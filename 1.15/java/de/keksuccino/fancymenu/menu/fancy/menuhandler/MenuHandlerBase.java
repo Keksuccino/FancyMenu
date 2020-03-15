@@ -59,7 +59,7 @@ public abstract class MenuHandlerBase {
 
 					if (action.equalsIgnoreCase("animatebackground")) {
 						String value = sec.getEntryValue("name");
-						String intro = sec.getEntryValue("replayintro");
+						String intro = sec.getEntryValue("replayanimation");
 						if (value != null) {
 							if (AnimationHandler.animationExists(value)) {
 								this.backgroundAnimation = AnimationHandler.getAnimation(value);
