@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.properties.PropertiesSection;
 import de.keksuccino.properties.PropertiesSerializer;
 import de.keksuccino.properties.PropertiesSet;
@@ -15,7 +16,7 @@ public class MenuCustomizationProperties {
 	public static void loadProperties() {
 		properties.clear();
 		
-		File f = new File("config/fancymain/customization");
+		File f = FancyMenu.getCustomizationPath();
 		if (!f.exists()) {
 			f.mkdirs();
 		}

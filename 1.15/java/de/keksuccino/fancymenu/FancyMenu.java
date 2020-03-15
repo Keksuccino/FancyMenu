@@ -15,13 +15,16 @@ public class FancyMenu {
 	
 	public static Config config;
 	
+	private static File animationsPath = new File("config/fancymenu/animations");
+	private static File customizationPath = new File("config/fancymenu/customization");
+	
 	public FancyMenu() {
 		//Checking if FancyMain was loaded client- or serverside
     	if (FMLEnvironment.dist == Dist.CLIENT) {
     		
     		//Creating all important directorys
-    		File f = new File("config/fancymain/animations");
-    		f.mkdirs();
+    		animationsPath.mkdirs();
+    		customizationPath.mkdirs();
 
     		initConfig();
 
@@ -37,7 +40,7 @@ public class FancyMenu {
 	
 	private static void initConfig() {
     	try {
-    		config = new Config("config/fancymain/config.txt");
+    		config = new Config("config/fancymenu/config.txt");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		
@@ -63,8 +66,14 @@ public class FancyMenu {
 		} catch (InvalidValueException e) {
 			e.printStackTrace();
 		}
-    }
+	}
 	
+	public static File getAnimationPath() {
+		return animationsPath;
+	}
 	
+	public static File getCustomizationPath() {
+		return customizationPath;
+	}
 
 }

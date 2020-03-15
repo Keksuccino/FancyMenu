@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.file.FileUtils;
@@ -39,7 +40,7 @@ public class AnimationHandler {
 	}
 	
 	public static void loadCustomAnimations() {
-		File f = new File("config/fancymain/animations");
+		File f = FancyMenu.getAnimationPath();
 		if (!f.exists() || !f.isDirectory()) {
 			return;
 		}

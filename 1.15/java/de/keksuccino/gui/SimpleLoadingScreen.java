@@ -15,9 +15,7 @@ public class SimpleLoadingScreen extends Screen {
 	private final Minecraft mc;
 	private AnimationRenderer loading = new AnimationRenderer("keksuccino/animations/loading", 15, true, 0, 0, 200, 37, "fancymenu");
 	private String status = "";
-//	private float progress = 0.0F;
-//	private Screen fallbackGui;
-
+	
 	public SimpleLoadingScreen(Minecraft mc) {
 		super(new StringTextComponent("loading"));
 		this.mc = mc;
@@ -25,10 +23,6 @@ public class SimpleLoadingScreen extends Screen {
 	
 	@Override
 	public void render(int p_render_1_, int p_render_2_, float p_render_3_) {
-//		if ((fallbackGui != null) && (this.progress >= 1.0F)) {
-//			Minecraft.getInstance().displayGuiScreen(this.fallbackGui);
-//			return;
-//		}
 
 		this.mc.getTextureManager().bindTexture(RenderUtils.getWhiteImageResource());
 		this.blit(0, 0, width, height, width, height);
@@ -47,17 +41,6 @@ public class SimpleLoadingScreen extends Screen {
 		
 		super.render(p_render_1_, p_render_2_, p_render_3_);
 	}
-
-//	private void drawProgressBar(int fromX, int fromY, int toX, int toY, float progress) {
-//		// int i = MathHelper.ceil((float)(toX - fromX - 1));
-//		fill(fromX - 1, fromY - 1, toX + 1, toY + 1, -16777216 | Math.round((1.0F - progress) * 255.0F) << 16 | Math.round((1.0F - progress) * 255.0F) << 8 | Math.round((1.0F - progress) * 255.0F));
-//		fill(fromX, fromY, toX, toY, -1);
-//		fill(fromX + 1, fromY + 1, fromX, toY - 1, -16777216 | (int) MathHelper.lerp(1.0F - progress, 226.0F, 255.0F) << 16 | (int) MathHelper.lerp(1.0F - progress, 40.0F, 255.0F) << 8 | (int) MathHelper.lerp(1.0F - progress, 55.0F, 255.0F));
-//	}
-
-//	public void setProgress(float progress) {
-//		this.progress = progress;
-//	}
 	
 	public void setStatusText(String status) {
 		this.status = status;
