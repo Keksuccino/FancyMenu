@@ -28,7 +28,7 @@ These will only be played once, even if the animation is in loop mode.
 
 ![](preview/options.gif)
 
-It is possible to render frames with transparent backgrounds, which can be very useful when it comes to rendering animations as menu decoration.
+It is possible to render frames with transparent backgrounds, which can be very useful when it comes to displaying animations as menu decoration.
 
 ## Customization Tools
 
