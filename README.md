@@ -2,8 +2,8 @@
 
 FancyMenu is a forge-based minecraft mod to customize ingame menus in many ways.
 
-A special thing about FancyMenu is, that its not limited to the basic minecraft menus like the options or inventory menu.<br>
-With FancyMenu, its possible to customize nearly every default-looking menu in the game. Even menus from other mods.
+A special thing about FancyMenu is, that it's not limited to the basic minecraft menus like the options or inventory menu.<br>
+With FancyMenu, it's possible to customize nearly every default-looking menu in the game. Even menus from other mods.
 
 Some of its key features are:<br>
 - Hide, move resize and rename buttons<br>
@@ -48,7 +48,7 @@ The second one displays the menu identifier, which is important to specify the m
 ### Apply changes without restarting the game
 
 The third button added to the top of every menu, is the "Reload" button.<br>
-By pressing this button, you can apply changes made to customization files directly to the game without restarting it, so you are being able to test changes without worrying about loosing time if its not as good looking as you thought.
+By pressing this button, you can apply changes made to customization files directly to the game without restarting it, so you are being able to test changes without worrying about loosing time if it's not as good looking as you thought.
 
 ### Hiding the tools
 
@@ -65,3 +65,6 @@ The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very
 - FancyMenu and its code<br>
 Copyright © 2020 Keksuccino.
 All rights reserved.
+
+- Minecraft Cave Animation<br>
+Copyright © Mojang AB.
