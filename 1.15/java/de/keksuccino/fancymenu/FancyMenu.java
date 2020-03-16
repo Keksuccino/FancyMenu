@@ -45,10 +45,10 @@ public class FancyMenu {
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
-			config.registerValue("hidelogo", true, "mainmenu");
+			config.registerValue("hidelogo", false, "mainmenu");
 			config.registerValue("buttonfadein", true, "mainmenu", "When a background animation is defined, the buttons can start fading in at a specific animation frame.");
 			config.registerValue("mainmenufadeinframe", 60, "mainmenu", "Sets the animation frame at which the main menu buttons should start fading in.");
-			config.registerValue("hidesplashtext", true, "mainmenu");
+			config.registerValue("hidesplashtext", false, "mainmenu");
 			config.registerValue("showmainmenufooter", true, "mainmenu");
 			config.syncConfig();
 			
