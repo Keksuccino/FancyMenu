@@ -59,3 +59,9 @@ No problem! After you're done with customization, you can hide the buttons in th
 ## Documentation [The FancyMenu Wiki]
 
 The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
+
+## Copyright
+
+- FancyMenu and its code<br>
+Copyright © 2020 Keksuccino.
+All rights reserved.
