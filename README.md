@@ -17,3 +17,15 @@ The animation engine used in FancyMenu can render smooth looking animations, eve
 
 Making your own animation is super easy and can be done by everyone.
 
+### Animation Intros
+
+![](preview/main.gif)
+
+Animations can have intros, which will be played before the main animation starts.<br>
+These will only be played once, even if the animation is in loop mode.
+
+### Transparent Animations
+
+![](preview/options.gif)
+
+It is possible to render frames with transparent backgrounds, which can be very useful when it comes to rendering animations as menu decoration.
