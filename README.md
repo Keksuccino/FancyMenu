@@ -13,9 +13,9 @@ Some of its key features are:<br>
 
 ## The FancyMenu Animation Engine
 
-The animation engine used in FancyMenu can render smooth looking animations, even if they have a high resolution!
+The animation engine used by FancyMenu can render smooth looking animations, even if they have a high resolution!
 
-Making your own animation is super easy and can be done by everyone.
+Making your own animations is super easy and can be done by everyone.
 
 ### Animation Intros
 
