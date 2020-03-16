@@ -48,7 +48,7 @@ The second one displays the menu identifier, which is important to specify the m
 ### Apply changes without restarting the game
 
 The third button added to the top of every menu, is the "Reload" button.<br>
-By pressing this button, you can apply changes made to customization files direclty to the game without restarting it, so you are being able to test changes without worrying about loosing time if its not as good looking as you thought.
+By pressing this button, you can apply changes made to customization files directly to the game without restarting it, so you are being able to test changes without worrying about loosing time if its not as good looking as you thought.
 
 ### Hiding the tools
 
