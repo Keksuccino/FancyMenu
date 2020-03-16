@@ -19,7 +19,7 @@ public class FancyMenu {
 	private static File customizationPath = new File("config/fancymenu/customization");
 	
 	public FancyMenu() {
-		//Checking if FancyMain was loaded client- or serverside
+		//Checking if FancyMenu was loaded client- or serverside
     	if (FMLEnvironment.dist == Dist.CLIENT) {
     		
     		//Creating all important directorys
@@ -34,7 +34,7 @@ public class FancyMenu {
         	MenuCustomization.init();
         	
     	} else {
-    		System.out.println("## WARNING ## 'FancyMain' is a client mod and has no effect when loaded on a server!");
+    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
     	}
 	}
 	

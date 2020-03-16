@@ -16,7 +16,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	/**
 	 * Container to hold a {@link IAnimationRenderer} instance with an optional intro which plays before the main animation starts.
 	 * 
-	 * @param introAnimation The name of the intro {@link IAnimationRenderer} registered to the {@link AnimationHandler}. Can be null, but there's absolutely no case in which this would be useful.
+	 * @param introAnimation The intro animation. Can be null, but there's absolutely no case in which this would be useful.
 	 * @param mainAnimation The main animation.
 	 * @throws AnimationNotFoundException If the main animation is null.
 	 */
