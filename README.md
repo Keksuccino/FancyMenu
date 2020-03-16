@@ -60,6 +60,10 @@ No problem! After you're done with customization, you can hide the buttons in th
 
 The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
 
+## DOWNLOAD
+
+FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
+
 ## Copyright
 
 - FancyMenu and its code<br>
