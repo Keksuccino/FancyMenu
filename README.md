@@ -55,3 +55,7 @@ By pressing this button, you can apply changes made to customization files direc
 So, you don't want to see these ~ugly~ beautiful buttons everytime you open a menu?!
 
 No problem! After you're done with customization, you can hide the buttons in the config.
+
+## Documentation [The FancyMenu Wiki]
+
+The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
