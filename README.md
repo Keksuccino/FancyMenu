@@ -6,7 +6,7 @@ A special thing about FancyMenu is, that it's not limited to the basic minecraft
 With FancyMenu, it's possible to customize nearly every default-looking menu in the game. Even menus from other mods.
 
 Some of its key features are:<br>
-- Hide, move resize and rename buttons<br>
+- Hide, move, resize and rename buttons<br>
 - Add lines of text to menu screens and format them<br>
 - Animate the background of menus<br>
 - Add textures and animations to menus<br>
