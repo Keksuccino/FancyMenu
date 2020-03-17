@@ -16,7 +16,7 @@ Some of its key features are:<br>
 The animation engine used by FancyMenu can render smooth looking animations, even if they have a high resolution!
 
 Making your own animations is super easy and can be done by everyone.<br>
-Learn more about making your own animations in the [FeancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki)!
+Learn more about making your own animations in the [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki)!
 
 ### Animation Intros
 
@@ -59,7 +59,7 @@ No problem! After you're done with customization, you can hide the buttons in th
 
 ## Documentation [The FancyMenu Wiki]
 
-The [FeancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
+The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
 
 ## DOWNLOAD
 
