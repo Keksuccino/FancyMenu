@@ -15,7 +15,8 @@ Some of its key features are:<br>
 
 The animation engine used by FancyMenu can render smooth looking animations, even if they have a high resolution!
 
-Making your own animations is super easy and can be done by everyone.
+Making your own animations is super easy and can be done by everyone.<br>
+Learn more about making your own animations in the [FeancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki)!
 
 ### Animation Intros
 
@@ -50,7 +51,7 @@ The second one displays the menu identifier, which is important to specify the m
 The third button added to the top of every menu, is the "Reload" button.<br>
 By pressing this button, you can apply changes made to customization files directly to the game without restarting it, so you are being able to test changes without worrying about loosing time if it's not as good looking as you thought.
 
-### Hiding the tools
+### Hiding tools
 
 So, you don't want to see these ~ugly~ beautiful buttons everytime you open a menu?!
 
@@ -58,7 +59,7 @@ No problem! After you're done with customization, you can hide the buttons in th
 
 ## Documentation [The FancyMenu Wiki]
 
-The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
+The [FeancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
 
 ## DOWNLOAD
 
