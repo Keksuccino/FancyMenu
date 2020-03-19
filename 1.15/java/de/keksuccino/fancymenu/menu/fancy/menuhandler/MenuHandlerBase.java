@@ -29,13 +29,14 @@ public abstract class MenuHandlerBase {
 	protected List<MenuCustomizationItem> items = new ArrayList<MenuCustomizationItem>();
 	protected IAnimationRenderer backgroundAnimation = null;
 	protected boolean replayIntro = false;
+	private boolean animationSet = false;
 	
 	//TODO Identifier and type are not used like planned, so I will change this later 
 	public abstract String getMenuIdentifier();
 	
 	@Nullable
 	public abstract Class<?> getMenuType();
-	
+
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
 		if (!this.shouldCustomize(e.getGui())) {
@@ -63,6 +64,7 @@ public abstract class MenuHandlerBase {
 						if (value != null) {
 							if (AnimationHandler.animationExists(value)) {
 								this.backgroundAnimation = AnimationHandler.getAnimation(value);
+								this.animationSet = true;
 							} else {
 								this.backgroundAnimation = null;
 							}
@@ -74,6 +76,10 @@ public abstract class MenuHandlerBase {
 							if (intro.equalsIgnoreCase("false")) {
 								this.replayIntro = false;
 							}
+						}
+					} else {
+						if (!this.animationSet) {
+							this.backgroundAnimation = null;
 						}
 					}
 					
@@ -186,6 +192,7 @@ public abstract class MenuHandlerBase {
 			if (this.replayIntro) {
 				this.backgroundAnimation.resetAnimation();
 			}
+			this.animationSet = false;
 		}
 	}
 	

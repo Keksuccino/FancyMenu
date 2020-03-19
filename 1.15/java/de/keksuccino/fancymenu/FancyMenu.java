@@ -47,9 +47,10 @@ public class FancyMenu {
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
 			config.registerValue("buttonfadein", true, "mainmenu", "When a background animation is defined, the buttons can start fading in at a specific animation frame.");
-			config.registerValue("mainmenufadeinframe", 60, "mainmenu", "Sets the animation frame at which the main menu buttons should start fading in.");
+			config.registerValue("mainmenufadeinframe", 1, "mainmenu", "Sets the animation frame at which the main menu buttons should start fading in.");
 			config.registerValue("hidesplashtext", false, "mainmenu");
 			config.registerValue("showmainmenufooter", true, "mainmenu");
+			config.registerValue("hiderealmsnotifications", false, "mainmenu");
 			config.syncConfig();
 			
 			//Updating all categorys at start to keep it synchronized with older config files
@@ -61,6 +62,7 @@ public class FancyMenu {
 			config.setCategory("mainmenufadeinframe", "mainmenu");
 			config.setCategory("hidesplashtext", "mainmenu");
 			config.setCategory("showmainmenufooter", "mainmenu");
+			config.setCategory("hiderealmsnotifications", "mainmenu");
 			
 			config.clearUnusedValues();
 		} catch (InvalidValueException e) {

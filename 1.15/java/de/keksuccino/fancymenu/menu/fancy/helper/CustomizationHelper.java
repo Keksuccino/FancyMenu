@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.realmsclient.RealmsMainScreen;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -14,7 +13,6 @@ import de.keksuccino.gui.SimpleLoadingScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.realms.RealmsScreen;
 import net.minecraft.realms.RealmsScreenProxy;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
