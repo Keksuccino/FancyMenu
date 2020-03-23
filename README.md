@@ -1,4 +1,4 @@
-## About
+## FancyMenu   ![](https://img.shields.io/badge/supports-MC%201.15%20%7C%20MC%201.14%20%7C%20MC%201.13-orange)
 
 FancyMenu is a forge-based minecraft mod to customize ingame menus in many ways.
 
@@ -72,7 +72,7 @@ See LICENSE.md for more information.
 
 ## Copyright
 
-- FancyMenu and its code<br>
+- FancyMenu<br>
 Copyright © 2020 Keksuccino.
 
 - Minecraft Cave Animation<br>
