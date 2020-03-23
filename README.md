@@ -65,7 +65,7 @@ The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very
 
 FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
 
-## LICENSING
+## Licensing
 
 FancyMenu is licensed under GPLv3.<br>
 See LICENSE.md for more information.
