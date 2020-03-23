@@ -65,11 +65,15 @@ The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very
 
 FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
 
+## LICENSING
+
+FancyMenu is licensed under GPLv3.<br>
+See LICENSE.md for more information.
+
 ## Copyright
 
 - FancyMenu and its code<br>
 Copyright © 2020 Keksuccino.
-All rights reserved.
 
 - Minecraft Cave Animation<br>
 Copyright © Mojang AB.
