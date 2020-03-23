@@ -3,10 +3,6 @@ package de.keksuccino.reflection;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-import javax.annotation.Nonnull;
-
-import com.google.common.base.Preconditions;
-
 import cpw.mods.modlauncher.api.INameMappingService;
 import net.minecraftforge.fml.loading.FMLLoader;
 
@@ -58,19 +54,15 @@ public class ReflectionHelper {
 		}
 		return o;
 	}
-	
-	/**
-	 * Method back-ported from Forge for MC 1.15.2
-	 * Copyright (c) 2019 Minecraft Forge.
-	 */
-	@Nonnull
-    public static <T> Field findField(@Nonnull final Class<? super T> clazz, @Nonnull final String fieldName) {
-        Preconditions.checkNotNull(clazz, "Class to find field on cannot be null.");
-        Preconditions.checkNotNull(fieldName, "Name of field to find cannot be null.");
-        Preconditions.checkArgument(!fieldName.isEmpty(), "Name of field to find cannot be empty.");
 
+	/**
+	 * Searches for an obfuscated MC field.
+	 * @param srgName The srg name of the field.
+	 */
+    public static <T> Field findField(Class<? super T> c, String srgName) {
         try {
-        	Field f = clazz.getDeclaredField(remapName(INameMappingService.Domain.FIELD, fieldName));
+        	String s = FMLLoader.getNameFunction("srg").map(f->f.apply(INameMappingService.Domain.FIELD, srgName)).orElse(srgName);
+        	Field f = c.getDeclaredField(s);
             f.setAccessible(true);
             return f;
         }
@@ -79,15 +71,6 @@ public class ReflectionHelper {
         }
         
         return null;
-    }
-	
-	/**
-	 * Method back-ported from Forge for MC 1.15.2
-	 * Copyright (c) 2019 Minecraft Forge.
-	 */
-	@Nonnull
-    public static String remapName(INameMappingService.Domain domain, String name) {
-        return FMLLoader.getNameFunction("srg").map(f->f.apply(domain, name)).orElse(name);
     }
 
 }
