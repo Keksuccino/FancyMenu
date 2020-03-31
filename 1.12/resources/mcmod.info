@@ -1,0 +1,13 @@
+[
+{
+  "modid": "fancymenu",
+  "name": "\u00A7dFancy\u00A75Menu",
+  "description": "Give your life a fancy touch. You deserve it.\n\nCOPYRIGHT:\n> FancyMenu (c) Copyright 2020 Keksuccino",
+  "version": "0.4.3b.alpha",
+  "mcversion": "${mcversion}",
+  "updateUrl": "",
+  "authorList": ["Keksuccino"],
+  "screenshots": [],
+  "dependencies": []
+}
+]
