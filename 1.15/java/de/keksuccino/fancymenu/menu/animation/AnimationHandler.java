@@ -35,6 +35,28 @@ public class AnimationHandler {
 		}
 	}
 	
+	public static void unregisterAnimation(IAnimationRenderer animation) {
+		AnimationData d = null;
+		for (AnimationData a : animations.values()) {
+			if (a.animation == animation) {
+				d = a;
+				break;
+			}
+		}
+		if (d != null) {
+			unregisterAnimation(d.name);
+		}
+	}
+	
+	public static void unregisterAnimation(String name) {
+		if (animationExists(name)) {
+			animations.remove(name);
+			if (custom.contains(name)) {
+				custom.remove(name);
+			}
+		}
+	}
+	
 	public static void init() {
 		MinecraftForge.EVENT_BUS.register(new AnimationHandlerEvents());
 	}

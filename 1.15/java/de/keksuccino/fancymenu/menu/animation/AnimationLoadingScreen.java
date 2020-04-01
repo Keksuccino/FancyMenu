@@ -55,6 +55,7 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 						public void run() {
 							loading.setStatusText("Loading animation frames for " + current.getPath());
 							current.prepareAnimation();
+							System.gc();
 							loading.preparing = false;
 						}
 					}).start();
