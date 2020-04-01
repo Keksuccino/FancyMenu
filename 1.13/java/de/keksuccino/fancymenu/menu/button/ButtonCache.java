@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
+import de.keksuccino.fancymenu.menu.fancy.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.gui.SimpleLoadingScreen;
 import de.keksuccino.locale.LocaleUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -21,12 +23,21 @@ public class ButtonCache {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
+		//Don't refresh cache if screen is instance of LayoutCreator
+		if (e.getGui() instanceof LayoutCreatorScreen) {
+			return;
+		}
+		//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
+		if (e.getGui() instanceof SimpleLoadingScreen) {
+			return;
+		}
+		
 		if (e.getGui() == Minecraft.getInstance().currentScreen) {
 			buttons.clear();
 			
 			int i = 1;
 			for (GuiButton w : sortButtons(e.getButtonList())) {
-				buttons.put(i, new ButtonData(w, i, w.displayString, LocaleUtils.getKeyForString(w.displayString), e.getGui()));
+				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.displayString), e.getGui()));
 				i++;
 			}
 		}
@@ -105,7 +116,7 @@ public class ButtonCache {
 	public static String getNameForButton(GuiButton w) {
 		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
-				return m.getValue().getName();
+				return m.getValue().label;
 			}
 		}
 		return null;
@@ -147,11 +158,20 @@ public class ButtonCache {
 	 */
 	public static ButtonData getButtonForName(String name) {
 		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
-			if (m.getValue().getName().equals(name)) {
+			if (m.getValue().label.equals(name)) {
 				return m.getValue();
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Returns all currently cached buttons as {@link ButtonData}.
+	 */
+	public static List<ButtonData> getButtons() {
+		List<ButtonData> b = new ArrayList<ButtonData>();
+		b.addAll(buttons.values());
+		return b;
 	}
 
 }

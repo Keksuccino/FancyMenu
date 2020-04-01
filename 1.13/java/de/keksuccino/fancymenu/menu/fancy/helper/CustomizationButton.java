@@ -8,8 +8,8 @@ import net.minecraft.client.gui.GuiButton;
  */
 public class CustomizationButton extends AdvancedButton {
 
-	public CustomizationButton(int widthIn, int heightIn, int x, int y, String buttonText, IPressable onPress) {
-		super(widthIn, heightIn, x, y, buttonText, onPress);
+	public CustomizationButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
+		super(x, y, widthIn, heightIn, buttonText, onPress);
 	}
 
 	public static boolean isCustomizationButton(GuiButton w) {

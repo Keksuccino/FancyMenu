@@ -9,9 +9,11 @@ import javax.annotation.Nullable;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationItem.Type;
+import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.math.MathUtils;
 import de.keksuccino.properties.PropertiesSection;
 import de.keksuccino.properties.PropertiesSet;
@@ -26,7 +28,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public abstract class MenuHandlerBase {
 	
-	protected List<MenuCustomizationItem> items = new ArrayList<MenuCustomizationItem>();
+	protected List<CustomizationItemBase> items = new ArrayList<CustomizationItemBase>();
 	protected IAnimationRenderer backgroundAnimation = null;
 	protected boolean replayIntro = false;
 	private boolean animationSet = false;
@@ -170,15 +172,15 @@ public abstract class MenuHandlerBase {
 					}
 					
 					if (action.equalsIgnoreCase("addtext")) {
-						items.add(new MenuCustomizationItem(sec, Type.STRING));
+						items.add(new StringCustomizationItem(sec));
 					}
 					
 					if (action.equalsIgnoreCase("addtexture")) {
-						items.add(new MenuCustomizationItem(sec, Type.TEXTURE));
+						items.add(new TextureCustomizationItem(sec));
 					}
 					
 					if (action.equalsIgnoreCase("addanimation")) {
-						items.add(new MenuCustomizationItem(sec, Type.ANIMATION));
+						items.add(new AnimationCustomizationItem(sec));
 					}
 					
 				}
@@ -202,7 +204,7 @@ public abstract class MenuHandlerBase {
 			return;
 		}
 		
-		for (MenuCustomizationItem i : this.items) {
+		for (CustomizationItemBase i : this.items) {
 			try {
 				i.render(e.getGui());
 			} catch (IOException e1) {

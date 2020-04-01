@@ -78,7 +78,9 @@ public class ExternalTextureAnimationRenderer implements IAnimationRenderer {
 						if (isValidFrame(in)) {
 							ExternalResourceLocation er = new ExternalResourceLocation(in.getAbsolutePath());
 							er.loadTexture();
-							this.resources.add(er);
+							if (er.isReady()) {
+								this.resources.add(er);
+							}
 						}
 					}
 				}
@@ -88,7 +90,9 @@ public class ExternalTextureAnimationRenderer implements IAnimationRenderer {
 					if (isValidFrame(in)) {
 						ExternalResourceLocation er = new ExternalResourceLocation(in.getAbsolutePath());
 						er.loadTexture();
-						this.resources.add(er);
+						if (er.isReady()) {
+							this.resources.add(er);
+						}
 					}
 				}
 			}
@@ -110,7 +114,6 @@ public class ExternalTextureAnimationRenderer implements IAnimationRenderer {
 					return 0;
 				}
 			});
-			
 			this.ready = true;
 		} catch (Exception e) {
 			e.printStackTrace();

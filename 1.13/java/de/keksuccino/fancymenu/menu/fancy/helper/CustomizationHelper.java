@@ -7,6 +7,7 @@ import java.util.List;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.gui.SimpleLoadingScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -31,14 +32,16 @@ public class CustomizationHelper {
 		if (e.getGui() != Minecraft.getInstance().currentScreen) {
 			return;
 		}
-		
-		//Prevents rendering in unsupported screens
+		//Prevents rendering in realm screens (if it's the main screen)
 		if (e.getGui() instanceof GuiScreenRealmsProxy) {
 			return;
 		}
-		
-		//Prevents rendering in FancyMenu loadingscreens
+		//Prevents rendering in FancyMenu's loading screens
 		if (e.getGui() instanceof SimpleLoadingScreen) {
+			return;
+		}
+		//Prevents rendering in layout creation screens
+		if (e.getGui() instanceof LayoutCreatorScreen) {
 			return;
 		}
 		
@@ -66,10 +69,15 @@ public class CustomizationHelper {
 			onReloadButtonPress();
 		});
 		
+		GuiButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 130, 5, 70, 20, "Create Layout", (onPress) -> {
+			Minecraft.getInstance().displayGuiScreen(new LayoutCreatorScreen(e.getGui()));
+		});
+		
 		if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 			e.addButton(iButton);
 			e.addButton(rButton);
 			e.addButton(miButton);
+			e.addButton(layoutCreatorButton);
 		}
 
 	}

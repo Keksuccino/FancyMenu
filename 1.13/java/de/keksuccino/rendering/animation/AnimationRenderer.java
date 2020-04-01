@@ -299,7 +299,8 @@ public class AnimationRenderer implements IAnimationRenderer {
 	}
 
 	@Override
-	public void prepareAnimation() {}
+	public void prepareAnimation() {
+	}
 
 	@Override
 	public boolean isGettingLooped() {
