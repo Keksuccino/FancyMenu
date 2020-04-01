@@ -185,6 +185,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		//Draw minecraft logo and edition textures if not disabled in the config
 		if (!FancyMenu.config.getOrDefault("hidelogo", true)) {
+			GlStateManager.enableBlend();
 			Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			if ((double) minecraftLogoSpelling < 1.0E-4D) {
@@ -198,8 +199,12 @@ public class MainMenuHandler extends MenuHandlerBase {
 				e.getGui().drawTexturedModalRect(j + 155, 30, 0, 45, 155, 44);
 			}
 
-			Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
-			GuiScreen.drawModalRectWithCustomSizedTexture(j + 88, 67, 0.0F, 0.0F, 98, 14, 128.0F, 16.0F);
+			String version = Minecraft.getMinecraft().getVersion();
+			if (version.equals("1.12.2")) {
+				Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
+				GuiScreen.drawModalRectWithCustomSizedTexture(j + 88, 67, 0.0F, 0.0F, 98, 14, 128.0F, 16.0F);
+			}
+			GlStateManager.disableBlend();
 		}
 
 		//TODO ForgeHooksClient.renderMainMenu((GuiMainMenu) e.getGui(), fontRenderer, width, height);

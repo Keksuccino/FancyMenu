@@ -10,7 +10,7 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
 
-@Mod(modid = "fancymenu")
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]")
 public class FancyMenu {
 	
 	public static Config config;
