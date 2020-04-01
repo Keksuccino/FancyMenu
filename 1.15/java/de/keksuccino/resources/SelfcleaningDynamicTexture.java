@@ -17,13 +17,21 @@ public class SelfcleaningDynamicTexture extends DynamicTexture {
 		super.updateDynamicTexture();
 		
 		//Clearing all NativeImage data to free memory
-		this.getTextureData().close();
 		clearTextureData(this);
+	}
+	
+	/**
+	 * Dummy method to avoid NullPointer's.
+	 */
+	@Override
+	public NativeImage getTextureData() {
+		return new NativeImage(0, 0, true);
 	}
 	
 	private static void clearTextureData(DynamicTexture texture) {
 		try {
 			Field f = ObfuscationReflectionHelper.findField(DynamicTexture.class, "field_110566_b");
+			((NativeImage)f.get(texture)).close();
 			f.set(texture, null);
 		} catch (Exception e) {
 			e.printStackTrace();
