@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
-import de.keksuccino.fancymenu.menu.fancy.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.gui.SimpleLoadingScreen;
 import de.keksuccino.locale.LocaleUtils;
 import net.minecraft.client.Minecraft;
@@ -23,10 +22,6 @@ public class ButtonCache {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
-		//Don't refresh cache if screen is instance of LayoutCreator
-		if (e.getGui() instanceof LayoutCreatorScreen) {
-			return;
-		}
 		//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
 		if (e.getGui() instanceof SimpleLoadingScreen) {
 			return;
