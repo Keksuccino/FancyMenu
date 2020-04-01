@@ -51,8 +51,9 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 					this.setStatusText("Loading animation frames for " + current.getPath());
 					this.preparing = true;
 				} else {
-					//Have to be called in the main thread in <1.15 (I hate laggy loading screens..)
+					//Needs to be called in the main thread in <1.15 (I hate laggy loading screens..)
 					current.prepareAnimation();
+					System.gc();
 					this.preparing = false;
 				}
 			} else {

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
@@ -24,12 +23,13 @@ public class ExternalResourceLocation {
 	 * The main instance of minecraft's {@link TextureManager} needs to be loaded before calling this method.<br><br>
 	 * 
 	 * After loading the texture, {@code ExternalResourceLocation.isReady()} will return true.
+	 * @throws LowMemoryException 
 	 */
-	@SuppressWarnings("resource")
 	public void loadTexture() {
 		if (this.loaded) {
 			return;
 		}
+
 		try {
 			if (Minecraft.getInstance().getTextureManager() == null) {
 				System.out.println("################################ WARNING ################################");
@@ -38,7 +38,7 @@ public class ExternalResourceLocation {
 			}
 			File f = new File(path);
 			FileInputStream s = new FileInputStream(f);
-			location = Minecraft.getInstance().getTextureManager().getDynamicTextureLocation(f.getName(), new DynamicTexture(NativeImage.read(s)));
+			location = Minecraft.getInstance().getTextureManager().getDynamicTextureLocation(f.getName(), new SelfcleaningDynamicTexture(NativeImage.read(s)));
 			s.close();
 			loaded = true;
 		} catch (Exception e) {
