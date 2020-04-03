@@ -31,36 +31,6 @@ These will only be played once, even if the animation is in loop mode.
 
 It is possible to render frames with transparent backgrounds, which can be very useful when it comes to displaying animations as menu decoration.
 
-## Customization Tools
-
-FancyMenu has some small tools to help you customize your menus a little easier.
-
-### Display Button and Menu Informations
-
-By default, the mod will add three buttons at top of every supported menu.<br>
-Two of these buttons are "Button Info" and "Menu Info".
-
-With the first button, you can display useful informations about every button by just hovering over them with the mouse.<br>
-It will display things like the width and height of a button, but the most important information it gives you is the button ID and the button key.<br>
-These are used to specify a button, if you want to customize it.
-
-The second one displays the menu identifier, which is important to specify the menu type of the menu you want to customize.
-
-### Apply changes without restarting the game
-
-The third button added to the top of every menu, is the "Reload" button.<br>
-By pressing this button, you can apply changes made to customization files directly to the game without restarting it, so you are being able to test changes without worrying about loosing time if it's not as good looking as you thought.
-
-### Hiding tools
-
-So, you don't want to see these ~ugly~ beautiful buttons everytime you open a menu?!
-
-No problem! After you're done with customization, you can hide the buttons in the config.
-
-## Documentation [The FancyMenu Wiki]
-
-The [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki) has some very helpful documentations about creating animations and customize menus, so check it out!
-
 ## DOWNLOAD
 
 FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
