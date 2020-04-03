@@ -11,25 +11,7 @@ Some of its key features are:<br>
 - Animate the background of menus<br>
 - Add textures and animations to menus<br>
 
-## The FancyMenu Animation Engine
-
-The animation engine used by FancyMenu can render smooth looking animations, even if they have a high resolution!
-
-Making your own animations is super easy and can be done by everyone.<br>
-Learn more about making animations in the [FancyMenu wiki](https://github.com/Keksuccino/FancyMenu/wiki/Animations)!
-
-### Animation Intros
-
 ![](preview/main.gif)
-
-Animations can have intros, which will be played before the main animation starts.<br>
-These will only be played once, even if the animation is in loop mode.
-
-### Transparent Animations
-
-![](preview/options.gif)
-
-It is possible to render frames with transparent backgrounds, which can be very useful when it comes to displaying animations as menu decoration.
 
 ## DOWNLOAD
 
