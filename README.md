@@ -1,4 +1,4 @@
-## FancyMenu   [![](https://img.shields.io/badge/supports-MC%201.15%20%7C%20MC%201.14%20%7C%20MC%201.13%20%7C%20MC%201.12-orange)](https://www.curseforge.com/minecraft/mc-mods/fancymenu) [![](https://img.shields.io/badge/download-CurseForge-blueviolet)](https://www.curseforge.com/minecraft/mc-mods/fancymenu)
+## FancyMenu   [![](https://img.shields.io/badge/supports-MC%201.15%20%7C%20MC%201.14%20%7C%20MC%201.13%20%7C%20MC%201.12-orange)](https://www.curseforge.com/minecraft/mc-mods/fancymenu) [![](https://img.shields.io/badge/download-CurseForge-blueviolet)](https://www.curseforge.com/minecraft/mc-mods/fancymenu) [![](https://img.shields.io/reddit/subreddit-subscribers/FancyMenu?style=social)](https://www.reddit.com/r/FancyMenu/)
 
 FancyMenu is a forge-based minecraft mod to customize ingame menus in many ways.
 
