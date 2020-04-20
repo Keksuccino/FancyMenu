@@ -6,8 +6,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.gui.SimpleLoadingScreen;
-import de.keksuccino.rendering.animation.IAnimationRenderer;
+import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -59,7 +59,13 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			} else {
 				if (!current.isFinished()) {
 					this.setStatusText("Pre-rendering animation " + current.getPath());
+					if (current instanceof AdvancedAnimation) {
+						((AdvancedAnimation)current).setMuteAudio(true);
+					}
 					current.render();
+					if (current instanceof AdvancedAnimation) {
+						((AdvancedAnimation)current).setMuteAudio(false);
+					}
 				} else {
 					current.setFPS(this.cachedFPS);
 					current.setLooped(this.cachedLoop);

@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import de.keksuccino.math.MathUtils;
-import de.keksuccino.properties.PropertiesSection;
-import de.keksuccino.rendering.RenderUtils;
+import de.keksuccino.core.math.MathUtils;
+import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -72,8 +72,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 	@Override
 	public int getPosY(GuiScreen menu) {
-		int y = (int) (super.getPosY(menu) / this.scale);
-		return y;
+		return (int) (super.getPosY(menu) / this.scale);
 	}
 	
 	@Override

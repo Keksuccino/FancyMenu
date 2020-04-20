@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.button;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -7,11 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.locale.LocaleUtils;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
-import de.keksuccino.gui.SimpleLoadingScreen;
-import de.keksuccino.locale.LocaleUtils;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -22,6 +25,10 @@ public class ButtonCache {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
+		//Don't refresh cache if screen is instance of LayoutCreator
+		if (e.getGui() instanceof LayoutCreatorScreen) {
+			return;
+		}
 		//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
 		if (e.getGui() instanceof SimpleLoadingScreen) {
 			return;
@@ -33,6 +40,43 @@ public class ButtonCache {
 			int i = 1;
 			for (GuiButton w : sortButtons(e.getButtonList())) {
 				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.displayString), e.getGui()));
+				i++;
+			}
+		}
+	}
+	
+	public static void cacheFrom(GuiScreen s, int screenWidth, int screenHeight) {
+		List<GuiButton> l = new ArrayList<GuiButton>();
+		try {
+			//Resetting the button list
+			Field f0 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			f0.set(s, new ArrayList<GuiButton>());
+			
+			//Setting all important values for the GuiScreen to be able to initialize itself
+			s.mc = Minecraft.getMinecraft();
+			s.width = screenWidth;
+			s.height = screenHeight;
+			//itemRender field
+			Field f1 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "itemRender", "field_146296_j");
+			f1.set(s, Minecraft.getMinecraft().getRenderItem());
+			//fontRenderer field
+			Field f2 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "fontRenderer", "field_146289_q");
+			f2.set(s, Minecraft.getMinecraft().fontRenderer);
+			
+			s.initGui();
+			
+			//Reflecting the buttons list field to cache all buttons of the menu
+			Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			l.addAll((List<GuiButton>) f.get(s));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if (!l.isEmpty()) {
+			buttons.clear();
+			int i = 1;
+			for (GuiButton w : sortButtons(l)) {
+				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.displayString), s));
 				i++;
 			}
 		}

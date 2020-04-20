@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
+import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
-import de.keksuccino.properties.PropertiesSection;
-import de.keksuccino.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.GuiScreen;
 
 public class AnimationCustomizationItem extends CustomizationItemBase {

@@ -1,12 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.lwjgl.util.glu.Project;
@@ -14,10 +9,10 @@ import org.lwjgl.util.glu.Project;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import de.keksuccino.core.input.MouseInput;
+import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
-import de.keksuccino.input.MouseInput;
-import de.keksuccino.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -35,24 +30,19 @@ import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
+import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class MainMenuHandler extends MenuHandlerBase {
 
 	private static final ResourceLocation FACEBOOK = new ResourceLocation("keksuccino", "socialmedia/fb.png");
 	private static final ResourceLocation TWITTER = new ResourceLocation("keksuccino", "socialmedia/twitter.png");
 	private static final ResourceLocation INSTAGRAM = new ResourceLocation("keksuccino", "socialmedia/instagram.png");
-	private Map<Integer, List<GuiButton>> widgetsRaw = new HashMap<Integer, List<GuiButton>>();
-	private List<List<GuiButton>> widgets = new ArrayList<List<GuiButton>>();
-	private int tick;
-	private int cachedTick;
 	private int tickFooter;
 	private float fadeFooter;
-	private int fadeInFrame = -1;
-	private static final Random RANDOM = new Random();
 	
 	private static final ResourceLocation[] PANORAMA_RESOURCES = new ResourceLocation[] {new ResourceLocation("textures/gui/title/background/panorama_0.png"), new ResourceLocation("textures/gui/title/background/panorama_1.png"), new ResourceLocation("textures/gui/title/background/panorama_2.png"), new ResourceLocation("textures/gui/title/background/panorama_3.png"), new ResourceLocation("textures/gui/title/background/panorama_4.png"), new ResourceLocation("textures/gui/title/background/panorama_5.png")};
 	private DynamicTexture viewport = new DynamicTexture(256, 256);
@@ -61,195 +51,125 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private static final ResourceLocation MINECRAFT_TITLE_TEXTURES = new ResourceLocation("textures/gui/title/minecraft.png");
 	private static final ResourceLocation MINECRAFT_TITLE_EDITION = new ResourceLocation("textures/gui/title/edition.png");
+	private static final Random RANDOM = new Random();
 	
-	@Override
-	public String getMenuIdentifier() {
-		return this.getMenuType().getName();
+	public MainMenuHandler() {
+		super(GuiMainMenu.class.getName());
 	}
-
-	@Override
-	public Class<?> getMenuType() {
-		return GuiMainMenu.class;
-	}
-	
-	//----------------------------------------------------------
 	
 	@SubscribeEvent
 	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getGui())) {
-
-			this.renderMainMenu(e);
+			e.setCanceled(true);
+			e.getGui().drawDefaultBackground();
 			
-			if (this.canRenderBackground() && FancyMenu.config.getOrDefault("buttonfadein", true)) {
-				//Setting the animation frame at which the menu buttons should start fading in
-				if (fadeInFrame == -1) {
-					int i2 = FancyMenu.config.getOrDefault("mainmenufadeinframe", 0);
-					if (i2 > this.backgroundAnimation.animationFrames()) {
-						fadeInFrame = 0;
-					} else {
-						fadeInFrame = i2;
-					}
-				}
-				
-				if (this.backgroundAnimation.currentFrame() >= fadeInFrame) {
-					if (!widgets.isEmpty()) {
-						if (tick >= cachedTick + 9) {
-							for (GuiButton w : (List<GuiButton>) widgets.get(0)) {
-								w.visible = true;
-							}
-							widgets.remove(0);
-							cachedTick = tick;
-						}
-						tick += 1;
-					} else {
-						renderFooter(e);
-						tick = 0;
-						cachedTick = 0;
-					}
-				}
-			} else {
-				//Rendering footer instant if button-fade-in is disabled
-				renderFooter(e);
-			}
-
+			this.renderFooter(e);
 		}
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onScreenInit(GuiScreenEvent.InitGuiEvent.Post e) {
 		if (this.shouldCustomize(e.getGui())) {
-			this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
-			
 			// Resetting values to defaults
 			fadeFooter = 0.1F;
 			tickFooter = 0;
-			tick = 0;
-			cachedTick = 0;
-
-			widgetsRaw.clear();
-			widgets.clear();
-
-			if (this.canRenderBackground()) {
-				if (this.shouldFadeInButtons()) {
-					cacheWidgets(e);
-
-					List<Integer> ints = new ArrayList<Integer>();
-					ints.addAll(widgetsRaw.keySet());
-
-					// Sorting all buttons by its group (height)
-					Collections.sort(ints, new Comparator<Integer>() {
-						@Override
-						public int compare(Integer o1, Integer o2) {
-							if (o1 > o2) {
-								return 1;
-							}
-							if (o1 < o2) {
-								return -1;
-							}
-							return 0;
-						}
-					});
-
-					for (Integer i : ints) {
-						widgets.add(widgetsRaw.get(i));
-					}
-				}
-			}
+			
+			this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
 		}
 	}
 	
 	/**
 	 * Mimic the original main menu to be able to customize it easier
 	 */
-	private void renderMainMenu(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		e.setCanceled(true);
-		
-		FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-		int width = e.getGui().width;
-		int height = e.getGui().height;
-		int j = width / 2 - 137;
-		float minecraftLogoSpelling = RANDOM.nextFloat();
-		int mouseX = e.getMouseX();
-		int mouseY = e.getMouseY();
-		String copyright = "Copyright Mojang AB. Do not distribute!";
-		int widthCopyright = Minecraft.getMinecraft().fontRenderer.getStringWidth(copyright);
-		int widthCopyrightRest = width - widthCopyright - 2;
-		
-		//Draw the panorama skybox and a semi-transparent overlay over it
-		if (!this.canRenderBackground()) {
-			this.panoramaTimer += e.getRenderPartialTicks();
-			this.renderSkybox(mouseX, mouseY, e.getRenderPartialTicks(), e.getGui());
-		} else {
-			e.getGui().drawDefaultBackground();
-		}
-		
-		//Draw minecraft logo and edition textures if not disabled in the config
-		if (!FancyMenu.config.getOrDefault("hidelogo", true)) {
-			GlStateManager.enableBlend();
-			Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
-			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-			if ((double) minecraftLogoSpelling < 1.0E-4D) {
-				e.getGui().drawTexturedModalRect(j + 0, 30, 0, 0, 99, 44);
-				e.getGui().drawTexturedModalRect(j + 99, 30, 129, 0, 27, 44);
-				e.getGui().drawTexturedModalRect(j + 99 + 26, 30, 126, 0, 3, 44);
-				e.getGui().drawTexturedModalRect(j + 99 + 26 + 3, 30, 99, 0, 26, 44);
-				e.getGui().drawTexturedModalRect(j + 155, 30, 0, 45, 155, 44);
-			} else {
-				e.getGui().drawTexturedModalRect(j + 0, 30, 0, 0, 155, 44);
-				e.getGui().drawTexturedModalRect(j + 155, 30, 0, 45, 155, 44);
+	@Override
+	public void drawToBackground(BackgroundDrawnEvent e) {
+		if (this.shouldCustomize(e.getGui())) {
+			FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+			int width = e.getGui().width;
+			int height = e.getGui().height;
+			int j = width / 2 - 137;
+			float minecraftLogoSpelling = RANDOM.nextFloat();
+			int mouseX = MouseInput.getMouseX();
+			int mouseY = MouseInput.getMouseY();
+			String copyright = "Copyright Mojang AB. Do not distribute!";
+			int widthCopyright = Minecraft.getMinecraft().fontRenderer.getStringWidth(copyright);
+			int widthCopyrightRest = width - widthCopyright - 2;
+			
+			//Draw the panorama skybox and a semi-transparent overlay over it
+			if (!this.canRenderBackground()) {
+				this.panoramaTimer += Minecraft.getMinecraft().getRenderPartialTicks();
+				this.renderSkybox(mouseX, mouseY, Minecraft.getMinecraft().getRenderPartialTicks(), e.getGui());
+			}
+			
+			super.drawToBackground(e);
+			
+			//Draw minecraft logo and edition textures if not disabled in the config
+			if (!FancyMenu.config.getOrDefault("hidelogo", true)) {
+				GlStateManager.enableBlend();
+				Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
+				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+				if ((double) minecraftLogoSpelling < 1.0E-4D) {
+					e.getGui().drawTexturedModalRect(j + 0, 30, 0, 0, 99, 44);
+					e.getGui().drawTexturedModalRect(j + 99, 30, 129, 0, 27, 44);
+					e.getGui().drawTexturedModalRect(j + 99 + 26, 30, 126, 0, 3, 44);
+					e.getGui().drawTexturedModalRect(j + 99 + 26 + 3, 30, 99, 0, 26, 44);
+					e.getGui().drawTexturedModalRect(j + 155, 30, 0, 45, 155, 44);
+				} else {
+					e.getGui().drawTexturedModalRect(j + 0, 30, 0, 0, 155, 44);
+					e.getGui().drawTexturedModalRect(j + 155, 30, 0, 45, 155, 44);
+				}
+
+				String version = ForgeVersion.mcVersion;
+				if (version.equals("1.12.2")) {
+					Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
+					GuiScreen.drawModalRectWithCustomSizedTexture(j + 88, 67, 0.0F, 0.0F, 98, 14, 128.0F, 16.0F);
+				}
+				GlStateManager.disableBlend();
 			}
 
-			String version = Minecraft.getMinecraft().getVersion();
-			if (version.equals("1.12.2")) {
-				Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
-				GuiScreen.drawModalRectWithCustomSizedTexture(j + 88, 67, 0.0F, 0.0F, 98, 14, 128.0F, 16.0F);
+			//Draw branding strings to the main menu if not disabled in the config
+			if (!FancyMenu.config.getOrDefault("hidebranding", true)) {
+				List<String> brandings = Lists.reverse(FMLCommonHandler.instance().getBrandings(true));
+		        for (int brdline = 0; brdline < brandings.size(); brdline++) {
+		            String brd = brandings.get(brdline);
+		            if (!Strings.isNullOrEmpty(brd)) {
+		                e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, brd, 2, e.getGui().height - ( 10 + brdline * (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 1)), 16777215);
+		            }
+		        }
 			}
-			GlStateManager.disableBlend();
-		}
+			
+			e.getGui().drawString(fontRenderer, copyright, widthCopyrightRest, height - 10, -1);
+			if (mouseX > widthCopyrightRest && mouseX < widthCopyrightRest + widthCopyright && mouseY > height - 10 && mouseY < height) {
+				GuiScreen.drawRect(widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
+			}
 
-		//TODO ForgeHooksClient.renderMainMenu((GuiMainMenu) e.getGui(), fontRenderer, width, height);
-
-		//Draw splashtext string to the main menu if not disabled in the config
-		if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
-			GlStateManager.pushMatrix();
-			GlStateManager.translate((float) (width / 2 + 90), 70.0F, 0.0F);
-			GlStateManager.rotate(-20.0F, 0.0F, 0.0F, 1.0F);
-			float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-			f = f * 100.0F / (float) (fontRenderer.getStringWidth(this.getSplash(e.getGui())) + 32);
-			GlStateManager.scale(f, f, f);
-			e.getGui().drawCenteredString(fontRenderer, this.getSplash(e.getGui()), 0, -8, -256);
-			GlStateManager.popMatrix();
-		}
-
-		//Draw branding strings to the main menu if not disabled in the config
-		if (!FancyMenu.config.getOrDefault("hidebranding", true)) {
-			List<String> brandings = Lists.reverse(FMLCommonHandler.instance().getBrandings(true));
-	        for (int brdline = 0; brdline < brandings.size(); brdline++) {
-	            String brd = brandings.get(brdline);
-	            if (!Strings.isNullOrEmpty(brd)) {
-	                e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, brd, 2, e.getGui().height - ( 10 + brdline * (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 1)), 16777215);
-	            }
-	        }
-		}
-		
-		e.getGui().drawString(fontRenderer, copyright, widthCopyrightRest, height - 10, -1);
-		if (mouseX > widthCopyrightRest && mouseX < widthCopyrightRest + widthCopyright && mouseY > height - 10 && mouseY < height) {
-			GuiScreen.drawRect(widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
-		}
-
-		this.renderButtonsAndLabels(e);
-		
-		//Draw notification indicators to the "Realms" button if not disabled in the config
-		if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {
-			this.drawRealmsNotification(e.getGui());
+			this.renderButtonsAndLabels(e, mouseX, mouseY);
+			
+			//Draw notification indicators to the "Realms" button if not disabled in the config
+			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {
+				this.drawRealmsNotification(e.getGui());
+			}
+			
+			//Draw splashtext string to the main menu if not disabled in the config
+			if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
+				int offsetx = FancyMenu.config.getOrDefault("splashoffsetx", 0);
+				int offsety = FancyMenu.config.getOrDefault("splashoffsety", 0);
+				int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
+				GlStateManager.pushMatrix();
+				GlStateManager.translate((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
+				GlStateManager.rotate((float)rotation, 0.0F, 0.0F, 1.0F);
+				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+				f = f * 100.0F / (float) (fontRenderer.getStringWidth(this.getSplash(e.getGui())) + 32);
+				GlStateManager.scale(f, f, f);
+				e.getGui().drawCenteredString(fontRenderer, this.getSplash(e.getGui()), 0, -8, -256);
+				GlStateManager.popMatrix();
+			}
 		}
 	}
 	
-	private void renderButtonsAndLabels(GuiScreenEvent.DrawScreenEvent.Pre e) {
+	private void renderButtonsAndLabels(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
 		List<GuiButton> buttons = this.getButtonList(e.getGui());
 		List<GuiLabel> labels = this.getLabelList(e.getGui());
-		int mouseX = e.getMouseX();
-		int mouseY = e.getMouseY();
 		float partial = Minecraft.getMinecraft().getRenderPartialTicks();
 		
 		if (buttons != null) {
@@ -260,6 +180,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		if (labels != null) {
 			for(int j = 0; j < labels.size(); ++j) {
+				System.out.println(labels.get(j).toString());
 				labels.get(j).drawLabel(Minecraft.getMinecraft(), mouseX, mouseY);
 			}
 		}
@@ -312,33 +233,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 		return null;
 	}
 	
-	private boolean fade = false;
-	private boolean shouldFadeInButtons() {
-		if (FancyMenu.config.getOrDefault("buttonfadein", true) && !fade) {
-			if (!this.replayIntro) {
-				fade = true;
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	private void cacheWidgets(GuiScreenEvent.InitGuiEvent e) {
-		//Grouping all menu buttons by its height to fade in buttons at the same height in the same moment
-		//Seperated from ButtonCache because we need the (possibly) rearanged buttons in its new order
-		for (GuiButton w : e.getButtonList()) {
-			if (w.visible) {
-				if (widgetsRaw.containsKey(w.y)) {
-					widgetsRaw.get(w.y).add(w);
-				} else {
-					widgetsRaw.put(w.y, new ArrayList<GuiButton>());
-					widgetsRaw.get(w.y).add(w);
-				}
-				w.visible = false;
-			}
-		}
-	}
-	
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {
 		if (!FancyMenu.config.getOrDefault("showmainmenufooter", true)) {
 			return;
@@ -385,7 +279,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 		}
 	}
-
+	
 	private void drawPanorama(int mouseX, int mouseY, float partialTicks) {
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder bufferbuilder = tessellator.getBuffer();
@@ -520,7 +414,7 @@ public class MainMenuHandler extends MenuHandlerBase {
     }
     
     private static float getZlevel(Gui gui) {
-    	Field f = ReflectionHelper.findField(Gui.class, "field_73735_i", "zLevel");
+    	Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(Gui.class, "field_73735_i", "zLevel");
     	try {
 			return f.getFloat(gui);
 		} catch (Exception e) {

@@ -6,13 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.core.file.FileUtils;
+import de.keksuccino.core.math.MathUtils;
+import de.keksuccino.core.rendering.animation.ExternalTextureAnimationRenderer;
+import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
-import de.keksuccino.file.FileUtils;
-import de.keksuccino.math.MathUtils;
-import de.keksuccino.rendering.animation.ExternalTextureAnimationRenderer;
-import de.keksuccino.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
@@ -24,6 +24,10 @@ public class AnimationHandler {
 	private static List<String> custom = new ArrayList<String>();
 	protected static boolean ready = false;
 
+	public static void init() {
+		MinecraftForge.EVENT_BUS.register(new AnimationHandlerEvents());
+	}
+	
 	public static void registerAnimation(IAnimationRenderer animation, String name, Type type) {
 		if (!animations.containsKey(name)) {
 			animations.put(name, new AnimationData(animation, name, type));
@@ -57,10 +61,6 @@ public class AnimationHandler {
 		}
 	}
 	
-	public static void init() {
-		MinecraftForge.EVENT_BUS.register(new AnimationHandlerEvents());
-	}
-	
 	public static void loadCustomAnimations() {
 		File f = FancyMenu.getAnimationPath();
 		if (!f.exists() || !f.isDirectory()) {
@@ -72,12 +72,15 @@ public class AnimationHandler {
 		
 		for (File a : f.listFiles()) {
 			String name = null;
+			String mainAudio = null;
+			String introAudio = null;
 			int fps = 1;
 			boolean loop = true;
 			int width = 20;
 			int height = 20;
 			int x = 0;
 			int y = 0;
+			boolean replayIntro = false;
 			
 			if (a.isDirectory()) {
 				File p = new File(a.getAbsolutePath() + "/properties.txt");
@@ -135,6 +138,23 @@ public class AnimationHandler {
 						}
 					}
 					
+					if (props.containsKey("replayintro")) {
+						String s = props.get("replayintro");
+						if ((s != null) && s.equalsIgnoreCase("true")) {
+							replayIntro = true;
+						}
+					}
+					
+				}
+				
+				File audio1 = new File(a.getAbsolutePath() + "/audio/mainaudio.wav");
+				if (audio1.exists()) {
+					mainAudio = audio1.getPath();
+				}
+				
+				File audio2 = new File(a.getAbsolutePath() + "/audio/introaudio.wav");
+				if (audio2.exists()) {
+					introAudio = audio2.getPath();
 				}
 				
 				if (name != null) {
@@ -144,21 +164,32 @@ public class AnimationHandler {
 						ExternalTextureAnimationRenderer in = new ExternalTextureAnimationRenderer(intro, fps, loop, x, y, width, height);
 						ExternalTextureAnimationRenderer an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
 						try {
-							registerAnimation(new AdvancedAnimation(in, an), name, Type.EXTERNAL);
+							registerAnimation(new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro), name, Type.EXTERNAL);
 							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
 						} catch (AnimationNotFoundException e) {
 							e.printStackTrace();
 						}
 					} else if (ani != null) {
 						ExternalTextureAnimationRenderer an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
-						registerAnimation(an, name, Type.EXTERNAL);
-						System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
+						try {
+							//Finally a case to null the intro animation! It's not useless anymore!
+							registerAnimation(new AdvancedAnimation(null, an, introAudio, mainAudio, false), name, Type.EXTERNAL);
+							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
+						} catch (AnimationNotFoundException e) {
+							e.printStackTrace();
+						}
 					} else {
 						System.out.println("[FM AnimationHandler] ### ERROR: This is not a valid animation: " + name);
 					}
 				}
 			}
 		}
+	}
+	
+	public static List<String> getCustomAnimationNames() {
+		List<String> l = new ArrayList<String>();
+		l.addAll(custom);
+		return l;
 	}
 	
 	private static String getIntroPath(String path) {

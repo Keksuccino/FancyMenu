@@ -4,10 +4,12 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.gui.SimpleLoadingScreen;
+import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -35,8 +37,15 @@ public class CustomizationHelper {
 		if (e.getGui() instanceof GuiScreenRealmsProxy) {
 			return;
 		}
-		//Prevents rendering in FancyMenu's loading screens
+		//Prevents rendering in FancyMenu screens
 		if (e.getGui() instanceof SimpleLoadingScreen) {
+			return;
+		}
+		if (e.getGui() instanceof GameIntroScreen) {
+			return;
+		}
+		//Prevents rendering in layout creation screens
+		if (e.getGui() instanceof LayoutCreatorScreen) {
 			return;
 		}
 		
@@ -64,10 +73,15 @@ public class CustomizationHelper {
 			onReloadButtonPress();
 		});
 		
+		GuiButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, "Create Layout", (onPress) -> {
+			Minecraft.getInstance().displayGuiScreen(new LayoutCreatorScreen(e.getGui()));
+		});
+		
 		if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 			e.addButton(iButton);
 			e.addButton(rButton);
 			e.addButton(miButton);
+			e.addButton(layoutCreatorButton);
 		}
 
 	}
@@ -174,6 +188,8 @@ public class CustomizationHelper {
 	}
 
 	private static void onReloadButtonPress() {
+		FancyMenu.updateConfig();
+		MenuCustomization.resetSounds();
 		MenuCustomization.reload();
 		try {
 			Minecraft.getInstance().displayGuiScreen(Minecraft.getInstance().currentScreen);

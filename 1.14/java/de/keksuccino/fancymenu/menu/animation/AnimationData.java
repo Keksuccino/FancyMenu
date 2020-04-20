@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.animation;
 
-import de.keksuccino.rendering.animation.IAnimationRenderer;
+import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 
 public class AnimationData {
 	

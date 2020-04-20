@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import de.keksuccino.math.MathUtils;
-import de.keksuccino.properties.PropertiesSection;
+import de.keksuccino.core.math.MathUtils;
+import de.keksuccino.core.properties.PropertiesSection;
 import net.minecraft.client.gui.GuiScreen;
 
 public abstract class CustomizationItemBase {
@@ -46,11 +46,17 @@ public abstract class CustomizationItemBase {
 		String w = item.getEntryValue("width");
 		if ((w != null) && MathUtils.isInteger(w)) {
 			this.width = Integer.parseInt(w);
+			if (this.width < 0) {
+				this.width = 0;
+			}
 		}
 		
 		String h = item.getEntryValue("height");
 		if ((h != null) && MathUtils.isInteger(h)) {
 			this.height = Integer.parseInt(h);
+			if (this.height < 0) {
+				this.height = 0;
+			}
 		}
 	}
 

@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import de.keksuccino.properties.PropertiesSection;
-import de.keksuccino.rendering.animation.ExternalTextureAnimationRenderer;
+import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.rendering.animation.ExternalTextureAnimationRenderer;
 import net.minecraft.client.gui.GuiScreen;
 
 public class TextureCustomizationItem extends AnimationCustomizationItem {

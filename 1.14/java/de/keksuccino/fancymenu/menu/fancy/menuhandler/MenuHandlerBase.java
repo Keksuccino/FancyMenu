@@ -1,21 +1,36 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+
+import de.keksuccino.core.math.MathUtils;
+import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.properties.PropertiesSet;
+import de.keksuccino.core.rendering.animation.IAnimationRenderer;
+import de.keksuccino.core.resources.ExternalTextureResourceLocation;
+import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationItem.Type;
-import de.keksuccino.math.MathUtils;
-import de.keksuccino.properties.PropertiesSection;
-import de.keksuccino.properties.PropertiesSet;
-import de.keksuccino.rendering.animation.IAnimationRenderer;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.resources.I18n;
@@ -24,31 +39,61 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 
-public abstract class MenuHandlerBase {
+public class MenuHandlerBase {
 	
-	protected List<MenuCustomizationItem> items = new ArrayList<MenuCustomizationItem>();
+	protected List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
+	protected List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
+	
+	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
+	protected List<String> oldAudio = new ArrayList<String>();
 	protected IAnimationRenderer backgroundAnimation = null;
-	protected boolean replayIntro = false;
-	private boolean animationSet = false;
+	protected ExternalTextureResourceLocation backgroundTexture = null;
+	private String identifier;
+	private boolean backgroundDrawable;
 	
-	//TODO Identifier and type are not used like planned, so I will change this later 
-	public abstract String getMenuIdentifier();
+	/**
+	 * @param identifier Has to be the valid and full class name of the GUI screen.
+	 */
+	public MenuHandlerBase(@Nonnull String identifier) {
+		this.identifier = identifier;
+	}
 	
-	@Nullable
-	public abstract Class<?> getMenuType();
-
+	public String getMenuIdentifier() {
+		return this.identifier;
+	}
+	
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
 		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!AnimationHandler.isReady()) {
+			return;
+		}
+		if (LayoutCreatorScreen.isActive) {
 			return;
 		}
 		
 		List<Widget> buttons = e.getWidgetList();
 		List<PropertiesSet> props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
 		
-		items.clear();
+		audio.clear();
+		frontRenderItems.clear();
+		backgroundRenderItems.clear();
+		this.backgroundAnimation = null;
+		this.backgroundDrawable = false;
 		
+		boolean backgroundTextureSet = false;
+
 		for (PropertiesSet s : props) {
+			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+			if (metas.isEmpty()) {
+				metas = s.getPropertiesOfType("type-meta");
+			}
+			if (metas.isEmpty()) {
+				continue;
+			}
+			String renderOrder = metas.get(0).getEntryValue("renderorder");
 			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
 				String action = sec.getEntryValue("action");
 				if (action != null) {
@@ -58,28 +103,26 @@ public abstract class MenuHandlerBase {
 						b = getButton(identifier, buttons);
 					}
 
+					if (action.equalsIgnoreCase("texturizebackground")) {
+						String value = sec.getEntryValue("path");
+						if (value != null) {
+							File f = new File(value);
+							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
+								if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
+									this.backgroundTexture = new ExternalTextureResourceLocation(value);
+									this.backgroundTexture.loadTexture();
+								}
+								backgroundTextureSet = true;
+							}
+						}
+					}
+					
 					if (action.equalsIgnoreCase("animatebackground")) {
 						String value = sec.getEntryValue("name");
-						String intro = sec.getEntryValue("replayanimation");
 						if (value != null) {
 							if (AnimationHandler.animationExists(value)) {
 								this.backgroundAnimation = AnimationHandler.getAnimation(value);
-								this.animationSet = true;
-							} else {
-								this.backgroundAnimation = null;
 							}
-						}
-						if (intro != null) {
-							if (intro.equalsIgnoreCase("true")) {
-								this.replayIntro = true;
-							}
-							if (intro.equalsIgnoreCase("false")) {
-								this.replayIntro = false;
-							}
-						}
-					} else {
-						if (!this.animationSet) {
-							this.backgroundAnimation = null;
 						}
 					}
 					
@@ -92,7 +135,7 @@ public abstract class MenuHandlerBase {
 					if (action.equalsIgnoreCase("renamebutton")) {
 						String value = sec.getEntryValue("value");
 						if ((value != null) && (b != null)) {
-							b.setMessage(value);
+							b.setMessage(value);;
 						}
 					}
 					
@@ -103,7 +146,7 @@ public abstract class MenuHandlerBase {
 							int w = Integer.parseInt(width);
 							int h = Integer.parseInt(height);
 							b.setWidth(w);
-							b.setHeight(h);
+							b.setHeight(h);;
 						}
 					}
 					
@@ -116,7 +159,8 @@ public abstract class MenuHandlerBase {
 							int y = Integer.parseInt(posY);
 							int w = e.getGui().width;
 							int h = e.getGui().height;
-							
+
+							//TODO Remove deprecated "original" orientation
 							if (orientation.equalsIgnoreCase("original")) {
 								b.x = b.x + x;
 								b.y = b.y + y;
@@ -170,39 +214,102 @@ public abstract class MenuHandlerBase {
 					}
 					
 					if (action.equalsIgnoreCase("addtext")) {
-						items.add(new MenuCustomizationItem(sec, Type.STRING));
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new StringCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new StringCustomizationItem(sec));
+						}
 					}
 					
 					if (action.equalsIgnoreCase("addtexture")) {
-						items.add(new MenuCustomizationItem(sec, Type.TEXTURE));
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new TextureCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new TextureCustomizationItem(sec));
+						}
 					}
 					
 					if (action.equalsIgnoreCase("addanimation")) {
-						items.add(new MenuCustomizationItem(sec, Type.ANIMATION));
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new AnimationCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new AnimationCustomizationItem(sec));
+						}
+					}
+					
+					if (action.equalsIgnoreCase("addbutton")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new ButtonCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new ButtonCustomizationItem(sec));
+						}
+					}
+					
+					if (action.equalsIgnoreCase("addaudio")) {
+						String path = sec.getEntryValue("path");
+						String loopString = sec.getEntryValue("loop");
+						boolean loop = false; 
+						if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
+							loop = true;
+						}
+						if (path != null) {
+							File f = new File(path);
+							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+								try {
+									String name = path + Files.size(f.toPath());
+									MenuCustomization.registerSound(name, path);
+									this.audio.put(name, loop);
+								} catch (Exception ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
 					}
 					
 				}
 			}
 		}
-	}
-	
-	@SubscribeEvent
-	public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		if (this.canRenderBackground() && this.shouldCustomize(e.getGui())) {
-			if (this.replayIntro) {
-				this.backgroundAnimation.resetAnimation();
+		
+		for (String s : this.oldAudio) {
+			if (!this.audio.containsKey(s)) {
+				SoundHandler.stopSound(s);
 			}
-			this.animationSet = false;
+		}
+		
+		this.oldAudio.clear();
+		
+		for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
+			SoundHandler.playSound(m.getKey());
+			if (m.getValue()) {
+				SoundHandler.setLooped(m.getKey(), true);
+			}
+			this.oldAudio.add(m.getKey());
+		}
+		
+		if (!backgroundTextureSet) {
+			this.backgroundTexture = null;
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
 		if (!this.shouldCustomize(e.getGui())) {
 			return;
 		}
 		
-		for (MenuCustomizationItem i : this.items) {
+		if (!this.backgroundDrawable) {
+			//Rendering all items which SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
+			for (CustomizationItemBase i : this.backgroundRenderItems) {
+				try {
+					i.render(e.getGui());
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		
+		//Rendering all items which should be rendered in the foreground
+		for (CustomizationItemBase i : this.frontRenderItems) {
 			try {
 				i.render(e.getGui());
 			} catch (IOException e1) {
@@ -215,12 +322,30 @@ public abstract class MenuHandlerBase {
 	public void drawToBackground(GuiScreenEvent.BackgroundDrawnEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			//Rendering the background animation to the menu
-			if (this.canRenderBackground() && this.backgroundAnimation.isReady()) {
-				boolean b = this.backgroundAnimation.isStretchedToStreensize();
-				this.backgroundAnimation.setStretchImageToScreensize(true);
-				this.backgroundAnimation.render();
-				this.backgroundAnimation.setStretchImageToScreensize(b);
+			if (this.canRenderBackground()) {
+				if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
+					boolean b = this.backgroundAnimation.isStretchedToStreensize();
+					this.backgroundAnimation.setStretchImageToScreensize(true);
+					this.backgroundAnimation.render();
+					this.backgroundAnimation.setStretchImageToScreensize(b);
+				} else if (this.backgroundTexture != null) {
+					GlStateManager.enableBlend();
+					Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
+					IngameGui.blit(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
+					GlStateManager.disableBlend();
+				}
 			}
+
+			//Rendering all items which should be rendered in the background
+			for (CustomizationItemBase i : this.backgroundRenderItems) {
+				try {
+					i.render(e.getGui());
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+
+			this.backgroundDrawable = true;
 		}
 	}
 	
@@ -251,8 +376,8 @@ public abstract class MenuHandlerBase {
 	}
 	
 	protected boolean shouldCustomize(Screen menu) {
-		if (getMenuType() != null) {
-			if (!this.getMenuType().isAssignableFrom(menu.getClass())) {
+		if (getMenuIdentifier() != null) {
+			if (!this.getMenuIdentifier().equals(menu.getClass().getName())) {
 				return false;
 			}
 		}
@@ -260,7 +385,7 @@ public abstract class MenuHandlerBase {
 	}
 	
 	protected boolean canRenderBackground() {
-		return (this.backgroundAnimation != null);
+		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null));
 	}
 
 }

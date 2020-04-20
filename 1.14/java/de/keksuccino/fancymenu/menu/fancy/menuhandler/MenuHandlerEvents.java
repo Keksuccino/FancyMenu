@@ -10,19 +10,8 @@ public class MenuHandlerEvents {
 	public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		if (!MenuHandlerRegistry.isHandlerRegistered(e.getGui().getClass().getName())) {
 			
-			MenuHandlerBase handler = new MenuHandlerBase() {
-				@Override
-				public Class<?> getMenuType() {
-					return e.getGui().getClass();
-				}
-				
-				@Override
-				public String getMenuIdentifier() {
-					return e.getGui().getClass().getName();
-				}
-			};
-
-			MenuHandlerRegistry.registerHandler(handler);
+			MenuHandlerRegistry.registerHandler(new MenuHandlerBase(e.getGui().getClass().getName()));
+			
 		}
 	}
 

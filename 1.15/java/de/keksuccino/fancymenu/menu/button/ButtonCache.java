@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.button;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -7,9 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.locale.LocaleUtils;
+import de.keksuccino.core.reflection.ReflectionHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
-import de.keksuccino.locale.LocaleUtils;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -21,12 +26,55 @@ public class ButtonCache {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
+		//Don't refresh cache if screen is instance of LayoutCreator
+		if (e.getGui() instanceof LayoutCreatorScreen) {
+			return;
+		}
+		//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
+		if (e.getGui() instanceof SimpleLoadingScreen) {
+			return;
+		}
+		
 		if (e.getGui() == Minecraft.getInstance().currentScreen) {
 			buttons.clear();
 			
 			int i = 1;
 			for (Widget w : sortButtons(e.getWidgetList())) {
-				buttons.put(i, new ButtonData(w, i, w.getMessage(), LocaleUtils.getKeyForString(w.getMessage()), e.getGui()));
+				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage()), e.getGui()));
+				i++;
+			}
+		}
+	}
+	
+	public static void cacheFrom(Screen s, int screenWidth, int screenHeight) {
+		List<Widget> l = new ArrayList<Widget>();
+		try {
+			//Resetting the button list
+			Field f0 = ReflectionHelper.findField(Screen.class, "buttons");
+			f0.set(s, new ArrayList<Widget>());
+			
+			//Setting all important values for the GuiScreen to be able to initialize itself
+			//itemRenderer field
+			Field f1 = ReflectionHelper.findField(Screen.class, "itemRenderer");
+			f1.set(s, Minecraft.getInstance().getItemRenderer());
+			//font field
+			Field f2 = ReflectionHelper.findField(Screen.class, "font");
+			f2.set(s, Minecraft.getInstance().fontRenderer);
+
+			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+			
+			//Reflecting the buttons list field to cache all buttons of the menu
+			Field f = ReflectionHelper.findField(Screen.class, "buttons");
+			l.addAll((List<Widget>) f.get(s));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		if (!l.isEmpty()) {
+			buttons.clear();
+			int i = 1;
+			for (Widget w : sortButtons(l)) {
+				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage()), s));
 				i++;
 			}
 		}
@@ -105,7 +153,7 @@ public class ButtonCache {
 	public static String getNameForButton(Widget w) {
 		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
-				return m.getValue().getName();
+				return m.getValue().label;
 			}
 		}
 		return null;
@@ -147,11 +195,20 @@ public class ButtonCache {
 	 */
 	public static ButtonData getButtonForName(String name) {
 		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
-			if (m.getValue().getName().equals(name)) {
+			if (m.getValue().label.equals(name)) {
 				return m.getValue();
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Returns all currently cached buttons as {@link ButtonData}.
+	 */
+	public static List<ButtonData> getButtons() {
+		List<ButtonData> b = new ArrayList<ButtonData>();
+		b.addAll(buttons.values());
+		return b;
 	}
 
 }
