@@ -13,7 +13,7 @@ Some of its key features are:<br>
 - Add textures and animations to menus
 - Add audio to menus and animations
 - Play animations as game intro before the main menu loads
-
+<br>
 ![](preview/main.gif)
 
 ## DOWNLOAD
