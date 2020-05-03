@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -33,7 +34,6 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class MainMenuHandler extends MenuHandlerBase {
@@ -57,6 +57,19 @@ public class MainMenuHandler extends MenuHandlerBase {
 		super(GuiMainMenu.class.getName());
 	}
 	
+	@Override
+	public void onInitPost(ButtonCachedEvent e) {
+		if (this.shouldCustomize(e.getGui())) {
+			// Resetting values to defaults
+			fadeFooter = 0.1F;
+			tickFooter = 0;
+			
+			this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
+		}
+		
+		super.onInitPost(e);
+	}
+	
 	@SubscribeEvent
 	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getGui())) {
@@ -64,17 +77,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 			e.getGui().drawDefaultBackground();
 			
 			this.renderFooter(e);
-		}
-	}
-	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onScreenInit(GuiScreenEvent.InitGuiEvent.Post e) {
-		if (this.shouldCustomize(e.getGui())) {
-			// Resetting values to defaults
-			fadeFooter = 0.1F;
-			tickFooter = 0;
-			
-			this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
 		}
 	}
 	

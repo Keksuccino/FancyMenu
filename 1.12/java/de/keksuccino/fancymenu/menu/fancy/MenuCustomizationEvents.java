@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -16,7 +17,7 @@ public class MenuCustomizationEvents {
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		//Stopping audio for all menu handlers when changing the screen
-		if (MenuCustomization.isValidScreen(e.getGui())) {
+		if (MenuCustomization.isValidScreen(e.getGui()) && !LayoutCreatorScreen.isActive) {
 			if (this.lastScreen != e.getGui()) {
 				MenuCustomization.stopSounds();
 				MenuCustomization.resetSounds();

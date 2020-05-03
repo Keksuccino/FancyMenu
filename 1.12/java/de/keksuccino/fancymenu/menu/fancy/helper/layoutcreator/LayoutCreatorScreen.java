@@ -53,6 +53,8 @@ import net.minecraft.util.ResourceLocation;
 
 public class LayoutCreatorScreen extends GuiScreen {
 	
+	public static boolean isActive = false;
+	
 	private static final ResourceLocation EXPAND_INDICATOR = new ResourceLocation("keksuccino", "expand.png");
 	private static final ResourceLocation SHRINK_INDICATOR = new ResourceLocation("keksuccino", "shrink.png");
 	private boolean expandHovered = false;
@@ -159,6 +161,17 @@ public class LayoutCreatorScreen extends GuiScreen {
 		this.closeButton = new AdvancedButton(17, (this.height / 2) + 64, 40, 40, "Close", true, (onPress) -> {
 			PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 				if (call.booleanValue()) {
+					isActive = false;
+					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+						if (r instanceof AdvancedAnimation) {
+							((AdvancedAnimation)r).stopAudio();
+							if (((AdvancedAnimation)r).replayIntro()) {
+								((AdvancedAnimation)r).resetAnimation();
+							}
+						}
+					}
+					MenuCustomization.stopSounds();
+					MenuCustomization.resetSounds();
 					MenuCustomizationProperties.loadProperties();
 					Minecraft.getMinecraft().displayGuiScreen(this.screen);
 				}
@@ -1051,6 +1064,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			this.setMenusUseable(true);
 			return;
 		}
+		System.out.println(path);
 		File f = new File(path);
 		if (f.exists()) {
 			TextureCustomizationItem i = new TextureCustomizationItem(new PropertiesSection(""));

@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "1.0.1";
 	
 	public static Config config;
 	
@@ -70,7 +70,7 @@ public class FancyMenu {
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
-			config.registerValue("showmainmenufooter", true, "mainmenu");
+			config.registerValue("showmainmenufooter", false, "mainmenu");
 			config.registerValue("hiderealmsnotifications", false, "mainmenu");
 
 			config.registerValue("hidesplashtext", false, "mainmenu_splash");

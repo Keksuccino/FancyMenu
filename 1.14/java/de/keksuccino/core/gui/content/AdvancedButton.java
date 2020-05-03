@@ -73,7 +73,7 @@ public class AdvancedButton extends Button {
 			
 			this.renderBg(mc, mouseX, mouseY);
 
-			this.drawCenteredString(font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, 14737632);
+			this.drawCenteredString(font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, getFGColor());
 			
 			GlStateManager.disableBlend();
 		}

@@ -35,7 +35,9 @@ public class AnimationHandler {
 				custom.add(name);
 			}
 		} else {
-			throw new IllegalArgumentException("[FM AnimationHandler] Animation name '" + name + "' already used!");
+			System.out.println("######################################");
+			System.out.println("[FM AnimationHandler] Animation name '" + name + "' already used!");
+			System.out.println("######################################");
 		}
 	}
 	

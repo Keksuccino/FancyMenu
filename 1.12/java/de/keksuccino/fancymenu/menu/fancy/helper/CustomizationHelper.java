@@ -4,8 +4,12 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
@@ -27,68 +31,83 @@ public class CustomizationHelper {
 	private GuiButton buttonInfoButton;
 	private GuiButton menuInfoButton;
 	
+	private GuiScreen current;
+	private int lastWidth;
+	private int lastHeight;
+	private List<AdvancedButton> helperbuttons = new ArrayList<AdvancedButton>();
+	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
-		//Prevents rendering in child(?)-screens like RealmsScreenProxy
-		if (e.getGui() != Minecraft.getMinecraft().currentScreen) {
+		if (!isValidScreen(e.getGui())) {
 			return;
 		}
-		//Prevents rendering in realm screens (if it's the main screen)
-		if (e.getGui() instanceof GuiScreenRealmsProxy) {
-			return;
-		}
-		//Prevents rendering in FancyMenu screens
-		if (e.getGui() instanceof SimpleLoadingScreen) {
-			return;
-		}
-		if (e.getGui() instanceof GameIntroScreen) {
-			return;
-		}
-		//Prevents rendering in layout creation screens
-		if (e.getGui() instanceof LayoutCreatorScreen) {
-			return;
-		}
+		
+		this.current = e.getGui();
 		
 		this.handleWidgetsUpdate(e.getButtonList());
 		
-		String infoLabel = "Button Info";
-		if (this.showButtonInfo) {
-			infoLabel = "§aButton Info";
+		if ((this.lastWidth != e.getGui().width) || (this.lastHeight != e.getGui().height)) {
+			this.helperbuttons.clear();
+			
+			String infoLabel = "Button Info";
+			if (this.showButtonInfo) {
+				infoLabel = "§aButton Info";
+			}
+			AdvancedButton iButton = new CustomizationButton(5, 5, 70, 20, infoLabel, true, (onPress) -> {
+				this.onInfoButtonPress();
+			}); 
+			this.buttonInfoButton = iButton;
+			
+			String minfoLabel = "Menu Info";
+			if (this.showMenuInfo) {
+				minfoLabel = "§aMenu Info";
+			}
+			AdvancedButton miButton = new CustomizationButton(80, 5, 70, 20, minfoLabel, true, (onPress) -> {
+				this.onMoreInfoButtonPress();
+			});
+			this.menuInfoButton = miButton;
+			
+			AdvancedButton rButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, "Reload", true, (onPress) -> {
+				onReloadButtonPress();
+			});
+			
+			AdvancedButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, "Create Layout", true, (onPress) -> {
+				Minecraft.getMinecraft().displayGuiScreen(new LayoutCreatorScreen(this.current));
+				LayoutCreatorScreen.isActive = true;
+				MenuCustomization.stopSounds();
+				MenuCustomization.resetSounds();
+				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+					if (r instanceof AdvancedAnimation) {
+						((AdvancedAnimation)r).stopAudio();
+						if (((AdvancedAnimation)r).replayIntro()) {
+							((AdvancedAnimation)r).resetAnimation();
+						}
+					}
+				}
+			});
+			
+			if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
+				this.helperbuttons.add(iButton);
+				this.helperbuttons.add(miButton);
+				this.helperbuttons.add(rButton);
+				this.helperbuttons.add(layoutCreatorButton);
+			}
 		}
-		GuiButton iButton = new CustomizationButton(5, 5, 70, 20, infoLabel, (onPress) -> {
-			this.onInfoButtonPress();
-		}); 
-		this.buttonInfoButton = iButton;
 		
-		String minfoLabel = "Menu Info";
-		if (this.showMenuInfo) {
-			minfoLabel = "§aMenu Info";
-		}
-		GuiButton miButton = new CustomizationButton(80, 5, 70, 20, minfoLabel, (onPress) -> {
-			this.onMoreInfoButtonPress();
-		});
-		this.menuInfoButton = miButton;
-		
-		GuiButton rButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, "Reload", (onPress) -> {
-			onReloadButtonPress();
-		});
-		
-		GuiButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, "Create Layout", (onPress) -> {
-			Minecraft.getMinecraft().displayGuiScreen(new LayoutCreatorScreen(e.getGui()));
-		});
-		
-		if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
-			e.getButtonList().add(iButton);
-			e.getButtonList().add(rButton);
-			e.getButtonList().add(miButton);
-			e.getButtonList().add(layoutCreatorButton);
-		}
-
+		this.lastWidth = e.getGui().width;
+		this.lastHeight = e.getGui().height;
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
-		if (this.showMenuInfo) {
+		
+		if (isValidScreen(e.getGui())) {
+			for (AdvancedButton b : this.helperbuttons) {
+				b.drawButton(Minecraft.getMinecraft(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
+			}
+		}
+		
+		if (this.showMenuInfo  && !(e.getGui() instanceof LayoutCreatorScreen)) {
 			GlStateManager.enableBlend();
 			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§f§lMenu Identifier:", 7, 30, 0);
 			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§f" + e.getGui().getClass().getName(), 7, 40, 0);
@@ -161,6 +180,29 @@ public class CustomizationHelper {
 		}
 	}
 	
+	private static boolean isValidScreen(GuiScreen s) {
+		//Prevents rendering in child(?)-screens like RealmsScreenProxy
+		if (s != Minecraft.getMinecraft().currentScreen) {
+			return false;
+		}
+		//Prevents rendering in realm screens (if it's the main screen)
+		if (s instanceof GuiScreenRealmsProxy) {
+			return false;
+		}
+		//Prevents rendering in FancyMenu screens
+		if (s instanceof SimpleLoadingScreen) {
+			return false;
+		}
+		if (s instanceof GameIntroScreen) {
+			return false;
+		}
+		//Prevents rendering in layout creation screens
+		if (s instanceof LayoutCreatorScreen) {
+			return false;
+		}
+		return true;
+	}
+	
 	private static void drawInfoBackground(int x, int y, int width, int height) {
 		GuiScreen.drawRect(x, y, x + width, y + height, new Color(102, 0, 102, 200).getRGB());
 	}
@@ -187,10 +229,14 @@ public class CustomizationHelper {
 		}
 	}
 
-	private static void onReloadButtonPress() {
+	private void onReloadButtonPress() {
 		FancyMenu.updateConfig();
 		MenuCustomization.resetSounds();
 		MenuCustomization.reload();
+		if (!FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
+			this.showButtonInfo = false;
+			this.showMenuInfo = false;
+		}
 		try {
 			Minecraft.getMinecraft().displayGuiScreen(Minecraft.getMinecraft().currentScreen);
 		} catch (Exception e) {

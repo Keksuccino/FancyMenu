@@ -14,6 +14,7 @@ public class TextureCustomizationItem extends AnimationCustomizationItem {
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtexture")) {
 			this.value = item.getEntryValue("path");
 			if (this.value != null) {
+				this.value = this.value.replace("\\", "/");
 				//Yes, this is retarded, but it saves me from writing more code than needed and looks cleaner ( ͡° ͜ʖ ͡°)
 				this.renderer = new ExternalTextureAnimationRenderer(1, false, 0, 0, 20, 20, this.value);
 			}

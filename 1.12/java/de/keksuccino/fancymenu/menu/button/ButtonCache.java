@@ -16,33 +16,85 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class ButtonCache {
 	
 	private static Map<Integer, ButtonData> buttons = new HashMap<Integer, ButtonData>();
+	private static GuiScreen current = null;
+	private static boolean cached = false;
 	
-	@SubscribeEvent(priority = EventPriority.HIGH)
+	@SubscribeEvent
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
-		//Don't refresh cache if screen is instance of LayoutCreator
-		if (e.getGui() instanceof LayoutCreatorScreen) {
-			return;
-		}
-		//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
-		if (e.getGui() instanceof SimpleLoadingScreen) {
-			return;
-		}
-		
-		if (e.getGui() == Minecraft.getMinecraft().currentScreen) {
-			buttons.clear();
+		cached = false;
+		current = e.getGui();
+	}
+	
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onBackDrawn(GuiScreenEvent.BackgroundDrawnEvent e) {
+		cache(e.getGui());
+	}
+	
+	@SubscribeEvent
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		cache(e.getGui());
+	}
+	
+	private static void cache(GuiScreen s) {
+		if (!cached) {
+			cached = true;
 			
-			int i = 1;
-			for (GuiButton w : sortButtons(e.getButtonList())) {
-				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.displayString), e.getGui()));
-				i++;
+			boolean cache = true;
+			//Don't refresh cache if screen is instance of LayoutCreator
+			if (s instanceof LayoutCreatorScreen) {
+				cache = false;
 			}
+			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
+			if (s instanceof SimpleLoadingScreen) {
+				cache = false;
+			}
+			
+			if ((s == Minecraft.getMinecraft().currentScreen) && cache) {
+				buttons.clear();
+				
+				int i = 1;
+				for (GuiButton w : sortButtons(getGuiButtons(s))) {
+					buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.displayString), s));
+					i++;
+				}
+			}
+
+			MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, getButtons(), cache));
 		}
+	}
+	
+	public static void addButton(GuiButton w) {
+		List<GuiButton> l = new ArrayList<GuiButton>();
+		for (ButtonData d : getButtons()) {
+			l.add(d.getButton());
+		}
+		l.add(w);
+		
+		buttons.clear();
+		int i = 1;
+		for (GuiButton wi : sortButtons(l)) {
+			buttons.put(i, new ButtonData(wi, i, LocaleUtils.getKeyForString(wi.displayString), current));
+			i++;
+		}
+	}
+	
+	private static List<GuiButton> getGuiButtons(GuiScreen s) {
+		List<GuiButton> l = new ArrayList<GuiButton>();
+		try {
+			Field f = ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			l = (List<GuiButton>) f.get(s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return l;
 	}
 	
 	public static void cacheFrom(GuiScreen s, int screenWidth, int screenHeight) {
@@ -63,11 +115,15 @@ public class ButtonCache {
 			Field f2 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "fontRenderer", "field_146289_q");
 			f2.set(s, Minecraft.getMinecraft().fontRenderer);
 			
+			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Pre(s, l));
+			
 			s.initGui();
 			
 			//Reflecting the buttons list field to cache all buttons of the menu
 			Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
 			l.addAll((List<GuiButton>) f.get(s));
+			
+			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Post(s, l));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

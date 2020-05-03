@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.animation;
 
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
@@ -24,7 +25,7 @@ public class AnimationHandlerEvents {
 
 		//Stopping audio and resetting to intro (if enabled) for all advanced animations when changing the screen
 		if (MenuCustomization.isValidScreen(e.getGui())) {
-			if (AnimationHandler.isReady() && (this.lastScreen != e.getGui())) {
+			if (AnimationHandler.isReady() && (this.lastScreen != e.getGui()) && !LayoutCreatorScreen.isActive) {
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 					if (r instanceof AdvancedAnimation) {
 						((AdvancedAnimation)r).stopAudio();

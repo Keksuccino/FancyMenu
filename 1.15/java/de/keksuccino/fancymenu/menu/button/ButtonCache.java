@@ -17,33 +17,85 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class ButtonCache {
 	
 	private static Map<Integer, ButtonData> buttons = new HashMap<Integer, ButtonData>();
+	private static Screen current = null;
+	private static boolean cached = false;
 	
-	@SubscribeEvent(priority = EventPriority.HIGH)
+	@SubscribeEvent
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
-		//Don't refresh cache if screen is instance of LayoutCreator
-		if (e.getGui() instanceof LayoutCreatorScreen) {
-			return;
-		}
-		//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
-		if (e.getGui() instanceof SimpleLoadingScreen) {
-			return;
-		}
-		
-		if (e.getGui() == Minecraft.getInstance().currentScreen) {
-			buttons.clear();
+		cached = false;
+		current = e.getGui();
+	}
+	
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onBackDrawn(GuiScreenEvent.BackgroundDrawnEvent e) {
+		cache(e.getGui());
+	}
+	
+	@SubscribeEvent
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		cache(e.getGui());
+	}
+	
+	private static void cache(Screen s) {
+		if (!cached) {
+			cached = true;
 			
-			int i = 1;
-			for (Widget w : sortButtons(e.getWidgetList())) {
-				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage()), e.getGui()));
-				i++;
+			boolean cache = true;
+			//Don't refresh cache if screen is instance of LayoutCreator
+			if (s instanceof LayoutCreatorScreen) {
+				cache = false;
 			}
+			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
+			if (s instanceof SimpleLoadingScreen) {
+				cache = false;
+			}
+			
+			if ((s == Minecraft.getInstance().currentScreen) && cache) {
+				buttons.clear();
+				
+				int i = 1;
+				for (Widget w : sortButtons(getGuiButtons(s))) {
+					buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage()), s));
+					i++;
+				}
+			}
+
+			MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, getButtons(), cache));
 		}
+	}
+	
+	public static void addButton(Widget w) {
+		List<Widget> l = new ArrayList<Widget>();
+		for (ButtonData d : getButtons()) {
+			l.add(d.getButton());
+		}
+		l.add(w);
+		
+		buttons.clear();
+		int i = 1;
+		for (Widget wi : sortButtons(l)) {
+			buttons.put(i, new ButtonData(wi, i, LocaleUtils.getKeyForString(wi.getMessage()), current));
+			i++;
+		}
+	}
+	
+	private static List<Widget> getGuiButtons(Screen s) {
+		List<Widget> l = new ArrayList<Widget>();
+		try {
+			Field f = ObfuscationReflectionHelper.findField(Screen.class, "buttons");
+			l = (List<Widget>) f.get(s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return l;
 	}
 	
 	public static void cacheFrom(Screen s, int screenWidth, int screenHeight) {

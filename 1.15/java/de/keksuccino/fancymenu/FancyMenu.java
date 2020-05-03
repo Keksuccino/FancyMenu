@@ -4,6 +4,7 @@ import java.io.File;
 
 import de.keksuccino.core.config.Config;
 import de.keksuccino.core.config.exceptions.InvalidValueException;
+import de.keksuccino.core.gui.notifications.NotificationHandler;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.sound.SoundHandler;
@@ -17,7 +18,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "1.0.1";
 	
 	public static Config config;
 	
@@ -43,6 +44,8 @@ public class FancyMenu {
         	
         	PopupHandler.init();
         	
+        	NotificationHandler.init();
+        	
         	KeyboardHandler.init();
         	
         	SoundHandler.init();
@@ -60,7 +63,7 @@ public class FancyMenu {
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
-			config.registerValue("showmainmenufooter", true, "mainmenu");
+			config.registerValue("showmainmenufooter", false, "mainmenu");
 			config.registerValue("hiderealmsnotifications", false, "mainmenu");
 
 			config.registerValue("hidesplashtext", false, "mainmenu_splash");

@@ -20,6 +20,7 @@ import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
+import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
@@ -35,7 +36,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.client.event.GuiScreenEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 
@@ -62,8 +62,8 @@ public class MenuHandlerBase {
 		return this.identifier;
 	}
 	
-	@SubscribeEvent(priority = EventPriority.LOW)
-	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
+	@SubscribeEvent
+	public void onInitPost(ButtonCachedEvent e) {
 		if (!this.shouldCustomize(e.getGui())) {
 			return;
 		}
@@ -384,7 +384,7 @@ public class MenuHandlerBase {
 		return true;
 	}
 	
-	protected boolean canRenderBackground() {
+	public boolean canRenderBackground() {
 		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null));
 	}
 

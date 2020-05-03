@@ -94,7 +94,7 @@ public class TextInputPopup extends Popup {
 	
 	public void onEnterPressed(KeyboardData d) {
 		if ((d.keycode == 28) && this.isDisplayed()) {
-			this.input = this.textField.getText();
+			this.input = this.textField.getText().replace("\n", "").replace("\r", "");
 			this.setDisplayed(false);
 			if (this.callback != null) {
 				this.callback.accept(this.input);

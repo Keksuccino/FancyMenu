@@ -15,6 +15,17 @@ public class CustomizationButton extends AdvancedButton {
 		
 		this.setBackgroundColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 	}
+	
+	public CustomizationButton(int x, int y, int widthIn, int heightIn, String buttonText, boolean b, IPressable onPress) {
+		super(x, y, widthIn, heightIn, buttonText, b, onPress);
+		
+		this.setBackgroundColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
+	}
+	
+	@Override
+	public void renderButton(int p_renderButton_1_, int p_renderButton_2_, float p_renderButton_3_) {
+		super.renderButton(p_renderButton_1_, p_renderButton_2_, p_renderButton_3_);
+	}
 
 	public static boolean isCustomizationButton(Widget w) {
 		return (w instanceof CustomizationButton);
