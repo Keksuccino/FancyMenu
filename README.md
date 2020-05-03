@@ -12,8 +12,8 @@ Some of its key features are:<br>
 - Animate the background of menus
 - Add textures and animations to menus
 - Add audio to menus and animations
-- Play animations as game intro before the main menu loads
-<br>
+- Play animations as game intro before the main menu loads<br>
+
 ![](preview/main.gif)
 
 ## DOWNLOAD
