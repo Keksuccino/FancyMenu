@@ -39,8 +39,7 @@ public class MenuCustomization {
 			//Registering event to automatically register handlers for all menus (its necessary to do this AFTER registering custom handlers!)
 			MinecraftForge.EVENT_BUS.register(new MenuHandlerEvents());
 			
-			//Registering events to render the customization helper buttons in all menus
-			MinecraftForge.EVENT_BUS.register(new CustomizationHelper());
+			CustomizationHelper.init();
 			
 			//Registering the update event for the button cache
 			MinecraftForge.EVENT_BUS.register(new ButtonCache());

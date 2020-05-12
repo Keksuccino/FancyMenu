@@ -10,6 +10,7 @@ import de.keksuccino.core.gui.content.AdvancedTextField;
 import de.keksuccino.core.input.CharacterFilter;
 import de.keksuccino.core.input.KeyboardData;
 import de.keksuccino.core.input.KeyboardHandler;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
@@ -40,7 +41,7 @@ public class TextInputPopup extends Popup {
 		this.textField.setFocused2(false);
 		this.textField.setMaxStringLength(1000);
 		
-		this.doneButton = new AdvancedButton(0, 0, 100, 20, "Done", true, (press) -> {
+		this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.done"), true, (press) -> {
 			this.input = this.textField.getText();
 			this.setDisplayed(false);
 			if (this.callback != null) {

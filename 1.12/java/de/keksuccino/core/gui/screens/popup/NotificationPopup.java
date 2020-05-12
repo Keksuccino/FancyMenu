@@ -1,7 +1,7 @@
 package de.keksuccino.core.gui.screens.popup;
 
 import java.awt.Color;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -75,7 +75,17 @@ public class NotificationPopup extends Popup {
 	
 	public void setNotificationText(String... text) {
 		if (text != null) {
-			this.text = Arrays.asList(text);
+			List<String> l = new ArrayList<String>();
+			for (String s : text) {
+				if (s.contains("%n%")) {
+					for (String s2 : s.split("%n%")) {
+						l.add(s2);
+					}
+				} else {
+					l.add(s);
+				}
+			}
+			this.text = l;
 		}
 	}
 	

@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -25,6 +26,8 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		super(Minecraft.getInstance());
 		this.renderers.addAll(Arrays.asList(renderer));
 		this.fallback = fallbackGui;
+		
+		this.setDarkmode(FancyMenu.config.getOrDefault("loadingscreendarkmode", false));
 	}
 
 	@Override

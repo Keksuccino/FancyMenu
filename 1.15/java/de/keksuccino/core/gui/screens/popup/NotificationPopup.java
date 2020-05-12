@@ -1,7 +1,7 @@
 package de.keksuccino.core.gui.screens.popup;
 
 import java.awt.Color;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.input.KeyboardData;
 import de.keksuccino.core.input.KeyboardHandler;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
@@ -29,7 +30,7 @@ public class NotificationPopup extends Popup {
 		
 		this.setNotificationText(text);
 		this.width = width;
-		this.accept = new AdvancedButton(0, 0, 100, 20, "Accept", true, (press) -> {
+		this.accept = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.notification.accept"), true, (press) -> {
 			this.setDisplayed(false);
 			if (this.callback != null) {
 				this.callback.run();
@@ -76,7 +77,17 @@ public class NotificationPopup extends Popup {
 	
 	public void setNotificationText(String... text) {
 		if (text != null) {
-			this.text = Arrays.asList(text);
+			List<String> l = new ArrayList<String>();
+			for (String s : text) {
+				if (s.contains("%n%")) {
+					for (String s2 : s.split("%n%")) {
+						l.add(s2);
+					}
+				} else {
+					l.add(s);
+				}
+			}
+			this.text = l;
 		}
 	}
 	

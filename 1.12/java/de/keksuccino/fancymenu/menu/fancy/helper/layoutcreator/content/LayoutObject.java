@@ -100,7 +100,7 @@ public abstract class LayoutObject extends Gui {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o9);
 		
-		this.orientationMenu = new PopupMenu(100, -1);
+		this.orientationMenu = new PopupMenu(100, 16, -1);
 		this.orientationMenu.addContent(o1);
 		this.orientationMenu.addContent(o2);
 		this.orientationMenu.addContent(o3);
@@ -116,8 +116,10 @@ public abstract class LayoutObject extends Gui {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.orientationButton);
 
-		this.rightclickMenu = new PopupMenu(110, -1);
+		this.rightclickMenu = new PopupMenu(110, 16, -1);
 		this.rightclickMenu.addContent(this.orientationButton);
+		
+		this.rightclickMenu.addChild(this.orientationMenu);
 		
 		if (this.destroyable) {
 			AdvancedButton destroy = new AdvancedButton(0, 0, 0, 16, "Delete", true, (press) -> {
@@ -276,8 +278,6 @@ public abstract class LayoutObject extends Gui {
         
         //Handle orientation menu
         if (this.orientationMenu != null) {
-        	this.orientationMenu.render(mouseX, mouseY);
-    		
             if (this.orientationMenu.isOpen()) {
             	this.handler.setObjectFocused(this, true);
             }

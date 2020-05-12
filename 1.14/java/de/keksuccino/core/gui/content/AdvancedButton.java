@@ -7,10 +7,12 @@ import javax.annotation.Nullable;
 import com.mojang.blaze3d.platform.GlStateManager;
 
 import de.keksuccino.core.input.MouseInput;
+import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.ResourceLocation;
 
 public class AdvancedButton extends Button {
 
@@ -23,6 +25,8 @@ public class AdvancedButton extends Button {
 	private Color idleBorderColor;
 	private Color hoveredBorderColor;
 	private int borderWidth = 2;
+	private ResourceLocation backgroundHover;
+	private ResourceLocation backgroundNormal;
 	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
 		super(x, y, widthIn, heightIn, buttonText, onPress);
@@ -42,15 +46,7 @@ public class AdvancedButton extends Button {
 			this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 			
 			GlStateManager.enableBlend();
-			if (!this.hasColorBackground()) {
-				int i = this.getYImage(this.isHovered());
-				mc.getTextureManager().bindTexture(WIDGETS_LOCATION);
-				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-				GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-				GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-				this.blit(this.x, this.y, 0, 46 + i * 20, this.width / 2, this.height);
-				this.blit(this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
-			} else {
+			if (this.hasColorBackground()) {
 				Color border;
 				if (!isHovered) {
 					IngameGui.fill(this.x, this.y, this.x + this.width, this.y + this.height, this.idleColor.getRGB());
@@ -69,13 +65,27 @@ public class AdvancedButton extends Button {
 					//right
 					IngameGui.fill(this.x + this.width - this.borderWidth, this.y + this.borderWidth, this.x + this.width, this.y + this.height - this.borderWidth, border.getRGB());
 				}
+			} else if (this.hasCustomTextureBackground()) {
+				if (this.isHovered()) {
+					Minecraft.getInstance().textureManager.bindTexture(backgroundHover);
+				} else {
+					Minecraft.getInstance().textureManager.bindTexture(backgroundNormal);
+				}
+				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+				blit(this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+			} else {
+				int i = this.getYImage(this.isHovered());
+				mc.getTextureManager().bindTexture(WIDGETS_LOCATION);
+				GlStateManager.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+				GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+				GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+				this.blit(this.x, this.y, 0, 46 + i * 20, this.width / 2, this.height);
+				this.blit(this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
 			}
 			
 			this.renderBg(mc, mouseX, mouseY);
 
 			this.drawCenteredString(font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, getFGColor());
-			
-			GlStateManager.disableBlend();
 		}
 
 		if (this.handleClick && this.useable) {
@@ -88,6 +98,22 @@ public class AdvancedButton extends Button {
 				this.leftDown = false;
 			}
 		}
+	}
+	
+	public void setBackgroundTexture(ResourceLocation normal, ResourceLocation hovered) {
+		this.backgroundNormal = normal;
+		this.backgroundHover = hovered;
+	}
+	
+	public void setBackgroundTexture(ExternalTextureResourceLocation normal, ExternalTextureResourceLocation hovered) {
+		if (!normal.isReady()) {
+			normal.loadTexture();
+		}
+		if (!hovered.isReady()) {
+			hovered.loadTexture();
+		}
+		this.backgroundHover = hovered.getResourceLocation();
+		this.backgroundNormal = normal.getResourceLocation();
 	}
 	
 	public void setBackgroundColor(@Nullable Color idle, @Nullable Color hovered, @Nullable Color idleBorder, @Nullable Color hoveredBorder, int borderWidth) {
@@ -109,6 +135,10 @@ public class AdvancedButton extends Button {
 	
 	public boolean hasColorBackground() {
 		return ((this.idleColor != null) && (this.hoveredColor != null));
+	}
+	
+	public boolean hasCustomTextureBackground() {
+		return ((this.backgroundHover != null) && (this.backgroundNormal != null));
 	}
 	
 	@Override

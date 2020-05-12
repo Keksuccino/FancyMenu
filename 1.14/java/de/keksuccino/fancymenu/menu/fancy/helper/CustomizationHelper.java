@@ -22,10 +22,13 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.realms.RealmsScreenProxy;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CustomizationHelper {
+	
+	private static CustomizationHelper instance;
 	
 	private boolean showButtonInfo = false;
 	private boolean showMenuInfo = false;
@@ -37,6 +40,15 @@ public class CustomizationHelper {
 	private int lastWidth;
 	private int lastHeight;
 	private List<AdvancedButton> helperbuttons = new ArrayList<AdvancedButton>();
+	
+	public static void init() {
+		instance = new CustomizationHelper();
+		MinecraftForge.EVENT_BUS.register(instance);
+	}
+	
+	public static CustomizationHelper getInstance() {
+		return instance;
+	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
@@ -129,14 +141,6 @@ public class CustomizationHelper {
 						key = "<button has no key>";
 					}
 					
-					String identifier = null;
-					if (id >= 0) {
-						identifier = ButtonCache.getButtonForId(id).getScreen().getClass().getName();
-					}
-					if (identifier == null) {
-						identifier = "<identifier not found>";
-					}
-					
 					List<String> info = new ArrayList<String>();
 					int width = Minecraft.getInstance().fontRenderer.getStringWidth("Button Info") + 10;
 					
@@ -209,7 +213,7 @@ public class CustomizationHelper {
 		IngameGui.fill(x, y, x + width, y + height, new Color(102, 0, 102, 200).getRGB());
 	}
 	
-	private void onInfoButtonPress() {
+	public void onInfoButtonPress() {
 		if (this.showButtonInfo) {
 			this.showButtonInfo = false;
 			this.buttonInfoButton.setMessage("Button Info");;
@@ -220,7 +224,7 @@ public class CustomizationHelper {
 		}
 	}
 	
-	private void onMoreInfoButtonPress() {
+	public void onMoreInfoButtonPress() {
 		if (this.showMenuInfo) {
 			this.showMenuInfo = false;
 			this.menuInfoButton.setMessage("Menu Info");;
@@ -231,7 +235,7 @@ public class CustomizationHelper {
 		}
 	}
 
-	private void onReloadButtonPress() {
+	public void onReloadButtonPress() {
 		FancyMenu.updateConfig();
 		MenuCustomization.resetSounds();
 		MenuCustomization.reload();

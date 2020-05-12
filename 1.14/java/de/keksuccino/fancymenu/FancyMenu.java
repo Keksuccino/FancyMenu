@@ -4,20 +4,26 @@ import java.io.File;
 
 import de.keksuccino.core.config.Config;
 import de.keksuccino.core.config.exceptions.InvalidValueException;
+import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.sound.SoundHandler;
+import de.keksuccino.fancymenu.keybinding.Keybinding;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.0.1";
+	public static final String VERSION = "1.1";
 	
 	public static Config config;
 	
@@ -47,9 +53,21 @@ public class FancyMenu {
         	
         	SoundHandler.init();
         	
+        	Keybinding.init();
+        	
+        	FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+        	
+        	FancyMenuTray.init();
+        	
+        	FileChooser.init();
+        	
     	} else {
     		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
     	}
+	}
+	
+	private void onClientSetup(FMLClientSetupEvent e) {
+		Locals.init();
 	}
 	
 	public static void updateConfig() {
@@ -69,6 +87,7 @@ public class FancyMenu {
 			config.registerValue("splashrotation", -20, "mainmenu_splash");
 			
 			config.registerValue("gameintroanimation", "", "loading");
+			config.registerValue("loadingscreendarkmode", false, "loading");
 			
 			config.syncConfig();
 			
@@ -86,6 +105,7 @@ public class FancyMenu {
 			config.setCategory("splashrotation", "mainmenu_splash");
 			
 			config.setCategory("gameintroanimation", "loading");
+			config.setCategory("loadingscreendarkmode", "loading");
 			
 			config.clearUnusedValues();
 		} catch (InvalidValueException e) {

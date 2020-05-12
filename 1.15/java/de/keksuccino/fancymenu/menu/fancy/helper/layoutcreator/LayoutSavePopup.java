@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.awt.Color;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -9,6 +9,7 @@ import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.popup.Popup;
 import de.keksuccino.core.input.KeyboardData;
 import de.keksuccino.core.input.KeyboardHandler;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -25,9 +26,9 @@ public class LayoutSavePopup extends Popup {
 
 		this.callback = callback;
 		
-		this.setNotificationText("§c§lAre you sure?", "", "Do you want to save your layout to a customization file now?");
+		this.setNotificationText("§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.savefile"));
 		
-		this.saveButton = new AdvancedButton(0, 0, 230, 20, "Save and keep other layouts enabled", true, (press) -> {
+		this.saveButton = new AdvancedButton(0, 0, 230, 20, Locals.localize("helper.creator.savefile.keep"), true, (press) -> {
 			this.setDisplayed(false);
 			if (this.callback != null) {
 				this.callback.accept(1);
@@ -35,7 +36,7 @@ public class LayoutSavePopup extends Popup {
 		});
 		this.addButton(this.saveButton);
 		
-		this.saveAndDisableOthersButton = new AdvancedButton(0, 0, 200, 20, "Save and disable other layouts", true, (press) -> {
+		this.saveAndDisableOthersButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("helper.creator.savefile.disable"), true, (press) -> {
 			this.setDisplayed(false);
 			if (this.callback != null) {
 				this.callback.accept(2);
@@ -43,7 +44,7 @@ public class LayoutSavePopup extends Popup {
 		});
 		this.addButton(this.saveAndDisableOthersButton);
 		
-		this.cancelButton = new AdvancedButton(0, 0, 80, 20, "Cancel", true, (press) -> {
+		this.cancelButton = new AdvancedButton(0, 0, 80, 20, Locals.localize("helper.creator.savefile.cancel"), true, (press) -> {
 			this.setDisplayed(false);
 			if (this.callback != null) {
 				this.callback.accept(3);
@@ -84,9 +85,19 @@ public class LayoutSavePopup extends Popup {
 		}
 	}
 	
-	public void setNotificationText(String... text) {
+	private void setNotificationText(String... text) {
 		if (text != null) {
-			this.text = Arrays.asList(text);
+			List<String> l = new ArrayList<String>();
+			for (String s : text) {
+				if (s.contains("%n%")) {
+					for (String s2 : s.split("%n%")) {
+						l.add(s2);
+					}
+				} else {
+					l.add(s);
+				}
+			}
+			this.text = l;
 		}
 	}
 	

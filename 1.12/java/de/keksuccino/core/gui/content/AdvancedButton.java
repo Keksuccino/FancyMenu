@@ -6,11 +6,13 @@ import javax.annotation.Nullable;
 
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.math.MathUtils;
+import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.util.ResourceLocation;
 
 public class AdvancedButton extends GuiButton {
 
@@ -24,6 +26,8 @@ public class AdvancedButton extends GuiButton {
 	private Color idleBorderColor;
 	private Color hoveredBorderColor;
 	private int borderWidth = 2;
+	private ResourceLocation backgroundHover;
+	private ResourceLocation backgroundNormal;
 	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
 		super(MathUtils.getRandomNumberInRange(100, 999), x, y, widthIn, heightIn, buttonText);
@@ -44,17 +48,7 @@ public class AdvancedButton extends GuiButton {
 			this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 			
 			GlStateManager.enableBlend();
-			if (!this.hasColorBackground()) {
-				mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
-	            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-	            this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
-	            int i = this.getHoverState(this.hovered);
-	            GlStateManager.enableBlend();
-	            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-	            GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-	            this.drawTexturedModalRect(this.x, this.y, 0, 46 + i * 20, this.width / 2, this.height);
-	            this.drawTexturedModalRect(this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
-			} else {
+			if (this.hasColorBackground()) {
 				Color border;
 				if (!hovered) {
 					GuiScreen.drawRect(this.x, this.y, this.x + this.width, this.y + this.height, this.idleColor.getRGB());
@@ -73,6 +67,24 @@ public class AdvancedButton extends GuiButton {
 					//right
 					GuiScreen.drawRect(this.x + this.width - this.borderWidth, this.y + this.borderWidth, this.x + this.width, this.y + this.height - this.borderWidth, border.getRGB());
 				}
+			} else if (this.hasCustomTextureBackground()) {
+				if (this.isMouseOver()) {
+					Minecraft.getMinecraft().getTextureManager().bindTexture(backgroundHover);
+				} else {
+					Minecraft.getMinecraft().getTextureManager().bindTexture(backgroundNormal);
+				}
+				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+				drawModalRectWithCustomSizedTexture(this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+			} else {
+				mc.getTextureManager().bindTexture(BUTTON_TEXTURES);
+	            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+	            this.hovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+	            int i = this.getHoverState(this.hovered);
+	            GlStateManager.enableBlend();
+	            GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+	            GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+	            this.drawTexturedModalRect(this.x, this.y, 0, 46 + i * 20, this.width / 2, this.height);
+	            this.drawTexturedModalRect(this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
 			}
 			
 			this.mouseDragged(mc, mouseX, mouseY);
@@ -87,7 +99,6 @@ public class AdvancedButton extends GuiButton {
 			}
 
 			this.drawCenteredString(font, this.displayString, this.x + this.width / 2, this.y + (this.height - 8) / 2, j);
-			GlStateManager.disableBlend();
 		}
 
 		if (this.handleClick && this.useable) {
@@ -115,12 +126,32 @@ public class AdvancedButton extends GuiButton {
 		}
 	}
 	
+	public void setBackgroundTexture(ResourceLocation normal, ResourceLocation hovered) {
+		this.backgroundNormal = normal;
+		this.backgroundHover = hovered;
+	}
+	
+	public void setBackgroundTexture(ExternalTextureResourceLocation normal, ExternalTextureResourceLocation hovered) {
+		if (!normal.isReady()) {
+			normal.loadTexture();
+		}
+		if (!hovered.isReady()) {
+			hovered.loadTexture();
+		}
+		this.backgroundHover = hovered.getResourceLocation();
+		this.backgroundNormal = normal.getResourceLocation();
+	}
+	
 	public boolean hasBorder() {
 		return (this.hasColorBackground() && (this.idleBorderColor != null) && (this.hoveredBorderColor != null));
 	}
 	
 	public boolean hasColorBackground() {
 		return ((this.idleColor != null) && (this.hoveredColor != null));
+	}
+	
+	public boolean hasCustomTextureBackground() {
+		return ((this.backgroundHover != null) && (this.backgroundNormal != null));
 	}
 	
 	@Override

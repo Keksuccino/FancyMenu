@@ -13,6 +13,8 @@ public class ExternalTextureResourceLocation {
 	private String path;
 	private ResourceLocation location;
 	private boolean loaded = false;
+	private int width = 0;
+	private int height = 0;
 	
 	public ExternalTextureResourceLocation(String path) {
 		this.path = path;
@@ -37,7 +39,10 @@ public class ExternalTextureResourceLocation {
 			}
 			File f = new File(path);
 			FileInputStream s = new FileInputStream(f);
-			location = Minecraft.getInstance().getTextureManager().getDynamicTextureLocation(f.getName(), new SelfcleaningDynamicTexture(NativeImage.read(s)));
+			NativeImage i = NativeImage.read(s);
+			this.width = i.getWidth();
+			this.height = i.getHeight();
+			location = Minecraft.getInstance().getTextureManager().getDynamicTextureLocation(f.getName(), new SelfcleaningDynamicTexture(i));
 			s.close();
 			loaded = true;
 		} catch (Exception e) {
@@ -55,6 +60,14 @@ public class ExternalTextureResourceLocation {
 	
 	public boolean isReady() {
 		return this.loaded;
+	}
+	
+	public int getHeight() {
+		return this.height;
+	}
+	
+	public int getWidth() {
+		return this.width;
 	}
 
 }

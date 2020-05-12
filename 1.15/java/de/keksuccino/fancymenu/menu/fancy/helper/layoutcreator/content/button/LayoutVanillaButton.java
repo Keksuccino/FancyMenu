@@ -1,15 +1,22 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
 import java.awt.Color;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.lwjgl.glfw.GLFW;
 
+import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.content.AdvancedButton;
+import de.keksuccino.core.gui.content.PopupMenu;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.TextInputPopup;
+import de.keksuccino.core.input.CharacterFilter;
+import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
@@ -19,18 +26,21 @@ public class LayoutVanillaButton extends LayoutObject {
 	
 	public final ButtonData button;
 	public boolean hidden = false;
+	private String backNormal = null;
+	private String backHovered = null;
+	private int clicks = 0;
 	
 	public LayoutVanillaButton(ButtonData button, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(button.label, button.width, button.height, button.x, button.y), false, handler);
 		this.button = button;
 		this.object.orientation = "original";
 	}
-	
+
 	@Override
 	public void init() {
 		super.init();
 		
-		AdvancedButton b0 = new AdvancedButton(0, 0, 0, 16, "Reset Orientation", (press) -> {
+		AdvancedButton b0 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.vanillabutton.resetorientation"), (press) -> {
 			this.object.orientation = "original";
 			this.object.posX = this.button.x;
 			this.object.posY = this.button.y;
@@ -42,20 +52,99 @@ public class LayoutVanillaButton extends LayoutObject {
 		this.rightclickMenu.addContent(b0);
 		LayoutCreatorScreen.colorizeCreatorButton(b0);
 		
-		AdvancedButton b1 = new AdvancedButton(0, 0, 0, 16, "Hide Button", (press) -> {
+		AdvancedButton b1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.vanillabutton.hide"), (press) -> {
 			this.handler.hideVanillaButton(this);
 		});
 		this.rightclickMenu.addContent(b1);
 		LayoutCreatorScreen.colorizeCreatorButton(b1);
 		
-		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, "Edit Label", (press) -> {
+		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
 			this.handler.setMenusUseable(false);
-			TextInputPopup i = new TextInputPopup(new Color(0, 0, 0, 0), "§lEdit Label:", null, 240, this::editLabelCallback);
+			TextInputPopup i = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, this::editLabelCallback);
 			i.setText(this.object.value);
 			PopupHandler.displayPopup(i);
 		});
 		this.rightclickMenu.addContent(b2);
 		LayoutCreatorScreen.colorizeCreatorButton(b2);
+		
+		PopupMenu texturePopup = new PopupMenu(100, 16, -1);
+		this.rightclickMenu.addChild(texturePopup);
+		
+		AdvancedButton tpop1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.normal"), (press) -> {
+			FileChooser.askForFile(new File("").getAbsoluteFile(), (call) -> {
+				if (call != null) {
+					File home = new File("");
+					String path = call.getPath();
+					if (path.startsWith(home.getAbsolutePath())) {
+						path = path.replace(home.getAbsolutePath(), "");
+						if (path.startsWith("\\") || path.startsWith("/")) {
+							path = path.substring(1);
+						}
+					}
+					this.backNormal = path;
+					if (this.backHovered == null) {
+						this.backHovered = path;
+					}
+					((LayoutButtonDummyCustomizationItem)this.object).setTexture(ExternalTextureHandler.getResource(this.backNormal).getResourceLocation());
+				}
+			}, "jpg", "jpeg", "png");
+		});
+		texturePopup.addContent(tpop1);
+		LayoutCreatorScreen.colorizeCreatorButton(tpop1);
+		
+		AdvancedButton tpop2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.hovered"), (press) -> {
+			FileChooser.askForFile(new File("").getAbsoluteFile(), (call) -> {
+				if (call != null) {
+					File home = new File("");
+					String path = call.getPath();
+					if (path.startsWith(home.getAbsolutePath())) {
+						path = path.replace(home.getAbsolutePath(), "");
+						if (path.startsWith("\\") || path.startsWith("/")) {
+							path = path.substring(1);
+						}
+					}
+					this.backHovered = path;
+					if (this.backNormal == null) {
+						this.backNormal = path;
+					}
+					((LayoutButtonDummyCustomizationItem)this.object).setTexture(ExternalTextureHandler.getResource(this.backNormal).getResourceLocation());
+				}
+			}, "jpg", "jpeg", "png");
+		});
+		texturePopup.addContent(tpop2);
+		LayoutCreatorScreen.colorizeCreatorButton(tpop2);
+		
+		AdvancedButton tpop3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.reset"), (press) -> {
+			this.backHovered = null;
+			this.backNormal = null;
+			((LayoutButtonDummyCustomizationItem)this.object).setTexture(null);
+		});
+		texturePopup.addContent(tpop3);
+		LayoutCreatorScreen.colorizeCreatorButton(tpop3);
+		
+		AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture"), (press) -> {
+			texturePopup.openMenuAt(0, press.y);
+		});
+		this.rightclickMenu.addContent(b4);
+		LayoutCreatorScreen.colorizeCreatorButton(b4);
+		
+		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.vanillabutton.autoclick"), (press) -> {
+			this.handler.setMenusUseable(false);
+			TextInputPopup pop = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.vanillabutton.autoclick.popup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+				if (call != null) {
+					if (call.equals("") || !MathUtils.isInteger(call)) {
+						this.clicks = 0;
+					} else {
+						this.clicks = Integer.parseInt(call);
+					}
+				}
+				this.handler.setMenusUseable(true);
+			});
+			pop.setText("" + this.clicks);
+			PopupHandler.displayPopup(pop);
+		});
+		this.rightclickMenu.addContent(b5);
+		LayoutCreatorScreen.colorizeCreatorButton(b5);
 	}
 	
 	@Override
@@ -125,12 +214,29 @@ public class LayoutVanillaButton extends LayoutObject {
 			s.addEntry("value", this.object.value);
 			l.add(s);
 		}
+		// setbuttontexture
+		if ((this.backHovered != null) && (this.backNormal != null)) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "setbuttontexture");
+			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			s.addEntry("backgroundnormal", this.backNormal);
+			s.addEntry("backgroundhovered", this.backHovered);
+			l.add(s);
+		}
+		// clickbutton
+		if (this.clicks > 0) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "clickbutton");
+			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			s.addEntry("clicks", "" + this.clicks);
+			l.add(s);
+		}
 		
 		return l;
 	}
 	
 	public void displaySetOrientationNotification() {
-		this.handler.displayNotification(300, "§c§lSpecial care required!", "", "§oStandard buttons need some head pats before they listen to you.", "", "", "To §lresize or move §rthem, you have to give them an §lorientation §rfirst!", "", "You can do that by §lright-clicking §rthe button.", "", "", "");
+		this.handler.displayNotification(300, "§c§l" + Locals.localize("helper.creator.items.vanillabutton.noorientation.title"), "", Locals.localize("helper.creator.items.vanillabutton.noorientation.desc"), "", "", "");
 	}
 	
 	private boolean canBeModified() {

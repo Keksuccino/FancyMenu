@@ -13,6 +13,7 @@ import com.google.common.io.Files;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.core.file.FileUtils;
+import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.content.IMenu;
 import de.keksuccino.core.gui.content.PopupMenu;
@@ -26,17 +27,19 @@ import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
-import de.keksuccino.core.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
+import de.keksuccino.core.resources.ExternalTextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutString;
@@ -81,7 +84,6 @@ public class LayoutCreatorScreen extends Screen {
 	private AdvancedButton saveButton;
 	
 	private PopupMenu backgroundRightclickMenu;
-	private PopupMenu chooseBackgroundAnimationMenu;
 	private PopupMenu addAnimationMenu;
 	private PopupMenu addObjectPopup;
 	private PopupMenu hiddenPopup;
@@ -96,7 +98,8 @@ public class LayoutCreatorScreen extends Screen {
 	
 	private IAnimationRenderer backgroundAnimation;
 	private ExternalTextureResourceLocation backgroundTexture;
-	private String backgroundAnimationName;
+	public List<String> backgroundAnimationNames = new ArrayList<String>();
+	public boolean randomBackgroundAnimation = false;
 	
 	private String renderorder = "foreground";
 	private String requiredmods;
@@ -122,7 +125,7 @@ public class LayoutCreatorScreen extends Screen {
 			m.closeMenu();
 		}
 		
-		this.addObjectButton = new AdvancedButton(17, (this.height / 2) - 104, 40, 40, "Add", true, (onPress) -> {
+		this.addObjectButton = new AdvancedButton(17, (this.height / 2) - 104, 40, 40, Locals.localize("helper.creator.menu.add"), true, (onPress) -> {
 			if (this.addObjectPopup.isOpen()) {
 				this.addObjectPopup.closeMenu();
 			} else {
@@ -131,7 +134,7 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(addObjectButton);
 		
-		this.hiddenButton = new AdvancedButton(17, (this.height / 2) - 62, 40, 40, "Hidden", true, (onPress) -> {
+		this.hiddenButton = new AdvancedButton(17, (this.height / 2) - 62, 40, 40, Locals.localize("helper.creator.menu.hidden"), true, (onPress) -> {
 			if (this.hiddenPopup.isOpen()) {
 				this.hiddenPopup.closeMenu();
 			} else {
@@ -140,7 +143,7 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(hiddenButton);
 		
-		this.audioButton = new AdvancedButton(17, (this.height / 2) - 20, 40, 40, "Audio", true, (onPress) -> {
+		this.audioButton = new AdvancedButton(17, (this.height / 2) - 20, 40, 40, Locals.localize("helper.creator.menu.audio"), true, (onPress) -> {
 			if (this.audioPopup.isOpen()) {
 				this.audioPopup.closeMenu();
 			} else {
@@ -149,17 +152,18 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(audioButton);
 		
-		this.saveButton = new AdvancedButton(17, (this.height / 2) + 22, 40, 40, "Save", true, (onPress) -> {
+		this.saveButton = new AdvancedButton(17, (this.height / 2) + 22, 40, 40, Locals.localize("helper.creator.menu.save"), true, (onPress) -> {
 			if (!this.isLayoutEmpty()) {
 				this.setMenusUseable(false);
 				PopupHandler.displayPopup(new LayoutSavePopup(this::saveCustomizationFileCallback));
 			} else {
-				this.displayNotification(300, "§c§lLayout is empty!", "", "Your layout has no content.", "", "Do some customization magic first before you save it!", "", "", "");
+				//TODO Fixen (Wird nie getriggert, man kann immer sichern)
+				this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.layoutempty.title"), "", Locals.localize("helper.creator.layoutempty.desc"), "", "", "");
 			}
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(saveButton);
 		
-		this.closeButton = new AdvancedButton(17, (this.height / 2) + 64, 40, 40, "Close", true, (onPress) -> {
+		this.closeButton = new AdvancedButton(17, (this.height / 2) + 64, 40, 40, Locals.localize("helper.creator.menu.close"), true, (onPress) -> {
 			PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 				if (call.booleanValue()) {
 					isActive = false;
@@ -176,121 +180,66 @@ public class LayoutCreatorScreen extends Screen {
 					MenuCustomizationProperties.loadProperties();
 					Minecraft.getInstance().displayGuiScreen(this.screen);
 				}
-			}, "§c§lAre you sure?", "", "Do you really want to close the Layout Creator?", "", "", ""));
+			}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.close"), "", "", ""));
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(closeButton);
-		
-		if (this.chooseBackgroundAnimationMenu == null) {
-			this.chooseBackgroundAnimationMenu = this.generateAnimationMenu(this::setBackgroundAnimation);
-		}
-		
-		if (this.chooseBackgroundAnimationMenu == null) {
-			this.chooseBackgroundAnimationMenu = this.generateAnimationMenu(this::setBackgroundAnimation);
-		}
 		
 		if (this.addAnimationMenu == null) {
 			this.addAnimationMenu = this.generateAnimationMenu(this::addAnimation);
 		}
 
+		//Add -> 
 		if (this.addObjectPopup == null) {
-			this.addObjectPopup = new PopupMenu(130, -1);
+			this.addObjectPopup = new PopupMenu(130, 16, -1);
 			this.addMenu(this.addObjectPopup);
 			
-			AdvancedButton b1 = new AdvancedButton(0, 0, 0, 20, "Image", (press) -> {
-				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lImage Path:", null, 240, this::addTexture));
+			AdvancedButton b1 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.image"), (press) -> {
+				FileChooser.askForFile(new File("").getAbsoluteFile(), (callback) -> {
+					if (callback != null) {
+						this.addTexture(callback.getPath());
+					} else {
+						this.addTexture(null);
+					}
+				}, "jpg", "jpeg", "png");
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b1);
 			this.addObjectPopup.addContent(b1);
 			
-			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 20, "Animation", (press) -> {
+			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation"), (press) -> {
 				if (this.addAnimationMenu.isOpen()) {
 					this.addAnimationMenu.closeMenu();
 				} else {
 					this.addAnimationMenu.openMenuAt(press.x + press.getWidth() + 2, press.y);
 				}
-				this.chooseBackgroundAnimationMenu.closeMenu();
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b2);
 			this.addObjectPopup.addContent(b2);
 			
-			AdvancedButton b3 = new AdvancedButton(0, 0, 0, 20, "Text", (press) -> {
+			AdvancedButton b3 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
 				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lNew Text:", null, 240, this::addText));
+				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this::addText));
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b3);
 			this.addObjectPopup.addContent(b3);
 			
-			AdvancedButton b5 = new AdvancedButton(0, 0, 0, 20, "Button", (press) -> {
+			AdvancedButton b5 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
 				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lButton Label:", null, 240, this::addButton));
+				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this::addButton));
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b5);
 			this.addObjectPopup.addContent(b5);
 			
-			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 20, "Audio", (press) -> {
-				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lAudio Path:", null, 240, (call) -> {
-					if (call != null) {
-						File f = new File(call);
-						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-							if (!this.audio.containsKey(call)) {
-								this.setMenusUseable(true);
-								MenuCustomization.registerSound(call, call);
-								SoundHandler.playSound(call);
-								this.audio.put(call, false);
-								this.updateAudioPopup();
-							} else {
-								this.displayNotification(300, "§c§lAudio already loaded!", "", "The audio you want to add is already part of this layout!", "", "You can't add the same audio multiple times.", "", "", "", "", "", "");
-							}
-							
-						} else {
-							this.displayNotification(300, "§c§lInvalid audio file!", "", "The file you want to load does not exists or has an unsupported file type.", "", "Please check your file path and be sure that your file is a valid WAV audio file!", "", "", "", "", "", "");
-						}
+			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
+				FileChooser.askForFile(new File("").getAbsoluteFile(), (callback) -> {
+					if (callback != null) {
+						this.addAudio(callback.getPath());
 					} else {
-						this.setMenusUseable(true);
+						this.addAudio(null);
 					}
-				}));
+				}, "wav");
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b6);
 			this.addObjectPopup.addContent(b6);
-			
-			AdvancedButton b4 = new AdvancedButton(0, 0, 0, 20, "Background Animation", (press) -> {
-				if (this.chooseBackgroundAnimationMenu.isOpen()) {
-					this.chooseBackgroundAnimationMenu.closeMenu();
-				} else {
-					this.chooseBackgroundAnimationMenu.openMenuAt(press.x + press.getWidth() + 2, press.y);
-				}
-				this.addAnimationMenu.closeMenu();
-			});
-			LayoutCreatorScreen.colorizeCreatorButton(b4);
-			this.addObjectPopup.addContent(b4);
-			
-			AdvancedButton b7 = new AdvancedButton(0, 0, 0, 20, "Background Image", (press) -> {
-				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lImage Path:", null, 240, (call) -> {
-					if (call != null) {
-						File f = new File(call);
-						if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-							if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(call)) {
-								this.backgroundTexture = new ExternalTextureResourceLocation(call);
-								this.backgroundTexture.loadTexture();
-								if (this.backgroundAnimation != null) {
-									((AdvancedAnimation)this.backgroundAnimation).stopAudio();
-								}
-								this.backgroundAnimation = null;
-							}
-							this.setMenusUseable(true);
-						} else {
-							this.displayNotification(300, "§c§lInvalid image file!", "", "The image you want to load does not exists or has an unsupported file type!", "", "Supported file types are JPG/JPEG and PNG.", "", "", "", "", "", "");
-						}
-					} else {
-						this.setMenusUseable(true);
-					}
-				}));
-			});
-			LayoutCreatorScreen.colorizeCreatorButton(b7);
-			this.addObjectPopup.addContent(b7);
 		}
 		
 		this.updateHiddenButtonPopup();
@@ -301,34 +250,36 @@ public class LayoutCreatorScreen extends Screen {
 			this.setMenusUseable(false);
 		}
 		
+		//BackgroundRightClick -> Renderorder ->
 		if (this.renderorderPopup == null) {
-			this.renderorderPopup = new PopupMenu(100, -1);
+			this.renderorderPopup = new PopupMenu(100, 16, -1);
 			this.addMenu(renderorderPopup);
 
-			this.renderorderBackgroundButton = new AdvancedButton(0, 0, 0, 16, "Background", true, (press) -> {
-				press.setMessage("§aBackground");;
-				this.renderorderForegroundButton.setMessage("Foreground");;
+			this.renderorderBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder.background"), true, (press) -> {
+				press.setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));;
+				this.renderorderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));;
 				this.renderorder = "background";
 			});
 			this.renderorderPopup.addContent(renderorderBackgroundButton);
 			LayoutCreatorScreen.colorizeCreatorButton(renderorderBackgroundButton);
 			
-			this.renderorderForegroundButton = new AdvancedButton(0, 0, 0, 16, "§aForeground", true, (press) -> {
-				press.setMessage("§aForeground");;
-				this.renderorderBackgroundButton.setMessage("Background");;
+			this.renderorderForegroundButton = new AdvancedButton(0, 0, 0, 16, "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"), true, (press) -> {
+				press.setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));;
+				this.renderorderBackgroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.background"));;
 				this.renderorder = "foreground";
 			});
 			this.renderorderPopup.addContent(renderorderForegroundButton);
 			LayoutCreatorScreen.colorizeCreatorButton(renderorderForegroundButton);
 		}
 		
+		//BackgroundRightClick -> MC Version ->
 		if (this.mcversionPopup == null) {
-			this.mcversionPopup = new PopupMenu(100, -1);
+			this.mcversionPopup = new PopupMenu(100, 16, -1);
 			this.addMenu(mcversionPopup);
 			
-			AdvancedButton m1 = new AdvancedButton(0, 0, 0, 16, "Set Minimum", true, (press) -> {
+			AdvancedButton m1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
 				this.setMenusUseable(false);
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§lMinimum Minecraft Version", null, 240, (call) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						this.minimumMC = call;
 					}
@@ -342,9 +293,9 @@ public class LayoutCreatorScreen extends Screen {
 			this.mcversionPopup.addContent(m1);
 			LayoutCreatorScreen.colorizeCreatorButton(m1);
 			
-			AdvancedButton m2 = new AdvancedButton(0, 0, 0, 16, "Set Maximum", true, (press) -> {
+			AdvancedButton m2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
 				this.setMenusUseable(false);
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§lMaximum Minecraft Version", null, 240, (call) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						this.maximumMC = call;
 					}
@@ -359,13 +310,14 @@ public class LayoutCreatorScreen extends Screen {
 			LayoutCreatorScreen.colorizeCreatorButton(m2);
 		}
 		
+		//BackgroundRightClick -> FM Version ->
 		if (this.fmversionPopup == null) {
-			this.fmversionPopup = new PopupMenu(100, -1);
+			this.fmversionPopup = new PopupMenu(100, 16, -1);
 			this.addMenu(fmversionPopup);
 			
-			AdvancedButton m1 = new AdvancedButton(0, 0, 0, 16, "Set Minimum", true, (press) -> {
+			AdvancedButton m1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
 				this.setMenusUseable(false);
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§lMinimum FancyMenu Version", null, 240, (call) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						this.minimumFM = call;
 					}
@@ -379,9 +331,9 @@ public class LayoutCreatorScreen extends Screen {
 			this.fmversionPopup.addContent(m1);
 			LayoutCreatorScreen.colorizeCreatorButton(m1);
 			
-			AdvancedButton m2 = new AdvancedButton(0, 0, 0, 16, "Set Maximum", true, (press) -> {
+			AdvancedButton m2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
 				this.setMenusUseable(false);
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§lMaximum FancyMenu Version", null, 240, (call) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						this.maximumFM = call;
 					}
@@ -397,9 +349,20 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		
 		if (this.backgroundRightclickMenu == null) {
-			this.backgroundRightclickMenu = new PopupMenu(110, -1);
+			this.backgroundRightclickMenu = new PopupMenu(110, 16, -1);
+
+			this.backgroundRightclickMenu.addChild(this.renderorderPopup);
+			this.backgroundRightclickMenu.addChild(this.mcversionPopup);
+			this.backgroundRightclickMenu.addChild(this.fmversionPopup);
 			
-			AdvancedButton resetBackB = new AdvancedButton(0, 0, 0, 16, "Reset Background", true, (press) -> {
+			AdvancedButton backOptionsB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.backgroundoptions"), true, (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new BackgroundOptionsPopup(this));
+			});
+			this.backgroundRightclickMenu.addContent(backOptionsB);
+			LayoutCreatorScreen.colorizeCreatorButton(backOptionsB);
+			
+			AdvancedButton resetBackB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.resetbackground"), true, (press) -> {
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 				}
@@ -410,17 +373,18 @@ public class LayoutCreatorScreen extends Screen {
 			this.backgroundRightclickMenu.addContent(resetBackB);
 			LayoutCreatorScreen.colorizeCreatorButton(resetBackB);
 			
-			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, "Renderorder", true, (press) -> {
+			this.backgroundRightclickMenu.addChild(this.renderorderPopup);
+			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder"), true, (press) -> {
 				this.fmversionPopup.closeMenu();
 				this.mcversionPopup.closeMenu();
-				this.renderorderPopup.openMenuAt(press.x + press.getWidth() + 2, press.y);
+				this.renderorderPopup.openMenuAt(0, press.y);
 			});
 			this.backgroundRightclickMenu.addContent(b2);
 			LayoutCreatorScreen.colorizeCreatorButton(b2);
 			
-			AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, "Required Mods", true, (press) -> {
+			AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.requiredmods"), true, (press) -> {
 				this.setMenusUseable(false);
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§lRequired Mods [modid, separated by commas]", null, 240, (call) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.requiredmods.desc"), null, 240, (call) -> {
 					if (call != null) {
 						this.requiredmods = call;
 					}
@@ -434,7 +398,7 @@ public class LayoutCreatorScreen extends Screen {
 			this.backgroundRightclickMenu.addContent(b3);
 			LayoutCreatorScreen.colorizeCreatorButton(b3);
 			
-			AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, "Minecraft Version", true, (press) -> {
+			AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.mc"), true, (press) -> {
 				this.renderorderPopup.closeMenu();
 				this.fmversionPopup.closeMenu();
 				this.mcversionPopup.openMenuAt(press.x + press.getWidth() + 2, press.y);
@@ -442,7 +406,7 @@ public class LayoutCreatorScreen extends Screen {
 			this.backgroundRightclickMenu.addContent(b4);
 			LayoutCreatorScreen.colorizeCreatorButton(b4);
 			
-			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, "FancyMenu Version", true, (press) -> {
+			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.fm"), true, (press) -> {
 				this.renderorderPopup.closeMenu();
 				this.mcversionPopup.closeMenu();
 				this.fmversionPopup.openMenuAt(press.x + press.getWidth() + 2, press.y);
@@ -519,11 +483,23 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		l.add(meta);
 		
-		if (this.backgroundAnimation != null) {
+		if (!this.backgroundAnimationNames.isEmpty()) {
+			String names = this.backgroundAnimationNames.get(0);
+			if (this.backgroundAnimationNames.size() > 1) {
+				int i = 0;
+				for (String s : this.backgroundAnimationNames) {
+					if (i > 0) {
+						names += ", " + s;
+					}
+					i++;
+				}
+			}
 			PropertiesSection ps = new PropertiesSection("customization");
 			ps.addEntry("action", "animatebackground");
-			ps.addEntry("name", this.backgroundAnimationName);
-			ps.addEntry("replayanimation", "false");
+			ps.addEntry("name", names);
+			if (this.randomBackgroundAnimation) {
+				ps.addEntry("random", "true");
+			}
 			l.add(ps);
 		}
 		
@@ -588,11 +564,11 @@ public class LayoutCreatorScreen extends Screen {
 	}
 	
 	private PopupMenu generateAnimationMenu(Consumer<String> callback) {
-		PopupMenu p = new PopupMenu(120, -1);
+		PopupMenu p = new PopupMenu(120, 16, -1);
 		
-		AdvancedButton inputAniB = new AdvancedButton(0, 0, 0, 20, "Enter Animation Name", true, (press) -> {
+		AdvancedButton inputAniB = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation.entername"), true, (press) -> {
 			this.setMenusUseable(false);
-			PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lAnimation Name:", null, 240, callback));
+			PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.animation.entername.title") + ":", null, 240, callback));
 		});
 		p.addContent(inputAniB);
 		LayoutCreatorScreen.colorizeCreatorButton(inputAniB);
@@ -665,11 +641,11 @@ public class LayoutCreatorScreen extends Screen {
 		if ((this.hiddenPopup != null) && this.menus.contains(this.hiddenPopup)) {
 			this.menus.remove(this.hiddenPopup);
 		}
-		this.hiddenPopup = new PopupMenu(100, -1);
+		this.hiddenPopup = new PopupMenu(100, 16, -1);
 		this.addMenu(this.hiddenPopup);
 		
 		if (this.hidden.isEmpty()) {
-			AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, "EMPTY", true, (press) -> {
+			AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {
 			});
 			this.hiddenPopup.addContent(bt);
 			LayoutCreatorScreen.colorizeCreatorButton(bt);
@@ -693,11 +669,11 @@ public class LayoutCreatorScreen extends Screen {
 			this.menus.remove(this.audioPopup);
 		}
 		this.audioSubPopups.clear();
-		this.audioPopup = new PopupMenu(100, -1);
+		this.audioPopup = new PopupMenu(100, 16, -1);
 		this.addMenu(this.audioPopup);
 		
 		if (this.audio.isEmpty()) {
-			AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, "EMPTY", true, (press) -> {
+			AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {
 			});
 			this.audioPopup.addContent(bt);
 			LayoutCreatorScreen.colorizeCreatorButton(bt);
@@ -708,9 +684,9 @@ public class LayoutCreatorScreen extends Screen {
 					label = Minecraft.getInstance().fontRenderer.trimStringToWidth(label, 80) + "..";
 				}
 				
-				PopupMenu actions = new PopupMenu(100, -1);
+				PopupMenu actions = new PopupMenu(100, 16, -1);
 				
-				AdvancedButton a1 = new AdvancedButton(0, 0, 0, 16, "Delete", true, (press2) -> {
+				AdvancedButton a1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.audio.delete"), true, (press2) -> {
 					this.audioPopup.closeMenu();
 					this.setMenusUseable(false);
 					PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
@@ -721,24 +697,24 @@ public class LayoutCreatorScreen extends Screen {
 							this.updateAudioPopup();
 						}
 						this.setMenusUseable(true);
-					}, "§c§lAre you sure?", "", "", "Do you really want to delete this audio?", "", ""));
+					}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", "", Locals.localize("helper.creator.audio.delete.msg"), "", ""));
 				});
 				actions.addContent(a1);
 				LayoutCreatorScreen.colorizeCreatorButton(a1);
 				
-				String lab = "Enable Loop";
+				String lab = Locals.localize("helper.creator.audio.enableloop");
 				if (m.getValue()) {
-					lab = "Disable Loop";
+					lab = Locals.localize("helper.creator.audio.disableloop");
 				}
 				AdvancedButton a2 = new AdvancedButton(0, 0, 0, 16, lab, true, (press2) -> {
-					if (press2.getMessage().equals("Enable Loop")) {
+					if (press2.getMessage().equals(Locals.localize("helper.creator.audio.enableloop"))) {
 						SoundHandler.setLooped(m.getKey(), true);
 						this.audio.put(m.getKey(), true);
-						press2.setMessage("Disable Loop");;
+						press2.setMessage(Locals.localize("helper.creator.audio.disableloop"));;
 					} else {
 						SoundHandler.setLooped(m.getKey(), false);
 						this.audio.put(m.getKey(), false);
-						press2.setMessage("Enable Loop");;
+						press2.setMessage(Locals.localize("helper.creator.audio.enableloop"));;
 					}
 				});
 				actions.addContent(a2);
@@ -838,7 +814,6 @@ public class LayoutCreatorScreen extends Screen {
 		
 		this.addObjectPopup.render(mouseX, mouseY);
 
-		this.chooseBackgroundAnimationMenu.render(mouseX, mouseY);
 		this.addAnimationMenu.render(mouseX, mouseY);
 		
 		this.hiddenPopup.render(mouseX, mouseY);
@@ -863,18 +838,6 @@ public class LayoutCreatorScreen extends Screen {
 				this.backgroundRightclickMenu.openMenuAt(mouseX, mouseY);
 			}
 			this.backgroundRightclickMenu.render(mouseX, mouseY);
-		}
-		
-		this.renderorderPopup.render(mouseX, mouseY);
-		
-		this.mcversionPopup.render(mouseX, mouseY);
-		
-		this.fmversionPopup.render(mouseX, mouseY);
-		
-		if (!this.backgroundRightclickMenu.isOpen()) {
-			this.renderorderPopup.closeMenu();
-			this.mcversionPopup.closeMenu();
-			this.fmversionPopup.closeMenu();
 		}
 		
 		if (this.expanded) {
@@ -902,7 +865,6 @@ public class LayoutCreatorScreen extends Screen {
 		
 		if (!this.addObjectPopup.isOpen()) {
 			this.addAnimationMenu.closeMenu();
-			this.chooseBackgroundAnimationMenu.closeMenu();
 		}
 		
 		if (PopupHandler.isPopupActive() || this.isObjectFocused()) {
@@ -960,11 +922,11 @@ public class LayoutCreatorScreen extends Screen {
 		if (this.renderHiddenIndicator) {
 			if (this.hiddenIndicatorTick == 0) {
 				if ((this.hiddenIndicatorCount == 0) || (this.hiddenIndicatorCount == 2) || (this.hiddenIndicatorCount == 4)) {
-					this.hiddenButton.setMessage("§4Hidden");;
+					this.hiddenButton.setMessage("§4" + Locals.localize("helper.creator.menu.hidden"));;
 					this.expandColor = Color.RED;
 				}
 				if ((this.hiddenIndicatorCount == 1) || (this.hiddenIndicatorCount == 3) || (this.hiddenIndicatorCount == 5)) {
-					this.hiddenButton.setMessage("Hidden");;
+					this.hiddenButton.setMessage(Locals.localize("helper.creator.menu.hidden"));;
 					this.expandColor = Color.WHITE;
 					if (this.hiddenIndicatorCount == 5) {
 						this.renderHiddenIndicator = false;
@@ -1061,23 +1023,30 @@ public class LayoutCreatorScreen extends Screen {
 	}
 
 	private void addTexture(String path) {
+		File home = new File("");
 		if (path == null) {
 			this.setMenusUseable(true);
 			return;
 		}
+		if (path.startsWith(home.getAbsolutePath())) {
+			path = path.replace(home.getAbsolutePath(), "");
+			if (path.startsWith("\\") || path.startsWith("/")) {
+				path = path.substring(1);
+			}
+		}
 		File f = new File(path);
 		if (f.exists()) {
-			TextureCustomizationItem i = new TextureCustomizationItem(new PropertiesSection(""));
-			i.action = "addtexture";
-			i.value = path;
-			i.height = 100;
-			i.width = 100;
-			i.renderer = new ExternalTextureAnimationRenderer(1, false, 0, 0, 20, 20, path);
+			PropertiesSection sec = new PropertiesSection("customization");
+			sec.addEntry("action", "addtexture");
+			sec.addEntry("path", path);
+			sec.addEntry("height", "100");
+			
+			TextureCustomizationItem i = new TextureCustomizationItem(sec);
 			this.addContent(new LayoutTexture(i, this));
 			
 			this.setMenusUseable(true);
 		} else {
-			this.displayNotification(300, "§c§lImage not found!", "", "The image you want do add does not exists", "at the specified location!", "", "", "", "", "", "");
+			this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.imagenotfound.title"), "", Locals.localize("helper.creator.imagenotfound.desc"), "", "", "", "", "", "");
 		}
 	}
 	
@@ -1092,14 +1061,17 @@ public class LayoutCreatorScreen extends Screen {
 			s.addEntry("action", "addanimation");
 			s.addEntry("name", name);
 			AnimationCustomizationItem i = new AnimationCustomizationItem(s);
+			int w = AnimationHandler.getAnimation(name).getWidth();
+			int h = AnimationHandler.getAnimation(name).getHeight();
+			double ratio = (double) w / (double) h;
 			i.height = 100;
-			i.width = 100;
+			i.width = (int)(i.height * ratio);
 			AnimationHandler.getAnimation(name).resetAnimation();
 			this.addContent(new LayoutAnimation(i, this));
 			
 			this.setMenusUseable(true);
 		} else {
-			this.displayNotification(300, "§c§lAnimation not found!", "", "The animation you want to add does not exists!", "", "Maybe you forgot to add all mandatory variables to its properties?", "", "Always keep in mind that you have to restart your game", "after you've added a new animation to the animations folder.", "", "", "");
+			this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.animationnotfound.title"), "", Locals.localize("helper.creator.animationnotfound.desc"), "", "", "");
 		}
 	}
 	
@@ -1126,24 +1098,87 @@ public class LayoutCreatorScreen extends Screen {
 			
 			this.setMenusUseable(true);
 		} else {
-			this.displayNotification(300, "§c§lText too short!", "", "Your text needs at least one character to be a text!", "Otherwise..it would be nothing.", "", "Nobody wants to be nothing, so don't do that to your text!", "", "", "", "");
+			this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.texttooshort.title"), "", Locals.localize("helper.creator.texttooshort.desc"), "", "", "", "");
 		}
 	}
 	
-	private void setBackgroundAnimation(String name) {
-		this.chooseBackgroundAnimationMenu.closeMenu();
-		if (name == null) {
-			this.setMenusUseable(true);
-			return;
-		}
-		if (AnimationHandler.animationExists(name)) {
-			this.backgroundTexture = null;
-			this.backgroundAnimation = AnimationHandler.getAnimation(name);
-			this.backgroundAnimation.resetAnimation();
-			this.backgroundAnimationName = name;
-			this.setMenusUseable(true);
+	private void addAudio(String path) {
+		if (path != null) {
+			File home = new File("");
+			if (path.startsWith(home.getAbsolutePath())) {
+				path = path.replace(home.getAbsolutePath(), "");
+				if (path.startsWith("\\") || path.startsWith("/")) {
+					path = path.substring(1);
+				}
+			}
+			
+			File f = new File(path);
+			if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+				if (!this.audio.containsKey(path)) {
+					this.setMenusUseable(true);
+					MenuCustomization.registerSound(path, path);
+					SoundHandler.playSound(path);
+					this.audio.put(path, false);
+					this.updateAudioPopup();
+				} else {
+					this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.audioalreadyloaded.title"), "", Locals.localize("helper.creator.audioalreadyloaded.desc"), "", "", "", "", "", "");
+				}
+				
+			} else {
+				this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+			}
 		} else {
-			this.displayNotification(300, "§c§lAnimation not found!", "", "The animation you want to add does not exists!", "", "Maybe you forgot to add all mandatory variables to its properties?", "", "Always keep in mind that you have to restart your game", "after you've added a new animation to the animations folder.", "", "", "");
+			this.setMenusUseable(true);
+		}
+	}
+	
+	public void setBackgroundAnimations(String... names) {
+		if ((names != null) && (names.length > 0)) {
+			for (String s : names) {
+				if (AnimationHandler.animationExists(s) && !this.backgroundAnimationNames.contains(s)) {
+					this.backgroundAnimationNames.add(s);
+				}
+			}
+			if (!this.backgroundAnimationNames.isEmpty()) {
+				this.backgroundTexture = null;
+				if (this.backgroundAnimation != null) {
+					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+				}
+				this.backgroundAnimation = AnimationHandler.getAnimation(this.backgroundAnimationNames.get(0));
+				this.backgroundAnimation.resetAnimation();
+			}
+		}
+		if (names == null) {
+			this.backgroundAnimation = null;
+		}
+		this.setMenusUseable(true);
+	}
+	
+	public void setBackgroundTexture(String path) {
+		if (path != null) {
+			File home = new File("");
+			if (path.startsWith(home.getAbsolutePath())) {
+				path = path.replace(home.getAbsolutePath(), "");
+				if (path.startsWith("\\") || path.startsWith("/")) {
+					path = path.substring(1);
+				}
+			}
+			
+			File f = new File(path);
+			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
+				this.backgroundTexture = ExternalTextureHandler.getResource(path);
+				if (this.backgroundAnimation != null) {
+					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+				}
+				this.backgroundAnimation = null;
+				this.backgroundAnimationNames.clear();
+				
+				this.setMenusUseable(true);
+			} else {
+				this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+			}
+		} else {
+			this.setMenusUseable(true);
 		}
 	}
 	
@@ -1195,7 +1230,7 @@ public class LayoutCreatorScreen extends Screen {
 				if (this.focused.isDestroyable()) {
 					this.focused.destroyObject();
 				} else {
-					this.displayNotification(300, "§c§lObject can't be deleted!", "", "Sorry, but you cannot delete this object.", "", "You will need to learn how to live with it..", "", "", "");
+					this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.cannotdelete.title"), "", Locals.localize("helper.creator.cannotdelete.desc"), "", "", "");
 				}
 			}
 		}

@@ -12,12 +12,15 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 
+import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
+import de.keksuccino.core.resources.ExternalTextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import de.keksuccino.core.sound.SoundHandler;
+import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
@@ -30,6 +33,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
@@ -47,6 +51,9 @@ public class MenuHandlerBase {
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected List<String> oldAudio = new ArrayList<String>();
 	protected IAnimationRenderer backgroundAnimation = null;
+	protected IAnimationRenderer lastBackgroundAnimation = null;
+	protected List<IAnimationRenderer> backgroundAnimations = new ArrayList<IAnimationRenderer>();
+	protected int backgroundAnimationId = 0;
 	protected ExternalTextureResourceLocation backgroundTexture = null;
 	private String identifier;
 	private boolean backgroundDrawable;
@@ -81,6 +88,10 @@ public class MenuHandlerBase {
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
 		this.backgroundAnimation = null;
+		this.backgroundAnimations.clear();
+		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
+			((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+		}
 		this.backgroundDrawable = false;
 		
 		boolean backgroundTextureSet = false;
@@ -106,11 +117,10 @@ public class MenuHandlerBase {
 					if (action.equalsIgnoreCase("texturizebackground")) {
 						String value = sec.getEntryValue("path");
 						if (value != null) {
-							File f = new File(value);
+							File f = new File(value.replace("\\", "/"));
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 								if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
-									this.backgroundTexture = new ExternalTextureResourceLocation(value);
-									this.backgroundTexture.loadTexture();
+									this.backgroundTexture = ExternalTextureHandler.getResource(value);
 								}
 								backgroundTextureSet = true;
 							}
@@ -119,9 +129,58 @@ public class MenuHandlerBase {
 					
 					if (action.equalsIgnoreCase("animatebackground")) {
 						String value = sec.getEntryValue("name");
+						String random = sec.getEntryValue("random");
+						boolean ran = false;
+						if ((random != null) && random.equalsIgnoreCase("true")) {
+							ran = true;
+						}
 						if (value != null) {
-							if (AnimationHandler.animationExists(value)) {
-								this.backgroundAnimation = AnimationHandler.getAnimation(value);
+							if (value.contains(",")) {
+								for (String s2 : value.split("[,]")) {
+									int i = 0;
+									for (char c : s2.toCharArray()) {
+										if (c != " ".charAt(0)) {
+											break;
+										}
+										i++;
+									}
+									if (i > s2.length()) {
+										continue;
+									}
+									String temp = new StringBuilder(s2.substring(i)).reverse().toString();
+									int i2 = 0;
+									for (char c : temp.toCharArray()) {
+										if (c != " ".charAt(0)) {
+											break;
+										}
+										i2++;
+									}
+									String name = new StringBuilder(temp.substring(i2)).reverse().toString();
+									if (AnimationHandler.animationExists(name)) {
+										this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
+									}
+								}
+							} else {
+								if (AnimationHandler.animationExists(value)) {
+									this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
+								}
+							}
+							
+							if (!this.backgroundAnimations.isEmpty()) {
+								if (ran) {
+									if ((MenuHandlerRegistry.getLastActiveHandler() == null) || (MenuHandlerRegistry.getLastActiveHandler() != this)) {
+										this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
+									}
+									this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
+								} else {
+									if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
+										this.backgroundAnimation = this.lastBackgroundAnimation;
+									} else {
+										this.backgroundAnimationId = 0;
+										this.backgroundAnimation = this.backgroundAnimations.get(0);
+									}
+									this.lastBackgroundAnimation = this.backgroundAnimation;
+								}
 							}
 						}
 					}
@@ -213,6 +272,32 @@ public class MenuHandlerBase {
 						}
 					}
 					
+					if (action.equalsIgnoreCase("setbuttontexture")) {
+						if (b != null) {
+							String backNormal = sec.getEntryValue("backgroundnormal");
+							String backHover = sec.getEntryValue("backgroundhovered");
+							if ((backNormal != null) && (backHover != null)) {
+								File f = new File(backNormal.replace("\\", "/"));
+								File f2 = new File(backHover.replace("\\", "/"));
+								if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
+									b.visible = false;
+									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+								}
+							}
+						}
+					}
+					
+					if (action.equalsIgnoreCase("clickbutton")) {
+						if (b != null) {
+							String clicks = sec.getEntryValue("clicks");
+							if ((clicks != null) && (MathUtils.isInteger(clicks))) {
+								for (int i = 0; i < Integer.parseInt(clicks); i++) {
+									b.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
+								}
+							}
+						}
+					}
+					
 					if (action.equalsIgnoreCase("addtext")) {
 						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
 							backgroundRenderItems.add(new StringCustomizationItem(sec));
@@ -269,6 +354,8 @@ public class MenuHandlerBase {
 				}
 			}
 		}
+		
+		MenuHandlerRegistry.setActiveHandler(this.getMenuIdentifier());
 		
 		for (String s : this.oldAudio) {
 			if (!this.audio.containsKey(s)) {
@@ -386,6 +473,24 @@ public class MenuHandlerBase {
 	
 	public boolean canRenderBackground() {
 		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null));
+	}
+	
+	public boolean setBackgroundAnimation(int id) {
+		if (id < this.backgroundAnimations.size()) {
+			this.backgroundAnimationId = id;
+			this.backgroundAnimation = this.backgroundAnimations.get(id);
+			this.lastBackgroundAnimation = this.backgroundAnimation;
+			return true;
+		}
+		return false;
+	}
+	
+	public int getCurrentBackgroundAnimationId() {
+		return this.backgroundAnimationId;
+	}
+	
+	public List<IAnimationRenderer> backgroundAnimations() {
+		return this.backgroundAnimations;
 	}
 
 }

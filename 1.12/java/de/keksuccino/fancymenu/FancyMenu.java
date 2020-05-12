@@ -4,13 +4,17 @@ import java.io.File;
 
 import de.keksuccino.core.config.Config;
 import de.keksuccino.core.config.exceptions.InvalidValueException;
+import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.sound.SoundHandler;
+import de.keksuccino.fancymenu.keybinding.Keybinding;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -20,7 +24,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.0.1";
+	public static final String VERSION = "1.1";
 	
 	public static Config config;
 	
@@ -50,6 +54,12 @@ public class FancyMenu {
         	
         	SoundHandler.init();
         	
+        	Keybinding.init();
+        	
+        	FancyMenuTray.init();
+        	
+        	FileChooser.init();
+        	
     	} else {
     		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
     	}
@@ -59,6 +69,8 @@ public class FancyMenu {
 	public void onInitPost(FMLPostInitializationEvent e) {
 		if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
 			MouseInput.init();
+			
+			Locals.init();
 		}
 	}
 	
