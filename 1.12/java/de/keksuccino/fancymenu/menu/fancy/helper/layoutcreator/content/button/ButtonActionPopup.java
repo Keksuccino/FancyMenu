@@ -115,7 +115,7 @@ public class ButtonActionPopup extends Popup {
 	}
 	
 	public void onEnterPressed(KeyboardData d) {
-		if ((d.keycode == 257) && this.isDisplayed()) {
+		if ((d.keycode == 28) && this.isDisplayed()) {
 			this.setDisplayed(false);
 			if (this.contentCallback != null) {
 				this.contentCallback.accept(this.textField.getText());
@@ -127,7 +127,7 @@ public class ButtonActionPopup extends Popup {
 	}
 
 	public void onEscapePressed(KeyboardData d) {
-		if ((d.keycode == 256) && this.isDisplayed()) {
+		if ((d.keycode == 1) && this.isDisplayed()) {
 			this.setDisplayed(false);
 			if (this.contentCallback != null) {
 				this.contentCallback.accept(null);

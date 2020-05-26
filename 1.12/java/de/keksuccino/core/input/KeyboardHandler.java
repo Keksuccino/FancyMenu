@@ -21,8 +21,10 @@ public class KeyboardHandler {
 	
 	//Using seperated lists to add new listeners to prevent Comodifications
 	private static Map<Integer, Consumer<KeyboardData>> pressedRaw = new HashMap<Integer, Consumer<KeyboardData>>();
+	private static Map<Integer, Consumer<KeyboardData>> releasedRaw = new HashMap<Integer, Consumer<KeyboardData>>();
 	
 	private static Map<Integer, Consumer<KeyboardData>> keyPressedListeners = new HashMap<Integer, Consumer<KeyboardData>>();
+	private static Map<Integer, Consumer<KeyboardData>> keyReleasedListeners = new HashMap<Integer, Consumer<KeyboardData>>();
 	
 	private static boolean init = false;
 	
@@ -37,46 +39,24 @@ public class KeyboardHandler {
 	public void onKeyPressPost(GuiScreenEvent.KeyboardInputEvent.Post e) {
 		keycode = Keyboard.getEventKey();
 		typedChar = Keyboard.getEventCharacter();
-//		keyPressed = true;
 		
 		keyPressedListeners.clear();
 		keyPressedListeners.putAll(pressedRaw);
 		
-		if (Keyboard.getEventKey() == 0 && typedChar >= ' ' || Keyboard.getEventKeyState()) {
+		keyReleasedListeners.clear();
+		keyReleasedListeners.putAll(releasedRaw);
+		
+		if (((Keyboard.getEventKey() == 0) && (typedChar >= ' ')) || Keyboard.getEventKeyState()) {
 			for (Consumer<KeyboardData> c : keyPressedListeners.values()) {
 				c.accept(new KeyboardData(keycode, typedChar));
 			}
 		}
+		if (!Keyboard.getEventKeyState()) {
+			for (Consumer<KeyboardData> c : keyReleasedListeners.values()) {
+				c.accept(new KeyboardData(keycode, typedChar));
+			}
+		}
 	}
-	
-//	@SubscribeEvent
-//	public void onKeyReleasedPost(GuiScreenEvent.KeyboardKeyReleasedEvent.Post e) {
-//		keyPressed = false;
-//		
-//		keyReleasedListeners.clear();
-//		keyReleasedListeners.putAll(releasedRaw);
-//		
-//		for (Consumer<KeyboardData> c : keyReleasedListeners.values()) {
-//			c.accept(new KeyboardData(e.getKeyCode(), e.getScanCode(), e.getModifiers()));
-//		}
-//	}
-	
-//	@SubscribeEvent
-//	public void onCharTyped(GuiScreenEvent.KeyboardCharTypedEvent.Post e) {
-//		typedChar = e.getCodePoint();
-//		charModifiers = e.getModifiers();
-//		
-//		charListeners.clear();
-//		charListeners.putAll(charRaw);
-//		
-//		for (Consumer<CharData> c : charListeners.values()) {
-//			c.accept(new CharData(e.getCodePoint(), e.getModifiers()));
-//		}
-//	}
-	
-//	public static boolean isKeyPressed() {
-//		return keyPressed;
-//	}
 	
 	public static int getCurrentKeyCode() {
 		return keycode;
@@ -95,23 +75,14 @@ public class KeyboardHandler {
 		return id;
 	}
 	
-//	/**
-//	 * Adds a new listener and returns its unique ID.
-//	 */
-//	public static int addKeyReleasedListener(Consumer<KeyboardData> c) {
-//		int id = generateUniqueId();
-//		releasedRaw.put(id, c);
-//		return id;
-//	}
-//	
-//	/**
-//	 * Adds a new listener and returns its unique ID.
-//	 */
-//	public static int addCharTypedListener(Consumer<CharData> c) {
-//		int id = generateUniqueId();
-//		charRaw.put(id, c);
-//		return id;
-//	}
+	/**
+	 * Adds a new listener and returns its unique ID.
+	 */
+	public static int addKeyReleasedListener(Consumer<KeyboardData> c) {
+		int id = generateUniqueId();
+		releasedRaw.put(id, c);
+		return id;
+	}
 	
 	public static void removeKeyPressedListener(int id) {
 		if (pressedRaw.containsKey(id)) {
@@ -119,17 +90,11 @@ public class KeyboardHandler {
 		}
 	}
 	
-//	public static void removeKeyReleasedListener(int id) {
-//		if (releasedRaw.containsKey(id)) {
-//			releasedRaw.remove(id);
-//		}
-//	}
-//	
-//	public static void removeCharTypedListener(int id) {
-//		if (charRaw.containsKey(id)) {
-//			charRaw.remove(id);
-//		}
-//	}
+	public static void removeKeyReleasedListener(int id) {
+		if (releasedRaw.containsKey(id)) {
+			releasedRaw.remove(id);
+		}
+	}
 	
 	private static int generateUniqueId() {
 		int i = MathUtils.getRandomNumberInRange(100000000, 999999999);

@@ -29,11 +29,11 @@ public class MouseInput {
 	
 	public static int getMouseX() {
 		Minecraft.getInstance().mouseHelper.getMouseX();
-		return (int)(Minecraft.getInstance().mouseHelper.getMouseX() * (double)Minecraft.getInstance().func_228018_at_().getScaledWidth() / (double)Minecraft.getInstance().func_228018_at_().getWidth());
+		return (int)(Minecraft.getInstance().mouseHelper.getMouseX() * (double)Minecraft.getInstance().getMainWindow().getScaledWidth() / (double)Minecraft.getInstance().getMainWindow().getWidth());
 	}
 	
 	public static int getMouseY() {
-		return (int)(Minecraft.getInstance().mouseHelper.getMouseY() * (double)Minecraft.getInstance().func_228018_at_().getScaledHeight() / (double)Minecraft.getInstance().func_228018_at_().getHeight());
+		return (int)(Minecraft.getInstance().mouseHelper.getMouseY() * (double)Minecraft.getInstance().getMainWindow().getScaledHeight() / (double)Minecraft.getInstance().getMainWindow().getHeight());
 	}
 
 }

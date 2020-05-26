@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
@@ -26,7 +26,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		this.button = new AdvancedButton(parent.x, parent.y, parent.getWidth(), parent.getHeight(), parent.getMessage(), true, (press) -> {
 			click();
 		});
-		this.button.setBackgroundTexture(ExternalTextureHandler.getResource(backNormal.replace("\\", "/")), ExternalTextureHandler.getResource(backHover.replace("\\", "/")));
+		this.button.setBackgroundTexture(TextureHandler.getResource(backNormal.replace("\\", "/")), TextureHandler.getResource(backHover.replace("\\", "/")));
 	}
 
 	@Override

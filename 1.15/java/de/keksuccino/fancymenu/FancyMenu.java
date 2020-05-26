@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -24,7 +25,8 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.1";
+	public static final String VERSION = "1.2.1";
+	private static boolean isNotHeadless = false;
 	
 	public static Config config;
 	
@@ -55,14 +57,20 @@ public class FancyMenu {
         	KeyboardHandler.init();
         	
         	SoundHandler.init();
-        	
-        	Keybinding.init();
+
+        	if (config.getOrDefault("enablehotkeys", true)) {
+        		Keybinding.init();
+        	}
         	
         	FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
+
+        	if (config.getOrDefault("enablesystemtray", true) && !Minecraft.IS_RUNNING_ON_MAC) {
+        		isNotHeadless = FancyMenuTray.init();
+        	}
         	
-        	FancyMenuTray.init();
-        	
-        	FileChooser.init();
+        	if (isNotHeadless) {
+        		FileChooser.init();
+        	}
         	
     	} else {
     		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
@@ -72,10 +80,16 @@ public class FancyMenu {
 	private void onClientSetup(FMLClientSetupEvent e) {
 		Locals.init();
 	}
-	
+
 	public static void updateConfig() {
     	try {
     		config = new Config("config/fancymenu/config.txt");
+    		
+    		if (!Minecraft.IS_RUNNING_ON_MAC) {
+    			config.registerValue("enablesystemtray", true, "general", "A minecraft restart is required after changing this value.");
+    		}
+    		
+    		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		
@@ -95,6 +109,12 @@ public class FancyMenu {
 			config.syncConfig();
 			
 			//Updating all categorys at start to keep them synchronized with older config files
+			config.setCategory("enablesystemtray", "general");
+			
+			if (!Minecraft.IS_RUNNING_ON_MAC) {
+				config.setCategory("enablehotkeys", "general");
+			}
+    		
 			config.setCategory("showcustomizationbuttons", "customization");
 			
 			config.setCategory("hidebranding", "mainmenu");
@@ -128,6 +148,10 @@ public class FancyMenu {
 			customizationPath.mkdirs();
 		}
 		return customizationPath;
+	}
+	
+	public static boolean isNotHeadless() {
+		return isNotHeadless;
 	}
 
 }

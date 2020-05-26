@@ -15,7 +15,7 @@ import de.keksuccino.core.gui.screens.popup.TextInputPopup;
 import de.keksuccino.core.input.CharacterFilter;
 import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
@@ -85,7 +85,7 @@ public class LayoutVanillaButton extends LayoutObject {
 					if (this.backHovered == null) {
 						this.backHovered = path;
 					}
-					((LayoutButtonDummyCustomizationItem)this.object).setTexture(ExternalTextureHandler.getResource(this.backNormal).getResourceLocation());
+					((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
 				}
 			}, "jpg", "jpeg", "png");
 		});
@@ -107,7 +107,7 @@ public class LayoutVanillaButton extends LayoutObject {
 					if (this.backNormal == null) {
 						this.backNormal = path;
 					}
-					((LayoutButtonDummyCustomizationItem)this.object).setTexture(ExternalTextureHandler.getResource(this.backNormal).getResourceLocation());
+					((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
 				}
 			}, "jpg", "jpeg", "png");
 		});
@@ -160,13 +160,13 @@ public class LayoutVanillaButton extends LayoutObject {
 				this.displaySetOrientationNotification();
 				this.object.posX = this.button.x;
 				this.object.posY = this.button.y;
-				GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), normalCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
 				return;
 			}
 			//Cancel resize
 			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
 				this.displaySetOrientationNotification();
-				GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), normalCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
 				return;
 			}
 		}

@@ -1,13 +1,15 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
@@ -15,7 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ConnectingScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.util.Util;
 import net.minecraft.world.WorldSettings;
 
 public class ButtonCustomizationItem extends CustomizationItemBase {
@@ -43,7 +44,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			String finalAction = actionvalue;
 			if (buttonaction.equalsIgnoreCase("openlink")) {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					Util.getOSType().openURI(finalAction);
+					this.openWebLink(finalAction);
 				});
 			}
 			if (buttonaction.equalsIgnoreCase("sendmessage")) {
@@ -74,7 +75,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
 					File f = new File(finalAction.replace("\\", "/"));
 					if (f.exists()) {
-						Util.getOSType().openFile(new File(finalAction));
+						this.openFile(f);
 					}
 				});
 			}
@@ -115,7 +116,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				File f = new File(backNormal.replace("\\", "/"));
 				File f2 = new File(backHover.replace("\\", "/"));
 				if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
-					this.button.setBackgroundTexture(ExternalTextureHandler.getResource(backNormal.replace("\\", "/")), ExternalTextureHandler.getResource(backHover.replace("\\", "/")));
+					this.button.setBackgroundTexture(TextureHandler.getResource(backNormal.replace("\\", "/")), TextureHandler.getResource(backHover.replace("\\", "/")));
 				}
 			}
 		}
@@ -141,6 +142,36 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			return false;
 		}
 		return super.shouldRender();
+	}
+	
+	private void openWebLink(String url) {
+		try {
+			if (!Minecraft.IS_RUNNING_ON_MAC) {
+				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+					Desktop.getDesktop().browse(new URI(url));
+				}
+			} else {
+				Runtime runtime = Runtime.getRuntime();
+			    String[] args = { "osascript", "-e", "open location \"" + url + "\"" };
+			    runtime.exec(args);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
+	
+	private void openFile(File f) {
+		try {
+			if (!Minecraft.IS_RUNNING_ON_MAC) {
+				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+					Desktop.getDesktop().open(f);
+				}
+			} else {
+				Runtime.getRuntime().exec(new String[]{"/usr/bin/open", f.getAbsolutePath()});
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

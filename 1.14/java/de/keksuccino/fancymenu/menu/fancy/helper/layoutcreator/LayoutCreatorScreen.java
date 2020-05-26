@@ -13,7 +13,6 @@ import com.google.common.io.Files;
 import com.mojang.blaze3d.platform.GlStateManager;
 
 import de.keksuccino.core.file.FileUtils;
-import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.content.IMenu;
 import de.keksuccino.core.gui.content.PopupMenu;
@@ -28,9 +27,10 @@ import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import de.keksuccino.core.sound.SoundHandler;
+import de.keksuccino.core.web.WebUtils;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -40,15 +40,20 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutString;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutTexture;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutWebString;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutWebTexture;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
@@ -192,18 +197,18 @@ public class LayoutCreatorScreen extends Screen {
 			this.addMenu(this.addObjectPopup);
 			
 			AdvancedButton b1 = new AdvancedButton(0, 0, 0, 20, "Image", (press) -> {
-//				this.setMenusUseable(false);
-//				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lImage Path:", null, 240, this::addTexture));
-				FileChooser.askForFile(new File("").getAbsoluteFile(), (callback) -> {
-					if (callback != null) {
-						this.addTexture(callback.getPath());
-					} else {
-						this.addTexture(null);
-					}
-				}, "jpg", "jpeg", "png");
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new ChooseFilePopup(this::addTexture, "jpg", "jpeg", "png"));
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b1);
 			this.addObjectPopup.addContent(b1);
+			
+			AdvancedButton b4 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this::addWebTexture));
+			});
+			LayoutCreatorScreen.colorizeCreatorButton(b4);
+			this.addObjectPopup.addContent(b4);
 			
 			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 20, "Animation", (press) -> {
 				if (this.addAnimationMenu.isOpen()) {
@@ -222,6 +227,13 @@ public class LayoutCreatorScreen extends Screen {
 			LayoutCreatorScreen.colorizeCreatorButton(b3);
 			this.addObjectPopup.addContent(b3);
 			
+			AdvancedButton b7 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webtext"), (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this::addWebText));
+			});
+			LayoutCreatorScreen.colorizeCreatorButton(b7);
+			this.addObjectPopup.addContent(b7);
+			
 			AdvancedButton b5 = new AdvancedButton(0, 0, 0, 20, "Button", (press) -> {
 				this.setMenusUseable(false);
 				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§lButton Label:", null, 240, this::addButton));
@@ -230,13 +242,8 @@ public class LayoutCreatorScreen extends Screen {
 			this.addObjectPopup.addContent(b5);
 			
 			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 20, "Audio", (press) -> {
-				FileChooser.askForFile(new File("").getAbsoluteFile(), (callback) -> {
-					if (callback != null) {
-						this.addAudio(callback.getPath());
-					} else {
-						this.addAudio(null);
-					}
-				}, "wav");
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new ChooseFilePopup(this::addAudio, "wav"));
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b6);
 			this.addObjectPopup.addContent(b6);
@@ -1043,7 +1050,23 @@ public class LayoutCreatorScreen extends Screen {
 			
 			this.setMenusUseable(true);
 		} else {
-			this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.imagenotfound.title"), "", Locals.localize("helper.creator.imagenotfound.desc"), "", "", "", "", "", "");
+			this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+		}
+	}
+	
+	private void addWebTexture(String url) {
+		if (url != null) {
+			url = WebUtils.filterURL(url);
+		}
+		if (WebUtils.isValidUrl(url)) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "addwebtexture");
+			s.addEntry("url", url);
+			s.addEntry("height", "100");
+			this.addContent(new LayoutWebTexture(new WebTextureCustomizationItem(s), this));
+			this.setMenusUseable(true);
+		} else {
+			this.displayNotification(300, Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
 		}
 	}
 	
@@ -1079,6 +1102,21 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		this.addContent(new LayoutButton(100, 20, label, this));
 		this.setMenusUseable(true);
+	}
+	
+	private void addWebText(String url) {
+		if (url != null) {
+			url = WebUtils.filterURL(url);
+		}
+		if (WebUtils.isValidUrl(url)) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "addwebtext");
+			s.addEntry("url", url);
+			this.addContent(new LayoutWebString(new WebStringCustomizationItem(s), this));
+			this.setMenusUseable(true);
+		} else {
+			this.displayNotification(300, Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
+		}
 	}
 	
 	private void addText(String text) {
@@ -1163,7 +1201,7 @@ public class LayoutCreatorScreen extends Screen {
 			
 			File f = new File(path);
 			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-				this.backgroundTexture = ExternalTextureHandler.getResource(path);
+				this.backgroundTexture = TextureHandler.getResource(path);
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 				}

@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import java.awt.Color;
-import java.io.File;
 
-import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.content.HorizontalSwitcher;
 import de.keksuccino.core.gui.screens.popup.Popup;
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.KeyboardData;
 import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.fancymenu.localization.Locals;
@@ -50,9 +49,10 @@ public class BackgroundOptionsPopup extends Popup {
 		this.animationSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
-			FileChooser.askForFile(new File("").getAbsoluteFile(), (call) -> {
-				BackgroundOptionsPopup.this.handler.setBackgroundTexture(call.getPath());
-			}, "jpg", "jpeg", "png");
+			BackgroundOptionsPopup.this.handler.setMenusUseable(false);
+			PopupHandler.displayPopup(new ChooseFilePopup((call) -> {
+				BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
+			}, "jpg", "jpeg", "png"));
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(chooseTextureButton);
 		
@@ -160,14 +160,14 @@ public class BackgroundOptionsPopup extends Popup {
 	}
 	
 	public void onEnterPressed(KeyboardData d) {
-		if ((d.keycode == 257) && this.isDisplayed()) {
+		if ((d.keycode == 28) && this.isDisplayed()) {
 			this.setDisplayed(false);
 			this.handler.setMenusUseable(true);
 		}
 	}
 	
 	public void onEscapePressed(KeyboardData d) {
-		if ((d.keycode == 256) && this.isDisplayed()) {
+		if ((d.keycode == 1) && this.isDisplayed()) {
 			this.setDisplayed(false);
 			this.handler.setMenusUseable(true);
 		}

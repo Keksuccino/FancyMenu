@@ -4,9 +4,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ExternalTextureHandler {
+public class TextureHandler {
 	
-	private static Map<String, ExternalTextureResourceLocation> textures = new HashMap<String, ExternalTextureResourceLocation>();
+	private static Map<String, ITextureResourceLocation> textures = new HashMap<String, ITextureResourceLocation>();
 	
 	public static ExternalTextureResourceLocation getResource(String path) {
 		File f = new File(path);
@@ -19,7 +19,25 @@ public class ExternalTextureHandler {
 			}
 			return null;
 		}
-		return textures.get(f.getAbsolutePath());
+		return (ExternalTextureResourceLocation) textures.get(f.getAbsolutePath());
+	}
+	
+	public static WebTextureResourceLocation getWebResource(String url) {
+		if (!textures.containsKey(url)) {
+			try {
+				WebTextureResourceLocation r = new WebTextureResourceLocation(url);
+				r.loadTexture();
+				if (!r.isReady()) {
+					return null;
+				}
+				textures.put(url, r);
+				return r;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		return (WebTextureResourceLocation) textures.get(url);
 	}
 	
 	public static void removeResource(String path) {

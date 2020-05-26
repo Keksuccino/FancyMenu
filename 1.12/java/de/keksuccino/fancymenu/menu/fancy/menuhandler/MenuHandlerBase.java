@@ -16,7 +16,7 @@ import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -33,6 +33,8 @@ import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -120,7 +122,7 @@ public class MenuHandlerBase {
 							File f = new File(value.replace("\\", "/"));
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 								if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
-									this.backgroundTexture = ExternalTextureHandler.getResource(value);
+									this.backgroundTexture = TextureHandler.getResource(value);
 								}
 								backgroundTextureSet = true;
 							}
@@ -312,11 +314,27 @@ public class MenuHandlerBase {
 						}
 					}
 					
+					if (action.equalsIgnoreCase("addwebtext")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new WebStringCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new WebStringCustomizationItem(sec));
+						}
+					}
+					
 					if (action.equalsIgnoreCase("addtexture")) {
 						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
 							backgroundRenderItems.add(new TextureCustomizationItem(sec));
 						} else {
 							frontRenderItems.add(new TextureCustomizationItem(sec));
+						}
+					}
+					
+					if (action.equalsIgnoreCase("addwebtexture")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new WebTextureCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new WebTextureCustomizationItem(sec));
 						}
 					}
 					

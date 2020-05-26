@@ -85,7 +85,7 @@ public class AdvancedTextField extends TextFieldWidget {
 		}
 
 		this.setText(s);
-		this.func_212422_f(i + l);
+		this.clampCursorPosition(i + l);
 		this.setSelectionPos(this.getCursorPosition());
 		this.setResponderEntryValue(this.getText());
 	}

@@ -23,7 +23,7 @@ import net.minecraft.client.gui.AbstractGui;
 
 public abstract class LayoutObject extends AbstractGui {
 	
-	public final CustomizationItemBase object;
+	public CustomizationItemBase object;
 	protected LayoutCreatorScreen handler;
 	protected boolean hovered = false;
 	protected boolean focused = false;
@@ -216,7 +216,7 @@ public abstract class LayoutObject extends AbstractGui {
 		
 		//Reset cursor to default
 		if ((this.activeGrabber == -1) && (!MouseInput.isLeftMouseDown() || PopupHandler.isPopupActive())) {
-			GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), normalCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
 		}
 				
 		//Update dragging state
@@ -324,16 +324,16 @@ public abstract class LayoutObject extends AbstractGui {
 		
 		//Update cursor and active grabber when grabber is hovered
 		if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-			GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), hResizeCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), hResizeCursor);
 			this.activeGrabber = 0;
 		} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-			GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), hResizeCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), hResizeCursor);
 			this.activeGrabber = 1;
 		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-			GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), vResizeCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), vResizeCursor);
 			this.activeGrabber = 2;
 		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-			GLFW.glfwSetCursor(Minecraft.getInstance().func_228018_at_().getHandle(), vResizeCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), vResizeCursor);
 			this.activeGrabber = 3;
 		} else {
 			this.activeGrabber = -1;

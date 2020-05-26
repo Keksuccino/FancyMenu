@@ -56,6 +56,7 @@ public class Locals {
 	private static void prepareLocalsFiles() {
 		copyLocalsFile("de_de");
 		copyLocalsFile("en_us");
+//		TODO copyLocalsFile("ru_ru");
 	}
 	
 	private static void copyLocalsFile(String language) {
@@ -63,8 +64,7 @@ public class Locals {
 		if (lang.exists()) {
 			lang.delete();
 		}
-		
-		//TODO übernehmen
+
 		BufferedReader br = null;
 		BufferedWriter bw = null;
 		try {

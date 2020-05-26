@@ -171,3 +171,16 @@ helper.creator.items.string.scale.invalidvalue.title = Invalid Value!
 helper.creator.items.string.scale.invalidvalue.desc = The value you want to set is not a valid scale value!%n%%n%Scale value examples: 1.0, 2.0, 0.5
 
 helper.creator.deleteobject = Do you really want to §lDELETE §rthis object?%n%%n%§lThis action cannot be undone!
+
+helper.creator.choosefile.enterorchoose = §lEnter Path Or Choose File
+helper.creator.choosefile.choose = Choose File
+helper.creator.choosefile.notsupported = §cFile chooser not supported or disabled! Please manually enter the path.
+
+helper.creator.webstring.multiline = Set Multilined
+helper.creator.webstring.nomultiline = Set Not Multilined
+
+helper.creator.web.invalidurl = §c§lInvalid URL!%n%%n%This URL is not a valid URL or does not exists!
+helper.creator.web.enterurl = Enter URL
+
+helper.creator.add.webimage = Web Image
+helper.creator.add.webtext = Web Text

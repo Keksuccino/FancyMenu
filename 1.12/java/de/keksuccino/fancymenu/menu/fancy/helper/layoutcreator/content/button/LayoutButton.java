@@ -13,7 +13,7 @@ import de.keksuccino.core.gui.content.PopupMenu;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.TextInputPopup;
 import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
@@ -69,7 +69,7 @@ public class LayoutButton extends LayoutObject {
 					if (this.backHovered == null) {
 						this.backHovered = path;
 					}
-					((LayoutButtonDummyCustomizationItem)this.object).setTexture(ExternalTextureHandler.getResource(this.backNormal).getResourceLocation());
+					((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
 				}
 			}, "jpg", "jpeg", "png");
 		});
@@ -91,7 +91,7 @@ public class LayoutButton extends LayoutObject {
 					if (this.backNormal == null) {
 						this.backNormal = path;
 					}
-					((LayoutButtonDummyCustomizationItem)this.object).setTexture(ExternalTextureHandler.getResource(this.backNormal).getResourceLocation());
+					((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
 				}
 			}, "jpg", "jpeg", "png");
 		});

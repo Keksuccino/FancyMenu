@@ -41,7 +41,6 @@ public class FileUtils {
 		List<String> list = new ArrayList<>();
 		
 		try {
-			//TODO übernehmen
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8));
 			String line = in.readLine();
 			while (line != null) {

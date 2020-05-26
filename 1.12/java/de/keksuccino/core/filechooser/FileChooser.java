@@ -29,6 +29,10 @@ public class FileChooser {
 	 * @param callback The callback.
 	 */
 	public static void askForFile(File homeDir, Consumer<File> callback, String... fileTypes) {
+		if (!init) {
+			return;
+		}
+		
 		System.setProperty("java.awt.headless", "false");
 		
 		new Thread(new Runnable() {

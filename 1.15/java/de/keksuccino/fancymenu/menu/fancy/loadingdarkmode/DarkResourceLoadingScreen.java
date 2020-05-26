@@ -36,8 +36,8 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 	@Override
 	public void render(int p_render_1_, int p_render_2_, float p_render_3_) {
 		Minecraft mc = Minecraft.getInstance();
-		int i = mc.func_228018_at_().getScaledWidth();
-		int j = mc.func_228018_at_().getScaledHeight();
+		int i = mc.getMainWindow().getScaledWidth();
+		int j = mc.getMainWindow().getScaledHeight();
 		long k = Util.milliTime();
 		if (this.reloading && (this.asyncReloader.asyncPartDone() || mc.currentScreen != null) && this.l2 == -1L) {
 			this.l2 = k;
@@ -68,8 +68,8 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 			f2 = 1.0F;
 		}
 
-		int k1 = (mc.func_228018_at_().getScaledWidth() - 256) / 2;
-		int i1 = (mc.func_228018_at_().getScaledHeight() - 256) / 2;
+		int k1 = (mc.getMainWindow().getScaledWidth() - 256) / 2;
+		int i1 = (mc.getMainWindow().getScaledHeight() - 256) / 2;
 		mc.getTextureManager().bindTexture(MOJANG_LOGO_TEXTURE);
 		RenderSystem.enableBlend();
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, f2);
@@ -95,7 +95,7 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 
 			this.l1 = Util.milliTime();
 			if (mc.currentScreen != null) {
-				mc.currentScreen.init(mc, mc.func_228018_at_().getScaledWidth(), mc.func_228018_at_().getScaledHeight());
+				mc.currentScreen.init(mc, mc.getMainWindow().getScaledWidth(), mc.getMainWindow().getScaledHeight());
 			}
 		}
 

@@ -9,7 +9,7 @@ import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
@@ -116,7 +116,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				File f = new File(backNormal.replace("\\", "/"));
 				File f2 = new File(backHover.replace("\\", "/"));
 				if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
-					this.button.setBackgroundTexture(ExternalTextureHandler.getResource(backNormal.replace("\\", "/")), ExternalTextureHandler.getResource(backHover.replace("\\", "/")));
+					this.button.setBackgroundTexture(TextureHandler.getResource(backNormal.replace("\\", "/")), TextureHandler.getResource(backHover.replace("\\", "/")));
 				}
 			}
 		}
@@ -146,8 +146,14 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	
 	private void openWebLink(String url) {
 		try {
-			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-			    Desktop.getDesktop().browse(new URI(url));
+			if (!Minecraft.IS_RUNNING_ON_MAC) {
+				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+					Desktop.getDesktop().browse(new URI(url));
+				}
+			} else {
+				Runtime runtime = Runtime.getRuntime();
+			    String[] args = { "osascript", "-e", "open location \"" + url + "\"" };
+			    runtime.exec(args);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -156,8 +162,12 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	
 	private void openFile(File f) {
 		try {
-			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-				Desktop.getDesktop().open(f);
+			if (!Minecraft.IS_RUNNING_ON_MAC) {
+				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
+					Desktop.getDesktop().open(f);
+				}
+			} else {
+				Runtime.getRuntime().exec(new String[]{"/usr/bin/open", f.getAbsolutePath()});
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
 public abstract class CustomizationItemBase {
@@ -28,32 +29,43 @@ public abstract class CustomizationItemBase {
 	
 	public CustomizationItemBase(PropertiesSection item) {
 		this.action = item.getEntryValue("action");
-		
+
+		int guiwidth = 0;
+		int guiheight = 0;
+		if (Minecraft.getInstance().currentScreen != null) {
+			guiwidth = Minecraft.getInstance().currentScreen.width;
+			guiheight = Minecraft.getInstance().currentScreen.height;
+		}
+
 		String x = item.getEntryValue("x");
 		String y = item.getEntryValue("y");
-		if ((x != null) && MathUtils.isInteger(x)) {
-			this.posX = Integer.parseInt(x);
+		if (x != null) {
+			x = x.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			this.posX = (int) MathUtils.calculateFromString(x);
 		}
-		if ((y != null) && MathUtils.isInteger(y)) {
-			this.posY = Integer.parseInt(y);
+		if (y != null) {
+			y = y.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			this.posY = (int) MathUtils.calculateFromString(y);
 		}
 	
 		String o = item.getEntryValue("orientation");
 		if (o != null) {
 			this.orientation = o;
 		}
-		
+
 		String w = item.getEntryValue("width");
-		if ((w != null) && MathUtils.isInteger(w)) {
-			this.width = Integer.parseInt(w);
+		if (w != null) {
+			w = w.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			this.width = (int) MathUtils.calculateFromString(w);
 			if (this.width < 0) {
 				this.width = 0;
 			}
 		}
-		
+
 		String h = item.getEntryValue("height");
-		if ((h != null) && MathUtils.isInteger(h)) {
-			this.height = Integer.parseInt(h);
+		if (h != null) {
+			h = h.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			this.height = (int) MathUtils.calculateFromString(h);
 			if (this.height < 0) {
 				this.height = 0;
 			}

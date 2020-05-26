@@ -171,3 +171,16 @@ helper.creator.items.string.scale.invalidvalue.title = Ungültiger Wert!
 helper.creator.items.string.scale.invalidvalue.desc = Der Wert, den du setzen möchtest, ist keine gültige Schriftgröße!%n%%n%Beispiele für Schriftgrößen: 1.0, 2.0, 0.5
 
 helper.creator.deleteobject = Möchtest du dieses Objekt wirklich §lLÖSCHEN§r?%n%%n%§lDiese Aktion kann nicht rückgängig gemacht werden!
+
+helper.creator.choosefile.enterorchoose = §lDateipfad festlegen oder Datei wählen
+helper.creator.choosefile.choose = Datei wählen
+helper.creator.choosefile.notsupported = §cDateisuche deaktiviert oder nicht unterstützt! Bitte Pfad manuell festlegen.
+
+helper.creator.webstring.multiline = Mehrzeilig
+helper.creator.webstring.nomultiline = Nicht Mehrzeilig
+
+helper.creator.web.invalidurl = §c§lUngültige URL!%n%%n%Diese URL ist entweder keine gültige URL oder existiert nicht!
+helper.creator.web.enterurl = URL eingeben
+
+helper.creator.add.webimage = Web Bild
+helper.creator.add.webtext = Web Text

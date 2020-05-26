@@ -53,7 +53,7 @@ public class LayoutString extends LayoutObject {
 		LayoutCreatorScreen.colorizeCreatorButton(centeredB);
 		
 		String sLabel = Locals.localize("helper.creator.items.string.setshadow");
-		if (this.isStringCentered()) {
+		if (this.getObject().shadow) {
 			sLabel = Locals.localize("helper.creator.items.string.setnoshadow");
 		}
 		AdvancedButton shadowB = new AdvancedButton(0, 0, 0, 16, sLabel, true, (press) -> {

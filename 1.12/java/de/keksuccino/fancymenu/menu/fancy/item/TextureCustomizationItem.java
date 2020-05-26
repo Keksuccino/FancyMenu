@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.ExternalTextureHandler;
+import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -25,7 +25,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				File f = new File(this.value);
 				if (f.exists() && f.isFile() && (f.getName().endsWith(".png") || f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg"))) {
 					try {
-						this.texture = ExternalTextureHandler.getResource(this.value);
+						this.texture = TextureHandler.getResource(this.value);
 
 						int w = this.texture.getWidth();
 						int h = this.texture.getHeight();
