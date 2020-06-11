@@ -7,8 +7,12 @@ import org.lwjgl.opengl.GL11;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldVertexBufferUploader;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 
 public class RenderUtils {
@@ -55,6 +59,22 @@ public class RenderUtils {
     	GL11.glPopMatrix();
         RenderSystem.disableBlend();
         GL11.glPopMatrix();
+    }
+
+    public static void doubleBlit(double x, double y, float f1, float f2, int w, int h) {
+    	innerDoubleBlit(x, x + (double)w, y, y + (double)h, 0, (f1 + 0.0F) / (float)w, (f1 + (float)w) / (float)w, (f2 + 0.0F) / (float)h, (f2 + (float)h) / (float)h);
+    }
+
+    public static void innerDoubleBlit(double x, double xEnd, double y, double yEnd, int z, float f1, float f2, float f3, float f4) {
+    	BufferBuilder bufferbuilder = Tessellator.getInstance().getBuffer();
+        bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
+        bufferbuilder.pos(x, yEnd, (double)z).tex(f1, f4).endVertex();
+        bufferbuilder.pos(xEnd, yEnd, (double)z).tex(f2, f4).endVertex();
+        bufferbuilder.pos(xEnd, y, (double)z).tex(f2, f3).endVertex();
+        bufferbuilder.pos(x, y, (double)z).tex(f1, f3).endVertex();
+        bufferbuilder.finishDrawing();
+        RenderSystem.enableAlphaTest();
+        WorldVertexBufferUploader.draw(bufferbuilder);
     }
 
 }

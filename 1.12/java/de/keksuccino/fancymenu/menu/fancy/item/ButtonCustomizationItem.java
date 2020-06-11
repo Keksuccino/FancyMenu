@@ -1,16 +1,18 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
+import java.net.URL;
+import java.util.Locale;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.core.resources.TextureHandler;
+import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import net.minecraft.client.Minecraft;
@@ -18,10 +20,15 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.world.WorldSettings;
+import net.minecraftforge.client.event.ClientChatEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	public AdvancedButton button;
+	private String hoverLabel;
+	private String hoverSound;
+	private boolean hover = false;
 	
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -35,12 +42,27 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			String actionvalue = item.getEntryValue("value");
 			String backNormal = item.getEntryValue("backgroundnormal");
 			String backHover = item.getEntryValue("backgroundhovered");
+
 			if (buttonaction == null) {
 				return;
 			}
 			if (actionvalue == null) {
 				actionvalue = "";
 			}
+
+			this.hoverSound = item.getEntryValue("hoversound");
+			if (this.hoverSound != null) {
+				this.hoverSound = this.hoverSound.replace("\\", "/");
+				File f = new File(this.hoverSound);
+				if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+					MenuCustomization.registerSound(this.hoverSound, this.hoverSound);
+				} else {
+					this.hoverSound = null;
+				}
+			}
+
+			this.hoverLabel = item.getEntryValue("hoverlabel");
+			
 			String finalAction = actionvalue;
 			if (buttonaction.equalsIgnoreCase("openlink")) {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
@@ -50,7 +72,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (buttonaction.equalsIgnoreCase("sendmessage")) {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
 					if (Minecraft.getMinecraft().world != null) {
-						Minecraft.getMinecraft().player.sendChatMessage(finalAction);
+						if (!MinecraftForge.EVENT_BUS.post(new ClientChatEvent(finalAction))) {
+							Minecraft.getMinecraft().player.sendChatMessage(finalAction);
+						}
 					}
 				});
 			}
@@ -75,7 +99,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
 					File f = new File(finalAction.replace("\\", "/"));
 					if (f.exists()) {
-						this.openFile(new File(finalAction));
+						this.openFile(f);
 					}
 				});
 			}
@@ -133,6 +157,20 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		this.button.x = x;
 		this.button.y = y;
 		
+		if (this.button.isMouseOver()) {
+			if (this.hoverLabel != null) {
+				this.button.displayString = this.hoverLabel;
+			}
+			if ((this.hoverSound != null) && !this.hover) {
+				this.hover = true;
+				SoundHandler.resetSound(this.hoverSound);
+				SoundHandler.playSound(this.hoverSound);
+			}
+		} else {
+			this.button.displayString = this.value;
+			this.hover = false;
+		}
+		
 		this.button.drawButton(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getMinecraft().getRenderPartialTicks());
 	}
 	
@@ -146,14 +184,19 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	
 	private void openWebLink(String url) {
 		try {
+			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+			URL u = new URL(url);
 			if (!Minecraft.IS_RUNNING_ON_MAC) {
-				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-					Desktop.getDesktop().browse(new URI(url));
+				if (s.contains("win")) {
+					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
+				} else {
+					if (u.getProtocol().equals("file")) {
+						url = url.replace("file:", "file://");
+					}
+					Runtime.getRuntime().exec(new String[]{"xdg-open", url});
 				}
 			} else {
-				Runtime runtime = Runtime.getRuntime();
-			    String[] args = { "osascript", "-e", "open location \"" + url + "\"" };
-			    runtime.exec(args);
+				Runtime.getRuntime().exec(new String[]{"open", url});
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -162,13 +205,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	
 	private void openFile(File f) {
 		try {
-			if (!Minecraft.IS_RUNNING_ON_MAC) {
-				if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)) {
-					Desktop.getDesktop().open(f);
-				}
-			} else {
-				Runtime.getRuntime().exec(new String[]{"/usr/bin/open", f.getAbsolutePath()});
-			}
+			this.openWebLink(f.toURI().toURL().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

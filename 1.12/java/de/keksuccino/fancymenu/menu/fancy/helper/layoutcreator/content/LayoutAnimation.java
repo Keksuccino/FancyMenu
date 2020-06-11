@@ -7,6 +7,7 @@ import java.util.List;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.YesNoPopup;
 import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
@@ -46,7 +47,7 @@ public class LayoutAnimation extends LayoutObject {
 				((AdvancedAnimation)((AnimationCustomizationItem)this.object).renderer).stopAudio();
 			}
 			this.handler.setMenusUseable(true);
-		}, "§c§lAre you sure?", "", "Do you really want to §lDELETE §rthis object?", "", "§lThis action cannot be undone!", "", "", "", "", ""));
+		}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));
 	}
 
 }

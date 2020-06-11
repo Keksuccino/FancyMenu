@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 public class AdvancedButton extends Button {
 
 	private boolean handleClick = false;
-	private boolean leftDown = false;
+	private static boolean leftDown = false;
 	private boolean useable = true;
 	
 	private Color idleColor;
@@ -89,13 +89,13 @@ public class AdvancedButton extends Button {
 		}
 
 		if (this.handleClick && this.useable) {
-			if (this.isHovered() && MouseInput.isLeftMouseDown() && !this.leftDown) {
+			if (this.isHovered() && MouseInput.isLeftMouseDown() && !leftDown) {
 				this.onClick(mouseX, mouseY);
 				this.playDownSound(Minecraft.getInstance().getSoundHandler());
-				this.leftDown = true;
+				leftDown = true;
 			}
 			if (!MouseInput.isLeftMouseDown()) {
-				this.leftDown = false;
+				leftDown = false;
 			}
 		}
 	}

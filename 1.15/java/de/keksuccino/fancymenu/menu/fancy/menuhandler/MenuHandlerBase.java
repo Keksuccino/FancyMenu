@@ -12,10 +12,12 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
+import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
@@ -59,6 +61,11 @@ public class MenuHandlerBase {
 	protected ExternalTextureResourceLocation backgroundTexture = null;
 	private String identifier;
 	private boolean backgroundDrawable;
+	protected boolean panoramaback = false;
+	private int panoTick = 0;
+	private double panoPos = 0.0;
+	private boolean panoMoveBack = false;
+	private boolean panoStop = false;
 	
 	/**
 	 * @param identifier Has to be the valid and full class name of the GUI screen.
@@ -118,11 +125,17 @@ public class MenuHandlerBase {
 
 					if (action.equalsIgnoreCase("texturizebackground")) {
 						String value = sec.getEntryValue("path");
+						String pano = sec.getEntryValue("panorama");
 						if (value != null) {
 							File f = new File(value.replace("\\", "/"));
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 								if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
 									this.backgroundTexture = TextureHandler.getResource(value);
+								}
+								if ((pano != null) && pano.equalsIgnoreCase("true")) {
+									this.panoramaback = true;
+								} else {
+									this.panoramaback = false;
 								}
 								backgroundTextureSet = true;
 							}
@@ -192,8 +205,8 @@ public class MenuHandlerBase {
 							b.visible = false;
 						}
 					}
-					
-					if (action.equalsIgnoreCase("renamebutton")) {
+
+					if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 						String value = sec.getEntryValue("value");
 						if ((value != null) && (b != null)) {
 							b.setMessage(value);;
@@ -203,9 +216,15 @@ public class MenuHandlerBase {
 					if (action.equalsIgnoreCase("resizebutton")) {
 						String width = sec.getEntryValue("width");
 						String height = sec.getEntryValue("height");
-						if ((width != null) && (height != null) && MathUtils.isInteger(width) && MathUtils.isInteger(height) && (b != null)) {
-							int w = Integer.parseInt(width);
-							int h = Integer.parseInt(height);
+						if (width != null) {
+							width = width.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
+						}
+						if (height != null) {
+							height = height.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
+						}
+						if ((width != null) && (height != null) && (b != null)) {
+							int w = (int) MathUtils.calculateFromString(width);
+							int h = (int) MathUtils.calculateFromString(height);
 							b.setWidth(w);
 							b.setHeight(h);;
 						}
@@ -214,10 +233,16 @@ public class MenuHandlerBase {
 					if (action.equalsIgnoreCase("movebutton")) {
 						String posX = sec.getEntryValue("x");
 						String posY = sec.getEntryValue("y");
+						if (posX != null) {
+							posX = posX.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
+						}
+						if (posY != null) {
+							posY = posY.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
+						}
 						String orientation = sec.getEntryValue("orientation");
-						if ((orientation != null) && (posX != null) && (posY != null) && MathUtils.isInteger(posX) && MathUtils.isInteger(posY) && (b != null)) {
-							int x = Integer.parseInt(posX);
-							int y = Integer.parseInt(posY);
+						if ((orientation != null) && (posX != null) && (posY != null) && (b != null)) {
+							int x = (int) MathUtils.calculateFromString(posX);
+							int y = (int) MathUtils.calculateFromString(posY);
 							int w = e.getGui().width;
 							int h = e.getGui().height;
 
@@ -288,28 +313,26 @@ public class MenuHandlerBase {
 							}
 						}
 					}
-					
-//					//TODO übernehmen
-//					if (action.equalsIgnoreCase("addhoversound")) {
-//						if (b != null) {
-//							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
-//							} else {
-//								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
-//							}
-//						}
-//					}
-//					
-//					//TODO übernehmen
-//					if (action.equalsIgnoreCase("sethoverlabel")) {
-//						if (b != null) {
-//							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
-//							} else {
-//								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
-//							}
-//						}
-//					}
+
+					if (action.equalsIgnoreCase("addhoversound")) {
+						if (b != null) {
+							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+							} else {
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("sethoverlabel")) {
+						if (b != null) {
+							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+							} else {
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+							}
+						}
+					}
 					
 					if (action.equalsIgnoreCase("clickbutton")) {
 						if (b != null) {
@@ -420,6 +443,10 @@ public class MenuHandlerBase {
 
 	@SubscribeEvent
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		
 		if (!this.shouldCustomize(e.getGui())) {
 			return;
 		}
@@ -444,7 +471,7 @@ public class MenuHandlerBase {
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void drawToBackground(GuiScreenEvent.BackgroundDrawnEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
@@ -458,11 +485,73 @@ public class MenuHandlerBase {
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
 					Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
-					IngameGui.blit(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
+					
+					if (!this.panoramaback) {
+						IngameGui.blit(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
+					} else {
+						int w = this.backgroundTexture.getWidth();
+						int h = this.backgroundTexture.getHeight();
+						double ratio = (double) w / (double) h;
+						int wfinal = (int)(e.getGui().height * ratio);
+
+						//Check if the panorama background should move to the left side or to the ride side
+						if ((panoPos + (wfinal - e.getGui().width)) <= 0) {
+							panoMoveBack = true;
+						}
+						if (panoPos >= 0) {
+							panoMoveBack = false;
+						}
+
+						//Fix pos after resizing
+						if (panoPos + (wfinal - e.getGui().width) < 0) {
+							panoPos = 0 - (wfinal - e.getGui().width);
+						}
+						if (panoPos > 0) {
+							panoPos = 0;
+						}
+						
+						if (!panoStop) {
+							if (panoTick >= 1) {
+								panoTick = 0;
+								if (panoMoveBack) {
+									panoPos = panoPos + 0.5;
+								} else {
+									panoPos = panoPos - 0.5;
+								}
+								
+								if (panoPos + (wfinal - e.getGui().width) == 0) {
+									panoStop = true;
+								}
+								if (panoPos == 0) {
+									panoStop = true;
+								}
+							} else {
+								panoTick++;
+							}
+						} else {
+							if (panoTick >= 300) {
+								panoStop = false;
+								panoTick = 0;
+							} else {
+								panoTick++;
+							}
+						}
+						if (wfinal <= e.getGui().width) {
+							IngameGui.blit(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
+						} else {
+//							IngameGui.blit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height, wfinal, e.getGui().height);
+							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height);
+						}
+					}
+					
 					RenderSystem.disableBlend();
 				}
 			}
 
+			if (PopupHandler.isPopupActive()) {
+				return;
+			}
+			
 			//Rendering all items which should be rendered in the background
 			for (CustomizationItemBase i : this.backgroundRenderItems) {
 				try {

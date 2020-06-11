@@ -9,6 +9,7 @@ import org.lwjgl.util.glu.Project;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -145,7 +146,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 				GuiScreen.drawRect(widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
 			}
 
-			this.renderButtonsAndLabels(e, mouseX, mouseY);
+			if (!PopupHandler.isPopupActive()) {
+				this.renderButtonsAndLabels(e, mouseX, mouseY);
+			}
 			
 			//Draw notification indicators to the "Realms" button if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {

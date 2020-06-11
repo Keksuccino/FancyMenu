@@ -8,14 +8,20 @@ import com.mojang.blaze3d.platform.GlStateManager;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.gui.screens.popup.NotificationPopup;
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
+import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
@@ -36,7 +42,7 @@ public class CustomizationHelper {
 	private AdvancedButton buttonInfoButton;
 	private AdvancedButton menuInfoButton;
 	
-	private Screen current;
+	public Screen current;
 	private int lastWidth;
 	private int lastHeight;
 	private List<AdvancedButton> helperbuttons = new ArrayList<AdvancedButton>();
@@ -63,29 +69,29 @@ public class CustomizationHelper {
 		if ((this.lastWidth != e.getGui().width) || (this.lastHeight != e.getGui().height)) {
 			this.helperbuttons.clear();
 			
-			String infoLabel = "Button Info";
+			String infoLabel = Locals.localize("helper.button.buttoninfo");
 			if (this.showButtonInfo) {
-				infoLabel = "§aButton Info";
+				infoLabel = "§a" + Locals.localize("helper.button.buttoninfo");
 			}
 			AdvancedButton iButton = new CustomizationButton(5, 5, 70, 20, infoLabel, true, (onPress) -> {
 				this.onInfoButtonPress();
 			}); 
 			this.buttonInfoButton = iButton;
 			
-			String minfoLabel = "Menu Info";
+			String minfoLabel = Locals.localize("helper.button.menuinfo");
 			if (this.showMenuInfo) {
-				minfoLabel = "§aMenu Info";
+				minfoLabel = "§a" + Locals.localize("helper.button.menuninfo");
 			}
 			AdvancedButton miButton = new CustomizationButton(80, 5, 70, 20, minfoLabel, true, (onPress) -> {
 				this.onMoreInfoButtonPress();
 			});
 			this.menuInfoButton = miButton;
 			
-			AdvancedButton rButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, "Reload", true, (onPress) -> {
+			AdvancedButton rButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.button.reload"), true, (onPress) -> {
 				onReloadButtonPress();
 			});
 			
-			AdvancedButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, "Create Layout", true, (onPress) -> {
+			AdvancedButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, Locals.localize("helper.button.createlayout"), true, (onPress) -> {
 				Minecraft.getInstance().displayGuiScreen(new LayoutCreatorScreen(this.current));
 				LayoutCreatorScreen.isActive = true;
 				MenuCustomization.stopSounds();
@@ -100,11 +106,40 @@ public class CustomizationHelper {
 				}
 			});
 			
+			AdvancedButton editLayoutButton = new CustomizationButton(e.getGui().width - 245, 5, 90, 20, Locals.localize("helper.creator.editlayout"), true, (onPress) -> {
+				List<PropertiesSet> l = MenuCustomizationProperties.getPropertiesWithIdentifier(this.current.getClass().getName());
+				if (l.isEmpty()) {
+					PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.creator.editlayout.nolayouts.msg")));
+				}
+				if (l.size() == 1) {
+					if (!MenuCustomization.containsCalculations(l.get(0))) {
+						Minecraft.getInstance().displayGuiScreen(new PreloadedLayoutCreatorScreen(this.current, l));
+						LayoutCreatorScreen.isActive = true;
+						MenuCustomization.stopSounds();
+						MenuCustomization.resetSounds();
+						for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+							if (r instanceof AdvancedAnimation) {
+								((AdvancedAnimation)r).stopAudio();
+								if (((AdvancedAnimation)r).replayIntro()) {
+									((AdvancedAnimation)r).resetAnimation();
+								}
+							}
+						}
+					} else {
+						PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.creator.editlayout.unsupportedvalues")));
+					}
+				}
+				if (l.size() > 1) {
+					PopupHandler.displayPopup(new EditLayoutPopup(l));
+				}
+			});
+			
 			if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 				this.helperbuttons.add(iButton);
 				this.helperbuttons.add(miButton);
 				this.helperbuttons.add(rButton);
 				this.helperbuttons.add(layoutCreatorButton);
+				this.helperbuttons.add(editLayoutButton);
 			}
 		}
 
@@ -114,41 +149,45 @@ public class CustomizationHelper {
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
-		
-		if (isValidScreen(e.getGui())) {
-			for (AdvancedButton b : this.helperbuttons) {
-				b.render(e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
-			}
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		if (!isValidScreen(e.getGui())) {
+			return;
 		}
 		
-		if (this.showMenuInfo  && !(e.getGui() instanceof LayoutCreatorScreen)) {
+		for (AdvancedButton b : this.helperbuttons) {
+			b.render(e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
+		}
+		
+		if (this.showMenuInfo && !(e.getGui() instanceof LayoutCreatorScreen)) {
 			GlStateManager.enableBlend();
-			e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f§lMenu Identifier:", 7, 30, 0);
+			e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":", 7, 30, 0);
 			e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f" + e.getGui().getClass().getName(), 7, 40, 0);
 			GlStateManager.disableBlend();
 		}
-		
+
 		if (this.showButtonInfo) {
 			for (Widget w : this.buttons) {
 				if (w.isHovered()) {
 					int id = getButtonId(w);
-					String idString = "<id not found>";
+					String idString = Locals.localize("helper.buttoninfo.idnotfound");
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
 					String key = ButtonCache.getKeyForButton(w);
 					if (key == null) {
-						key = "<button has no key>";
+						key = Locals.localize("helper.buttoninfo.keynotfound");
 					}
 					
 					List<String> info = new ArrayList<String>();
-					int width = Minecraft.getInstance().fontRenderer.getStringWidth("Button Info") + 10;
+					int width = Minecraft.getInstance().fontRenderer.getStringWidth(Locals.localize("helper.button.buttoninfo")) + 10;
 					
-					info.add("§fID: " + idString);
-					info.add("§fKey: " + key);
-					info.add("§fWidth: " + w.getWidth());
-					info.add("§fHeight: " + w.getHeight());
-					info.add("§fLabel Width: " + Minecraft.getInstance().fontRenderer.getStringWidth(w.getMessage()));
+					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
+					info.add("§f" + Locals.localize("helper.buttoninfo.key") + ": " + key);
+					info.add("§f" + Locals.localize("general.width") + ": " + w.getWidth());
+					info.add("§f" + Locals.localize("general.height") + ": " + w.getHeight());
+					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().fontRenderer.getStringWidth(w.getMessage()));
 					
 					//Getting the longest string from the list to render the background with the correct width
 					for (String s : info) {
@@ -171,7 +210,7 @@ public class CustomizationHelper {
 					drawInfoBackground(x, y, width + 10, 90);
 					
 					GlStateManager.enableBlend();
-					e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f§lButton Info", x + 10, y + 10, 0);
+					e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, 0);
 
 					int i2 = 20;
 					for (String s : info) {
@@ -213,25 +252,33 @@ public class CustomizationHelper {
 		IngameGui.fill(x, y, x + width, y + height, new Color(102, 0, 102, 200).getRGB());
 	}
 	
+	public void updateCustomizationButtons() {
+		this.lastHeight = -1;
+		Screen current = Minecraft.getInstance().currentScreen;
+		if (current != null) {
+			Minecraft.getInstance().displayGuiScreen(current);
+		}
+	}
+	
 	public void onInfoButtonPress() {
 		if (this.showButtonInfo) {
 			this.showButtonInfo = false;
-			this.buttonInfoButton.setMessage("Button Info");;
+			this.buttonInfoButton.setMessage(Locals.localize("helper.button.buttoninfo"));;
 			
 		} else {
 			this.showButtonInfo = true;
-			this.buttonInfoButton.setMessage("§aButton Info");;
+			this.buttonInfoButton.setMessage("§a" + Locals.localize("helper.button.buttoninfo"));;
 		}
 	}
 	
 	public void onMoreInfoButtonPress() {
 		if (this.showMenuInfo) {
 			this.showMenuInfo = false;
-			this.menuInfoButton.setMessage("Menu Info");;
+			this.menuInfoButton.setMessage(Locals.localize("helper.button.menuinfo"));;
 			
 		} else {
 			this.showMenuInfo = true;
-			this.menuInfoButton.setMessage("§aMenu Info");;
+			this.menuInfoButton.setMessage("§a" + Locals.localize("helper.button.menuinfo"));;
 		}
 	}
 

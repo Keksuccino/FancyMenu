@@ -77,7 +77,7 @@ public class FileChooser {
 		}).start();
 	}
 	
-	//"Why you don't handle the callback directly in the chooser thread?":
+	//"Why don't you handle the callback directly in the chooser thread?":
 	//Because some texture and sound stuff needs to be done in the main thread.
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {

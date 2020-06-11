@@ -22,7 +22,7 @@ public class MouseInput {
 	public static boolean isLeftMouseDown() {
 		return (getActiveMouseButton() == 0);
 	}
-	
+
 	public static boolean isRightMouseDown() {
 		return (getActiveMouseButton() == 1);
 	}

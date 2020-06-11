@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -24,7 +25,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.2.1";
+	public static final String VERSION = "1.3";
 	private static boolean isNotHeadless = false;
 	
 	public static Config config;
@@ -76,6 +77,8 @@ public class FancyMenu {
 	
 	private void onClientSetup(FMLClientSetupEvent e) {
 		Locals.init();
+		
+		GameMusicHandler.init();
 	}
 	
 	public static void updateConfig() {
@@ -85,8 +88,8 @@ public class FancyMenu {
     		if (!Minecraft.IS_RUNNING_ON_MAC) {
     			config.registerValue("enablesystemtray", true, "general", "A minecraft restart is required after changing this value.");
     		}
-    		
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
+    		config.registerValue("playmenumusic", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		
@@ -102,15 +105,16 @@ public class FancyMenu {
 			
 			config.registerValue("gameintroanimation", "", "loading");
 			config.registerValue("loadingscreendarkmode", false, "loading");
+			config.registerValue("showanimationloadingstatus", true, "loading");
 			
 			config.syncConfig();
 			
 			//Updating all categorys at start to keep them synchronized with older config files
-			config.setCategory("enablesystemtray", "general");
-			
 			if (!Minecraft.IS_RUNNING_ON_MAC) {
-				config.setCategory("enablehotkeys", "general");
+				config.setCategory("enablesystemtray", "general");
 			}
+			config.setCategory("enablehotkeys", "general");
+			config.setCategory("playmenumusic", "general");
     		
 			config.setCategory("showcustomizationbuttons", "customization");
 			
@@ -126,6 +130,7 @@ public class FancyMenu {
 			
 			config.setCategory("gameintroanimation", "loading");
 			config.setCategory("loadingscreendarkmode", "loading");
+			config.setCategory("showanimationloadingstatus", "loading");
 			
 			config.clearUnusedValues();
 		} catch (InvalidValueException e) {

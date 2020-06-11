@@ -11,16 +11,16 @@ public abstract class CustomizationItemBase {
 	
 	/**
 	 * This value CANNOT BE NULL!<br>
-	 * If null, {@code CustomizationItemBase.shouldRender()} will never return true.
+	 * If null, {@link CustomizationItemBase#shouldRender()} will never return true.
 	 */
 	public String value;
 	public String action;
 	/**
-	 * NOT similar to {@code MenuCustomizationItem.getPosX()}! This is the raw value without the defined orientation and scale!
+	 * NOT similar to {@link CustomizationItemBase#getPosX(Screen)}! This is the raw value without the defined orientation and scale!
 	 */
 	public int posX = 0;
 	/**
-	 * NOT similar to {@code MenuCustomizationItem.getPosY()}! This is the raw value without the defined orientation and scale!
+	 * NOT similar to {@link CustomizationItemBase#getPosY(Screen)}! This is the raw value without the defined orientation and scale!
 	 */
 	public int posY = 0;
 	public String orientation = "top-left";

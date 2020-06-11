@@ -17,7 +17,7 @@ popup.notification.accept = Bestätigen
 helper.button.menuinfo = Menü Info
 helper.button.buttoninfo = Button Info
 helper.button.reload = Neuladen
-helper.button.createlayout = Layout Erstellen
+helper.button.createlayout = Layout erstellen
 
 helper.menuinfo.identifier = Menü Identifier
 
@@ -106,7 +106,7 @@ helper.creator.add.button.label = Button Label
 
 helper.creator.add.audio = Audio
 
-helper.creator.vanillabutton.autoclick = Autoklick
+helper.creator.vanillabutton.autoclick = Button klicken
 helper.creator.vanillabutton.autoclick.popup = Automatische Button Klicks
 
 helper.creator.backgroundoptions = Hintergrundoptionen
@@ -184,3 +184,33 @@ helper.creator.web.enterurl = URL eingeben
 
 helper.creator.add.webimage = Web Bild
 helper.creator.add.webtext = Web Text
+
+helper.creator.editlayout = Layout editieren
+helper.creator.editlayout.popup.loadall = Alle laden
+helper.creator.editlayout.popup.loadselected = Ausgewähltes laden
+helper.creator.editlayout.popup.layouts = Layouts
+helper.creator.editlayout.popup.cancel = Abbrechen
+helper.creator.editlayout.popup.actionscount = {} Anpassungsaktionen
+helper.creator.editlayout.nolayouts.msg = §c§lKeine Layouts gefunden!%n%%n%%n%Für dieses Menü gibt es noch keine Layouts!%n%%n%Möchtest du dieses Menu anpassen, nutze bitte den "Layout erstellen" Button!
+helper.creator.editlayout.popup.msg = Es existiert mehr als ein Layout für dieses Menü!%n%%n%Möchtest du das komplette Layout laden und alle kombinieren%n%oder nur ein ganz Bestimmtes?%n%%n%§cVariablen aus Meta-Sektionen von Layouts gehen beim Kombinieren verloren!
+
+helper.creator.editlayout.single.override = Bestehendes Layout überschreiben
+helper.creator.editlayout.single.asnew.keep = Als Neues speichern und andere aktiv lassen
+helper.creator.editlayout.single.asnew.disable = Als Neues speichern und andere deaktivieren
+
+helper.creator.items.button.hoverlabel = Hoverlabel
+helper.creator.items.button.hoverlabel.text = Hoverlabel Text
+helper.creator.items.button.hoverlabel.reset = Hoverlabel resetten
+helper.creator.items.button.hoversound = Hoversound
+helper.creator.items.button.hoversound.path = Hoversound Pfad
+helper.creator.items.button.hoversound.reset = Hoversound resetten
+
+helper.creator.editlayout.unsupportedvalues = §c§lNicht unterstützte Werte!%n%%n%%n%Dein Layout beinhaltet nicht unterstützte Werte!%n%Diese Werte kann der Layout Creator nicht verarbeiten.%n%%n%Du nutzt vermutlich §lPositions- oder Größenberechnungen%n%in einer deiner Anpassungs-Sektionen.%n%%n%Bitte ändere diese Werte manuell zu Absoluten und versuche es erneut.
+
+helper.creator.backgroundoptions.setpanorama = Panoramabild?
+helper.creator.backgroundoptions.panorama = Panorama
+helper.creator.backgroundoptions.nopanorama = Kein Panorama
+
+helper.creator.textures.invalidcharacters = §c§lNicht unterstützte Zeichen!%n%%n%%n%Der Dateiname deines Bildes enthält nicht unterstützte Zeichen!%n%%n%Bitte nutze nur die Zeichen "a-z", "0-9", ".", "_" und "-".%n%Leerzeichen, Großbuchstaben und sonstige spezielle Zeichen sind nicht erlaubt.
+
+

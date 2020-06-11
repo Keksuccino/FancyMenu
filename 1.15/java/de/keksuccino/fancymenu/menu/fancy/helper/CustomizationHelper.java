@@ -8,6 +8,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.gui.screens.popup.NotificationPopup;
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
+import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.localization.Locals;
@@ -15,8 +18,10 @@ import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
@@ -37,7 +42,7 @@ public class CustomizationHelper {
 	private AdvancedButton buttonInfoButton;
 	private AdvancedButton menuInfoButton;
 	
-	private Screen current;
+	public Screen current;
 	private int lastWidth;
 	private int lastHeight;
 	private List<AdvancedButton> helperbuttons = new ArrayList<AdvancedButton>();
@@ -100,12 +105,41 @@ public class CustomizationHelper {
 					}
 				}
 			});
+
+			AdvancedButton editLayoutButton = new CustomizationButton(e.getGui().width - 245, 5, 90, 20, Locals.localize("helper.creator.editlayout"), true, (onPress) -> {
+				List<PropertiesSet> l = MenuCustomizationProperties.getPropertiesWithIdentifier(this.current.getClass().getName());
+				if (l.isEmpty()) {
+					PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.creator.editlayout.nolayouts.msg")));
+				}
+				if (l.size() == 1) {
+					if (!MenuCustomization.containsCalculations(l.get(0))) {
+						Minecraft.getInstance().displayGuiScreen(new PreloadedLayoutCreatorScreen(this.current, l));
+						LayoutCreatorScreen.isActive = true;
+						MenuCustomization.stopSounds();
+						MenuCustomization.resetSounds();
+						for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+							if (r instanceof AdvancedAnimation) {
+								((AdvancedAnimation)r).stopAudio();
+								if (((AdvancedAnimation)r).replayIntro()) {
+									((AdvancedAnimation)r).resetAnimation();
+								}
+							}
+						}
+					} else {
+						PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.creator.editlayout.unsupportedvalues")));
+					}
+				}
+				if (l.size() > 1) {
+					PopupHandler.displayPopup(new EditLayoutPopup(l));
+				}
+			});
 			
 			if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 				this.helperbuttons.add(iButton);
 				this.helperbuttons.add(miButton);
 				this.helperbuttons.add(rButton);
 				this.helperbuttons.add(layoutCreatorButton);
+				this.helperbuttons.add(editLayoutButton);
 			}
 		}
 
@@ -115,11 +149,15 @@ public class CustomizationHelper {
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		if (!isValidScreen(e.getGui())) {
+			return;
+		}
 		
-		if (isValidScreen(e.getGui())) {
-			for (AdvancedButton b : this.helperbuttons) {
-				b.render(e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
-			}
+		for (AdvancedButton b : this.helperbuttons) {
+			b.render(e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
 		}
 		
 		if (this.showMenuInfo && !(e.getGui() instanceof LayoutCreatorScreen)) {
@@ -186,7 +224,7 @@ public class CustomizationHelper {
 			}
 		}
 	}
-	
+
 	private static boolean isValidScreen(Screen s) {
 		//Prevents rendering in child(?)-screens like RealmsScreenProxy
 		if (s != Minecraft.getInstance().currentScreen) {
@@ -212,6 +250,14 @@ public class CustomizationHelper {
 	
 	private static void drawInfoBackground(int x, int y, int width, int height) {
 		IngameGui.fill(x, y, x + width, y + height, new Color(102, 0, 102, 200).getRGB());
+	}
+	
+	public void updateCustomizationButtons() {
+		this.lastHeight = -1;
+		Screen current = Minecraft.getInstance().currentScreen;
+		if (current != null) {
+			Minecraft.getInstance().displayGuiScreen(current);
+		}
 	}
 	
 	public void onInfoButtonPress() {

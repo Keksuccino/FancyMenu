@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -51,7 +52,9 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			
 			if (!current.isReady()) {
 				if (!this.preparing) {
-					this.setStatusText("Loading animation frames for " + current.getPath());
+					if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
+						this.setStatusText(Locals.localize("loading.animation.loadingframes", current.getPath().replace("/", ".").replace("\\", ".")));
+					}
 					this.preparing = true;
 				} else {
 					//Needs to be called in the main thread in <1.15 (I hate laggy loading screens..)
@@ -61,7 +64,9 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 				}
 			} else {
 				if (!current.isFinished()) {
-					this.setStatusText("Pre-rendering animation " + current.getPath());
+					if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
+						this.setStatusText(Locals.localize("loading.animation.prerendering", current.getPath().replace("/", ".").replace("\\", ".")));
+					}
 					if (current instanceof AdvancedAnimation) {
 						((AdvancedAnimation)current).setMuteAudio(true);
 					}
@@ -90,7 +95,7 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 	}
 	
 	public void onFinished() {
-		this.setStatusText("Done!");
+		this.setStatusText(Locals.localize("loading.animation.done"));
 	}
 
 	public boolean loadingFinished() {

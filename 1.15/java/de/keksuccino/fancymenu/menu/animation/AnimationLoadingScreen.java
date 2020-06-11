@@ -57,7 +57,9 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							loading.setStatusText(Locals.localize("loading.animation.loadingframes", current.getPath().replace("/", ".").replace("\\", ".")));
+							if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
+								loading.setStatusText(Locals.localize("loading.animation.loadingframes", current.getPath().replace("/", ".").replace("\\", ".")));
+							}
 							current.prepareAnimation();
 							System.gc();
 							loading.preparing = false;
@@ -66,7 +68,9 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 				}
 			} else {
 				if (!current.isFinished()) {
-					this.setStatusText(Locals.localize("loading.animation.prerendering", current.getPath().replace("/", ".").replace("\\", ".")));
+					if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
+						this.setStatusText(Locals.localize("loading.animation.prerendering", current.getPath().replace("/", ".").replace("\\", ".")));
+					}
 					if (current instanceof AdvancedAnimation) {
 						((AdvancedAnimation)current).setMuteAudio(true);
 					}

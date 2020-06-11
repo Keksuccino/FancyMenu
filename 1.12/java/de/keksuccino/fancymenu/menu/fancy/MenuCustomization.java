@@ -3,6 +3,9 @@ package de.keksuccino.fancymenu.menu.fancy;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.core.math.MathUtils;
+import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -94,5 +97,35 @@ public class MenuCustomization {
 		for (String s : sounds) {
 			SoundHandler.resetSound(s);
 		}
+	}
+	
+	public static boolean containsCalculations(PropertiesSet properties) {
+		for (PropertiesSection s : properties.getPropertiesOfType("customization")) {
+			String width = s.getEntryValue("width");
+			String height = s.getEntryValue("height");
+			String x = s.getEntryValue("x");
+			String y = s.getEntryValue("y");
+			String posX = s.getEntryValue("posX");
+			String posY = s.getEntryValue("posY");
+			if ((width != null) && !MathUtils.isInteger(width)) {
+				return true;
+			}
+			if ((height != null) && !MathUtils.isInteger(height)) {
+				return true;
+			}
+			if ((x != null) && !MathUtils.isInteger(x)) {
+				return true;
+			}
+			if ((y != null) && !MathUtils.isInteger(y)) {
+				return true;
+			}
+			if ((posX != null) && !MathUtils.isInteger(posX)) {
+				return true;
+			}
+			if ((posY != null) && !MathUtils.isInteger(posY)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

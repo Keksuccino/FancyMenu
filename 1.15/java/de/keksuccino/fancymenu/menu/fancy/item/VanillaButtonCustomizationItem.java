@@ -15,7 +15,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
-//TODO übernehmen
 public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	
 	private Widget parent;

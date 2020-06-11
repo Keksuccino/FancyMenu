@@ -18,7 +18,7 @@ public class AdvancedButton extends GuiButton {
 
 	private IPressable press;
 	private boolean handleClick = false;
-	private boolean leftDown = false;
+	private static boolean leftDown = false;
 	private boolean useable = true;
 	
 	private Color idleColor;
@@ -102,13 +102,13 @@ public class AdvancedButton extends GuiButton {
 		}
 
 		if (this.handleClick && this.useable) {
-			if (this.isMouseOver() && MouseInput.isLeftMouseDown() && !this.leftDown) {
+			if (this.isMouseOver() && MouseInput.isLeftMouseDown() && !leftDown) {
 				this.press.onPress(this);
 				this.playPressSound(Minecraft.getMinecraft().getSoundHandler());
-				this.leftDown = true;
+				leftDown = true;
 			}
 			if (!MouseInput.isLeftMouseDown()) {
-				this.leftDown = false;
+				leftDown = false;
 			}
 		}
 	}

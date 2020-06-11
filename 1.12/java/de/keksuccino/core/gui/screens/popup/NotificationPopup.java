@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.input.KeyboardData;
 import de.keksuccino.core.input.KeyboardHandler;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
@@ -28,7 +29,7 @@ public class NotificationPopup extends Popup {
 		
 		this.setNotificationText(text);
 		this.width = width;
-		this.accept = new AdvancedButton(0, 0, 100, 20, "Accept", true, (press) -> {
+		this.accept = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.notification.accept"), true, (press) -> {
 			this.setDisplayed(false);
 			if (this.callback != null) {
 				this.callback.run();

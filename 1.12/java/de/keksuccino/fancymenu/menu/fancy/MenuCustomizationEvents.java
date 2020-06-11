@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.fancy.music.AdvancedMusicTicker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.MusicTicker;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -25,6 +28,13 @@ public class MenuCustomizationEvents {
 			
 			this.lastScreen = e.getGui();
 			this.idle = false;
+		}
+		
+		if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+			MusicTicker m = Minecraft.getMinecraft().getMusicTicker();
+			if (m instanceof AdvancedMusicTicker) {
+				((AdvancedMusicTicker)m).stop();
+			}
 		}
 	}
 	

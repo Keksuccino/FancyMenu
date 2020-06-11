@@ -53,7 +53,7 @@ public class LayoutWebString extends LayoutObject {
 		
 		String mLabel = Locals.localize("helper.creator.webstring.multiline");
 		if (this.getObject().multiline) {
-			sLabel = Locals.localize("helper.creator.webstring.nomultiline");
+			mLabel = Locals.localize("helper.creator.webstring.nomultiline");
 		}
 		AdvancedButton multilineB = new AdvancedButton(0, 0, 0, 16, mLabel, true, (press) -> {
 			if (this.getObject().multiline) {

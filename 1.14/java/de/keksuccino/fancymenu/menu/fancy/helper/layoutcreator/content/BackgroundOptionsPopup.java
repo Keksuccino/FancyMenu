@@ -25,6 +25,9 @@ public class BackgroundOptionsPopup extends Popup {
 	protected AdvancedButton randomButton;
 	protected AdvancedButton notRandomButton;
 	
+	protected AdvancedButton panoramaButton;
+	protected AdvancedButton noPanoramaButton;
+	
 	protected AdvancedButton addRemoveAnimationButton;
 	
 	protected HorizontalSwitcher typeSwitcher;
@@ -50,9 +53,13 @@ public class BackgroundOptionsPopup extends Popup {
 		
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			BackgroundOptionsPopup.this.handler.setMenusUseable(false);
-			PopupHandler.displayPopup(new ChooseFilePopup((call) -> {
+			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
-			}, "jpg", "jpeg", "png"));
+			}, "jpg", "jpeg", "png");
+			if ((this.handler.backgroundTexture != null)) {
+				cf.setText(this.handler.backgroundTexturePath);
+			}
+			PopupHandler.displayPopup(cf);
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(chooseTextureButton);
 		
@@ -75,6 +82,26 @@ public class BackgroundOptionsPopup extends Popup {
 			this.randomButton.setMessage(Locals.localize("helper.creator.backgroundoptions.random"));
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(notRandomButton);
+		
+		String pan = Locals.localize("helper.creator.backgroundoptions.panorama");
+		String nPan = Locals.localize("helper.creator.backgroundoptions.nopanorama");
+		if (this.handler.panorama) {
+			pan = "§a" + pan;
+		} else {
+			nPan = "§a" + nPan;
+		}
+		this.panoramaButton = new AdvancedButton(0, 0, 100, 20, pan, true, (press) -> {
+			this.handler.panorama = true;
+			press.setMessage("§a" + Locals.localize("helper.creator.backgroundoptions.panorama"));
+			this.noPanoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.nopanorama"));
+		});
+		LayoutCreatorScreen.colorizeCreatorButton(panoramaButton);
+		this.noPanoramaButton = new AdvancedButton(0, 0, 100, 20, nPan, true, (press) -> {
+			this.handler.panorama = false;
+			press.setMessage("§a" + Locals.localize("helper.creator.backgroundoptions.nopanorama"));
+			this.panoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.panorama"));
+		});
+		LayoutCreatorScreen.colorizeCreatorButton(noPanoramaButton);
 		
 		this.addRemoveAnimationButton = new AdvancedButton(0, 0, 100, 20, "", true, (press) -> {
 			if (this.animationSwitcher.getSelectedValue() != null) {
@@ -147,8 +174,18 @@ public class BackgroundOptionsPopup extends Popup {
 			
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundimage"))) {
 				this.chooseTextureButton.x = (renderIn.width / 2) - (this.chooseTextureButton.getWidth() / 2);
-				this.chooseTextureButton.y = renderIn.height / 2;
+				this.chooseTextureButton.y = (renderIn.height / 2) - 25;
 				this.chooseTextureButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
+
+				renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.setpanorama"), renderIn.width / 2, (renderIn.height / 2) + 13, Color.WHITE.getRGB());
+
+				this.panoramaButton.x = (renderIn.width / 2) - this.panoramaButton.getWidth() - 5;
+				this.panoramaButton.y = (renderIn.height / 2) + 30;
+				this.panoramaButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
+
+				this.noPanoramaButton.x = (renderIn.width / 2) + 5;
+				this.noPanoramaButton.y = (renderIn.height / 2) + 30;
+				this.noPanoramaButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 			}
 			
 			

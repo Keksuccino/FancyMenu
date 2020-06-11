@@ -20,12 +20,14 @@ import de.keksuccino.core.gui.screens.popup.NotificationPopup;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.TextInputPopup;
 import de.keksuccino.core.gui.screens.popup.YesNoPopup;
+import de.keksuccino.core.input.CharacterFilter;
 import de.keksuccino.core.input.KeyboardData;
 import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
+import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.resources.ExternalTextureResourceLocation;
@@ -48,6 +50,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutTex
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutWebString;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutWebTexture;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButtonDummyCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
@@ -55,6 +58,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
@@ -63,55 +67,68 @@ public class LayoutCreatorScreen extends Screen {
 	
 	public static boolean isActive = false;
 	
-	private static final ResourceLocation EXPAND_INDICATOR = new ResourceLocation("keksuccino", "expand.png");
-	private static final ResourceLocation SHRINK_INDICATOR = new ResourceLocation("keksuccino", "shrink.png");
-	private boolean expandHovered = false;
-	private boolean expanded = false;
-	private boolean expandMouseDown = false;
-	private Color expandColor = Color.WHITE;
+	protected static final ResourceLocation EXPAND_INDICATOR = new ResourceLocation("keksuccino", "expand.png");
+	protected static final ResourceLocation SHRINK_INDICATOR = new ResourceLocation("keksuccino", "shrink.png");
+	protected boolean expandHovered = false;
+	protected boolean expanded = false;
+	protected boolean expandMouseDown = false;
+	protected Color expandColor = Color.WHITE;
+	
+	protected boolean leftDownAndFocused = false;
 	
 	public final Screen screen;
-	private List<LayoutObject> content = new ArrayList<LayoutObject>();
-	private List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
-	private Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	private Map<Integer, String> vanillaButtonNames = new HashMap<Integer, String>();
-	private LayoutObject focused = null;
-	private int hiddenIndicatorTick = 0;
-	private int hiddenIndicatorCount = 0;
-	private boolean renderHiddenIndicator = false;
+	protected List<LayoutObject> content = new ArrayList<LayoutObject>();
+	protected List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
+	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
+	protected Map<Integer, String> vanillaButtonNames = new HashMap<Integer, String>();
+	protected Map<Integer, List<String>> vanillaButtonTextures = new HashMap<Integer, List<String>>();
+	protected Map<Integer, Integer> vanillaButtonClicks = new HashMap<Integer, Integer>();
+	protected Map<Integer, String> vanillaHoverLabels = new HashMap<Integer, String>();
+	protected Map<Integer, String> vanillaHoverSounds = new HashMap<Integer, String>();
+	protected LayoutObject focused = null;
+	protected int hiddenIndicatorTick = 0;
+	protected int hiddenIndicatorCount = 0;
+	protected boolean renderHiddenIndicator = false;
 	
-	private List<IMenu> menus = new ArrayList<IMenu>();
+	protected List<IMenu> menus = new ArrayList<IMenu>();
 	
-	private AdvancedButton addObjectButton;
-	private AdvancedButton hiddenButton;
-	private AdvancedButton audioButton;
-	private AdvancedButton closeButton;
-	private AdvancedButton saveButton;
+	protected AdvancedButton addObjectButton;
+	protected AdvancedButton hiddenButton;
+	protected AdvancedButton audioButton;
+	protected AdvancedButton closeButton;
+	protected AdvancedButton saveButton;
 	
-	private PopupMenu backgroundRightclickMenu;
-	private PopupMenu addAnimationMenu;
-	private PopupMenu addObjectPopup;
-	private PopupMenu hiddenPopup;
-	private PopupMenu audioPopup;
-	private List<PopupMenu> audioSubPopups = new ArrayList<PopupMenu>();
-	private PopupMenu renderorderPopup;
-	private PopupMenu mcversionPopup;
-	private PopupMenu fmversionPopup;
+	protected PopupMenu backgroundRightclickMenu;
+	protected PopupMenu addAnimationMenu;
+	protected PopupMenu addObjectPopup;
+	protected PopupMenu hiddenPopup;
+	protected PopupMenu audioPopup;
+	protected List<PopupMenu> audioSubPopups = new ArrayList<PopupMenu>();
+	protected PopupMenu renderorderPopup;
+	protected PopupMenu mcversionPopup;
+	protected PopupMenu fmversionPopup;
 	
-	private AdvancedButton renderorderBackgroundButton;
-	private AdvancedButton renderorderForegroundButton;
+	protected AdvancedButton renderorderBackgroundButton;
+	protected AdvancedButton renderorderForegroundButton;
 	
-	private IAnimationRenderer backgroundAnimation;
-	private ExternalTextureResourceLocation backgroundTexture;
+	protected IAnimationRenderer backgroundAnimation;
+	public ExternalTextureResourceLocation backgroundTexture;
+	public String backgroundTexturePath;
+	
 	public List<String> backgroundAnimationNames = new ArrayList<String>();
 	public boolean randomBackgroundAnimation = false;
+	public boolean panorama = false;
+	private int panoTick = 0;
+	private double panoPos = 0.0;
+	private boolean panoMoveBack = false;
+	private boolean panoStop = false;
 	
-	private String renderorder = "foreground";
-	private String requiredmods;
-	private String minimumMC;
-	private String maximumMC;
-	private String minimumFM;
-	private String maximumFM;
+	protected String renderorder = "foreground";
+	protected String requiredmods;
+	protected String minimumMC;
+	protected String maximumMC;
+	protected String minimumFM;
+	protected String maximumFM;
 	
 	public LayoutCreatorScreen(Screen screenToCustomize) {
 		super(new StringTextComponent(""));
@@ -432,7 +449,7 @@ public class LayoutCreatorScreen extends Screen {
 		return false;
 	}
 	
-	private void disableLayouts() {
+	protected void disableLayouts() {
 		File f = new File(FancyMenu.getCustomizationPath().getPath() + "/.disabled");
 		if (!f.exists()) {
 			f.mkdirs();
@@ -515,7 +532,10 @@ public class LayoutCreatorScreen extends Screen {
 		if (this.backgroundTexture != null) {
 			PropertiesSection ps = new PropertiesSection("customization");
 			ps.addEntry("action", "texturizebackground");
-			ps.addEntry("path", this.backgroundTexture.getPath());
+			ps.addEntry("path", this.backgroundTexturePath);
+			if (this.panorama) {
+				ps.addEntry("panorama", "true");
+			}
 			l.add(ps);
 		}
 		
@@ -533,7 +553,7 @@ public class LayoutCreatorScreen extends Screen {
 		return l;
 	}
 	
-	private void saveToCustomizationFile(String fileName) throws IOException {
+	protected void saveToCustomizationFile(String fileName) throws IOException {
 		List<PropertiesSection> l = this.getAllProperties();
 		
 		if (!l.isEmpty() && (l.size() > 1)) {
@@ -556,7 +576,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 	
-	private String generateCustomizationFileName(String dir, String baseName) {
+	protected String generateCustomizationFileName(String dir, String baseName) {
 		File f = new File(dir);
 		if (!f.exists() && f.isDirectory()) {
 			f.mkdirs();
@@ -604,7 +624,7 @@ public class LayoutCreatorScreen extends Screen {
 	 * Updates the LayoutObjects shown in the CreatorScreen.<br>
 	 * The positions of all UNMODIFIED vanilla buttons will be updated to keep them at the correct position when the screen is getting resized.
 	 */
-	private void updateContent() {
+	protected void updateContent() {
 		List<LayoutObject> l = new ArrayList<LayoutObject>();
 		for (LayoutObject o : this.content) {
 			if (!(o instanceof LayoutVanillaButton)) {
@@ -619,12 +639,30 @@ public class LayoutCreatorScreen extends Screen {
 		ButtonCache.cacheFrom(this.screen, this.width, this.height);
 		
 		this.content.clear();
+		
+		//Sync labels, textures, auto-clicks and other stuff made to vanilla buttons
 		for (ButtonData b : ButtonCache.getButtons()) {
 			if (!this.containsVanillaButton(l, b)) {
 				LayoutVanillaButton v = new LayoutVanillaButton(b, this);
 				if (this.vanillaButtonNames.containsKey(b.getId())) {
 					v.object.value = this.vanillaButtonNames.get(b.getId()); 
 				}
+				if (this.vanillaButtonClicks.containsKey(b.getId())) {
+					v.clicks = this.vanillaButtonClicks.get(b.getId()); 
+				}
+				if (this.vanillaHoverLabels.containsKey(b.getId())) {
+					v.hoverLabel = this.vanillaHoverLabels.get(b.getId()); 
+				}
+				if (this.vanillaHoverSounds.containsKey(b.getId())) {
+					v.hoverSound = this.vanillaHoverSounds.get(b.getId()); 
+				}
+				if (this.vanillaButtonTextures.containsKey(b.getId())) {
+					List<String> l2 = this.vanillaButtonTextures.get(b.getId());
+					v.backNormal = l2.get(0);
+					v.backHovered = l2.get(1);
+					((LayoutButtonDummyCustomizationItem)v.object).setTexture(TextureHandler.getResource(l2.get(0)).getResourceLocation());
+				}
+				//---------------
 				content.add(v);
 			}
 		}
@@ -743,6 +781,50 @@ public class LayoutCreatorScreen extends Screen {
 	public void setVanillaButtonName(LayoutVanillaButton button, String text) {
 		this.vanillaButtonNames.put(button.button.getId(), text);
 		button.object.value = text;
+	}
+
+	public void setVanillaTexture(LayoutVanillaButton button, String backNormal, String backHover) {
+		if ((backNormal != null) && (backHover != null)) {
+			List<String> l = new ArrayList<String>();
+			l.add(backNormal);
+			l.add(backHover);
+			
+			this.vanillaButtonTextures.put(button.button.getId(), l);
+		} else {
+			if (this.vanillaButtonTextures.containsKey(button.button.getId())) {
+				this.vanillaButtonTextures.remove(button.button.getId());
+			}
+		}
+	}
+
+	public void setVanillaClicks(LayoutVanillaButton button, int clicks) {
+		if (clicks > 0) {
+			this.vanillaButtonClicks.put(button.button.getId(), clicks);
+		} else {
+			if (this.vanillaButtonClicks.containsKey(button.button.getId())) {
+				this.vanillaButtonClicks.remove(button.button.getId());
+			}
+		}
+	}
+
+	public void setVanillaHoverLabel(LayoutVanillaButton button, String label) {
+		if (label != null) {
+			this.vanillaHoverLabels.put(button.button.getId(), label);
+		} else {
+			if (this.vanillaHoverLabels.containsKey(button.button.getId())) {
+				this.vanillaHoverLabels.remove(button.button.getId());
+			}
+		}
+	}
+
+	public void setVanillaHoverSound(LayoutVanillaButton button, String sound) {
+		if (sound != null) {
+			this.vanillaHoverSounds.put(button.button.getId(), sound);
+		} else {
+			if (this.vanillaHoverSounds.containsKey(button.button.getId())) {
+				this.vanillaHoverSounds.remove(button.button.getId());
+			}
+		}
 	}
 	
 	public void hideVanillaButton(LayoutVanillaButton b) {
@@ -875,8 +957,8 @@ public class LayoutCreatorScreen extends Screen {
 		if (!this.addObjectPopup.isOpen()) {
 			this.addAnimationMenu.closeMenu();
 		}
-		
-		if (PopupHandler.isPopupActive() || this.isObjectFocused()) {
+
+		if (PopupHandler.isPopupActive() || this.leftDownAndFocused) {
 			this.saveButton.setUseable(false);
 			this.audioButton.setUseable(false);
 			this.hiddenButton.setUseable(false);
@@ -889,8 +971,14 @@ public class LayoutCreatorScreen extends Screen {
 			this.closeButton.setUseable(true);
 			this.addObjectButton.setUseable(true);
 		}
-		
+
 		this.renderMenuExpandIndicator(mouseX, mouseY);
+
+		if (this.isObjectFocused() && MouseInput.isLeftMouseDown()) {
+			this.leftDownAndFocused = true;
+		} else {
+			this.leftDownAndFocused = false;
+		}
 		
 		super.render(mouseX, mouseY, partialTicks);
 	}
@@ -908,6 +996,10 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		Screen.blit(x, y, 0.0F, 0.0F, 20, 20, 20, 20);
 		RenderSystem.disableBlend();
+
+		if (this.leftDownAndFocused) {
+			return;
+		}
 		
 		if ((mouseX >= x) && (mouseX <= x + 7) && (mouseY >= y + 2) && mouseY <= y + 18) {
 			this.expandHovered = true;
@@ -952,19 +1044,72 @@ public class LayoutCreatorScreen extends Screen {
 			this.hiddenIndicatorTick = 0;
 		}
 	}
-	
+
 	private void renderCreatorBackground() {
 		RenderSystem.enableBlend();
 		Screen.fill(0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
-		RenderSystem.disableBlend();
-		
+
 		if (this.backgroundTexture != null) {
-			RenderSystem.enableBlend();
 			Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
-			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			Screen.blit(0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
-			RenderSystem.disableBlend();
+			
+			if (!this.panorama) {
+				IngameGui.blit(0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
+			} else {
+				int w = this.backgroundTexture.getWidth();
+				int h = this.backgroundTexture.getHeight();
+				double ratio = (double) w / (double) h;
+				int wfinal = (int)(this.height * ratio);
+
+				//Check if the panorama background should move to the left side or to the right side
+				if ((panoPos + (wfinal - this.width)) <= 0) {
+					panoMoveBack = true;
+				}
+				if (panoPos >= 0) {
+					panoMoveBack = false;
+				}
+
+				//Fix pos after resizing
+				if (panoPos + (wfinal - this.width) < 0) {
+					panoPos = 0 - (wfinal - this.width);
+				}
+				if (panoPos > 0) {
+					panoPos = 0;
+				}
+				
+				if (!panoStop) {
+					if (panoTick >= 1) {
+						panoTick = 0;
+						if (panoMoveBack) {
+							panoPos = panoPos + 0.5;
+						} else {
+							panoPos = panoPos - 0.5;
+						}
+						
+						if (panoPos + (wfinal - this.width) == 0) {
+							panoStop = true;
+						}
+						if (panoPos == 0) {
+							panoStop = true;
+						}
+					} else {
+						panoTick++;
+					}
+				} else {
+					if (panoTick >= 300) {
+						panoStop = false;
+						panoTick = 0;
+					} else {
+						panoTick++;
+					}
+				}
+				if (wfinal <= this.width) {
+					IngameGui.blit(0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
+				} else {
+					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height);
+				}
+			}
 		}
+		RenderSystem.disableBlend();
 		
 		if (this.backgroundAnimation != null) {
 			boolean b = this.backgroundAnimation.isStretchedToStreensize();
@@ -1044,16 +1189,21 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 		File f = new File(path);
+		String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 		if (f.exists()) {
-			PropertiesSection sec = new PropertiesSection("customization");
-			sec.addEntry("action", "addtexture");
-			sec.addEntry("path", path);
-			sec.addEntry("height", "100");
-			
-			TextureCustomizationItem i = new TextureCustomizationItem(sec);
-			this.addContent(new LayoutTexture(i, this));
-			
-			this.setMenusUseable(true);
+			if (filename.equals(f.getName())) {
+				PropertiesSection sec = new PropertiesSection("customization");
+				sec.addEntry("action", "addtexture");
+				sec.addEntry("path", path);
+				sec.addEntry("height", "100");
+				
+				TextureCustomizationItem i = new TextureCustomizationItem(sec);
+				this.addContent(new LayoutTexture(i, this));
+				
+				this.setMenusUseable(true);
+			} else {
+				this.displayNotification(300, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+			}
 		} else {
 			this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
 		}
@@ -1142,7 +1292,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 	
-	private void addAudio(String path) {
+	protected void addAudio(String path) {
 		if (path != null) {
 			File home = new File("");
 			if (path.startsWith(home.getAbsolutePath())) {
@@ -1205,15 +1355,21 @@ public class LayoutCreatorScreen extends Screen {
 			}
 			
 			File f = new File(path);
+			String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-				this.backgroundTexture = TextureHandler.getResource(path);
-				if (this.backgroundAnimation != null) {
-					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+				if (filename.equals(f.getName())) {
+					this.backgroundTexture = TextureHandler.getResource(path);
+					this.backgroundTexturePath = path;
+					if (this.backgroundAnimation != null) {
+						((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+					}
+					this.backgroundAnimation = null;
+					this.backgroundAnimationNames.clear();
+					
+					this.setMenusUseable(true);
+				} else {
+					this.displayNotification(300, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
 				}
-				this.backgroundAnimation = null;
-				this.backgroundAnimationNames.clear();
-				
-				this.setMenusUseable(true);
 			} else {
 				this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
 			}

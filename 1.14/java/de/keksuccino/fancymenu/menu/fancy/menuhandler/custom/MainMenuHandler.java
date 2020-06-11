@@ -6,6 +6,7 @@ import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -127,7 +128,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 				Screen.fill(widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
 			}
 
-			this.renderButtons(e, mouseX, mouseY);
+			if (!PopupHandler.isPopupActive()) {
+				this.renderButtons(e, mouseX, mouseY);
+			}
 			
 			//Draw notification indicators to the "Realms" button if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {

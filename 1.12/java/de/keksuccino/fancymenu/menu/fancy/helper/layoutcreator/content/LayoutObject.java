@@ -14,6 +14,7 @@ import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.input.MouseInput.CursorType;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.rendering.RenderUtils;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import net.minecraft.client.Minecraft;
@@ -111,7 +112,7 @@ public abstract class LayoutObject extends Gui {
 		this.orientationMenu.addContent(o8);
 		this.orientationMenu.addContent(o9);
 		
-		this.orientationButton = new AdvancedButton(0, 0, 0, 16, "Set Orientation", true, (press) -> {
+		this.orientationButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 			this.orientationMenu.openMenuAt(press.x + press.width, press.y);
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.orientationButton);
@@ -122,7 +123,7 @@ public abstract class LayoutObject extends Gui {
 		this.rightclickMenu.addChild(this.orientationMenu);
 		
 		if (this.destroyable) {
-			AdvancedButton destroy = new AdvancedButton(0, 0, 0, 16, "Delete", true, (press) -> {
+			AdvancedButton destroy = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.delete"), true, (press) -> {
 				this.destroyObject();
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(destroy);
@@ -336,12 +337,12 @@ public abstract class LayoutObject extends Gui {
 		
 		//Render pos and size values
 		RenderUtils.setScale(0.5F);
-		this.drawString(Minecraft.getMinecraft().fontRenderer, "orientation: " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getMinecraft().fontRenderer, "posX: " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getMinecraft().fontRenderer, "width: " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		this.drawString(Minecraft.getMinecraft().fontRenderer, "posY: " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getMinecraft().fontRenderer, "height: " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale();
 	}
 	
@@ -508,7 +509,7 @@ public abstract class LayoutObject extends Gui {
 				this.handler.removeContent(this);
 			}
 			this.handler.setMenusUseable(true);
-		}, "§c§lAre you sure?", "", "Do you really want to §lDELETE §rthis object?", "", "§lThis action cannot be undone!", "", "", "", "", ""));
+		}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));
 	}
 
 	public abstract List<PropertiesSection> getProperties();

@@ -149,6 +149,7 @@ public class KeyboardHandler {
 		}
 	}
 	
+	//TODO switch to UUID
 	private static int generateUniqueId() {
 		int i = MathUtils.getRandomNumberInRange(100000000, 999999999);
 		while(ids.contains(i)) {

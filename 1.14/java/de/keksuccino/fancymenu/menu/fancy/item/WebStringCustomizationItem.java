@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,7 +160,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				this.lines.clear();
 				
 				URL u = new URL(this.value);
-				BufferedReader r = new BufferedReader(new InputStreamReader(u.openStream()));
+				BufferedReader r = new BufferedReader(new InputStreamReader(u.openStream(), StandardCharsets.UTF_8));
 				String s = r.readLine();
 				while(s != null) {
 					this.lines.add(StringUtils.convertFormatCodes(s, "&", "§"));

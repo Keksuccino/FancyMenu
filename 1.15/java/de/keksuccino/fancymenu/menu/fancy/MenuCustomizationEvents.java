@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,10 @@ public class MenuCustomizationEvents {
 			this.lastScreen = e.getGui();
 			this.idle = false;
 		}
+		
+		if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+			Minecraft.getInstance().getMusicTicker().stop();
+		}
 	}
 	
 	@SubscribeEvent
@@ -37,5 +42,4 @@ public class MenuCustomizationEvents {
 			this.idle = true;
 		}
 	}
-
 }

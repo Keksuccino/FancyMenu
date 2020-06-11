@@ -106,7 +106,7 @@ helper.creator.add.button.label = Button Label
 
 helper.creator.add.audio = Audio
 
-helper.creator.vanillabutton.autoclick = Autoclick
+helper.creator.vanillabutton.autoclick = Click button
 helper.creator.vanillabutton.autoclick.popup = Automatic Button Clicks
 
 helper.creator.backgroundoptions = Background Options
@@ -184,3 +184,32 @@ helper.creator.web.enterurl = Enter URL
 
 helper.creator.add.webimage = Web Image
 helper.creator.add.webtext = Web Text
+
+helper.creator.editlayout = Edit Layout
+helper.creator.editlayout.popup.loadall = Load All
+helper.creator.editlayout.popup.loadselected = Load Selected Layout
+helper.creator.editlayout.popup.layouts = Layouts
+helper.creator.editlayout.popup.cancel = Cancel
+helper.creator.editlayout.popup.actionscount = {} customization actions
+helper.creator.editlayout.nolayouts.msg = §c§lNo layouts found!%n%%n%%n%This menu does not contain any layouts!%n%%n%If you want to customize this menu, please use the "Create Layout" button!
+helper.creator.editlayout.popup.msg = There is more than one customization file for this menu screen!%n%%n%Do you want to load the full layout and combine all of them%n%or do you just want to load a specific one?%n%%n%§cCustomization meta values gets lost when combining multiple layouts!
+
+helper.creator.editlayout.single.override = Override existing layout
+helper.creator.editlayout.single.asnew.keep = Save as new layout and keep others enabled
+helper.creator.editlayout.single.asnew.disable = Save as new layout and disable others
+
+helper.creator.items.button.hoverlabel = Hoverlabel
+helper.creator.items.button.hoverlabel.text = Hoverlabel Text
+helper.creator.items.button.hoverlabel.reset = Reset Hoverlabel
+helper.creator.items.button.hoversound = Hoversound
+helper.creator.items.button.hoversound.path = Hoversound Path
+helper.creator.items.button.hoversound.reset = Reset Hoversound
+
+helper.creator.editlayout.unsupportedvalues = §c§lUnsupported values!%n%%n%%n%Your layout contains unsupported values!%n%These values do not work in the layout creator.%n%%n%You're probably using some sort of §lposition or size calculation%n%in one of your customization sections.%n%%n%Please manually convert these calculations to absolute values and try again.
+
+helper.creator.backgroundoptions.setpanorama = Panoramic Image?
+helper.creator.backgroundoptions.panorama = Panoramic
+helper.creator.backgroundoptions.nopanorama = Not Panoramic
+
+helper.creator.textures.invalidcharacters = §c§lInvalid characters!%n%%n%%n%The filename of your image contains invalid characters!%n%%n%Please only use characters "a-z", "0-9", ".", "_" and "-".%n%Spaces, uppercase letters and any other special characters are unsupported.
+

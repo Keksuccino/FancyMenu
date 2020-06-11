@@ -7,6 +7,7 @@ import java.util.Random;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -84,6 +85,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 			int widthCopyright = Minecraft.getInstance().fontRenderer.getStringWidth(copyright);
 			int widthCopyrightRest = width - widthCopyright - 2;
 			
+			RenderSystem.enableBlend();
+			
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
 				this.panorama.render(Minecraft.getInstance().getRenderPartialTicks(), 1.0F);
@@ -97,7 +100,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 			
 			//Draw minecraft logo and edition textures if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hidelogo", true)) {
-				RenderSystem.enableBlend();
 				Minecraft.getInstance().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				if ((double) minecraftLogoSpelling < 1.0E-4D) {
@@ -113,7 +115,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 				Minecraft.getInstance().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
 				Screen.blit(j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
-				RenderSystem.disableBlend();
 			}
 
 			ForgeHooksClient.renderMainMenu((MainMenuScreen) e.getGui(), fontRenderer, width, height);
@@ -128,7 +129,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 				Screen.fill(widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
 			}
 
-			this.renderButtons(e, mouseX, mouseY);
+			if (!PopupHandler.isPopupActive()) {
+				this.renderButtons(e, mouseX, mouseY);
+			}
 			
 			//Draw notification indicators to the "Realms" button if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {
