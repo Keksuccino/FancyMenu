@@ -32,9 +32,7 @@ public class FileChooser {
 		if (!init) {
 			return;
 		}
-		
-		System.setProperty("java.awt.headless", "false");
-		
+
 		new Thread(new Runnable() {
 			@Override
 			public void run() {

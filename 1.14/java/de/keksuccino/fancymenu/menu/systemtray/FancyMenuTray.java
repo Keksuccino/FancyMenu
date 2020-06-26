@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.menu.systemtray;
 
-import java.awt.GraphicsEnvironment;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
@@ -10,7 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import net.minecraft.client.Minecraft;
@@ -24,12 +22,6 @@ public class FancyMenuTray {
 	public static boolean init() {
 		if (!init) {
 			try {
-				System.setProperty("java.awt.headless", "false");
-				
-				Field f = GraphicsEnvironment.class.getDeclaredField("headless");
-				f.setAccessible(true);
-				f.set(GraphicsEnvironment.getLocalGraphicsEnvironment(), false);
-
 				SystemTray tray = SystemTray.getSystemTray();
 				PopupMenu pop = new PopupMenu();
 
