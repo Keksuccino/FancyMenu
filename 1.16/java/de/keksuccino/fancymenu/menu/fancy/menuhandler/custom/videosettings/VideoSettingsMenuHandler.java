@@ -1,0 +1,54 @@
+package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.videosettings;
+
+import java.lang.reflect.Field;
+import java.util.List;
+
+import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import net.minecraft.client.AbstractOption;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.VideoSettingsScreen;
+import net.minecraft.client.gui.widget.list.OptionsRowList;
+import net.minecraft.client.settings.FullscreenResolutionOption;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+
+public class VideoSettingsMenuHandler extends MenuHandlerBase {
+
+	private static final AbstractOption[] OPTIONS = new AbstractOption[]{AbstractOption.GRAPHICS, AbstractOption.RENDER_DISTANCE, AbstractOption.AO, AbstractOption.FRAMERATE_LIMIT, AbstractOption.VSYNC, AbstractOption.VIEW_BOBBING, AbstractOption.GUI_SCALE, AbstractOption.ATTACK_INDICATOR, AbstractOption.GAMMA, AbstractOption.RENDER_CLOUDS, AbstractOption.FULLSCREEN, AbstractOption.PARTICLES, AbstractOption.MIPMAP_LEVELS, AbstractOption.ENTITY_SHADOWS};
+	
+	public VideoSettingsMenuHandler() {
+		super(VideoSettingsScreen.class.getName());
+	}
+	
+	@Override
+	public void onInitPost(ButtonCachedEvent e) {
+		if (this.shouldCustomize(e.getGui())) {
+			try {
+				OptionsRowList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().field_230708_k_, e.getGui().field_230709_l_, 32, e.getGui().field_230709_l_ - 32, 25, this);
+				l.addOption(new FullscreenResolutionOption(Minecraft.getInstance().getMainWindow()));
+			    l.addOption(AbstractOption.BIOME_BLEND_RADIUS);
+			    l.addOptions(OPTIONS);
+				Field f = ObfuscationReflectionHelper.findField(VideoSettingsScreen.class, "field_146501_h");
+				e.getGui().func_231039_at__().remove(f.get(e.getGui()));
+				f.set(e.getGui(), l);
+				addChildren(e.getGui(), l);
+			} catch(Exception ex) {
+				ex.printStackTrace();
+			}
+		}
+		
+		super.onInitPost(e);
+	}
+	
+	private static void addChildren(Screen s, IGuiEventListener e) {
+		try {
+			Field f = ObfuscationReflectionHelper.findField(Screen.class, "field_230705_e_");
+			((List<IGuiEventListener>)f.get(s)).add(e);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+	}
+
+}
