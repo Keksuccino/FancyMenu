@@ -8,17 +8,20 @@ import java.lang.reflect.Field;
 import de.keksuccino.core.config.Config;
 import de.keksuccino.core.config.exceptions.InvalidValueException;
 import de.keksuccino.core.filechooser.FileChooser;
-import de.keksuccino.core.gui.notifications.NotificationHandler;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.KeyboardHandler;
+import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -29,13 +32,16 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.3.1";
+	//TODO übernehmen
+	public static final String VERSION = "1.4.1";
 	private static boolean isNotHeadless = false;
 	
 	public static Config config;
 	
 	private static File animationsPath = new File("config/fancymenu/animations");
 	private static File customizationPath = new File("config/fancymenu/customization");
+	//TODO übernehmen
+	private static File customGuiPath = new File("config/fancymenu/customguis");
 	
 	public FancyMenu() {
 		try {
@@ -46,11 +52,16 @@ public class FancyMenu {
 	    		//Create all important directorys
 	    		animationsPath.mkdirs();
 	    		customizationPath.mkdirs();
+	    		//TODO übernehmen
+	    		customGuiPath.mkdirs();
 
 	    		updateConfig();
 
 	    		AnimationHandler.init();
 	    		AnimationHandler.loadCustomAnimations();
+	    		
+	    		//TODO übernehmen
+	    		CustomGuiLoader.loadCustomGuis();
 	    		
 	    		GameIntroHandler.init();
 	    		
@@ -58,9 +69,13 @@ public class FancyMenu {
 	        	
 	        	PopupHandler.init();
 	        	
-	        	NotificationHandler.init();
+	        	//TODO übernehmen
+	        	//NotificationHandler.init();
 	        	
 	        	KeyboardHandler.init();
+	        	
+	        	//TODO übernehmen
+	        	MouseInput.init();
 	        	
 	        	SoundHandler.init();
 
@@ -68,17 +83,19 @@ public class FancyMenu {
 	        		Keybinding.init();
 	        	}
 
-	        	//Disabling file chooser and system tray if "FindMe" mod is active
-	        	if (!ModList.get().isLoaded("findme")) {
+	        	//TODO übernehmen
+	        	if (!config.getOrDefault("safemode", false) && !Minecraft.IS_RUNNING_ON_MAC && !ModList.get().isLoaded("findme")) {
 	        		isNotHeadless = this.escapeHeadless();
-	        	}
-	        	
-	        	if (config.getOrDefault("enablesystemtray", true) && isRunningOnWindows() && isNotHeadless) {
-	        		FancyMenuTray.init();
-	        	}
-	        	
-	        	if (isNotHeadless) {
-	        		FileChooser.init();
+		        	
+		        	if (config.getOrDefault("enablesystemtray", true) && isRunningOnWindows() && isNotHeadless) {
+		        		FancyMenuTray.init();
+		        	}
+		        	
+		        	if (isNotHeadless) {
+		        		FileChooser.init();
+		        	}
+	        	} else {
+	        		System.out.println("## INFO ## LAUNCHING 'FANCYMENU' IN SAFEMODE! (FILECHOOSER AND SYSTEM TRAY ARE DISABLED IN THIS MODE)");
 	        	}
 	        	
 	        	FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
@@ -92,12 +109,18 @@ public class FancyMenu {
 		}
 	}
 	
+	//Separate method 'cause looks cleaner.
 	private void onClientSetup(FMLClientSetupEvent e) {
 		try {
 			
 			Locals.init();
 			
 	    	GameMusicHandler.init();
+	    	
+	    	//TODO übernehmen
+        	MainWindowHandler.init();
+        	MainWindowHandler.updateWindowIcon();
+        	MainWindowHandler.updateWindowTitle();
 	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -144,9 +167,13 @@ public class FancyMenu {
     		
     		config.registerValue("enablesystemtray", true, "general", "ONLY AVAILABLE ON WINDOWS! A minecraft restart is required after changing this value.");
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
+    		//TODO übernehmen
+    		config.registerValue("safemode", false, "general", "Maximizes compatibility with the operating system. Disables file chooser and system tray. A minecraft restart is required after changing this value.");
+    		//-----------
     		config.registerValue("playmenumusic", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
+    		config.registerValue("softmode", false, "customization", "Maximizes mod compatibility. Disables background customization support for scrollable menu screens. Restart is needed after changing this value.");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
@@ -161,15 +188,27 @@ public class FancyMenu {
 			config.registerValue("gameintroanimation", "", "loading");
 			config.registerValue("loadingscreendarkmode", false, "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");
+			//TODO übernehmen
+			config.registerValue("allowgameintroskip", true, "loading");
+			config.registerValue("customgameintroskiptext", "", "loading");
+			//---------
+			
+			//TODO übernehmen
+			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
+			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
 			
 			config.syncConfig();
 			
 			//Updating all categorys at start to keep them synchronized with older config files
 			config.setCategory("enablesystemtray", "general");
 			config.setCategory("enablehotkeys", "general");
+			//TODO übernehmen
+			config.setCategory("safemode", "general");
+			//------------
 			config.setCategory("playmenumusic", "general");
     		
 			config.setCategory("showcustomizationbuttons", "customization");
+			config.setCategory("softmode", "customization");
 			
 			config.setCategory("hidebranding", "mainmenu");
 			config.setCategory("hidelogo", "mainmenu");
@@ -184,6 +223,14 @@ public class FancyMenu {
 			config.setCategory("gameintroanimation", "loading");
 			config.setCategory("loadingscreendarkmode", "loading");
 			config.setCategory("showanimationloadingstatus", "loading");
+			//TODO übernehmen
+			config.setCategory("allowgameintroskip", "loading");
+			config.setCategory("customgameintroskiptext", "loading");
+			//-----------
+			
+			//TODO übernehmen
+			config.setCategory("customwindowicon", "minecraftwindow");
+			config.setCategory("customwindowtitle", "minecraftwindow");
 			
 			config.clearUnusedValues();
 		} catch (InvalidValueException e) {
@@ -203,6 +250,14 @@ public class FancyMenu {
 			customizationPath.mkdirs();
 		}
 		return customizationPath;
+	}
+	
+	//TODO übernehmen
+	public static File getCustomGuiPath() {
+		if (!customGuiPath.exists()) {
+			customGuiPath.mkdirs();
+		}
+		return customGuiPath;
 	}
 	
 	public static boolean isNotHeadless() {

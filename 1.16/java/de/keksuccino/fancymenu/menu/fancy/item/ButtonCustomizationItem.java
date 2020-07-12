@@ -15,6 +15,7 @@ import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import net.minecraft.client.Minecraft;
@@ -138,6 +139,14 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				});
 			}
 			
+			if (buttonaction.equalsIgnoreCase("opencustomgui")) {
+				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
+					if (CustomGuiLoader.guiExists(finalAction)) {
+						Minecraft.getInstance().displayGuiScreen(CustomGuiLoader.getGui(finalAction, Minecraft.getInstance().currentScreen, null));
+					}
+				});
+			}
+			
 			if ((this.button != null) && (backNormal != null) && (backHover != null)) {
 				File f = new File(backNormal.replace("\\", "/"));
 				File f2 = new File(backHover.replace("\\", "/"));
@@ -211,6 +220,10 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public AdvancedButton getButton() {
+		return this.button;
 	}
 
 }

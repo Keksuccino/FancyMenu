@@ -20,19 +20,22 @@ public class HorizontalSwitcher extends Gui {
 	private Color valuecolor = Color.WHITE;
 	private Color valuebackcolor = Color.LIGHT_GRAY;
 	
-	public HorizontalSwitcher(int displayWidth, String... values) {
+	public HorizontalSwitcher(int displayWidth, boolean ignoreBlockedInput, String... values) {
 		this.prev = new AdvancedImageButton(0, 0, 20, 20, new ResourceLocation("keksuccino", "arrow_left.png"), true, (press) -> {
 			int i = this.selected - 1;
 			if (i >= 0) {
 				this.selected = i;
 			}
 		});
+		this.prev.ignoreBlockedInput = ignoreBlockedInput;
+		
 		this.next = new AdvancedImageButton(0, 0, 20, 20, new ResourceLocation("keksuccino", "arrow_right.png"), true, (press) -> {
 			int i = this.selected + 1;
 			if (i <= this.values.size()-1) {
 				this.selected = i;
 			}
 		});
+		this.next.ignoreBlockedInput = ignoreBlockedInput;
 		
 		if (values != null) {
 			this.values.addAll(Arrays.asList(values));

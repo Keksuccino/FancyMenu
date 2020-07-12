@@ -23,10 +23,10 @@ public class ButtonData {
 		this.key = key;
 		this.button = button;
 		this.screen = fromScreen;
-		this.label = button.func_230458_i_().getString();
-		this.x = button.field_230690_l_ ;
-		this.y = button.field_230691_m_;
-		this.width = button.func_230998_h_();
+		this.label = button.getMessage().getString();
+		this.x = button.x;
+		this.y = button.y;
+		this.width = button.getWidth();
 		this.height = button.getHeight();
 	}
 	

@@ -2,8 +2,6 @@ package de.keksuccino.core.rendering;
 
 import java.awt.Color;
 
-import org.lwjgl.opengl.GL11;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
@@ -48,17 +46,16 @@ public class RenderUtils {
 		return r;
 	}
 	
+	//TODO übernehmen
 	public static void setScale(float scale) {
-    	GL11.glPushMatrix();
         RenderSystem.enableBlend();
-        GL11.glPushMatrix();
-        GL11.glScaled(scale, scale, scale);
+        RenderSystem.pushMatrix();
+        RenderSystem.scalef(scale, scale, scale);
     }
 	
+	//TODO übernehmen
     public static void postScale() {
-    	GL11.glPopMatrix();
-        RenderSystem.disableBlend();
-        GL11.glPopMatrix();
+    	RenderSystem.popMatrix();
     }
 
     public static void doubleBlit(double x, double y, float f1, float f2, int w, int h) {

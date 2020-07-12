@@ -13,6 +13,7 @@ import java.util.List;
 import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -171,11 +172,16 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				r.close();
 				
 			} catch (Exception e) {
+				this.lines.clear();
+				this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
 				e.printStackTrace();
 			}
 			
 			return true;
 		} else {
+			this.lines.clear();
+			this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
+			
 			System.out.println("########################## ERROR ##########################");
 			System.out.println("[FM] Cannot load text content from " + this.value + "! Invalid URL!");
 			System.out.println("###########################################################");

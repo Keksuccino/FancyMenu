@@ -27,6 +27,7 @@ import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.properties.PropertiesSerializer;
 import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
@@ -42,6 +43,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
@@ -85,6 +87,7 @@ public class LayoutCreatorScreen extends Screen {
 	protected Map<Integer, Integer> vanillaButtonClicks = new HashMap<Integer, Integer>();
 	protected Map<Integer, String> vanillaHoverLabels = new HashMap<Integer, String>();
 	protected Map<Integer, String> vanillaHoverSounds = new HashMap<Integer, String>();
+	protected Map<Integer, Double> vanillaHideFor = new HashMap<Integer, Double>();
 	protected LayoutObject focused = null;
 	protected int hiddenIndicatorTick = 0;
 	protected int hiddenIndicatorCount = 0;
@@ -130,6 +133,9 @@ public class LayoutCreatorScreen extends Screen {
 	protected String minimumFM;
 	protected String maximumFM;
 	
+	private Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
+	private LayoutObject topObject;
+	
 	public LayoutCreatorScreen(Screen screenToCustomize) {
 		super(new StringTextComponent(""));
 		this.screen = screenToCustomize;
@@ -140,15 +146,17 @@ public class LayoutCreatorScreen extends Screen {
 	
 	//init
 	@Override
-	protected void func_231160_c_() {
+	protected void init() {
 		this.focused = null;
 		this.updateContent();
+		
+		this.focusChangeBlocker.clear();
 		
 		for (IMenu m : this.menus) {
 			m.closeMenu();
 		}
 		
-		this.addObjectButton = new AdvancedButton(17, (this.field_230709_l_ / 2) - 104, 40, 40, Locals.localize("helper.creator.menu.add"), true, (onPress) -> {
+		this.addObjectButton = new AdvancedButton(17, (this.height / 2) - 104, 40, 40, Locals.localize("helper.creator.menu.add"), true, (onPress) -> {
 			if (this.addObjectPopup.isOpen()) {
 				this.addObjectPopup.closeMenu();
 			} else {
@@ -157,7 +165,7 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(addObjectButton);
 		
-		this.hiddenButton = new AdvancedButton(17, (this.field_230709_l_ / 2) - 62, 40, 40, Locals.localize("helper.creator.menu.hidden"), true, (onPress) -> {
+		this.hiddenButton = new AdvancedButton(17, (this.height / 2) - 62, 40, 40, Locals.localize("helper.creator.menu.hidden"), true, (onPress) -> {
 			if (this.hiddenPopup.isOpen()) {
 				this.hiddenPopup.closeMenu();
 			} else {
@@ -166,7 +174,7 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(hiddenButton);
 		
-		this.audioButton = new AdvancedButton(17, (this.field_230709_l_ / 2) - 20, 40, 40, Locals.localize("helper.creator.menu.audio"), true, (onPress) -> {
+		this.audioButton = new AdvancedButton(17, (this.height / 2) - 20, 40, 40, Locals.localize("helper.creator.menu.audio"), true, (onPress) -> {
 			if (this.audioPopup.isOpen()) {
 				this.audioPopup.closeMenu();
 			} else {
@@ -175,7 +183,7 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(audioButton);
 		
-		this.saveButton = new AdvancedButton(17, (this.field_230709_l_ / 2) + 22, 40, 40, Locals.localize("helper.creator.menu.save"), true, (onPress) -> {
+		this.saveButton = new AdvancedButton(17, (this.height / 2) + 22, 40, 40, Locals.localize("helper.creator.menu.save"), true, (onPress) -> {
 			if (!this.isLayoutEmpty()) {
 				this.setMenusUseable(false);
 				PopupHandler.displayPopup(new LayoutSavePopup(this::saveCustomizationFileCallback));
@@ -186,7 +194,7 @@ public class LayoutCreatorScreen extends Screen {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(saveButton);
 		
-		this.closeButton = new AdvancedButton(17, (this.field_230709_l_ / 2) + 64, 40, 40, Locals.localize("helper.creator.menu.close"), true, (onPress) -> {
+		this.closeButton = new AdvancedButton(17, (this.height / 2) + 64, 40, 40, Locals.localize("helper.creator.menu.close"), true, (onPress) -> {
 			PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 				if (call.booleanValue()) {
 					isActive = false;
@@ -447,7 +455,7 @@ public class LayoutCreatorScreen extends Screen {
 	
 	//shouldCloseOnEsc
 	@Override
-	public boolean func_231178_ax__() {
+	public boolean shouldCloseOnEsc() {
 		return false;
 	}
 	
@@ -467,7 +475,7 @@ public class LayoutCreatorScreen extends Screen {
 				continue;
 			}
 			PropertiesSection sec = l.get(0);
-			if (sec.getEntryValue("identifier").equals(this.screen.getClass().getName())) {
+			if (sec.getEntryValue("identifier").equals(this.getScreenToCustomizeIdentifier())) {
 				File cusFile = new File(sec.getEntryValue("path"));
 				if (cusFile.exists()) {
 					try {
@@ -492,7 +500,7 @@ public class LayoutCreatorScreen extends Screen {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
 		
 		PropertiesSection meta = new PropertiesSection("customization-meta");
-		meta.addEntry("identifier", this.screen.getClass().getName());
+		meta.addEntry("identifier", this.getScreenToCustomizeIdentifier());
 		meta.addEntry("renderorder", this.renderorder);
 		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
 			meta.addEntry("requiredmods", this.requiredmods);
@@ -557,41 +565,16 @@ public class LayoutCreatorScreen extends Screen {
 	
 	protected void saveToCustomizationFile(String fileName) throws IOException {
 		List<PropertiesSection> l = this.getAllProperties();
-		
-		if (!l.isEmpty() && (l.size() > 1)) {
-			File f = new File(FancyMenu.getCustomizationPath().getPath() + "/" + fileName);
-			f.createNewFile();
-			
-			String data = "";
-			
-			data += "type = menu\n\n";
-			
-			for (PropertiesSection ps : l) {
-				data += ps.getSectionType() + " {\n";
-				for (Map.Entry<String, String> e : ps.getEntries().entrySet()) {
-					data += "  " + e.getKey() + " = " + e.getValue() + "\n";
-				}
-				data += "}\n\n";
-			}
-			
-			FileUtils.writeTextToFile(f, data, false);
+		PropertiesSet props = new PropertiesSet("menu");
+		for (PropertiesSection s : l) {
+			props.addProperties(s);
 		}
+		
+		PropertiesSerializer.writeProperties(props, FancyMenu.getCustomizationPath().getPath() + "/" + fileName);
 	}
 	
 	protected String generateCustomizationFileName(String dir, String baseName) {
-		File f = new File(dir);
-		if (!f.exists() && f.isDirectory()) {
-			f.mkdirs();
-		}
-
-		File f2 = new File(f.getPath() + "/" + baseName + ".txt");
-		int i = 1;
-		while (f2.exists()) {
-			f2 = new File(f.getPath() + "/" + baseName + "_" + i + ".txt");
-			i++;
-		}
-		
-		return f2.getName();
+		return FileUtils.generateAvailableFilename(dir, baseName, "txt");
 	}
 	
 	private PopupMenu generateAnimationMenu(Consumer<String> callback) {
@@ -638,7 +621,7 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 		
-		ButtonCache.cacheFrom(this.screen, this.field_230708_k_, this.field_230709_l_);
+		ButtonCache.cacheFrom(this.screen, this.width, this.height);
 		
 		this.content.clear();
 		
@@ -651,6 +634,9 @@ public class LayoutCreatorScreen extends Screen {
 				}
 				if (this.vanillaButtonClicks.containsKey(b.getId())) {
 					v.clicks = this.vanillaButtonClicks.get(b.getId()); 
+				}
+				if (this.vanillaHideFor.containsKey(b.getId())) {
+					v.hideforsec = this.vanillaHideFor.get(b.getId()); 
 				}
 				if (this.vanillaHoverLabels.containsKey(b.getId())) {
 					v.hoverLabel = this.vanillaHoverLabels.get(b.getId()); 
@@ -682,7 +668,7 @@ public class LayoutCreatorScreen extends Screen {
 		return false;
 	}
 	
-	private boolean isHidden(LayoutObject b) {
+	public boolean isHidden(LayoutObject b) {
 		return this.hidden.contains(b);
 	}
 	
@@ -808,6 +794,10 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 	}
+	
+	public void setVanillaHideFor(LayoutVanillaButton button, double seconds) {
+		this.vanillaHideFor.put(button.button.getId(), seconds);
+	}
 
 	public void setVanillaHoverLabel(LayoutVanillaButton button, String label) {
 		if (label != null) {
@@ -833,7 +823,8 @@ public class LayoutCreatorScreen extends Screen {
 		if (!this.hidden.contains(b) && this.content.contains(b)) {
 			this.hidden.add(b);
 			b.hidden = true;
-			this.setObjectFocused(b, false);
+			this.setObjectFocused(b, false, true);
+			b.resetObjectStates();
 			this.updateHiddenButtonPopup();
 			this.renderHiddenIndicator = true;
 		}
@@ -885,9 +876,37 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 	
+	public List<LayoutObject> getContent() {
+		return this.content;
+	}
+	
 	//render
 	@Override
-	public void func_230430_a_(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+		
+		//Handle object focus and update the top hovered object
+		if (!MouseInput.isVanillaInputBlocked()) {
+			if ((this.focused != null) && !this.focused.isHovered() && !this.focused.isDragged() && !this.focused.isGrabberPressed() && !this.focused.isGettingResized() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+				this.setObjectFocused(this.focused, false, false);
+			}
+			LayoutObject ob = null;
+			LayoutObject top = null;
+			for (LayoutObject o : this.content) {
+				if (o.isHovered()) {
+					top = o;
+					if (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) {
+						ob = o;
+					}
+				}
+			}
+			if (!this.isObjectFocused() && (ob != null)) {
+				this.setObjectFocused(ob, true, false);
+			}
+			this.topObject = top;
+		} else {
+			this.focused = null;
+		}
+
 		this.renderCreatorBackground(matrix);
 		
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
@@ -983,13 +1002,13 @@ public class LayoutCreatorScreen extends Screen {
 			this.leftDownAndFocused = false;
 		}
 		
-		super.func_230430_a_(matrix, mouseX, mouseY, partialTicks);
+		super.render(matrix, mouseX, mouseY, partialTicks);
 	}
 	
 	private void renderMenuExpandIndicator(MatrixStack matrix, int mouseX, int mouseY) {
 		RenderSystem.enableBlend();
 		int x = 5;
-		int y = (this.field_230709_l_ / 2) - 10;
+		int y = (this.height / 2) - 10;
 		if (this.expanded) {
 			Minecraft.getInstance().getTextureManager().bindTexture(SHRINK_INDICATOR);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 0.5F);
@@ -997,7 +1016,7 @@ public class LayoutCreatorScreen extends Screen {
 			Minecraft.getInstance().getTextureManager().bindTexture(EXPAND_INDICATOR);
 			RenderSystem.color4f(this.expandColor.getRed(), this.expandColor.getGreen(), this.expandColor.getBlue(), 0.5F);
 		}
-		func_238463_a_(matrix, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
+		blit(matrix, x, y, 0.0F, 0.0F, 20, 20, 20, 20);
 		RenderSystem.disableBlend();
 
 		if (this.leftDownAndFocused) {
@@ -1050,21 +1069,21 @@ public class LayoutCreatorScreen extends Screen {
 
 	private void renderCreatorBackground(MatrixStack matrix) {
 		RenderSystem.enableBlend();
-		func_238467_a_(matrix, 0, 0, this.field_230708_k_, this.field_230709_l_, new Color(38, 38, 38).getRGB());
+		fill(matrix, 0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
 
 		if (this.backgroundTexture != null) {
 			Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 			
 			if (!this.panorama) {
-				func_238463_a_(matrix, 0, 0, 1.0F, 1.0F, this.field_230708_k_, this.field_230709_l_, this.field_230708_k_, this.field_230709_l_);
+				blit(matrix, 0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
 			} else {
 				int w = this.backgroundTexture.getWidth();
 				int h = this.backgroundTexture.getHeight();
 				double ratio = (double) w / (double) h;
-				int wfinal = (int)(this.field_230709_l_ * ratio);
+				int wfinal = (int)(this.height * ratio);
 
 				//Check if the panorama background should move to the left side or to the right side
-				if ((panoPos + (wfinal - this.field_230708_k_)) <= 0) {
+				if ((panoPos + (wfinal - this.width)) <= 0) {
 					panoMoveBack = true;
 				}
 				if (panoPos >= 0) {
@@ -1072,8 +1091,8 @@ public class LayoutCreatorScreen extends Screen {
 				}
 
 				//Fix pos after resizing
-				if (panoPos + (wfinal - this.field_230708_k_) < 0) {
-					panoPos = 0 - (wfinal - this.field_230708_k_);
+				if (panoPos + (wfinal - this.width) < 0) {
+					panoPos = 0 - (wfinal - this.width);
 				}
 				if (panoPos > 0) {
 					panoPos = 0;
@@ -1088,7 +1107,7 @@ public class LayoutCreatorScreen extends Screen {
 							panoPos = panoPos - 0.5;
 						}
 						
-						if (panoPos + (wfinal - this.field_230708_k_) == 0) {
+						if (panoPos + (wfinal - this.width) == 0) {
 							panoStop = true;
 						}
 						if (panoPos == 0) {
@@ -1105,10 +1124,10 @@ public class LayoutCreatorScreen extends Screen {
 						panoTick++;
 					}
 				}
-				if (wfinal <= this.field_230708_k_) {
-					func_238463_a_(matrix, 0, 0, 1.0F, 1.0F, this.field_230708_k_, this.field_230709_l_, this.field_230708_k_, this.field_230709_l_);
+				if (wfinal <= this.width) {
+					blit(matrix, 0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
 				} else {
-					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.field_230709_l_);
+					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height);
 				}
 			}
 		}
@@ -1129,28 +1148,29 @@ public class LayoutCreatorScreen extends Screen {
 		return (this.focused == object);
 	}
 	
-	public void setObjectFocused(LayoutObject object, boolean b) {
+	public void setObjectFocused(LayoutObject object, boolean b, boolean ignoreBlockedFocusChange) {
+		if (this.isFocusChangeBlocked() && !ignoreBlockedFocusChange) {
+			return;
+		}
 		if (!this.content.contains(object)) {
 			return;
 		}
-		if (this.isHidden(object)) {
-			return;
-		}
-		if (PopupHandler.isPopupActive()) {
-			return;
-		}
 		if (b) {
+			//TODO irgendwie n bisschen sinnlos oder wenigstens teilweise sinnlos.
 			if (this.backgroundRightclickMenu.isHovered() || this.renderorderPopup.isHovered()) {
 				return;
 			}
-			if (this.focused == null) {
-				this.focused = object;
-			}
+			this.focused = object;
+			//---------
 		} else {
 			if ((this.focused != null) && (this.focused == object)) {
 				this.focused = null;
 			}
 		}
+	}
+
+	public LayoutObject getFocusedObject() {
+		return this.focused;
 	}
 	
 	public boolean isObjectFocused() {
@@ -1342,6 +1362,9 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 		if (names == null) {
+			if (this.backgroundAnimation != null) {
+				((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+			}
 			this.backgroundAnimation = null;
 		}
 		this.setMenusUseable(true);
@@ -1387,7 +1410,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		if ((i == 1) || (i == 2)) {
 			try {
-				String name = this.screen.getClass().getName();
+				String name = this.getScreenToCustomizeIdentifier();
 				if (name.contains(".")) {
 					name = new StringBuilder(new StringBuilder(name).reverse().toString().split("[.]", 2)[0]).reverse().toString();
 				}
@@ -1436,11 +1459,35 @@ public class LayoutCreatorScreen extends Screen {
 	}
 	
 	public int getWidth() {
-		return this.field_230708_k_;
+		return this.width;
 	}
 	
 	public int getHeight() {
-		return this.field_230709_l_;
+		return this.height;
+	}
+	
+	public Screen getScreenToCustomize() {
+		return this.screen;
+	}
+
+	public String getScreenToCustomizeIdentifier() {
+		if (!(this.screen instanceof CustomGuiBase)) {
+			return this.screen.getClass().getName();
+		} else {
+			return ((CustomGuiBase)this.screen).getIdentifier();
+		}
+	}
+
+	public void setFocusChangeBlocked(String id, Boolean b) {
+		this.focusChangeBlocker.put(id, b);
+	}
+
+	public boolean isFocusChangeBlocked() {
+		return this.focusChangeBlocker.containsValue(true);
+	}
+	
+	public LayoutObject getTopHoverObject() {
+		return this.topObject;
 	}
 
 }

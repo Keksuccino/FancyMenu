@@ -19,6 +19,10 @@ public class AdvancedButton extends Button {
 
 	private boolean handleClick = false;
 	private static boolean leftDown = false;
+	//TODO übernehmen
+	private boolean leftDownNotHovered = false;
+	public boolean ignoreBlockedInput = false;
+	//-------
 	private boolean useable = true;
 	
 	private Color idleColor;
@@ -89,8 +93,17 @@ public class AdvancedButton extends Button {
 			this.drawCenteredString(font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, getFGColor());
 		}
 
+		//TODO übernehmen
+		if (!this.isHovered() && MouseInput.isLeftMouseDown()) {
+			this.leftDownNotHovered = true;
+		}
+		if (!MouseInput.isLeftMouseDown()) {
+			this.leftDownNotHovered = false;
+		}
+		
 		if (this.handleClick && this.useable) {
-			if (this.isHovered() && MouseInput.isLeftMouseDown() && !leftDown) {
+			//TODO übernehmen
+			if (this.isHovered() && MouseInput.isLeftMouseDown() && !leftDown && !leftDownNotHovered && !this.isInputBlocked()) {
 				this.onClick(mouseX, mouseY);
 				this.playDownSound(Minecraft.getInstance().getSoundHandler());
 				leftDown = true;
@@ -99,6 +112,14 @@ public class AdvancedButton extends Button {
 				leftDown = false;
 			}
 		}
+	}
+	
+	//TODO übernehmen
+	private boolean isInputBlocked() {
+		if (this.ignoreBlockedInput) {
+			return false;
+		}
+		return MouseInput.isVanillaInputBlocked();
 	}
 	
 	public void setBackgroundColor(@Nullable Color idle, @Nullable Color hovered, @Nullable Color idleBorder, @Nullable Color hoveredBorder, int borderWidth) {
@@ -168,6 +189,11 @@ public class AdvancedButton extends Button {
 	
 	public void setHandleClick(boolean b) {
 		this.handleClick = b;
+	}
+	
+	//TODO übernehmen
+	public static boolean isAnyButtonLeftClicked() {
+		return leftDown;
 	}
 
 }

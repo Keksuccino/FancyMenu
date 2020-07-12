@@ -44,7 +44,9 @@ public class LayoutAnimation extends LayoutObject {
 		PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 			if (call.booleanValue()) {
 				this.handler.removeContent(this);
-				((AdvancedAnimation)((AnimationCustomizationItem)this.object).renderer).stopAudio();
+				if ((AdvancedAnimation)((AnimationCustomizationItem)this.object).renderer != null) {
+					((AdvancedAnimation)((AnimationCustomizationItem)this.object).renderer).stopAudio();
+				}
 			}
 			this.handler.setMenusUseable(true);
 		}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));

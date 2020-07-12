@@ -2,7 +2,10 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
@@ -14,6 +17,8 @@ import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.content.PopupMenu;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.YesNoPopup;
+import de.keksuccino.core.input.KeyboardData;
+import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.rendering.RenderUtils;
@@ -22,14 +27,12 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.client.gui.FontRenderer;
 
 public abstract class LayoutObject extends AbstractGui {
 	
 	public CustomizationItemBase object;
 	protected LayoutCreatorScreen handler;
 	protected boolean hovered = false;
-	protected boolean focused = false;
 	protected boolean dragging = false;
 	protected boolean resizing = false;
 	protected int activeGrabber = -1;
@@ -42,12 +45,21 @@ public abstract class LayoutObject extends AbstractGui {
 	protected int startHeight;
 	protected int orientationDiffX = 0;
 	protected int orientationDiffY = 0;
+
+	protected List<LayoutObject> hoveredLayers = new ArrayList<LayoutObject>();
 	
 	protected PopupMenu rightclickMenu;
 	protected PopupMenu orientationMenu;
 	protected AdvancedButton orientationButton;
+	protected PopupMenu layersPopup;
+	protected AdvancedButton layersButton;
+
+	protected static boolean isShiftPressed = false;
+	private static boolean shiftListener = false;
 	
 	private final boolean destroyable;
+
+	public final String objectId = UUID.randomUUID().toString();
 	
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
@@ -57,52 +69,81 @@ public abstract class LayoutObject extends AbstractGui {
 		this.handler = handler;
 		this.object = object;
 		this.destroyable = destroyable;
+
+		if (!shiftListener) {
+			KeyboardHandler.addKeyPressedListener(new Consumer<KeyboardData>() {
+				@Override
+				public void accept(KeyboardData t) {
+					if ((t.keycode == 340) || (t.keycode == 344)) {
+						isShiftPressed = true;
+					}
+				}
+			});
+			KeyboardHandler.addKeyReleasedListener(new Consumer<KeyboardData>() {
+				@Override
+				public void accept(KeyboardData t) {
+					if ((t.keycode == 340) || (t.keycode == 344)) {
+						isShiftPressed = false;
+					}
+				}
+			});
+			shiftListener = true;
+		}
 		
 		this.init();
 	}
 	
 	protected void init() {
 		AdvancedButton o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-left");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o1);
 		AdvancedButton o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-left");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o2);
 		AdvancedButton o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-left");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o3);
 		AdvancedButton o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-centered");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o4);
 		AdvancedButton o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-centered");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o5);
 		AdvancedButton o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-centered");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o6);
 		AdvancedButton o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-right");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o7);
 		AdvancedButton o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-right");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o8);
 		AdvancedButton o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-right");
 			this.orientationMenu.closeMenu();
 		});
@@ -120,13 +161,39 @@ public abstract class LayoutObject extends AbstractGui {
 		this.orientationMenu.addContent(o9);
 		
 		this.orientationButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
-			this.orientationMenu.openMenuAt(((AdvancedButton)press).getX() + ((AdvancedButton)press).getWidth(), ((AdvancedButton)press).getY());
+			this.orientationMenu.openMenuAt(press.x + press.getWidth(), press.y);
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.orientationButton);
 
+		this.layersButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.chooselayer"), true, (press) -> {
+			if (this.layersPopup != null) {
+				this.rightclickMenu.removeChild(layersPopup);
+			}
+			this.layersPopup = new PopupMenu(100, 16, -1);
+			for (LayoutObject o : this.hoveredLayers) {
+				String label = o.object.value;
+				if (label == null) {
+					label = "Object";
+				} else {
+					if (Minecraft.getInstance().fontRenderer.getStringWidth(label) > 90) {
+						//TODO trimStringToWidth
+						label = Minecraft.getInstance().fontRenderer.func_238412_a_(label, 85) + "..";
+					}
+				}
+				AdvancedButton btn = new AdvancedButton(0, 0, 0, 0, label, (press2) -> {
+					this.handler.setObjectFocused(o, true, true);
+				});
+				LayoutCreatorScreen.colorizeCreatorButton(btn);
+				this.layersPopup.addContent(btn);
+			}
+			this.rightclickMenu.addChild(layersPopup);
+			this.layersPopup.openMenuAt(press.x + press.getWidth(), press.y);
+		});
+		LayoutCreatorScreen.colorizeCreatorButton(this.layersButton);
+				
 		this.rightclickMenu = new PopupMenu(110, 16, -1);
+		this.rightclickMenu.addContent(this.layersButton);
 		this.rightclickMenu.addContent(this.orientationButton);
-		
 		this.rightclickMenu.addChild(this.orientationMenu);
 		
 		if (this.destroyable) {
@@ -183,27 +250,26 @@ public abstract class LayoutObject extends AbstractGui {
 	
 	protected int orientationMouseX(int mouseX) {
 		if (this.object.orientation.endsWith("-centered")) {
-			return mouseX - (this.handler.getWidth() / 2);
+			return mouseX - (this.handler.width / 2);
 		}
 		if (this.object.orientation.endsWith("-right")) {
-			return mouseX - this.handler.getWidth();
+			return mouseX - this.handler.width;
 		}
 		return mouseX;
 	}
 	
 	protected int orientationMouseY(int mouseY) {
 		if (this.object.orientation.startsWith("mid-")) {
-			return mouseY - (this.handler.getHeight() / 2);
+			return mouseY - (this.handler.height / 2);
 		}
 		if (this.object.orientation.startsWith("bottom-")) {
-			return mouseY - this.handler.getHeight();
+			return mouseY - this.handler.height;
 		}
 		return mouseY;
 	}
 	
 	public void render(MatrixStack matrix, int mouseX, int mouseY) {
 		this.updateHovered(mouseX, mouseY);
-		this.updateFocused();
 
 		//Render the customization item
         try {
@@ -215,6 +281,11 @@ public abstract class LayoutObject extends AbstractGui {
 		// Renders the border around the object if its focused (starts to render one tick after the object got focused)
 		if (this.handler.isFocused(this)) {
 			this.renderBorder(matrix, mouseX, mouseY);
+		} else {
+			LayoutObject f = this.handler.getFocusedObject();
+			if ((this.handler.getTopHoverObject() == this) && (!this.handler.isObjectFocused() || (!f.isHovered() && !f.isDragged() && !f.isGettingResized() && !f.isGrabberPressed()))) {
+				this.renderHighlightBorder(matrix);
+			}
 		}
 		
 		//Reset cursor to default
@@ -229,13 +300,6 @@ public abstract class LayoutObject extends AbstractGui {
 			if (!MouseInput.isLeftMouseDown()) {
 				this.dragging = false;
 			}
-		}
-				
-		//Tell the handler if this object is currently focused
-		if (this.focused || this.isDragged() || this.resizing || this.isGrabberPressed()) {
-			this.handler.setObjectFocused(this, true);
-		} else {
-			this.handler.setObjectFocused(this, false);
 		}
 		
 		//Handles the resizing process
@@ -256,10 +320,10 @@ public abstract class LayoutObject extends AbstractGui {
 		
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
-			if ((mouseX >= 5) && (mouseX <= this.handler.getWidth() -5)) {
+			if ((mouseX >= 5) && (mouseX <= this.handler.width -5)) {
 				this.object.posX = this.orientationMouseX(mouseX) - this.startDiffX;
 			}
-			if ((mouseY >= 5) && (mouseY <= this.handler.getHeight() -5)) {
+			if ((mouseY >= 5) && (mouseY <= this.handler.height -5)) {
 				this.object.posY = this.orientationMouseY(mouseY) - this.startDiffY;
 			}
 		}
@@ -272,13 +336,16 @@ public abstract class LayoutObject extends AbstractGui {
         if (this.rightclickMenu != null) {
         	if (this.isRightClicked() && this.handler.isFocused(this)) {
             	this.rightclickMenu.openMenuAt(mouseX, mouseY);
+            	this.hoveredLayers.clear();
+            	for (LayoutObject o : this.handler.getContent()) {
+            		if (o.isHovered()) {
+            			this.hoveredLayers.add(o);
+            		}
+            	}
             }
         	
         	this.rightclickMenu.render(matrix, mouseX, mouseY);
-    		
-            if (this.rightclickMenu.isOpen()) {
-            	this.handler.setObjectFocused(this, true);
-            }
+
             if ((this.isLeftClicked() || ((MouseInput.isRightMouseDown() || MouseInput.isLeftMouseDown()) && !this.isHovered())) && !this.rightclickMenu.isHovered()) {
             	this.rightclickMenu.closeMenu();
             }
@@ -286,24 +353,35 @@ public abstract class LayoutObject extends AbstractGui {
         
         //Handle orientation menu
         if (this.orientationMenu != null) {
-            if (this.orientationMenu.isOpen()) {
-            	this.handler.setObjectFocused(this, true);
-            }
             if ((this.isLeftClicked() || ((MouseInput.isRightMouseDown() || MouseInput.isLeftMouseDown()) && !this.isHovered())) && !this.orientationMenu.isHovered() && !this.orientationButton.isHovered()) {
             	this.orientationMenu.closeMenu();
+            }
+        }
+
+        if (this.layersPopup != null) {
+            if ((this.isLeftClicked() || ((MouseInput.isRightMouseDown() || MouseInput.isLeftMouseDown()) && !this.isHovered())) && !this.layersPopup.isHovered() && !this.layersButton.isHovered()) {
+            	this.layersPopup.closeMenu();
+            }
+        }
+
+        if (!(this.handler.isFocusChangeBlocked() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()))) {
+        	if (((this.layersPopup != null && this.layersPopup.isOpen())) || ((this.orientationMenu != null) && this.orientationMenu.isOpen()) || this.rightclickMenu.isOpen()) {
+            	this.handler.setFocusChangeBlocked(objectId, true);
+            } else {
+            	this.handler.setFocusChangeBlocked(objectId, false);
             }
         }
 	}
 	
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
-		func_238467_a_(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		func_238467_a_(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
 		//vertical line left
-		func_238467_a_(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
 		//vertical line right
-		func_238467_a_(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
 		
 		int w = 4;
 		int h = 4;
@@ -317,13 +395,13 @@ public abstract class LayoutObject extends AbstractGui {
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.height - (h / 2);
 		
 		//grabber left
-		func_238467_a_(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 		//grabber right
-		func_238467_a_(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 		//grabber top
-		func_238467_a_(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
 		//grabber bottom
-		func_238467_a_(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
 		
 		//Update cursor and active grabber when grabber is hovered
 		if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
@@ -343,15 +421,27 @@ public abstract class LayoutObject extends AbstractGui {
 		}
 		
 		//Render pos and size values
-		FontRenderer font = Minecraft.getInstance().fontRenderer;
 		RenderUtils.setScale(matrix, 0.5F);
-		font.func_238405_a_(matrix, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		font.func_238405_a_(matrix, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		font.func_238405_a_(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		this.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		this.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		this.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		font.func_238405_a_(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		font.func_238405_a_(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		this.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
+		this.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
+	}
+	
+	protected void renderHighlightBorder(MatrixStack matrix) {
+		Color c = new Color(0, 200, 255, 255);
+		
+		//horizontal line top
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, c.getRGB());
+		//horizontal line bottom
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		//vertical line left
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		//vertical line right
+		AbstractGui.fill(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
 	}
 	
 	/**
@@ -370,6 +460,16 @@ public abstract class LayoutObject extends AbstractGui {
 	
 	public boolean isGrabberPressed() {
 		return ((this.getActiveResizeGrabber() != -1) && MouseInput.isLeftMouseDown());
+	}
+
+	protected int getAspectWidth(int startW, int startH, int height) {
+		double ratio = (double) startW / (double) startH;
+		return (int)(height * ratio);
+	}
+
+	protected int getAspectHeight(int startW, int startH, int width) {
+		double ratio = (double) startW / (double) startH;
+		return (int)(width / ratio);
 	}
 	
 	protected void handleResize(int mouseX, int mouseY) {
@@ -395,12 +495,24 @@ public abstract class LayoutObject extends AbstractGui {
 			if (w >= 5) {
 				this.object.posX = this.startX + diffX;
 				this.object.width = w;
+				if (isShiftPressed) {
+					int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
+					if (h >= 5) {
+						this.object.height = h;
+					}
+				}
 			}
 		}
 		if (g == 1) { //right
 			int w = this.object.width + (diffX - this.object.width);
 			if (w >= 5) {
 				this.object.width = w;
+				if (isShiftPressed) {
+					int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
+					if (h >= 5) {
+						this.object.height = h;
+					}
+				}
 			}
 		}
 		if (g == 2) { //top
@@ -408,12 +520,24 @@ public abstract class LayoutObject extends AbstractGui {
 			if (h >= 5) {
 				this.object.posY = this.startY + diffY;
 				this.object.height = h;
+				if (isShiftPressed) {
+					int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
+					if (w >= 5) {
+						this.object.width = w;
+					}
+				}
 			}
 		}
 		if (g == 3) { //bottom
 			int h = this.object.height + (diffY - this.object.height);
 			if (h >= 5) {
 				this.object.height = h;
+				if (isShiftPressed) {
+					int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
+					if (w >= 5) {
+						this.object.width = w;
+					}
+				}
 			}
 		}
 	}
@@ -434,17 +558,12 @@ public abstract class LayoutObject extends AbstractGui {
 		}
 	}
 	
-	protected void updateFocused() {
-		if (this.isLeftClicked() || this.isRightClicked()) {
-			this.focused = true;
-		}
-		if (!this.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
-			this.focused = false;
-		}
-	}
-	
 	public boolean isDragged() {
 		return this.dragging;
+	}
+
+	public boolean isGettingResized() {
+		return this.resizing;
 	}
 	
 	public boolean isLeftClicked() {
@@ -518,6 +637,24 @@ public abstract class LayoutObject extends AbstractGui {
 			}
 			this.handler.setMenusUseable(true);
 		}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));
+	}
+
+	public void resetObjectStates() {
+		hovered = false;
+		dragging = false;
+		resizing = false;
+		activeGrabber = -1;
+		if (this.orientationMenu != null) {
+			this.orientationMenu.closeMenu();
+		}
+		if (this.rightclickMenu != null) {
+			this.rightclickMenu.closeMenu();
+		}
+		if (this.layersPopup != null) {
+			this.layersPopup.closeMenu();
+		}
+		this.handler.setFocusChangeBlocked(objectId, false);
+		this.handler.setObjectFocused(this, false, true);
 	}
 
 	public abstract List<PropertiesSection> getProperties();

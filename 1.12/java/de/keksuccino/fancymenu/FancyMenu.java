@@ -14,11 +14,14 @@ import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -29,13 +32,14 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:findme")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.3.1";
+	public static final String VERSION = "1.4.1";
 	private static boolean isNotHeadless = false;
 	
 	public static Config config;
 	
 	private static File animationsPath = new File("config/fancymenu/animations");
 	private static File customizationPath = new File("config/fancymenu/customization");
+	private static File customGuiPath = new File("config/fancymenu/customguis");
 	
 	public FancyMenu() {
 		try {
@@ -46,11 +50,14 @@ public class FancyMenu {
 	    		//Create all important directorys
 	    		animationsPath.mkdirs();
 	    		customizationPath.mkdirs();
+	    		customGuiPath.mkdirs();
 
 	    		updateConfig();
 
 	    		AnimationHandler.init();
 	    		AnimationHandler.loadCustomAnimations();
+	    		
+	    		CustomGuiLoader.loadCustomGuis();
 	    		
 	    		GameIntroHandler.init();
 	    		
@@ -66,17 +73,18 @@ public class FancyMenu {
 	        		Keybinding.init();
 	        	}
 
-	        	//Disabling file chooser and system tray if "FindMe" mod is active
-	        	if (!Loader.isModLoaded("findme")) {
+	        	if (!config.getOrDefault("safemode", false) && !Minecraft.IS_RUNNING_ON_MAC && !Loader.isModLoaded("findme")) {
 	        		isNotHeadless = this.escapeHeadless();
-	        	}
-	        	
-	        	if (config.getOrDefault("enablesystemtray", true) && isRunningOnWindows() && isNotHeadless) {
-	        		FancyMenuTray.init();
-	        	}
-	        	
-	        	if (isNotHeadless) {
-	        		FileChooser.init();
+		        	
+		        	if (config.getOrDefault("enablesystemtray", true) && isRunningOnWindows() && isNotHeadless) {
+		        		FancyMenuTray.init();
+		        	}
+		        	
+		        	if (isNotHeadless) {
+		        		FileChooser.init();
+		        	}
+	        	} else {
+	        		System.out.println("## INFO ## LAUNCHING 'FANCYMENU' IN SAFEMODE! (FILECHOOSER AND SYSTEM TRAY ARE DISABLED IN THIS MODE)");
 	        	}
 	        	
 	    	} else {
@@ -97,6 +105,11 @@ public class FancyMenu {
 				Locals.init();
 				
 				GameMusicHandler.init();
+				
+				MainWindowHandler.init();
+	        	MainWindowHandler.updateWindowIcon();
+	        	MainWindowHandler.updateWindowTitle();
+	        	
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -140,12 +153,14 @@ public class FancyMenu {
 	public static void updateConfig() {
     	try {
     		config = new Config("config/fancymenu/config.txt");
+    		
     		config.registerValue("enablesystemtray", true, "general", "ONLY AVAILABLE ON WINDOWS! A minecraft restart is required after changing this value.");
+    		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
+    		config.registerValue("safemode", false, "general", "Maximizes compatibility with the operating system. Disables file chooser and system tray. A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");
     		
-    		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
-    		
     		config.registerValue("showcustomizationbuttons", true, "customization");
+    		config.registerValue("softmode", false, "customization", "Maximizes mod compatibility. Disables background customization support for scrollable menu screens. Restart is needed after changing this value.");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
@@ -158,17 +173,23 @@ public class FancyMenu {
 			config.registerValue("splashrotation", -20, "mainmenu_splash");
 			
 			config.registerValue("gameintroanimation", "", "loading");
-			config.registerValue("loadingscreendarkmode", false, "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");
+			config.registerValue("allowgameintroskip", true, "loading");
+			config.registerValue("customgameintroskiptext", "", "loading");
+			
+			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
+			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
 			
 			config.syncConfig();
 			
 			//Updating all categorys at start to keep them synchronized with older config files
 			config.setCategory("enablesystemtray", "general");
 			config.setCategory("enablehotkeys", "general");
+			config.setCategory("safemode", "general");
 			config.setCategory("playmenumusic", "general");
     		
 			config.setCategory("showcustomizationbuttons", "customization");
+			config.setCategory("softmode", "customization");
 			
 			config.setCategory("hidebranding", "mainmenu");
 			config.setCategory("hidelogo", "mainmenu");
@@ -181,8 +202,12 @@ public class FancyMenu {
 			config.setCategory("splashrotation", "mainmenu_splash");
 			
 			config.setCategory("gameintroanimation", "loading");
-			config.setCategory("loadingscreendarkmode", "loading");
 			config.setCategory("showanimationloadingstatus", "loading");
+			config.setCategory("allowgameintroskip", "loading");
+			config.setCategory("customgameintroskiptext", "loading");
+
+			config.setCategory("customwindowicon", "minecraftwindow");
+			config.setCategory("customwindowtitle", "minecraftwindow");
 			
 			config.clearUnusedValues();
 		} catch (InvalidValueException e) {
@@ -202,6 +227,13 @@ public class FancyMenu {
 			customizationPath.mkdirs();
 		}
 		return customizationPath;
+	}
+	
+	public static File getCustomGuiPath() {
+		if (!customGuiPath.exists()) {
+			customGuiPath.mkdirs();
+		}
+		return customGuiPath;
 	}
 	
 	public static boolean isNotHeadless() {

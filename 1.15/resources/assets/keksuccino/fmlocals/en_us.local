@@ -213,3 +213,39 @@ helper.creator.backgroundoptions.nopanorama = Not Panoramic
 
 helper.creator.textures.invalidcharacters = §c§lInvalid characters!%n%%n%%n%The filename of your image contains invalid characters!%n%%n%Please only use characters "a-z", "0-9", ".", "_" and "-".%n%Spaces, uppercase letters and any other special characters are unsupported.
 
+helper.buttons.tools.dropdownlabel = Customization
+helper.buttons.tools.overridemenu = Override With
+helper.buttons.tools.resetoverride = Reset Override
+helper.buttons.tools.closecustomgui = Close GUI
+
+helper.buttons.tools.customguis = Custom GUIs
+helper.buttons.tools.customguis.open = Open GUI
+helper.buttons.tools.customguis.delete = Delete GUI
+helper.buttons.tools.customguis.pickbyname = Pick By Name
+helper.buttons.tools.customguis.openbyname = Open By Name
+helper.buttons.tools.customguis.deletebyname = Delete By Name
+helper.buttons.tools.customguis.sure = §c§lAre you sure?%n%%n%%n%Do you really want to §ldelete §rthis GUI?%n%%n%§lThis action cannot be undone!%n% %n% %n% %n%
+helper.buttons.tools.customguis.invalididentifier = §c§lInvalid identifier!%n%%n%%n%No custom GUI found with this identifier!%n% %n% %n% %n%
+
+helper.buttons.tools.creategui = Create GUI
+helper.buttons.tools.creategui.allowesc = Allow
+helper.buttons.tools.creategui.donotallowesc = Don't Allow
+helper.buttons.tools.creategui.invalididentifier = §cInvalid identifier!
+helper.buttons.tools.creategui.identifieralreadyused = §cIdentifier already in use! Please choose another one!
+helper.buttons.tools.creategui.allowescdesc = Allow ESC To Close Menu
+helper.buttons.tools.creategui.menuidentifier = Menu Identifier
+helper.buttons.tools.creategui.menutitle = Menu Title (Optional)
+helper.buttons.tools.creategui.create = Create
+
+gameintro.skip = PRESS SPACE TO SKIP
+
+helper.creator.items.chooselayer = Choose Layer
+
+customization.items.webstring.unabletoload = Unable to load web text! Invalid URL or not connected to internet!
+
+helper.creator.custombutton.config.actiontype.opencustomgui.desc = Opens a Custom GUI.
+helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Menu Identifier
+
+helper.creator.items.button.delayappearance = Delay Appearance
+helper.creator.items.button.delayappearance.desc = Delay Appearance For Seconds [Decimal Value Support]
+helper.creator.items.button.delayappearance.invalidvalue = §c§lInvalid Value!%n%%n%%n%This is not a valid seconds value!%n%Maybe your value is too long. (..DON'T BE PROUD OF THIS!)%n%%n%Value Examples: 3, 2.0, 0.05, 0.8, 10.5

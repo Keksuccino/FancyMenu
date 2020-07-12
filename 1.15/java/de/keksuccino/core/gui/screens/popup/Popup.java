@@ -45,6 +45,8 @@ public abstract class Popup {
 	protected void addButton(AdvancedButton b) {
 		if (!this.buttons.contains(b)) {
 			this.buttons.add(b);
+			//TODO übernehmen
+			b.ignoreBlockedInput = true;
 			this.colorizePopupButton(b);
 		}
 	}

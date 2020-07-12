@@ -71,17 +71,17 @@ public class TextInputPopup extends Popup {
 			int height = 100;
 			
 			RenderSystem.enableBlend();
-			IngameGui.func_238467_a_(matrix, (renderIn.field_230708_k_ / 2) - (this.width / 2), (renderIn.field_230709_l_ / 2) - (height / 2), (renderIn.field_230708_k_ / 2) + (this.width / 2), (renderIn.field_230709_l_ / 2) + (height / 2), this.color.getRGB());
+			IngameGui.fill(matrix, (renderIn.width / 2) - (this.width / 2), (renderIn.height / 2) - (height / 2), (renderIn.width / 2) + (this.width / 2), (renderIn.height / 2) + (height / 2), this.color.getRGB());
 			RenderSystem.disableBlend();
 			
-			renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) - (height / 2) + 10, Color.WHITE.getRGB());
+			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.width / 2, (renderIn.height / 2) - (height / 2) + 10, Color.WHITE.getRGB());
 			
-			this.textField.setX((renderIn.field_230708_k_ / 2) - (this.textField.getWidth() / 2));
-			this.textField.setY((renderIn.field_230709_l_ / 2) - (this.textField.getHeight() / 2));
+			this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
+			this.textField.setY((renderIn.height / 2) - (this.textField.getHeight() / 2));
 			this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 			
-			this.doneButton.setX((renderIn.field_230708_k_ / 2) - (this.doneButton.getWidth() / 2));
-			this.doneButton.setY(((renderIn.field_230709_l_ / 2) + (height / 2)) - this.doneButton.getHeight() - 5);
+			this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
+			this.doneButton.setY(((renderIn.height / 2) + (height / 2)) - this.doneButton.getHeight() - 5);
 			
 			this.renderButtons(matrix, mouseX, mouseY);
 		}

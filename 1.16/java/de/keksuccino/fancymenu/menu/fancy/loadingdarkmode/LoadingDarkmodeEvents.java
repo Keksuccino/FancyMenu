@@ -36,13 +36,13 @@ public class LoadingDarkmodeEvents {
 	public void onTick(ClientTickEvent e) {
 		startedTicking = true;
 		tick();
-//		System.out.println("test");
 	}
 	
 	protected static void tick() {
 		if (FancyMenu.config.getOrDefault("loadingscreendarkmode", false)) {
 			if ((Minecraft.getInstance().loadingGui != null) && (Minecraft.getInstance().loadingGui instanceof ResourceLoadProgressGui) && !(Minecraft.getInstance().loadingGui instanceof DarkResourceLoadingScreen)) {
 				ResourceLoadProgressGui screen = (ResourceLoadProgressGui) Minecraft.getInstance().loadingGui;
+
 				Minecraft.getInstance().setLoadingGui(new DarkResourceLoadingScreen(Minecraft.getInstance(), DarkResourceLoadingScreen.getReloader(screen), DarkResourceLoadingScreen.getCallback(screen), DarkResourceLoadingScreen.getReloading(screen)));
 			}
 		}

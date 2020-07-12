@@ -32,27 +32,27 @@ public class CurrentScreenHandler {
 	
 	public static int getWidth() {
 		if (getScreen() != null) {
-			return getScreen().field_230708_k_;
+			return getScreen().width;
 		}
 		return 0;
 	}
 	
 	public static void setWidth(int width) {
 		if (getScreen() != null) {
-			getScreen().field_230708_k_ = width;
+			getScreen().width = width;
 		}
 	}
 	
 	public static int getHeight() {
 		if (getScreen() != null) {
-			return getScreen().field_230709_l_;
+			return getScreen().height;
 		}
 		return 0;
 	}
 	
 	public static void setHeight(int height) {
 		if (getScreen() != null) {
-			getScreen().field_230709_l_ = height;
+			getScreen().height = height;
 		}
 	}
 	

@@ -14,7 +14,7 @@ public class PopupMenu implements IMenu {
 	private int buttonHeight;
 	private int x = 0;
 	private int y = 0;
-	private List<AdvancedButton> content = new ArrayList<AdvancedButton>();
+	protected List<AdvancedButton> content = new ArrayList<AdvancedButton>();
 	private List<PopupMenu> children = new ArrayList<PopupMenu>();
 	private PopupMenu parent;
 	private boolean opened = false;
@@ -54,7 +54,7 @@ public class PopupMenu implements IMenu {
 					} else {
 						this.x = parent.x + parent.width + 2;
 					}
-					if ((this.x + this.width) > Minecraft.getInstance().currentScreen.field_230708_k_) {
+					if ((this.x + this.width) > Minecraft.getInstance().currentScreen.width) {
 						this.x = parent.x - this.width - 2;
 						this.left = true;
 					} else if (!parent.left) {
@@ -147,6 +147,11 @@ public class PopupMenu implements IMenu {
 	}
 	
 	public void openMenuAt(int x, int y) {
+		
+		for (PopupMenu m : this.children) {
+			m.closeMenu();
+		}
+		
 		this.x = x;
 		this.y = y;
 
@@ -158,12 +163,12 @@ public class PopupMenu implements IMenu {
 		//field_230709_l_ = screen height
 		//field_230708_k_ = screen width
 		
-		if ((this.y + this.lastHeight) > Minecraft.getInstance().currentScreen.field_230709_l_) {
+		if ((this.y + this.lastHeight) > Minecraft.getInstance().currentScreen.height) {
 			this.up = true;
 		} else {
 			this.up = false;
 		}
-		if ((this.x + this.width) > Minecraft.getInstance().currentScreen.field_230708_k_) {
+		if ((this.x + this.width) > Minecraft.getInstance().currentScreen.width) {
 			this.left = true;
 		} else {
 			this.left = false;
@@ -180,6 +185,7 @@ public class PopupMenu implements IMenu {
 	}
 	
 	public void addContent(AdvancedButton button) {
+		button.ignoreBlockedInput = true;
 		this.content.add(button);
 	}
 	

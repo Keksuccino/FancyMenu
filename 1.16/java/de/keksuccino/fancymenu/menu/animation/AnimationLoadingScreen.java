@@ -34,7 +34,7 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 	}
 
 	@Override
-	public void func_230430_a_(MatrixStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
+	public void render(MatrixStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
 		IAnimationRenderer current = this.getCurrentRenderer();
 		
 		if (current == null) {
@@ -90,7 +90,7 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			}
 		}
 		
-		super.func_230430_a_(matrix, p_render_1_, p_render_2_, p_render_3_);
+		super.render(matrix, p_render_1_, p_render_2_, p_render_3_);
 	}
 	
 	private IAnimationRenderer getCurrentRenderer() {

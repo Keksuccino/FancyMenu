@@ -146,20 +146,13 @@ public abstract class CustomizationItemBase {
 		return true;
 	}
 	
-	@Override
-	public CustomizationItemBase clone() {
-		CustomizationItemBase item = new CustomizationItemBase(new PropertiesSection("")) {
-			@Override
-			public void render(Screen menu) throws IOException {}
-		};
-		item.height = this.height;
-		item.orientation = this.orientation;
-		item.posX = this.posX;
-		item.posY = this.posY;
-		item.value = this.value;
-		item.width = this.width;
-		item.action = this.action;
-		return item;
+	public CustomizationItemBase cloneObject() {
+		try {
+			return (CustomizationItemBase) this.clone();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 }

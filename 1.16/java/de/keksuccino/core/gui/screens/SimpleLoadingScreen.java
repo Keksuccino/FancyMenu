@@ -28,12 +28,12 @@ public class SimpleLoadingScreen extends Screen {
 	
 	//render
 	@Override
-	public void func_230430_a_(MatrixStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
+	public void render(MatrixStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
 		int color = new Color(239, 50, 61).getRGB();
 		if (darkmode) {
 			color = new Color(26, 26, 26).getRGB();
 		}
-		func_238467_a_(matrix, 0, 0, field_230708_k_, field_230709_l_, color);
+		fill(matrix, 0, 0, width, height, color);
 		
 		int j2 = (int)((double)mc.getMainWindow().getScaledWidth() * 0.5D);
 		int i1 = (int)((double)mc.getMainWindow().getScaledHeight() * 0.5D);
@@ -44,17 +44,17 @@ public class SimpleLoadingScreen extends Screen {
 		mc.getTextureManager().bindTexture(MOJANG_LOGO_TEXTURE);
 		RenderSystem.enableBlend();
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		func_238466_a_(matrix, j2 - k1, i1 - j1, k1, (int)d0, -0.0625F, 0.0F, 120, 60, 120, 120);
-		func_238466_a_(matrix, j2, i1 - j1, k1, (int)d0, 0.0625F, 60.0F, 120, 60, 120, 120);
+		blit(matrix, j2 - k1, i1 - j1, k1, (int)d0, -0.0625F, 0.0F, 120, 60, 120, 120);
+		blit(matrix, j2, i1 - j1, k1, (int)d0, 0.0625F, 60.0F, 120, 60, 120, 120);
 
-		this.loading.setPosX((field_230708_k_ /2) - 100);
-		this.loading.setPosY(field_230709_l_ - 80);
+		this.loading.setPosX((width /2) - 100);
+		this.loading.setPosY(height - 80);
 		
 		this.loading.render(matrix);
 		
-		this.drawStatus(this.status, matrix, field_230708_k_ / 2, field_230709_l_ - 30);
+		this.drawStatus(this.status, matrix, width / 2, height - 30);
 		
-		super.func_230430_a_(matrix, p_render_1_, p_render_2_, p_render_3_);
+		super.render(matrix, p_render_1_, p_render_2_, p_render_3_);
 	}
 	
 	public void setStatusText(String status) {
@@ -63,7 +63,7 @@ public class SimpleLoadingScreen extends Screen {
 
 	public void drawStatus(String text, MatrixStack matrix, int width, int height) {
 		//drawString
-		mc.fontRenderer.func_238421_b_(matrix, text, (float) (width - Minecraft.getInstance().fontRenderer.getStringWidth(text) / 2), (float) height, Color.WHITE.getRGB());
+		mc.fontRenderer.drawString(matrix, text, (float) (width - Minecraft.getInstance().fontRenderer.getStringWidth(text) / 2), (float) height, Color.WHITE.getRGB());
 	}
 	
 	public void setDarkmode(boolean b) {

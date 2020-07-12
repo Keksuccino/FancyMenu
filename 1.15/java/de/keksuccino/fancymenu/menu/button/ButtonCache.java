@@ -122,13 +122,12 @@ public class ButtonCache {
 			e.printStackTrace();
 		}
 		
-		if (!l.isEmpty()) {
-			buttons.clear();
-			int i = 1;
-			for (Widget w : sortButtons(l)) {
-				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage()), s));
-				i++;
-			}
+		//TODO übernehmen
+		buttons.clear();
+		int i = 1;
+		for (Widget w : sortButtons(l)) {
+			buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage()), s));
+			i++;
 		}
 	}
 	

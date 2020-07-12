@@ -34,7 +34,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equalsIgnoreCase("setbuttontexture")) {
 				String backNormal = item.getEntryValue("backgroundnormal");
 				String backHover = item.getEntryValue("backgroundhovered");
-				this.button = new AdvancedButton(parent.field_230690_l_, parent.field_230691_m_, parent.func_230998_h_(), parent.getHeight(), parent.func_230458_i_().getString(), true, (press) -> {
+				this.button = new AdvancedButton(parent.x, parent.y, parent.getWidth(), parent.getHeight(), parent.getMessage().getString(), true, (press) -> {
 					click();
 				});
 				this.button.setBackgroundTexture(TextureHandler.getResource(backNormal.replace("\\", "/")), TextureHandler.getResource(backHover.replace("\\", "/")));
@@ -60,7 +60,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equalsIgnoreCase("sethoverlabel")) {
 				this.value = item.getEntryValue("label");
 				if (this.parent != null) {
-					this.normalLabel = this.parent.func_230458_i_().getString();
+					this.normalLabel = this.parent.getMessage().getString();
 				}
 			}
 		}
@@ -72,20 +72,20 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			
 			//Sync custom button with its parent and render it
 			if (this.button != null) {
-				if (this.button.isHovered() && !this.parent.func_230449_g_()) {
+				if (this.button.isHovered() && !this.parent.isHovered()) {
 					this.setHovered(this.parent, true);
 				}
-				if (!this.button.isHovered() && this.parent.func_230449_g_()) {
+				if (!this.button.isHovered() && this.parent.isHovered()) {
 					this.setHovered(this.parent, false);
 				}
 				
-				this.button.setX(this.parent.field_230690_l_);
-				this.button.setY( this.parent.field_230691_m_);
-				this.button.setWidth(this.parent.func_230998_h_());
+				this.button.setX(this.parent.x);
+				this.button.setY( this.parent.y);
+				this.button.setWidth(this.parent.getWidth());
 				this.button.setHeight(this.parent.getHeight());
-				this.button.setMessage(this.parent.func_230458_i_().getString());
+				this.button.setMessage(this.parent.getMessage().getString());
 
-				this.button.setMessage(this.parent.func_230458_i_().getString());
+				this.button.setMessage(this.parent.getMessage().getString());
 				
 				this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
 			}
@@ -93,22 +93,22 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			//Everything for "setbuttontexture" is done in the button sync above
 			
 			if (this.action.equals("addhoversound")) {
-				if (this.parent.func_230449_g_() && !hovered && (this.value != null)) {
+				if (this.parent.isHovered() && !hovered && (this.value != null)) {
 					SoundHandler.resetSound(this.value);
 					SoundHandler.playSound(this.value);
 					this.hovered = true;
 				}
-				if (!this.parent.func_230449_g_()) {
+				if (!this.parent.isHovered()) {
 					this.hovered = false;
 				}
 			}
 			
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
-					if (this.parent.func_230449_g_()) {
-						this.parent.func_238482_a_(new StringTextComponent(this.value));
+					if (this.parent.isHovered()) {
+						this.parent.setMessage(new StringTextComponent(this.value));
 					} else {
-						this.parent.func_238482_a_(new StringTextComponent(this.normalLabel));
+						this.parent.setMessage(new StringTextComponent(this.normalLabel));
 					}
 				}
 			}
@@ -118,7 +118,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	
 	private void setHovered(Widget w, boolean hovered) {
 		try {
-			Field f = ObfuscationReflectionHelper.findField(Widget.class, "isHovered");
+			Field f = ObfuscationReflectionHelper.findField(Widget.class, "field_230692_n_");
 			f.set(w, hovered);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -126,7 +126,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	}
 	
 	private void click() {
-		this.parent.func_230982_a_(MouseInput.getMouseX(), MouseInput.getMouseY());
+		this.parent.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 
 }

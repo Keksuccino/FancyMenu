@@ -71,18 +71,18 @@ public class LayoutSavePopup extends Popup {
 
 			int i = 0;
 			for (String s : this.text) {
-				renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(s), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) - (height / 2) + 10 + i, Color.WHITE.getRGB());
+				renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(s), renderIn.width / 2, (renderIn.height / 2) - (height / 2) + 10 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
 			
-			this.saveButton.setX((renderIn.field_230708_k_ / 2) - (this.saveButton.getWidth() / 2));
-			this.saveButton.setY(((renderIn.field_230709_l_ / 2) + (height / 2)));
+			this.saveButton.setX((renderIn.width / 2) - (this.saveButton.getWidth() / 2));
+			this.saveButton.setY(((renderIn.height / 2) + (height / 2)));
 			
-			this.saveAndDisableOthersButton.setX((renderIn.field_230708_k_ / 2) - (this.saveAndDisableOthersButton.getWidth() / 2));
-			this.saveAndDisableOthersButton.setY(((renderIn.field_230709_l_ / 2) + (height / 2) + 25));
+			this.saveAndDisableOthersButton.setX((renderIn.width / 2) - (this.saveAndDisableOthersButton.getWidth() / 2));
+			this.saveAndDisableOthersButton.setY(((renderIn.height / 2) + (height / 2) + 25));
 			
-			this.cancelButton.setX((renderIn.field_230708_k_ / 2) - (this.cancelButton.getWidth() / 2));
-			this.cancelButton.setY(((renderIn.field_230709_l_ / 2) + (height / 2) + 50));
+			this.cancelButton.setX((renderIn.width / 2) - (this.cancelButton.getWidth() / 2));
+			this.cancelButton.setY(((renderIn.height / 2) + (height / 2) + 50));
 			
 			this.renderButtons(matrix, mouseX, mouseY);
 		}

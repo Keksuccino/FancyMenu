@@ -16,6 +16,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
@@ -98,9 +99,9 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			matrix.push();
 			matrix.scale(this.scale, this.scale, this.scale);
 			if (this.shadow) {
-				font.func_238421_b_(matrix, s, x, y + (i / this.scale), Color.WHITE.getRGB());
+				font.drawStringWithShadow(matrix, s, x, y + (i / this.scale), Color.WHITE.getRGB());
 			} else {
-				font.func_238405_a_(matrix, s, x, y + (i / this.scale), Color.WHITE.getRGB());
+				font.drawString(matrix, s, x, y + (i / this.scale), Color.WHITE.getRGB());
 			}
 			matrix.pop();
 			
@@ -173,11 +174,16 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				r.close();
 				
 			} catch (Exception e) {
+				this.lines.clear();
+				this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
 				e.printStackTrace();
 			}
 			
 			return true;
 		} else {
+			this.lines.clear();
+			this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
+			
 			System.out.println("########################## ERROR ##########################");
 			System.out.println("[FM] Cannot load text content from " + this.value + "! Invalid URL!");
 			System.out.println("###########################################################");

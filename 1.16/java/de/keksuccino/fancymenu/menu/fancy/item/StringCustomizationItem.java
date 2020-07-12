@@ -58,10 +58,10 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		matrix.scale(this.scale, this.scale, this.scale);
 		if (this.shadow) {
 			//drawStringWithShadow
-			font.func_238405_a_(matrix, "§f" + this.value, x, y, 0);
+			font.drawStringWithShadow(matrix, "§f" + this.value, x, y, 0);
 		} else {
 			//drawString
-			font.func_238421_b_(matrix, "§f" + this.value, x, y, 0);
+			font.drawString(matrix, "§f" + this.value, x, y, 0);
 		}
 		matrix.pop();
 		RenderSystem.disableBlend();

@@ -12,13 +12,13 @@ public class CustomizationButton extends AdvancedButton {
 
 	public CustomizationButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
 		super(x, y, widthIn, heightIn, buttonText, onPress);
-		
+		this.ignoreBlockedInput = true;
 		this.setBackgroundColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 	}
 	
 	public CustomizationButton(int x, int y, int widthIn, int heightIn, String buttonText, boolean b, IPressable onPress) {
 		super(x, y, widthIn, heightIn, buttonText, b, onPress);
-		
+		this.ignoreBlockedInput = true;
 		this.setBackgroundColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 	}
 

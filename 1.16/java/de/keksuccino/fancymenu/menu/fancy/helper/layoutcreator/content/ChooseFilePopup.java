@@ -58,23 +58,23 @@ public class ChooseFilePopup extends TextInputPopup {
 			return;
 		}
 		RenderSystem.enableBlend();
-		IngameGui.func_238467_a_(matrix, 0, 0, renderIn.field_230708_k_, renderIn.field_230709_l_ , new Color(0, 0, 0, 240).getRGB());
+		IngameGui.fill(matrix, 0, 0, renderIn.width, renderIn.height, new Color(0, 0, 0, 240).getRGB());
 		RenderSystem.disableBlend();
 		
-		renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_  / 2) - 40, Color.WHITE.getRGB());
+		renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.width / 2, (renderIn.height  / 2) - 40, Color.WHITE.getRGB());
 		
-		this.textField.setX((renderIn.field_230708_k_ / 2) - (this.textField.getWidth() / 2));
-		this.textField.setY((renderIn.field_230709_l_  / 2) - (this.textField.getHeight() / 2));
+		this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
+		this.textField.setY((renderIn.height  / 2) - (this.textField.getHeight() / 2));
 		this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 		
-		this.doneButton.setX((renderIn.field_230708_k_ / 2) - (this.doneButton.getWidth() / 2));
-		this.doneButton.setY(((renderIn.field_230709_l_  / 2) + 100) - this.doneButton.getHeight() - 5);
+		this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
+		this.doneButton.setY(((renderIn.height  / 2) + 100) - this.doneButton.getHeight() - 5);
 		
-		this.chooseFileBtn.setX((renderIn.field_230708_k_ / 2) - (this.doneButton.getWidth() / 2));
-		this.chooseFileBtn.setY(((renderIn.field_230709_l_  / 2) + 50) - this.doneButton.getHeight() - 5);
+		this.chooseFileBtn.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
+		this.chooseFileBtn.setY(((renderIn.height  / 2) + 50) - this.doneButton.getHeight() - 5);
 		
 		if (!FancyMenu.isNotHeadless()) {
-			renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.choosefile.notsupported")), (renderIn.field_230708_k_ / 2), ((renderIn.field_230709_l_  / 2) + 50), Color.WHITE.getRGB());
+			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.choosefile.notsupported")), (renderIn.width / 2), ((renderIn.height  / 2) + 50), Color.WHITE.getRGB());
 		}
 		
 		this.renderButtons(matrix, mouseX, mouseY);

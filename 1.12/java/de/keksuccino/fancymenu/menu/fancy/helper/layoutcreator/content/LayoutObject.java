@@ -2,7 +2,10 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
@@ -10,6 +13,8 @@ import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.content.PopupMenu;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.YesNoPopup;
+import de.keksuccino.core.input.KeyboardData;
+import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.input.MouseInput.CursorType;
 import de.keksuccino.core.properties.PropertiesSection;
@@ -26,7 +31,6 @@ public abstract class LayoutObject extends Gui {
 	public final CustomizationItemBase object;
 	protected LayoutCreatorScreen handler;
 	protected boolean hovered = false;
-	protected boolean focused = false;
 	protected boolean dragging = false;
 	protected boolean resizing = false;
 	protected int activeGrabber = -1;
@@ -40,62 +44,100 @@ public abstract class LayoutObject extends Gui {
 	protected int orientationDiffX = 0;
 	protected int orientationDiffY = 0;
 	
+	protected List<LayoutObject> hoveredLayers = new ArrayList<LayoutObject>();
+	
 	protected PopupMenu rightclickMenu;
 	protected PopupMenu orientationMenu;
 	protected AdvancedButton orientationButton;
+	protected PopupMenu layersPopup;
+	protected AdvancedButton layersButton;
+	
+	protected static boolean isShiftPressed = false;
+	private static boolean shiftListener = false;
 	
 	private final boolean destroyable;
+	
+	public final String objectId = UUID.randomUUID().toString();
 	
 	public LayoutObject(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutCreatorScreen handler) {
 		this.handler = handler;
 		this.object = object;
 		this.destroyable = destroyable;
 
+		if (!shiftListener) {
+			KeyboardHandler.addKeyPressedListener(new Consumer<KeyboardData>() {
+				@Override
+				public void accept(KeyboardData t) {
+					if ((t.keycode == 42) || (t.keycode == 54)) {
+						isShiftPressed = true;
+					}
+				}
+			});
+			KeyboardHandler.addKeyReleasedListener(new Consumer<KeyboardData>() {
+				@Override
+				public void accept(KeyboardData t) {
+					if ((t.keycode == 42) || (t.keycode == 54)) {
+						isShiftPressed = false;
+					}
+				}
+			});
+			shiftListener = true;
+		}
+		
 		this.init();
 	}
 	
 	protected void init() {
 		AdvancedButton o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-left");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o1);
 		AdvancedButton o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-left");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o2);
 		AdvancedButton o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-left");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o3);
 		AdvancedButton o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-centered");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o4);
 		AdvancedButton o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-centered");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o5);
 		AdvancedButton o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-centered");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o6);
 		AdvancedButton o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-right");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o7);
 		AdvancedButton o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-right");
 			this.orientationMenu.closeMenu();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(o8);
 		AdvancedButton o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-right");
 			this.orientationMenu.closeMenu();
 		});
@@ -117,9 +159,34 @@ public abstract class LayoutObject extends Gui {
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.orientationButton);
 
+		this.layersButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.chooselayer"), true, (press) -> {
+			if (this.layersPopup != null) {
+				this.rightclickMenu.removeChild(layersPopup);
+			}
+			this.layersPopup = new PopupMenu(100, 16, -1);
+			for (LayoutObject o : this.hoveredLayers) {
+				String label = o.object.value;
+				if (label == null) {
+					label = "Object";
+				} else {
+					if (Minecraft.getMinecraft().fontRenderer.getStringWidth(label) > 90) {
+						label = Minecraft.getMinecraft().fontRenderer.trimStringToWidth(label, 85) + "..";
+					}
+				}
+				AdvancedButton btn = new AdvancedButton(0, 0, 0, 0, label, (press2) -> {
+					this.handler.setObjectFocused(o, true, true);
+				});
+				LayoutCreatorScreen.colorizeCreatorButton(btn);
+				this.layersPopup.addContent(btn);
+			}
+			this.rightclickMenu.addChild(layersPopup);
+			this.layersPopup.openMenuAt(press.x + press.width, press.y);
+		});
+		LayoutCreatorScreen.colorizeCreatorButton(this.layersButton);
+				
 		this.rightclickMenu = new PopupMenu(110, 16, -1);
+		this.rightclickMenu.addContent(this.layersButton);
 		this.rightclickMenu.addContent(this.orientationButton);
-		
 		this.rightclickMenu.addChild(this.orientationMenu);
 		
 		if (this.destroyable) {
@@ -196,7 +263,6 @@ public abstract class LayoutObject extends Gui {
 	
 	public void render(int mouseX, int mouseY) {
 		this.updateHovered(mouseX, mouseY);
-		this.updateFocused();
 
 		//Render the customization item
         try {
@@ -208,6 +274,11 @@ public abstract class LayoutObject extends Gui {
 		// Renders the border around the object if its focused (starts to render one tick after the object got focused)
 		if (this.handler.isFocused(this)) {
 			this.renderBorder(mouseX, mouseY);
+		} else {
+			LayoutObject f = this.handler.getFocusedObject();
+			if ((this.handler.getTopHoverObject() == this) && (!this.handler.isObjectFocused() || (!f.isHovered() && !f.isDragged() && !f.isGettingResized() && !f.isGrabberPressed()))) {
+				this.renderHighlightBorder();
+			}
 		}
 		
 		//Reset cursor to default
@@ -222,13 +293,6 @@ public abstract class LayoutObject extends Gui {
 			if (!MouseInput.isLeftMouseDown()) {
 				this.dragging = false;
 			}
-		}
-				
-		//Tell the handler if this object is currently focused
-		if (this.focused || this.isDragged() || this.resizing || this.isGrabberPressed()) {
-			this.handler.setObjectFocused(this, true);
-		} else {
-			this.handler.setObjectFocused(this, false);
 		}
 		
 		//Handles the resizing process
@@ -262,28 +326,42 @@ public abstract class LayoutObject extends Gui {
 		}
 
 		//Handle button options menu
-        if (this.rightclickMenu != null) {
+		if (this.rightclickMenu != null) {
         	if (this.isRightClicked() && this.handler.isFocused(this)) {
             	this.rightclickMenu.openMenuAt(mouseX, mouseY);
+            	this.hoveredLayers.clear();
+            	for (LayoutObject o : this.handler.getContent()) {
+            		if (o.isHovered()) {
+            			this.hoveredLayers.add(o);
+            		}
+            	}
             }
         	
         	this.rightclickMenu.render(mouseX, mouseY);
-    		
-            if (this.rightclickMenu.isOpen()) {
-            	this.handler.setObjectFocused(this, true);
-            }
+
             if ((this.isLeftClicked() || ((MouseInput.isRightMouseDown() || MouseInput.isLeftMouseDown()) && !this.isHovered())) && !this.rightclickMenu.isHovered()) {
             	this.rightclickMenu.closeMenu();
             }
         }
         
         //Handle orientation menu
-        if (this.orientationMenu != null) {
-            if (this.orientationMenu.isOpen()) {
-            	this.handler.setObjectFocused(this, true);
-            }
+		if (this.orientationMenu != null) {
             if ((this.isLeftClicked() || ((MouseInput.isRightMouseDown() || MouseInput.isLeftMouseDown()) && !this.isHovered())) && !this.orientationMenu.isHovered() && !this.orientationButton.isMouseOver()) {
             	this.orientationMenu.closeMenu();
+            }
+        }
+
+        if (this.layersPopup != null) {
+            if ((this.isLeftClicked() || ((MouseInput.isRightMouseDown() || MouseInput.isLeftMouseDown()) && !this.isHovered())) && !this.layersPopup.isHovered() && !this.layersButton.isMouseOver()) {
+            	this.layersPopup.closeMenu();
+            }
+        }
+
+        if (!(this.handler.isFocusChangeBlocked() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()))) {
+        	if (((this.layersPopup != null && this.layersPopup.isOpen())) || ((this.orientationMenu != null) && this.orientationMenu.isOpen()) || this.rightclickMenu.isOpen()) {
+            	this.handler.setFocusChangeBlocked(objectId, true);
+            } else {
+            	this.handler.setFocusChangeBlocked(objectId, false);
             }
         }
 	}
@@ -346,6 +424,19 @@ public abstract class LayoutObject extends Gui {
 		RenderUtils.postScale();
 	}
 	
+	protected void renderHighlightBorder() {
+		Color c = new Color(0, 200, 255, 255);
+		
+		//horizontal line top
+		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, c.getRGB());
+		//horizontal line bottom
+		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		//vertical line left
+		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		//vertical line right
+		Gui.drawRect(this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+	}
+	
 	/**
 	 * <b>Returns:</b><br><br>
 	 * 
@@ -362,6 +453,16 @@ public abstract class LayoutObject extends Gui {
 	
 	public boolean isGrabberPressed() {
 		return ((this.getActiveResizeGrabber() != -1) && MouseInput.isLeftMouseDown());
+	}
+	
+	protected int getAspectWidth(int startW, int startH, int height) {
+		double ratio = (double) startW / (double) startH;
+		return (int)(height * ratio);
+	}
+
+	protected int getAspectHeight(int startW, int startH, int width) {
+		double ratio = (double) startW / (double) startH;
+		return (int)(width / ratio);
 	}
 	
 	protected void handleResize(int mouseX, int mouseY) {
@@ -387,12 +488,24 @@ public abstract class LayoutObject extends Gui {
 			if (w >= 5) {
 				this.object.posX = this.startX + diffX;
 				this.object.width = w;
+				if (isShiftPressed) {
+					int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
+					if (h >= 5) {
+						this.object.height = h;
+					}
+				}
 			}
 		}
 		if (g == 1) { //right
 			int w = this.object.width + (diffX - this.object.width);
 			if (w >= 5) {
 				this.object.width = w;
+				if (isShiftPressed) {
+					int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
+					if (h >= 5) {
+						this.object.height = h;
+					}
+				}
 			}
 		}
 		if (g == 2) { //top
@@ -400,12 +513,24 @@ public abstract class LayoutObject extends Gui {
 			if (h >= 5) {
 				this.object.posY = this.startY + diffY;
 				this.object.height = h;
+				if (isShiftPressed) {
+					int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
+					if (w >= 5) {
+						this.object.width = w;
+					}
+				}
 			}
 		}
 		if (g == 3) { //bottom
 			int h = this.object.height + (diffY - this.object.height);
 			if (h >= 5) {
 				this.object.height = h;
+				if (isShiftPressed) {
+					int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
+					if (w >= 5) {
+						this.object.width = w;
+					}
+				}
 			}
 		}
 	}
@@ -426,17 +551,12 @@ public abstract class LayoutObject extends Gui {
 		}
 	}
 	
-	protected void updateFocused() {
-		if (this.isLeftClicked() || this.isRightClicked()) {
-			this.focused = true;
-		}
-		if (!this.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
-			this.focused = false;
-		}
-	}
-	
 	public boolean isDragged() {
 		return this.dragging;
+	}
+	
+	public boolean isGettingResized() {
+		return this.resizing;
 	}
 	
 	public boolean isLeftClicked() {
@@ -512,6 +632,24 @@ public abstract class LayoutObject extends Gui {
 		}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));
 	}
 
+	public void resetObjectStates() {
+		hovered = false;
+		dragging = false;
+		resizing = false;
+		activeGrabber = -1;
+		if (this.orientationMenu != null) {
+			this.orientationMenu.closeMenu();
+		}
+		if (this.rightclickMenu != null) {
+			this.rightclickMenu.closeMenu();
+		}
+		if (this.layersPopup != null) {
+			this.layersPopup.closeMenu();
+		}
+		this.handler.setFocusChangeBlocked(objectId, false);
+		this.handler.setObjectFocused(this, false, true);
+	}
+	
 	public abstract List<PropertiesSection> getProperties();
 
 }

@@ -81,7 +81,7 @@ public abstract class CustomizationItemBase {
 	 * NOT similar to {@code MenuCustomizationItem.posX}! 
 	 */
 	public int getPosX(Screen menu) {
-		int w = menu.field_230708_k_;
+		int w = menu.width;
 		int x = this.posX;
 
 		if (orientation.equalsIgnoreCase("top-centered")) {
@@ -112,7 +112,7 @@ public abstract class CustomizationItemBase {
 	 * NOT similar to {@code MenuCustomizationItem.posY}! 
 	 */
 	public int getPosY(Screen menu) {
-		int h = menu.field_230709_l_;
+		int h = menu.height;
 		int y = this.posY;
 
 		if (orientation.equalsIgnoreCase("mid-left")) {

@@ -19,6 +19,8 @@ public class AdvancedButton extends GuiButton {
 	private IPressable press;
 	private boolean handleClick = false;
 	private static boolean leftDown = false;
+	private boolean leftDownNotHovered = false;
+	public boolean ignoreBlockedInput = false;
 	private boolean useable = true;
 	
 	private Color idleColor;
@@ -101,8 +103,15 @@ public class AdvancedButton extends GuiButton {
 			this.drawCenteredString(font, this.displayString, this.x + this.width / 2, this.y + (this.height - 8) / 2, j);
 		}
 
+		if (!this.isMouseOver() && MouseInput.isLeftMouseDown()) {
+			this.leftDownNotHovered = true;
+		}
+		if (!MouseInput.isLeftMouseDown()) {
+			this.leftDownNotHovered = false;
+		}
+		
 		if (this.handleClick && this.useable) {
-			if (this.isMouseOver() && MouseInput.isLeftMouseDown() && !leftDown) {
+			if (this.isMouseOver() && MouseInput.isLeftMouseDown() && !leftDown && !leftDownNotHovered && !this.isInputBlocked()) {
 				this.press.onPress(this);
 				this.playPressSound(Minecraft.getMinecraft().getSoundHandler());
 				leftDown = true;
@@ -111,6 +120,13 @@ public class AdvancedButton extends GuiButton {
 				leftDown = false;
 			}
 		}
+	}
+	
+	private boolean isInputBlocked() {
+		if (this.ignoreBlockedInput) {
+			return false;
+		}
+		return MouseInput.isVanillaInputBlocked();
 	}
 	
 	public void setBackgroundColor(@Nullable Color idle, @Nullable Color hovered, @Nullable Color idleBorder, @Nullable Color hoveredBorder, int borderWidth) {
@@ -179,6 +195,10 @@ public class AdvancedButton extends GuiButton {
 	
 	public interface IPressable {
 		void onPress(GuiButton button);
+	}
+	
+	public static boolean isAnyButtonLeftClicked() {
+		return leftDown;
 	}
 
 }

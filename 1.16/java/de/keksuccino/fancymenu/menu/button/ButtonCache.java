@@ -63,7 +63,7 @@ public class ButtonCache {
 				
 				int i = 1;
 				for (Widget w : sortButtons(getGuiButtons(s))) {
-					buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.func_230458_i_().getString()), s));
+					buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
 					i++;
 				}
 			}
@@ -82,7 +82,7 @@ public class ButtonCache {
 		buttons.clear();
 		int i = 1;
 		for (Widget wi : sortButtons(l)) {
-			buttons.put(i, new ButtonData(wi, i, LocaleUtils.getKeyForString(wi.func_230458_i_().getString()), current));
+			buttons.put(i, new ButtonData(wi, i, LocaleUtils.getKeyForString(wi.getMessage().getString()), current));
 			i++;
 		}
 	}
@@ -114,7 +114,7 @@ public class ButtonCache {
 			f2.set(s, Minecraft.getInstance().fontRenderer);
 
 			//init
-			s.func_231158_b_(Minecraft.getInstance(), screenWidth, screenHeight);
+			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 			
 			//Reflecting the buttons list field to cache all buttons of the menu
 			Field f = ReflectionHelper.findField(Screen.class, "field_230710_m_");
@@ -123,13 +123,11 @@ public class ButtonCache {
 			e.printStackTrace();
 		}
 		
-		if (!l.isEmpty()) {
-			buttons.clear();
-			int i = 1;
-			for (Widget w : sortButtons(l)) {
-				buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.func_230458_i_().getString()), s));
-				i++;
-			}
+		buttons.clear();
+		int i = 1;
+		for (Widget w : sortButtons(l)) {
+			buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
+			i++;
 		}
 	}
 	
@@ -144,11 +142,11 @@ public class ButtonCache {
 			if (CustomizationButton.isCustomizationButton(w)) {
 				continue;
 			}
-			if (m.containsKey(w.field_230691_m_)) {
-				m.get(w.field_230691_m_).add(w);
+			if (m.containsKey(w.y)) {
+				m.get(w.y).add(w);
 			} else {
-				m.put(w.field_230691_m_, new ArrayList<Widget>());
-				m.get(w.field_230691_m_).add(w);
+				m.put(w.y, new ArrayList<Widget>());
+				m.get(w.y).add(w);
 			}
 		}
 		
@@ -174,10 +172,10 @@ public class ButtonCache {
 				@Override
 				public int compare(Widget o1, Widget o2) {
 					//func_230998_h_() = getWidth
-					if (o1.func_230998_h_() > o2.func_230998_h_()) {
+					if (o1.getWidth() > o2.getWidth()) {
 						return 1;
 					}
-					if (o1.func_230998_h_() < o2.func_230998_h_()) {
+					if (o1.getWidth() < o2.getWidth()) {
 						return -1;
 					}
 					return 0;

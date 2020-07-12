@@ -26,6 +26,7 @@ import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.input.StringUtils;
 import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.core.properties.PropertiesSerializer;
 import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
@@ -41,6 +42,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
@@ -85,6 +87,9 @@ public class LayoutCreatorScreen extends Screen {
 	protected Map<Integer, Integer> vanillaButtonClicks = new HashMap<Integer, Integer>();
 	protected Map<Integer, String> vanillaHoverLabels = new HashMap<Integer, String>();
 	protected Map<Integer, String> vanillaHoverSounds = new HashMap<Integer, String>();
+	//TODO übernehmen
+	protected Map<Integer, Double> vanillaHideFor = new HashMap<Integer, Double>();
+	//---------
 	protected LayoutObject focused = null;
 	protected int hiddenIndicatorTick = 0;
 	protected int hiddenIndicatorCount = 0;
@@ -130,6 +135,11 @@ public class LayoutCreatorScreen extends Screen {
 	protected String minimumFM;
 	protected String maximumFM;
 	
+	//TODO übernehmen
+	private Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
+	private LayoutObject topObject;
+	//----
+	
 	public LayoutCreatorScreen(Screen screenToCustomize) {
 		super(new StringTextComponent(""));
 		this.screen = screenToCustomize;
@@ -142,6 +152,9 @@ public class LayoutCreatorScreen extends Screen {
 	protected void init() {
 		this.focused = null;
 		this.updateContent();
+		
+		//TODO übernehmen
+		this.focusChangeBlocker.clear();
 		
 		for (IMenu m : this.menus) {
 			m.closeMenu();
@@ -200,7 +213,7 @@ public class LayoutCreatorScreen extends Screen {
 					MenuCustomization.stopSounds();
 					MenuCustomization.resetSounds();
 					MenuCustomizationProperties.loadProperties();
-					Minecraft.getInstance().displayGuiScreen(this.screen);
+					Minecraft.getInstance().displayGuiScreen(this.getScreenToCustomize());
 				}
 			}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.close"), "", "", ""));
 		});
@@ -465,7 +478,8 @@ public class LayoutCreatorScreen extends Screen {
 				continue;
 			}
 			PropertiesSection sec = l.get(0);
-			if (sec.getEntryValue("identifier").equals(this.screen.getClass().getName())) {
+			//TODO übernehmen
+			if (sec.getEntryValue("identifier").equals(this.getScreenToCustomizeIdentifier())) {
 				File cusFile = new File(sec.getEntryValue("path"));
 				if (cusFile.exists()) {
 					try {
@@ -490,7 +504,8 @@ public class LayoutCreatorScreen extends Screen {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
 		
 		PropertiesSection meta = new PropertiesSection("customization-meta");
-		meta.addEntry("identifier", this.screen.getClass().getName());
+		//TODO übernehmen
+		meta.addEntry("identifier", this.getScreenToCustomizeIdentifier());
 		meta.addEntry("renderorder", this.renderorder);
 		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
 			meta.addEntry("requiredmods", this.requiredmods);
@@ -553,43 +568,20 @@ public class LayoutCreatorScreen extends Screen {
 		return l;
 	}
 	
+	//TODO übernehmen
 	protected void saveToCustomizationFile(String fileName) throws IOException {
 		List<PropertiesSection> l = this.getAllProperties();
-		
-		if (!l.isEmpty() && (l.size() > 1)) {
-			File f = new File(FancyMenu.getCustomizationPath().getPath() + "/" + fileName);
-			f.createNewFile();
-			
-			String data = "";
-			
-			data += "type = menu\n\n";
-			
-			for (PropertiesSection ps : l) {
-				data += ps.getSectionType() + " {\n";
-				for (Map.Entry<String, String> e : ps.getEntries().entrySet()) {
-					data += "  " + e.getKey() + " = " + e.getValue() + "\n";
-				}
-				data += "}\n\n";
-			}
-			
-			FileUtils.writeTextToFile(f, data, false);
+		PropertiesSet props = new PropertiesSet("menu");
+		for (PropertiesSection s : l) {
+			props.addProperties(s);
 		}
+		
+		PropertiesSerializer.writeProperties(props, FancyMenu.getCustomizationPath().getPath() + "/" + fileName);
 	}
 	
+	//TODO übernehmen
 	protected String generateCustomizationFileName(String dir, String baseName) {
-		File f = new File(dir);
-		if (!f.exists() && f.isDirectory()) {
-			f.mkdirs();
-		}
-
-		File f2 = new File(f.getPath() + "/" + baseName + ".txt");
-		int i = 1;
-		while (f2.exists()) {
-			f2 = new File(f.getPath() + "/" + baseName + "_" + i + ".txt");
-			i++;
-		}
-		
-		return f2.getName();
+		return FileUtils.generateAvailableFilename(dir, baseName, "txt");
 	}
 	
 	private PopupMenu generateAnimationMenu(Consumer<String> callback) {
@@ -640,7 +632,7 @@ public class LayoutCreatorScreen extends Screen {
 		
 		this.content.clear();
 		
-		//Sync labels, textures, auto-clicks and other stuff made to vanilla buttons
+		//Sync labels, textures, auto-clicks and other stuff done to vanilla buttons
 		for (ButtonData b : ButtonCache.getButtons()) {
 			if (!this.containsVanillaButton(l, b)) {
 				LayoutVanillaButton v = new LayoutVanillaButton(b, this);
@@ -650,6 +642,11 @@ public class LayoutCreatorScreen extends Screen {
 				if (this.vanillaButtonClicks.containsKey(b.getId())) {
 					v.clicks = this.vanillaButtonClicks.get(b.getId()); 
 				}
+				//TODO übernehmen
+				if (this.vanillaHideFor.containsKey(b.getId())) {
+					v.hideforsec = this.vanillaHideFor.get(b.getId()); 
+				}
+				//--------
 				if (this.vanillaHoverLabels.containsKey(b.getId())) {
 					v.hoverLabel = this.vanillaHoverLabels.get(b.getId()); 
 				}
@@ -662,7 +659,6 @@ public class LayoutCreatorScreen extends Screen {
 					v.backHovered = l2.get(1);
 					((LayoutButtonDummyCustomizationItem)v.object).setTexture(TextureHandler.getResource(l2.get(0)).getResourceLocation());
 				}
-				//---------------
 				content.add(v);
 			}
 		}
@@ -680,7 +676,8 @@ public class LayoutCreatorScreen extends Screen {
 		return false;
 	}
 	
-	private boolean isHidden(LayoutObject b) {
+	//TODO übernehmen
+	public boolean isHidden(LayoutObject b) {
 		return this.hidden.contains(b);
 	}
 	
@@ -806,6 +803,11 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 	}
+	
+	//TODO übernehmen
+	public void setVanillaHideFor(LayoutVanillaButton button, double seconds) {
+		this.vanillaHideFor.put(button.button.getId(), seconds);
+	}
 
 	public void setVanillaHoverLabel(LayoutVanillaButton button, String label) {
 		if (label != null) {
@@ -827,11 +829,13 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 	
+	//TODO übernehmen
 	public void hideVanillaButton(LayoutVanillaButton b) {
 		if (!this.hidden.contains(b) && this.content.contains(b)) {
 			this.hidden.add(b);
 			b.hidden = true;
-			this.setObjectFocused(b, false);
+			this.setObjectFocused(b, false, true);
+			b.resetObjectStates();
 			this.updateHiddenButtonPopup();
 			this.renderHiddenIndicator = true;
 		}
@@ -883,8 +887,38 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 	
+	//TODO übernehmen
+	public List<LayoutObject> getContent() {
+		return this.content;
+	}
+	
 	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
+		
+		//TODO übernehmen
+		//Handle object focus and update the top hovered object
+		if (!MouseInput.isVanillaInputBlocked()) {
+			if ((this.focused != null) && !this.focused.isHovered() && !this.focused.isDragged() && !this.focused.isGrabberPressed() && !this.focused.isGettingResized() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+				this.setObjectFocused(this.focused, false, false);
+			}
+			LayoutObject ob = null;
+			LayoutObject top = null;
+			for (LayoutObject o : this.content) {
+				if (o.isHovered()) {
+					top = o;
+					if (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) {
+						ob = o;
+					}
+				}
+			}
+			if (!this.isObjectFocused() && (ob != null)) {
+				this.setObjectFocused(ob, true, false);
+			}
+			this.topObject = top;
+		} else {
+			this.focused = null;
+		}
+		
 		this.renderCreatorBackground();
 		
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
@@ -1126,28 +1160,31 @@ public class LayoutCreatorScreen extends Screen {
 		return (this.focused == object);
 	}
 	
-	public void setObjectFocused(LayoutObject object, boolean b) {
+	//TODO übernehmen
+	public void setObjectFocused(LayoutObject object, boolean b, boolean ignoreBlockedFocusChange) {
+		if (this.isFocusChangeBlocked() && !ignoreBlockedFocusChange) {
+			return;
+		}
 		if (!this.content.contains(object)) {
 			return;
 		}
-		if (this.isHidden(object)) {
-			return;
-		}
-		if (PopupHandler.isPopupActive()) {
-			return;
-		}
 		if (b) {
+			//TODO irgendwie n bisschen sinnlos oder wenigstens teilweise sinnlos.
 			if (this.backgroundRightclickMenu.isHovered() || this.renderorderPopup.isHovered()) {
 				return;
 			}
-			if (this.focused == null) {
-				this.focused = object;
-			}
+			this.focused = object;
+			//---------
 		} else {
 			if ((this.focused != null) && (this.focused == object)) {
 				this.focused = null;
 			}
 		}
+	}
+	
+	//TODO übernehmen
+	public LayoutObject getFocusedObject() {
+		return this.focused;
 	}
 	
 	public boolean isObjectFocused() {
@@ -1339,6 +1376,9 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 		if (names == null) {
+			if (this.backgroundAnimation != null) {
+				((AdvancedAnimation)this.backgroundAnimation).stopAudio();
+			}
 			this.backgroundAnimation = null;
 		}
 		this.setMenusUseable(true);
@@ -1384,7 +1424,8 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		if ((i == 1) || (i == 2)) {
 			try {
-				String name = this.screen.getClass().getName();
+				//TODO übernehmen
+				String name = this.getScreenToCustomizeIdentifier();
 				if (name.contains(".")) {
 					name = new StringBuilder(new StringBuilder(name).reverse().toString().split("[.]", 2)[0]).reverse().toString();
 				}
@@ -1430,6 +1471,33 @@ public class LayoutCreatorScreen extends Screen {
 				}
 			}
 		}
+	}
+	
+	public Screen getScreenToCustomize() {
+		return this.screen;
+	}
+	
+	//TODO übernehmen
+	public String getScreenToCustomizeIdentifier() {
+		if (!(this.screen instanceof CustomGuiBase)) {
+			return this.screen.getClass().getName();
+		} else {
+			return ((CustomGuiBase)this.screen).getIdentifier();
+		}
+	}
+	
+	//TODO übernehmen
+	public void setFocusChangeBlocked(String id, Boolean b) {
+		this.focusChangeBlocker.put(id, b);
+	}
+	
+	//TODO übernehmen
+	public boolean isFocusChangeBlocked() {
+		return this.focusChangeBlocker.containsValue(true);
+	}
+	
+	public LayoutObject getTopHoverObject() {
+		return this.topObject;
 	}
 
 }

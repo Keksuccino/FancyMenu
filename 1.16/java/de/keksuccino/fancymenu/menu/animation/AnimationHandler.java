@@ -233,20 +233,24 @@ public class AnimationHandler {
 	}
 	
 	public static void setupAnimations() {
-		Screen s = null;
-		if (Minecraft.getInstance().currentScreen != null) {
-			s = Minecraft.getInstance().currentScreen;
-		} else {
-			s = new MainMenuScreen();
-		}
-		AnimationLoadingScreen l = new AnimationLoadingScreen(s, getAnimations().toArray(new IAnimationRenderer[0])) {
-			@Override
-			public void onFinished() {
-				ready = true;
-				super.onFinished();
+		if (!animations.isEmpty()) {
+			Screen s = null;
+			if (Minecraft.getInstance().currentScreen != null) {
+				s = Minecraft.getInstance().currentScreen;
+			} else {
+				s = new MainMenuScreen();
 			}
-		};
-		Minecraft.getInstance().displayGuiScreen(l);
+			AnimationLoadingScreen l = new AnimationLoadingScreen(s, getAnimations().toArray(new IAnimationRenderer[0])) {
+				@Override
+				public void onFinished() {
+					ready = true;
+					super.onFinished();
+				}
+			};
+			Minecraft.getInstance().displayGuiScreen(l);
+		} else {
+			ready = true;
+		}
 	}
 	
 	public static boolean animationExists(String name) {

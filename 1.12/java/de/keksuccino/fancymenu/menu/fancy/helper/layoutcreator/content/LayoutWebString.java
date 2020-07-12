@@ -94,6 +94,20 @@ public class LayoutWebString extends LayoutObject {
 		RenderUtils.postScale();
 	}
 	
+	@Override
+	protected void renderHighlightBorder() {
+		Color c = new Color(0, 200, 255, 255);
+
+		//horizontal line top
+		Gui.drawRect(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.width, this.getStringPosY() + 1, c.getRGB());
+		//horizontal line bottom
+		Gui.drawRect(this.getStringPosX(), this.getStringPosY() + this.object.height, this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height + 1, c.getRGB());
+		//vertical line left
+		Gui.drawRect(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + 1, this.getStringPosY() + this.object.height, c.getRGB());
+		//vertical line right
+		Gui.drawRect(this.getStringPosX() + this.object.width, this.getStringPosY(), this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height, c.getRGB());
+	}
+	
 	private int getStringPosX() {
 		return (int)(this.object.getPosX(this.handler) * this.getStringScale());
 	}

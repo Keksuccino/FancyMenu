@@ -67,7 +67,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getGui())) {
 			e.setCanceled(true);
-			e.getGui().func_230446_a_(e.getMatrixStack());;
+			e.getGui().renderBackground(e.getMatrixStack());;
 			
 			this.renderFooter(e);
 		}
@@ -79,9 +79,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 	@Override
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			FontRenderer fontRenderer = Minecraft.getInstance().fontRenderer;
-			int width = e.getGui().field_230708_k_;
-			int height = e.getGui().field_230709_l_;
+			FontRenderer font = Minecraft.getInstance().fontRenderer;
+			int width = e.getGui().width;
+			int height = e.getGui().height;
 			int j = width / 2 - 137;
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
@@ -99,7 +99,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 				Minecraft.getInstance().getTextureManager().bindTexture(new ResourceLocation("textures/gui/title/background/panorama_overlay.png"));
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-				IngameGui.func_238466_a_(matrix, 0, 0, width, height, 0.0F, 0.0F, 16, 128, 16, 128);
+				IngameGui.blit(matrix, 0, 0, width, height, 0.0F, 0.0F, 16, 128, 16, 128);
 			}
 			
 			super.drawToBackground(e);
@@ -109,30 +109,37 @@ public class MainMenuHandler extends MenuHandlerBase {
 				Minecraft.getInstance().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				if ((double) minecraftLogoSpelling < 1.0E-4D) {
-					e.getGui().func_238474_b_(matrix, j + 0, 30, 0, 0, 99, 44);
-					e.getGui().func_238474_b_(matrix, j + 99, 30, 129, 0, 27, 44);
-					e.getGui().func_238474_b_(matrix, j + 99 + 26, 30, 126, 0, 3, 44);
-					e.getGui().func_238474_b_(matrix, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
-					e.getGui().func_238474_b_(matrix, j + 155, 30, 0, 45, 155, 44);
+					e.getGui().blit(matrix, j + 0, 30, 0, 0, 99, 44);
+					e.getGui().blit(matrix, j + 99, 30, 129, 0, 27, 44);
+					e.getGui().blit(matrix, j + 99 + 26, 30, 126, 0, 3, 44);
+					e.getGui().blit(matrix, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
+					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
 				} else {
-					e.getGui().func_238474_b_(matrix, j + 0, 30, 0, 0, 155, 44);
-					e.getGui().func_238474_b_(matrix, j + 155, 30, 0, 45, 155, 44);
+					e.getGui().blit(matrix, j + 0, 30, 0, 0, 155, 44);
+					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
 				}
 
 				Minecraft.getInstance().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
-				IngameGui.func_238463_a_(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+				IngameGui.blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 			}
 
-			ForgeHooksClient.renderMainMenu((MainMenuScreen) e.getGui(), matrix, fontRenderer, width, height);
+			ForgeHooksClient.renderMainMenu((MainMenuScreen) e.getGui(), matrix, font, width, height);
 
 			//Draw branding strings to the main menu if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hidebranding", true)) {
-				BrandingControl.forEachLine(true, true, (brdline, brd) -> e.getGui().func_238476_c_(matrix, fontRenderer, brd, 2, height - (10 + brdline * (fontRenderer.FONT_HEIGHT + 1)), 16777215));
+				BrandingControl.forEachLine(true, true, (brdline, brd) ->
+				   e.getGui().drawString(matrix, font, brd, 2, e.getGui().height - ( 10 + brdline * (font.FONT_HEIGHT + 1)), 16777215)
+				);
+
+				BrandingControl.forEachAboveCopyrightLine((brdline, brd) ->
+				   e.getGui().drawString(matrix, font, brd, e.getGui().width - font.getStringWidth(brd), e.getGui().height - (10 + (brdline + 1) * ( font.FONT_HEIGHT + 1)), 16777215)
+				);
+//				BrandingControl.forEachLine(true, true, (brdline, brd) -> e.getGui().func_238476_c_(matrix, fontRenderer, brd, 2, height - (10 + brdline * (fontRenderer.FONT_HEIGHT + 1)), 16777215));
 			}
 			
-			e.getGui().func_238476_c_(matrix, fontRenderer, copyright, widthCopyrightRest, height - 10, -1);
+			e.getGui().drawString(matrix, font, copyright, widthCopyrightRest, height - 10, -1);
 			if (mouseX > widthCopyrightRest && mouseX < widthCopyrightRest + widthCopyright && mouseY > height - 10 && mouseY < height) {
-				IngameGui.func_238467_a_(matrix, widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
+				IngameGui.fill(matrix, widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
 			}
 
 			if (!PopupHandler.isPopupActive()) {
@@ -153,9 +160,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 				matrix.translate((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
 				matrix.rotate(new Quaternion((float)rotation, 0.0F, 0.0F, 1.0F));
 				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (Util.milliTime() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-				f = f * 100.0F / (float) (fontRenderer.getStringWidth(this.getSplash(e.getGui())) + 32);
+				f = f * 100.0F / (float) (font.getStringWidth(this.getSplash(e.getGui())) + 32);
 				matrix.scale(f, f, f);
-				e.getGui().func_238472_a_(matrix, fontRenderer, new StringTextComponent(this.getSplash(e.getGui())), 0, -8, -256);
+				e.getGui().drawCenteredString(matrix, font, new StringTextComponent(this.getSplash(e.getGui())), 0, -8, -256);
 				matrix.pop();
 			}
 		}
@@ -167,7 +174,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
-				buttons.get(i).func_230430_a_(CurrentScreenHandler.getMatrixStack(), mouseX, mouseY, partial);
+				buttons.get(i).render(CurrentScreenHandler.getMatrixStack(), mouseX, mouseY, partial);
 			}
 		}
 	}
@@ -183,7 +190,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 			if (realms != null) {
 				//render
-				realms.func_230430_a_(matrix, (int)Minecraft.getInstance().mouseHelper.getMouseX(), (int)Minecraft.getInstance().mouseHelper.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
+				realms.render(matrix, (int)Minecraft.getInstance().mouseHelper.getMouseX(), (int)Minecraft.getInstance().mouseHelper.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
 			}
 		}
 	}
@@ -216,19 +223,19 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		if (tickFooter < 30) {
 			tickFooter += 1;
-		} else if (e.getGui().field_230709_l_ >= 280) {
+		} else if (e.getGui().height >= 280) {
 			int i = MathHelper.ceil(fadeFooter * 255.0F) << 24;
 			
 			RenderUtils.setScale(e.getMatrixStack(), 1.1F);
-			e.getGui().func_238472_a_(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, new StringTextComponent("§fDISCOVER MORE AT MINECRAFT.NET"), (int) (e.getGui().field_230708_k_ / 2 / 1.1D), (int) ((e.getGui().field_230709_l_ - 50) / 1.1D), i);
+			e.getGui().drawCenteredString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, new StringTextComponent("§fDISCOVER MORE AT MINECRAFT.NET"), (int) (e.getGui().width / 2 / 1.1D), (int) ((e.getGui().height - 50) / 1.1D), i);
 			RenderUtils.postScale(e.getMatrixStack());
 			
 			RenderUtils.setScale(e.getMatrixStack(), 0.7F);
-			e.getGui().func_238476_c_(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f@MINECRAFT", (int) ((e.getGui().field_230708_k_ / 2 - 10) / 0.7D), (int) ((e.getGui().field_230709_l_ - 30) / 0.7D), i);
+			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f@MINECRAFT", (int) ((e.getGui().width / 2 - 10) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
 			
-			e.getGui().func_238476_c_(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§fMINECRAFT", (int) ((e.getGui().field_230708_k_ / 2 + 60) / 0.7D), (int) ((e.getGui().field_230709_l_ - 30) / 0.7D), i);
+			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§fMINECRAFT", (int) ((e.getGui().width / 2 + 60) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
 
-			e.getGui().func_238476_c_(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f/MINECRAFT", (int) ((e.getGui().field_230708_k_ / 2 - 80) / 0.7D), (int) ((e.getGui().field_230709_l_ - 30) / 0.7D), i);
+			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f/MINECRAFT", (int) ((e.getGui().width / 2 - 80) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
 			RenderUtils.postScale(e.getMatrixStack());
 			
 			RenderSystem.enableBlend();
@@ -236,17 +243,17 @@ public class MainMenuHandler extends MenuHandlerBase {
 			Minecraft.getInstance().getTextureManager().bindTexture(FACEBOOK);
 			RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, MathHelper.clamp(fadeFooter, 0.1F, 1.0F));
-			Screen.func_238463_a_(e.getMatrixStack(), e.getGui().field_230708_k_ / 2 - 100, e.getGui().field_230709_l_ - 35, 0.0F, 0.0F, 15, 15, 15, 15);
+			Screen.blit(e.getMatrixStack(), e.getGui().width / 2 - 100, e.getGui().height - 35, 0.0F, 0.0F, 15, 15, 15, 15);
 
 			Minecraft.getInstance().getTextureManager().bindTexture(TWITTER);
 			RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, MathHelper.clamp(fadeFooter, 0.1F, 1.0F));
-			Screen.func_238463_a_(e.getMatrixStack(), e.getGui().field_230708_k_ / 2 - 30, e.getGui().field_230709_l_ - 35, 0.0F, 0.0F, 15, 15, 15, 15);
+			Screen.blit(e.getMatrixStack(), e.getGui().width / 2 - 30, e.getGui().height - 35, 0.0F, 0.0F, 15, 15, 15, 15);
 
 			Minecraft.getInstance().getTextureManager().bindTexture(INSTAGRAM);
 			RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, MathHelper.clamp(fadeFooter, 0.1F, 1.0F));
-			Screen.func_238463_a_(e.getMatrixStack(), e.getGui().field_230708_k_ / 2 + 40, e.getGui().field_230709_l_ - 35, 0.0F, 0.0F, 15, 15, 15, 15);
+			Screen.blit(e.getMatrixStack(), e.getGui().width / 2 + 40, e.getGui().height - 35, 0.0F, 0.0F, 15, 15, 15, 15);
 			
 			RenderSystem.disableBlend();
 

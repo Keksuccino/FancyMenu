@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TextureHandler {
-	
+
 	private static Map<String, ITextureResourceLocation> textures = new HashMap<String, ITextureResourceLocation>();
 	
 	public static ExternalTextureResourceLocation getResource(String path) {

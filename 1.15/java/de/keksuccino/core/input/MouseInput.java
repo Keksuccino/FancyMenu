@@ -1,12 +1,28 @@
 package de.keksuccino.core.input;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.keksuccino.core.reflection.ReflectionHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHelper;
+import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class MouseInput {
+	
+	//TODO übernehmen
+	private static boolean leftClicked = false;
+	private static boolean rightClicked  = false;
+	private static Map<String, Boolean> vanillainput = new HashMap<String, Boolean>();
+	//-------------
+	
+	//TODO übernehmen
+	public static void init() {
+		MinecraftForge.EVENT_BUS.register(new MouseInput());
+	}
 	
 	public static int getActiveMouseButton() {
 		int b = -1;
@@ -19,21 +35,71 @@ public class MouseInput {
 		return b;
 	}
 	
+	//TODO übernehmen
 	public static boolean isLeftMouseDown() {
-		return (getActiveMouseButton() == 0);
+		return leftClicked;
 	}
 
+	//TODO übernehmen
 	public static boolean isRightMouseDown() {
-		return (getActiveMouseButton() == 1);
+		return rightClicked;
 	}
 	
 	public static int getMouseX() {
-		Minecraft.getInstance().mouseHelper.getMouseX();
+		//TODO übernehmen
+//		Minecraft.getInstance().mouseHelper.getMouseX();
 		return (int)(Minecraft.getInstance().mouseHelper.getMouseX() * (double)Minecraft.getInstance().getMainWindow().getScaledWidth() / (double)Minecraft.getInstance().getMainWindow().getWidth());
 	}
 	
 	public static int getMouseY() {
 		return (int)(Minecraft.getInstance().mouseHelper.getMouseY() * (double)Minecraft.getInstance().getMainWindow().getScaledHeight() / (double)Minecraft.getInstance().getMainWindow().getHeight());
 	}
+	
+	//TODO übernehmen
+	public static void blockVanillaInput(String category) {
+		vanillainput.put(category, true);
+	}
+	
+	public static void unblockVanillaInput(String category) {
+		vanillainput.put(category, false);
+	}
+	
+	public static boolean isVanillaInputBlocked() {
+		return vanillainput.containsValue(true);
+	}
+	
+	@SubscribeEvent
+	public void onMouseClicked(GuiScreenEvent.MouseClickedEvent.Pre e) {
+		int i = e.getButton();
+		if (i == 0) {
+			leftClicked = true;
+		}
+		if (i == 1) {
+			rightClicked = true;
+		}
+		
+		if (isVanillaInputBlocked()) {
+			e.setCanceled(true);
+		}
+	}
+	
+	@SubscribeEvent
+	public void onMouseReleased(GuiScreenEvent.MouseReleasedEvent.Pre e) {
+		int i = e.getButton();
+		if (i == 0) {
+			leftClicked = false;
+		}
+		if (i == 1) {
+			rightClicked = false;
+		}
+	}
+	
+	@SubscribeEvent
+	public void onScreenInit(GuiScreenEvent.InitGuiEvent.Pre e) {
+		//Reset values on screen init
+		leftClicked = false;
+		rightClicked = false;
+	}
+	//-------------------
 
 }

@@ -19,6 +19,8 @@ public class AdvancedButton extends Button {
 
 	private boolean handleClick = false;
 	private static boolean leftDown = false;
+	private boolean leftDownNotHovered = false;
+	public boolean ignoreBlockedInput = false;
 	private boolean useable = true;
 	
 	private Color idleColor;
@@ -40,8 +42,8 @@ public class AdvancedButton extends Button {
 	
 	//renderButton
 	@Override
-	public void func_230431_b_(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
-		if (this.field_230694_p_) {
+	public void renderButton(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+		if (this.visible) {
 			Minecraft mc = Minecraft.getInstance();
 			FontRenderer font = mc.fontRenderer;
 			
@@ -97,57 +99,64 @@ public class AdvancedButton extends Button {
 			//field_230674_k_ = x1
 			//field_230675_l_ = x0
 			
-			this.field_230692_n_ = mouseX >= this.field_230690_l_ && mouseY >= this.field_230691_m_ && mouseX < this.field_230690_l_ + this.field_230688_j_ && mouseY < this.field_230691_m_ + this.field_230689_k_;
+			this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 			
 			RenderSystem.enableBlend();
 			if (this.hasColorBackground()) {
 				Color border;
-				if (!field_230692_n_) {
-					func_238467_a_(matrix, this.field_230690_l_, this.field_230691_m_, this.field_230690_l_ + this.field_230688_j_, this.field_230691_m_ + this.field_230689_k_, this.idleColor.getRGB());
+				if (!isHovered) {
+					fill(matrix, this.x, this.y, this.x + this.width, this.y + this.height, this.idleColor.getRGB());
 					border = this.idleBorderColor;
 				} else {
-					func_238467_a_(matrix, this.field_230690_l_, this.field_230691_m_, this.field_230690_l_ + this.field_230688_j_, this.field_230691_m_ + this.field_230689_k_, this.hoveredColor.getRGB());
+					fill(matrix, this.x, this.y, this.x + this.width, this.y + this.height, this.hoveredColor.getRGB());
 					border = this.hoveredBorderColor;
 				}
 				if (this.hasBorder()) {
 					//top
-					func_238467_a_(matrix, this.field_230690_l_, this.field_230691_m_, this.field_230690_l_ + this.field_230688_j_, this.field_230691_m_ + this.borderWidth, border.getRGB());
+					fill(matrix, this.x, this.y, this.x + this.width, this.y + this.borderWidth, border.getRGB());
 					//bottom
-					func_238467_a_(matrix, this.field_230690_l_, this.field_230691_m_ + this.field_230689_k_ - this.borderWidth, this.field_230690_l_ + this.field_230688_j_, this.field_230691_m_ + this.field_230689_k_, border.getRGB());
+					fill(matrix, this.x, this.y + this.height - this.borderWidth, this.x + this.width, this.y + this.height, border.getRGB());
 					//left
-					func_238467_a_(matrix, this.field_230690_l_, this.field_230691_m_ + this.borderWidth, this.field_230690_l_ + this.borderWidth, this.field_230691_m_ + this.field_230689_k_ - this.borderWidth, border.getRGB());
+					fill(matrix, this.x, this.y + this.borderWidth, this.x + this.borderWidth, this.y + this.height - this.borderWidth, border.getRGB());
 					//right
-					func_238467_a_(matrix, this.field_230690_l_ + this.field_230688_j_ - this.borderWidth, this.field_230691_m_ + this.borderWidth, this.field_230690_l_ + this.field_230688_j_, this.field_230691_m_ + this.field_230689_k_ - this.borderWidth, border.getRGB());
+					fill(matrix, this.x + this.width - this.borderWidth, this.y + this.borderWidth, this.x + this.width, this.y + this.height - this.borderWidth, border.getRGB());
 				}
 			} else if (this.hasCustomTextureBackground()) {
-				if (this.func_230449_g_()) {
+				if (this.isHovered()) {
 					mc.textureManager.bindTexture(backgroundHover);
 				} else {
 					mc.textureManager.bindTexture(backgroundNormal);
 				}
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-				func_238463_a_(matrix, this.field_230690_l_, this.field_230691_m_, 0.0F, 0.0F, this.field_230688_j_, this.field_230689_k_, this.field_230688_j_, this.field_230689_k_);
+				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			} else {
-				mc.getTextureManager().bindTexture(field_230687_i_);
-				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.field_230695_q_);
-				int i = this.func_230989_a_(this.func_230449_g_());
+				mc.getTextureManager().bindTexture(WIDGETS_LOCATION);
+				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+				int i = this.getYImage(this.isHovered());
 				RenderSystem.defaultBlendFunc();
 				RenderSystem.enableDepthTest();
-				this.func_238474_b_(matrix, this.field_230690_l_, this.field_230691_m_, 0, 46 + i * 20, this.field_230688_j_ / 2, this.field_230689_k_);
-				this.func_238474_b_(matrix, this.field_230690_l_ + this.field_230688_j_ / 2, this.field_230691_m_, 200 - this.field_230688_j_ / 2, 46 + i * 20, this.field_230688_j_ / 2, this.field_230689_k_);
+				this.blit(matrix, this.x, this.y, 0, 46 + i * 20, this.width / 2, this.height);
+				this.blit(matrix, this.x + this.width / 2, this.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
 				RenderSystem.disableDepthTest();
 			}
 			
 			//func_230441_a_ = renderBg
-			this.func_230441_a_(matrix, mc, mouseX, mouseY);
+			this.renderBg(matrix, mc, mouseX, mouseY);
 
-			this.func_238472_a_(matrix, font, new StringTextComponent(getMessage()), this.field_230690_l_ + this.field_230688_j_ / 2, this.field_230691_m_ + (this.field_230689_k_ - 8) / 2, getFGColor());
+			this.drawCenteredString(matrix, font, new StringTextComponent(getMessageString()), this.x + this.width / 2, this.y + (this.height - 8) / 2, getFGColor());
 		}
 
+		if (!this.isHovered() && MouseInput.isLeftMouseDown()) {
+			this.leftDownNotHovered = true;
+		}
+		if (!MouseInput.isLeftMouseDown()) {
+			this.leftDownNotHovered = false;
+		}
+		
 		if (this.handleClick && this.useable) {
-			if (this.func_230449_g_() && MouseInput.isLeftMouseDown() && !leftDown) {
-				this.func_230982_a_(mouseX, mouseY);
-				this.func_230988_a_(Minecraft.getInstance().getSoundHandler());
+			if (this.isHovered() && MouseInput.isLeftMouseDown() && !leftDown && !leftDownNotHovered && !this.isInputBlocked()) {
+				this.onClick(mouseX, mouseY);
+				this.playDownSound(Minecraft.getInstance().getSoundHandler());
 				leftDown = true;
 			}
 			if (!MouseInput.isLeftMouseDown()) {
@@ -156,9 +165,11 @@ public class AdvancedButton extends Button {
 		}
 	}
 	
-	//TODO remove later when mappings aren't useless anymore
-	public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
-		this.func_230431_b_(matrix, mouseX, mouseY, partialTicks);
+	private boolean isInputBlocked() {
+		if (this.ignoreBlockedInput) {
+			return false;
+		}
+		return MouseInput.isVanillaInputBlocked();
 	}
 	
 	public void setBackgroundColor(@Nullable Color idle, @Nullable Color hovered, @Nullable Color idleBorder, @Nullable Color hoveredBorder, int borderWidth) {
@@ -204,20 +215,20 @@ public class AdvancedButton extends Button {
 	
 	//mouseClicked
 	@Override
-	public boolean func_231044_a_(double p_mouseClicked_1_, double p_mouseClicked_3_, int p_mouseClicked_5_) {
+	public boolean mouseClicked(double p_mouseClicked_1_, double p_mouseClicked_3_, int p_mouseClicked_5_) {
 		if (!this.handleClick && this.useable) {
-			return super.func_231044_a_(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
+			return super.mouseClicked(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
 		}
 		return false;
 	}
 	
 	//keyPressed
 	@Override
-	public boolean func_231046_a_(int p_keyPressed_1_, int p_keyPressed_2_, int p_keyPressed_3_) {
+	public boolean keyPressed(int p_keyPressed_1_, int p_keyPressed_2_, int p_keyPressed_3_) {
 		if (this.handleClick) {
 			return false;
 		}
-		return super.func_231046_a_(p_keyPressed_1_, p_keyPressed_2_, p_keyPressed_3_);
+		return super.keyPressed(p_keyPressed_1_, p_keyPressed_2_, p_keyPressed_3_);
 	}
 	
 	public void setUseable(boolean b) {
@@ -232,44 +243,44 @@ public class AdvancedButton extends Button {
 		this.handleClick = b;
 	}
 	
-	public String getMessage() {
-		return this.func_230458_i_().getString();
+	public String getMessageString() {
+		return this.getMessage().getString();
 	}
 	
 	public void setMessage(String msg) {
-		this.func_238482_a_(new StringTextComponent(msg));
+		this.setMessage(new StringTextComponent(msg));
 	}
 	
 	public int getWidth() {
-		return this.field_230688_j_;
+		return this.width;
 	}
 	
 	public void setWidth(int width) {
-		this.field_230688_j_ = width;
+		this.width = width;
 	}
 	
 	public int getX() {
-		return this.field_230690_l_;
+		return this.x;
 	}
 	
 	public void setX(int x) {
-		this.field_230690_l_ = x;
+		this.x = x;
 	}
 	
 	public int getY() {
-		return this.field_230691_m_;
+		return this.y;
 	}
 	
 	public void setY(int y) {
-		this.field_230691_m_ = y;
-	}
-	
-	public boolean isHovered() {
-		return this.func_230449_g_();
+		this.y = y;
 	}
 	
 	public void setHovered(boolean b) {
-		this.field_230692_n_ = b;
+		this.isHovered = b;
+	}
+	
+	public static boolean isAnyButtonLeftClicked() {
+		return leftDown;
 	}
 
 }

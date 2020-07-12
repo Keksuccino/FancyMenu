@@ -36,21 +36,22 @@ public class LayoutString extends LayoutObject {
 		this.rightclickMenu.addContent(scaleB);
 		LayoutCreatorScreen.colorizeCreatorButton(scaleB);
 		
-		String cLabel = Locals.localize("helper.creator.items.string.setcentered");
-		if (this.isStringCentered()) {
-			cLabel = Locals.localize("helper.creator.items.string.setuncentered");
-		}
-		AdvancedButton centeredB = new AdvancedButton(0, 0, 0, 16, cLabel, true, (press) -> {
-			if (this.isStringCentered()) {
-				press.setMessage(Locals.localize("helper.creator.items.string.setcentered"));;
-				this.getObject().centered = false;
-			} else {
-				press.setMessage(Locals.localize("helper.creator.items.string.setuncentered"));;
-				this.getObject().centered = true;
-			}
-		});
-		this.rightclickMenu.addContent(centeredB);
-		LayoutCreatorScreen.colorizeCreatorButton(centeredB);
+		//TODO übernehmen
+//		String cLabel = Locals.localize("helper.creator.items.string.setcentered");
+//		if (this.isStringCentered()) {
+//			cLabel = Locals.localize("helper.creator.items.string.setuncentered");
+//		}
+//		AdvancedButton centeredB = new AdvancedButton(0, 0, 0, 16, cLabel, true, (press) -> {
+//			if (this.isStringCentered()) {
+//				press.setMessage(Locals.localize("helper.creator.items.string.setcentered"));;
+//				this.getObject().centered = false;
+//			} else {
+//				press.setMessage(Locals.localize("helper.creator.items.string.setuncentered"));;
+//				this.getObject().centered = true;
+//			}
+//		});
+//		this.rightclickMenu.addContent(centeredB);
+//		LayoutCreatorScreen.colorizeCreatorButton(centeredB);
 		
 		String sLabel = Locals.localize("helper.creator.items.string.setshadow");
 		if (this.getObject().shadow) {
@@ -92,8 +93,10 @@ public class LayoutString extends LayoutObject {
 	
 		//Render pos and size values
 		RenderUtils.setScale(0.5F);
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 44, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.string.border.centered") + ": " + this.isStringCentered(), this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
+		//TODO übernehmen
+		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
+//		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.string.border.centered") + ": " + this.isStringCentered(), this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
+		//-------------
 		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getStringScale(), this.getStringPosX()*2, (this.getStringPosY()*2) - 26, Color.WHITE.getRGB());
 		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.getStringPosX(), this.getStringPosX()*2, (this.getStringPosY()*2) - 17, Color.WHITE.getRGB());
 		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.getStringPosX()*2, (this.getStringPosY()*2) - 8, Color.WHITE.getRGB());
@@ -101,6 +104,21 @@ public class LayoutString extends LayoutObject {
 		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.getStringPosY(), ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 14, Color.WHITE.getRGB());
 		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale();
+	}
+	
+	//TODO übernehmen
+	@Override
+	protected void renderHighlightBorder() {
+		Color c = new Color(0, 200, 255, 255);
+		
+		//horizontal line top
+		AbstractGui.fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.width, this.getStringPosY() + 1, c.getRGB());
+		//horizontal line bottom
+		AbstractGui.fill(this.getStringPosX(), this.getStringPosY() + this.object.height, this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height + 1, c.getRGB());
+		//vertical line left
+		AbstractGui.fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + 1, this.getStringPosY() + this.object.height, c.getRGB());
+		//vertical line right
+		AbstractGui.fill(this.getStringPosX() + this.object.width, this.getStringPosY(), this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height, c.getRGB());
 	}
 	
 	private int getStringPosX() {

@@ -61,17 +61,17 @@ public class NotificationPopup extends Popup {
 			}
 			
 			RenderSystem.enableBlend();
-			IngameGui.func_238467_a_(matrix, (renderIn.field_230708_k_ / 2) - (this.width / 2), (renderIn.field_230709_l_ / 2) - (height / 2), (renderIn.field_230708_k_ / 2) + (this.width / 2), (renderIn.field_230709_l_ / 2) + (height / 2), this.color.getRGB());
+			IngameGui.fill(matrix, (renderIn.width / 2) - (this.width / 2), (renderIn.height / 2) - (height / 2), (renderIn.width / 2) + (this.width / 2), (renderIn.height / 2) + (height / 2), this.color.getRGB());
 			RenderSystem.disableBlend();
 			
 			int i = 0;
 			for (String s : this.text) {
-				renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(s), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) - (height / 2) + 10 + i, Color.WHITE.getRGB());
+				renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(s), renderIn.width / 2, (renderIn.height / 2) - (height / 2) + 10 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
 			
-			this.accept.setX((renderIn.field_230708_k_ / 2) - (this.accept.getWidth() / 2));
-			this.accept.setY(((renderIn.field_230709_l_ / 2) + (height / 2)) - this.accept.getHeight() - 5);
+			this.accept.setX((renderIn.width / 2) - (this.accept.getWidth() / 2));
+			this.accept.setY(((renderIn.height / 2) + (height / 2)) - this.accept.getHeight() - 5);
 			
 			this.renderButtons(matrix, mouseX, mouseY);
 		}

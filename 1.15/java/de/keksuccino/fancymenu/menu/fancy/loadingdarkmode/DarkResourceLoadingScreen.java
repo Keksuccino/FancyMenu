@@ -1,10 +1,21 @@
 package de.keksuccino.fancymenu.menu.fancy.loadingdarkmode;
 
 import java.awt.Color;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.stb.STBEasyFont;
+import org.lwjgl.system.MemoryUtil;
+
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
@@ -15,6 +26,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.loading.progress.StartupMessageManager;
 
 public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 
@@ -76,7 +88,10 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 		this.blit(k1, i1, 0, 0, 256, 256);
 		float f3 = this.asyncReloader.estimateExecutionSpeed();
 		this.f1 = MathHelper.clamp(this.f1 * 0.95F + f3 * 0.050000012F, 0.0F, 1.0F);
-		net.minecraftforge.fml.client.ClientModLoader.renderProgressText();
+		
+		//TODO übernehmen
+		this.renderForgeStatusMessages();
+		
 		if (f < 1.0F) {
 			this.renderProgressBar(i / 2 - 150, j / 4 * 3, i / 2 + 150, j / 4 * 3 + 10, 1.0F - MathHelper.clamp(f, 0.0F, 1.0F));
 		}
@@ -137,5 +152,57 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 		}
 		return false;
 	}
+	
+	//TODO übernehmen
+	//Forge status render stuff ---->
+	private static float[] forgestatuscolor = new float[] {1.0f, 1.0f, 1.0f};
+	private void renderForgeStatusMessages() {
+        List<Pair<Integer, StartupMessageManager.Message>> messages = StartupMessageManager.getMessages();
+        for (int i = 0; i < messages.size(); i++) {
+            boolean nofade = i == 0;
+            final Pair<Integer, StartupMessageManager.Message> pair = messages.get(i);
+            final float fade = MathHelper.clamp((4000.0f - (float) pair.getLeft() - ( i - 4 ) * 1000.0f) / 5000.0f, 0.0f, 1.0f);
+            if (fade <0.01f && !nofade) continue;
+            StartupMessageManager.Message msg = pair.getRight();
+            renderForgeMessage(msg.getText(), forgestatuscolor, ((Minecraft.getInstance().getMainWindow().getScaledHeight() - 15) / 10) - i + 1, nofade ? 1.0f : fade);
+        }
+        renderForgeMemoryInfo();
+    }
+	
+	private void renderForgeMessage(final String message, final float[] colour, int line, float alpha) {
+        GlStateManager.enableClientState(GL11.GL_VERTEX_ARRAY);
+        ByteBuffer charBuffer = MemoryUtil.memAlloc(message.length() * 270);
+        int quads = STBEasyFont.stb_easy_font_print(0, 0, message, null, charBuffer);
+        GL14.glVertexPointer(2, GL11.GL_FLOAT, 16, charBuffer);
+
+        RenderSystem.enableBlend();
+        RenderSystem.disableTexture();
+        GL14.glBlendColor(0,0,0, alpha);
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.CONSTANT_ALPHA, GlStateManager.DestFactor.ONE_MINUS_CONSTANT_ALPHA);
+        RenderSystem.color3f(colour[0],colour[1],colour[2]);
+        RenderSystem.pushMatrix();
+        RenderSystem.translatef(10, line * 10, 0);
+        RenderSystem.scalef(1, 1, 0);
+        RenderSystem.drawArrays(GL11.GL_QUADS, 0, quads * 4);
+        RenderSystem.popMatrix();
+
+        GlStateManager.disableClientState(GL11.GL_VERTEX_ARRAY);
+        MemoryUtil.memFree(charBuffer);
+    }
+	
+	private static float[] memorycolour = new float[] {0.0f, 0.0f, 0.0f};
+    private void renderForgeMemoryInfo() {
+        final MemoryUsage heapusage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        final MemoryUsage offheapusage = ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage();
+        final float pctmemory = (float) heapusage.getUsed() / heapusage.getMax();
+        String memory = String.format("Memory Heap: %d / %d MB (%.1f%%)  OffHeap: %d MB", heapusage.getUsed() >> 20, heapusage.getMax() >> 20, pctmemory * 100.0, offheapusage.getUsed() >> 20);
+
+        final int i = MathHelper.hsvToRGB((1.0f - (float)Math.pow(pctmemory, 1.5f)) / 3f, 1.0f, 0.5f);
+        memorycolour[2] = ((i) & 0xFF) / 255.0f;
+        memorycolour[1] = ((i >> 8 ) & 0xFF) / 255.0f;
+        memorycolour[0] = ((i >> 16 ) & 0xFF) / 255.0f;
+        renderForgeMessage(memory, memorycolour, 1, 1.0f);
+    }
+    //--------------------------------
 
 }

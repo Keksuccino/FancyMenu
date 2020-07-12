@@ -25,8 +25,11 @@ public class MenuHandlerRegistry {
 		return lastActiveHandler;
 	}
 	
-	protected static void setActiveHandler(String menuIdentifier) {
-		if (isHandlerRegistered(menuIdentifier)) {
+	//TODO übernehmen
+	public static void setActiveHandler(String menuIdentifier) {
+		if (menuIdentifier == null) {
+			lastActiveHandler = null;
+		} else if (isHandlerRegistered(menuIdentifier)) {
 			lastActiveHandler = handlers.get(menuIdentifier);
 		}
 	}

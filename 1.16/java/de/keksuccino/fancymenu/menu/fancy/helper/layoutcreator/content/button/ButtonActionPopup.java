@@ -35,7 +35,7 @@ public class ButtonActionPopup extends Popup {
 		this.textField.setFocused2(false);
 		this.textField.setMaxStringLength(1000);
 		
-		this.actionSwitcher = new HorizontalSwitcher(120,
+		this.actionSwitcher = new HorizontalSwitcher(120, true,
 				"openlink",
 				"sendmessage",
 				"quitgame",
@@ -43,7 +43,8 @@ public class ButtonActionPopup extends Popup {
 				"loadworld",
 				"openfile",
 				"prevbackground",
-				"nextbackground");
+				"nextbackground",
+				"opencustomgui");
 		this.actionSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.actionSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
@@ -77,31 +78,31 @@ public class ButtonActionPopup extends Popup {
 			int height = 100;
 			
 			RenderSystem.enableBlend();
-			Screen.func_238467_a_(matrix, (renderIn.field_230708_k_ / 2) - (this.width / 2), (renderIn.field_230709_l_ / 2) - (height / 2), (renderIn.field_230708_k_ / 2) + (this.width / 2), (renderIn.field_230709_l_ / 2) + (height / 2), new Color(0, 0, 0, 0).getRGB());
+			Screen.fill(matrix, (renderIn.width / 2) - (this.width / 2), (renderIn.height / 2) - (height / 2), (renderIn.width / 2) + (this.width / 2), (renderIn.height / 2) + (height / 2), new Color(0, 0, 0, 0).getRGB());
 			RenderSystem.disableBlend();
 			
-			renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent("§l" + Locals.localize("helper.creator.custombutton.config")), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) - (height / 2) - 40, Color.WHITE.getRGB());
+			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent("§l" + Locals.localize("helper.creator.custombutton.config")), renderIn.width / 2, (renderIn.height / 2) - (height / 2) - 40, Color.WHITE.getRGB());
 			
 			
-			renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype")), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) - 60, Color.WHITE.getRGB());
+			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype")), renderIn.width / 2, (renderIn.height / 2) - 60, Color.WHITE.getRGB());
 			
-			this.actionSwitcher.render(matrix, (renderIn.field_230708_k_ / 2) - (this.actionSwitcher.getTotalWidth() / 2), (renderIn.field_230709_l_ / 2) - 45);
+			this.actionSwitcher.render(matrix, (renderIn.width / 2) - (this.actionSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 45);
 			
-			renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc")), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) - 20, Color.WHITE.getRGB());
+			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc")), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
 			
 			
 			String s = this.actionSwitcher.getSelectedValue();
-			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile")))) {
-				renderIn.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value"))), renderIn.field_230708_k_ / 2, (renderIn.field_230709_l_ / 2) + 15, Color.WHITE.getRGB());
+			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui")))) {
+				renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value"))), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
 				
-				this.textField.setX((renderIn.field_230708_k_ / 2) - (this.textField.getWidth() / 2));
-				this.textField.setY((renderIn.field_230709_l_ / 2) + 30);
+				this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
+				this.textField.setY((renderIn.height / 2) + 30);
 				this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 			}
 			
 			
-			this.doneButton.setX((renderIn.field_230708_k_ / 2) - (this.doneButton.getWidth() / 2));
-			this.doneButton.setY(((renderIn.field_230709_l_ / 2) + (height / 2)) + 20);
+			this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
+			this.doneButton.setY(((renderIn.height / 2) + (height / 2)) + 20);
 			
 			this.renderButtons(matrix, mouseX, mouseY);
 		}

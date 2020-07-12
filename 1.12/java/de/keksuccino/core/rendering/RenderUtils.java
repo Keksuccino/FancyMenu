@@ -3,8 +3,6 @@ package de.keksuccino.core.rendering;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -47,16 +45,13 @@ public class RenderUtils {
 	}
 	
 	public static void setScale(float scale) {
-    	GL11.glPushMatrix();
         GlStateManager.enableBlend();
-        GL11.glPushMatrix();
-        GL11.glScaled(scale, scale, scale);
+        GlStateManager.pushMatrix();
+        GlStateManager.scale(scale, scale, scale);
     }
 	
     public static void postScale() {
-    	GL11.glPopMatrix();
-        GlStateManager.disableBlend();
-        GL11.glPopMatrix();
+    	GlStateManager.popMatrix();
     }
     
     public static void doubleBlit(double x, double y, float f1, float f2, int w, int h) {

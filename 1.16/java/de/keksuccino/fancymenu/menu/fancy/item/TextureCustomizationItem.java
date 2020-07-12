@@ -59,7 +59,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 			Minecraft.getInstance().getTextureManager().bindTexture(this.texture.getResourceLocation());
 			RenderSystem.enableBlend();
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			IngameGui.func_238463_a_(matrix, x, y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+			IngameGui.blit(matrix, x, y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			RenderSystem.disableBlend();
 		}
 	}

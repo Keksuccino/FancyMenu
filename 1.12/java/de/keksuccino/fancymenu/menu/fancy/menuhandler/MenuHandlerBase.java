@@ -11,6 +11,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.math.MathUtils;
@@ -28,6 +29,9 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
+import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
@@ -68,6 +72,12 @@ public class MenuHandlerBase {
 	private boolean panoMoveBack = false;
 	private boolean panoStop = false;
 	
+	private Map<GuiButton, Double> hidefor = new HashMap<GuiButton, Double>();
+	private List<GuiButton> hidden = new ArrayList<GuiButton>();
+
+	private List<GuiButton> buttons;
+	private List<PropertiesSet> props;
+	
 	/**
 	 * @param identifier Has to be the valid and full class name of the GUI screen.
 	 */
@@ -80,6 +90,52 @@ public class MenuHandlerBase {
 	}
 	
 	@SubscribeEvent
+	public void onInitPre(GuiScreenEvent.InitGuiEvent.Post e) {
+		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!AnimationHandler.isReady()) {
+			return;
+		}
+		if (!GameIntroHandler.introDisplayed) {
+			return;
+		}
+		if (LayoutCreatorScreen.isActive) {
+			return;
+		}
+
+		this.buttons = e.getButtonList();
+		this.props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
+
+		//Applying customizations which needs to be done before other ones
+		for (PropertiesSet s : this.props) {
+			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+			if (metas.isEmpty()) {
+				metas = s.getPropertiesOfType("type-meta");
+			}
+			if (metas.isEmpty()) {
+				continue;
+			}
+			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+				String action = sec.getEntryValue("action");
+				if (action != null) {
+					String identifier = sec.getEntryValue("identifier");
+
+					if (action.equalsIgnoreCase("overridemenu")) {
+						if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
+							CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (GuiScreen)null, e.getGui(), (onClose) -> {
+								e.getGui().onGuiClosed();
+							});
+							Minecraft.getMinecraft().displayGuiScreen(cus);
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	@SubscribeEvent
 	public void onInitPost(ButtonCachedEvent e) {
 		if (!this.shouldCustomize(e.getGui())) {
 			return;
@@ -87,13 +143,19 @@ public class MenuHandlerBase {
 		if (!AnimationHandler.isReady()) {
 			return;
 		}
+		if (!GameIntroHandler.introDisplayed) {
+			return;
+		}
 		if (LayoutCreatorScreen.isActive) {
 			return;
 		}
+
+		if ((this.buttons == null) || (this.props == null)) {
+			return;
+		}
 		
-		List<GuiButton> buttons = e.getButtonList();
-		List<PropertiesSet> props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
-		
+		this.hidden.clear();
+		this.hidefor.clear();
 		audio.clear();
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
@@ -201,9 +263,22 @@ public class MenuHandlerBase {
 						}
 					}
 					
+					if (action.equalsIgnoreCase("hidebuttonfor")) {
+						String time = sec.getEntryValue("seconds");
+						if (b != null) {
+							if (MenuHandlerRegistry.getLastActiveHandler() != this) {
+								if ((time != null) && MathUtils.isDouble(time)) {
+									b.visible = false;
+									this.hidefor.put(b, Double.parseDouble(time));
+								}
+							}
+						}
+					}
+					
 					if (action.equalsIgnoreCase("hidebutton")) {
 						if (b != null) {
 							b.visible = false;
+							this.hidden.add(b);
 						}
 					}
 					
@@ -393,10 +468,21 @@ public class MenuHandlerBase {
 					}
 					
 					if (action.equalsIgnoreCase("addbutton")) {
+						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
+						AdvancedButton cbtn = i.getButton();
+						String hide = sec.getEntryValue("hideforseconds");
+						
+						if (MenuHandlerRegistry.getLastActiveHandler() != this) {
+							if ((hide != null) && MathUtils.isDouble(hide) && (cbtn != null)) {
+								cbtn.visible = false;
+								hidefor.put(cbtn, Double.parseDouble(hide));
+							}
+						}
+						
 						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-							backgroundRenderItems.add(new ButtonCustomizationItem(sec));
+							backgroundRenderItems.add(i);
 						} else {
-							frontRenderItems.add(new ButtonCustomizationItem(sec));
+							frontRenderItems.add(i);
 						}
 					}
 					
@@ -445,6 +531,33 @@ public class MenuHandlerBase {
 		
 		if (!backgroundTextureSet) {
 			this.backgroundTexture = null;
+		}
+		
+		for (Map.Entry<GuiButton, Double> m : this.hidefor.entrySet()) {
+			if (!hidden.contains(m.getKey())) {
+				
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						long start = System.currentTimeMillis();
+						float delay = (float) (1000.0 * m.getValue());
+						while (true) {
+							try {
+								long now = System.currentTimeMillis();
+								if (now >= start + (int)delay) {
+									m.getKey().visible = true;
+									return;
+								}
+								
+								Thread.sleep(50);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}).start();
+				
+			}
 		}
 	}
 

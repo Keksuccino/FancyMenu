@@ -3,6 +3,7 @@ package de.keksuccino.core.properties;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import de.keksuccino.core.file.FileUtils;
 
@@ -75,6 +76,43 @@ public class PropertiesSerializer {
 			}
 		}
 		return null;
+	}
+	
+	public static void writeProperties(PropertiesSet props, String path) {
+		try {
+			List<PropertiesSection> l = props.getProperties();
+
+			if (!l.isEmpty() && (l.size() > 1)) {
+				File f = new File(path);
+				//check if path is a file
+				if (f.getName().contains(".") && !f.getName().startsWith(".")) {
+					File parent = f.getParentFile();
+					if ((parent != null) && parent.isDirectory() && !parent.exists()) {
+						parent.mkdirs();
+					}
+					
+					f.createNewFile();
+
+					String data = "";
+
+					data += "type = " + props.getPropertiesType() + "\n\n";
+
+					for (PropertiesSection ps : l) {
+						data += ps.getSectionType() + " {\n";
+						for (Map.Entry<String, String> e : ps.getEntries().entrySet()) {
+							data += "  " + e.getKey() + " = " + e.getValue() + "\n";
+						}
+						data += "}\n\n";
+					}
+
+					FileUtils.writeTextToFile(f, false, data);
+				} else {
+					System.out.println("############### CANNOT WRITE PROPERTIES! PATH IS NOT A FILE!");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

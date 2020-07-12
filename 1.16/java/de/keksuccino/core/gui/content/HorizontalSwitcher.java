@@ -23,19 +23,22 @@ public class HorizontalSwitcher extends AbstractGui {
 	private Color valuecolor = Color.WHITE;
 	private Color valuebackcolor = Color.LIGHT_GRAY;
 	
-	public HorizontalSwitcher(int displayWidth, String... values) {
+	public HorizontalSwitcher(int displayWidth, boolean ignoreBlockedInput, String... values) {
 		this.prev = new AdvancedImageButton(0, 0, 20, 20, new ResourceLocation("keksuccino", "arrow_left.png"), true, (press) -> {
 			int i = this.selected - 1;
 			if (i >= 0) {
 				this.selected = i;
 			}
 		});
+		this.prev.ignoreBlockedInput = ignoreBlockedInput;
+		
 		this.next = new AdvancedImageButton(0, 0, 20, 20, new ResourceLocation("keksuccino", "arrow_right.png"), true, (press) -> {
 			int i = this.selected + 1;
 			if (i <= this.values.size()-1) {
 				this.selected = i;
 			}
 		});
+		this.next.ignoreBlockedInput = ignoreBlockedInput;
 		
 		if (values != null) {
 			this.values.addAll(Arrays.asList(values));
@@ -58,10 +61,10 @@ public class HorizontalSwitcher extends AbstractGui {
 		this.prev.render(matrix, mouseX, mouseY, partial);
 		
 		//Value background
-		func_238467_a_(matrix, x + 25, y, x + 25 + this.width, y + 20, this.valuebackcolor.getRGB());
+		fill(matrix, x + 25, y, x + 25 + this.width, y + 20, this.valuebackcolor.getRGB());
 		
 		//Selected value
-		func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(sel), x + 25 + (this.width/2), y + 5, this.valuecolor.getRGB());
+		drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(sel), x + 25 + (this.width/2), y + 5, this.valuecolor.getRGB());
 		
 		this.next.setX(x + 25 + this.width + 5);;
 		this.next.setY(y);

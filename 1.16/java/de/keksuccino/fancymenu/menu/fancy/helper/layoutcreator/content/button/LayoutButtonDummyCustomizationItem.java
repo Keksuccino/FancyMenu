@@ -34,13 +34,13 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 	public void render(MatrixStack matrix, Screen menu) throws IOException {
 		RenderSystem.enableBlend();
         if (this.texture == null) {
-        	Screen.func_238467_a_(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.width, this.getPosY(menu) + this.height, new Color(138, 138, 138, 255).getRGB());
+        	Screen.fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.width, this.getPosY(menu) + this.height, new Color(138, 138, 138, 255).getRGB());
         } else {
         	Minecraft.getInstance().getTextureManager().bindTexture(this.texture);
         	RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        	Screen.func_238463_a_(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+        	Screen.blit(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.width, this.height, this.width, this.height);
         }
-        menu.func_238472_a_(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(this.value), this.getPosX(menu) + this.width / 2, this.getPosY(menu) + (this.height - 8) / 2, new Color(255, 255, 255, 255).getRGB());
+        menu.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(this.value), this.getPosX(menu) + this.width / 2, this.getPosY(menu) + (this.height - 8) / 2, new Color(255, 255, 255, 255).getRGB());
         RenderSystem.disableBlend();
 	}
 	

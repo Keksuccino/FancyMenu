@@ -12,10 +12,11 @@ public class GameIntroEvents {
 	@SubscribeEvent
 	public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		if ((e.getGui() instanceof GuiMainMenu) && AnimationHandler.isReady() && !GameIntroHandler.introDisplayed) {
-			GameIntroHandler.introDisplayed = true;
 			IAnimationRenderer intro = GameIntroHandler.getGameIntroAnimation();
 			if (intro != null) {
 				Minecraft.getMinecraft().displayGuiScreen(new GameIntroScreen(intro, (GuiMainMenu) e.getGui()));
+			} else {
+				GameIntroHandler.introDisplayed = true;
 			}
 		}
 	}

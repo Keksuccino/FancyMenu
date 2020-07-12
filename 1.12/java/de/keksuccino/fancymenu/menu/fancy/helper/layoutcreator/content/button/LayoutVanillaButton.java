@@ -29,6 +29,7 @@ public class LayoutVanillaButton extends LayoutObject {
 	public int clicks = 0;
 	public String hoverLabel;
 	public String hoverSound;
+	public double hideforsec = 0;
 	
 	public LayoutVanillaButton(ButtonData button, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(button.label, button.width, button.height, button.x, button.y), false, handler);
@@ -163,6 +164,7 @@ public class LayoutVanillaButton extends LayoutObject {
 			this.backHovered = null;
 			this.backNormal = null;
 			((LayoutButtonDummyCustomizationItem)this.object).setTexture(null);
+			this.handler.setVanillaTexture(this, null, null);
 		});
 		texturePopup.addContent(tpop3);
 		LayoutCreatorScreen.colorizeCreatorButton(tpop3);
@@ -250,19 +252,37 @@ public class LayoutVanillaButton extends LayoutObject {
 		});
 		this.rightclickMenu.addContent(b9);
 		LayoutCreatorScreen.colorizeCreatorButton(b9);
+		
+		AdvancedButton b10 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
+			this.handler.setMenusUseable(false);
+			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+				if (call != null) {
+					if (MathUtils.isDouble(call)) {
+						this.hideforsec = Double.parseDouble(call);
+						this.handler.setVanillaHideFor(this, this.hideforsec);
+						this.handler.setMenusUseable(true);
+					} else {
+						this.handler.displayNotification(300, Locals.localize("helper.creator.items.button.delayappearance.invalidvalue"));
+					}
+				} else {
+					this.handler.setMenusUseable(true);
+				}
+			});
+			in.setText("" + this.hideforsec);
+			PopupHandler.displayPopup(in);
+		});
+		this.rightclickMenu.addContent(b10);
+		LayoutCreatorScreen.colorizeCreatorButton(b10);
+		
 	}
 	
 	@Override
 	public void render(int mouseX, int mouseY) {
-		if (this.hidden) {
-			this.rightclickMenu.closeMenu();
-			this.orientationMenu.closeMenu();
-		}
 		
 		if (!this.canBeModified()) {
 			//Cancel dragging
 			if (this.isDragged() && this.handler.isFocused(this) && ((this.startX != this.object.posX) || (this.startY != this.object.posY))) {
-				this.handler.setObjectFocused(this, false);
+				this.handler.setObjectFocused(this, false, true);
 				this.dragging = false;
 				this.object.posX = this.button.x;
 				this.object.posY = this.button.y;
@@ -279,7 +299,7 @@ public class LayoutVanillaButton extends LayoutObject {
 				this.object.posY = this.button.y;
 				this.object.width = this.button.width;
 				this.object.height = this.button.height;
-				this.handler.setObjectFocused(this, false);
+				this.handler.setObjectFocused(this, false, true);
 				this.displaySetOrientationNotification();
 				return;
 			}
@@ -367,6 +387,14 @@ public class LayoutVanillaButton extends LayoutObject {
 			s.addEntry("action", "sethoverlabel");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
 			s.addEntry("label", this.hoverLabel);
+			l.add(s);
+		}
+		//hidebuttonfor
+		if (this.hideforsec != 0) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "hidebuttonfor");
+			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			s.addEntry("seconds", "" + this.hideforsec);
 			l.add(s);
 		}
 		

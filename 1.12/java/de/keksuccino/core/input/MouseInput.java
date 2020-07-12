@@ -5,6 +5,8 @@ import java.awt.image.DataBufferInt;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Cursor;
@@ -14,28 +16,32 @@ import de.keksuccino.core.resources.ResourceUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class MouseInput {
 	
 	private static Cursor VRESIZE_CURSOR;
 	private static Cursor HRESIZE_CURSOR;
 	
-	private static boolean init = false;
+	private static boolean leftClicked = false;
+	private static boolean rightClicked  = false;
+	private static Map<String, Boolean> vanillainput = new HashMap<String, Boolean>();
 	
 	public static void init() {
-		if (!init) {
-			VRESIZE_CURSOR = loadCursor(new ResourceLocation("keksuccino", "cursor/vresize.png"), 32, 32, 16, 16);
-			HRESIZE_CURSOR = loadCursor(new ResourceLocation("keksuccino", "cursor/hresize.png"), 32, 32, 16, 16);
-			init = true;
-		}
+		VRESIZE_CURSOR = loadCursor(new ResourceLocation("keksuccino", "cursor/vresize.png"), 32, 32, 16, 16);
+		HRESIZE_CURSOR = loadCursor(new ResourceLocation("keksuccino", "cursor/hresize.png"), 32, 32, 16, 16);
+		
+		MinecraftForge.EVENT_BUS.register(new MouseInput());
 	}
 	
 	public static boolean isLeftMouseDown() {
-		return Mouse.isButtonDown(0);
+		return leftClicked;
 	}
-	
+
 	public static boolean isRightMouseDown() {
-		return Mouse.isButtonDown(1);
+		return rightClicked;
 	}
 	
 	public static int getMouseX() {
@@ -99,6 +105,46 @@ public class MouseInput {
 	public static enum CursorType {
 		VRESIZE,
 		HRESIZE;
+	}
+	
+	public static void blockVanillaInput(String category) {
+		vanillainput.put(category, true);
+	}
+	
+	public static void unblockVanillaInput(String category) {
+		vanillainput.put(category, false);
+	}
+	
+	public static boolean isVanillaInputBlocked() {
+		return vanillainput.containsValue(true);
+	}
+	
+	@SubscribeEvent
+	public void onMouseClicked(GuiScreenEvent.MouseInputEvent.Pre e) {
+		int i = Mouse.getEventButton();
+		if ((i == 0) && Mouse.getEventButtonState()) {
+			leftClicked = true;
+		}
+		if ((i == 1) && Mouse.getEventButtonState()) {
+			rightClicked = true;
+		}
+		if ((i == 0) && !Mouse.getEventButtonState()) {
+			leftClicked = false;
+		}
+		if ((i == 1) && !Mouse.getEventButtonState()) {
+			rightClicked = false;
+		}
+		
+		if (isVanillaInputBlocked()) {
+			e.setCanceled(true);
+		}
+	}
+	
+	@SubscribeEvent
+	public void onScreenInit(GuiScreenEvent.InitGuiEvent.Pre e) {
+		//Reset values on screen init
+		leftClicked = false;
+		rightClicked = false;
 	}
 
 }

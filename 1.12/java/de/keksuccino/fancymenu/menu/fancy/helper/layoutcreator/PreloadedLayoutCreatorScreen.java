@@ -291,6 +291,23 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						}
 					}
 					
+					if (action.equalsIgnoreCase("hidebuttonfor")) {
+						if (b != null) {
+							String seconds = sec.getEntryValue("seconds");
+							if ((seconds != null) && (MathUtils.isDouble(seconds))) {
+								if (!vanillas.containsKey(b.getId())) {
+									LayoutVanillaButton van = new LayoutVanillaButton(b, this);
+									vanillas.put(b.getId(), van);
+									con.add(van);
+								}
+								double d = Double.parseDouble(seconds);
+								vanillas.get(b.getId()).hideforsec = d;
+								
+								this.vanillaHideFor.put(b.getId(), d);
+							}
+						}
+					}
+					
 					if (action.equalsIgnoreCase("addtext")) {
 						con.add(new LayoutString(new StringCustomizationItem(sec), this));
 					}
@@ -320,6 +337,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						String backHover = sec.getEntryValue("backgroundhovered");
 						String hoverLabel = sec.getEntryValue("hoverlabel");
 						String hoverSound = sec.getEntryValue("hoversound");
+						String hidefor = sec.getEntryValue("hideforseconds");
 						
 						if (baction == null) {
 							continue;
@@ -330,6 +348,10 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 							actionvalue = "";
 						}
 						lb.actionContent = actionvalue;
+						
+						if ((hidefor != null) && MathUtils.isDouble(hidefor)) {
+							lb.hideforsec = Double.parseDouble(hidefor);
+						}
 						
 						if ((backNormal != null) && (backHover != null)) {
 							lb.backNormal = backNormal.replace("\\", "/");
@@ -439,7 +461,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 		}
 		if ((i == 2) || (i == 3)) {
 			try {
-				String name = this.screen.getClass().getName();
+				String name = this.getScreenToCustomizeIdentifier();
 				if (name.contains(".")) {
 					name = new StringBuilder(new StringBuilder(name).reverse().toString().split("[.]", 2)[0]).reverse().toString();
 				}

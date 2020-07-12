@@ -27,7 +27,7 @@ public abstract class Popup {
 			return;
 		}
 		RenderSystem.enableBlend();
-		IngameGui.func_238467_a_(matrix, 0, 0, renderIn.field_230708_k_, renderIn.field_230709_l_, new Color(0, 0, 0, this.alpha).getRGB());
+		IngameGui.fill(matrix, 0, 0, renderIn.width, renderIn.height, new Color(0, 0, 0, this.alpha).getRGB());
 		RenderSystem.disableBlend();
 	}
 	
@@ -46,6 +46,7 @@ public abstract class Popup {
 	protected void addButton(AdvancedButton b) {
 		if (!this.buttons.contains(b)) {
 			this.buttons.add(b);
+			b.ignoreBlockedInput = true;
 			this.colorizePopupButton(b);
 		}
 	}

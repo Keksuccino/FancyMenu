@@ -7,8 +7,8 @@ import net.minecraftforge.common.MinecraftForge;
 
 public class GameIntroHandler {
 
-	protected static boolean introDisplayed = false;
-
+	public static boolean introDisplayed = false;
+	
 	public static void init() {
 		MinecraftForge.EVENT_BUS.register(new GameIntroEvents());
 	}

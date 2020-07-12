@@ -213,4 +213,39 @@ helper.creator.backgroundoptions.nopanorama = Kein Panorama
 
 helper.creator.textures.invalidcharacters = §c§lNicht unterstützte Zeichen!%n%%n%%n%Der Dateiname deines Bildes enthält nicht unterstützte Zeichen!%n%%n%Bitte nutze nur die Zeichen "a-z", "0-9", ".", "_" und "-".%n%Leerzeichen, Großbuchstaben und sonstige spezielle Zeichen sind nicht erlaubt.
 
+helper.buttons.tools.dropdownlabel = Anpassungstools
+helper.buttons.tools.overridemenu = Überschreiben mit
+helper.buttons.tools.resetoverride = Übers. rücksetzen
+helper.buttons.tools.closecustomgui = GUI schließen
 
+helper.buttons.tools.customguis = Eigene GUIs
+helper.buttons.tools.customguis.open = GUI öffnen
+helper.buttons.tools.customguis.delete = GUI löschen
+helper.buttons.tools.customguis.pickbyname = Per Name wählen
+helper.buttons.tools.customguis.openbyname = Per Name öffnen
+helper.buttons.tools.customguis.deletebyname = Per Name löschen
+helper.buttons.tools.customguis.sure = §c§lBist du sicher?%n%%n%%n%Möchtest du dieses GUI wirklich §llöschen§r?%n%%n%§lDiese Aktion kann nicht rückgängig gemacht werden!%n% %n% %n% %n%
+helper.buttons.tools.customguis.invalididentifier = §c§lUngültiger Identifier!%n%%n%%n%Es wurde kein GUI mit diesem Identifier (GUI-ID) gefunden!%n% %n% %n% %n%
+
+helper.buttons.tools.creategui = GUI erstellen
+helper.buttons.tools.creategui.allowesc = Erlauben
+helper.buttons.tools.creategui.donotallowesc = Nicht erlauben
+helper.buttons.tools.creategui.invalididentifier = §cUngültiger Identifier!
+helper.buttons.tools.creategui.identifieralreadyused = §cIdentifier wird bereits verwendet! Bitte wähle einen anderen!
+helper.buttons.tools.creategui.allowescdesc = Erlaube Schließen des GUIs per ESC
+helper.buttons.tools.creategui.menuidentifier = Menü Identifier (GUI-ID)
+helper.buttons.tools.creategui.menutitle = Menü Titel (Optional)
+helper.buttons.tools.creategui.create = Erstellen
+
+gameintro.skip = MIT LEERTASTE ÜBERSPRINGEN
+
+helper.creator.items.chooselayer = Ebene wählen
+
+customization.items.webstring.unabletoload = Web Text konnte nicht geladen werden! Ungültige URL oder keine Internetverbindung!
+
+helper.creator.custombutton.config.actiontype.opencustomgui.desc = Öffnet ein Custom GUI (Selbst erstelltes GUI).
+helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Menü Identifier
+
+helper.creator.items.button.delayappearance = Erscheinen verzögern
+helper.creator.items.button.delayappearance.desc = Erscheinen um Sekunden verzögern [Dezimalwert-Unterstützung]
+helper.creator.items.button.delayappearance.invalidvalue = §c§lUngültiger Wert!%n%%n%%n%Das ist kein gültiger Sekundenwert!%n%Vielleicht ist dein Wert zu lang. (..SEI DA NICHT STOLZ DRAUF!)%n%%n%Beispiele für Werte: 3, 2.0, 0.05, 0.8, 10.5

@@ -18,11 +18,18 @@ import com.google.common.io.Files;
 
 public class FileUtils {
 
-	public static void writeTextToFile(File f, String text, boolean append) throws IOException {
+	//TODO übernehmen
+	public static void writeTextToFile(File f, boolean append, String... text) throws IOException {
 		FileOutputStream fo = new FileOutputStream(f, append);
 		OutputStreamWriter os = new OutputStreamWriter(fo, StandardCharsets.UTF_8);
 		BufferedWriter writer = new BufferedWriter(os);
-        writer.write(text);
+        if (text.length == 1) {
+        	writer.write(text[0]);
+        } else if (text.length > 0) {
+        	for (String s : text) {
+        		writer.write(s + "\n");
+        	}
+        }
         writer.flush();
         try {
         	if (writer != null) {
@@ -81,6 +88,23 @@ public class FileUtils {
 		}
 		
 		return list;
+	}
+	
+	//TODO übernehmen
+	public static String generateAvailableFilename(String dir, String baseName, String extension) {
+		File f = new File(dir);
+		if (!f.exists() && f.isDirectory()) {
+			f.mkdirs();
+		}
+
+		File f2 = new File(f.getPath() + "/" + baseName + "." + extension.replace(".", ""));
+		int i = 1;
+		while (f2.exists()) {
+			f2 = new File(f.getPath() + "/" + baseName + "_" + i + "." + extension.replace(".", ""));
+			i++;
+		}
+		
+		return f2.getName();
 	}
 	
 	public static void compressToZip(String pathToCompare, String zipFile) {

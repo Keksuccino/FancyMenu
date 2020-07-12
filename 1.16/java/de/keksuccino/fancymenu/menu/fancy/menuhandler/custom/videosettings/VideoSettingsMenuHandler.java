@@ -26,12 +26,12 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 	public void onInitPost(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			try {
-				OptionsRowList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().field_230708_k_, e.getGui().field_230709_l_, 32, e.getGui().field_230709_l_ - 32, 25, this);
+				OptionsRowList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, this);
 				l.addOption(new FullscreenResolutionOption(Minecraft.getInstance().getMainWindow()));
 			    l.addOption(AbstractOption.BIOME_BLEND_RADIUS);
 			    l.addOptions(OPTIONS);
 				Field f = ObfuscationReflectionHelper.findField(VideoSettingsScreen.class, "field_146501_h");
-				e.getGui().func_231039_at__().remove(f.get(e.getGui()));
+				e.getGui().children().remove(f.get(e.getGui()));
 				f.set(e.getGui(), l);
 				addChildren(e.getGui(), l);
 			} catch(Exception ex) {

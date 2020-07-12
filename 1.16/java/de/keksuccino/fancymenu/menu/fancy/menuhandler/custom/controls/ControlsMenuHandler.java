@@ -23,7 +23,7 @@ public class ControlsMenuHandler extends MenuHandlerBase {
 			try {
 				ControlsList l = new ControlsList((ControlsScreen) e.getGui(), Minecraft.getInstance(), this);
 				Field f = ObfuscationReflectionHelper.findField(ControlsScreen.class, "field_146494_r");
-				e.getGui().func_231039_at__().remove(f.get(e.getGui()));
+				e.getGui().children().remove(f.get(e.getGui()));
 				f.set(e.getGui(), l);
 				addChildren(e.getGui(), l);
 			} catch(Exception ex) {

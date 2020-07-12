@@ -12,6 +12,7 @@ import de.keksuccino.core.gui.content.PopupMenu;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.TextInputPopup;
 import de.keksuccino.core.input.CharacterFilter;
+import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.fancymenu.localization.Locals;
@@ -27,6 +28,7 @@ public class LayoutButton extends LayoutObject {
 	public String backHovered = null;
 	public String hoverSound;
 	public String hoverLabel;
+	public double hideforsec = 0;
 	
 	public LayoutButton(int width, int height, @Nonnull String label, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(label, width, height, 0, 0), true, handler);
@@ -213,6 +215,26 @@ public class LayoutButton extends LayoutObject {
 		this.rightclickMenu.addContent(b8);
 		LayoutCreatorScreen.colorizeCreatorButton(b8);
 		
+		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
+			this.handler.setMenusUseable(false);
+			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+				if (call != null) {
+					if (MathUtils.isDouble(call)) {
+						this.hideforsec = Double.parseDouble(call);
+						this.handler.setMenusUseable(true);
+					} else {
+						this.handler.displayNotification(300, Locals.localize("helper.creator.items.button.delayappearance.invalidvalue"));
+					}
+				} else {
+					this.handler.setMenusUseable(true);
+				}
+			});
+			in.setText("" + this.hideforsec);
+			PopupHandler.displayPopup(in);
+		});
+		this.rightclickMenu.addContent(b9);
+		LayoutCreatorScreen.colorizeCreatorButton(b9);
+		
 	}
 	
 	private void editLabelCallback(String text) {
@@ -260,6 +282,9 @@ public class LayoutButton extends LayoutObject {
 			}
 			if (this.hoverLabel != null) {
 				s.addEntry("hoverlabel", this.hoverLabel);
+			}
+			if (this.hideforsec != 0) {
+				s.addEntry("hideforseconds", "" + this.hideforsec);
 			}
 			l.add(s);
 		}

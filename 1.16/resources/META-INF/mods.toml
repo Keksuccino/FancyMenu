@@ -7,7 +7,7 @@ loaderVersion="[32,)" #mandatory This is typically bumped every Minecraft versio
 # The modid of the mod
 modId="fancymenu" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="1.3.1" #mandatory
+version="1.4.1" #mandatory
  # A display name for the mod
 displayName="§dFancy§5Menu" #mandatory
 # A text field displayed in the mod UI

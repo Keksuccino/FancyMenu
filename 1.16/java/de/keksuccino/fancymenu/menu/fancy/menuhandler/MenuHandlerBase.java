@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.math.MathUtils;
@@ -30,6 +31,9 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
+import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
@@ -68,6 +72,12 @@ public class MenuHandlerBase {
 	private double panoPos = 0.0;
 	private boolean panoMoveBack = false;
 	private boolean panoStop = false;
+
+	private Map<Widget, Double> hidefor = new HashMap<Widget, Double>();
+	private List<Widget> hidden = new ArrayList<Widget>();
+
+	private List<Widget> buttons;
+	private List<PropertiesSet> props;
 	
 	/**
 	 * @param identifier Has to be the valid and full class name of the GUI screen.
@@ -79,6 +89,52 @@ public class MenuHandlerBase {
 	public String getMenuIdentifier() {
 		return this.identifier;
 	}
+
+	@SubscribeEvent
+	public void onInitPre(GuiScreenEvent.InitGuiEvent.Post e) {
+		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!AnimationHandler.isReady()) {
+			return;
+		}
+		if (!GameIntroHandler.introDisplayed) {
+			return;
+		}
+		if (LayoutCreatorScreen.isActive) {
+			return;
+		}
+
+		this.buttons = e.getWidgetList();
+		this.props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
+
+		//Applying customizations which needs to be done before other ones
+		for (PropertiesSet s : this.props) {
+			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+			if (metas.isEmpty()) {
+				metas = s.getPropertiesOfType("type-meta");
+			}
+			if (metas.isEmpty()) {
+				continue;
+			}
+			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+				String action = sec.getEntryValue("action");
+				if (action != null) {
+					String identifier = sec.getEntryValue("identifier");
+
+					if (action.equalsIgnoreCase("overridemenu")) {
+						if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
+							CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getGui(), (onClose) -> {
+								e.getGui().onClose();
+							});
+							Minecraft.getInstance().displayGuiScreen(cus);
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	@SubscribeEvent
 	public void onInitPost(ButtonCachedEvent e) {
@@ -88,13 +144,20 @@ public class MenuHandlerBase {
 		if (!AnimationHandler.isReady()) {
 			return;
 		}
+		if (!GameIntroHandler.introDisplayed) {
+			return;
+		}
 		if (LayoutCreatorScreen.isActive) {
 			return;
 		}
 		
-		List<Widget> buttons = e.getWidgetList();
-		List<PropertiesSet> props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
-		
+		if ((this.buttons == null) || (this.props == null)) {
+			return;
+		}
+
+		this.hidden.clear();
+		this.hidefor.clear();
+		//-------------
 		audio.clear();
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
@@ -106,8 +169,8 @@ public class MenuHandlerBase {
 		this.backgroundDrawable = false;
 		
 		boolean backgroundTextureSet = false;
-
-		for (PropertiesSet s : props) {
+		
+		for (PropertiesSet s : this.props) {
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
 			if (metas.isEmpty()) {
 				metas = s.getPropertiesOfType("type-meta");
@@ -122,9 +185,9 @@ public class MenuHandlerBase {
 					String identifier = sec.getEntryValue("identifier");
 					Widget b = null;
 					if (identifier != null) {
-						b = getButton(identifier, buttons);
+						b = getButton(identifier, this.buttons);
 					}
-
+					
 					if (action.equalsIgnoreCase("texturizebackground")) {
 						String value = sec.getEntryValue("path");
 						String pano = sec.getEntryValue("panorama");
@@ -202,16 +265,30 @@ public class MenuHandlerBase {
 						}
 					}
 					
+					if (action.equalsIgnoreCase("hidebuttonfor")) {
+						String time = sec.getEntryValue("seconds");
+						if (b != null) {
+							if (MenuHandlerRegistry.getLastActiveHandler() != this) {
+								if ((time != null) && MathUtils.isDouble(time)) {
+									b.visible = false;
+									this.hidefor.put(b, Double.parseDouble(time));
+								}
+							}
+						}
+					}
+					
+					
 					if (action.equalsIgnoreCase("hidebutton")) {
 						if (b != null) {
-							b.field_230694_p_ = false;
+							b.visible = false;
+							this.hidden.add(b);
 						}
 					}
 
 					if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 						String value = sec.getEntryValue("value");
 						if ((value != null) && (b != null)) {
-							b.func_238482_a_(new StringTextComponent(value));
+							b.setMessage(new StringTextComponent(value));
 						}
 					}
 					
@@ -219,15 +296,15 @@ public class MenuHandlerBase {
 						String width = sec.getEntryValue("width");
 						String height = sec.getEntryValue("height");
 						if (width != null) {
-							width = width.replace("%guiwidth%", "" + e.getGui().field_230708_k_).replace("%guiheight%", "" + e.getGui().field_230709_l_);
+							width = width.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
 						}
 						if (height != null) {
-							height = height.replace("%guiwidth%", "" + e.getGui().field_230708_k_).replace("%guiheight%", "" + e.getGui().field_230709_l_);
+							height = height.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
 						}
 						if ((width != null) && (height != null) && (b != null)) {
 							int w = (int) MathUtils.calculateFromString(width);
 							int h = (int) MathUtils.calculateFromString(height);
-							b.func_230991_b_(w);
+							b.setWidth(w);
 							b.setHeight(h);;
 						}
 					}
@@ -236,67 +313,67 @@ public class MenuHandlerBase {
 						String posX = sec.getEntryValue("x");
 						String posY = sec.getEntryValue("y");
 						if (posX != null) {
-							posX = posX.replace("%guiwidth%", "" + e.getGui().field_230708_k_).replace("%guiheight%", "" + e.getGui().field_230709_l_);
+							posX = posX.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
 						}
 						if (posY != null) {
-							posY = posY.replace("%guiwidth%", "" + e.getGui().field_230708_k_).replace("%guiheight%", "" + e.getGui().field_230709_l_);
+							posY = posY.replace("%guiwidth%", "" + e.getGui().width).replace("%guiheight%", "" + e.getGui().height);
 						}
 						String orientation = sec.getEntryValue("orientation");
 						if ((orientation != null) && (posX != null) && (posY != null) && (b != null)) {
 							int x = (int) MathUtils.calculateFromString(posX);
 							int y = (int) MathUtils.calculateFromString(posY);
-							int w = e.getGui().field_230708_k_;
-							int h = e.getGui().field_230709_l_;
+							int w = e.getGui().width;
+							int h = e.getGui().height;
 
 							//TODO Remove deprecated "original" orientation
 							if (orientation.equalsIgnoreCase("original")) {
-								b.field_230690_l_ = b.field_230690_l_ + x;
-								b.field_230691_m_ = b.field_230691_m_ + y;
+								b.x = b.x + x;
+								b.y = b.y + y;
 							}
 							//-----------------------------
 							if (orientation.equalsIgnoreCase("top-left")) {
-								b.field_230690_l_ = x;
-								b.field_230691_m_ = y;
+								b.x = x;
+								b.y = y;
 							}
 							
 							if (orientation.equalsIgnoreCase("mid-left")) {
-								b.field_230690_l_ = x;
-								b.field_230691_m_ = (h / 2) + y;
+								b.x = x;
+								b.y = (h / 2) + y;
 							}
 							
 							if (orientation.equalsIgnoreCase("bottom-left")) {
-								b.field_230690_l_ = x;
-								b.field_230691_m_ = h + y;
+								b.x = x;
+								b.y = h + y;
 							}
 							//----------------------------
 							if (orientation.equalsIgnoreCase("top-centered")) {
-								b.field_230690_l_ = (w / 2) + x;
-								b.field_230691_m_ = y;
+								b.x = (w / 2) + x;
+								b.y = y;
 							}
 							
 							if (orientation.equalsIgnoreCase("mid-centered")) {
-								b.field_230690_l_ = (w / 2) + x;
-								b.field_230691_m_ = (h / 2) + y;
+								b.x = (w / 2) + x;
+								b.y = (h / 2) + y;
 							}
 							
 							if (orientation.equalsIgnoreCase("bottom-centered")) {
-								b.field_230690_l_ = (w / 2) + x;
-								b.field_230691_m_ = h + y;
+								b.x = (w / 2) + x;
+								b.y = h + y;
 							}
 							//-----------------------------
 							if (orientation.equalsIgnoreCase("top-right")) {
-								b.field_230690_l_ = w + x;
-								b.field_230691_m_ = y;
+								b.x = w + x;
+								b.y = y;
 							}
 							
 							if (orientation.equalsIgnoreCase("mid-right")) {
-								b.field_230690_l_ = w + x;
-								b.field_230691_m_ = (h / 2) + y;
+								b.x = w + x;
+								b.y = (h / 2) + y;
 							}
 							
 							if (orientation.equalsIgnoreCase("bottom-right")) {
-								b.field_230690_l_ = w + x;
-								b.field_230691_m_ = h + y;
+								b.x = w + x;
+								b.y = h + y;
 							}
 						}
 					}
@@ -309,7 +386,7 @@ public class MenuHandlerBase {
 								File f = new File(backNormal.replace("\\", "/"));
 								File f2 = new File(backHover.replace("\\", "/"));
 								if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
-									b.field_230694_p_ = false;
+									b.visible = false;
 									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
 								}
 							}
@@ -341,7 +418,7 @@ public class MenuHandlerBase {
 							String clicks = sec.getEntryValue("clicks");
 							if ((clicks != null) && (MathUtils.isInteger(clicks))) {
 								for (int i = 0; i < Integer.parseInt(clicks); i++) {
-									b.func_230982_a_(MouseInput.getMouseX(), MouseInput.getMouseY());
+									b.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
 								}
 							}
 						}
@@ -386,18 +463,30 @@ public class MenuHandlerBase {
 							frontRenderItems.add(new AnimationCustomizationItem(sec));
 						}
 					}
-					
+
 					if (action.equalsIgnoreCase("addbutton")) {
+						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
+						AdvancedButton cbtn = i.getButton();
+						String hide = sec.getEntryValue("hideforseconds");
+						
+						if (MenuHandlerRegistry.getLastActiveHandler() != this) {
+							if ((hide != null) && MathUtils.isDouble(hide) && (cbtn != null)) {
+								cbtn.visible = false;
+								hidefor.put(cbtn, Double.parseDouble(hide));
+							}
+						}
+						
 						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-							backgroundRenderItems.add(new ButtonCustomizationItem(sec));
+							backgroundRenderItems.add(i);
 						} else {
-							frontRenderItems.add(new ButtonCustomizationItem(sec));
+							frontRenderItems.add(i);
 						}
 					}
 					
 					if (action.equalsIgnoreCase("addaudio")) {
 						String path = sec.getEntryValue("path");
 						String loopString = sec.getEntryValue("loop");
+						
 						boolean loop = false; 
 						if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
 							loop = true;
@@ -440,6 +529,33 @@ public class MenuHandlerBase {
 		
 		if (!backgroundTextureSet) {
 			this.backgroundTexture = null;
+		}
+
+		for (Map.Entry<Widget, Double> m : this.hidefor.entrySet()) {
+			if (!hidden.contains(m.getKey())) {
+				
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						long start = System.currentTimeMillis();
+						float delay = (float) (1000.0 * m.getValue());
+						while (true) {
+							try {
+								long now = System.currentTimeMillis();
+								if (now >= start + (int)delay) {
+									m.getKey().visible = true;
+									return;
+								}
+								
+								Thread.sleep(50);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}).start();
+				
+			}
 		}
 	}
 
@@ -489,15 +605,15 @@ public class MenuHandlerBase {
 					Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 					
 					if (!this.panoramaback) {
-						IngameGui.func_238463_a_(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, e.getGui().field_230708_k_, e.getGui().field_230709_l_, e.getGui().field_230708_k_, e.getGui().field_230709_l_);
+						IngameGui.blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
 					} else {
 						int w = this.backgroundTexture.getWidth();
 						int h = this.backgroundTexture.getHeight();
 						double ratio = (double) w / (double) h;
-						int wfinal = (int)(e.getGui().field_230709_l_ * ratio);
+						int wfinal = (int)(e.getGui().height * ratio);
 
 						//Check if the panorama background should move to the left side or to the ride side
-						if ((panoPos + (wfinal - e.getGui().field_230708_k_)) <= 0) {
+						if ((panoPos + (wfinal - e.getGui().width)) <= 0) {
 							panoMoveBack = true;
 						}
 						if (panoPos >= 0) {
@@ -505,8 +621,8 @@ public class MenuHandlerBase {
 						}
 
 						//Fix pos after resizing
-						if (panoPos + (wfinal - e.getGui().field_230708_k_) < 0) {
-							panoPos = 0 - (wfinal - e.getGui().field_230708_k_);
+						if (panoPos + (wfinal - e.getGui().width) < 0) {
+							panoPos = 0 - (wfinal - e.getGui().width);
 						}
 						if (panoPos > 0) {
 							panoPos = 0;
@@ -521,7 +637,7 @@ public class MenuHandlerBase {
 									panoPos = panoPos - 0.5;
 								}
 								
-								if (panoPos + (wfinal - e.getGui().field_230708_k_) == 0) {
+								if (panoPos + (wfinal - e.getGui().width) == 0) {
 									panoStop = true;
 								}
 								if (panoPos == 0) {
@@ -538,11 +654,11 @@ public class MenuHandlerBase {
 								panoTick++;
 							}
 						}
-						if (wfinal <= e.getGui().field_230708_k_) {
-							IngameGui.func_238463_a_(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, e.getGui().field_230708_k_, e.getGui().field_230709_l_, e.getGui().field_230708_k_, e.getGui().field_230709_l_);
+						if (wfinal <= e.getGui().width) {
+							IngameGui.blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
 						} else {
 //							IngameGui.blit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height, wfinal, e.getGui().height);
-							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().field_230709_l_);
+							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height);
 						}
 					}
 					

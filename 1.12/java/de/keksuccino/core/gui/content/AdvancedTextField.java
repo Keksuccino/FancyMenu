@@ -133,6 +133,12 @@ public class AdvancedTextField extends GuiTextField {
 
 			return true;
 		} else {
+			
+			//Exclude keys like SHIFT, ENTER, TAB, etc.
+			if ((keyCode == 42) || (keyCode == 54) || (keyCode == 58) || (keyCode == 42) || (keyCode == 15) || (keyCode == 28) || (keyCode == 1)) {
+				return false;
+			}
+			
 			switch (keyCode) {
 			case 14:
 

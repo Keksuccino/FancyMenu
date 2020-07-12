@@ -1,5 +1,6 @@
 package de.keksuccino.core.gui.screens.popup;
 
+import de.keksuccino.core.input.MouseInput;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -17,16 +18,12 @@ public class PopupHandler {
 	}
 	
 	@SubscribeEvent
-	public static void onMouseInput(GuiScreenEvent.MouseClickedEvent.Pre e) {
-		if ((popup != null) && popup.isDisplayed()) {
-			e.setCanceled(true);
-		}
-	}
-	
-	@SubscribeEvent
 	public static void onRender(GuiScreenEvent.DrawScreenEvent.Post e) {
 		if ((popup != null) && popup.isDisplayed()) {
+			MouseInput.blockVanillaInput("popupgui");
 			popup.render(e.getMatrixStack(), e.getMouseX(), e.getMouseY(), e.getGui());
+		} else {
+			MouseInput.unblockVanillaInput("popupgui");
 		}
 	}
 	

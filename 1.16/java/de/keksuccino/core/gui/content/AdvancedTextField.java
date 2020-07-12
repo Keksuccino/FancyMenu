@@ -47,7 +47,7 @@ public class AdvancedTextField extends TextFieldWidget {
 	
 	//charTyped
 	@Override
-	public boolean func_231042_a_(char p_charTyped_1_, int p_charTyped_2_) {
+	public boolean charTyped(char p_charTyped_1_, int p_charTyped_2_) {
 		if (this.getVisible() && this.isFocused()) {
 			if ((this.filter == null) || this.filter.isAllowed(p_charTyped_1_)) {
 				if (this.isEnabled()) {
@@ -139,8 +139,8 @@ public class AdvancedTextField extends TextFieldWidget {
 	
 	//renderButton
 	@Override
-	public void func_230431_b_(MatrixStack matrix, int mouseX, int mouseY, float p_renderButton_3_) {
-		super.func_230431_b_(matrix, mouseX, mouseY, p_renderButton_3_);
+	public void renderButton(MatrixStack matrix, int mouseX, int mouseY, float p_renderButton_3_) {
+		super.renderButton(matrix, mouseX, mouseY, p_renderButton_3_);
 		
 		if (this.handle) {
 			if (this.tick > 7) {
@@ -151,7 +151,7 @@ public class AdvancedTextField extends TextFieldWidget {
 			}
 			
 			if (MouseInput.isLeftMouseDown() && !this.leftDown) {
-				super.func_231044_a_(mouseX, mouseY, 0);
+				super.mouseClicked(mouseX, mouseY, 0);
 				this.leftDown = true;
 			}
 			if (!MouseInput.isLeftMouseDown()) {
@@ -160,13 +160,8 @@ public class AdvancedTextField extends TextFieldWidget {
 		}
 	}
 	
-	//TODO remove later
-	public void renderButton(MatrixStack matrix, int mouseX, int mouseY, float p_renderButton_3_) {
-		this.func_230431_b_(matrix, mouseX, mouseY, p_renderButton_3_);
-	}
-	
 	public void onKeyPress(KeyboardData d) {
-		super.func_231046_a_(d.keycode, d.scancode, d.modfiers);
+		super.keyPressed(d.keycode, d.scancode, d.modfiers);
 	}
 	
 	public void onKeyReleased(KeyboardData d) {
@@ -174,39 +169,35 @@ public class AdvancedTextField extends TextFieldWidget {
 	}
 	
 	public void onCharTyped(CharData d) {
-		this.func_231042_a_(d.typedChar, d.modfiers);
+		this.charTyped(d.typedChar, d.modfiers);
 	}
 	
 	public int getWidth() {
-		return this.field_230688_j_;
+		return this.width;
 	}
 	
 	public void setWidth(int width) {
-		this.field_230688_j_ = width;
+		this.width = width;
 	}
 	
 	public int getX() {
-		return this.field_230690_l_;
+		return this.x;
 	}
 	
 	public void setX(int x) {
-		this.field_230690_l_ = x;
+		this.x = x;
 	}
 	
 	public int getY() {
-		return this.field_230691_m_;
+		return this.y;
 	}
 	
 	public void setY(int y) {
-		this.field_230691_m_ = y;
+		this.y = y;
 	}
-	
-	public boolean isFocused() {
-		return this.func_230999_j_();
-	}
-	
+
 	public void setFocused(boolean b) {
-		this.func_230996_d_(b);
+		this.setFocused(b);
 	}
 
 }

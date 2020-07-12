@@ -7,16 +7,20 @@ import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.core.sound.SoundHandler;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.loadingdarkmode.LoadingDarkmodeEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.DummyCoreMainHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.LanguageMenuHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MoreRefinedStorageMainHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.controls.ControlsMenuHandler;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.serverselection.ServerSelectionMenuHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.videosettings.VideoSettingsMenuHandler;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.worldselection.WorldSelectionMenuHandler;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.realms.RealmsScreenProxy;
 import net.minecraftforge.client.gui.NotificationModUpdateScreen;
@@ -34,11 +38,16 @@ public class MenuCustomization {
 			
 			//Registering all custom menu handlers
 			MenuHandlerRegistry.registerHandler(new MainMenuHandler());
-			MenuHandlerRegistry.registerHandler(new ControlsMenuHandler());
-			MenuHandlerRegistry.registerHandler(new LanguageMenuHandler());
-			MenuHandlerRegistry.registerHandler(new VideoSettingsMenuHandler());
-			
 			MenuHandlerRegistry.registerHandler(new MoreRefinedStorageMainHandler());
+			MenuHandlerRegistry.registerHandler(new DummyCoreMainHandler());
+			
+			if (!FancyMenu.config.getOrDefault("softmode", false)) {
+				MenuHandlerRegistry.registerHandler(new WorldSelectionMenuHandler());
+				MenuHandlerRegistry.registerHandler(new ServerSelectionMenuHandler());
+				MenuHandlerRegistry.registerHandler(new ControlsMenuHandler());
+				MenuHandlerRegistry.registerHandler(new LanguageMenuHandler());
+				MenuHandlerRegistry.registerHandler(new VideoSettingsMenuHandler());
+			}
 			
 			//Registering event to automatically register handlers for all menus (its necessary to do this AFTER registering custom handlers!)
 			MinecraftForge.EVENT_BUS.register(new MenuHandlerEvents());
@@ -48,7 +57,7 @@ public class MenuCustomization {
 			//Registering the update event for the button cache
 			MinecraftForge.EVENT_BUS.register(new ButtonCache());
 			
-			//Caching menu customization properties from config/fancymain/customization
+			//Caching menu customization properties from config/fancymenu/customization
 			MenuCustomizationProperties.loadProperties();
 			
 			LoadingDarkmodeEvents.init();
