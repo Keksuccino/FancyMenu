@@ -44,7 +44,6 @@ public class LayoutAnimation extends LayoutObject {
 		PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 			if (call.booleanValue()) {
 				this.handler.removeContent(this);
-				//TODO übernehmen;
 				if ((AdvancedAnimation)((AnimationCustomizationItem)this.object).renderer != null) {
 					((AdvancedAnimation)((AnimationCustomizationItem)this.object).renderer).stopAudio();
 				}

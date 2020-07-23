@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.mainwindow;
 
 import java.awt.image.BufferedImage;

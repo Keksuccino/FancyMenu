@@ -6,11 +6,11 @@ import java.util.function.Consumer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.content.AdvancedButton;
+import de.keksuccino.core.gui.screens.popup.FilePickerPopup;
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.gui.screens.popup.TextInputPopup;
 import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
@@ -31,21 +31,20 @@ public class ChooseFilePopup extends TextInputPopup {
 		super.init(color, title, filter, callback);
 		
 		this.chooseFileBtn = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.choosefile.choose"), true, (press) -> {
-			if (FancyMenu.isNotHeadless()) {
-				FileChooser.askForFile(new File("").getAbsoluteFile(), (call) -> {
-					if (call != null) {
-						String path = call.getAbsolutePath();
-						File home = new File("");
-						if (path.startsWith(home.getAbsolutePath())) {
-							path = path.replace(home.getAbsolutePath(), "");
-							if (path.startsWith("\\") || path.startsWith("/")) {
-								path = path.substring(1);
-							}
+			PopupHandler.displayPopup(new FilePickerPopup(new File("").getAbsoluteFile().getAbsolutePath(), null, this, (call) -> {
+				if (call != null) {
+					String path = call.getAbsolutePath();
+					File home = new File("");
+					if (path.startsWith(home.getAbsolutePath())) {
+						path = path.replace(home.getAbsolutePath(), "");
+						if (path.startsWith("\\") || path.startsWith("/")) {
+							path = path.substring(1);
 						}
-						this.setText(path);
 					}
-				}, fileTypes);
-			}
+					path = path.replace("\\", "/");
+					this.setText(path);
+				}
+			}, fileTypes));
 		});
 		this.addButton(chooseFileBtn);
 	}
@@ -70,10 +69,6 @@ public class ChooseFilePopup extends TextInputPopup {
 		
 		this.chooseFileBtn.x = (renderIn.width / 2) - (this.doneButton.getWidth() / 2);
 		this.chooseFileBtn.y = ((renderIn.height / 2) + 50) - this.doneButton.getHeight() - 5;
-		
-		if (!FancyMenu.isNotHeadless()) {
-			renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.choosefile.notsupported"), (renderIn.width / 2), ((renderIn.height / 2) + 50), Color.WHITE.getRGB());
-		}
 		
 		this.renderButtons(mouseX, mouseY);
 	}

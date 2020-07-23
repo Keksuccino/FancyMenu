@@ -136,7 +136,6 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 					}
 				});
 			}
-			//TODO übernehmen
 			if (buttonaction.equalsIgnoreCase("opencustomgui")) {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
 					if (CustomGuiLoader.guiExists(finalAction)) {
@@ -219,8 +218,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			e.printStackTrace();
 		}
 	}
-	
-	//TODO übernehmen
+
 	public AdvancedButton getButton() {
 		return this.button;
 	}

@@ -17,22 +17,12 @@ public class PopupHandler {
 		}
 	}
 	
-	//TODO übernehmen
-//	@SubscribeEvent
-//	public static void onMouseInput(GuiScreenEvent.MouseClickedEvent.Pre e) {
-//		if ((popup != null) && popup.isDisplayed()) {
-//			e.setCanceled(true);
-//		}
-//	}
-	
 	@SubscribeEvent
 	public static void onRender(GuiScreenEvent.DrawScreenEvent.Post e) {
 		if ((popup != null) && popup.isDisplayed()) {
-			//TODO übernehmen
 			MouseInput.blockVanillaInput("popupgui");
 			popup.render(e.getMouseX(), e.getMouseY(), e.getGui());
 		} else {
-			//TODO übernehmen
 			MouseInput.unblockVanillaInput("popupgui");
 		}
 	}
@@ -49,6 +39,9 @@ public class PopupHandler {
 	}
 	
 	public static void displayPopup(Popup p) {
+		if (popup != null) {
+			popup.setDisplayed(false);
+		}
 		popup = p;
 		popup.setDisplayed(true);
 	}

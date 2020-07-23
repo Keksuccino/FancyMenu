@@ -42,7 +42,6 @@ public class ButtonActionPopup extends Popup {
 				"openfile",
 				"prevbackground",
 				"nextbackground",
-				//TODO übernehmen
 				"opencustomgui");
 		this.actionSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.actionSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
@@ -91,7 +90,6 @@ public class ButtonActionPopup extends Popup {
 			
 			
 			String s = this.actionSwitcher.getSelectedValue();
-			//TODO übernehmen (opencustomgui)
 			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui")))) {
 				renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value")), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
 				

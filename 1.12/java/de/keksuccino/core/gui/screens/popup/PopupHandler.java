@@ -39,6 +39,9 @@ public class PopupHandler {
 	}
 	
 	public static void displayPopup(Popup p) {
+		if (popup != null) {
+			popup.setDisplayed(false);
+		}
 		popup = p;
 		popup.setDisplayed(true);
 	}

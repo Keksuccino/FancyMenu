@@ -233,7 +233,6 @@ public class AnimationHandler {
 	}
 	
 	public static void setupAnimations() {
-		//TODO übernehmen
 		if (!animations.isEmpty()) {
 			Screen s = null;
 			if (Minecraft.getInstance().currentScreen != null) {

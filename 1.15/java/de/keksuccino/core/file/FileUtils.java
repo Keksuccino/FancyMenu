@@ -18,7 +18,6 @@ import com.google.common.io.Files;
 
 public class FileUtils {
 
-	//TODO übernehmen
 	public static void writeTextToFile(File f, boolean append, String... text) throws IOException {
 		FileOutputStream fo = new FileOutputStream(f, append);
 		OutputStreamWriter os = new OutputStreamWriter(fo, StandardCharsets.UTF_8);
@@ -89,8 +88,7 @@ public class FileUtils {
 		
 		return list;
 	}
-	
-	//TODO übernehmen
+
 	public static String generateAvailableFilename(String dir, String baseName, String extension) {
 		File f = new File(dir);
 		if (!f.exists() && f.isDirectory()) {

@@ -61,7 +61,6 @@ public class BackgroundOptionsPopup extends Popup {
 			}
 			PopupHandler.displayPopup(cf);
 		});
-		//TODO übernehmen
 		this.addButton(chooseTextureButton);
 		
 		String ran = Locals.localize("helper.creator.backgroundoptions.random");
@@ -76,7 +75,6 @@ public class BackgroundOptionsPopup extends Popup {
 			press.setMessage("§a" + Locals.localize("helper.creator.backgroundoptions.random"));
 			this.notRandomButton.setMessage(Locals.localize("helper.creator.backgroundoptions.notrandom"));
 		});
-		//TODO übernehmen
 		this.addButton(randomButton);
 		
 		this.notRandomButton = new AdvancedButton(0, 0, 100, 20, nRan, true, (press) -> {
@@ -84,7 +82,6 @@ public class BackgroundOptionsPopup extends Popup {
 			press.setMessage("§a" + Locals.localize("helper.creator.backgroundoptions.notrandom"));
 			this.randomButton.setMessage(Locals.localize("helper.creator.backgroundoptions.random"));
 		});
-		//TODO übernehmen
 		this.addButton(notRandomButton);
 		
 		String pan = Locals.localize("helper.creator.backgroundoptions.panorama");
@@ -99,7 +96,6 @@ public class BackgroundOptionsPopup extends Popup {
 			press.setMessage("§a" + Locals.localize("helper.creator.backgroundoptions.panorama"));
 			this.noPanoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.nopanorama"));
 		});
-		//TODO übernehmen
 		this.addButton(panoramaButton);
 		
 		this.noPanoramaButton = new AdvancedButton(0, 0, 100, 20, nPan, true, (press) -> {
@@ -107,7 +103,6 @@ public class BackgroundOptionsPopup extends Popup {
 			press.setMessage("§a" + Locals.localize("helper.creator.backgroundoptions.nopanorama"));
 			this.panoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.panorama"));
 		});
-		//TODO übernehmen
 		this.addButton(noPanoramaButton);
 		
 		this.addRemoveAnimationButton = new AdvancedButton(0, 0, 100, 20, "", true, (press) -> {
@@ -125,7 +120,6 @@ public class BackgroundOptionsPopup extends Popup {
 				}
 			}
 		});
-		//TODO übernehmen
 		this.addButton(addRemoveAnimationButton);
 		
 		this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.done"), true, (press) -> {
@@ -165,10 +159,8 @@ public class BackgroundOptionsPopup extends Popup {
 					} else {
 						this.addRemoveAnimationButton.setMessage(Locals.localize("helper.creator.backgroundoptions.addanimation"));
 					}
-					//TODO übernehmen
 					this.addRemoveAnimationButton.visible = true;
 				} else {
-					//TODO übernehmen
 					this.addRemoveAnimationButton.visible = false;
 				}
 				
@@ -176,19 +168,12 @@ public class BackgroundOptionsPopup extends Popup {
 				
 				this.randomButton.x = (renderIn.width / 2) - this.randomButton.getWidth() - 5;
 				this.randomButton.y = (renderIn.height / 2) + 45;
-				//TODO übernehmen
-//				this.randomButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 				this.randomButton.visible = true;
-				//--------------
 				
 				this.notRandomButton.x = (renderIn.width / 2) + 5;
 				this.notRandomButton.y = (renderIn.height / 2) + 45;
-				//TODO übernehmen
-//				this.notRandomButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 				this.notRandomButton.visible = true;
-				//--------------
 
-				//TODO übernehmen
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
 				this.noPanoramaButton.visible = false;
@@ -197,28 +182,18 @@ public class BackgroundOptionsPopup extends Popup {
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundimage"))) {
 				this.chooseTextureButton.x = (renderIn.width / 2) - (this.chooseTextureButton.getWidth() / 2);
 				this.chooseTextureButton.y = (renderIn.height / 2) - 25;
-				//TODO übernehmen
-//				this.chooseTextureButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 				this.chooseTextureButton.visible = true;
-				//--------------
 
 				renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.setpanorama"), renderIn.width / 2, (renderIn.height / 2) + 13, Color.WHITE.getRGB());
 
 				this.panoramaButton.x = (renderIn.width / 2) - this.panoramaButton.getWidth() - 5;
 				this.panoramaButton.y = (renderIn.height / 2) + 30;
-				//TODO übernehmen
-//				this.panoramaButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 				this.panoramaButton.visible = true;
-				//--------------
 
 				this.noPanoramaButton.x = (renderIn.width / 2) + 5;
 				this.noPanoramaButton.y = (renderIn.height / 2) + 30;
-				//TODO übernehmen
-//				this.noPanoramaButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 				this.noPanoramaButton.visible = true;
-				//--------------
 				
-				//TODO übernehmen
 				this.addRemoveAnimationButton.visible = false;
 				this.randomButton.visible = false;
 				this.notRandomButton.visible = false;

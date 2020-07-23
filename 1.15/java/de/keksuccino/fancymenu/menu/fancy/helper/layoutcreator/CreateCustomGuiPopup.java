@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.awt.Color;

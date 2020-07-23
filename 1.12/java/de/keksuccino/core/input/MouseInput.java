@@ -5,8 +5,11 @@ import java.awt.image.DataBufferInt;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Cursor;
@@ -28,6 +31,8 @@ public class MouseInput {
 	private static boolean leftClicked = false;
 	private static boolean rightClicked  = false;
 	private static Map<String, Boolean> vanillainput = new HashMap<String, Boolean>();
+	
+	private static List<Consumer<MouseData>> listeners = new ArrayList<Consumer<MouseData>>();
 	
 	public static void init() {
 		VRESIZE_CURSOR = loadCursor(new ResourceLocation("keksuccino", "cursor/vresize.png"), 32, 32, 16, 16);
@@ -119,8 +124,17 @@ public class MouseInput {
 		return vanillainput.containsValue(true);
 	}
 	
+	public static void registerMouseListener(Consumer<MouseData> c) {
+		listeners.add(c);
+	}
+	
 	@SubscribeEvent
 	public void onMouseClicked(GuiScreenEvent.MouseInputEvent.Pre e) {
+		
+		for (Consumer<MouseData> c : listeners) {
+			c.accept(new MouseData(getMouseX(), getMouseY(), Mouse.getEventDX(), Mouse.getEventDY(), Mouse.getEventDWheel()));
+		}
+		
 		int i = Mouse.getEventButton();
 		if ((i == 0) && Mouse.getEventButtonState()) {
 			leftClicked = true;
@@ -145,6 +159,23 @@ public class MouseInput {
 		//Reset values on screen init
 		leftClicked = false;
 		rightClicked = false;
+	}
+	
+	public static class MouseData {
+		public int deltaX;
+		public int deltaY;
+		public int deltaZ;
+		
+		public int mouseX;
+		public int mouseY;
+		
+		public MouseData(int mouseX, int mouseY, int deltaX, int deltaY, int deltaZ) {
+			this.deltaX = deltaX;
+			this.deltaY = deltaY;
+			this.deltaZ = deltaZ;
+			this.mouseX = mouseX;
+			this.mouseY = mouseY;
+		}
 	}
 
 }

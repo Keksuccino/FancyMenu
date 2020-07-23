@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 public class DummyCoreMainHandler extends MainMenuHandler {

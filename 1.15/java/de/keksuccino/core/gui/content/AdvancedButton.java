@@ -19,10 +19,8 @@ public class AdvancedButton extends Button {
 
 	private boolean handleClick = false;
 	private static boolean leftDown = false;
-	//TODO übernehmen
 	private boolean leftDownNotHovered = false;
 	public boolean ignoreBlockedInput = false;
-	//-------
 	private boolean useable = true;
 	
 	private Color idleColor;
@@ -93,7 +91,6 @@ public class AdvancedButton extends Button {
 			this.drawCenteredString(font, this.getMessage(), this.x + this.width / 2, this.y + (this.height - 8) / 2, getFGColor());
 		}
 
-		//TODO übernehmen
 		if (!this.isHovered() && MouseInput.isLeftMouseDown()) {
 			this.leftDownNotHovered = true;
 		}
@@ -102,7 +99,6 @@ public class AdvancedButton extends Button {
 		}
 		
 		if (this.handleClick && this.useable) {
-			//TODO übernehmen
 			if (this.isHovered() && MouseInput.isLeftMouseDown() && !leftDown && !leftDownNotHovered && !this.isInputBlocked()) {
 				this.onClick(mouseX, mouseY);
 				this.playDownSound(Minecraft.getInstance().getSoundHandler());
@@ -113,8 +109,7 @@ public class AdvancedButton extends Button {
 			}
 		}
 	}
-	
-	//TODO übernehmen
+
 	private boolean isInputBlocked() {
 		if (this.ignoreBlockedInput) {
 			return false;
@@ -190,8 +185,7 @@ public class AdvancedButton extends Button {
 	public void setHandleClick(boolean b) {
 		this.handleClick = b;
 	}
-	
-	//TODO übernehmen
+
 	public static boolean isAnyButtonLeftClicked() {
 		return leftDown;
 	}

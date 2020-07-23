@@ -12,9 +12,7 @@ public class PopupMenu implements IMenu {
 	private int buttonHeight;
 	private int x = 0;
 	private int y = 0;
-	//TODO übernehmen
 	protected List<AdvancedButton> content = new ArrayList<AdvancedButton>();
-	//--------
 	private List<PopupMenu> children = new ArrayList<PopupMenu>();
 	private PopupMenu parent;
 	private boolean opened = false;
@@ -147,7 +145,6 @@ public class PopupMenu implements IMenu {
 	}
 	
 	public void openMenuAt(int x, int y) {
-		//TODO übernehmen
 		for (PopupMenu m : this.children) {
 			m.closeMenu();
 		}
@@ -181,7 +178,6 @@ public class PopupMenu implements IMenu {
 	}
 	
 	public void addContent(AdvancedButton button) {
-		//TODO übernehmen
 		button.ignoreBlockedInput = true;
 		this.content.add(button);
 	}

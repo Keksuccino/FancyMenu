@@ -1,13 +1,8 @@
 package de.keksuccino.fancymenu;
 
-import java.awt.GraphicsEnvironment;
-import java.awt.Toolkit;
 import java.io.File;
-import java.lang.reflect.Field;
-
 import de.keksuccino.core.config.Config;
 import de.keksuccino.core.config.exceptions.InvalidValueException;
-import de.keksuccino.core.filechooser.FileChooser;
 import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.core.input.MouseInput;
@@ -21,10 +16,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
-import de.keksuccino.fancymenu.menu.systemtray.FancyMenuTray;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -33,8 +25,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.4.1";
-	private static boolean isNotHeadless = false;
+	public static final String VERSION = "1.4.2";
 	
 	public static Config config;
 	
@@ -44,7 +35,6 @@ public class FancyMenu {
 	
 	public FancyMenu() {
 		try {
-			
 			//Check if FancyMenu was loaded client- or serverside
 	    	if (FMLEnvironment.dist == Dist.CLIENT) {
 	    		
@@ -77,20 +67,6 @@ public class FancyMenu {
 	        	if (config.getOrDefault("enablehotkeys", true)) {
 	        		Keybinding.init();
 	        	}
-
-	        	if (!config.getOrDefault("safemode", false) && !Minecraft.IS_RUNNING_ON_MAC && !ModList.get().isLoaded("findme")) {
-	        		isNotHeadless = this.escapeHeadless();
-		        	
-		        	if (config.getOrDefault("enablesystemtray", true) && isRunningOnWindows() && isNotHeadless) {
-		        		FancyMenuTray.init();
-		        	}
-		        	
-		        	if (isNotHeadless) {
-		        		FileChooser.init();
-		        	}
-	        	} else {
-	        		System.out.println("## INFO ## LAUNCHING 'FANCYMENU' IN SAFEMODE! (FILECHOOSER AND SYSTEM TRAY ARE DISABLED IN THIS MODE)");
-	        	}
 	        	
 	        	FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onClientSetup);
 	        	
@@ -118,48 +94,12 @@ public class FancyMenu {
 			ex.printStackTrace();
 		}
 	}
-	
-	//If anyone knows how to do this in a less ugly way, PLEASE TELL ME..
-	private boolean escapeHeadless() {
-    	try {
-			System.setProperty("java.awt.headless", "false");
-			System.setProperty("Djava.awt.headless", "false");
-			System.setProperty("-Djava.awt.headless", "false");
-			
-			Field f = GraphicsEnvironment.class.getDeclaredField("headless");
-			f.setAccessible(true);
-			f.set(GraphicsEnvironment.getLocalGraphicsEnvironment(), false);
-			
-			Field f2 = Toolkit.class.getDeclaredField("toolkit");
-			f2.setAccessible(true);
-			f2.set(Toolkit.class, null);
-			
-			Toolkit.getDefaultToolkit();
-			
-			return true;
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-    	return false;
-	}
-	
-	public static boolean isRunningOnWindows() {
-		String os = System.getProperty("os.name");
-		if (os != null) {
-			if (os.toLowerCase().startsWith("windows")) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public static void updateConfig() {
     	try {
     		config = new Config("config/fancymenu/config.txt");
-    		
-    		config.registerValue("enablesystemtray", true, "general", "ONLY AVAILABLE ON WINDOWS! A minecraft restart is required after changing this value.");
+
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
-    		config.registerValue("safemode", false, "general", "Maximizes compatibility with the operating system. Disables file chooser and system tray. A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
@@ -187,9 +127,7 @@ public class FancyMenu {
 			config.syncConfig();
 			
 			//Updating all categorys at start to keep them synchronized with older config files
-			config.setCategory("enablesystemtray", "general");
 			config.setCategory("enablehotkeys", "general");
-			config.setCategory("safemode", "general");
 			config.setCategory("playmenumusic", "general");
     		
 			config.setCategory("showcustomizationbuttons", "customization");
@@ -239,10 +177,6 @@ public class FancyMenu {
 			customGuiPath.mkdirs();
 		}
 		return customGuiPath;
-	}
-	
-	public static boolean isNotHeadless() {
-		return isNotHeadless;
 	}
 
 }

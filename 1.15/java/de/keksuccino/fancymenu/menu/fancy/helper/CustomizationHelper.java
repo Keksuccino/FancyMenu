@@ -35,6 +35,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
@@ -47,29 +48,24 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class CustomizationHelper {
 	
 	private static CustomizationHelper instance;
-	
-	//TODO übernehmen
+
 	private AdvancedButton dropdownButton;
 	private PopupMenu dropdown;
 	private PopupMenu overridePopup;
 	private PopupMenu customGuisPopup;
 	private ManageCustomGuiPopupMenu manageCustomGuiPopup;
-	//--------
 	private boolean showButtonInfo = false;
 	private boolean showMenuInfo = false;
 	private List<Widget> buttons = new ArrayList<Widget>();
 	private AdvancedButton buttonInfoButton;
 	private AdvancedButton menuInfoButton;
-	//TODO übernehmen
 	private AdvancedButton reloadButton;
 	private AdvancedButton overrideButton;
 	private AdvancedButton customGuisButton;
 	
 	public Screen current;
-	//TODO übernehmen
-//	private int lastWidth;
-//	private int lastHeight;
-//	private List<AdvancedButton> helperbuttons = new ArrayList<AdvancedButton>();
+	
+	private Color menuinfoBackground = new Color(0, 0, 0, 240);
 	
 	public static void init() {
 		instance = new CustomizationHelper();
@@ -82,8 +78,7 @@ public class CustomizationHelper {
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
-		
-		//TODO übernehmen
+
 		if (this.dropdown != null) {
 			this.dropdown.closeMenu();
 		}
@@ -96,9 +91,6 @@ public class CustomizationHelper {
 		this.current = e.getGui();
 
 		this.handleWidgetsUpdate(e.getWidgetList());
-		
-		//TODO übernehmen
-//		if ((this.lastWidth != e.getGui().width) || (this.lastHeight != e.getGui().height)) {
 			
 		String infoLabel = Locals.localize("helper.button.buttoninfo");
 		if (this.showButtonInfo) {
@@ -111,7 +103,6 @@ public class CustomizationHelper {
 
 		String minfoLabel = Locals.localize("helper.button.menuinfo");
 		if (this.showMenuInfo) {
-			//TODO übernehmen
 			minfoLabel = "§a" + Locals.localize("helper.button.menuinfo");
 		}
 		AdvancedButton miButton = new CustomizationButton(80, 5, 70, 20, minfoLabel, true, (onPress) -> {
@@ -119,7 +110,6 @@ public class CustomizationHelper {
 		});
 		this.menuInfoButton = miButton;
 
-		//TODO übernehmen
 		this.reloadButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.button.reload"), true, (onPress) -> {
 			onReloadButtonPress();
 		});
@@ -140,13 +130,11 @@ public class CustomizationHelper {
 		});
 
 		AdvancedButton editLayoutButton = new CustomizationButton(e.getGui().width - 245, 5, 90, 20, Locals.localize("helper.creator.editlayout"), true, (onPress) -> {
-			//TODO übernehmen
 			String identifier = this.current.getClass().getName();
 			if (this.current instanceof CustomGuiBase) {
 				identifier = ((CustomGuiBase) this.current).getIdentifier();
 			}
 			List<PropertiesSet> l = MenuCustomizationProperties.getPropertiesWithIdentifier(identifier);
-			//-------------------
 			if (l.isEmpty()) {
 				PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.creator.editlayout.nolayouts.msg")));
 			}
@@ -173,7 +161,6 @@ public class CustomizationHelper {
 			}
 		});
 
-		//TODO übernehmen
 		String overrLabel = Locals.localize("helper.buttons.tools.overridemenu");
 		if (this.isScreenOverridden()) {
 			overrLabel = Locals.localize("helper.buttons.tools.resetoverride");
@@ -282,13 +269,11 @@ public class CustomizationHelper {
 				}
 			}
 		});
-		
-		//TODO übernehmen
+
 		AdvancedButton createGuiButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.buttons.tools.creategui"), true, (onPress) -> {
 			PopupHandler.displayPopup(new CreateCustomGuiPopup());
 		});
-		
-		//TODO übernehmen
+
 		this.manageCustomGuiPopup = new ManageCustomGuiPopupMenu(100, 20, -1);
 		this.customGuisPopup = new PopupMenu(100, 20, -1);
 		List<String> l = CustomGuiLoader.getCustomGuis();
@@ -354,8 +339,7 @@ public class CustomizationHelper {
 		} else {
 			this.customGuisPopup.addContent(new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), true, (press) -> {}));
 		}
-		
-		//TODO übernehmen
+
 		this.customGuisButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.buttons.tools.customguis"), true, (press) -> {
 			this.customGuisPopup.openMenuAt(press.x - this.customGuisPopup.getWidth() - 2, press.y);
 		});
@@ -364,7 +348,6 @@ public class CustomizationHelper {
 			e.getGui().onClose();
 		});
 
-		//TODO übernehmen
 		this.dropdown = new PopupMenu(100, 20, -1);
 
 		this.dropdown.addContent(iButton);
@@ -388,7 +371,7 @@ public class CustomizationHelper {
 				this.dropdown.closeMenu();
 			}
 		});
-		//------------------
+
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
@@ -399,8 +382,7 @@ public class CustomizationHelper {
 		if (!isValidScreen(e.getGui())) {
 			return;
 		}
-		
-		//TODO übernehmen
+
 		if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 			this.dropdownButton.render(e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
 			this.reloadButton.render(e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
@@ -443,15 +425,26 @@ public class CustomizationHelper {
 		}
 		
 		if (this.showMenuInfo && !(e.getGui() instanceof LayoutCreatorScreen)) {
-			RenderSystem.enableBlend();
-			//TODO übernehmen
-			e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":", 5, 5, 0);
+			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
+			String id = "";
 			if (e.getGui() instanceof CustomGuiBase) {
-				e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f" + ((CustomGuiBase)e.getGui()).getIdentifier(), 5, 15, 0);
+				id = "§f" + ((CustomGuiBase)e.getGui()).getIdentifier();
 			} else {
-				e.getGui().drawString(Minecraft.getInstance().fontRenderer, "§f" + e.getGui().getClass().getName(), 5, 15, 0);
+				id = "§f" + e.getGui().getClass().getName();
 			}
-			//------------
+			int w = Minecraft.getInstance().fontRenderer.getStringWidth(infoTitle);
+			int w2 = Minecraft.getInstance().fontRenderer.getStringWidth(id);
+			if (w2 > w) {
+				w = w2;
+			}
+			
+			RenderSystem.enableBlend();
+			
+			AbstractGui.fill(3, 3, 3 + w + 4, 25, this.menuinfoBackground.getRGB());
+			
+			e.getGui().drawString(Minecraft.getInstance().fontRenderer, infoTitle, 5, 5, 0);
+			e.getGui().drawString(Minecraft.getInstance().fontRenderer, id, 5, 15, 0);
+			
 			RenderSystem.disableBlend();
 		}
 
@@ -573,10 +566,8 @@ public class CustomizationHelper {
 		FancyMenu.updateConfig();
 		MenuCustomization.resetSounds();
 		MenuCustomization.reload();
-		//TODO übernehmen
 		MenuHandlerRegistry.setActiveHandler(null);
 		CustomGuiLoader.loadCustomGuis();
-		//----------
 		if (!FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 			this.showButtonInfo = false;
 			this.showMenuInfo = false;
@@ -603,16 +594,14 @@ public class CustomizationHelper {
 	private static int getButtonId(Widget w) {
 		return ButtonCache.getIdForButton(w);
 	}
-	
-	//TODO übernehmen
+
 	private boolean isScreenOverridden() {
 		if ((this.current != null) && (this.current instanceof CustomGuiBase) && (((CustomGuiBase)this.current).getOverriddenScreen() != null)) {
 			return true;
 		}
 		return false;
 	}
-	
-	//TODO übernehmen
+
 	private void onOverrideWithCustomGui(String customGuiIdentifier) {
 		if ((customGuiIdentifier != null) && CustomGuiLoader.guiExists(customGuiIdentifier)) {
 			PropertiesSection meta = new PropertiesSection("customization-meta");
@@ -638,8 +627,7 @@ public class CustomizationHelper {
 			this.onReloadButtonPress();
 		}
 	}
-	
-	//TODO übernehmen
+
 	private static class ManageCustomGuiPopupMenu extends PopupMenu {
 
 		public ManageCustomGuiPopupMenu(int width, int buttonHeight, int space) {

@@ -77,8 +77,7 @@ public class PropertiesSerializer {
 		}
 		return null;
 	}
-	
-	//TODO übernehmen
+
 	public static void writeProperties(PropertiesSet props, String path) {
 		try {
 			List<PropertiesSection> l = props.getProperties();

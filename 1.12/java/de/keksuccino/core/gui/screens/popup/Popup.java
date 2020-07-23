@@ -10,7 +10,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 
-public abstract class Popup {
+public abstract class Popup extends Gui {
 	
 	private boolean displayed = false;
 	private int alpha;

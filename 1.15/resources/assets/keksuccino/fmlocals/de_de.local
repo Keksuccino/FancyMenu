@@ -249,3 +249,7 @@ helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Menü I
 helper.creator.items.button.delayappearance = Erscheinen verzögern
 helper.creator.items.button.delayappearance.desc = Erscheinen um Sekunden verzögern [Dezimalwert-Unterstützung]
 helper.creator.items.button.delayappearance.invalidvalue = §c§lUngültiger Wert!%n%%n%%n%Das ist kein gültiger Sekundenwert!%n%Vielleicht ist dein Wert zu lang. (..SEI DA NICHT STOLZ DRAUF!)%n%%n%Beispiele für Werte: 3, 2.0, 0.05, 0.8, 10.5
+
+popup.choosefile.back = ZURÜCK
+popup.choosefile.title = Datei wählen
+popup.choosefile.choose = Wählen

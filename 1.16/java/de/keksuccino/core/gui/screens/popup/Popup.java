@@ -9,10 +9,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 
-public abstract class Popup {
+public abstract class Popup extends AbstractGui {
 	
 	private boolean displayed = false;
 	private int alpha;
@@ -27,7 +27,7 @@ public abstract class Popup {
 			return;
 		}
 		RenderSystem.enableBlend();
-		IngameGui.fill(matrix, 0, 0, renderIn.width, renderIn.height, new Color(0, 0, 0, this.alpha).getRGB());
+		fill(matrix, 0, 0, renderIn.width, renderIn.height, new Color(0, 0, 0, this.alpha).getRGB());
 		RenderSystem.disableBlend();
 	}
 	

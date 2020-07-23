@@ -12,14 +12,11 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class MouseInput {
-	
-	//TODO übernehmen
+
 	private static boolean leftClicked = false;
 	private static boolean rightClicked  = false;
 	private static Map<String, Boolean> vanillainput = new HashMap<String, Boolean>();
-	//-------------
-	
-	//TODO übernehmen
+
 	public static void init() {
 		MinecraftForge.EVENT_BUS.register(new MouseInput());
 	}
@@ -34,28 +31,23 @@ public class MouseInput {
 		}
 		return b;
 	}
-	
-	//TODO übernehmen
+
 	public static boolean isLeftMouseDown() {
 		return leftClicked;
 	}
 
-	//TODO übernehmen
 	public static boolean isRightMouseDown() {
 		return rightClicked;
 	}
 	
 	public static int getMouseX() {
-		//TODO übernehmen
-//		Minecraft.getInstance().mouseHelper.getMouseX();
 		return (int)(Minecraft.getInstance().mouseHelper.getMouseX() * (double)Minecraft.getInstance().getMainWindow().getScaledWidth() / (double)Minecraft.getInstance().getMainWindow().getWidth());
 	}
 	
 	public static int getMouseY() {
 		return (int)(Minecraft.getInstance().mouseHelper.getMouseY() * (double)Minecraft.getInstance().getMainWindow().getScaledHeight() / (double)Minecraft.getInstance().getMainWindow().getHeight());
 	}
-	
-	//TODO übernehmen
+
 	public static void blockVanillaInput(String category) {
 		vanillainput.put(category, true);
 	}
@@ -100,6 +92,5 @@ public class MouseInput {
 		leftClicked = false;
 		rightClicked = false;
 	}
-	//-------------------
 
 }

@@ -173,7 +173,6 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				r.close();
 				
 			} catch (Exception e) {
-				//TODO übernehmen
 				this.lines.clear();
 				this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
 				e.printStackTrace();
@@ -181,7 +180,6 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			
 			return true;
 		} else {
-			//TODO übernehmen
 			this.lines.clear();
 			this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
 			

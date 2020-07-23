@@ -121,8 +121,7 @@ public class ButtonCache {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		//TODO übernehmen
+
 		buttons.clear();
 		int i = 1;
 		for (Widget w : sortButtons(l)) {

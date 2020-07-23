@@ -24,8 +24,7 @@ public class MenuHandlerRegistry {
 	public static MenuHandlerBase getLastActiveHandler() {
 		return lastActiveHandler;
 	}
-	
-	//TODO übernehmen
+
 	public static void setActiveHandler(String menuIdentifier) {
 		if (menuIdentifier == null) {
 			lastActiveHandler = null;

@@ -88,8 +88,7 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 		this.blit(k1, i1, 0, 0, 256, 256);
 		float f3 = this.asyncReloader.estimateExecutionSpeed();
 		this.f1 = MathHelper.clamp(this.f1 * 0.95F + f3 * 0.050000012F, 0.0F, 1.0F);
-		
-		//TODO übernehmen
+
 		this.renderForgeStatusMessages();
 		
 		if (f < 1.0F) {
@@ -153,7 +152,6 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 		return false;
 	}
 	
-	//TODO übernehmen
 	//Forge status render stuff ---->
 	private static float[] forgestatuscolor = new float[] {1.0f, 1.0f, 1.0f};
 	private void renderForgeStatusMessages() {

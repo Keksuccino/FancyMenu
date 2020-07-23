@@ -87,9 +87,7 @@ public class LayoutCreatorScreen extends Screen {
 	protected Map<Integer, Integer> vanillaButtonClicks = new HashMap<Integer, Integer>();
 	protected Map<Integer, String> vanillaHoverLabels = new HashMap<Integer, String>();
 	protected Map<Integer, String> vanillaHoverSounds = new HashMap<Integer, String>();
-	//TODO übernehmen
 	protected Map<Integer, Double> vanillaHideFor = new HashMap<Integer, Double>();
-	//---------
 	protected LayoutObject focused = null;
 	protected int hiddenIndicatorTick = 0;
 	protected int hiddenIndicatorCount = 0;
@@ -134,11 +132,9 @@ public class LayoutCreatorScreen extends Screen {
 	protected String maximumMC;
 	protected String minimumFM;
 	protected String maximumFM;
-	
-	//TODO übernehmen
+
 	private Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
 	private LayoutObject topObject;
-	//----
 	
 	public LayoutCreatorScreen(Screen screenToCustomize) {
 		super(new StringTextComponent(""));
@@ -152,8 +148,7 @@ public class LayoutCreatorScreen extends Screen {
 	protected void init() {
 		this.focused = null;
 		this.updateContent();
-		
-		//TODO übernehmen
+
 		this.focusChangeBlocker.clear();
 		
 		for (IMenu m : this.menus) {
@@ -478,7 +473,6 @@ public class LayoutCreatorScreen extends Screen {
 				continue;
 			}
 			PropertiesSection sec = l.get(0);
-			//TODO übernehmen
 			if (sec.getEntryValue("identifier").equals(this.getScreenToCustomizeIdentifier())) {
 				File cusFile = new File(sec.getEntryValue("path"));
 				if (cusFile.exists()) {
@@ -504,7 +498,6 @@ public class LayoutCreatorScreen extends Screen {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
 		
 		PropertiesSection meta = new PropertiesSection("customization-meta");
-		//TODO übernehmen
 		meta.addEntry("identifier", this.getScreenToCustomizeIdentifier());
 		meta.addEntry("renderorder", this.renderorder);
 		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
@@ -567,8 +560,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		return l;
 	}
-	
-	//TODO übernehmen
+
 	protected void saveToCustomizationFile(String fileName) throws IOException {
 		List<PropertiesSection> l = this.getAllProperties();
 		PropertiesSet props = new PropertiesSet("menu");
@@ -578,8 +570,7 @@ public class LayoutCreatorScreen extends Screen {
 		
 		PropertiesSerializer.writeProperties(props, FancyMenu.getCustomizationPath().getPath() + "/" + fileName);
 	}
-	
-	//TODO übernehmen
+
 	protected String generateCustomizationFileName(String dir, String baseName) {
 		return FileUtils.generateAvailableFilename(dir, baseName, "txt");
 	}
@@ -642,11 +633,9 @@ public class LayoutCreatorScreen extends Screen {
 				if (this.vanillaButtonClicks.containsKey(b.getId())) {
 					v.clicks = this.vanillaButtonClicks.get(b.getId()); 
 				}
-				//TODO übernehmen
 				if (this.vanillaHideFor.containsKey(b.getId())) {
 					v.hideforsec = this.vanillaHideFor.get(b.getId()); 
 				}
-				//--------
 				if (this.vanillaHoverLabels.containsKey(b.getId())) {
 					v.hoverLabel = this.vanillaHoverLabels.get(b.getId()); 
 				}
@@ -675,8 +664,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		return false;
 	}
-	
-	//TODO übernehmen
+
 	public boolean isHidden(LayoutObject b) {
 		return this.hidden.contains(b);
 	}
@@ -803,8 +791,7 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 	}
-	
-	//TODO übernehmen
+
 	public void setVanillaHideFor(LayoutVanillaButton button, double seconds) {
 		this.vanillaHideFor.put(button.button.getId(), seconds);
 	}
@@ -828,8 +815,7 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 	}
-	
-	//TODO übernehmen
+
 	public void hideVanillaButton(LayoutVanillaButton b) {
 		if (!this.hidden.contains(b) && this.content.contains(b)) {
 			this.hidden.add(b);
@@ -886,16 +872,14 @@ public class LayoutCreatorScreen extends Screen {
 			this.updateContent();
 		}
 	}
-	
-	//TODO übernehmen
+
 	public List<LayoutObject> getContent() {
 		return this.content;
 	}
 	
 	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
-		
-		//TODO übernehmen
+
 		//Handle object focus and update the top hovered object
 		if (!MouseInput.isVanillaInputBlocked()) {
 			if ((this.focused != null) && !this.focused.isHovered() && !this.focused.isDragged() && !this.focused.isGrabberPressed() && !this.focused.isGettingResized() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
@@ -1159,8 +1143,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		return (this.focused == object);
 	}
-	
-	//TODO übernehmen
+
 	public void setObjectFocused(LayoutObject object, boolean b, boolean ignoreBlockedFocusChange) {
 		if (this.isFocusChangeBlocked() && !ignoreBlockedFocusChange) {
 			return;
@@ -1181,8 +1164,7 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 	}
-	
-	//TODO übernehmen
+
 	public LayoutObject getFocusedObject() {
 		return this.focused;
 	}
@@ -1424,7 +1406,6 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		if ((i == 1) || (i == 2)) {
 			try {
-				//TODO übernehmen
 				String name = this.getScreenToCustomizeIdentifier();
 				if (name.contains(".")) {
 					name = new StringBuilder(new StringBuilder(name).reverse().toString().split("[.]", 2)[0]).reverse().toString();
@@ -1476,8 +1457,7 @@ public class LayoutCreatorScreen extends Screen {
 	public Screen getScreenToCustomize() {
 		return this.screen;
 	}
-	
-	//TODO übernehmen
+
 	public String getScreenToCustomizeIdentifier() {
 		if (!(this.screen instanceof CustomGuiBase)) {
 			return this.screen.getClass().getName();
@@ -1485,13 +1465,11 @@ public class LayoutCreatorScreen extends Screen {
 			return ((CustomGuiBase)this.screen).getIdentifier();
 		}
 	}
-	
-	//TODO übernehmen
+
 	public void setFocusChangeBlocked(String id, Boolean b) {
 		this.focusChangeBlocker.put(id, b);
 	}
-	
-	//TODO übernehmen
+
 	public boolean isFocusChangeBlocked() {
 		return this.focusChangeBlocker.containsValue(true);
 	}

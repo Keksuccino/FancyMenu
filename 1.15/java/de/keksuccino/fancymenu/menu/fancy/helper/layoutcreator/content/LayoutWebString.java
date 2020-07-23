@@ -93,8 +93,7 @@ public class LayoutWebString extends LayoutObject {
 		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale();
 	}
-	
-	//TODO übernehmen
+
 	@Override
 	protected void renderHighlightBorder() {
 		Color c = new Color(0, 200, 255, 255);

@@ -8,10 +8,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
 
-public abstract class Popup {
+public abstract class Popup extends AbstractGui {
 	
 	private boolean displayed = false;
 	private int alpha;
@@ -45,7 +46,6 @@ public abstract class Popup {
 	protected void addButton(AdvancedButton b) {
 		if (!this.buttons.contains(b)) {
 			this.buttons.add(b);
-			//TODO übernehmen
 			b.ignoreBlockedInput = true;
 			this.colorizePopupButton(b);
 		}

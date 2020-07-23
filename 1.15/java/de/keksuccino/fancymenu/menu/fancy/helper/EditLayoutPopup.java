@@ -96,7 +96,6 @@ public class EditLayoutPopup extends Popup {
 				PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.creator.editlayout.unsupportedvalues")));
 			}
 		});
-		//TODO übernehmen
 		this.addButton(loadAllButton);
 		
 		this.loadLayoutButton = new AdvancedButton(0, 0, 120, 20, Locals.localize("helper.creator.editlayout.popup.loadselected"), true, (press) -> {
@@ -125,13 +124,11 @@ public class EditLayoutPopup extends Popup {
 				}
 			}
 		});
-		//TODO übernehmen
 		this.addButton(loadLayoutButton);
 		
 		this.cancelButton = new AdvancedButton(0, 0, 120, 20, Locals.localize("helper.creator.editlayout.popup.cancel"), true, (press) -> {
 			this.setDisplayed(false);
 		});
-		//TODO übernehmen
 		this.addButton(cancelButton);
 	}
 
@@ -155,9 +152,6 @@ public class EditLayoutPopup extends Popup {
 			
 			this.loadAllButton.x = (renderIn.width / 2) - (this.loadAllButton.getWidth() / 2);
 			this.loadAllButton.y = startY;
-			//TODO übernehmen
-//			this.loadAllButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
-			
 			
 			renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.editlayout.popup.layouts"),
 					renderIn.width / 2, startY + 37, Color.WHITE.getRGB());
@@ -180,13 +174,9 @@ public class EditLayoutPopup extends Popup {
 			
 			this.loadLayoutButton.x = (renderIn.width / 2) - this.loadLayoutButton.getWidth() - 5;
 			this.loadLayoutButton.y = startY + 95;
-			//TODO übernehmen
-//			this.loadLayoutButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 			
 			this.cancelButton.x = (renderIn.width / 2) + 5;
 			this.cancelButton.y = startY + 95;
-			//TODO übernehmen
-//			this.cancelButton.render(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 			
 			this.renderButtons(mouseX, mouseY);
 		}

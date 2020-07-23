@@ -70,12 +70,10 @@ public class MenuHandlerBase {
 	private double panoPos = 0.0;
 	private boolean panoMoveBack = false;
 	private boolean panoStop = false;
-	
-	//TODO übernehmen
+
 	private Map<Widget, Double> hidefor = new HashMap<Widget, Double>();
 	private List<Widget> hidden = new ArrayList<Widget>();
 
-	//TODO übernehmen
 	private List<Widget> buttons;
 	private List<PropertiesSet> props;
 	
@@ -89,8 +87,7 @@ public class MenuHandlerBase {
 	public String getMenuIdentifier() {
 		return this.identifier;
 	}
-	
-	//TODO übernehmen
+
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Post e) {
 		if (!this.shouldCustomize(e.getGui())) {
@@ -99,7 +96,6 @@ public class MenuHandlerBase {
 		if (!AnimationHandler.isReady()) {
 			return;
 		}
-		//TODO übernehmen
 		if (!GameIntroHandler.introDisplayed) {
 			return;
 		}
@@ -146,27 +142,19 @@ public class MenuHandlerBase {
 		if (!AnimationHandler.isReady()) {
 			return;
 		}
-		//TODO übernehmen
 		if (!GameIntroHandler.introDisplayed) {
 			return;
 		}
 		if (LayoutCreatorScreen.isActive) {
 			return;
 		}
-		
-		//TODO übernehmen
-//		List<Widget> buttons = e.getWidgetList();
-//		List<PropertiesSet> props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
-		
-		//TODO übernehmen
+
 		if ((this.buttons == null) || (this.props == null)) {
 			return;
 		}
-		
-		//TODO übernehmen
+
 		this.hidden.clear();
 		this.hidefor.clear();
-		//-------------
 		audio.clear();
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
@@ -273,8 +261,7 @@ public class MenuHandlerBase {
 							}
 						}
 					}
-					
-					//TODO übernehmen
+
 					if (action.equalsIgnoreCase("hidebuttonfor")) {
 						String time = sec.getEntryValue("seconds");
 						if (b != null) {
@@ -291,7 +278,6 @@ public class MenuHandlerBase {
 					if (action.equalsIgnoreCase("hidebutton")) {
 						if (b != null) {
 							b.visible = false;
-							//TODO übernehmen
 							this.hidden.add(b);
 						}
 					}
@@ -474,8 +460,7 @@ public class MenuHandlerBase {
 							frontRenderItems.add(new AnimationCustomizationItem(sec));
 						}
 					}
-					
-					//TODO übernehmen
+
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
 						AdvancedButton cbtn = i.getButton();
@@ -542,8 +527,7 @@ public class MenuHandlerBase {
 		if (!backgroundTextureSet) {
 			this.backgroundTexture = null;
 		}
-		
-		//TODO übernehmen
+
 		for (Map.Entry<Widget, Double> m : this.hidefor.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
 				

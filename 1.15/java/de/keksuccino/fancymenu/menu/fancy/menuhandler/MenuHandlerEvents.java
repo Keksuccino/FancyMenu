@@ -9,7 +9,6 @@ public class MenuHandlerEvents {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		//TODO übernehmen
 		if (e.getGui() instanceof CustomGuiBase) {
 			if (!MenuHandlerRegistry.isHandlerRegistered(((CustomGuiBase)e.getGui()).getIdentifier())) {
 				MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(((CustomGuiBase)e.getGui()).getIdentifier()));

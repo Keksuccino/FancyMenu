@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.serverselection;
 
 import com.mojang.blaze3d.platform.GlStateManager;

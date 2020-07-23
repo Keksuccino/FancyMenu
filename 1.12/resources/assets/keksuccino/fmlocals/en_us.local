@@ -249,3 +249,7 @@ helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Menu Id
 helper.creator.items.button.delayappearance = Delay Appearance
 helper.creator.items.button.delayappearance.desc = Delay Appearance For Seconds [Decimal Value Support]
 helper.creator.items.button.delayappearance.invalidvalue = §c§lInvalid Value!%n%%n%%n%This is not a valid seconds value!%n%Maybe your value is too long. (..DON'T BE PROUD OF THIS!)%n%%n%Value Examples: 3, 2.0, 0.05, 0.8, 10.5
+
+popup.choosefile.back = BACK
+popup.choosefile.title = Choose File
+popup.choosefile.choose = Choose

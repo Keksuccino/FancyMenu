@@ -7,7 +7,6 @@ import net.minecraftforge.common.MinecraftForge;
 
 public class GameIntroHandler {
 
-	//TODO übernehmen
 	public static boolean introDisplayed = false;
 
 	public static void init() {

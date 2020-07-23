@@ -45,15 +45,13 @@ public class RenderUtils {
 		BLANK = r;
 		return r;
 	}
-	
-	//TODO übernehmen
+
 	public static void setScale(float scale) {
         RenderSystem.enableBlend();
         RenderSystem.pushMatrix();
         RenderSystem.scalef(scale, scale, scale);
     }
-	
-	//TODO übernehmen
+
     public static void postScale() {
     	RenderSystem.popMatrix();
     }

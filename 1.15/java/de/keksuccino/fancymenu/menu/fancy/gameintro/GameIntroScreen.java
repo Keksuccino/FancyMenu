@@ -20,18 +20,15 @@ public class GameIntroScreen extends Screen {
 	private MainMenuScreen main;
 	private boolean pre;
 	private boolean loop;
-	//TODO übernehmen
 	private boolean stretched;
 	private boolean skipable = false;
-	//---------
 	private int keypress;
 
 	public GameIntroScreen(IAnimationRenderer intro, MainMenuScreen main) {
 		super(new StringTextComponent(""));
 		this.renderer = intro;
 		this.main = main;
-		
-		//TODO übernehmen
+
 		this.keypress = KeyboardHandler.addKeyPressedListener((c) -> {
 			if ((Minecraft.getInstance().currentScreen == this) && this.skipable) {
 				if (c.keycode == 32) {
@@ -65,34 +62,26 @@ public class GameIntroScreen extends Screen {
 			if (!pre) {
 				this.renderer.resetAnimation();
 				this.loop = this.renderer.isGettingLooped();
-				//TODO übernehmen
 				this.stretched = this.renderer.isStretchedToStreensize();
 				this.renderer.setStretchImageToScreensize(true);
-				//-------
 				this.renderer.setLooped(false);
 				this.pre = true;
 			}
 			
 			if (!this.renderer.isFinished()) {
 				this.renderer.render();
-				//TODO übernehmen
 				if (FancyMenu.config.getOrDefault("allowgameintroskip", true)) {
 					this.skipable = true;
 				}
 			} else {
 				this.renderer.setLooped(this.loop);
-				//TODO übernehmen
 				this.renderer.setStretchImageToScreensize(this.stretched);
-				//------------
 				this.renderer.resetAnimation();
-				//TODO übernehmen
 				GameIntroHandler.introDisplayed = true;
-				//------------
 				Minecraft.getInstance().displayGuiScreen(this.main);
 			}
 		}
-		
-		//TODO übernehmen
+
 		if (this.skipable) {
 			RenderSystem.enableBlend();
 			RenderSystem.pushMatrix();

@@ -36,6 +36,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
@@ -62,6 +63,8 @@ public class CustomizationHelper {
 	private AdvancedButton reloadButton;
 	private AdvancedButton overrideButton;
 	private AdvancedButton customGuisButton;
+
+	private Color menuinfoBackground = new Color(0, 0, 0, 240);
 	
 	public Screen current;
 	
@@ -76,7 +79,7 @@ public class CustomizationHelper {
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
-
+		
 		if (this.dropdown != null) {
 			this.dropdown.closeMenu();
 		}
@@ -382,7 +385,7 @@ public class CustomizationHelper {
 		if (!isValidScreen(e.getGui())) {
 			return;
 		}
-
+		
 		if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 			this.dropdownButton.render(e.getMatrixStack(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
 			this.reloadButton.render(e.getMatrixStack(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
@@ -423,15 +426,28 @@ public class CustomizationHelper {
 				}
 			}
 		}
-		
+
 		if (this.showMenuInfo && !(e.getGui() instanceof LayoutCreatorScreen)) {
-			RenderSystem.enableBlend();
-			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":", 5, 5, 0);
+			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
+			String id = "";
 			if (e.getGui() instanceof CustomGuiBase) {
-				e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f" + ((CustomGuiBase)e.getGui()).getIdentifier(), 5, 15, 0);
+				id = "§f" + ((CustomGuiBase)e.getGui()).getIdentifier();
 			} else {
-				e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f" + e.getGui().getClass().getName(), 5, 15, 0);
+				id = "§f" + e.getGui().getClass().getName();
 			}
+			int w = Minecraft.getInstance().fontRenderer.getStringWidth(infoTitle);
+			int w2 = Minecraft.getInstance().fontRenderer.getStringWidth(id);
+			if (w2 > w) {
+				w = w2;
+			}
+			
+			RenderSystem.enableBlend();
+			
+			AbstractGui.fill(e.getMatrixStack(), 3, 3, 3 + w + 4, 25, this.menuinfoBackground.getRGB());
+			
+			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, infoTitle, 5, 5, 0);
+			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, id, 5, 15, 0);
+			
 			RenderSystem.disableBlend();
 		}
 

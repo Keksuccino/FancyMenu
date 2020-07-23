@@ -28,7 +28,6 @@ public class LayoutButton extends LayoutObject {
 	public String backHovered = null;
 	public String hoverSound;
 	public String hoverLabel;
-	//TODO übernehmen
 	public double hideforsec = 0;
 	
 	public LayoutButton(int width, int height, @Nonnull String label, LayoutCreatorScreen handler) {
@@ -215,8 +214,7 @@ public class LayoutButton extends LayoutObject {
 		});
 		this.rightclickMenu.addContent(b8);
 		LayoutCreatorScreen.colorizeCreatorButton(b8);
-		
-		//TODO übernehmen
+
 		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
 			this.handler.setMenusUseable(false);
 			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
@@ -285,7 +283,6 @@ public class LayoutButton extends LayoutObject {
 			if (this.hoverLabel != null) {
 				s.addEntry("hoverlabel", this.hoverLabel);
 			}
-			//TODO übernehmen
 			if (this.hideforsec != 0) {
 				s.addEntry("hideforseconds", "" + this.hideforsec);
 			}

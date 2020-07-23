@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiScreenRealmsProxy;
@@ -62,6 +63,8 @@ public class CustomizationHelper {
 	private AdvancedButton customGuisButton;
 	
 	public GuiScreen current;
+	
+	private Color menuinfoBackground = new Color(0, 0, 0, 240);
 	
 	public static void init() {
 		instance = new CustomizationHelper();
@@ -341,7 +344,6 @@ public class CustomizationHelper {
 		});
 		
 		AdvancedButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.closecustomgui"), (press) -> {
-			//TODO experimental
 			if (e.getGui() instanceof CustomGuiBase) {
 				((CustomGuiBase)e.getGui()).onClose();
 			}
@@ -424,13 +426,26 @@ public class CustomizationHelper {
 		}
 		
 		if (this.showMenuInfo && !(e.getGui() instanceof LayoutCreatorScreen)) {
-			GlStateManager.enableBlend();
-			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":", 5, 5, 0);
+			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
+			String id = "";
 			if (e.getGui() instanceof CustomGuiBase) {
-				e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§f" + ((CustomGuiBase)e.getGui()).getIdentifier(), 5, 15, 0);
+				id = "§f" + ((CustomGuiBase)e.getGui()).getIdentifier();
 			} else {
-				e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§f" + e.getGui().getClass().getName(), 5, 15, 0);
+				id = "§f" + e.getGui().getClass().getName();
 			}
+			int w = Minecraft.getMinecraft().fontRenderer.getStringWidth(infoTitle);
+			int w2 = Minecraft.getMinecraft().fontRenderer.getStringWidth(id);
+			if (w2 > w) {
+				w = w2;
+			}
+			
+			GlStateManager.enableBlend();
+			
+			Gui.drawRect(3, 3, 3 + w + 4, 25, this.menuinfoBackground.getRGB());
+			
+			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, infoTitle, 5, 5, 0);
+			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, id, 5, 15, 0);
+			
 			GlStateManager.disableBlend();
 		}
 

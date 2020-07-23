@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.worldselection;
 
 import java.util.function.Supplier;

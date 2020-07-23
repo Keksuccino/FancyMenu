@@ -54,9 +54,9 @@ public class Locals {
 	}
 	
 	private static void prepareLocalsFiles() {
-		copyLocalsFile("de_de");
 		copyLocalsFile("en_us");
-//		TODO copyLocalsFile("ru_ru");
+		copyLocalsFile("de_de");
+		copyLocalsFile("pl_pl");
 	}
 	
 	private static void copyLocalsFile(String language) {
