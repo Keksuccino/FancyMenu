@@ -57,6 +57,7 @@ public class Locals {
 		copyLocalsFile("en_us");
 		copyLocalsFile("de_de");
 		copyLocalsFile("pl_pl");
+		copyLocalsFile("pt_br");
 	}
 	
 	private static void copyLocalsFile(String language) {
@@ -68,6 +69,7 @@ public class Locals {
 		BufferedReader br = null;
 		BufferedWriter bw = null;
 		try {
+			//TODO warum zur hölle hab ich das so gemacht?!
 			try {
 				br = new BufferedReader(new InputStreamReader(Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation("keksuccino", "fmlocals/" + language + ".local")).getInputStream(), StandardCharsets.UTF_8));
 				bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(lang, false), StandardCharsets.UTF_8));

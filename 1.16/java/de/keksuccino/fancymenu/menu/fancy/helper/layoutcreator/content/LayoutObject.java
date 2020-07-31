@@ -176,7 +176,6 @@ public abstract class LayoutObject extends AbstractGui {
 					label = "Object";
 				} else {
 					if (Minecraft.getInstance().fontRenderer.getStringWidth(label) > 90) {
-						//TODO trimStringToWidth
 						label = Minecraft.getInstance().fontRenderer.func_238412_a_(label, 85) + "..";
 					}
 				}

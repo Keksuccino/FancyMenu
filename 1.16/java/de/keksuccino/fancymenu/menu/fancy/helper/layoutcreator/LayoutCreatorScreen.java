@@ -82,12 +82,13 @@ public class LayoutCreatorScreen extends Screen {
 	protected List<LayoutObject> content = new ArrayList<LayoutObject>();
 	protected List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	protected Map<Integer, String> vanillaButtonNames = new HashMap<Integer, String>();
-	protected Map<Integer, List<String>> vanillaButtonTextures = new HashMap<Integer, List<String>>();
-	protected Map<Integer, Integer> vanillaButtonClicks = new HashMap<Integer, Integer>();
-	protected Map<Integer, String> vanillaHoverLabels = new HashMap<Integer, String>();
-	protected Map<Integer, String> vanillaHoverSounds = new HashMap<Integer, String>();
-	protected Map<Integer, Double> vanillaHideFor = new HashMap<Integer, Double>();
+	protected Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
+	protected Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
+	protected Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
+	protected Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
+	protected Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
+	protected Map<Long, Double> vanillaHideFor = new HashMap<Long, Double>();
+	protected Map<Long, Boolean> vanillaDelayOnlyFirstTime = new HashMap<Long, Boolean>();
 	protected LayoutObject focused = null;
 	protected int hiddenIndicatorTick = 0;
 	protected int hiddenIndicatorCount = 0;
@@ -637,6 +638,9 @@ public class LayoutCreatorScreen extends Screen {
 				}
 				if (this.vanillaHideFor.containsKey(b.getId())) {
 					v.hideforsec = this.vanillaHideFor.get(b.getId()); 
+					if (this.vanillaDelayOnlyFirstTime.containsKey(b.getId())) {
+						v.delayonlyfirsttime = this.vanillaDelayOnlyFirstTime.get(b.getId());
+					}
 				}
 				if (this.vanillaHoverLabels.containsKey(b.getId())) {
 					v.hoverLabel = this.vanillaHoverLabels.get(b.getId()); 
@@ -794,9 +798,13 @@ public class LayoutCreatorScreen extends Screen {
 			}
 		}
 	}
-	
+
 	public void setVanillaHideFor(LayoutVanillaButton button, double seconds) {
 		this.vanillaHideFor.put(button.button.getId(), seconds);
+	}
+
+	public void setVanillaDelayOnlyFirstTime(LayoutVanillaButton button, boolean onlyfirsttime) {
+		this.vanillaDelayOnlyFirstTime.put(button.button.getId(), onlyfirsttime);
 	}
 
 	public void setVanillaHoverLabel(LayoutVanillaButton button, String label) {
@@ -1075,7 +1083,7 @@ public class LayoutCreatorScreen extends Screen {
 			Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 			
 			if (!this.panorama) {
-				blit(matrix, 0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
+				blit(matrix, 0, 0, 1.0F, 1.0F, this.width, this.height + 1, this.width, this.height + 1);
 			} else {
 				int w = this.backgroundTexture.getWidth();
 				int h = this.backgroundTexture.getHeight();
@@ -1125,9 +1133,9 @@ public class LayoutCreatorScreen extends Screen {
 					}
 				}
 				if (wfinal <= this.width) {
-					blit(matrix, 0, 0, 1.0F, 1.0F, this.width, this.height, this.width, this.height);
+					blit(matrix, 0, 0, 1.0F, 1.0F, this.width, this.height + 1, this.width, this.height + 1);
 				} else {
-					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height);
+					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height + 1);
 				}
 			}
 		}

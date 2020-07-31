@@ -30,6 +30,7 @@ public class LayoutVanillaButton extends LayoutObject {
 	public String hoverLabel;
 	public String hoverSound;
 	public double hideforsec = 0;
+	public boolean delayonlyfirsttime = false;
 	
 	public LayoutVanillaButton(ButtonData button, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(button.label, button.width, button.height, button.x, button.y), false, handler);
@@ -255,7 +256,7 @@ public class LayoutVanillaButton extends LayoutObject {
 		
 		AdvancedButton b10 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
 			this.handler.setMenusUseable(false);
-			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+			TextInputPopup in = new HideForPopup(Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 				if (call != null) {
 					if (MathUtils.isDouble(call)) {
 						this.hideforsec = Double.parseDouble(call);
@@ -267,7 +268,11 @@ public class LayoutVanillaButton extends LayoutObject {
 				} else {
 					this.handler.setMenusUseable(true);
 				}
-			});
+			}, (call) -> {
+				this.delayonlyfirsttime = call;
+				this.handler.setVanillaDelayOnlyFirstTime(this, this.delayonlyfirsttime);
+			}, this.delayonlyfirsttime);
+			
 			in.setText("" + this.hideforsec);
 			PopupHandler.displayPopup(in);
 		});
@@ -395,6 +400,9 @@ public class LayoutVanillaButton extends LayoutObject {
 			s.addEntry("action", "hidebuttonfor");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
 			s.addEntry("seconds", "" + this.hideforsec);
+			if (this.delayonlyfirsttime) {
+				s.addEntry("onlyfirsttime", "true");
+			}
 			l.add(s);
 		}
 		

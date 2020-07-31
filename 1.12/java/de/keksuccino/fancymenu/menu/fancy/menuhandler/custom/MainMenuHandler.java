@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -208,7 +209,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private List<GuiButton> getButtonList(GuiScreen gui) {
 		Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146292_n", "buttonList");
-		List<GuiButton> buttons = null;
+		List<GuiButton> buttons = new ArrayList<GuiButton>();
 		try {
 			buttons = (List<GuiButton>) f.get(gui);
 		} catch (Exception e) {
@@ -219,7 +220,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private List<GuiLabel> getLabelList(GuiScreen gui) {
 		Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146293_o", "labelList");
-		List<GuiLabel> labels = null;
+		List<GuiLabel> labels = new ArrayList<GuiLabel>();
 		try {
 			labels = (List<GuiLabel>) f.get(gui);
 		} catch (Exception e) {
@@ -235,7 +236,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
+		return "";
 	}
 	
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {

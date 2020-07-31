@@ -57,6 +57,7 @@ public class Locals {
 		copyLocalsFile("en_us");
 		copyLocalsFile("de_de");
 		copyLocalsFile("pl_pl");
+		copyLocalsFile("pt_br");
 	}
 
 	private static void copyLocalsFile(String language) {

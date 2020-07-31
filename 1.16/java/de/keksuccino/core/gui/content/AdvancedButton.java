@@ -30,14 +30,23 @@ public class AdvancedButton extends Button {
 	private int borderWidth = 2;
 	private ResourceLocation backgroundHover;
 	private ResourceLocation backgroundNormal;
+
+	private IPressable press;
 	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
 		super(x, y, widthIn, heightIn, new StringTextComponent(buttonText), onPress);
+		this.press = onPress;
 	}
 	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, boolean handleClick, IPressable onPress) {
 		super(x, y, widthIn, heightIn, new StringTextComponent(buttonText), onPress);
 		this.handleClick = handleClick;
+		this.press = onPress;
+	}
+
+	@Override
+	public void onPress() {
+		this.press.onPress(this);
 	}
 	
 	//renderButton
@@ -46,58 +55,6 @@ public class AdvancedButton extends Button {
 		if (this.visible) {
 			Minecraft mc = Minecraft.getInstance();
 			FontRenderer font = mc.fontRenderer;
-			
-			//Widget:
-			//field_230692_n_ = isHovered
-			//func_230449_g_() = isHovered()
-			//field_230690_l_ = x
-			//field_230691_m_ = y
-			//field_230688_j_ = width
-			//field_230689_k_ = height
-			//field_230694_p_ = visible
-			//func_230989_a_() = getYImage()
-			//func_238472_a_() = drawCenteredString
-			//func_230458_i_() = getMessage
-			//func_238482_a_() = setMessage
-			//func_230998_h_() = getWidth
-			//func_230991_b_() = setWidth
-			//func_230982_a_() = onClick
-			//func_230431_b_() = renderButton
-			//func_230430_a_() = render
-			
-			//FontRenderer:
-			//func_238405_a_() = drawStringWithShadow
-			//func_238421_b_() = drawString
-			//func_238412_a_() = trimStringToWidth
-			
-			//Screen & AbstractGUI:
-			//func_230430_a_() = render
-			//func_230446_a_() = renderBackground
-			//func_231178_ax__() = shouldCloseOnEsc
-			//func_238467_a_() = fill()
-			//func_238463_a_() = blit(int, int, float, float, int, int, int, int)
-			//field_230708_k_ = width
-			//field_230709_l_ = height
-			//func_231160_c_() = init
-			//func_231039_at__() = children
-			//func_231171_q_() = getTitle
-			
-			//AbstractList:
-			//func_230513_b_() = addEntry
-			//func_230958_g_() = getSelected
-			//func_230951_c_() = centerScrollOn
-			//func_230966_l_() = getScrollAmount
-			//func_230937_a_() = scroll
-			//func_230932_a_() = setScrollAmount
-			//func_230962_i_() = getRowTop
-			//func_230968_n_() = getRowLeft
-			//func_230948_b_() = getRowBottom
-			//field_230670_d_ = width
-			//field_230671_e_ = height
-			//field_230672_i_ = y0
-			//field_230673_j_ = y1
-			//field_230674_k_ = x1
-			//field_230675_l_ = x0
 			
 			this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 			
@@ -144,6 +101,7 @@ public class AdvancedButton extends Button {
 			this.renderBg(matrix, mc, mouseX, mouseY);
 
 			this.drawCenteredString(matrix, font, new StringTextComponent(getMessageString()), this.x + this.width / 2, this.y + (this.height - 8) / 2, getFGColor());
+
 		}
 
 		if (!this.isHovered() && MouseInput.isLeftMouseDown()) {
@@ -212,12 +170,13 @@ public class AdvancedButton extends Button {
 	public boolean hasCustomTextureBackground() {
 		return ((this.backgroundHover != null) && (this.backgroundNormal != null));
 	}
-	
-	//mouseClicked
+
 	@Override
 	public boolean mouseClicked(double p_mouseClicked_1_, double p_mouseClicked_3_, int p_mouseClicked_5_) {
-		if (!this.handleClick && this.useable) {
-			return super.mouseClicked(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
+		if (!this.handleClick) {
+			if (this.useable) {
+				return super.mouseClicked(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
+			}
 		}
 		return false;
 	}
@@ -277,6 +236,10 @@ public class AdvancedButton extends Button {
 	
 	public void setHovered(boolean b) {
 		this.isHovered = b;
+	}
+
+	public void setPressAction(IPressable press) {
+		this.press = press;
 	}
 	
 	public static boolean isAnyButtonLeftClicked() {

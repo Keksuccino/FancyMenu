@@ -37,6 +37,10 @@ public class ButtonCachedEvent extends Event {
 		return l;
 	}
 	
+	/**
+	 * Custom childs needs to be added <b>AFTER</b> calling this method!<br>
+	 * (Removes custom childs added before calling this method)
+	 */
 	public void addWidget(Widget w) {
 		try {
 			Method m = ObfuscationReflectionHelper.findMethod(Screen.class, "addButton", Widget.class);

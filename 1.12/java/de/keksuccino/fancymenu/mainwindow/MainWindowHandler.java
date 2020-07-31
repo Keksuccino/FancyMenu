@@ -9,6 +9,8 @@ import javax.imageio.ImageIO;
 import org.lwjgl.opengl.Display;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 
 public class MainWindowHandler {
 
@@ -69,6 +71,16 @@ public class MainWindowHandler {
 		if ((s != null) && (!s.equals(""))) {
 			Display.setTitle(s);
 		}
+	}
+	
+	public static int getScaledWidth() {
+		ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+		return res.getScaledWidth();
+	}
+	
+	public static int getScaledHeight() {
+		ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+		return res.getScaledHeight();
 	}
 
 }

@@ -29,6 +29,7 @@ public class LayoutButton extends LayoutObject {
 	public String hoverSound;
 	public String hoverLabel;
 	public double hideforsec = 0;
+	public boolean delayonlyfirsttime = false;
 	
 	public LayoutButton(int width, int height, @Nonnull String label, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(label, width, height, 0, 0), true, handler);
@@ -217,7 +218,7 @@ public class LayoutButton extends LayoutObject {
 
 		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
 			this.handler.setMenusUseable(false);
-			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+			TextInputPopup in = new HideForPopup(Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 				if (call != null) {
 					if (MathUtils.isDouble(call)) {
 						this.hideforsec = Double.parseDouble(call);
@@ -228,7 +229,10 @@ public class LayoutButton extends LayoutObject {
 				} else {
 					this.handler.setMenusUseable(true);
 				}
-			});
+			}, (call) -> {
+				this.delayonlyfirsttime = call;
+			}, this.delayonlyfirsttime);
+			
 			in.setText("" + this.hideforsec);
 			PopupHandler.displayPopup(in);
 		});
@@ -285,6 +289,9 @@ public class LayoutButton extends LayoutObject {
 			}
 			if (this.hideforsec != 0) {
 				s.addEntry("hideforseconds", "" + this.hideforsec);
+				if (this.delayonlyfirsttime) {
+					s.addEntry("delayonlyfirsttime", "true");
+				}
 			}
 			l.add(s);
 		}

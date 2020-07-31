@@ -22,11 +22,14 @@ public class CurrentScreenHandler {
 	}
 	
 	/**
-	 * Returns the {@link MatrixStack} for the current game tick or NULL if there is no stack.<br><br>
+	 * Returns the {@link MatrixStack} for the current game tick or a BLANK ONE if no stack was cached.<br><br>
 	 * 
 	 * <b>IF NO SCREEN IS BEING RENDERED ATM, THIS WILL RETURN THE LAST STACK USED TO RENDER A SCREEN!</b>
 	 */
 	public static MatrixStack getMatrixStack() {
+		if (currentStack == null) {
+			currentStack = new MatrixStack();
+		}
 		return currentStack;
 	}
 	

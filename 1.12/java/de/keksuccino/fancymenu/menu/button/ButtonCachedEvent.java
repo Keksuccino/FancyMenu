@@ -37,6 +37,10 @@ public class ButtonCachedEvent extends Event {
 		return l;
 	}
 	
+	/**
+	 * Custom childs needs to be added <b>AFTER</b> calling this method!<br>
+	 * (Removes custom childs added before calling this method)
+	 */
 	public void addButton(GuiButton w) {
 		try {
 			Method m = ReflectionHelper.findMethod(GuiScreen.class, "addButton", "func_189646_b", GuiButton.class);

@@ -16,7 +16,6 @@ import net.minecraft.util.ResourceLocation;
 
 public class AdvancedButton extends GuiButton {
 
-	private IPressable press;
 	private boolean handleClick = false;
 	private static boolean leftDown = false;
 	private boolean leftDownNotHovered = false;
@@ -30,6 +29,8 @@ public class AdvancedButton extends GuiButton {
 	private int borderWidth = 2;
 	private ResourceLocation backgroundHover;
 	private ResourceLocation backgroundNormal;
+	
+	private IPressable press;
 	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
 		super(MathUtils.getRandomNumberInRange(100, 999), x, y, widthIn, heightIn, buttonText);
@@ -172,11 +173,13 @@ public class AdvancedButton extends GuiButton {
 	
 	@Override
 	public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-		if (!this.handleClick && this.useable) {
-			if (this.isMouseOver()) {
-				this.press.onPress(this);
+		if (!this.handleClick) {
+			if (this.useable) {
+				if (this.isMouseOver()) {
+					this.press.onPress(this);
+				}
+				return super.mousePressed(mc, mouseX, mouseY);
 			}
-			return super.mousePressed(mc, mouseX, mouseY);
 		}
 		return false;
 	}
@@ -193,12 +196,16 @@ public class AdvancedButton extends GuiButton {
 		this.handleClick = b;
 	}
 	
-	public interface IPressable {
-		void onPress(GuiButton button);
+	public void setPressAction(IPressable press) {
+		this.press = press;
 	}
 	
 	public static boolean isAnyButtonLeftClicked() {
 		return leftDown;
+	}
+	
+	public interface IPressable {
+		void onPress(GuiButton button);
 	}
 
 }

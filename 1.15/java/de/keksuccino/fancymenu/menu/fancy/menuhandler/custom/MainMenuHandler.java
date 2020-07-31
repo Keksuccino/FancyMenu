@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -183,7 +184,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private List<Widget> getButtonList(Screen gui) {
 		Field f = ObfuscationReflectionHelper.findField(Screen.class, "buttons");
-		List<Widget> buttons = null;
+		List<Widget> buttons = new ArrayList<Widget>();
 		try {
 			buttons = (List<Widget>) f.get(gui);
 		} catch (Exception e) {
@@ -199,7 +200,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
+		return "";
 	}
 	
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {

@@ -8,9 +8,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
+import de.keksuccino.core.gui.content.AdvancedButton;
 import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.core.input.MouseInput;
 import de.keksuccino.core.locale.LocaleUtils;
+import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.reflection.ReflectionHelper;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
@@ -23,17 +29,21 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class ButtonCache {
-	
-	private static Map<Integer, ButtonData> buttons = new HashMap<Integer, ButtonData>();
+
+	private static Map<Long, ButtonData> buttons = new HashMap<Long, ButtonData>();
+	private static Map<Long, Widget> replaced = new HashMap<Long, Widget>();
 	private static Screen current = null;
 	private static boolean cached = false;
+	private static boolean caching = false;
 	
 	@SubscribeEvent
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
-		cached = false;
-		current = e.getGui();
+		if (!caching) {
+			cached = false;
+			current = e.getGui();
+		}
 	}
-	
+
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onBackDrawn(GuiScreenEvent.BackgroundDrawnEvent e) {
 		cache(e.getGui());
@@ -59,47 +69,62 @@ public class ButtonCache {
 			}
 			
 			if ((s == Minecraft.getInstance().currentScreen) && cache) {
-				buttons.clear();
-				
-				int i = 1;
-				for (Widget w : sortButtons(getGuiButtons(s))) {
-					buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
-					i++;
-				}
+				updateButtons(s, getGuiButtons(s));
 			}
 
 			MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, getButtons(), cache));
 		}
 	}
-	
-	public static void addButton(Widget w) {
-		List<Widget> l = new ArrayList<Widget>();
-		for (ButtonData d : getButtons()) {
-			l.add(d.getButton());
-		}
-		l.add(w);
-		
+
+	/**
+	 * The widget list (buttonlist) is only used by the old button id system.
+	 */
+	private static void updateButtons(Screen s, @Nullable List<Widget> buttonlist) {
+		replaced.clear();
 		buttons.clear();
-		int i = 1;
-		for (Widget wi : sortButtons(l)) {
-			buttons.put(i, new ButtonData(wi, i, LocaleUtils.getKeyForString(wi.getMessage().getString()), current));
-			i++;
+		
+		if (useLegacyButtonIds()) {
+			//Calculate button ids with the old, unstable id system
+			if (buttonlist != null) {
+				long i = 1;
+				for (Widget w : sortButtons(buttonlist)) {
+					buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
+					i++;
+				}
+			} else {
+				System.out.println("#### ERROR [FANCYMENU]: Buttonlist is NULL and ID calculation set to legacy!");
+			}
+		} else {
+			//Use the new id calculation system
+			List<ButtonData> ids = cacheButtons(s, 1000, 1000);
+			List<ButtonData> btns = cacheButtons(s, Minecraft.getInstance().getMainWindow().getScaledWidth(), Minecraft.getInstance().getMainWindow().getScaledHeight());
+			
+			if (btns.size() == ids.size()) {
+				int i = 0;
+				for (ButtonData id : ids) {
+					ButtonData button = btns.get(i);
+					if (!buttons.containsKey(id.getId())) {
+						buttons.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().getMessage().getString()), s));
+					} else {
+						System.out.println("");
+						System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
+						System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
+						System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
+						System.out.println("");
+						System.out.println("If one or booth of these buttons are added by a mod, please contact the developer(s) to fix this!");
+						System.out.println("FancyMenu cannot customize overlapping buttons!");
+						System.out.println("#####################################################");
+						System.out.println("");
+					}
+					i++;
+				}
+			}
 		}
 	}
-	
-	private static List<Widget> getGuiButtons(Screen s) {
-		List<Widget> l = new ArrayList<Widget>();
-		try {
-			Field f = ObfuscationReflectionHelper.findField(Screen.class, "field_230710_m_");
-			l = (List<Widget>) f.get(s);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return l;
-	}
-	
-	public static void cacheFrom(Screen s, int screenWidth, int screenHeight) {
-		List<Widget> l = new ArrayList<Widget>();
+
+	private static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
+		caching = true;
+		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
 		try {
 			//Resetting the button list
 			Field f0 = ReflectionHelper.findField(Screen.class, "field_230710_m_");
@@ -118,22 +143,140 @@ public class ButtonCache {
 			
 			//Reflecting the buttons list field to cache all buttons of the menu
 			Field f = ReflectionHelper.findField(Screen.class, "field_230710_m_");
-			l.addAll((List<Widget>) f.get(s));
+
+			for (Widget w : (List<Widget>) f.get(s)) {
+				String idRaw = w.x + "" + w.y;
+				long id = 0;
+				if (MathUtils.isLong(idRaw)) {
+					id = Long.parseLong(idRaw);
+				}
+				buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		buttons.clear();
-		int i = 1;
-		for (Widget w : sortButtons(l)) {
-			buttons.put(i, new ButtonData(w, i, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
-			i++;
+		caching = false;
+		return buttonlist;
+	}
+
+	public static void replaceButton(long id, Widget w) {
+		ButtonData d = getButtonForId(id);
+		Widget ori = null;
+		if ((d != null) && (current != null)) {
+			try {
+				Field f = ObfuscationReflectionHelper.findField(Screen.class, "field_230710_m_");
+				List<Widget> l = (List<Widget>) f.get(current);
+				List<Widget> l2 = new ArrayList<Widget>();
+				
+				for (Widget b : l) {
+					if (b == d.getButton()) {
+						l2.add(w);
+						ori = b;
+					} else {
+						l2.add(b);
+					}
+				}
+				
+				f.set(current, l2);
+				if (ori != null) {
+					replaced.put(d.getId(), ori);
+				}
+				d.replaceButton(w);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public static void replaceButton(String key, Widget w) {
+		ButtonData d = getButtonForKey(key);
+		if (d != null) {
+			replaceButton(d.getId(), w);
+		}
+	}
+
+	public static AdvancedButton convertToAdvancedButton(long id, boolean handleClick) {
+		ButtonData d = getButtonForId(id);
+		if ((d != null) && !(d.getButton() instanceof AdvancedButton)) {
+			AdvancedButton b = new AdvancedButton(d.getButton().x, d.getButton().y, d.getButton().getWidth(), d.getButton().getHeight(), d.getButton().getMessage().getString(), handleClick, (press) -> {
+				Widget w = replaced.get(d.getId());
+				if (w != null) {
+					w.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
+				}
+			});
+			replaceButton(id, b);
+			return b;
+		}
+		return null;
+	}
+
+	public static AdvancedButton convertToAdvancedButton(String key, boolean handleClick) {
+		ButtonData d = getButtonForKey(key);
+		if (d != null) {
+			return convertToAdvancedButton(d.getId(), handleClick);
+		}
+		return null;
+	}
+	
+	public static void addButton(Widget w) {
+		List<Widget> l = new ArrayList<Widget>();
+		for (ButtonData d : getButtons()) {
+			l.add(d.getButton());
+		}
+		l.add(w);
+
+		if (current != null) {
+			updateButtons(current, l);
+		}
+	}
+	
+	private static List<Widget> getGuiButtons(Screen s) {
+		List<Widget> l = new ArrayList<Widget>();
+		try {
+			Field f = ObfuscationReflectionHelper.findField(Screen.class, "field_230710_m_");
+			l = (List<Widget>) f.get(s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return l;
+	}
+
+	public static void cacheFrom(Screen s, int screenWidth, int screenHeight) {
+		if (useLegacyButtonIds()) {
+			List<Widget> l = new ArrayList<Widget>();
+			try {
+				//Resetting the button list
+				Field f0 = ReflectionHelper.findField(Screen.class, "field_230710_m_");
+				f0.set(s, new ArrayList<Widget>());
+				
+				//Setting all important values for the GuiScreen to be able to initialize itself
+				//itemRenderer field
+				Field f1 = ReflectionHelper.findField(Screen.class, "field_230707_j_");
+				f1.set(s, Minecraft.getInstance().getItemRenderer());
+				//font field
+				Field f2 = ReflectionHelper.findField(Screen.class, "field_230712_o_");
+				f2.set(s, Minecraft.getInstance().fontRenderer);
+
+				//init
+				s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+				
+				//Reflecting the buttons list field to cache all buttons of the menu
+				Field f = ReflectionHelper.findField(Screen.class, "field_230710_m_");
+				l.addAll((List<Widget>) f.get(s));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+			updateButtons(s, l);
+		} else {
+			updateButtons(s, null);
 		}
 	}
 	
 	/**
 	 * Will sort all buttons by its height and width.
 	 */
+	@Deprecated
 	private static List<Widget> sortButtons(List<Widget> widgets) {
 		List<Widget> l = new ArrayList<Widget>();
 		Map<Integer, List<Widget>> m = new HashMap<Integer, List<Widget>>(); 
@@ -186,12 +329,12 @@ public class ButtonCache {
 		
 		return l;
 	}
-	
+
 	/**
 	 * Returns the button id or -1 if the button has no cached id.
 	 */
-	public static int getIdForButton(Widget w) {
-		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
+	public static long getIdForButton(Widget w) {
+		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
 				return m.getValue().getId();
 			}
@@ -203,7 +346,7 @@ public class ButtonCache {
 	 * Returns the button name or null if the button has no cached name.
 	 */
 	public static String getNameForButton(Widget w) {
-		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
+		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
 				return m.getValue().label;
 			}
@@ -215,7 +358,7 @@ public class ButtonCache {
 	 * Returns the button key or null if the button has no cached key.
 	 */
 	public static String getKeyForButton(Widget w) {
-		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
+		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
 				return m.getValue().getKey();
 			}
@@ -226,7 +369,7 @@ public class ButtonCache {
 	/**
 	 * Returns the button for this id or null if no button with this id was found.
 	 */
-	public static ButtonData getButtonForId(int id) {
+	public static ButtonData getButtonForId(long id) {
 		return buttons.get(id);
 	}
 	
@@ -234,7 +377,7 @@ public class ButtonCache {
 	 * Returns the button for this key or null if no button with this key was found.
 	 */
 	public static ButtonData getButtonForKey(String key) {
-		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
+		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getKey().equalsIgnoreCase(key)) {
 				return m.getValue();
 			}
@@ -246,7 +389,7 @@ public class ButtonCache {
 	 * Returns the button for this name or null if no button with this name was found.
 	 */
 	public static ButtonData getButtonForName(String name) {
-		for (Map.Entry<Integer, ButtonData> m : buttons.entrySet()) {
+		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().label.equals(name)) {
 				return m.getValue();
 			}
@@ -261,6 +404,10 @@ public class ButtonCache {
 		List<ButtonData> b = new ArrayList<ButtonData>();
 		b.addAll(buttons.values());
 		return b;
+	}
+
+	public static boolean useLegacyButtonIds() {
+		return FancyMenu.config.getOrDefault("legacybuttonids", false);
 	}
 
 }

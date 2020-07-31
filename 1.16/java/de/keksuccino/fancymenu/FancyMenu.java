@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
+import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -25,7 +26,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod("fancymenu")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.4.2";
+	public static final String VERSION = "1.4.3";
 	
 	public static Config config;
 	
@@ -89,6 +90,8 @@ public class FancyMenu {
 	    	MainWindowHandler.init();
         	MainWindowHandler.updateWindowIcon();
         	MainWindowHandler.updateWindowTitle();
+
+        	GuiConstructor.init();
 	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -104,6 +107,7 @@ public class FancyMenu {
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		config.registerValue("softmode", false, "customization", "Maximizes mod compatibility. Disables background customization support for scrollable menu screens. Restart is needed after changing this value.");
+    		config.registerValue("legacybuttonids", false, "customization");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
@@ -132,6 +136,7 @@ public class FancyMenu {
     		
 			config.setCategory("showcustomizationbuttons", "customization");
 			config.setCategory("softmode", "customization");
+			config.setCategory("legacybuttonids", "customization");
 			
 			config.setCategory("hidebranding", "mainmenu");
 			config.setCategory("hidelogo", "mainmenu");

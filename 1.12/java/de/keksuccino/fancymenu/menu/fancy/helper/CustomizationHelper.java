@@ -23,6 +23,8 @@ import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
+import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
@@ -34,7 +36,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCr
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiScreenRealmsProxy;
 import net.minecraft.client.renderer.GlStateManager;
@@ -55,7 +56,7 @@ public class CustomizationHelper {
 	
 	private boolean showButtonInfo = false;
 	private boolean showMenuInfo = false;
-	private List<GuiButton> buttons = new ArrayList<GuiButton>();
+	private List<ButtonData> buttons = new ArrayList<ButtonData>();
 	private AdvancedButton buttonInfoButton;
 	private AdvancedButton menuInfoButton;
 	private AdvancedButton reloadButton;
@@ -75,6 +76,11 @@ public class CustomizationHelper {
 		return instance;
 	}
 	
+	@SubscribeEvent
+	public void onButtonsCached(ButtonCachedEvent e) {
+		this.buttons = e.getButtonDataList();
+	}
+	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
 
@@ -88,8 +94,6 @@ public class CustomizationHelper {
 		}
 		
 		this.current = e.getGui();
-
-		this.handleWidgetsUpdate(e.getButtonList());
 			
 		String infoLabel = Locals.localize("helper.button.buttoninfo");
 		if (this.showButtonInfo) {
@@ -450,14 +454,14 @@ public class CustomizationHelper {
 		}
 
 		if (this.showButtonInfo) {
-			for (GuiButton w : this.buttons) {
-				if (w.isMouseOver()) {
-					int id = getButtonId(w);
+			for (ButtonData d : this.buttons) {
+				if (d.getButton().isMouseOver()) {
+					long id = d.getId();
 					String idString = Locals.localize("helper.buttoninfo.idnotfound");
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
-					String key = ButtonCache.getKeyForButton(w);
+					String key = ButtonCache.getKeyForButton(d.getButton());
 					if (key == null) {
 						key = Locals.localize("helper.buttoninfo.keynotfound");
 					}
@@ -467,9 +471,9 @@ public class CustomizationHelper {
 					
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("helper.buttoninfo.key") + ": " + key);
-					info.add("§f" + Locals.localize("general.width") + ": " + w.width);
-					info.add("§f" + Locals.localize("general.height") + ": " + w.height);
-					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getMinecraft().fontRenderer.getStringWidth(w.displayString));
+					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().width);
+					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().height);
+					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getMinecraft().fontRenderer.getStringWidth(d.getButton().displayString));
 					
 					//Getting the longest string from the list to render the background with the correct width
 					for (String s : info) {
@@ -573,27 +577,14 @@ public class CustomizationHelper {
 			this.showButtonInfo = false;
 			this.showMenuInfo = false;
 		}
+		
+		MinecraftForge.EVENT_BUS.post(new MenuReloadedEvent(Minecraft.getMinecraft().currentScreen));
+		
 		try {
 			Minecraft.getMinecraft().displayGuiScreen(Minecraft.getMinecraft().currentScreen);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private void handleWidgetsUpdate(List<GuiButton> l) {
-		this.buttons.clear();
-		for (GuiButton w : l) {
-			if (!CustomizationButton.isCustomizationButton(w)) {
-				this.buttons.add(w);
-			}
-		}
-	}
-	
-	/**
-	 * Returns the button id or -1 if the button was not found in the button list.
-	 */
-	private static int getButtonId(GuiButton w) {
-		return ButtonCache.getIdForButton(w);
 	}
 	
 	private boolean isScreenOverridden() {

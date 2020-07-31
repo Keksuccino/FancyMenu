@@ -253,3 +253,11 @@ helper.creator.items.button.delayappearance.invalidvalue = §c§lUngültiger Wer
 popup.choosefile.back = ZURÜCK
 popup.choosefile.title = Datei wählen
 popup.choosefile.choose = Wählen
+
+custombuttons.action.opengui.cannotopengui = §c§lGUI konnte nicht geöffnet werden!%n%%n%%n%Entweder existiert dieses GUI nicht oder wird nicht unterstützt!%n%%n%Wenn dieses GUI existiert, kontaktiere bitte den Entwickler,%n%damit er Support für dieses GUI hinzufügen kann.
+
+helper.creator.custombutton.config.actiontype.opengui.desc = Öffnet ein GUI anhand seines Menü Identifiers.
+helper.creator.custombutton.config.actiontype.opengui.desc.value = Menü Identifier
+
+helper.creator.popup.hidefor.delayeverytime = Jedes Mal
+helper.creator.popup.hidefor.delayfirsttime = Nur erstes Mal

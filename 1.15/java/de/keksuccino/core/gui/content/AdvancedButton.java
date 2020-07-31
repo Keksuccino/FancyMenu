@@ -31,13 +31,22 @@ public class AdvancedButton extends Button {
 	private ResourceLocation backgroundHover;
 	private ResourceLocation backgroundNormal;
 	
+	private IPressable press;
+	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {
 		super(x, y, widthIn, heightIn, buttonText, onPress);
+		this.press = onPress;
 	}
 	
 	public AdvancedButton(int x, int y, int widthIn, int heightIn, String buttonText, boolean handleClick, IPressable onPress) {
 		super(x, y, widthIn, heightIn, buttonText, onPress);
 		this.handleClick = handleClick;
+		this.press = onPress;
+	}
+
+	@Override
+	public void onPress() {
+		this.press.onPress(this);
 	}
 	
 	@Override
@@ -160,8 +169,10 @@ public class AdvancedButton extends Button {
 	
 	@Override
 	public boolean mouseClicked(double p_mouseClicked_1_, double p_mouseClicked_3_, int p_mouseClicked_5_) {
-		if (!this.handleClick && this.useable) {
-			return super.mouseClicked(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
+		if (!this.handleClick) {
+			if (this.useable) {
+				return super.mouseClicked(p_mouseClicked_1_, p_mouseClicked_3_, p_mouseClicked_5_);
+			}
 		}
 		return false;
 	}
@@ -184,6 +195,10 @@ public class AdvancedButton extends Button {
 	
 	public void setHandleClick(boolean b) {
 		this.handleClick = b;
+	}
+	
+	public void setPressAction(IPressable press) {
+		this.press = press;
 	}
 
 	public static boolean isAnyButtonLeftClicked() {

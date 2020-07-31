@@ -32,6 +32,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
@@ -72,10 +73,10 @@ public class MenuHandlerBase {
 	private boolean panoMoveBack = false;
 	private boolean panoStop = false;
 	
-	private Map<GuiButton, Double> hidefor = new HashMap<GuiButton, Double>();
-	private List<GuiButton> hidden = new ArrayList<GuiButton>();
+	private List<Long> onlyDelayFirstTime = new ArrayList<Long>();
+	private Map<ButtonData, Double> hidefor = new HashMap<ButtonData, Double>();
+	private List<ButtonData> hidden = new ArrayList<ButtonData>();
 
-	private List<GuiButton> buttons;
 	private List<PropertiesSet> props;
 	
 	/**
@@ -87,6 +88,15 @@ public class MenuHandlerBase {
 	
 	public String getMenuIdentifier() {
 		return this.identifier;
+	}
+	
+	@SubscribeEvent
+	public void onMenuReloaded(MenuReloadedEvent e) {
+		this.onlyDelayFirstTime.clear();
+		
+		if (this.lastBackgroundAnimation != null) {
+			this.lastBackgroundAnimation.resetAnimation();
+		}
 	}
 	
 	@SubscribeEvent
@@ -104,7 +114,6 @@ public class MenuHandlerBase {
 			return;
 		}
 
-		this.buttons = e.getButtonList();
 		this.props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
 
 		//Applying customizations which needs to be done before other ones
@@ -150,7 +159,7 @@ public class MenuHandlerBase {
 			return;
 		}
 
-		if ((this.buttons == null) || (this.props == null)) {
+		if (this.props == null) {
 			return;
 		}
 		
@@ -182,8 +191,12 @@ public class MenuHandlerBase {
 				if (action != null) {
 					String identifier = sec.getEntryValue("identifier");
 					GuiButton b = null;
+					ButtonData bd = null;
 					if (identifier != null) {
-						b = getButton(identifier, buttons);
+						bd = getButton(identifier);
+						if (bd != null) {
+							b = bd.getButton();
+						}
 					}
 
 					if (action.equalsIgnoreCase("texturizebackground")) {
@@ -265,11 +278,15 @@ public class MenuHandlerBase {
 					
 					if (action.equalsIgnoreCase("hidebuttonfor")) {
 						String time = sec.getEntryValue("seconds");
+						String onlyfirsttime = sec.getEntryValue("onlyfirsttime");
 						if (b != null) {
 							if (MenuHandlerRegistry.getLastActiveHandler() != this) {
-								if ((time != null) && MathUtils.isDouble(time)) {
+								if ((time != null) && MathUtils.isDouble(time) && !this.onlyDelayFirstTime.contains(bd.getId())) {
 									b.visible = false;
-									this.hidefor.put(b, Double.parseDouble(time));
+									this.hidefor.put(bd, Double.parseDouble(time));
+								}
+								if ((onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true") && !this.onlyDelayFirstTime.contains(bd.getId())) {
+									this.onlyDelayFirstTime.add(bd.getId());
 								}
 							}
 						}
@@ -277,8 +294,7 @@ public class MenuHandlerBase {
 					
 					if (action.equalsIgnoreCase("hidebutton")) {
 						if (b != null) {
-							b.visible = false;
-							this.hidden.add(b);
+							this.hidden.add(bd);
 						}
 					}
 					
@@ -384,7 +400,7 @@ public class MenuHandlerBase {
 								File f2 = new File(backHover.replace("\\", "/"));
 								if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
 									b.visible = false;
-									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 								}
 							}
 						}
@@ -393,9 +409,9 @@ public class MenuHandlerBase {
 					if (action.equalsIgnoreCase("addhoversound")) {
 						if (b != null) {
 							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 							} else {
-								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 							}
 						}
 					}
@@ -403,9 +419,9 @@ public class MenuHandlerBase {
 					if (action.equalsIgnoreCase("sethoverlabel")) {
 						if (b != null) {
 							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 							} else {
-								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, b));
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 							}
 						}
 					}
@@ -471,11 +487,15 @@ public class MenuHandlerBase {
 						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
 						AdvancedButton cbtn = i.getButton();
 						String hide = sec.getEntryValue("hideforseconds");
+						String firsttime = sec.getEntryValue("delayonlyfirsttime");
 						
 						if (MenuHandlerRegistry.getLastActiveHandler() != this) {
-							if ((hide != null) && MathUtils.isDouble(hide) && (cbtn != null)) {
+							if ((hide != null) && MathUtils.isDouble(hide) && (cbtn != null) && !this.onlyDelayFirstTime.contains(i.getId())) {
 								cbtn.visible = false;
-								hidefor.put(cbtn, Double.parseDouble(hide));
+								hidefor.put(new ButtonData(cbtn, i.getId(), null, e.getGui()), Double.parseDouble(hide));
+							}
+							if ((firsttime != null) && firsttime.equalsIgnoreCase("true") && !this.onlyDelayFirstTime.contains(i.getId())) {
+								this.onlyDelayFirstTime.add(i.getId());
 							}
 						}
 						
@@ -533,7 +553,11 @@ public class MenuHandlerBase {
 			this.backgroundTexture = null;
 		}
 		
-		for (Map.Entry<GuiButton, Double> m : this.hidefor.entrySet()) {
+		for (ButtonData d : this.hidden) {
+			d.getButton().visible = false;
+		}
+		
+		for (Map.Entry<ButtonData, Double> m : this.hidefor.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
 				
 				new Thread(new Runnable() {
@@ -545,7 +569,7 @@ public class MenuHandlerBase {
 							try {
 								long now = System.currentTimeMillis();
 								if (now >= start + (int)delay) {
-									m.getKey().visible = true;
+									m.getKey().getButton().visible = true;
 									return;
 								}
 								
@@ -607,7 +631,7 @@ public class MenuHandlerBase {
 					Minecraft.getMinecraft().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 					
 					if (!this.panoramaback) {
-						Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
+						Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height + 1, e.getGui().width, e.getGui().height + 1);
 					} else {
 						int w = this.backgroundTexture.getWidth();
 						int h = this.backgroundTexture.getHeight();
@@ -653,10 +677,9 @@ public class MenuHandlerBase {
 							}
 						}
 						if (wfinal <= e.getGui().width) {
-							Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height, e.getGui().width, e.getGui().height);
+							Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, e.getGui().width, e.getGui().height + 1, e.getGui().width, e.getGui().height + 1);
 						} else {
-//							IngameGui.blit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height, wfinal, e.getGui().height);
-							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height);
+							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, e.getGui().height + 1);
 						}
 					}
 					
@@ -681,17 +704,17 @@ public class MenuHandlerBase {
 		}
 	}
 	
-	private static GuiButton getButton(String identifier, List<GuiButton> buttons) {
+	private static ButtonData getButton(String identifier) {
 		if (identifier.startsWith("%id=")) { //%id=1%
 			String p = identifier.split("[=]")[1].replace("%", "");
-			if (!MathUtils.isInteger(p)) {
+			if (!MathUtils.isLong(p)) {
 				return null;
 			}
-			int id = Integer.parseInt(p);
+			long id = Long.parseLong(p);
 			
 			ButtonData b = ButtonCache.getButtonForId(id);
 			if (b != null) {
-				return b.getButton();
+				return b;
 			}
 		} else {
 			ButtonData b = null;
@@ -701,7 +724,7 @@ public class MenuHandlerBase {
 				b = ButtonCache.getButtonForName(identifier);
 			}
 			if (b != null) {
-				return b.getButton();
+				return b;
 			}
 		}
 		return null;

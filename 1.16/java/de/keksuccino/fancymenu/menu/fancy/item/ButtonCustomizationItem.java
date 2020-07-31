@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -8,16 +9,21 @@ import java.util.Locale;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import de.keksuccino.core.gui.content.AdvancedButton;
+import de.keksuccino.core.gui.screens.popup.NotificationPopup;
+import de.keksuccino.core.gui.screens.popup.PopupHandler;
 import de.keksuccino.core.input.MouseInput;
+import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.core.resources.TextureHandler;
 import de.keksuccino.core.sound.SoundHandler;
+import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ConnectingScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -138,11 +144,20 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 					}
 				});
 			}
-			
 			if (buttonaction.equalsIgnoreCase("opencustomgui")) {
 				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
 					if (CustomGuiLoader.guiExists(finalAction)) {
 						Minecraft.getInstance().displayGuiScreen(CustomGuiLoader.getGui(finalAction, Minecraft.getInstance().currentScreen, null));
+					}
+				});
+			}
+			if (buttonaction.equalsIgnoreCase("opengui")) {
+				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
+					Screen s = GuiConstructor.tryToConstruct(finalAction);
+					if (s != null) {
+						Minecraft.getInstance().displayGuiScreen(s);
+					} else {
+						PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
 					}
 				});
 			}
@@ -224,6 +239,39 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	
 	public AdvancedButton getButton() {
 		return this.button;
+	}
+
+	public Long getId() {
+		int ori = 0;
+		if (this.orientation.equalsIgnoreCase("original")) {
+			ori = 1;
+		} else if (this.orientation.equalsIgnoreCase("top-left")) {
+			ori = 2;
+		} else if (this.orientation.equalsIgnoreCase("mid-left")) {
+			ori = 3;
+		} else if (this.orientation.equalsIgnoreCase("bottom-left")) {
+			ori = 4;
+		} else if (this.orientation.equalsIgnoreCase("top-centered")) {
+			ori = 5;
+		} else if (this.orientation.equalsIgnoreCase("mid-centered")) {
+			ori = 6;
+		} else if (this.orientation.equalsIgnoreCase("bottom-centered")) {
+			ori = 7;
+		} else if (this.orientation.equalsIgnoreCase("top-right")) {
+			ori = 8;
+		} else if (this.orientation.equalsIgnoreCase("mid-right")) {
+			ori = 9;
+		} else if (this.orientation.equalsIgnoreCase("bottom-right")) {
+			ori = 10;
+		}
+
+		String idRaw = "00" + ori + "" + Math.abs(this.posX) + "" + Math.abs(this.posY) + "" + Math.abs(this.width);
+		long id = 0;
+		if (MathUtils.isLong(idRaw)) {
+			id = Long.parseLong(idRaw);
+		}
+		
+		return id;
 	}
 
 }

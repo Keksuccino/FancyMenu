@@ -45,7 +45,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 		super(screenToCustomize);
 		
 		List<LayoutObject> con = new ArrayList<LayoutObject>();
-		Map<Integer, LayoutVanillaButton> vanillas = new HashMap<Integer, LayoutVanillaButton>();
+		Map<Long, LayoutVanillaButton> vanillas = new HashMap<Long, LayoutVanillaButton>();
 
 		if (properties.size() == 1) {
 			List<PropertiesSection> l = properties.get(0).getPropertiesOfType("customization-meta");
@@ -294,6 +294,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 					if (action.equalsIgnoreCase("hidebuttonfor")) {
 						if (b != null) {
 							String seconds = sec.getEntryValue("seconds");
+							String firsttime = sec.getEntryValue("onlyfirsttime");
 							if ((seconds != null) && (MathUtils.isDouble(seconds))) {
 								if (!vanillas.containsKey(b.getId())) {
 									LayoutVanillaButton van = new LayoutVanillaButton(b, this);
@@ -304,6 +305,11 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 								vanillas.get(b.getId()).hideforsec = d;
 								
 								this.vanillaHideFor.put(b.getId(), d);
+								
+								if ((firsttime != null) && firsttime.equalsIgnoreCase("true")) {
+									vanillas.get(b.getId()).delayonlyfirsttime = true;
+									this.vanillaDelayOnlyFirstTime.put(b.getId(), true);
+								}
 							}
 						}
 					}
@@ -338,6 +344,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						String hoverLabel = sec.getEntryValue("hoverlabel");
 						String hoverSound = sec.getEntryValue("hoversound");
 						String hidefor = sec.getEntryValue("hideforseconds");
+						String firsttime = sec.getEntryValue("delayonlyfirsttime");
 						
 						if (baction == null) {
 							continue;
@@ -351,6 +358,9 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						
 						if ((hidefor != null) && MathUtils.isDouble(hidefor)) {
 							lb.hideforsec = Double.parseDouble(hidefor);
+							if ((firsttime != null) && firsttime.equalsIgnoreCase("true")) {
+								lb.delayonlyfirsttime = true;
+							}
 						}
 						
 						if ((backNormal != null) && (backHover != null)) {
