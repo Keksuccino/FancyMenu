@@ -5,8 +5,9 @@ import java.io.IOException;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
@@ -22,6 +23,9 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtext")) {
 			this.value = item.getEntryValue("value");
+			if (this.value != null) {
+				this.value = MenuCustomization.convertString(this.value);
+			}
 			
 			String sh = item.getEntryValue("shadow");
 			if ((sh != null)) {

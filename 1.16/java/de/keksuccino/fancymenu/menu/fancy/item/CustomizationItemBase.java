@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.CurrentScreenHandler;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.gui.screen.Screen;
 
 public abstract class CustomizationItemBase {
@@ -32,21 +32,14 @@ public abstract class CustomizationItemBase {
 	public CustomizationItemBase(PropertiesSection item) {
 		this.action = item.getEntryValue("action");
 
-		int guiwidth = 0;
-		int guiheight = 0;
-		if (CurrentScreenHandler.getScreen() != null) {
-			guiwidth = CurrentScreenHandler.getWidth();
-			guiheight = CurrentScreenHandler.getHeight();
-		}
-
 		String x = item.getEntryValue("x");
 		String y = item.getEntryValue("y");
 		if (x != null) {
-			x = x.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			x = MenuCustomization.convertString(x);
 			this.posX = (int) MathUtils.calculateFromString(x);
 		}
 		if (y != null) {
-			y = y.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			y = MenuCustomization.convertString(y);
 			this.posY = (int) MathUtils.calculateFromString(y);
 		}
 	
@@ -57,7 +50,7 @@ public abstract class CustomizationItemBase {
 
 		String w = item.getEntryValue("width");
 		if (w != null) {
-			w = w.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			w = MenuCustomization.convertString(w);
 			this.width = (int) MathUtils.calculateFromString(w);
 			if (this.width < 0) {
 				this.width = 0;
@@ -66,7 +59,7 @@ public abstract class CustomizationItemBase {
 
 		String h = item.getEntryValue("height");
 		if (h != null) {
-			h = h.replace("%guiwidth%", "" + guiwidth).replace("%guiheight%", "" + guiheight);
+			h = MenuCustomization.convertString(h);
 			this.height = (int) MathUtils.calculateFromString(h);
 			if (this.height < 0) {
 				this.height = 0;

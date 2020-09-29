@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
 import java.awt.Color;
 
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;

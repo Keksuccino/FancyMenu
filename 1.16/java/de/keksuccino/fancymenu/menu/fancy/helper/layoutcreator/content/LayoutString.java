@@ -6,17 +6,17 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.RenderUtils;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -45,10 +45,14 @@ public class LayoutString extends LayoutObject {
 		}
 		AdvancedButton shadowB = new AdvancedButton(0, 0, 0, 16, sLabel, true, (press) -> {
 			if (this.getObject().shadow) {
-				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setshadow"));;
+				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setshadow"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().shadow = false;
 			} else {
-				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));;
+				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().shadow = true;
 			}
 		});
@@ -148,12 +152,20 @@ public class LayoutString extends LayoutObject {
 	}
 	
 	public void setScale(float scale) {
+		if (this.getObject().scale != scale) {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+		}
+		
 		((StringCustomizationItem)this.object).scale = scale;
 		this.setWidth((int)(Minecraft.getInstance().fontRenderer.getStringWidth(this.object.value)*scale));
 		this.setHeight((int)(7*scale));
 	}
 	
 	public void setText(String text) {
+		if (!this.getObject().value.equals(text)) {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+		}
+		
 		this.object.value = text;
 		this.setScale(this.getStringScale());
 	}

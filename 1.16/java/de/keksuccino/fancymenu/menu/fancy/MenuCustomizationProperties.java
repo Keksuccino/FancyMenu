@@ -4,12 +4,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.properties.PropertiesSerializer;
-import de.keksuccino.core.properties.PropertiesSet;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSerializer;
+import de.keksuccino.konkrete.properties.PropertiesSet;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
@@ -26,36 +26,38 @@ public class MenuCustomizationProperties {
 		}
 		
 		for (File f2 : f.listFiles()) {
-			PropertiesSet s = PropertiesSerializer.getProperties(f2.getAbsolutePath());
-			if ((s != null) && s.getPropertiesType().equalsIgnoreCase("menu")) {
-				List<PropertiesSection> l = s.getPropertiesOfType("customization-meta");
-				//TODO remove deprecated "type-meta" section name
-				if (l.isEmpty()) {
-					l = s.getPropertiesOfType("type-meta");
-				}
-				if (!l.isEmpty()) {
-					String s2 = l.get(0).getEntryValue("identifier");
-					String s3 = l.get(0).getEntryValue("requiredmods");
-					String s4 = l.get(0).getEntryValue("minimumfmversion");
-					String s5 = l.get(0).getEntryValue("maximumfmversion");
-					String s6 = l.get(0).getEntryValue("minimummcversion");
-					String s7 = l.get(0).getEntryValue("maximummcversion");
-					
-					if (s2 == null) {
-						continue;
+			if (f2.getPath().toLowerCase().endsWith(".txt")) {
+				PropertiesSet s = PropertiesSerializer.getProperties(f2.getAbsolutePath());
+				if ((s != null) && s.getPropertiesType().equalsIgnoreCase("menu")) {
+					List<PropertiesSection> l = s.getPropertiesOfType("customization-meta");
+					//TODO remove deprecated "type-meta" section name
+					if (l.isEmpty()) {
+						l = s.getPropertiesOfType("type-meta");
 					}
-					if (!isVersionCompatible(s4, s5, FancyMenu.VERSION)) {
-						continue;
+					if (!l.isEmpty()) {
+						String s2 = l.get(0).getEntryValue("identifier");
+						String s3 = l.get(0).getEntryValue("requiredmods");
+						String s4 = l.get(0).getEntryValue("minimumfmversion");
+						String s5 = l.get(0).getEntryValue("maximumfmversion");
+						String s6 = l.get(0).getEntryValue("minimummcversion");
+						String s7 = l.get(0).getEntryValue("maximummcversion");
+						
+						if (s2 == null) {
+							continue;
+						}
+						if (!isVersionCompatible(s4, s5, FancyMenu.VERSION)) {
+							continue;
+						}
+						if (!isVersionCompatible(s6, s7, MCPVersion.getMCVersion())) {
+							continue;
+						}
+						if (!allRequiredModsLoaded(s3)) {
+							continue;
+						}
+						
+						l.get(0).addEntry("path", f2.getPath());
+						properties.add(s);
 					}
-					if (!isVersionCompatible(s6, s7, MCPVersion.getMCVersion())) {
-						continue;
-					}
-					if (!allRequiredModsLoaded(s3)) {
-						continue;
-					}
-					
-					l.get(0).addEntry("path", f2.getPath());
-					properties.add(s);
 				}
 			}
 		}

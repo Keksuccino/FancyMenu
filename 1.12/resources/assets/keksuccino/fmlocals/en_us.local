@@ -1,18 +1,6 @@
-general.width = Width
-general.height = Height
-general.on = On
-general.off = Off
-
 loading.animation.loadingframes = Loading animation frames for {}
 loading.animation.prerendering = Pre-rendering animation {}
 loading.animation.done = Done!
-
-popup.done = Done
-
-popup.yesno.confirm = Confirm
-popup.yesno.cancel = Cancel
-
-popup.notification.accept = Accept
 
 helper.button.menuinfo = Menu Info
 helper.button.buttoninfo = Button Info
@@ -47,7 +35,7 @@ helper.creator.invalidaudio.title = Invalid audio file!
 helper.creator.invalidaudio.desc = The file you want to load does not exist or has an unsupported file type.%n%%n%Please check your file path and be sure that your file is a valid WAV audio file!
 
 helper.creator.invalidimage.title = Invalid image file!
-helper.creator.invalidimage.desc = The image you want to load does not exist or has an unsupported file type.%n%%n%Supported file types are JPG/JPEG and PNG.
+helper.creator.invalidimage.desc = The image you want to load does not exist or has an unsupported file type.%n%%n%Supported file types are JPG/JPEG, PNG and GIF.
 
 helper.creator.imagenotfound.title = Image not found!
 helper.creator.imagenotfound.desc = The image you want to add does not exist%n%at the specified location.
@@ -250,10 +238,6 @@ helper.creator.items.button.delayappearance = Delay Appearance
 helper.creator.items.button.delayappearance.desc = Delay Appearance For Seconds [Decimal Value Support]
 helper.creator.items.button.delayappearance.invalidvalue = §c§lInvalid Value!%n%%n%%n%This is not a valid seconds value!%n%Maybe your value is too long. (..DON'T BE PROUD OF THIS!)%n%%n%Value Examples: 3, 2.0, 0.05, 0.8, 10.5
 
-popup.choosefile.back = BACK
-popup.choosefile.title = Choose File
-popup.choosefile.choose = Choose
-
 custombuttons.action.opengui.cannotopengui = §c§lUnable To Open GUI!%n%%n%%n%The GUI you want to open either does not exist or isn't supported!%n%%n%If this is an existing GUI, please contact the developer to add support for it.
 
 helper.creator.custombutton.config.actiontype.opengui.desc = Opens a GUI by its menu identifier.
@@ -262,3 +246,75 @@ helper.creator.custombutton.config.actiontype.opengui.desc.value = Menu Identifi
 helper.creator.popup.hidefor.delayeverytime = Delay Everytime
 helper.creator.popup.hidefor.delayfirsttime = Delay First Time
 
+helper.creator.windowsize = Windowsize Restricts
+helper.creator.windowsize.biggerthan = Bigger Than
+helper.creator.windowsize.smallerthan = Smaller Than
+helper.creator.windowsize.biggerthan.desc = Only Enable Layout if Window is Bigger Than X
+helper.creator.windowsize.smallerthan.desc = Only Enable Layout if Window is Smaller Than X
+helper.creator.windowsize.currentwidth = Current Window Width
+helper.creator.windowsize.currentheight = Current Window Height
+
+helper.menuinfo.idcopied = Copied to clipboard!
+
+helper.excludemenu = Exclude Menu
+helper.excludemenu.soft = Soft Exclude
+helper.excludemenu.full = Full Exclude
+helper.excludemenu.current = Exclude Current
+helper.excludemenu.byidentifier = Exclude By Identifier
+helper.excludemenu.remove = Remove Excluded
+helper.excludemenu.excludebundle = Exclude ALL menus starting with the given menu identifier part?
+helper.excludemenu.excludejustthis = Just This Menu
+helper.excludemenu.excludeall = All Menus
+
+helper.creator.custombutton.config.actiontype.movefile.desc = Moves a file to a new path.
+helper.creator.custombutton.config.actiontype.movefile.desc.value = Filepath + new path, separated by ';'
+helper.creator.custombutton.config.actiontype.copyfile.desc = Copies a file to a path.
+helper.creator.custombutton.config.actiontype.copyfile.desc.value = Filepath + target path, separated by ';'
+helper.creator.custombutton.config.actiontype.deletefile.desc = Deletes a file.
+helper.creator.custombutton.config.actiontype.deletefile.desc.value = Filepath
+helper.creator.custombutton.config.actiontype.renamefile.desc = Renames a file.
+helper.creator.custombutton.config.actiontype.renamefile.desc.value = Filepath + new filename with type
+helper.creator.custombutton.config.actiontype.reloadmenu.desc = Reloads the currently displayed menu.
+helper.creator.custombutton.config.actiontype.runscript.desc = Runs a button script.
+helper.creator.custombutton.config.actiontype.runscript.desc.value = Script filename without filetype
+helper.creator.custombutton.config.actiontype.downloadfile.desc = Downloads a file to a path.
+helper.creator.custombutton.config.actiontype.downloadfile.desc.value = URL + download path, separated by ';'
+helper.creator.custombutton.config.actiontype.unpackzip.desc = Unpacks a ZIP file to a path.
+helper.creator.custombutton.config.actiontype.unpackzip.desc.value = Filepath + target path, separated by ';'
+
+helper.creator.custombutton.config.actionvalue.example = Example: {}
+
+helper.creator.custombutton.config.actiontype.openlink.desc.value.example = https://google.com
+helper.creator.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all!
+helper.creator.custombutton.config.actiontype.joinserver.desc.value.example = mc.coolserver.com
+helper.creator.custombutton.config.actiontype.loadworld.desc.value.example = myworld
+helper.creator.custombutton.config.actiontype.opencustomgui.desc.value.example = coolcustomgui
+helper.creator.custombutton.config.actiontype.opengui.desc.value.example = some.menu.identifier
+helper.creator.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/changelog.txt
+helper.creator.custombutton.config.actiontype.movefile.desc.value.example = config/fancymenu/image.jpg;config/moveto/image.jpg
+helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = config/fancymenu/image.jpg;config/fancymenu/imagecopy.jpg
+helper.creator.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/rickroll.gif
+helper.creator.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/image.jpg;newimagename.jpg
+helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://myhoster.com/layout.zip;config/fancymenu/layout.zip
+helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = config/fancymenu/archive.zip;config/fancymenu/unpacked/
+helper.creator.custombutton.config.actiontype.runscript.desc.value.example = coolscript
+
+helper.creator.rightclick.scale = GUI Scale
+helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than zero!
+
+helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc = Mutes or unmutes the menu background sounds added by FancyMenu.
+helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc.value = true/false
+helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc.value.example = true
+
+helper.creator.items.button.resetlabel = Reset Label
+
+helper.creator.vanillabutton.move.notification.dontshowagain = Don't show again
+
+helper.creator.items.custombutton.onlydisplayin = Only Display In
+helper.creator.items.custombutton.onlydisplayin.outgame = Outgame
+helper.creator.items.custombutton.onlydisplayin.singleplayer = Singleplayer
+helper.creator.items.custombutton.onlydisplayin.multiplayer = Multiplayer
+helper.creator.items.custombutton.onlydisplayin.reset = RESET
+
+helper.creator.items.button.clicksound = Set Clicksound
+helper.creator.items.button.clicksound.reset = Reset Clicksound

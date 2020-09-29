@@ -47,7 +47,7 @@ public class CustomGuiBase extends Screen {
 	public void render(int p_render_1_, int p_render_2_, float p_render_3_) {
 		this.renderBackground();
 		if (title != null) {
-			this.drawCenteredString(this.font, this.menutitle, this.width / 2, 8, 16777215);
+			drawCenteredString(this.font, this.menutitle, this.width / 2, 8, 16777215);
 		}
 		super.render(p_render_1_, p_render_2_, p_render_3_);
 	}

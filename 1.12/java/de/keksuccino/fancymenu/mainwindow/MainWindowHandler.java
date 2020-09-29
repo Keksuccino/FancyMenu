@@ -82,5 +82,14 @@ public class MainWindowHandler {
 		ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
 		return res.getScaledHeight();
 	}
+	
+	public static void updateFramebufferSize() {
+		Minecraft mc = Minecraft.getMinecraft();
+		mc.getFramebuffer().createBindFramebuffer(mc.displayWidth, mc.displayHeight);
+
+		if (mc.entityRenderer != null) {
+			mc.entityRenderer.updateShaderGroupSize(mc.displayWidth, mc.displayHeight);
+		}
+	}
 
 }

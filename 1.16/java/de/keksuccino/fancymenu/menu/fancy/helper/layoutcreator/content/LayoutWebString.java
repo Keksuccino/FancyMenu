@@ -6,16 +6,16 @@ import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.RenderUtils;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
@@ -45,9 +45,13 @@ public class LayoutWebString extends LayoutObject {
 		AdvancedButton shadowB = new AdvancedButton(0, 0, 0, 16, sLabel, true, (press) -> {
 			if (this.getObject().shadow) {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setshadow"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().shadow = false;
 			} else {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().shadow = true;
 			}
 		});
@@ -61,10 +65,14 @@ public class LayoutWebString extends LayoutObject {
 		AdvancedButton multilineB = new AdvancedButton(0, 0, 0, 16, mLabel, true, (press) -> {
 			if (this.getObject().multiline) {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.webstring.multiline"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().multiline = false;
 				this.getObject().updateContent(this.getObject().value);
 			} else {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.webstring.nomultiline"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().multiline = true;
 				this.getObject().updateContent(this.getObject().value);
 			}
@@ -144,13 +152,17 @@ public class LayoutWebString extends LayoutObject {
 	}
 	
 	public void setScale(float scale) {
+		if (this.getObject().scale != scale) {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+		}
+		
 		((WebStringCustomizationItem)this.object).scale = scale;
 		this.setWidth((int)(Minecraft.getInstance().fontRenderer.getStringWidth(this.object.value)*scale));
 		this.setHeight((int)(7*scale));
 	}
-	
-	public boolean updateContent(String url) {
-		return this.getObject().updateContent(url);
+
+	public void updateContent(String url) {
+		this.getObject().updateContent(url);
 	}
 	
 	private void setScaleCallback(String scale) {

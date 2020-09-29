@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
 import java.awt.Color;
-import java.util.function.Consumer;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.KeyboardData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
@@ -16,39 +15,41 @@ public class HideForPopup extends TextInputPopup {
 	
 	private AdvancedButton delayEverytimeBtn;
 	private AdvancedButton delayOnlyFirstTimeBtn;
-	private Consumer<Boolean> callback2;
+	private ILayoutButton button;
 	private boolean onlyfirsttime = false;
 	private int backgroundalpha = 0;
 
-	public HideForPopup(String title, CharacterFilter filter, int backgroundAlpha, Consumer<String> callback, Consumer<Boolean> callbackDelayOnlyFirstTime, boolean delayOnlyFirstTime) {
-		super(new Color(0, 0, 0, 0), title, filter, backgroundAlpha, callback);
-		this.callback2 = callbackDelayOnlyFirstTime;
-		this.onlyfirsttime = delayOnlyFirstTime;
+	public HideForPopup(String title, CharacterFilter filter, int backgroundAlpha, ILayoutButton button) {
+		super(new Color(0, 0, 0, 0), title, filter, backgroundAlpha, null);
 		this.backgroundalpha = backgroundAlpha;
+		this.button = button;
+		this.onlyfirsttime = button.isDelayedOnlyFirstTime();
 		
 		String eBtn = "§a" + Locals.localize("helper.creator.popup.hidefor.delayeverytime");
-		if (delayOnlyFirstTime) {
+		if (this.onlyfirsttime) {
 			eBtn = Locals.localize("helper.creator.popup.hidefor.delayeverytime");
 		}
 		this.delayEverytimeBtn = new AdvancedButton(0, 0, 100, 20, eBtn, true, (press) -> {
 			this.onlyfirsttime = false;
-			callback2.accept(this.onlyfirsttime);
 			press.displayString = "§a" + Locals.localize("helper.creator.popup.hidefor.delayeverytime");
 			this.delayOnlyFirstTimeBtn.displayString = Locals.localize("helper.creator.popup.hidefor.delayfirsttime");
 		});
 		this.addButton(this.delayEverytimeBtn);
 		
 		String fBtn = Locals.localize("helper.creator.popup.hidefor.delayfirsttime");
-		if (delayOnlyFirstTime) {
+		if (this.onlyfirsttime) {
 			fBtn = "§a" + Locals.localize("helper.creator.popup.hidefor.delayfirsttime");
 		}
 		this.delayOnlyFirstTimeBtn = new AdvancedButton(0, 0, 100, 20, fBtn, true, (press) -> {
 			this.onlyfirsttime = true;
-			callback2.accept(this.onlyfirsttime);
 			press.displayString = "§a" + Locals.localize("helper.creator.popup.hidefor.delayfirsttime");
 			this.delayEverytimeBtn.displayString = Locals.localize("helper.creator.popup.hidefor.delayeverytime");
 		});
 		this.addButton(this.delayOnlyFirstTimeBtn);
+		
+		this.doneButton.setPressAction((press) -> {
+			this.onDoneButtonPressed();
+		});
 		
 	}
 	
@@ -74,7 +75,7 @@ public class HideForPopup extends TextInputPopup {
 		this.delayEverytimeBtn.y = ((renderIn.height  / 2) + 50) - this.delayEverytimeBtn.height - 5;
 		
 		this.delayOnlyFirstTimeBtn.x = (renderIn.width / 2) + 5;
-		this.delayOnlyFirstTimeBtn.y = ((renderIn.height  / 2) + 50) - this.delayOnlyFirstTimeBtn.height- 5;
+		this.delayOnlyFirstTimeBtn.y = ((renderIn.height  / 2) + 50) - this.delayOnlyFirstTimeBtn.height - 5;
 		
 		this.doneButton.x = (renderIn.width / 2) - (this.doneButton.width / 2);
 		this.doneButton.y = ((renderIn.height / 2) + 90) - this.doneButton.height - 5;
@@ -84,13 +85,16 @@ public class HideForPopup extends TextInputPopup {
 	
 	@Override
 	public void onEnterPressed(KeyboardData d) {
-		super.onEnterPressed(d);
-		
-		if ((d.keycode == 257) && this.isDisplayed()) {
-			if (this.callback2 != null) {
-				this.callback2.accept(this.onlyfirsttime);
-			}
+		if ((d.keycode == 28) && this.isDisplayed()) {
+			this.onDoneButtonPressed();
 		}
+	}
+	
+	protected void onDoneButtonPressed() {
+		this.input = this.textField.getText();
+		String sec = CharacterFilter.getDoubleCharacterFiler().filterForAllowedChars(this.input);
+		this.button.setAppearanceDelay(sec, this.onlyfirsttime);
+		this.setDisplayed(false);
 	}
 
 }

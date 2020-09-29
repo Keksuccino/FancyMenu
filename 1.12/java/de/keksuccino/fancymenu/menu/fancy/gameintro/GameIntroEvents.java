@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraftforge.client.event.GuiScreenEvent;

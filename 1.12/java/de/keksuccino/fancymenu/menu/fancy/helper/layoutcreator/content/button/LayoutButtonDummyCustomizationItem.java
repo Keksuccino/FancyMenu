@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 import java.awt.Color;
 import java.io.IOException;
 
-import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;

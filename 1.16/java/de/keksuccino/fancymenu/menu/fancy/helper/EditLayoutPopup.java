@@ -10,21 +10,22 @@ import java.util.Map;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.HorizontalSwitcher;
-import de.keksuccino.core.gui.screens.popup.NotificationPopup;
-import de.keksuccino.core.gui.screens.popup.Popup;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.properties.PropertiesSet;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
+import de.keksuccino.konkrete.gui.screens.popup.NotificationPopup;
+import de.keksuccino.konkrete.gui.screens.popup.Popup;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -141,12 +142,12 @@ public class EditLayoutPopup extends Popup {
 		
 		if (this.isDisplayed()) {
 
-			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent("§l" + Locals.localize("helper.creator.editlayout")),
+			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent("§l" + Locals.localize("helper.creator.editlayout")),
 					renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 			
 			int i = 0;
 			for (String s : this.msg) {
-				renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(s),
+				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(s),
 						renderIn.width / 2, (renderIn.height / 2) - 90 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
@@ -157,7 +158,7 @@ public class EditLayoutPopup extends Popup {
 			this.loadAllButton.setY(startY);
 			
 			
-			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.editlayout.popup.layouts")),
+			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.editlayout.popup.layouts")),
 					renderIn.width / 2, startY + 37, Color.WHITE.getRGB());
 			
 			this.fileSwitcher.render(matrix, (renderIn.width / 2) - (this.fileSwitcher.getTotalWidth() / 2), startY + 50);
@@ -171,7 +172,7 @@ public class EditLayoutPopup extends Popup {
 				}
 			}
 			
-			renderIn.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer,
+			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer,
 					new StringTextComponent("(" + Locals.localize("helper.creator.editlayout.popup.actionscount", "" + count) + ")"),
 					renderIn.width / 2, startY + 75, Color.WHITE.getRGB());
 

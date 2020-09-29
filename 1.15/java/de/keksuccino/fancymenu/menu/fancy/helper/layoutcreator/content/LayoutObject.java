@@ -11,18 +11,19 @@ import javax.annotation.Nonnull;
 
 import org.lwjgl.glfw.GLFW;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.PopupMenu;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.YesNoPopup;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.RenderUtils;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 
@@ -58,6 +59,9 @@ public abstract class LayoutObject extends AbstractGui {
 	private final boolean destroyable;
 
 	public final String objectId = UUID.randomUUID().toString();
+
+	private Snapshot cachedSnapshot;
+	private boolean moving = false;
 	
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
@@ -206,6 +210,8 @@ public abstract class LayoutObject extends AbstractGui {
 	}
 	
 	protected void setOrientation(String pos) {
+		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+
 		if (pos.equals("mid-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
@@ -298,25 +304,27 @@ public abstract class LayoutObject extends AbstractGui {
 				this.dragging = false;
 			}
 		}
-
+		
 		//Handles the resizing process
 		if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
 			if (!this.resizing) {
+				this.cachedSnapshot = this.handler.history.createSnapshot();
+				
 				this.lastGrabber = this.getActiveResizeGrabber();
 			}
 			this.resizing = true;
 			this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 		}
-		if (!MouseInput.isLeftMouseDown()) {
-			this.startX = this.object.posX;
-			this.startY = this.object.posY;
-			this.startWidth = this.object.width;
-			this.startHeight = this.object.height;
-			this.resizing = false;
-		}
 		
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
+
+			if (!this.moving) {
+				this.cachedSnapshot = this.handler.history.createSnapshot();
+			}
+
+			this.moving = true;
+			
 			if ((mouseX >= 5) && (mouseX <= this.handler.width -5)) {
 				this.object.posX = this.orientationMouseX(mouseX) - this.startDiffX;
 			}
@@ -327,6 +335,28 @@ public abstract class LayoutObject extends AbstractGui {
 		if (!this.isDragged()) {
 			this.startDiffX = this.orientationMouseX(mouseX) - this.object.posX;
 			this.startDiffY = this.orientationMouseY(mouseY) - this.object.posY;
+
+			if (((this.startX != this.object.posX) || (this.startY != this.object.posY)) && this.moving) {
+				if (this.cachedSnapshot != null) {
+					this.handler.history.saveSnapshot(this.cachedSnapshot);
+				}
+			}
+
+			this.moving = false;
+		}
+
+		if (!MouseInput.isLeftMouseDown()) {
+			if (((this.startWidth != this.object.width) || (this.startHeight != this.object.height)) && this.resizing) {
+				if (this.cachedSnapshot != null) {
+					this.handler.history.saveSnapshot(this.cachedSnapshot);
+				}
+			}
+			
+			this.startX = this.object.posX;
+			this.startY = this.object.posY;
+			this.startWidth = this.object.width;
+			this.startHeight = this.object.height;
+			this.resizing = false;
 		}
 
 		//Handle button options menu
@@ -419,15 +449,15 @@ public abstract class LayoutObject extends AbstractGui {
 		
 		//Render pos and size values
 		RenderUtils.setScale(0.5F);
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
+		drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale();
 	}
-
+	
 	protected void renderHighlightBorder() {
 		Color c = new Color(0, 200, 255, 255);
 		
@@ -630,6 +660,8 @@ public abstract class LayoutObject extends AbstractGui {
 		this.handler.setMenusUseable(false);
 		PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 			if (call) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.handler.removeContent(this);
 			}
 			this.handler.setMenusUseable(true);

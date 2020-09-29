@@ -2,11 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.languagesettings;
 
 import java.lang.reflect.Field;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.fancymenu.menu.button.ButtonCache;
-import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -14,6 +11,8 @@ import net.minecraft.client.gui.screen.LanguageScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.SettingsScreen;
 import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.widget.button.OptionButton;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.AbstractOption;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -22,56 +21,67 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class LanguageMenuHandler extends MenuHandlerBase {
-
+	
 	private LanguageMenuList list;
-	private AdvancedButton confirmSettingsBtn;
-	private AdvancedButton unicodeButton;
+	private Button confirmSettingsBtn;
+	private Button unicodeButton;
 
 	public LanguageMenuHandler() {
 		super(LanguageScreen.class.getName());
 	}
-
-	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	
+	@SubscribeEvent
+	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
 		if (this.shouldCustomize(e.getGui())) {
-
-			GameSettings s = Minecraft.getInstance().gameSettings;
-
+			
+			Widget uni = null;
+			Widget confirm = null;
+			for (Widget w : e.getWidgetList()) {
+				if (w instanceof OptionButton) {
+					uni = w;
+				} else {
+					confirm = w;
+				}
+			}
+			if (uni != null) {
+				e.removeWidget(uni);
+			}
+			if (confirm != null) {
+				e.removeWidget(confirm);
+			}
+			
 			e.getGui().children().clear();
 			
-			this.unicodeButton = ButtonCache.convertToAdvancedButton(ButtonCache.getIdForButton(this.getUnicodeButton()), true);
-			if (this.unicodeButton != null) {
-				this.unicodeButton.setPressAction((press) -> {
-					AbstractOption.FORCE_UNICODE_FONT.nextValue(s);
+			GameSettings s = Minecraft.getInstance().gameSettings;
+			
+			this.unicodeButton = new OptionButton(e.getGui().width / 2 - 155, e.getGui().height - 38, 150, 20, AbstractOption.FORCE_UNICODE_FONT, AbstractOption.FORCE_UNICODE_FONT.getText(s), (press) -> {
+				AbstractOption.FORCE_UNICODE_FONT.nextValue(s);
+				s.saveOptions();
+				press.setMessage(AbstractOption.FORCE_UNICODE_FONT.getText(s));
+				Minecraft.getInstance().updateWindowSize();
+			});
+			e.addWidget(this.unicodeButton);
+			
+			this.confirmSettingsBtn = new Button(e.getGui().width / 2 - 155 + 160, e.getGui().height - 38, 150, 20, I18n.format("gui.done"), (press) -> {
+				LanguageMenuList.LanguageEntry languagescreen$list$languageentry = this.list.getSelected();
+				if (languagescreen$list$languageentry != null && !languagescreen$list$languageentry.field_214398_b.getCode().equals(Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode())) {
+					Minecraft.getInstance().getLanguageManager().setCurrentLanguage(languagescreen$list$languageentry.field_214398_b);
+					s.language = languagescreen$list$languageentry.field_214398_b.getCode();
+					net.minecraftforge.client.ForgeHooksClient.refreshResources(Minecraft.getInstance(), net.minecraftforge.resource.VanillaResourceType.LANGUAGES);
+					Minecraft.getInstance().fontRenderer.setBidiFlag(Minecraft.getInstance().getLanguageManager().isCurrentLanguageBidirectional());
+					press.setMessage(I18n.format("gui.done"));
+					this.unicodeButton.setMessage(AbstractOption.FORCE_UNICODE_FONT.getText(s));
 					s.saveOptions();
-					press.setMessage(AbstractOption.FORCE_UNICODE_FONT.getText(s));
-					Minecraft.getInstance().updateWindowSize();
-				});
-			}
+				}
 
-			this.confirmSettingsBtn = ButtonCache.convertToAdvancedButton(ButtonCache.getIdForButton(this.getConfirmButton()), true);
-			if (this.confirmSettingsBtn != null) {
-				this.confirmSettingsBtn.setPressAction((press) -> {
-					LanguageMenuList.LanguageEntry languagescreen$list$languageentry = this.list.getSelected();
-					if (languagescreen$list$languageentry != null && !languagescreen$list$languageentry.field_214398_b.getCode().equals(Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode())) {
-						Minecraft.getInstance().getLanguageManager().setCurrentLanguage(languagescreen$list$languageentry.field_214398_b);
-						s.language = languagescreen$list$languageentry.field_214398_b.getCode();
-						net.minecraftforge.client.ForgeHooksClient.refreshResources(Minecraft.getInstance(), net.minecraftforge.resource.VanillaResourceType.LANGUAGES);
-						Minecraft.getInstance().fontRenderer.setBidiFlag(Minecraft.getInstance().getLanguageManager().isCurrentLanguageBidirectional());
-						press.setMessage(I18n.format("gui.done"));
-						this.unicodeButton.setMessage(AbstractOption.FORCE_UNICODE_FONT.getText(s));
-						s.saveOptions();
-					}
-
-					Minecraft.getInstance().displayGuiScreen(this.getParent());
-				});
-			}
+				Minecraft.getInstance().displayGuiScreen(this.getParent());
+			});
+			e.addWidget(this.confirmSettingsBtn);
 			
 			this.list = new LanguageMenuList((LanguageScreen) e.getGui(), Minecraft.getInstance(), this);
 			addChildren(e.getGui(), this.list);
-		}
 
-		super.onInitPost(e);
+		}
 	}
 
 	@SubscribeEvent
@@ -110,30 +120,6 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 		return null;
 	}
 	
-	private Widget getConfirmButton() {
-		if (this.shouldCustomize(Minecraft.getInstance().currentScreen)) {
-			try {
-				Field f = ObfuscationReflectionHelper.findField(LanguageScreen.class, "field_146452_r");
-				return (Widget) f.get(Minecraft.getInstance().currentScreen);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
-	
-	private Widget getUnicodeButton() {
-		if (this.shouldCustomize(Minecraft.getInstance().currentScreen)) {
-			try {
-				Field f = ObfuscationReflectionHelper.findField(LanguageScreen.class, "field_211832_i");
-				return (Widget) f.get(Minecraft.getInstance().currentScreen);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
-	
 	private static void addChildren(Screen s, IGuiEventListener e) {
 		try {
 			Field f = ObfuscationReflectionHelper.findField(Screen.class, "children");
@@ -142,6 +128,5 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 			e1.printStackTrace();
 		}
 	}
-
 
 }

@@ -6,9 +6,10 @@ import java.io.IOException;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
@@ -40,7 +41,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
         	RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         	Screen.blit(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.width, this.height, this.width, this.height);
         }
-        menu.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(this.value), this.getPosX(menu) + this.width / 2, this.getPosY(menu) + (this.height - 8) / 2, new Color(255, 255, 255, 255).getRGB());
+        AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(this.value), this.getPosX(menu) + this.width / 2, this.getPosY(menu) + (this.height - 8) / 2, new Color(255, 255, 255, 255).getRGB());
         RenderSystem.disableBlend();
 	}
 	

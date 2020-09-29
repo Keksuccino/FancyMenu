@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 
 public class LayoutTexture extends LayoutObject {
 	

@@ -22,23 +22,25 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			try {
-				VideoSettingsList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, this);
-				l.addOption(new FullscreenResolutionOption(Minecraft.getInstance().getMainWindow()));
-			    l.addOption(AbstractOption.BIOME_BLEND_RADIUS);
-			    l.addOptions(OPTIONS);
-				Field f = ObfuscationReflectionHelper.findField(VideoSettingsScreen.class, "field_146501_h");
-				e.getGui().children().remove(f.get(e.getGui()));
-				f.set(e.getGui(), l);
-				addChildren(e.getGui(), l);
-			} catch(Exception ex) {
-				ex.printStackTrace();
+			if (isScrollable()) {
+				try {
+					VideoSettingsList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, this);
+					l.addOption(new FullscreenResolutionOption(Minecraft.getInstance().getMainWindow()));
+					l.addOption(AbstractOption.BIOME_BLEND_RADIUS);
+					l.addOptions(OPTIONS);
+					Field f = ObfuscationReflectionHelper.findField(VideoSettingsScreen.class, "field_146501_h");
+					e.getGui().children().remove(f.get(e.getGui()));
+					f.set(e.getGui(), l);
+					addChildren(e.getGui(), l);
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	private static void addChildren(Screen s, IGuiEventListener e) {
@@ -48,6 +50,14 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
+	}
+	
+	public static boolean isScrollable() {
+		Field f = null;
+		try {
+			f = ObfuscationReflectionHelper.findField(VideoSettingsScreen.class, "field_146501_h");
+		} catch (Exception e) {}
+		return (f != null);
 	}
 
 }

@@ -2,37 +2,44 @@ package de.keksuccino.fancymenu.menu.fancy;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-//Yes, I'm using too much "XYEvents" classes, but seperating events for every part of the mod helps me to find stuff more easily.
 public class MenuCustomizationEvents {
 	
 	private boolean idle = false;
-	private Screen lastScreen;
+	//TODO übernehmen
+//	private Screen lastScreen;
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		//Stopping audio for all menu handlers when changing the screen
 		if (MenuCustomization.isValidScreen(e.getGui()) && !LayoutCreatorScreen.isActive) {
-			if (this.lastScreen != e.getGui()) {
-				MenuCustomization.stopSounds();
-				MenuCustomization.resetSounds();
-			}
+			//TODO übernehmen
+//			if (this.lastScreen != e.getGui()) {
+//				MenuCustomization.stopSounds();
+//				MenuCustomization.resetSounds();
+//			}
+//			
+//			this.lastScreen = e.getGui();
 			
-			this.lastScreen = e.getGui();
 			this.idle = false;
 		}
+		//TODO übernehmen
+		if (!MenuCustomization.isValidScreen(Minecraft.getInstance().currentScreen)) {
+			MenuCustomization.stopSounds();
+			MenuCustomization.resetSounds();
+		}
 		
-		if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+		//Stopping menu music when deactivated in config
+		if ((Minecraft.getInstance().world == null) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
 			Minecraft.getInstance().getMusicTicker().stop();
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
 		//Stopping audio for all menu handlers if no screen is being displayed
@@ -41,5 +48,10 @@ public class MenuCustomizationEvents {
 			MenuCustomization.resetSounds();
 			this.idle = true;
 		}
+	}
+
+	@SubscribeEvent
+	public void onMenuReload(MenuReloadedEvent e) {
+		MenuCustomization.reloadExcludedMenus();
 	}
 }

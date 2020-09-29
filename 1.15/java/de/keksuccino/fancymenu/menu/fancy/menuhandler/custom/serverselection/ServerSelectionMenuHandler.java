@@ -19,7 +19,7 @@ public class ServerSelectionMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			try {
 				Field f = ObfuscationReflectionHelper.findField(MultiplayerScreen.class, "field_146804_i");
@@ -38,7 +38,7 @@ public class ServerSelectionMenuHandler extends MenuHandlerBase {
 			}
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	private static void addChildren(Screen s, IGuiEventListener e) {

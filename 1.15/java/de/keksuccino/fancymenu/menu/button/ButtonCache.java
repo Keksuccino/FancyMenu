@@ -10,17 +10,20 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.locale.LocaleUtils;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.reflection.ReflectionHelper;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.videosettings.VideoSettingsMenuHandler;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.localization.LocaleUtils;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.VideoSettingsScreen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -59,6 +62,38 @@ public class ButtonCache {
 			cached = true;
 			
 			boolean cache = true;
+
+			if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+			
+			//Don't cache video settings if Optifine is active
+			if ((s != null) && (s instanceof VideoSettingsScreen) && !VideoSettingsMenuHandler.isScrollable()) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+
+			//Don't cache screen if from one of slimeknights mods
+			if (s.getClass().getName().startsWith("slimeknights.")) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+
+			//Don't cache screen if from Optifine
+			if (s.getClass().getName().startsWith("net.optifine")) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+			
 			//Don't refresh cache if screen is instance of LayoutCreator
 			if (s instanceof LayoutCreatorScreen) {
 				cache = false;
@@ -82,6 +117,25 @@ public class ButtonCache {
 	private static void updateButtons(Screen s, @Nullable List<Widget> buttonlist) {
 		replaced.clear();
 		buttons.clear();
+
+		if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+			return;
+		}
+		
+		//Don't update video settings buttons if Optifine is active
+		if ((s != null) && (s instanceof VideoSettingsScreen) && !VideoSettingsMenuHandler.isScrollable()) {
+			return;
+		}
+
+		//Don't update buttons if screen is from one of slimeknights mods
+		if (s.getClass().getName().startsWith("slimeknights.")) {
+			return;
+		}
+				
+		//Don't update buttons if from Optifine
+		if (s.getClass().getName().startsWith("net.optifine")) {
+			return;
+		}
 		
 		if (useLegacyButtonIds()) {
 			//Calculate button ids with the old, unstable id system
@@ -111,7 +165,7 @@ public class ButtonCache {
 						System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
 						System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
 						System.out.println("");
-						System.out.println("If one or booth of these buttons are added by a mod, please contact the developer(s) to fix this!");
+						System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
 						System.out.println("FancyMenu cannot customize overlapping buttons!");
 						System.out.println("#####################################################");
 						System.out.println("");
@@ -204,6 +258,11 @@ public class ButtonCache {
 					w.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
 				}
 			});
+			
+			b.active = d.getButton().active;
+			b.visible = d.getButton().visible;
+			d.getButton().visible = false;
+			
 			replaceButton(id, b);
 			return b;
 		}
@@ -410,5 +469,8 @@ public class ButtonCache {
 		return FancyMenu.config.getOrDefault("legacybuttonids", false);
 	}
 
-}
+	public static boolean isCaching() {
+		return caching;
+	}
 
+}

@@ -5,13 +5,13 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -30,6 +30,8 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equalsIgnoreCase("setbuttontexture")) {
 				String backNormal = item.getEntryValue("backgroundnormal");
 				String backHover = item.getEntryValue("backgroundhovered");
+				backNormal = MenuCustomization.convertString(backNormal);
+				backHover = MenuCustomization.convertString(backHover);
 
 				ButtonCache.convertToAdvancedButton(this.parent.getId(), true);
 				
@@ -58,7 +60,25 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equalsIgnoreCase("sethoverlabel")) {
 				this.value = item.getEntryValue("label");
 				if (this.parent != null) {
+					if (this.value != null) {
+						this.value = MenuCustomization.convertString(this.value);
+					}
 					this.normalLabel = this.parent.getButton().getMessage().getString();
+				}
+			}
+
+			if (this.action.equalsIgnoreCase("setbuttonclicksound")) {
+				String path = item.getEntryValue("path");
+				path = MenuCustomization.convertString(path);
+				File f = new File(path);
+				
+				if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
+					ButtonCache.convertToAdvancedButton(this.parent.getId(), true);
+					
+					if (this.parent.getButton() instanceof AdvancedButton) {
+						SoundHandler.registerSound(f.getPath(), f.getPath());
+						((AdvancedButton)this.parent.getButton()).setClickSound(f.getPath());
+					}
 				}
 			}
 		}

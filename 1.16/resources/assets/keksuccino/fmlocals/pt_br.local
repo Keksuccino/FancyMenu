@@ -1,18 +1,6 @@
-general.width = Largura
-general.height = Altura
-general.on = Ligado
-general.off = Desligado
-
 loading.animation.loadingframes = Carregando quadros de animação por {}
 loading.animation.prerendering = Pre-renderizando animação {}
 loading.animation.done = Pronto!
-
-popup.done = Pronto
-
-popup.yesno.confirm = Confirmar
-popup.yesno.cancel = Cancelar
-
-popup.notification.accept = Aceitar
 
 helper.button.menuinfo = Info. Do Menu
 helper.button.buttoninfo = Info. Do Botão
@@ -47,7 +35,7 @@ helper.creator.invalidaudio.title = Arquivo de áudio inválido!
 helper.creator.invalidaudio.desc = O arquivo que você quer carregar não existe ou possue um tipo de arquivo não suportado.%n%%n%Por favor cheque seu caminho de arquivo e tenha certeza que seu arquivo tem o tipo WAV!
 
 helper.creator.invalidimage.title = Arquivo de imagem inválido!
-helper.creator.invalidimage.desc = A imagem que você quer carregar não existe ou possue um tipo de arquivo não suportado.%n%%n%Tipos de arquivos suportados são JPG/JPEG e PNG.
+helper.creator.invalidimage.desc = A imagem que você quer carregar não existe ou possue um tipo de arquivo não suportado.%n%%n%Tipos de arquivos suportados são JPG/JPEG, PNG e GIF.
 
 helper.creator.imagenotfound.title = Imagem não encontrada!
 helper.creator.imagenotfound.desc = A imagem que você quer adicionar não existe%n%no local especificado.
@@ -249,10 +237,6 @@ helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Identif
 helper.creator.items.button.delayappearance = Delay de aparição
 helper.creator.items.button.delayappearance.desc = Delay de aparição em segundos [Decimal Value Support]
 helper.creator.items.button.delayappearance.invalidvalue = §c§lValor inválido!%n%%n%%n%Isso não é um valor válido de segundos!%n%Talvez seu valor seja grande demais. (..NÃO SE ORGULHE DISSO!)%n%%n%Exemplos de valor: 3, 2.0, 0.05, 0.8, 10.5
-
-popup.choosefile.back = VOLTAR
-popup.choosefile.title = Escolher arquivo
-popup.choosefile.choose = Escolher
 
 custombuttons.action.opengui.cannotopengui = §c§lImpossível de abrir GUI!%n%%n%%n%A GUI que você quer abrir não existe ou não tem suporte!%n%%n%Se isso é uma GUI existente, por favor contate o desenvolvedor para ajuda.
 

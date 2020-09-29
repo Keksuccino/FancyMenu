@@ -28,7 +28,7 @@ public class ButtonData {
 		this.x = button.x;
 		this.y = button.y;
 		this.width = button.getWidth();
-		this.height = button.getHeight();
+		this.height = button.func_238483_d_();
 	}
 	
 	public Widget getButton() {

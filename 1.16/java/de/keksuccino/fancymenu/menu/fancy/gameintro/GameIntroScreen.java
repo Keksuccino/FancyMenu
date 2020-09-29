@@ -5,12 +5,13 @@ import java.awt.Color;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.StringTextComponent;
@@ -92,7 +93,7 @@ public class GameIntroScreen extends Screen {
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;
 			}
-			this.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
+			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
 			matrix.pop();
 		}
 	}

@@ -1,21 +1,30 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.io.IOUtils;
 import org.lwjgl.util.glu.Project;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Runnables;
 
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -24,14 +33,17 @@ import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiLabel;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.resources.IResource;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
 import net.minecraftforge.common.ForgeVersion;
@@ -53,7 +65,10 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private static final ResourceLocation MINECRAFT_TITLE_TEXTURES = new ResourceLocation("textures/gui/title/minecraft.png");
 	private static final ResourceLocation MINECRAFT_TITLE_EDITION = new ResourceLocation("textures/gui/title/edition.png");
+	private static final ResourceLocation SPLASH_TEXTS = new ResourceLocation("texts/splashes.txt");
 	private static final Random RANDOM = new Random();
+	
+	private String splash;
 	
 	public MainMenuHandler() {
 		super(GuiMainMenu.class.getName());
@@ -65,6 +80,50 @@ public class MainMenuHandler extends MenuHandlerBase {
 			// Resetting values to defaults
 			fadeFooter = 0.1F;
 			tickFooter = 0;
+			
+			if (this.splash == null) {
+		        this.splash = "missingno";
+		        IResource iresource = null;
+		        try {
+		            List<String> list = Lists.<String>newArrayList();
+		            iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
+		            BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
+		            String s;
+		            while ((s = bufferedreader.readLine()) != null) {
+		                s = s.trim();
+
+		                if (!s.isEmpty()) {
+		                    list.add(s);
+		                }
+		            }
+		            if (!list.isEmpty()) {
+		                while (true) {
+		                    this.splash = list.get(RANDOM.nextInt(list.size()));
+
+		                    if (this.splash.hashCode() != 125780783) {
+		                        break;
+		                    }
+		                }
+		            }
+		            
+		            Calendar calendar = Calendar.getInstance();
+		            calendar.setTime(new Date());
+
+		            if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
+		                this.splash = "Merry X-mas!";
+		            }
+		            else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
+		                this.splash = "Happy new year!";
+		            }
+		            else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
+		                this.splash = "OOoooOOOoooo! Spooky!";
+		            }
+		            
+		        } catch (IOException var8) {
+		        } finally {
+		            IOUtils.closeQuietly((Closeable)iresource);
+		        }
+			}
 			
 			this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
 		}
@@ -88,16 +147,13 @@ public class MainMenuHandler extends MenuHandlerBase {
 	@Override
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+			FontRenderer font = Minecraft.getMinecraft().fontRenderer;
 			int width = e.getGui().width;
 			int height = e.getGui().height;
 			int j = width / 2 - 137;
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
-			String copyright = "Copyright Mojang AB. Do not distribute!";
-			int widthCopyright = Minecraft.getMinecraft().fontRenderer.getStringWidth(copyright);
-			int widthCopyrightRest = width - widthCopyright - 2;
 			
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
@@ -142,9 +198,46 @@ public class MainMenuHandler extends MenuHandlerBase {
 		        }
 			}
 			
-			e.getGui().drawString(fontRenderer, copyright, widthCopyrightRest, height - 10, -1);
-			if (mouseX > widthCopyrightRest && mouseX < widthCopyrightRest + widthCopyright && mouseY > height - 10 && mouseY < height) {
-				GuiScreen.drawRect(widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
+			if (!FancyMenu.config.getOrDefault("hideforgenotifications", false)) {
+				ForgeHooksClient.renderMainMenu((GuiMainMenu) e.getGui(), font, e.getGui().width, e.getGui().height, "");
+			}
+			
+			//Draw and handle copyright
+			String c = "Copyright Mojang AB. Do not distribute!";
+			String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
+			int cX = 0;
+			int cY = 0;
+			int cW = Minecraft.getMinecraft().fontRenderer.getStringWidth(c);
+			int cH = 10;
+			
+			if (cPos.equalsIgnoreCase("top-left")) {
+				cX = 2;
+				cY = 2;
+			} else if (cPos.equalsIgnoreCase("top-centered")) {
+				cX = (width / 2) - (cW / 2);
+				cY = 2;
+			} else if (cPos.equalsIgnoreCase("top-right")) {
+				cX = width - cW - 2;
+				cY = 2;
+			} else if (cPos.equalsIgnoreCase("bottom-left")) {
+				cX = 2;
+				cY = height - cH - 2;
+			} else if (cPos.equalsIgnoreCase("bottom-centered")) {
+				cX = (width / 2) - (cW / 2);
+				cY = height - cH - 2;
+			} else {
+				cX = width - cW - 2;
+				cY = height - cH - 2;
+			}
+			
+			e.getGui().drawString(font, c, cX, cY, -1);
+			
+			if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
+				Gui.drawRect(cX, cY + cH - 1, cX + cW, cY + cH, -1);
+				
+				if (MouseInput.isLeftMouseDown()) {
+					Minecraft.getMinecraft().displayGuiScreen(new GuiWinGame(false, Runnables.doNothing()));
+				}
 			}
 
 			if (!PopupHandler.isPopupActive()) {
@@ -165,9 +258,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 				GlStateManager.translate((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
 				GlStateManager.rotate((float)rotation, 0.0F, 0.0F, 1.0F);
 				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-				f = f * 100.0F / (float) (fontRenderer.getStringWidth(this.getSplash(e.getGui())) + 32);
+				f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
 				GlStateManager.scale(f, f, f);
-				e.getGui().drawCenteredString(fontRenderer, this.getSplash(e.getGui()), 0, -8, -256);
+				e.getGui().drawCenteredString(font, this.splash, 0, -8, -256);
 				GlStateManager.popMatrix();
 			}
 		}
@@ -227,16 +320,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 			e.printStackTrace();
 		}
 		return labels;
-	}
-	
-	private String getSplash(GuiScreen gui) {
-		Field f5 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiMainMenu.class, "field_73975_c", "splashText");
-		try {
-			return (String) f5.get(gui);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return "";
 	}
 	
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {

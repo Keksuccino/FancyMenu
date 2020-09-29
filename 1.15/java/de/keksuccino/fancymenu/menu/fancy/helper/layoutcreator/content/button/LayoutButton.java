@@ -6,21 +6,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.PopupMenu;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.resources.TextureHandler;
 
-public class LayoutButton extends LayoutObject {
+public class LayoutButton extends LayoutObject implements ILayoutButton {
 
 	public String actionContent = "";
 	public String actionType = "openlink";
@@ -30,9 +32,16 @@ public class LayoutButton extends LayoutObject {
 	public String hoverLabel;
 	public double hideforsec = 0;
 	public boolean delayonlyfirsttime = false;
-	
-	public LayoutButton(int width, int height, @Nonnull String label, LayoutCreatorScreen handler) {
+	public String onlydisplayin = null;
+	public String clicksound = null;
+	private AdvancedButton onlyOutgameBtn;
+	private AdvancedButton onlySingleplayerBtn;
+	private AdvancedButton onlyMultiplayerBtn;
+
+	public LayoutButton(int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(label, width, height, 0, 0), true, handler);
+		this.onlydisplayin = onlydisplayin;
+		this.initOnlyDisplayInMenu();
 	}
 
 	@Override
@@ -42,7 +51,7 @@ public class LayoutButton extends LayoutObject {
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
 			this.handler.setMenusUseable(false);
 			TextInputPopup i = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, this::editLabelCallback);
-			i.setText(this.object.value);
+			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
 			PopupHandler.displayPopup(i);
 		});
 		this.rightclickMenu.addContent(b2);
@@ -76,6 +85,10 @@ public class LayoutButton extends LayoutObject {
 									call = call.substring(1);
 								}
 							}
+							if ((this.backNormal == null) || !this.backNormal.equals(call)) {
+								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							}
+							
 							this.backNormal = call;
 							if (this.backHovered == null) {
 								this.backHovered = call;
@@ -120,6 +133,10 @@ public class LayoutButton extends LayoutObject {
 									call = call.substring(1);
 								}
 							}
+							if ((this.backHovered == null) || !this.backHovered.equals(call)) {
+								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							}
+							
 							this.backHovered = call;
 							if (this.backNormal == null) {
 								this.backNormal = call;
@@ -148,6 +165,8 @@ public class LayoutButton extends LayoutObject {
 		LayoutCreatorScreen.colorizeCreatorButton(tpop2);
 		
 		AdvancedButton tpop3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.reset"), (press) -> {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			
 			this.backHovered = null;
 			this.backNormal = null;
 			((LayoutButtonDummyCustomizationItem)this.object).setTexture(null);
@@ -156,7 +175,7 @@ public class LayoutButton extends LayoutObject {
 		LayoutCreatorScreen.colorizeCreatorButton(tpop3);
 		
 		AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture"), (press) -> {
-			texturePopup.openMenuAt(0, press.y);
+			texturePopup.openMenuAt(0, ((AdvancedButton)press).getY());
 		});
 		this.rightclickMenu.addContent(b4);
 		LayoutCreatorScreen.colorizeCreatorButton(b4);
@@ -165,13 +184,17 @@ public class LayoutButton extends LayoutObject {
 			this.handler.setMenusUseable(false);
 			TextInputPopup ip = new TextInputPopup(new Color(0, 0, 0, 0), "", null, 240, (call) -> {
 				if (call != null) {
-					this.hoverLabel = call;
+					if ((this.hoverLabel == null) || !this.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					
+					this.hoverLabel = StringUtils.convertFormatCodes(call, "&", "§");
 				}
 				this.handler.setMenusUseable(true);
 			});
 			
 			if (this.hoverLabel != null) {
-				ip.setText(this.hoverLabel);
+				ip.setText(StringUtils.convertFormatCodes(this.hoverLabel, "§", "&"));
 			}
 			PopupHandler.displayPopup(ip);
 		});
@@ -179,6 +202,8 @@ public class LayoutButton extends LayoutObject {
 		LayoutCreatorScreen.colorizeCreatorButton(b5);
 
 		AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel.reset"), (press) -> {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			
 			this.hoverLabel = null;
 			this.rightclickMenu.closeMenu();
 		});
@@ -191,6 +216,10 @@ public class LayoutButton extends LayoutObject {
 				if (call != null) {
 					File f = new File(call);
 					if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+						if ((this.hoverSound == null) || !this.hoverSound.equals(call)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						
 						this.hoverSound = call;
 						this.handler.setMenusUseable(true);
 					} else {
@@ -210,35 +239,120 @@ public class LayoutButton extends LayoutObject {
 		LayoutCreatorScreen.colorizeCreatorButton(b7);
 
 		AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), (press) -> {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			
 			this.hoverSound = null;
 			this.rightclickMenu.closeMenu();
 		});
 		this.rightclickMenu.addContent(b8);
 		LayoutCreatorScreen.colorizeCreatorButton(b8);
 
-		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
+		AdvancedButton b10 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), (press) -> {
 			this.handler.setMenusUseable(false);
-			TextInputPopup in = new HideForPopup(Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
-					if (MathUtils.isDouble(call)) {
-						this.hideforsec = Double.parseDouble(call);
+					File f = new File(call);
+					if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+						if ((this.clicksound == null) || !this.clicksound.equals(call)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						
+						this.clicksound = call;
 						this.handler.setMenusUseable(true);
 					} else {
-						this.handler.displayNotification(300, Locals.localize("helper.creator.items.button.delayappearance.invalidvalue"));
+						this.handler.displayNotification(300, "§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
 					}
 				} else {
 					this.handler.setMenusUseable(true);
 				}
-			}, (call) -> {
-				this.delayonlyfirsttime = call;
-			}, this.delayonlyfirsttime);
+			}, "wav");
+			
+			if (this.clicksound != null) {
+				cf.setText(this.clicksound);
+			}
+			PopupHandler.displayPopup(cf);
+		});
+		this.rightclickMenu.addContent(b10);
+		LayoutCreatorScreen.colorizeCreatorButton(b10);
+
+		AdvancedButton b11 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), (press) -> {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			
+			this.clicksound = null;
+			this.rightclickMenu.closeMenu();
+		});
+		this.rightclickMenu.addContent(b11);
+		LayoutCreatorScreen.colorizeCreatorButton(b11);
+
+		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.delayappearance"), (press) -> {
+			this.handler.setMenusUseable(false);
+			TextInputPopup in = new HideForPopup(Locals.localize("helper.creator.items.button.delayappearance.desc"), CharacterFilter.getDoubleCharacterFiler(), 240, this);
 			
 			in.setText("" + this.hideforsec);
 			PopupHandler.displayPopup(in);
 		});
 		this.rightclickMenu.addContent(b9);
 		LayoutCreatorScreen.colorizeCreatorButton(b9);
+
+	}
+
+	private void initOnlyDisplayInMenu() {
+		PopupMenu onlyDisplayInMenu = new PopupMenu(100, 16, -1);
+		this.rightclickMenu.addChild(onlyDisplayInMenu);
 		
+		String outgame = Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame");
+		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("outgame")) {
+			outgame = "§a" + outgame;
+		}
+		onlyOutgameBtn = new AdvancedButton(0, 0, 0, 0, outgame, (press) -> {
+			this.onlydisplayin = "outgame";
+			press.setMessage("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame"));
+			this.onlySingleplayerBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer"));
+			this.onlyMultiplayerBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer"));
+		});
+		onlyDisplayInMenu.addContent(onlyOutgameBtn);
+		LayoutCreatorScreen.colorizeCreatorButton(onlyOutgameBtn);
+		
+		String sp = Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer");
+		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("singleplayer")) {
+			sp = "§a" + sp;
+		}
+		onlySingleplayerBtn = new AdvancedButton(0, 0, 0, 0, sp, (press) -> {
+			this.onlydisplayin = "singleplayer";
+			press.setMessage("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer"));
+			this.onlyOutgameBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame"));
+			this.onlyMultiplayerBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer"));
+		});
+		onlyDisplayInMenu.addContent(onlySingleplayerBtn);
+		LayoutCreatorScreen.colorizeCreatorButton(onlySingleplayerBtn);
+		
+		String mp = Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer");
+		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("multiplayer")) {
+			mp = "§a" + mp;
+		}
+		onlyMultiplayerBtn = new AdvancedButton(0, 0, 0, 0, mp, (press) -> {
+			this.onlydisplayin = "multiplayer";
+			press.setMessage("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer"));
+			this.onlySingleplayerBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer"));
+			this.onlyOutgameBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame"));
+		});
+		onlyDisplayInMenu.addContent(onlyMultiplayerBtn);
+		LayoutCreatorScreen.colorizeCreatorButton(onlyMultiplayerBtn);
+		
+		AdvancedButton odiResetBtn = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.custombutton.onlydisplayin.reset"), (press) -> {
+			this.onlydisplayin = null;
+			this.onlyMultiplayerBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer"));
+			this.onlySingleplayerBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer"));
+			this.onlyOutgameBtn.setMessage(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame"));
+		});
+		onlyDisplayInMenu.addContent(odiResetBtn);
+		LayoutCreatorScreen.colorizeCreatorButton(odiResetBtn);
+
+		AdvancedButton b10 = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.custombutton.onlydisplayin"), (press) -> {
+			onlyDisplayInMenu.openMenuAt(0, press.y);
+		});
+		this.rightclickMenu.addContent(b10);
+		LayoutCreatorScreen.colorizeCreatorButton(b10);
 	}
 	
 	private void editLabelCallback(String text) {
@@ -246,12 +360,18 @@ public class LayoutButton extends LayoutObject {
 			this.handler.setMenusUseable(true);
 			return;
 		} else {
-			this.object.value = text;
+			if ((this.object.value == null) || !this.object.value.equals(StringUtils.convertFormatCodes(text, "&", "§"))) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			
+			this.object.value = StringUtils.convertFormatCodes(text, "&", "§");
 		}
 		this.handler.setMenusUseable(true);
 	}
 	
 	private void setActionContentCallback(String content) {
+		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 		if (content != null) {
 			this.actionContent = content;
 		}
@@ -293,10 +413,46 @@ public class LayoutButton extends LayoutObject {
 					s.addEntry("delayonlyfirsttime", "true");
 				}
 			}
+			if (this.onlydisplayin != null) {
+				s.addEntry("onlydisplayin", this.onlydisplayin);
+			}
+			if (this.clicksound != null) {
+				s.addEntry("clicksound", this.clicksound);
+			}
 			l.add(s);
 		}
 		
 		return l;
+	}
+
+	@Override
+	public void setAppearanceDelay(String sec, boolean onlyfirsttime) {
+		if (sec != null) {
+			if (MathUtils.isDouble(sec)) {
+				double s = Double.parseDouble(sec);
+				if ((this.hideforsec != s) || (this.delayonlyfirsttime != onlyfirsttime)) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				}
+				
+				this.hideforsec = s;
+				this.delayonlyfirsttime = onlyfirsttime;
+				this.handler.setMenusUseable(true);
+			} else {
+				this.handler.displayNotification(300, Locals.localize("helper.creator.items.button.delayappearance.invalidvalue"));
+			}
+		} else {
+			this.handler.setMenusUseable(true);
+		}
+	}
+
+	@Override
+	public boolean isDelayedOnlyFirstTime() {
+		return this.delayonlyfirsttime;
+	}
+
+	@Override
+	public double getAppearanceDelay() {
+		return this.hideforsec;
 	}
 	
 }

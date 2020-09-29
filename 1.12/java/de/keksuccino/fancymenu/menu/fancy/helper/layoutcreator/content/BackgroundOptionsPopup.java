@@ -2,15 +2,15 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import java.awt.Color;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.HorizontalSwitcher;
-import de.keksuccino.core.gui.screens.popup.Popup;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
+import de.keksuccino.konkrete.gui.screens.popup.Popup;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 

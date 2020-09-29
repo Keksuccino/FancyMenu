@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import java.awt.Color;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.gui.GuiButton;
 
 /**

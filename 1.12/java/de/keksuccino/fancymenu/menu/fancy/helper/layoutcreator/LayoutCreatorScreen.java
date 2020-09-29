@@ -11,30 +11,7 @@ import java.util.function.Consumer;
 
 import com.google.common.io.Files;
 
-import de.keksuccino.core.file.FileUtils;
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.IMenu;
-import de.keksuccino.core.gui.content.PopupMenu;
-import de.keksuccino.core.gui.screens.popup.NotificationPopup;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.gui.screens.popup.YesNoPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.properties.PropertiesSerializer;
-import de.keksuccino.core.properties.PropertiesSet;
-import de.keksuccino.core.rendering.RenderUtils;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.core.resources.ExternalTextureResourceLocation;
-import de.keksuccino.core.sound.SoundHandler;
-import de.keksuccino.core.web.WebUtils;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -42,6 +19,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.ActionType;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
@@ -58,9 +36,34 @@ import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.IMenu;
+import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.screens.popup.NotificationPopup;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSerializer;
+import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.sound.SoundHandler;
+import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 
@@ -70,6 +73,9 @@ public class LayoutCreatorScreen extends GuiScreen {
 	
 	protected static final ResourceLocation EXPAND_INDICATOR = new ResourceLocation("keksuccino", "expand.png");
 	protected static final ResourceLocation SHRINK_INDICATOR = new ResourceLocation("keksuccino", "shrink.png");
+	
+	public EditHistory history = new EditHistory(this);
+	
 	protected boolean expandHovered = false;
 	protected boolean expanded = false;
 	protected boolean expandMouseDown = false;
@@ -81,13 +87,14 @@ public class LayoutCreatorScreen extends GuiScreen {
 	protected List<LayoutObject> content = new ArrayList<LayoutObject>();
 	protected List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	protected Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
-	protected Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
-	protected Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
-	protected Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
-	protected Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
-	protected Map<Long, Double> vanillaHideFor = new HashMap<Long, Double>();
-	protected Map<Long, Boolean> vanillaDelayOnlyFirstTime = new HashMap<Long, Boolean>();
+	public Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
+	public Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
+	public Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
+	public Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
+	public Map<Long, String> vanillaClickSounds = new HashMap<Long, String>();
+	public Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
+	public Map<Long, Double> vanillaHideFor = new HashMap<Long, Double>();
+	public Map<Long, Boolean> vanillaDelayOnlyFirstTime = new HashMap<Long, Boolean>();
 	protected LayoutObject focused = null;
 	protected int hiddenIndicatorTick = 0;
 	protected int hiddenIndicatorCount = 0;
@@ -108,6 +115,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 	protected PopupMenu audioPopup;
 	protected List<PopupMenu> audioSubPopups = new ArrayList<PopupMenu>();
 	protected PopupMenu renderorderPopup;
+	protected PopupMenu windowsizePopup;
 	protected PopupMenu mcversionPopup;
 	protected PopupMenu fmversionPopup;
 	
@@ -132,6 +140,14 @@ public class LayoutCreatorScreen extends GuiScreen {
 	protected String minimumFM;
 	protected String maximumFM;
 	
+	protected int biggerThanWidth = 0;
+	protected int biggerThanHeight = 0;
+	protected int smallerThanWidth = 0;
+	protected int smallerThanHeight = 0;
+	
+	protected int scale = 0;
+	protected int oriscale = -1;
+	
 	private Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
 	private LayoutObject topObject;
 	
@@ -144,6 +160,25 @@ public class LayoutCreatorScreen extends GuiScreen {
 	
 	@Override
 	public void initGui() {
+		
+		if (this.scale > 0) {
+			if (oriscale == -1) {
+				this.oriscale = Minecraft.getMinecraft().gameSettings.guiScale;
+			}
+			Minecraft.getMinecraft().gameSettings.guiScale = scale;
+			ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+			this.width = res.getScaledWidth();
+			this.height = res.getScaledHeight();
+		} else {
+			if (oriscale != -1) {
+				Minecraft.getMinecraft().gameSettings.guiScale = this.oriscale;
+				this.oriscale = -1;
+				ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+				this.width = res.getScaledWidth();
+				this.height = res.getScaledHeight();
+			}
+		}
+		
 		this.focused = null;
 		this.updateContent();
 		
@@ -181,12 +216,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 		LayoutCreatorScreen.colorizeCreatorButton(audioButton);
 		
 		this.saveButton = new AdvancedButton(17, (this.height / 2) + 22, 40, 40, Locals.localize("helper.creator.menu.save"), true, (onPress) -> {
-			if (!this.isLayoutEmpty()) {
-				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new LayoutSavePopup(this::saveCustomizationFileCallback));
-			} else {
-				this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.layoutempty.title"), "", Locals.localize("helper.creator.layoutempty.desc"), "", "", "");
-			}
+			this.setMenusUseable(false);
+			PopupHandler.displayPopup(new LayoutSavePopup(this::saveCustomizationFileCallback));
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(saveButton);
 		
@@ -205,6 +236,12 @@ public class LayoutCreatorScreen extends GuiScreen {
 					MenuCustomization.stopSounds();
 					MenuCustomization.resetSounds();
 					MenuCustomizationProperties.loadProperties();
+					
+					if (oriscale != -1) {
+						Minecraft.getMinecraft().gameSettings.guiScale = this.oriscale;
+						this.oriscale = -1;
+					}
+					
 					Minecraft.getMinecraft().displayGuiScreen(this.screen);
 				}
 			}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.close"), "", "", ""));
@@ -221,7 +258,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			
 			AdvancedButton b1 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.image"), (press) -> {
 				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new ChooseFilePopup(this::addTexture, "jpg", "jpeg", "png"));
+				PopupHandler.displayPopup(new ChooseFilePopup(this::addTexture, "jpg", "jpeg", "png", "gif"));
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b1);
 			this.addObjectPopup.addContent(b1);
@@ -287,6 +324,11 @@ public class LayoutCreatorScreen extends GuiScreen {
 			this.renderorderBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder.background"), true, (press) -> {
 				press.displayString = "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background");
 				this.renderorderForegroundButton.displayString = Locals.localize("helper.creator.layoutoptions.renderorder.foreground");
+				
+				if (!this.renderorder.equals("background")) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+				}
+				
 				this.renderorder = "background";
 			});
 			this.renderorderPopup.addContent(renderorderBackgroundButton);
@@ -295,12 +337,38 @@ public class LayoutCreatorScreen extends GuiScreen {
 			this.renderorderForegroundButton = new AdvancedButton(0, 0, 0, 16, "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"), true, (press) -> {
 				press.displayString = "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground");
 				this.renderorderBackgroundButton.displayString = Locals.localize("helper.creator.layoutoptions.renderorder.background");
+				
+				if (!this.renderorder.equals("foreground")) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+				}
+				
 				this.renderorder = "foreground";
 			});
 			this.renderorderPopup.addContent(renderorderForegroundButton);
 			LayoutCreatorScreen.colorizeCreatorButton(renderorderForegroundButton);
 		}
 		
+		//BackgroundRightClick -> Windowsize Restricts ->
+		if (this.windowsizePopup == null) {
+			this.windowsizePopup = new PopupMenu(100, 16, -1);
+			this.addMenu(this.windowsizePopup);
+
+			AdvancedButton wb1 = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.biggerthan"), true, (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new WindowSizePopup(this, ActionType.BIGGERTHAN));
+			});
+			this.windowsizePopup.addContent(wb1);
+			LayoutCreatorScreen.colorizeCreatorButton(wb1);
+
+			AdvancedButton wb2 = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.smallerthan"), true, (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new WindowSizePopup(this, ActionType.SMALLERTHAN));
+			});
+			this.windowsizePopup.addContent(wb2);
+			LayoutCreatorScreen.colorizeCreatorButton(wb2);
+		}
+		
+		//BackgroundRightClick -> MC Version ->
 		if (this.mcversionPopup == null) {
 			this.mcversionPopup = new PopupMenu(100, 16, -1);
 			this.addMenu(mcversionPopup);
@@ -309,6 +377,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.minimumMC != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.minimumMC = call;
 					}
 					this.setMenusUseable(true);
@@ -325,6 +397,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.maximumMC != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.maximumMC = call;
 					}
 					this.setMenusUseable(true);
@@ -338,6 +414,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			LayoutCreatorScreen.colorizeCreatorButton(m2);
 		}
 		
+		//BackgroundRightClick -> FM Version ->
 		if (this.fmversionPopup == null) {
 			this.fmversionPopup = new PopupMenu(100, 16, -1);
 			this.addMenu(fmversionPopup);
@@ -346,6 +423,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.minimumFM != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.minimumFM = call;
 					}
 					this.setMenusUseable(true);
@@ -362,6 +443,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.maximumFM != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.maximumFM = call;
 					}
 					this.setMenusUseable(true);
@@ -381,6 +466,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			this.backgroundRightclickMenu.addChild(this.renderorderPopup);
 			this.backgroundRightclickMenu.addChild(this.mcversionPopup);
 			this.backgroundRightclickMenu.addChild(this.fmversionPopup);
+			this.backgroundRightclickMenu.addChild(this.windowsizePopup);
 			
 			AdvancedButton backOptionsB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.backgroundoptions"), true, (press) -> {
 				this.setMenusUseable(false);
@@ -390,6 +476,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 			LayoutCreatorScreen.colorizeCreatorButton(backOptionsB);
 			
 			AdvancedButton resetBackB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.resetbackground"), true, (press) -> {
+				if ((this.backgroundTexture != null) || (this.backgroundAnimation != null)) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+				}
+				
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 				}
@@ -404,15 +494,56 @@ public class LayoutCreatorScreen extends GuiScreen {
 			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder"), true, (press) -> {
 				this.fmversionPopup.closeMenu();
 				this.mcversionPopup.closeMenu();
+				this.windowsizePopup.closeMenu();
 				this.renderorderPopup.openMenuAt(0, press.y);
 			});
 			this.backgroundRightclickMenu.addContent(b2);
 			LayoutCreatorScreen.colorizeCreatorButton(b2);
 			
+			AdvancedButton b7 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.windowsize"), true, (press) -> {
+				this.fmversionPopup.closeMenu();
+				this.mcversionPopup.closeMenu();
+				this.renderorderPopup.closeMenu();
+				this.windowsizePopup.openMenuAt(0, ((AdvancedButton)press).y);
+			});
+			this.backgroundRightclickMenu.addContent(b7);
+			LayoutCreatorScreen.colorizeCreatorButton(b7);
+			
+			AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+					if ((call != null) && MathUtils.isInteger(call)) {
+						int s = Integer.parseInt(call);
+						if (s < 0) {
+							this.displayNotification(300, Locals.localize("helper.creator.rightclick.scale.invalid"), "", "", "", "");
+						} else {
+							this.setMenusUseable(true);
+							
+							if (this.scale != s) {
+								this.history.saveSnapshot(this.history.createSnapshot());
+							}
+							
+							this.scale = s;
+							this.initGui();
+						}
+					} else {
+						this.setMenusUseable(true);
+					}
+				});
+				p.setText("" + this.scale);
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(p);
+			});
+			this.backgroundRightclickMenu.addContent(b8);
+			LayoutCreatorScreen.colorizeCreatorButton(b8);
+			
 			AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.requiredmods"), true, (press) -> {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.requiredmods.desc"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.requiredmods != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.requiredmods = call;
 					}
 					this.setMenusUseable(true);
@@ -428,6 +559,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.mc"), true, (press) -> {
 				this.renderorderPopup.closeMenu();
 				this.fmversionPopup.closeMenu();
+				this.windowsizePopup.closeMenu();
 				this.mcversionPopup.openMenuAt(press.x + press.width + 2, press.y);
 			});
 			this.backgroundRightclickMenu.addContent(b4);
@@ -436,6 +568,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.fm"), true, (press) -> {
 				this.renderorderPopup.closeMenu();
 				this.mcversionPopup.closeMenu();
+				this.windowsizePopup.closeMenu();
 				this.fmversionPopup.openMenuAt(press.x + press.width + 2, press.y);
 			});
 			this.backgroundRightclickMenu.addContent(b6);
@@ -486,7 +619,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 		return this.getAllProperties().isEmpty();
 	}
 	
-	private List<PropertiesSection> getAllProperties() {
+	protected List<PropertiesSection> getAllProperties() {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
 		
 		PropertiesSection meta = new PropertiesSection("customization-meta");
@@ -506,6 +639,18 @@ public class LayoutCreatorScreen extends GuiScreen {
 		}
 		if ((this.maximumFM != null) && !this.maximumFM.replace(" ", "").equals("")) {
 			meta.addEntry("maximumfmversion", this.maximumFM);
+		}
+		if (this.biggerThanWidth != 0) {
+			meta.addEntry("biggerthanwidth", "" + this.biggerThanWidth);
+		}
+		if (this.biggerThanHeight != 0) {
+			meta.addEntry("biggerthanheight", "" + this.biggerThanHeight);
+		}
+		if (this.smallerThanWidth != 0) {
+			meta.addEntry("smallerthanwidth", "" + this.smallerThanWidth);
+		}
+		if (this.smallerThanHeight != 0) {
+			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
 		}
 		l.add(meta);
 		
@@ -536,6 +681,13 @@ public class LayoutCreatorScreen extends GuiScreen {
 			if (this.panorama) {
 				ps.addEntry("panorama", "true");
 			}
+			l.add(ps);
+		}
+		
+		if (this.scale > 0) {
+			PropertiesSection ps = new PropertiesSection("customization");
+			ps.addEntry("action", "setscale");
+			ps.addEntry("scale", "" + this.scale);
 			l.add(ps);
 		}
 		
@@ -637,13 +789,15 @@ public class LayoutCreatorScreen extends GuiScreen {
 				if (this.vanillaHoverSounds.containsKey(b.getId())) {
 					v.hoverSound = this.vanillaHoverSounds.get(b.getId()); 
 				}
+				if (this.vanillaClickSounds.containsKey(b.getId())) {
+					v.clicksound = this.vanillaClickSounds.get(b.getId()); 
+				}
 				if (this.vanillaButtonTextures.containsKey(b.getId())) {
 					List<String> l2 = this.vanillaButtonTextures.get(b.getId());
 					v.backNormal = l2.get(0);
 					v.backHovered = l2.get(1);
 					((LayoutButtonDummyCustomizationItem)v.object).setTexture(TextureHandler.getResource(l2.get(0)).getResourceLocation());
 				}
-				//---------------
 				content.add(v);
 			}
 		}
@@ -760,6 +914,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 	}
 	
 	public void setVanillaButtonName(LayoutVanillaButton button, String text) {
+		if ((this.vanillaButtonNames.get(button.button.getId()) == null) || !(this.vanillaButtonNames.get(button.button.getId()).equals(text))) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+		}
+		
 		this.vanillaButtonNames.put(button.button.getId(), text);
 		button.object.value = text;
 	}
@@ -816,8 +974,20 @@ public class LayoutCreatorScreen extends GuiScreen {
 		}
 	}
 	
+	public void setVanillaClickSound(LayoutVanillaButton button, String sound) {
+		if (sound != null) {
+			this.vanillaClickSounds.put(button.button.getId(), sound);
+		} else {
+			if (this.vanillaClickSounds.containsKey(button.button.getId())) {
+				this.vanillaClickSounds.remove(button.button.getId());
+			}
+		}
+	}
+	
 	public void hideVanillaButton(LayoutVanillaButton b) {
 		if (!this.hidden.contains(b) && this.content.contains(b)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			this.hidden.add(b);
 			b.hidden = true;
 			this.setObjectFocused(b, false, true);
@@ -829,6 +999,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 	
 	public void showVanillaButton(LayoutVanillaButton b) {
 		if (this.isHidden(b)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			this.hidden.remove(b);
 			b.hidden = false;
 			this.updateHiddenButtonPopup();
@@ -967,7 +1139,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			if (!this.addObjectButton.isMouseOver() && !this.addObjectPopup.isHovered()) {
 				this.addObjectPopup.closeMenu();
 			}
-			if ((!this.backgroundRightclickMenu.isHovered() && !this.renderorderPopup.isHovered() && !this.mcversionPopup.isHovered() && !this.fmversionPopup.isHovered()) || this.isObjectFocused()) {
+			if ((!this.backgroundRightclickMenu.isHovered() && !this.renderorderPopup.isHovered() && !this.mcversionPopup.isHovered() && !this.fmversionPopup.isHovered() && !this.windowsizePopup.isHovered()) || this.isObjectFocused()) {
 				this.backgroundRightclickMenu.closeMenu();
 			}
 		}
@@ -997,6 +1169,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 		} else {
 			this.leftDownAndFocused = false;
 		}
+		
+		this.history.render();
 		
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}
@@ -1073,7 +1247,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			
 			if (!this.panorama) {
-				Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width, this.height + 1, this.width, this.height + 1);
+				Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 			} else {
 				int w = this.backgroundTexture.getWidth();
 				int h = this.backgroundTexture.getHeight();
@@ -1119,7 +1293,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 					}
 				}
 				if (wfinal <= this.width) {
-					Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width, this.height + 1, this.width, this.height + 1);
+					Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height + 1);
 				}
@@ -1209,6 +1383,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 		String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 		if (f.exists()) {
 			if (filename.equals(f.getName())) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				PropertiesSection sec = new PropertiesSection("customization");
 				sec.addEntry("action", "addtexture");
 				sec.addEntry("path", path);
@@ -1231,6 +1407,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 			url = WebUtils.filterURL(url);
 		}
 		if (WebUtils.isValidUrl(url)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtexture");
 			s.addEntry("url", url);
@@ -1249,6 +1427,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 			return;
 		}
 		if (AnimationHandler.animationExists(name)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addanimation");
 			s.addEntry("name", name);
@@ -1272,7 +1452,14 @@ public class LayoutCreatorScreen extends GuiScreen {
 			this.setMenusUseable(true);
 			return;
 		}
-		this.addContent(new LayoutButton(100, 20, label, this));
+		this.history.saveSnapshot(this.history.createSnapshot());
+
+		int w = 100;
+		if (Minecraft.getMinecraft().fontRenderer.getStringWidth(label) + 10 > w) {
+			w = Minecraft.getMinecraft().fontRenderer.getStringWidth(label) + 10;
+		}
+		this.addContent(new LayoutButton(w, 20, label, null, this));
+		
 		this.setMenusUseable(true);
 	}
 	
@@ -1281,6 +1468,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 			url = WebUtils.filterURL(url);
 		}
 		if (WebUtils.isValidUrl(url)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtext");
 			s.addEntry("url", url);
@@ -1297,6 +1486,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 			return;
 		}
 		if (text.length() > 0) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addtext");
 			s.addEntry("value", StringUtils.convertFormatCodes(text, "&", "§"));
@@ -1322,6 +1513,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 			File f = new File(path);
 			if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 				if (!this.audio.containsKey(path)) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+					
 					this.setMenusUseable(true);
 					MenuCustomization.registerSound(path, path);
 					SoundHandler.playSound(path);
@@ -1347,6 +1540,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 				}
 			}
 			if (!this.backgroundAnimationNames.isEmpty()) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.backgroundTexture = null;
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
@@ -1357,6 +1552,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 		}
 		if (names == null) {
 			if (this.backgroundAnimation != null) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 			}
 			this.backgroundAnimation = null;
@@ -1378,6 +1575,8 @@ public class LayoutCreatorScreen extends GuiScreen {
 			String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 				if (filename.equals(f.getName())) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+					
 					this.backgroundTexture = TextureHandler.getResource(path);
 					this.backgroundTexturePath = path;
 					if (this.backgroundAnimation != null) {
@@ -1426,15 +1625,23 @@ public class LayoutCreatorScreen extends GuiScreen {
 				return;
 			}
 			if (d.keycode == 203) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setX(this.focused.object.posX - 1);
 			}
 			if (d.keycode == 205) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setX(this.focused.object.posX + 1);
 			}
 			if (d.keycode == 200) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setY(this.focused.object.posY - 1);
 			}
 			if (d.keycode == 208) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setY(this.focused.object.posY + 1);
 			}
 		}

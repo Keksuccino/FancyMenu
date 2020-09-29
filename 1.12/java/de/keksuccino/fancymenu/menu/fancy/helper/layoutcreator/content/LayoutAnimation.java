@@ -4,13 +4,13 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.YesNoPopup;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 
 public class LayoutAnimation extends LayoutObject {
 	

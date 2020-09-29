@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -49,7 +50,7 @@ public class CustomGuiBase extends Screen {
 	public void render(MatrixStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
 		this.renderBackground(matrix);
 		if (title != null) {
-			this.drawCenteredString(matrix, this.font, this.menutitle, this.width / 2, 8, 16777215);
+			AbstractGui.drawCenteredString(matrix, this.font, this.menutitle, this.width / 2, 8, 16777215);
 		}
 		super.render(matrix, p_render_1_, p_render_2_, p_render_3_);
 	}

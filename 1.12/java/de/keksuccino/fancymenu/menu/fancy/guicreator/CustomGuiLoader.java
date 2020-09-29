@@ -9,9 +9,9 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.core.file.FileUtils;
-import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.gui.GuiScreen;
 
 public class CustomGuiLoader {

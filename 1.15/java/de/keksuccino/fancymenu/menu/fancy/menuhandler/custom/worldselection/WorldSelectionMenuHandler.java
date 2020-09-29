@@ -19,7 +19,7 @@ public class WorldSelectionMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			try {
 				Field f = ObfuscationReflectionHelper.findField(WorldSelectionScreen.class, "field_212352_g");
@@ -45,7 +45,7 @@ public class WorldSelectionMenuHandler extends MenuHandlerBase {
 			}
 		}
 
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	private static void addChildren(Screen s, IGuiEventListener e) {

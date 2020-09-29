@@ -12,30 +12,9 @@ import java.util.function.Consumer;
 import com.google.common.io.Files;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.file.FileUtils;
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.IMenu;
-import de.keksuccino.core.gui.content.PopupMenu;
-import de.keksuccino.core.gui.screens.popup.NotificationPopup;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.gui.screens.popup.YesNoPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.properties.PropertiesSerializer;
-import de.keksuccino.core.properties.PropertiesSet;
-import de.keksuccino.core.rendering.RenderUtils;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.core.resources.ExternalTextureResourceLocation;
-import de.keksuccino.core.sound.SoundHandler;
-import de.keksuccino.core.web.WebUtils;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -43,6 +22,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.ActionType;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
@@ -59,8 +39,29 @@ import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.IMenu;
+import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.screens.popup.NotificationPopup;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSerializer;
+import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.sound.SoundHandler;
+import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.StringTextComponent;
@@ -71,6 +72,9 @@ public class LayoutCreatorScreen extends Screen {
 	
 	protected static final ResourceLocation EXPAND_INDICATOR = new ResourceLocation("keksuccino", "expand.png");
 	protected static final ResourceLocation SHRINK_INDICATOR = new ResourceLocation("keksuccino", "shrink.png");
+
+	public EditHistory history = new EditHistory(this);
+		
 	protected boolean expandHovered = false;
 	protected boolean expanded = false;
 	protected boolean expandMouseDown = false;
@@ -82,13 +86,14 @@ public class LayoutCreatorScreen extends Screen {
 	protected List<LayoutObject> content = new ArrayList<LayoutObject>();
 	protected List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	protected Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
-	protected Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
-	protected Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
-	protected Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
-	protected Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
-	protected Map<Long, Double> vanillaHideFor = new HashMap<Long, Double>();
-	protected Map<Long, Boolean> vanillaDelayOnlyFirstTime = new HashMap<Long, Boolean>();
+	public Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
+	public Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
+	public Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
+	public Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
+	public Map<Long, String> vanillaClickSounds = new HashMap<Long, String>();
+	public Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
+	public Map<Long, Double> vanillaHideFor = new HashMap<Long, Double>();
+	public Map<Long, Boolean> vanillaDelayOnlyFirstTime = new HashMap<Long, Boolean>();
 	protected LayoutObject focused = null;
 	protected int hiddenIndicatorTick = 0;
 	protected int hiddenIndicatorCount = 0;
@@ -109,6 +114,7 @@ public class LayoutCreatorScreen extends Screen {
 	protected PopupMenu audioPopup;
 	protected List<PopupMenu> audioSubPopups = new ArrayList<PopupMenu>();
 	protected PopupMenu renderorderPopup;
+	protected PopupMenu windowsizePopup;
 	protected PopupMenu mcversionPopup;
 	protected PopupMenu fmversionPopup;
 	
@@ -134,6 +140,13 @@ public class LayoutCreatorScreen extends Screen {
 	protected String minimumFM;
 	protected String maximumFM;
 
+	protected int biggerThanWidth = 0;
+	protected int biggerThanHeight = 0;
+	protected int smallerThanWidth = 0;
+	protected int smallerThanHeight = 0;
+
+	protected int scale = 0;
+	
 	private Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
 	private LayoutObject topObject;
 	
@@ -145,11 +158,23 @@ public class LayoutCreatorScreen extends Screen {
 		KeyboardHandler.addKeyPressedListener(this::onDeletePress);
 	}
 	
+	//init
 	@Override
 	protected void init() {
+
+		if (this.scale > 0) {
+			Minecraft.getInstance().getMainWindow().setGuiScale(this.scale);
+			this.height = Minecraft.getInstance().getMainWindow().getScaledHeight();
+			this.width = Minecraft.getInstance().getMainWindow().getScaledWidth();
+		} else {
+			Minecraft.getInstance().getMainWindow().setGuiScale(Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont()));
+			this.height = Minecraft.getInstance().getMainWindow().getScaledHeight();
+			this.width = Minecraft.getInstance().getMainWindow().getScaledWidth();
+		}
+		
 		this.focused = null;
 		this.updateContent();
-
+		
 		this.focusChangeBlocker.clear();
 		
 		for (IMenu m : this.menus) {
@@ -160,7 +185,7 @@ public class LayoutCreatorScreen extends Screen {
 			if (this.addObjectPopup.isOpen()) {
 				this.addObjectPopup.closeMenu();
 			} else {
-				this.addObjectPopup.openMenuAt(onPress.x + onPress.getWidth() + 2, onPress.y);
+				this.addObjectPopup.openMenuAt(((AdvancedButton)onPress).getX() + ((AdvancedButton)onPress).getWidth() + 2, ((AdvancedButton)onPress).getY());
 			}
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(addObjectButton);
@@ -169,7 +194,7 @@ public class LayoutCreatorScreen extends Screen {
 			if (this.hiddenPopup.isOpen()) {
 				this.hiddenPopup.closeMenu();
 			} else {
-				this.hiddenPopup.openMenuAt(onPress.x + onPress.getWidth() + 2, onPress.y);
+				this.hiddenPopup.openMenuAt(((AdvancedButton)onPress).getX() + ((AdvancedButton)onPress).getWidth() + 2, ((AdvancedButton)onPress).getY());
 			}
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(hiddenButton);
@@ -178,19 +203,14 @@ public class LayoutCreatorScreen extends Screen {
 			if (this.audioPopup.isOpen()) {
 				this.audioPopup.closeMenu();
 			} else {
-				this.audioPopup.openMenuAt(onPress.x + onPress.getWidth() + 2, onPress.y);
+				this.audioPopup.openMenuAt(((AdvancedButton)onPress).getX() + ((AdvancedButton)onPress).getWidth() + 2, ((AdvancedButton)onPress).getY());
 			}
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(audioButton);
 		
 		this.saveButton = new AdvancedButton(17, (this.height / 2) + 22, 40, 40, Locals.localize("helper.creator.menu.save"), true, (onPress) -> {
-			if (!this.isLayoutEmpty()) {
-				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new LayoutSavePopup(this::saveCustomizationFileCallback));
-			} else {
-				//TODO Fixen (Wird nie getriggert, man kann immer sichern)
-				this.displayNotification(300, "§c§l" + Locals.localize("helper.creator.layoutempty.title"), "", Locals.localize("helper.creator.layoutempty.desc"), "", "", "");
-			}
+			this.setMenusUseable(false);
+			PopupHandler.displayPopup(new LayoutSavePopup(this::saveCustomizationFileCallback));
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(saveButton);
 		
@@ -209,7 +229,12 @@ public class LayoutCreatorScreen extends Screen {
 					MenuCustomization.stopSounds();
 					MenuCustomization.resetSounds();
 					MenuCustomizationProperties.loadProperties();
-					Minecraft.getInstance().displayGuiScreen(this.getScreenToCustomize());
+
+					Minecraft.getInstance().getMainWindow().setGuiScale(Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont()));
+					this.height = Minecraft.getInstance().getMainWindow().getScaledHeight();
+					this.width = Minecraft.getInstance().getMainWindow().getScaledWidth();
+					
+					Minecraft.getInstance().displayGuiScreen(this.screen);
 				}
 			}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.close"), "", "", ""));
 		});
@@ -226,7 +251,7 @@ public class LayoutCreatorScreen extends Screen {
 			
 			AdvancedButton b1 = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.image"), (press) -> {
 				this.setMenusUseable(false);
-				PopupHandler.displayPopup(new ChooseFilePopup(this::addTexture, "jpg", "jpeg", "png"));
+				PopupHandler.displayPopup(new ChooseFilePopup(this::addTexture, "jpg", "jpeg", "png", "gif"));
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b1);
 			this.addObjectPopup.addContent(b1);
@@ -242,7 +267,7 @@ public class LayoutCreatorScreen extends Screen {
 				if (this.addAnimationMenu.isOpen()) {
 					this.addAnimationMenu.closeMenu();
 				} else {
-					this.addAnimationMenu.openMenuAt(press.x + press.getWidth() + 2, press.y);
+					this.addAnimationMenu.openMenuAt(((AdvancedButton)press).getX() + ((AdvancedButton)press).getWidth() + 2, ((AdvancedButton)press).getY());
 				}
 			});
 			LayoutCreatorScreen.colorizeCreatorButton(b2);
@@ -291,20 +316,48 @@ public class LayoutCreatorScreen extends Screen {
 			this.addMenu(renderorderPopup);
 
 			this.renderorderBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder.background"), true, (press) -> {
-				press.setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));;
-				this.renderorderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));;
+				((AdvancedButton)press).setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));
+				this.renderorderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
+				if (!this.renderorder.equals("background")) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+				}
+				
 				this.renderorder = "background";
 			});
 			this.renderorderPopup.addContent(renderorderBackgroundButton);
 			LayoutCreatorScreen.colorizeCreatorButton(renderorderBackgroundButton);
 			
 			this.renderorderForegroundButton = new AdvancedButton(0, 0, 0, 16, "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"), true, (press) -> {
-				press.setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));;
-				this.renderorderBackgroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.background"));;
+				((AdvancedButton)press).setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
+				this.renderorderBackgroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.background"));
+				if (!this.renderorder.equals("foreground")) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+				}
+				
 				this.renderorder = "foreground";
 			});
 			this.renderorderPopup.addContent(renderorderForegroundButton);
 			LayoutCreatorScreen.colorizeCreatorButton(renderorderForegroundButton);
+		}
+
+		//BackgroundRightClick -> Windowsize Restricts ->
+		if (this.windowsizePopup == null) {
+			this.windowsizePopup = new PopupMenu(100, 16, -1);
+			this.addMenu(this.windowsizePopup);
+
+			AdvancedButton wb1 = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.biggerthan"), true, (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new WindowSizePopup(this, ActionType.BIGGERTHAN));
+			});
+			this.windowsizePopup.addContent(wb1);
+			LayoutCreatorScreen.colorizeCreatorButton(wb1);
+			
+			AdvancedButton wb2 = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.smallerthan"), true, (press) -> {
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(new WindowSizePopup(this, ActionType.SMALLERTHAN));
+			});
+			this.windowsizePopup.addContent(wb2);
+			LayoutCreatorScreen.colorizeCreatorButton(wb2);
 		}
 		
 		//BackgroundRightClick -> MC Version ->
@@ -316,6 +369,10 @@ public class LayoutCreatorScreen extends Screen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.minimumMC != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.minimumMC = call;
 					}
 					this.setMenusUseable(true);
@@ -332,6 +389,10 @@ public class LayoutCreatorScreen extends Screen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.maximumMC != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.maximumMC = call;
 					}
 					this.setMenusUseable(true);
@@ -354,6 +415,10 @@ public class LayoutCreatorScreen extends Screen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.minimumFM != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.minimumFM = call;
 					}
 					this.setMenusUseable(true);
@@ -370,6 +435,10 @@ public class LayoutCreatorScreen extends Screen {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.maximumFM != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.maximumFM = call;
 					}
 					this.setMenusUseable(true);
@@ -383,12 +452,14 @@ public class LayoutCreatorScreen extends Screen {
 			LayoutCreatorScreen.colorizeCreatorButton(m2);
 		}
 		
+		//Background Rightclick Menu
 		if (this.backgroundRightclickMenu == null) {
 			this.backgroundRightclickMenu = new PopupMenu(110, 16, -1);
 
 			this.backgroundRightclickMenu.addChild(this.renderorderPopup);
 			this.backgroundRightclickMenu.addChild(this.mcversionPopup);
 			this.backgroundRightclickMenu.addChild(this.fmversionPopup);
+			this.backgroundRightclickMenu.addChild(this.windowsizePopup);
 			
 			AdvancedButton backOptionsB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.backgroundoptions"), true, (press) -> {
 				this.setMenusUseable(false);
@@ -398,6 +469,10 @@ public class LayoutCreatorScreen extends Screen {
 			LayoutCreatorScreen.colorizeCreatorButton(backOptionsB);
 			
 			AdvancedButton resetBackB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.resetbackground"), true, (press) -> {
+				if ((this.backgroundTexture != null) || (this.backgroundAnimation != null)) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+				}
+				
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 				}
@@ -407,20 +482,60 @@ public class LayoutCreatorScreen extends Screen {
 			});
 			this.backgroundRightclickMenu.addContent(resetBackB);
 			LayoutCreatorScreen.colorizeCreatorButton(resetBackB);
-			
-			this.backgroundRightclickMenu.addChild(this.renderorderPopup);
+
 			AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder"), true, (press) -> {
 				this.fmversionPopup.closeMenu();
 				this.mcversionPopup.closeMenu();
-				this.renderorderPopup.openMenuAt(0, press.y);
+				this.windowsizePopup.closeMenu();
+				this.renderorderPopup.openMenuAt(0, ((AdvancedButton)press).getY());
 			});
 			this.backgroundRightclickMenu.addContent(b2);
 			LayoutCreatorScreen.colorizeCreatorButton(b2);
+
+			AdvancedButton b7 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.windowsize"), true, (press) -> {
+				this.fmversionPopup.closeMenu();
+				this.mcversionPopup.closeMenu();
+				this.renderorderPopup.closeMenu();
+				this.windowsizePopup.openMenuAt(0, ((AdvancedButton)press).getY());
+			});
+			this.backgroundRightclickMenu.addContent(b7);
+			LayoutCreatorScreen.colorizeCreatorButton(b7);
+
+			AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
+				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+					if ((call != null) && MathUtils.isInteger(call)) {
+						int s = Integer.parseInt(call);
+						if (s < 0) {
+							this.displayNotification(300, Locals.localize("helper.creator.rightclick.scale.invalid"), "", "", "", "");
+						} else {
+							this.setMenusUseable(true);
+							
+							if (this.scale != s) {
+								this.history.saveSnapshot(this.history.createSnapshot());
+							}
+							
+							this.scale = s;
+							this.init(Minecraft.getInstance(), Minecraft.getInstance().getMainWindow().getScaledWidth(), Minecraft.getInstance().getMainWindow().getScaledHeight());
+						}
+					} else {
+						this.setMenusUseable(true);
+					}
+				});
+				p.setText("" + this.scale);
+				this.setMenusUseable(false);
+				PopupHandler.displayPopup(p);
+			});
+			this.backgroundRightclickMenu.addContent(b8);
+			LayoutCreatorScreen.colorizeCreatorButton(b8);
 			
 			AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.requiredmods"), true, (press) -> {
 				this.setMenusUseable(false);
 				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.requiredmods.desc"), null, 240, (call) -> {
 					if (call != null) {
+						if (this.requiredmods != call) {
+							this.history.saveSnapshot(this.history.createSnapshot());
+						}
+						
 						this.requiredmods = call;
 					}
 					this.setMenusUseable(true);
@@ -436,7 +551,8 @@ public class LayoutCreatorScreen extends Screen {
 			AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.mc"), true, (press) -> {
 				this.renderorderPopup.closeMenu();
 				this.fmversionPopup.closeMenu();
-				this.mcversionPopup.openMenuAt(press.x + press.getWidth() + 2, press.y);
+				this.windowsizePopup.closeMenu();
+				this.mcversionPopup.openMenuAt(((AdvancedButton)press).getX() + ((AdvancedButton)press).getWidth() + 2, ((AdvancedButton)press).getY());
 			});
 			this.backgroundRightclickMenu.addContent(b4);
 			LayoutCreatorScreen.colorizeCreatorButton(b4);
@@ -444,7 +560,8 @@ public class LayoutCreatorScreen extends Screen {
 			AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.fm"), true, (press) -> {
 				this.renderorderPopup.closeMenu();
 				this.mcversionPopup.closeMenu();
-				this.fmversionPopup.openMenuAt(press.x + press.getWidth() + 2, press.y);
+				this.windowsizePopup.closeMenu();
+				this.fmversionPopup.openMenuAt(((AdvancedButton)press).getX() + ((AdvancedButton)press).getWidth() + 2, ((AdvancedButton)press).getY());
 			});
 			this.backgroundRightclickMenu.addContent(b6);
 			LayoutCreatorScreen.colorizeCreatorButton(b6);
@@ -453,6 +570,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 	
+	//shouldCloseOnEsc
 	@Override
 	public boolean shouldCloseOnEsc() {
 		return false;
@@ -494,8 +612,8 @@ public class LayoutCreatorScreen extends Screen {
 	public boolean isLayoutEmpty() {
 		return this.getAllProperties().isEmpty();
 	}
-	
-	private List<PropertiesSection> getAllProperties() {
+
+	protected List<PropertiesSection> getAllProperties() {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
 		
 		PropertiesSection meta = new PropertiesSection("customization-meta");
@@ -515,6 +633,18 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		if ((this.maximumFM != null) && !this.maximumFM.replace(" ", "").equals("")) {
 			meta.addEntry("maximumfmversion", this.maximumFM);
+		}
+		if (this.biggerThanWidth != 0) {
+			meta.addEntry("biggerthanwidth", "" + this.biggerThanWidth);
+		}
+		if (this.biggerThanHeight != 0) {
+			meta.addEntry("biggerthanheight", "" + this.biggerThanHeight);
+		}
+		if (this.smallerThanWidth != 0) {
+			meta.addEntry("smallerthanwidth", "" + this.smallerThanWidth);
+		}
+		if (this.smallerThanHeight != 0) {
+			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
 		}
 		l.add(meta);
 		
@@ -547,6 +677,13 @@ public class LayoutCreatorScreen extends Screen {
 			}
 			l.add(ps);
 		}
+
+		if (this.scale > 0) {
+			PropertiesSection ps = new PropertiesSection("customization");
+			ps.addEntry("action", "setscale");
+			ps.addEntry("scale", "" + this.scale);
+			l.add(ps);
+		}
 		
 		for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
 			PropertiesSection s = new PropertiesSection("customization");
@@ -561,7 +698,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		return l;
 	}
-
+	
 	protected void saveToCustomizationFile(String fileName) throws IOException {
 		List<PropertiesSection> l = this.getAllProperties();
 		PropertiesSet props = new PropertiesSet("menu");
@@ -571,7 +708,7 @@ public class LayoutCreatorScreen extends Screen {
 		
 		PropertiesSerializer.writeProperties(props, FancyMenu.getCustomizationPath().getPath() + "/" + fileName);
 	}
-
+	
 	protected String generateCustomizationFileName(String dir, String baseName) {
 		return FileUtils.generateAvailableFilename(dir, baseName, "txt");
 	}
@@ -624,7 +761,7 @@ public class LayoutCreatorScreen extends Screen {
 		
 		this.content.clear();
 		
-		//Sync labels, textures, auto-clicks and other stuff done to vanilla buttons
+		//Sync labels, textures, auto-clicks and other stuff made to vanilla buttons
 		for (ButtonData b : ButtonCache.getButtons()) {
 			if (!this.containsVanillaButton(l, b)) {
 				LayoutVanillaButton v = new LayoutVanillaButton(b, this);
@@ -645,6 +782,9 @@ public class LayoutCreatorScreen extends Screen {
 				}
 				if (this.vanillaHoverSounds.containsKey(b.getId())) {
 					v.hoverSound = this.vanillaHoverSounds.get(b.getId()); 
+				}
+				if (this.vanillaClickSounds.containsKey(b.getId())) {
+					v.clicksound = this.vanillaClickSounds.get(b.getId()); 
 				}
 				if (this.vanillaButtonTextures.containsKey(b.getId())) {
 					List<String> l2 = this.vanillaButtonTextures.get(b.getId());
@@ -668,7 +808,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		return false;
 	}
-
+	
 	public boolean isHidden(LayoutObject b) {
 		return this.hidden.contains(b);
 	}
@@ -743,21 +883,21 @@ public class LayoutCreatorScreen extends Screen {
 					lab = Locals.localize("helper.creator.audio.disableloop");
 				}
 				AdvancedButton a2 = new AdvancedButton(0, 0, 0, 16, lab, true, (press2) -> {
-					if (press2.getMessage().equals(Locals.localize("helper.creator.audio.enableloop"))) {
+					if (((AdvancedButton)press2).getMessage().equals(Locals.localize("helper.creator.audio.enableloop"))) {
 						SoundHandler.setLooped(m.getKey(), true);
 						this.audio.put(m.getKey(), true);
-						press2.setMessage(Locals.localize("helper.creator.audio.disableloop"));;
+						((AdvancedButton)press2).setMessage(Locals.localize("helper.creator.audio.disableloop"));;
 					} else {
 						SoundHandler.setLooped(m.getKey(), false);
 						this.audio.put(m.getKey(), false);
-						press2.setMessage(Locals.localize("helper.creator.audio.enableloop"));;
+						((AdvancedButton)press2).setMessage(Locals.localize("helper.creator.audio.enableloop"));;
 					}
 				});
 				actions.addContent(a2);
 				LayoutCreatorScreen.colorizeCreatorButton(a2);
 				
 				AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, label, true, (press) -> {
-					actions.openMenuAt(press.x + press.getWidth() + 2, press.y);
+					actions.openMenuAt(((AdvancedButton)press).getX() + ((AdvancedButton)press).getWidth() + 2, ((AdvancedButton)press).getY());
 				});
 				this.audioPopup.addContent(bt);
 				LayoutCreatorScreen.colorizeCreatorButton(bt);
@@ -768,6 +908,10 @@ public class LayoutCreatorScreen extends Screen {
 	}
 	
 	public void setVanillaButtonName(LayoutVanillaButton button, String text) {
+		if ((this.vanillaButtonNames.get(button.button.getId()) == null) || !(this.vanillaButtonNames.get(button.button.getId()).equals(text))) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+		}
+		
 		this.vanillaButtonNames.put(button.button.getId(), text);
 		button.object.value = text;
 	}
@@ -777,7 +921,7 @@ public class LayoutCreatorScreen extends Screen {
 			List<String> l = new ArrayList<String>();
 			l.add(backNormal);
 			l.add(backHover);
-			
+
 			this.vanillaButtonTextures.put(button.button.getId(), l);
 		} else {
 			if (this.vanillaButtonTextures.containsKey(button.button.getId())) {
@@ -799,7 +943,7 @@ public class LayoutCreatorScreen extends Screen {
 	public void setVanillaHideFor(LayoutVanillaButton button, double seconds) {
 		this.vanillaHideFor.put(button.button.getId(), seconds);
 	}
-	
+
 	public void setVanillaDelayOnlyFirstTime(LayoutVanillaButton button, boolean onlyfirsttime) {
 		this.vanillaDelayOnlyFirstTime.put(button.button.getId(), onlyfirsttime);
 	}
@@ -824,8 +968,20 @@ public class LayoutCreatorScreen extends Screen {
 		}
 	}
 
+	public void setVanillaClickSound(LayoutVanillaButton button, String sound) {
+		if (sound != null) {
+			this.vanillaClickSounds.put(button.button.getId(), sound);
+		} else {
+			if (this.vanillaClickSounds.containsKey(button.button.getId())) {
+				this.vanillaClickSounds.remove(button.button.getId());
+			}
+		}
+	}
+	
 	public void hideVanillaButton(LayoutVanillaButton b) {
 		if (!this.hidden.contains(b) && this.content.contains(b)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			this.hidden.add(b);
 			b.hidden = true;
 			this.setObjectFocused(b, false, true);
@@ -837,6 +993,8 @@ public class LayoutCreatorScreen extends Screen {
 	
 	public void showVanillaButton(LayoutVanillaButton b) {
 		if (this.isHidden(b)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			this.hidden.remove(b);
 			b.hidden = false;
 			this.updateHiddenButtonPopup();
@@ -880,14 +1038,15 @@ public class LayoutCreatorScreen extends Screen {
 			this.updateContent();
 		}
 	}
-
+	
 	public List<LayoutObject> getContent() {
 		return this.content;
 	}
 	
+	//render
 	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
-
+		
 		//Handle object focus and update the top hovered object
 		if (!MouseInput.isVanillaInputBlocked()) {
 			if ((this.focused != null) && !this.focused.isHovered() && !this.focused.isDragged() && !this.focused.isGrabberPressed() && !this.focused.isGettingResized() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
@@ -910,7 +1069,7 @@ public class LayoutCreatorScreen extends Screen {
 		} else {
 			this.focused = null;
 		}
-		
+
 		this.renderCreatorBackground();
 		
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
@@ -975,7 +1134,7 @@ public class LayoutCreatorScreen extends Screen {
 			if (!this.addObjectButton.isHovered() && !this.addObjectPopup.isHovered()) {
 				this.addObjectPopup.closeMenu();
 			}
-			if ((!this.backgroundRightclickMenu.isHovered() && !this.renderorderPopup.isHovered() && !this.mcversionPopup.isHovered() && !this.fmversionPopup.isHovered()) || this.isObjectFocused()) {
+			if ((!this.backgroundRightclickMenu.isHovered() && !this.renderorderPopup.isHovered() && !this.mcversionPopup.isHovered() && !this.fmversionPopup.isHovered() && !this.windowsizePopup.isHovered()) || this.isObjectFocused()) {
 				this.backgroundRightclickMenu.closeMenu();
 			}
 		}
@@ -1005,6 +1164,8 @@ public class LayoutCreatorScreen extends Screen {
 		} else {
 			this.leftDownAndFocused = false;
 		}
+
+		this.history.render();
 		
 		super.render(mouseX, mouseY, partialTicks);
 	}
@@ -1020,7 +1181,7 @@ public class LayoutCreatorScreen extends Screen {
 			Minecraft.getInstance().getTextureManager().bindTexture(EXPAND_INDICATOR);
 			RenderSystem.color4f(this.expandColor.getRed(), this.expandColor.getGreen(), this.expandColor.getBlue(), 0.5F);
 		}
-		Screen.blit(x, y, 0.0F, 0.0F, 20, 20, 20, 20);
+		blit(x, y, 0.0F, 0.0F, 20, 20, 20, 20);
 		RenderSystem.disableBlend();
 
 		if (this.leftDownAndFocused) {
@@ -1073,13 +1234,13 @@ public class LayoutCreatorScreen extends Screen {
 
 	private void renderCreatorBackground() {
 		RenderSystem.enableBlend();
-		Screen.fill(0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
+		fill(0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
 
 		if (this.backgroundTexture != null) {
 			Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 			
 			if (!this.panorama) {
-				IngameGui.blit(0, 0, 1.0F, 1.0F, this.width, this.height + 1, this.width, this.height + 1);
+				blit(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 			} else {
 				int w = this.backgroundTexture.getWidth();
 				int h = this.backgroundTexture.getHeight();
@@ -1129,7 +1290,7 @@ public class LayoutCreatorScreen extends Screen {
 					}
 				}
 				if (wfinal <= this.width) {
-					IngameGui.blit(0, 0, 1.0F, 1.0F, this.width, this.height + 1, this.width, this.height + 1);
+					blit(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height + 1);
 				}
@@ -1151,7 +1312,7 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		return (this.focused == object);
 	}
-
+	
 	public void setObjectFocused(LayoutObject object, boolean b, boolean ignoreBlockedFocusChange) {
 		if (this.isFocusChangeBlocked() && !ignoreBlockedFocusChange) {
 			return;
@@ -1219,6 +1380,8 @@ public class LayoutCreatorScreen extends Screen {
 		String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 		if (f.exists()) {
 			if (filename.equals(f.getName())) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				PropertiesSection sec = new PropertiesSection("customization");
 				sec.addEntry("action", "addtexture");
 				sec.addEntry("path", path);
@@ -1241,6 +1404,8 @@ public class LayoutCreatorScreen extends Screen {
 			url = WebUtils.filterURL(url);
 		}
 		if (WebUtils.isValidUrl(url)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtexture");
 			s.addEntry("url", url);
@@ -1259,6 +1424,8 @@ public class LayoutCreatorScreen extends Screen {
 			return;
 		}
 		if (AnimationHandler.animationExists(name)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addanimation");
 			s.addEntry("name", name);
@@ -1282,7 +1449,14 @@ public class LayoutCreatorScreen extends Screen {
 			this.setMenusUseable(true);
 			return;
 		}
-		this.addContent(new LayoutButton(100, 20, label, this));
+		this.history.saveSnapshot(this.history.createSnapshot());
+		
+		int w = 100;
+		if (Minecraft.getInstance().fontRenderer.getStringWidth(label) + 10 > w) {
+			w = Minecraft.getInstance().fontRenderer.getStringWidth(label) + 10;
+		}
+		this.addContent(new LayoutButton(w, 20, label, null, this));
+		
 		this.setMenusUseable(true);
 	}
 	
@@ -1291,6 +1465,8 @@ public class LayoutCreatorScreen extends Screen {
 			url = WebUtils.filterURL(url);
 		}
 		if (WebUtils.isValidUrl(url)) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtext");
 			s.addEntry("url", url);
@@ -1307,6 +1483,8 @@ public class LayoutCreatorScreen extends Screen {
 			return;
 		}
 		if (text.length() > 0) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addtext");
 			s.addEntry("value", StringUtils.convertFormatCodes(text, "&", "§"));
@@ -1332,6 +1510,9 @@ public class LayoutCreatorScreen extends Screen {
 			File f = new File(path);
 			if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 				if (!this.audio.containsKey(path)) {
+					//TODO noch verbessern wegen audio stoppen, etc
+					this.history.saveSnapshot(this.history.createSnapshot());
+					
 					this.setMenusUseable(true);
 					MenuCustomization.registerSound(path, path);
 					SoundHandler.playSound(path);
@@ -1357,6 +1538,8 @@ public class LayoutCreatorScreen extends Screen {
 				}
 			}
 			if (!this.backgroundAnimationNames.isEmpty()) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.backgroundTexture = null;
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
@@ -1367,6 +1550,8 @@ public class LayoutCreatorScreen extends Screen {
 		}
 		if (names == null) {
 			if (this.backgroundAnimation != null) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 			}
 			this.backgroundAnimation = null;
@@ -1388,6 +1573,8 @@ public class LayoutCreatorScreen extends Screen {
 			String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 				if (filename.equals(f.getName())) {
+					this.history.saveSnapshot(this.history.createSnapshot());
+					
 					this.backgroundTexture = TextureHandler.getResource(path);
 					this.backgroundTexturePath = path;
 					if (this.backgroundAnimation != null) {
@@ -1436,20 +1623,28 @@ public class LayoutCreatorScreen extends Screen {
 				return;
 			}
 			if (d.keycode == 263) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setX(this.focused.object.posX - 1);
 			}
 			if (d.keycode == 262) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setX(this.focused.object.posX + 1);
 			}
 			if (d.keycode == 265) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setY(this.focused.object.posY - 1);
 			}
 			if (d.keycode == 264) {
+				this.history.saveSnapshot(this.history.createSnapshot());
+				
 				this.focused.setY(this.focused.object.posY + 1);
 			}
 		}
 	}
-	
+
 	private void onDeletePress(KeyboardData d) {
 		if ((this == Minecraft.getInstance().currentScreen) && (this.focused != null) && !PopupHandler.isPopupActive()) {
 			if (d.keycode == 261) {
@@ -1460,6 +1655,14 @@ public class LayoutCreatorScreen extends Screen {
 				}
 			}
 		}
+	}
+	
+	public int getWidth() {
+		return this.width;
+	}
+	
+	public int getHeight() {
+		return this.height;
 	}
 	
 	public Screen getScreenToCustomize() {

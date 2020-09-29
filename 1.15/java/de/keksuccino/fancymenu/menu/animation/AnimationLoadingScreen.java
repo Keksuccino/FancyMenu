@@ -6,10 +6,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 

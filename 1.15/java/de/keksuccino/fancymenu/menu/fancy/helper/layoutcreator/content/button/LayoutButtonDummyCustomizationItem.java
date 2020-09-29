@@ -5,8 +5,8 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.properties.PropertiesSection;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;

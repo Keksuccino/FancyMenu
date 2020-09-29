@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.keybinding;
 
-import de.keksuccino.core.config.exceptions.InvalidValueException;
-import de.keksuccino.core.input.KeyboardHandler;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
+import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
+import de.keksuccino.konkrete.input.KeyboardHandler;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 

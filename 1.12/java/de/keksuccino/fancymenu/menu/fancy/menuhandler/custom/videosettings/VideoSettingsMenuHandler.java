@@ -21,32 +21,42 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 	@Override
 	public void onInitPost(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			try {
-				VideoSettingsList l;
-				if (OpenGlHelper.vboSupported) {
-					l = new VideoSettingsList(Minecraft.getMinecraft(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, VIDEO_OPTIONS, this);
-		        }
-		        else {
-		            GameSettings.Options[] agamesettings$options = new GameSettings.Options[VIDEO_OPTIONS.length - 1];
-		            int i = 0;
-		            for (GameSettings.Options gamesettings$options : VIDEO_OPTIONS) {
-		                if (gamesettings$options == GameSettings.Options.USE_VBO) {
-		                    break;
-		                }
-		                agamesettings$options[i] = gamesettings$options;
-		                ++i;
-		            }
-		            l = new VideoSettingsList(Minecraft.getMinecraft(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, agamesettings$options, this);
-		        }
+			if (isScrollable()) {
+				try {
+					VideoSettingsList l;
+					if (OpenGlHelper.vboSupported) {
+						l = new VideoSettingsList(Minecraft.getMinecraft(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, VIDEO_OPTIONS, this);
+					}
+					else {
+						GameSettings.Options[] agamesettings$options = new GameSettings.Options[VIDEO_OPTIONS.length - 1];
+						int i = 0;
+						for (GameSettings.Options gamesettings$options : VIDEO_OPTIONS) {
+							if (gamesettings$options == GameSettings.Options.USE_VBO) {
+								break;
+							}
+							agamesettings$options[i] = gamesettings$options;
+							++i;
+						}
+						l = new VideoSettingsList(Minecraft.getMinecraft(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, agamesettings$options, this);
+					}
 
-				Field f = ReflectionHelper.findField(GuiVideoSettings.class, "optionsRowList", "field_146501_h");
-				f.set(e.getGui(), l);
-			} catch(Exception ex) {
-				ex.printStackTrace();
+					Field f = ReflectionHelper.findField(GuiVideoSettings.class, "optionsRowList", "field_146501_h");
+					f.set(e.getGui(), l);
+				} catch(Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		}
-		
+
 		super.onInitPost(e);
+	}
+	
+	public static boolean isScrollable() {
+		Field f = null;
+		try {
+			f = ReflectionHelper.findField(GuiVideoSettings.class, "optionsRowList", "field_146501_h");
+		} catch (Exception e) {}
+		return (f != null);
 	}
 
 }

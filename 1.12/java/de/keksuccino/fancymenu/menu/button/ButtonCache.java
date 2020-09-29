@@ -11,18 +11,21 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.locale.LocaleUtils;
-import de.keksuccino.core.math.MathUtils;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.videosettings.VideoSettingsMenuHandler;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.localization.LocaleUtils;
+import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -60,6 +63,38 @@ public class ButtonCache {
 			cached = true;
 			
 			boolean cache = true;
+			
+			if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+			
+			//Don't cache video settings if Optifine is active
+			if ((s != null) && (s instanceof GuiVideoSettings) && !VideoSettingsMenuHandler.isScrollable()) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+
+			//Don't cache screen if from one of slimeknights mods
+			if (s.getClass().getName().startsWith("slimeknights.")) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+			
+			//Don't cache screen if from Optifine
+			if (s.getClass().getName().startsWith("net.optifine")) {
+				replaced.clear();
+				buttons.clear();
+				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
+				return;
+			}
+			
 			//Don't refresh cache if screen is instance of LayoutCreator
 			if (s instanceof LayoutCreatorScreen) {
 				cache = false;
@@ -84,6 +119,25 @@ public class ButtonCache {
 		replaced.clear();
 		buttons.clear();
 		
+		if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+			return;
+		}
+		
+		//Don't update video settings buttons if Optifine is active
+		if ((s != null) && (s instanceof GuiVideoSettings) && !VideoSettingsMenuHandler.isScrollable()) {
+			return;
+		}
+
+		//Don't update buttons if screen is from one of slimeknights mods
+		if (s.getClass().getName().startsWith("slimeknights.")) {
+			return;
+		}
+		
+		//Don't update buttons if from Optifine
+		if (s.getClass().getName().startsWith("net.optifine")) {
+			return;
+		}
+
 		if (useLegacyButtonIds()) {
 			//Calculate button ids with the old, unstable id system
 			if (buttonlist != null) {
@@ -213,11 +267,34 @@ public class ButtonCache {
 					clickButton(w);
 				}
 			});
+			
+			//TODO experimental
+			b.enabled = d.getButton().enabled;
+			b.visible = d.getButton().visible;
+			d.getButton().visible = false;
+			//------------
+			
 			replaceButton(id, b);
 			return b;
 		}
 		return null;
 	}
+	
+//	public static AdvancedButton convertToAdvancedButton(long id, boolean handleClick) {
+//		ButtonData d = getButtonForId(id);
+//		if ((d != null) && !(d.getButton() instanceof AdvancedButton)) {
+//			AdvancedButton b = new AdvancedButton(d.getButton().x, d.getButton().y, d.getButton().width, d.getButton().height, d.getButton().displayString, handleClick, (press) -> {
+//				GuiButton w = replaced.get(d.getId());
+//				if (w != null) {
+//					//TODO experimental
+//					clickButton(w);
+//				}
+//			});
+//			replaceButton(id, b);
+//			return b;
+//		}
+//		return null;
+//	}
 
 	public static AdvancedButton convertToAdvancedButton(String key, boolean handleClick) {
 		ButtonData d = getButtonForKey(key);
@@ -433,6 +510,13 @@ public class ButtonCache {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	/**
+	 * MC 1.12 exclusive
+	 */
+	public static boolean isCaching() {
+		return caching;
 	}
 
 }

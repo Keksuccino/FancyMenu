@@ -7,15 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.properties.PropertiesSet;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
@@ -34,11 +27,18 @@ import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.screen.Screen;
 
 public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 
-	private String single;
+	public String single;
 	private boolean audioInit = false;
 	
 	public PreloadedLayoutCreatorScreen(Screen screenToCustomize, List<PropertiesSet> properties) {
@@ -64,6 +64,68 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 				String order = meta.getEntryValue("renderorder");
 				if ((order != null) && order.equalsIgnoreCase("background")) {
 					this.renderorder = "background";
+				}
+
+				//TODO übernehmen
+				String biggerthanwidth = meta.getEntryValue("biggerthanwidth");
+				if (biggerthanwidth != null) {
+					biggerthanwidth = biggerthanwidth.replace(" ", "");
+					if (MathUtils.isInteger(biggerthanwidth)) {
+						int i = Integer.parseInt(biggerthanwidth);
+						this.biggerThanWidth = i;
+					}
+				}
+				
+				//TODO übernehmen
+				String biggerthanheight = meta.getEntryValue("biggerthanheight");
+				if (biggerthanheight != null) {
+					biggerthanheight = biggerthanheight.replace(" ", "");
+					if (MathUtils.isInteger(biggerthanheight)) {
+						int i = Integer.parseInt(biggerthanheight);
+						this.biggerThanHeight = i;
+					}
+				}
+				
+				//TODO übernehmen
+				String smallerthanwidth = meta.getEntryValue("smallerthanwidth");
+				if (smallerthanwidth != null) {
+					smallerthanwidth = smallerthanwidth.replace(" ", "");
+					if (MathUtils.isInteger(smallerthanwidth)) {
+						int i = Integer.parseInt(smallerthanwidth);
+						this.smallerThanWidth = i;
+					}
+				}
+				
+				//TODO übernehmen
+				String smallerthanheight = meta.getEntryValue("smallerthanheight");
+				if (smallerthanheight != null) {
+					smallerthanheight = smallerthanheight.replace(" ", "");
+					if (MathUtils.isInteger(smallerthanheight)) {
+						int i = Integer.parseInt(smallerthanheight);
+						this.smallerThanHeight = i;
+					}
+				}
+				
+				//TODO remove deprecated action
+				String biggerthan = meta.getEntryValue("biggerthan");
+				if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
+					String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
+					String hRaw = biggerthan.replace(" ", "").split("[x]", 2)[1];
+					if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
+						this.biggerThanWidth = Integer.parseInt(wRaw);
+						this.biggerThanHeight = Integer.parseInt(hRaw);
+					}
+				}
+
+				//TODO remove deprecated action
+				String smallerthan = meta.getEntryValue("smallerthan");
+				if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
+					String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
+					String hRaw = smallerthan.replace(" ", "").split("[x]", 2)[1];
+					if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
+						this.smallerThanWidth = Integer.parseInt(wRaw);
+						this.smallerThanHeight = Integer.parseInt(hRaw);
+					}
 				}
 				
 				this.single = meta.getEntryValue("path");
@@ -271,6 +333,24 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 							}
 						}
 					}
+
+					if (action.equalsIgnoreCase("setbuttonclicksound")) {
+						if (b != null) {
+							String path = sec.getEntryValue("path");
+							if (path != null) {
+								File f = new File(path);
+								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+									if (!vanillas.containsKey(b.getId())) {
+										LayoutVanillaButton van = new LayoutVanillaButton(b, this);
+										vanillas.put(b.getId(), van);
+										con.add(van);
+									}
+									vanillas.get(b.getId()).clicksound = path;
+									this.vanillaClickSounds.put(b.getId(), path);
+								}
+							}
+						}
+					}
 					
 					if (action.equalsIgnoreCase("clickbutton")) {
 						if (b != null) {
@@ -290,7 +370,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 							}
 						}
 					}
-
+					
 					if (action.equalsIgnoreCase("hidebuttonfor")) {
 						if (b != null) {
 							String seconds = sec.getEntryValue("seconds");
@@ -305,7 +385,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 								vanillas.get(b.getId()).hideforsec = d;
 								
 								this.vanillaHideFor.put(b.getId(), d);
-								
+
 								if ((firsttime != null) && firsttime.equalsIgnoreCase("true")) {
 									vanillas.get(b.getId()).delayonlyfirsttime = true;
 									this.vanillaDelayOnlyFirstTime.put(b.getId(), true);
@@ -336,7 +416,6 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 					
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
-						LayoutButton lb = new LayoutButton(bc.width, bc.height, bc.value, this);
 						String baction = sec.getEntryValue("buttonaction");
 						String actionvalue = sec.getEntryValue("value");
 						String backNormal = sec.getEntryValue("backgroundnormal");
@@ -345,6 +424,22 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						String hoverSound = sec.getEntryValue("hoversound");
 						String hidefor = sec.getEntryValue("hideforseconds");
 						String firsttime = sec.getEntryValue("delayonlyfirsttime");
+						String onlydisplayin = sec.getEntryValue("onlydisplayin");
+						String clicksound = sec.getEntryValue("clicksound");
+
+						if (onlydisplayin != null) {
+							if (onlydisplayin.equalsIgnoreCase("outgame")) {
+								onlydisplayin = "outgame";
+							} else if (onlydisplayin.equalsIgnoreCase("singleplayer")) {
+								onlydisplayin = "singleplayer";
+							} else if (onlydisplayin.equalsIgnoreCase("multiplayer")) {
+								onlydisplayin = "multiplayer";
+							} else {
+								onlydisplayin = null;
+							}
+						}
+
+						LayoutButton lb = new LayoutButton(bc.width, bc.height, bc.value, onlydisplayin, this);
 						
 						if (baction == null) {
 							continue;
@@ -376,7 +471,11 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						if (hoverLabel != null) {
 							lb.hoverLabel = hoverLabel;
 						}
-						
+
+						if (clicksound != null) {
+							lb.clicksound = clicksound.replace("\\", "/");
+						}
+
 						lb.object.orientation = bc.orientation;
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
@@ -413,6 +512,16 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 							}
 						}
 					}
+
+					if (action.equalsIgnoreCase("setscale")) {
+						String scale = sec.getEntryValue("scale");
+						if ((scale != null) && MathUtils.isInteger(scale)) {
+							int sc = Integer.parseInt(scale);
+							if (sc >= 0) {
+								this.scale = sc;
+							}
+						}
+					}
 					
 				}
 			}
@@ -421,6 +530,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 		this.content.addAll(con);
 	}
 	
+	//init
 	@Override
 	protected void init() {
 		super.init();
@@ -439,6 +549,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 		}
 	}
 	
+	//render
 	@Override
 	public void render(int mouseX, int mouseY, float partialTicks) {
 		

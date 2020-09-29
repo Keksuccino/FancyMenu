@@ -10,10 +10,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -21,7 +22,8 @@ import net.minecraft.client.renderer.GlStateManager;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
-	private List<String> lines = new ArrayList<String>();
+	public volatile List<String> lines = new ArrayList<String>();
+	private volatile boolean updating = false;
 	public boolean multiline = false;
 	public boolean shadow = false;
 	public float scale = 1.0F;
@@ -31,6 +33,9 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 		
 		if ((this.action != null) && this.action.equalsIgnoreCase("addwebtext")) {
 			this.value = item.getEntryValue("url");
+			if (this.value != null) {
+				this.value = MenuCustomization.convertString(this.value);
+			}
 			
 			String multi = item.getEntryValue("multiline");
 			if ((multi != null) && multi.equalsIgnoreCase("true")) {
@@ -60,59 +65,61 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			return;
 		}
 		
-		FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+		if (!this.updating) {
+			FontRenderer font = Minecraft.getMinecraft().fontRenderer;
 
-		GlStateManager.enableBlend();
-		
-		int w = 0;
-		int i = 0;
-		for (String s : this.lines) {
-			
-			float sc = this.scale;
-			if (s.startsWith("# ")) {
-				s = s.substring(2);
-				this.scale += 1.3F;
-			}
-			if (s.startsWith("## ")) {
-				s = s.substring(3);
-				this.scale += 1.0F;
-			}
-			if (s.startsWith("### ")) {
-				s = s.substring(4);
-				this.scale += 0.5F;
-			}
-			if (s.startsWith("#### ")) {
-				s = s.substring(5);
-				this.scale += 0.2F;
+			GlStateManager.enableBlend();
+
+			int w = 0;
+			int i = 0;
+			for (String s : this.lines) {
+
+				float sc = this.scale;
+				if (s.startsWith("# ")) {
+					s = s.substring(2);
+					this.scale += 1.3F;
+				}
+				if (s.startsWith("## ")) {
+					s = s.substring(3);
+					this.scale += 1.0F;
+				}
+				if (s.startsWith("### ")) {
+					s = s.substring(4);
+					this.scale += 0.5F;
+				}
+				if (s.startsWith("#### ")) {
+					s = s.substring(5);
+					this.scale += 0.2F;
+				}
+
+				int sw = (int) (font.getStringWidth(s) * this.scale);
+				if (w < sw) {
+					w = sw;
+				}
+
+				int x = this.getPosX(menu);
+				int y = this.getPosY(menu);
+
+				GlStateManager.pushMatrix();
+				GlStateManager.scale(this.scale, this.scale, this.scale);
+				if (this.shadow) {
+					font.drawStringWithShadow(s, x, y + (i / this.scale), Color.WHITE.getRGB());
+				} else {
+					font.drawString(s, x, (int) (y + (i / this.scale)), Color.WHITE.getRGB());
+				}
+				GlStateManager.popMatrix();
+
+				i += (10*this.scale);
+
+				this.scale = sc;
+
 			}
 
-			int sw = (int) (font.getStringWidth(s) * this.scale);
-			if (w < sw) {
-				w = sw;
-			}
-			
-			int x = this.getPosX(menu);
-			int y = this.getPosY(menu);
-			
-			GlStateManager.pushMatrix();
-			GlStateManager.scale(this.scale, this.scale, this.scale);
-			if (this.shadow) {
-				font.drawStringWithShadow(s, x, y + (i / this.scale), Color.WHITE.getRGB());
-			} else {
-				font.drawString(s, x, (int) (y + (i / this.scale)), Color.WHITE.getRGB());
-			}
-			GlStateManager.popMatrix();
-			
-			i += (10*this.scale);
-			
-			this.scale = sc;
-			
+			this.height = i;
+			this.width = w;
+
+			GlStateManager.disableBlend();
 		}
-		
-		this.height = i;
-		this.width = w;
-		
-		GlStateManager.disableBlend();
 	}
 	
 	@Override
@@ -135,60 +142,70 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 		return super.shouldRender();
 	}
 
-	public boolean updateContent(String url) {
-		String old = this.value;
-		
-		this.value = url;
-		if (this.isValidUrl()) {
-			//Get raw github file
-			if (this.value.toLowerCase().contains("/blob/") && (this.value.toLowerCase().startsWith("http://github.com/")
-					|| this.value.toLowerCase().startsWith("https://github.com/")|| this.value.toLowerCase().startsWith("http://www.github.com/")
-					|| this.value.toLowerCase().startsWith("https://www.github.com/"))) {
-				String path = this.value.replace("//", "").split("/", 2)[1].replace("/blob/", "/");
-				this.value = "https://raw.githubusercontent.com/" + path;
-			}
+	public void updateContent(String url) {
+		new Thread(new Runnable() {
 			
-			//Get raw pastebin file
-			if (!this.value.toLowerCase().contains("/raw/") && (this.value.toLowerCase().startsWith("http://pastebin.com/")
-					|| this.value.toLowerCase().startsWith("https://pastebin.com/")|| this.value.toLowerCase().startsWith("http://www.pastebin.com/")
-					|| this.value.toLowerCase().startsWith("https://www.pastebin.com/"))) {
-				String path = this.value.replace("//", "").split("/", 2)[1];
-				this.value = "https://pastebin.com/raw/" + path;
-			}
-			
-			try {
-				this.lines.clear();
+			@Override
+			public void run() {
 				
-				URL u = new URL(this.value);
-				BufferedReader r = new BufferedReader(new InputStreamReader(u.openStream(), StandardCharsets.UTF_8));
-				String s = r.readLine();
-				while(s != null) {
-					this.lines.add(StringUtils.convertFormatCodes(s, "&", "§"));
-					if (!multiline) {
-						break;
+				updating = true;
+				
+				String old = value;
+				
+				value = url;
+				if (isValidUrl()) {
+					//Get raw github file
+					if (value.toLowerCase().contains("/blob/") && (value.toLowerCase().startsWith("http://github.com/")
+							|| value.toLowerCase().startsWith("https://github.com/")|| value.toLowerCase().startsWith("http://www.github.com/")
+							|| value.toLowerCase().startsWith("https://www.github.com/"))) {
+						String path = value.replace("//", "").split("/", 2)[1].replace("/blob/", "/");
+						value = "https://raw.githubusercontent.com/" + path;
 					}
-					s = r.readLine();
+					
+					//Get raw pastebin file
+					if (!value.toLowerCase().contains("/raw/") && (value.toLowerCase().startsWith("http://pastebin.com/")
+							|| value.toLowerCase().startsWith("https://pastebin.com/")|| value.toLowerCase().startsWith("http://www.pastebin.com/")
+							|| value.toLowerCase().startsWith("https://www.pastebin.com/"))) {
+						String path = value.replace("//", "").split("/", 2)[1];
+						value = "https://pastebin.com/raw/" + path;
+					}
+					
+					try {
+						lines.clear();
+						
+						URL u = new URL(value);
+						BufferedReader r = new BufferedReader(new InputStreamReader(u.openStream(), StandardCharsets.UTF_8));
+						String s = r.readLine();
+						while(s != null) {
+							lines.add(StringUtils.convertFormatCodes(s, "&", "§"));
+							if (!multiline) {
+								break;
+							}
+							s = r.readLine();
+						}
+						r.close();
+						
+					} catch (Exception e) {
+						lines.clear();
+						lines.add(Locals.localize("customization.items.webstring.unabletoload"));
+						e.printStackTrace();
+					}
+
+				} else {
+					lines.clear();
+					lines.add(Locals.localize("customization.items.webstring.unabletoload"));
+					
+					System.out.println("########################## ERROR ##########################");
+					System.out.println("[FM] Cannot load text content from " + value + "! Invalid URL!");
+					System.out.println("###########################################################");
+					
+					value = old;
 				}
-				r.close();
 				
-			} catch (Exception e) {
-				this.lines.clear();
-				this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
-				e.printStackTrace();
+				updating = false;
+				
 			}
-			
-			return true;
-		} else {
-			this.lines.clear();
-			this.lines.add(Locals.localize("customization.items.webstring.unabletoload"));
-			
-			System.out.println("########################## ERROR ##########################");
-			System.out.println("[FM] Cannot load text content from " + this.value + "! Invalid URL!");
-			System.out.println("###########################################################");
-			
-			this.value = old;
-		}
-		return false;
+		}).start();
 	}
 	
 	private boolean isValidUrl() {

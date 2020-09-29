@@ -5,29 +5,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.google.common.util.concurrent.Runnables;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.rendering.CurrentScreenHandler;
-import de.keksuccino.core.rendering.RenderUtils;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IngameGui;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.WinGameScreen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.renderer.RenderSkybox;
 import net.minecraft.client.renderer.RenderSkyboxCube;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Quaternion;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -48,20 +50,26 @@ public class MainMenuHandler extends MenuHandlerBase {
 	private static final ResourceLocation MINECRAFT_TITLE_TEXTURES = new ResourceLocation("textures/gui/title/minecraft.png");
 	private static final ResourceLocation MINECRAFT_TITLE_EDITION = new ResourceLocation("textures/gui/title/edition.png");
 	private static final Random RANDOM = new Random();
+
+	private String splash;
 	
 	public MainMenuHandler() {
 		super(MainMenuScreen.class.getName());
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			// Resetting values to defaults
 			fadeFooter = 0.1F;
 			tickFooter = 0;
+
+			if (this.splash == null) {
+				this.splash = Minecraft.getInstance().getSplashes().getSplashText();
+			}
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	@SubscribeEvent
@@ -77,6 +85,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	/**
 	 * Mimic the original main menu to be able to customize it easier
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
@@ -87,9 +96,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
-			String copyright = "Copyright Mojang AB. Do not distribute!";
-			int widthCopyright = Minecraft.getInstance().fontRenderer.getStringWidth(copyright);
-			int widthCopyrightRest = width - widthCopyright - 2;
 			MatrixStack matrix = CurrentScreenHandler.getMatrixStack();
 			
 			RenderSystem.enableBlend();
@@ -124,23 +130,60 @@ public class MainMenuHandler extends MenuHandlerBase {
 				IngameGui.blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 			}
 
-			ForgeHooksClient.renderMainMenu((MainMenuScreen) e.getGui(), matrix, font, width, height);
-
 			//Draw branding strings to the main menu if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hidebranding", true)) {
+				e.getGui();
 				BrandingControl.forEachLine(true, true, (brdline, brd) ->
-				   e.getGui().drawString(matrix, font, brd, 2, e.getGui().height - ( 10 + brdline * (font.FONT_HEIGHT + 1)), 16777215)
+				   AbstractGui.drawString(matrix, font, brd, 2, e.getGui().height - ( 10 + brdline * (font.FONT_HEIGHT + 1)), 16777215)
 				);
+			}
 
+			if (!FancyMenu.config.getOrDefault("hideforgenotifications", false)) {
+				ForgeHooksClient.renderMainMenu((MainMenuScreen) e.getGui(), matrix, font, width, height);
+				
+				e.getGui();
 				BrandingControl.forEachAboveCopyrightLine((brdline, brd) ->
-				   e.getGui().drawString(matrix, font, brd, e.getGui().width - font.getStringWidth(brd), e.getGui().height - (10 + (brdline + 1) * ( font.FONT_HEIGHT + 1)), 16777215)
+				   AbstractGui.drawString(matrix, font, brd, e.getGui().width - font.getStringWidth(brd) - 1, e.getGui().height - (11 + (brdline + 1) * ( font.FONT_HEIGHT + 1)), 16777215)
 				);
-//				BrandingControl.forEachLine(true, true, (brdline, brd) -> e.getGui().func_238476_c_(matrix, fontRenderer, brd, 2, height - (10 + brdline * (fontRenderer.FONT_HEIGHT + 1)), 16777215));
+			}
+
+			//Draw and handle copyright
+			String c = "Copyright Mojang AB. Do not distribute!";
+			String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
+			int cX = 0;
+			int cY = 0;
+			int cW = Minecraft.getInstance().fontRenderer.getStringWidth(c);
+			int cH = 10;
+			
+			if (cPos.equalsIgnoreCase("top-left")) {
+				cX = 2;
+				cY = 2;
+			} else if (cPos.equalsIgnoreCase("top-centered")) {
+				cX = (width / 2) - (cW / 2);
+				cY = 2;
+			} else if (cPos.equalsIgnoreCase("top-right")) {
+				cX = width - cW - 2;
+				cY = 2;
+			} else if (cPos.equalsIgnoreCase("bottom-left")) {
+				cX = 2;
+				cY = height - cH - 2;
+			} else if (cPos.equalsIgnoreCase("bottom-centered")) {
+				cX = (width / 2) - (cW / 2);
+				cY = height - cH - 2;
+			} else {
+				cX = width - cW - 2;
+				cY = height - cH - 2;
 			}
 			
-			e.getGui().drawString(matrix, font, copyright, widthCopyrightRest, height - 10, -1);
-			if (mouseX > widthCopyrightRest && mouseX < widthCopyrightRest + widthCopyright && mouseY > height - 10 && mouseY < height) {
-				IngameGui.fill(matrix, widthCopyrightRest, height - 1, widthCopyrightRest + widthCopyright, height, -1);
+			e.getGui();
+			AbstractGui.drawString(matrix, font, c, cX, cY, -1);
+			
+			if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
+				IngameGui.fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
+				
+				if (MouseInput.isLeftMouseDown()) {
+					Minecraft.getInstance().displayGuiScreen(new WinGameScreen(false, Runnables.doNothing()));
+				}
 			}
 
 			if (!PopupHandler.isPopupActive()) {
@@ -157,14 +200,15 @@ public class MainMenuHandler extends MenuHandlerBase {
 				int offsetx = FancyMenu.config.getOrDefault("splashoffsetx", 0);
 				int offsety = FancyMenu.config.getOrDefault("splashoffsety", 0);
 				int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
-				matrix.push();
-				matrix.translate((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
-				matrix.rotate(new Quaternion((float)rotation, 0.0F, 0.0F, 1.0F));
+				RenderSystem.pushMatrix();
+				RenderSystem.translatef((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
+				RenderSystem.rotatef((float)rotation, 0.0F, 0.0F, 1.0F);
 				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (Util.milliTime() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-				f = f * 100.0F / (float) (font.getStringWidth(this.getSplash(e.getGui())) + 32);
-				matrix.scale(f, f, f);
-				e.getGui().drawCenteredString(matrix, font, new StringTextComponent(this.getSplash(e.getGui())), 0, -8, -256);
-				matrix.pop();
+				f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
+				RenderSystem.scalef(f, f, f);
+				e.getGui();
+				AbstractGui.drawCenteredString(matrix, font, new StringTextComponent(this.splash), 0, -8, -256);
+				RenderSystem.popMatrix();
 			}
 		}
 	}
@@ -207,16 +251,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		return buttons;
 	}
 	
-	private String getSplash(Screen gui) {
-		Field f5 = ObfuscationReflectionHelper.findField(MainMenuScreen.class, "field_73975_c");
-		try {
-			return (String) f5.get(gui);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return "";
-	}
-	
+	@SuppressWarnings("deprecation")
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {
 		if (!FancyMenu.config.getOrDefault("showmainmenufooter", true)) {
 			return;
@@ -228,15 +263,19 @@ public class MainMenuHandler extends MenuHandlerBase {
 			int i = MathHelper.ceil(fadeFooter * 255.0F) << 24;
 			
 			RenderUtils.setScale(e.getMatrixStack(), 1.1F);
-			e.getGui().drawCenteredString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, new StringTextComponent("§fDISCOVER MORE AT MINECRAFT.NET"), (int) (e.getGui().width / 2 / 1.1D), (int) ((e.getGui().height - 50) / 1.1D), i);
+			e.getGui();
+			AbstractGui.drawCenteredString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, new StringTextComponent("§fDISCOVER MORE AT MINECRAFT.NET"), (int) (e.getGui().width / 2 / 1.1D), (int) ((e.getGui().height - 50) / 1.1D), i);
 			RenderUtils.postScale(e.getMatrixStack());
 			
 			RenderUtils.setScale(e.getMatrixStack(), 0.7F);
-			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f@MINECRAFT", (int) ((e.getGui().width / 2 - 10) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
+			e.getGui();
+			AbstractGui.drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f@MINECRAFT", (int) ((e.getGui().width / 2 - 10) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
 			
-			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§fMINECRAFT", (int) ((e.getGui().width / 2 + 60) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
+			e.getGui();
+			AbstractGui.drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§fMINECRAFT", (int) ((e.getGui().width / 2 + 60) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
 
-			e.getGui().drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f/MINECRAFT", (int) ((e.getGui().width / 2 - 80) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
+			e.getGui();
+			AbstractGui.drawString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, "§f/MINECRAFT", (int) ((e.getGui().width / 2 - 80) / 0.7D), (int) ((e.getGui().height - 30) / 0.7D), i);
 			RenderUtils.postScale(e.getMatrixStack());
 			
 			RenderSystem.enableBlend();

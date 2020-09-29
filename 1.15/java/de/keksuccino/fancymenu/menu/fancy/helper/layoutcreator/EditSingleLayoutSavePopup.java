@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.Popup;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.Popup;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -71,21 +71,21 @@ public class EditSingleLayoutSavePopup extends Popup {
 		if (this.isDisplayed()) {
 			int i = 0;
 			for (String s : this.text) {
-				renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, s, renderIn.width / 2, (renderIn.height / 2) - 50 + i, Color.WHITE.getRGB());
+				drawCenteredString(Minecraft.getInstance().fontRenderer, s, renderIn.width / 2, (renderIn.height / 2) - 50 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
 			
-			this.overrideButton.x = (renderIn.width / 2) - (this.overrideButton.getWidth() / 2);
-			this.overrideButton.y = ((renderIn.height / 2));
+			this.overrideButton.setX((renderIn.width / 2) - (this.overrideButton.getWidth() / 2));
+			this.overrideButton.setY(((renderIn.height / 2)));
 			
-			this.saveAndKeepOthersButton.x = (renderIn.width / 2) - (this.saveAndKeepOthersButton.getWidth() / 2);
-			this.saveAndKeepOthersButton.y = ((renderIn.height / 2) + 25);
+			this.saveAndKeepOthersButton.setX((renderIn.width / 2) - (this.saveAndKeepOthersButton.getWidth() / 2));
+			this.saveAndKeepOthersButton.setY(((renderIn.height / 2) + 25));
 			
-			this.saveAndDisableOthersButton.x = (renderIn.width / 2) - (this.saveAndDisableOthersButton.getWidth() / 2);
-			this.saveAndDisableOthersButton.y = ((renderIn.height / 2) + 50);
+			this.saveAndDisableOthersButton.setX((renderIn.width / 2) - (this.saveAndDisableOthersButton.getWidth() / 2));
+			this.saveAndDisableOthersButton.setY(((renderIn.height / 2) + 50));
 			
-			this.cancelButton.x = (renderIn.width / 2) - (this.cancelButton.getWidth() / 2);
-			this.cancelButton.y = ((renderIn.height / 2) + 75);
+			this.cancelButton.setX((renderIn.width / 2) - (this.cancelButton.getWidth() / 2));
+			this.cancelButton.setY(((renderIn.height / 2) + 75));
 			
 			this.renderButtons(mouseX, mouseY);
 		}

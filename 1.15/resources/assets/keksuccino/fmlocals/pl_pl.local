@@ -1,18 +1,6 @@
-general.width = Szerokość
-general.height = Wysokość
-general.on = On
-general.off = Off
-
 loading.animation.loadingframes = Ładowanie klatek animacji dla {}
 loading.animation.prerendering = Wstępne renderowanie animacji {}
 loading.animation.done = Gotowe!
-
-popup.done = Gotowe
-
-popup.yesno.confirm = Potwierdź
-popup.yesno.cancel = Anuluj
-
-popup.notification.accept = Zaakceptuj
 
 helper.button.menuinfo = Info o Menu
 helper.button.buttoninfo = Info o Przyciskach
@@ -47,7 +35,7 @@ helper.creator.invalidaudio.title = Nieprawidłowy plik audio!
 helper.creator.invalidaudio.desc = Plik który chcesz załadować nie istnieje lub ma nieobsługiwany typ pliku.%n%%n%Sprawdź ścieżkę pliku i upewnij się, że plik jest prawidłowym plikiem audio WAV!
 
 helper.creator.invalidimage.title = Nieprawidłowy obraz!
-helper.creator.invalidimage.desc = Obraz który chcesz załadować nie istnieje lub ma nieobsługiwany typ pliku.%n%%n%Obsługiwane typy plików to JPG/JPEG i PNG.
+helper.creator.invalidimage.desc = Obraz który chcesz załadować nie istnieje lub ma nieobsługiwany typ pliku.%n%%n%Obsługiwane typy plików to JPG/JPEG, PNG i GIF.
 
 helper.creator.imagenotfound.title = Nie znaleziono obrazu!
 helper.creator.imagenotfound.desc = Obraz który chcesz dodać nie istnieje%n%w określonej lokalizacji.
@@ -249,7 +237,3 @@ helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Identyf
 helper.creator.items.button.delayappearance = Opóźnij pojawianie się objektu
 helper.creator.items.button.delayappearance.desc = Opóźnienie pojawiania się w sekundach [Obsługa wartości dziesiętnych]
 helper.creator.items.button.delayappearance.invalidvalue = §c§lNiewłaściwa Wartość!%n%%n%%n%To nie jest poprawna ilość sekund!%n%Może twoja wartość jest za długa. (..NIE BĄDŹ Z TEGO DUMNY!)%n%%n%Przykłady Wartości: 3, 2.0, 0.05, 0.8, 10.5
-
-popup.choosefile.back = BACK
-popup.choosefile.title = Choose File
-popup.choosefile.choose = Choose

@@ -4,19 +4,19 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.input.CharacterFilter;
-import de.keksuccino.core.input.StringUtils;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.RenderUtils;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
 
 public class LayoutString extends LayoutObject {
 	
@@ -42,10 +42,14 @@ public class LayoutString extends LayoutObject {
 		}
 		AdvancedButton shadowB = new AdvancedButton(0, 0, 0, 16, sLabel, true, (press) -> {
 			if (this.getObject().shadow) {
-				press.setMessage(Locals.localize("helper.creator.items.string.setshadow"));;
+				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setshadow"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().shadow = false;
 			} else {
-				press.setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));;
+				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				
 				this.getObject().shadow = true;
 			}
 		});
@@ -66,38 +70,39 @@ public class LayoutString extends LayoutObject {
 	@Override
 	protected void renderBorder(int mouseX, int mouseY) {
 		//horizontal line top
-		AbstractGui.fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.width, this.getStringPosY() + 1, Color.BLUE.getRGB());
+		fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.width, this.getStringPosY() + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		AbstractGui.fill(this.getStringPosX(), this.getStringPosY() + this.object.height, this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height + 1, Color.BLUE.getRGB());
+		fill(this.getStringPosX(), this.getStringPosY() + this.object.height, this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height + 1, Color.BLUE.getRGB());
 		//vertical line left
-		AbstractGui.fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + 1, this.getStringPosY() + this.object.height, Color.BLUE.getRGB());
+		fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + 1, this.getStringPosY() + this.object.height, Color.BLUE.getRGB());
 		//vertical line right
-		AbstractGui.fill(this.getStringPosX() + this.object.width, this.getStringPosY(), this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height, Color.BLUE.getRGB());
+		fill(this.getStringPosX() + this.object.width, this.getStringPosY(), this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height, Color.BLUE.getRGB());
 	
 		//Render pos and size values
+		FontRenderer font = Minecraft.getInstance().fontRenderer;
 		RenderUtils.setScale(0.5F);
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getStringScale(), this.getStringPosX()*2, (this.getStringPosY()*2) - 26, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.getStringPosX(), this.getStringPosX()*2, (this.getStringPosY()*2) - 17, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.getStringPosX()*2, (this.getStringPosY()*2) - 8, Color.WHITE.getRGB());
+		font.drawString(Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
+		font.drawString(Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getStringScale(), this.getStringPosX()*2, (this.getStringPosY()*2) - 26, Color.WHITE.getRGB());
+		font.drawString(Locals.localize("helper.creator.items.border.posx") + ": " + this.getStringPosX(), this.getStringPosX()*2, (this.getStringPosY()*2) - 17, Color.WHITE.getRGB());
+		font.drawString(Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.getStringPosX()*2, (this.getStringPosY()*2) - 8, Color.WHITE.getRGB());
 		
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.getStringPosY(), ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		font.drawString(Locals.localize("helper.creator.items.border.posy") + ": " + this.getStringPosY(), ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 14, Color.WHITE.getRGB());
+		font.drawString(Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.getStringPosX() + this.object.width)*2)+3, ((this.getStringPosY() + this.object.height)*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale();
 	}
-
+	
 	@Override
 	protected void renderHighlightBorder() {
 		Color c = new Color(0, 200, 255, 255);
 		
 		//horizontal line top
-		AbstractGui.fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.width, this.getStringPosY() + 1, c.getRGB());
+		fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.width, this.getStringPosY() + 1, c.getRGB());
 		//horizontal line bottom
-		AbstractGui.fill(this.getStringPosX(), this.getStringPosY() + this.object.height, this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height + 1, c.getRGB());
+		fill(this.getStringPosX(), this.getStringPosY() + this.object.height, this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height + 1, c.getRGB());
 		//vertical line left
-		AbstractGui.fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + 1, this.getStringPosY() + this.object.height, c.getRGB());
+		fill(this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + 1, this.getStringPosY() + this.object.height, c.getRGB());
 		//vertical line right
-		AbstractGui.fill(this.getStringPosX() + this.object.width, this.getStringPosY(), this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height, c.getRGB());
+		fill(this.getStringPosX() + this.object.width, this.getStringPosY(), this.getStringPosX() + this.object.width + 1, this.getStringPosY() + this.object.height, c.getRGB());
 	}
 	
 	private int getStringPosX() {
@@ -144,12 +149,20 @@ public class LayoutString extends LayoutObject {
 	}
 	
 	public void setScale(float scale) {
+		if (this.getObject().scale != scale) {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+		}
+		
 		((StringCustomizationItem)this.object).scale = scale;
 		this.setWidth((int)(Minecraft.getInstance().fontRenderer.getStringWidth(this.object.value)*scale));
 		this.setHeight((int)(7*scale));
 	}
 	
 	public void setText(String text) {
+		if (!this.getObject().value.equals(text)) {
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+		}
+		
 		this.object.value = text;
 		this.setScale(this.getStringScale());
 	}

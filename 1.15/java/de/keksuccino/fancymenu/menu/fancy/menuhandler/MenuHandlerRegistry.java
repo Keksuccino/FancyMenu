@@ -24,7 +24,7 @@ public class MenuHandlerRegistry {
 	public static MenuHandlerBase getLastActiveHandler() {
 		return lastActiveHandler;
 	}
-
+	
 	public static void setActiveHandler(String menuIdentifier) {
 		if (menuIdentifier == null) {
 			lastActiveHandler = null;

@@ -4,9 +4,9 @@ import java.io.File;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.sound.SoundHandler;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.konkrete.sound.SoundHandler;
 
 public class AdvancedAnimation implements IAnimationRenderer {
 	

@@ -3,13 +3,13 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 import java.awt.Color;
 import java.util.function.Consumer;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.AdvancedTextField;
-import de.keksuccino.core.gui.content.HorizontalSwitcher;
-import de.keksuccino.core.gui.screens.popup.Popup;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.AdvancedTextField;
+import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
+import de.keksuccino.konkrete.gui.screens.popup.Popup;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
@@ -39,11 +39,20 @@ public class ButtonActionPopup extends Popup {
 				"quitgame",
 				"joinserver",
 				"loadworld",
-				"openfile",
 				"prevbackground",
 				"nextbackground",
 				"opencustomgui",
-				"opengui");
+				"opengui",
+				"openfile",
+				"movefile",
+				"copyfile",
+				"deletefile",
+				"renamefile",
+				"downloadfile",
+				"unpackzip",
+				"reloadmenu",
+				"mutebackgroundsounds",
+				"runscript");
 		this.actionSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.actionSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
@@ -91,17 +100,19 @@ public class ButtonActionPopup extends Popup {
 			
 			
 			String s = this.actionSwitcher.getSelectedValue();
-			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui") || s.equals("opengui")))) {
+			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui") || s.equals("opengui") || s.equals("movefile") || s.equals("copyfile") || s.equals("deletefile") || s.equals("renamefile") || s.equals("runscript") || s.equals("downloadfile") || s.equals("unpackzip") || s.equals("mutebackgroundsounds")))) {
 				renderIn.drawCenteredString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value")), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
 				
 				this.textField.x = (renderIn.width / 2) - (this.textField.getWidth() / 2);
 				this.textField.y = (renderIn.height / 2) + 30;
 				this.textField.drawTextBox();
+				
+				renderIn.drawCenteredString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.custombutton.config.actionvalue.example", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value.example")), renderIn.width / 2, (renderIn.height / 2) + 56, Color.WHITE.getRGB());
 			}
 			
 			
 			this.doneButton.x = (renderIn.width / 2) - (this.doneButton.width / 2);
-			this.doneButton.y = ((renderIn.height / 2) + (height / 2)) + 20;
+			this.doneButton.y = ((renderIn.height / 2) + (height / 2)) + 30;
 			
 			this.renderButtons(mouseX, mouseY);
 		}

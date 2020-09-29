@@ -5,21 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.core.file.FileUtils;
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.PopupMenu;
-import de.keksuccino.core.gui.screens.SimpleLoadingScreen;
-import de.keksuccino.core.gui.screens.popup.NotificationPopup;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.gui.screens.popup.TextInputPopup;
-import de.keksuccino.core.gui.screens.popup.YesNoPopup;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.properties.PropertiesSerializer;
-import de.keksuccino.core.properties.PropertiesSet;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -27,6 +13,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization.ExcludeMode;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
@@ -34,6 +21,20 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.CreateCustomGuiPo
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.konkrete.gui.screens.popup.NotificationPopup;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
+import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSerializer;
+import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
@@ -52,6 +53,9 @@ public class CustomizationHelper {
 	private PopupMenu dropdown;
 	private PopupMenu overridePopup;
 	private PopupMenu customGuisPopup;
+	private PopupMenu excludePopup;
+	private PopupMenu excludeSubPopup;
+	private PopupMenu removeExcludedPopup;
 	private ManageCustomGuiPopupMenu manageCustomGuiPopup;
 	
 	private boolean showButtonInfo = false;
@@ -62,6 +66,9 @@ public class CustomizationHelper {
 	private AdvancedButton reloadButton;
 	private AdvancedButton overrideButton;
 	private AdvancedButton customGuisButton;
+	private AdvancedButton excludeButton;
+	private AdvancedButton removeExcludedButton;
+	private int tick = 0;
 	
 	public GuiScreen current;
 	
@@ -345,12 +352,38 @@ public class CustomizationHelper {
 
 		this.customGuisButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.buttons.tools.customguis"), true, (press) -> {
 			this.customGuisPopup.openMenuAt(press.x - this.customGuisPopup.getWidth() - 2, press.y);
+			this.excludePopup.closeMenu();
 		});
 		
 		AdvancedButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.closecustomgui"), (press) -> {
 			if (e.getGui() instanceof CustomGuiBase) {
 				((CustomGuiBase)e.getGui()).onClose();
 			}
+		});
+		
+		this.excludePopup = new PopupMenu(120, 20, -1);
+		
+		AdvancedButton excludeSoftBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.soft"), true, (press) -> {
+			this.buildSubExcludePopup(ExcludeMode.SOFT);
+			this.excludeSubPopup.openMenuAt(press.x - this.excludeSubPopup.getWidth() - 2, press.y);
+		});
+		this.excludePopup.addContent(excludeSoftBtn);
+		
+		AdvancedButton excludeFullBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.full"), true, (press) -> {
+			this.buildSubExcludePopup(ExcludeMode.FULL);
+			this.excludeSubPopup.openMenuAt(press.x - this.excludeSubPopup.getWidth() - 2, press.y);
+		});
+		this.excludePopup.addContent(excludeFullBtn);
+
+		this.excludeButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu"), true, (press) -> {
+			this.excludePopup.openMenuAt(press.x - this.excludePopup.getWidth() - 2, press.y);
+			this.customGuisPopup.closeMenu();
+		});
+
+		this.removeExcludedButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.remove"), true, (press) -> {
+			MenuCustomization.reloadExcludedMenus();
+			this.buildRemoveExcludedPopup();
+			this.removeExcludedPopup.openMenuAt(press.x - this.removeExcludedPopup.getWidth() - 2, press.y);
 		});
 
 		this.dropdown = new PopupMenu(100, 20, -1);
@@ -361,6 +394,8 @@ public class CustomizationHelper {
 		this.dropdown.addContent(customGuisButton);
 		this.dropdown.addContent(layoutCreatorButton);
 		this.dropdown.addContent(editLayoutButton);
+		this.dropdown.addContent(this.excludeButton);
+		this.dropdown.addContent(this.removeExcludedButton);
 		if (this.isScreenOverridden()) {
 			this.dropdown.addContent(overrideButton);
 		} else if (!(e.getGui() instanceof CustomGuiBase)) {
@@ -400,7 +435,7 @@ public class CustomizationHelper {
 				MouseInput.unblockVanillaInput("customizationhelper");
 			}
 			
-			if (this.dropdown.isOpen() && !this.customGuisPopup.isHovered() && !this.dropdownButton.isMouseOver() && !this.dropdown.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+			if (this.dropdown.isOpen() && !this.customGuisPopup.isHovered() && !this.excludePopup.isHovered() && !this.dropdownButton.isMouseOver() && !this.dropdown.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
 				this.dropdown.closeMenu();
 			}
 			if (this.overridePopup != null) {
@@ -427,15 +462,39 @@ public class CustomizationHelper {
 					}
 				}
 			}
+			if (this.excludePopup != null) {
+				this.excludePopup.render(e.getMouseX(), e.getMouseY());
+				if (this.excludePopup.isOpen() && !this.excludePopup.isHovered() && !this.excludeButton.isMouseOver() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+					this.excludePopup.closeMenu();
+				}
+				if (!this.dropdown.isOpen()) {
+					this.excludePopup.closeMenu();
+				}
+				if (this.excludeSubPopup != null) {
+					this.excludeSubPopup.render(e.getMouseX(), e.getMouseY());
+					if (!this.excludePopup.isOpen()) {
+						this.excludeSubPopup.closeMenu();
+					}
+				}
+			}
+			if (this.removeExcludedPopup != null) {
+				this.removeExcludedPopup.render(e.getMouseX(), e.getMouseY());
+				if (this.removeExcludedPopup.isOpen() && !this.removeExcludedPopup.isHovered() && !this.removeExcludedButton.isMouseOver() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+					this.removeExcludedPopup.closeMenu();
+				}
+				if (!this.dropdown.isOpen()) {
+					this.removeExcludedPopup.closeMenu();
+				}
+			}
 		}
 		
 		if (this.showMenuInfo && !(e.getGui() instanceof LayoutCreatorScreen)) {
 			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
 			String id = "";
 			if (e.getGui() instanceof CustomGuiBase) {
-				id = "§f" + ((CustomGuiBase)e.getGui()).getIdentifier();
+				id = ((CustomGuiBase)e.getGui()).getIdentifier();
 			} else {
-				id = "§f" + e.getGui().getClass().getName();
+				id = e.getGui().getClass().getName();
 			}
 			int w = Minecraft.getMinecraft().fontRenderer.getStringWidth(infoTitle);
 			int w2 = Minecraft.getMinecraft().fontRenderer.getStringWidth(id);
@@ -448,7 +507,29 @@ public class CustomizationHelper {
 			Gui.drawRect(3, 3, 3 + w + 4, 25, this.menuinfoBackground.getRGB());
 			
 			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, infoTitle, 5, 5, 0);
-			e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, id, 5, 15, 0);
+			if (tick == 0) {
+				e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§f" + id, 5, 15, 0);
+			} else {
+				e.getGui().drawString(Minecraft.getMinecraft().fontRenderer, "§a" + Locals.localize("helper.menuinfo.idcopied"), 5, 15, 0);
+			}
+			
+			int mouseX = MouseInput.getMouseX();
+			int mouseY = MouseInput.getMouseY();
+			if ((mouseX >= 5) && (mouseX <= 5 + w2) && (mouseY >= 15) && (mouseY <= 15 + 10) && (tick == 0)) {
+				Gui.drawRect(5, 15 + 10 - 1, 5 + w2, 15 + 10, -1);
+				
+				if (MouseInput.isLeftMouseDown()) {
+					tick++;
+					GuiScreen.setClipboardString(id);
+				}
+			}
+			if (tick > 0) {
+				if (tick < 60) {
+					tick++;
+				} else {
+					tick = 0;
+				}
+			}
 			
 			GlStateManager.disableBlend();
 		}
@@ -507,6 +588,47 @@ public class CustomizationHelper {
 					
 					break;
 				}
+			}
+		}
+	}
+	
+	private void buildSubExcludePopup(ExcludeMode m) {
+		this.excludeSubPopup = new PopupMenu(120, 20, -1);
+
+		AdvancedButton currentBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.current"), true, (press) -> {
+			MenuCustomization.addExcludedMenu(Minecraft.getMinecraft().currentScreen.getClass().getName(), m, false);
+			onReloadButtonPress();
+		});
+		this.excludeSubPopup.addContent(currentBtn);
+
+		AdvancedButton byIdentifierBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.byidentifier"), true, (press) -> {
+			PopupHandler.displayPopup(new ExcludeMenuPopup(m));
+		});
+		this.excludeSubPopup.addContent(byIdentifierBtn);
+	}
+
+	private void buildRemoveExcludedPopup() {
+		int i = 120;
+		List<String> l = MenuCustomization.getExcludedMenus();
+		for (String s : l) {
+			int i2 = Minecraft.getMinecraft().fontRenderer.getStringWidth(s);
+			if (i2 > i) {
+				i = i2;
+			}
+		}
+		this.removeExcludedPopup = new PopupMenu(i + 5, 20, -1);
+		
+		if (l.isEmpty()) {
+			AdvancedButton b = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), true, (press) -> {
+			});
+			this.removeExcludedPopup.addContent(b);
+		} else {
+			for (String s : l) {
+				AdvancedButton b = new CustomizationButton(0, 0, 0, 0, s, true, (press) -> {
+					MenuCustomization.removeExcludedMenu(s);
+					onReloadButtonPress();
+				});
+				this.removeExcludedPopup.addContent(b);
 			}
 		}
 	}

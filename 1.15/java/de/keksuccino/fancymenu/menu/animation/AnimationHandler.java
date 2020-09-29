@@ -6,13 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.keksuccino.core.file.FileUtils;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.rendering.animation.ExternalTextureAnimationRenderer;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
+import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
+import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -76,10 +77,13 @@ public class AnimationHandler {
 			String name = null;
 			String mainAudio = null;
 			String introAudio = null;
-			int fps = 1;
+			//TODO übernehmen
+			int fps = 0;
 			boolean loop = true;
-			int width = 20;
-			int height = 20;
+			//TODO Übernehmen
+			int width = 0;
+			int height = 0;
+			//-----------------
 			int x = 0;
 			int y = 0;
 			boolean replayIntro = false;
@@ -159,29 +163,43 @@ public class AnimationHandler {
 					introAudio = audio2.getPath();
 				}
 				
+				//TODO übernehmen
 				if (name != null) {
-					String intro = getIntroPath(a.getPath());
-					String ani = getAnimationPath(a.getPath());
-					if ((intro != null) && (ani != null)) {
-						ExternalTextureAnimationRenderer in = new ExternalTextureAnimationRenderer(intro, fps, loop, x, y, width, height);
-						ExternalTextureAnimationRenderer an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
-						try {
-							registerAnimation(new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro), name, Type.EXTERNAL);
-							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
-						} catch (AnimationNotFoundException e) {
-							e.printStackTrace();
-						}
-					} else if (ani != null) {
-						ExternalTextureAnimationRenderer an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
-						try {
-							//Finally a case to null the intro animation! It's not useless anymore!
-							registerAnimation(new AdvancedAnimation(null, an, introAudio, mainAudio, false), name, Type.EXTERNAL);
-							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
-						} catch (AnimationNotFoundException e) {
-							e.printStackTrace();
+					File gifIntro = new File(a.getPath() + "/intro.gif");
+					File gifAni = new File(a.getPath() + "/animation.gif");
+					IAnimationRenderer in = null;
+					IAnimationRenderer an = null;
+					
+					if (gifAni.exists()) {
+						if ((gifIntro.exists()) && (gifAni.exists())) {
+							in = new ExternalGifAnimationRenderer(gifIntro.getPath(), loop, x, y, width, height);
+							an = new ExternalGifAnimationRenderer(gifAni.getPath(), loop, x, y, width, height);
+						} else if (gifAni.exists()) {
+							an = new ExternalGifAnimationRenderer(gifAni.getPath(), loop, x, y, width, height);
 						}
 					} else {
-						System.out.println("[FM AnimationHandler] ### ERROR: This is not a valid animation: " + name);
+						String intro = getIntroPath(a.getPath());
+						String ani = getAnimationPath(a.getPath());
+						if ((intro != null) && (ani != null)) {
+							in = new ExternalTextureAnimationRenderer(intro, fps, loop, x, y, width, height);
+							an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
+						} else if (ani != null) {
+							an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
+						}
+					}
+					
+					try {
+						if ((in != null) && (an != null)) {
+							registerAnimation(new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro), name, Type.EXTERNAL);
+							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
+						} else if (an != null) {
+							registerAnimation(new AdvancedAnimation(null, an, introAudio, mainAudio, false), name, Type.EXTERNAL);
+							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
+						} else {
+							System.out.println("[FM AnimationHandler] ### ERROR: This is not a valid animation: " + name);
+						}
+					} catch (AnimationNotFoundException e) {
+						e.printStackTrace();
 					}
 				}
 			}

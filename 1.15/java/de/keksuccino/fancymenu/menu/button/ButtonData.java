@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
 
 public class ButtonData {
-	
+
 	private long id;
 	private String key;
 	private Widget button;
@@ -18,7 +18,7 @@ public class ButtonData {
 	public int y;
 	public int width;
 	public int height;
-	
+
 	public ButtonData(Widget button, long id, @Nullable String key, Screen fromScreen) {
 		this.id = id;
 		this.key = key;
@@ -34,7 +34,7 @@ public class ButtonData {
 	public Widget getButton() {
 		return button;
 	}
-	
+
 	public void replaceButton(Widget w) {
 		this.button = w;
 		this.replaced = true;
@@ -51,7 +51,7 @@ public class ButtonData {
 	public String getKey() {
 		return key;
 	}
-	
+
 	public long getId() {
 		return id;
 	}

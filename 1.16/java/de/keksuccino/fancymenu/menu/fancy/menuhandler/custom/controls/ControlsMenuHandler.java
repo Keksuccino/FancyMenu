@@ -18,7 +18,7 @@ public class ControlsMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			try {
 				ControlsList l = new ControlsList((ControlsScreen) e.getGui(), Minecraft.getInstance(), this);
@@ -31,7 +31,7 @@ public class ControlsMenuHandler extends MenuHandlerBase {
 			}
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	private static void addChildren(Screen s, IGuiEventListener e) {

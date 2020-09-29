@@ -5,13 +5,13 @@ import java.util.function.Consumer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.content.AdvancedTextField;
-import de.keksuccino.core.gui.content.HorizontalSwitcher;
-import de.keksuccino.core.gui.screens.popup.Popup;
-import de.keksuccino.core.input.KeyboardData;
-import de.keksuccino.core.input.KeyboardHandler;
-import de.keksuccino.fancymenu.localization.Locals;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.content.AdvancedTextField;
+import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
+import de.keksuccino.konkrete.gui.screens.popup.Popup;
+import de.keksuccino.konkrete.input.KeyboardData;
+import de.keksuccino.konkrete.input.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -39,11 +39,20 @@ public class ButtonActionPopup extends Popup {
 				"quitgame",
 				"joinserver",
 				"loadworld",
-				"openfile",
 				"prevbackground",
 				"nextbackground",
 				"opencustomgui",
-				"opengui");
+				"opengui",
+				"openfile",
+				"movefile",
+				"copyfile",
+				"deletefile",
+				"renamefile",
+				"downloadfile",
+				"unpackzip",
+				"reloadmenu",
+				"mutebackgroundsounds",
+				"runscript");
 		this.actionSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.actionSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
@@ -80,28 +89,30 @@ public class ButtonActionPopup extends Popup {
 			Screen.fill((renderIn.width / 2) - (this.width / 2), (renderIn.height / 2) - (height / 2), (renderIn.width / 2) + (this.width / 2), (renderIn.height / 2) + (height / 2), new Color(0, 0, 0, 0).getRGB());
 			RenderSystem.disableBlend();
 			
-			renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, "§l" + Locals.localize("helper.creator.custombutton.config"), renderIn.width / 2, (renderIn.height / 2) - (height / 2) - 40, Color.WHITE.getRGB());
+			drawCenteredString(Minecraft.getInstance().fontRenderer, "§l" + Locals.localize("helper.creator.custombutton.config"), renderIn.width / 2, (renderIn.height / 2) - (height / 2) - 40, Color.WHITE.getRGB());
 			
 			
-			renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actiontype"), renderIn.width / 2, (renderIn.height / 2) - 60, Color.WHITE.getRGB());
+			drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actiontype"), renderIn.width / 2, (renderIn.height / 2) - 60, Color.WHITE.getRGB());
 			
 			this.actionSwitcher.render((renderIn.width / 2) - (this.actionSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 45);
 			
-			renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc"), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
+			drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc"), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
 			
 			
 			String s = this.actionSwitcher.getSelectedValue();
-			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui") || s.equals("opengui")))) {
-				renderIn.drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value")), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
+			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui") || s.equals("opengui") || s.equals("movefile") || s.equals("copyfile") || s.equals("deletefile") || s.equals("renamefile") || s.equals("runscript") || s.equals("downloadfile") || s.equals("unpackzip") || s.equals("mutebackgroundsounds")))) {
+				drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value")), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
 				
-				this.textField.x = (renderIn.width / 2) - (this.textField.getWidth() / 2);
-				this.textField.y = (renderIn.height / 2) + 30;
+				this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
+				this.textField.setY((renderIn.height / 2) + 30);
 				this.textField.renderButton(mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
+
+				drawCenteredString(Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.custombutton.config.actionvalue.example", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value.example")), renderIn.width / 2, (renderIn.height / 2) + 56, Color.WHITE.getRGB());
 			}
 			
 			
-			this.doneButton.x = (renderIn.width / 2) - (this.doneButton.getWidth() / 2);
-			this.doneButton.y = ((renderIn.height / 2) + (height / 2)) + 20;
+			this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
+			this.doneButton.setY(((renderIn.height / 2) + (height / 2)) + 30);
 			
 			this.renderButtons(mouseX, mouseY);
 		}

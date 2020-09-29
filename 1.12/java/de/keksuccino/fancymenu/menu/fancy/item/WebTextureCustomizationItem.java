@@ -2,9 +2,10 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.core.resources.WebTextureResourceLocation;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
@@ -20,6 +21,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 		if ((this.action != null) && this.action.equalsIgnoreCase("addwebtexture")) {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
+				this.value = MenuCustomization.convertString(this.value);
 				try {
 					try {
 						this.texture = TextureHandler.getWebResource(this.value);

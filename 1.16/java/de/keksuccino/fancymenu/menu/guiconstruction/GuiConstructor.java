@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.menu.guiconstruction.instance.GuiInstance;
 import de.keksuccino.fancymenu.menu.guiconstruction.instance.ResourcePacksScreenInstance;
 import net.minecraft.client.GameSettings;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ResourcePacksScreen;
+import net.minecraft.client.gui.screen.PackScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resources.LanguageManager;
 
@@ -61,7 +61,7 @@ public class GuiConstructor {
 		try {
 
 			//Custom loader: ResourcePacksScreen
-			if (ResourcePacksScreen.class.isAssignableFrom(gui)) {
+			if (PackScreen.class.isAssignableFrom(gui)) {
 				return new ResourcePacksScreenInstance(con, paras, gui).getInstance();
 			}
 			

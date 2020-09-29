@@ -1,35 +1,20 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Locale;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.core.gui.content.AdvancedButton;
-import de.keksuccino.core.gui.screens.popup.NotificationPopup;
-import de.keksuccino.core.gui.screens.popup.PopupHandler;
-import de.keksuccino.core.input.MouseInput;
-import de.keksuccino.core.math.MathUtils;
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
-import de.keksuccino.core.resources.TextureHandler;
-import de.keksuccino.core.sound.SoundHandler;
-import de.keksuccino.fancymenu.localization.Locals;
-import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
-import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ConnectingScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.multiplayer.ServerData;
-import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.common.MinecraftForge;
 
 public class ButtonCustomizationItem extends CustomizationItemBase {
 
@@ -37,6 +22,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	private String hoverLabel;
 	private String hoverSound;
 	private boolean hover = false;
+	private boolean onlyMultiplayer = false;
+	private boolean onlySingleplayer = false;
+	private boolean onlyOutgame = false;
 	
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -46,6 +34,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (this.value == null) {
 				this.value = "";
 			}
+			this.value = MenuCustomization.convertString(this.value);
+			
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
 			String backNormal = item.getEntryValue("backgroundnormal");
@@ -57,6 +47,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (actionvalue == null) {
 				actionvalue = "";
 			}
+			actionvalue = MenuCustomization.convertString(actionvalue);
 
 			this.hoverSound = item.getEntryValue("hoversound");
 			if (this.hoverSound != null) {
@@ -70,98 +61,40 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			}
 
 			this.hoverLabel = item.getEntryValue("hoverlabel");
-			
+			if (this.hoverLabel != null) {
+				this.hoverLabel = MenuCustomization.convertString(this.hoverLabel);
+			}
+
+			String onlyX = item.getEntryValue("onlydisplayin");
+			if (onlyX != null) {
+				if (onlyX.equalsIgnoreCase("outgame")) {
+					this.onlyOutgame = true;
+				}
+				if (onlyX.equalsIgnoreCase("multiplayer")) {
+					this.onlyMultiplayer = true;
+				}
+				if (onlyX.equalsIgnoreCase("singleplayer")) {
+					this.onlySingleplayer = true;
+				}
+			}
+
 			String finalAction = actionvalue;
-			if (buttonaction.equalsIgnoreCase("openlink")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					this.openWebLink(finalAction);
-				});
+			this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
+				ButtonScriptEngine.runButtonAction(buttonaction, finalAction);
+			});
+
+			String click = item.getEntryValue("clicksound");
+			if (click != null) {
+				click.replace("\\", "/");
+				click = MenuCustomization.convertString(click);
+				File f = new File(click);
+				
+				if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
+					SoundHandler.registerSound(f.getPath(), f.getPath());
+					this.button.setClickSound(f.getPath());
+				}
 			}
-			if (buttonaction.equalsIgnoreCase("sendmessage")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					if (Minecraft.getInstance().world != null) {
-						if (!MinecraftForge.EVENT_BUS.post(new ClientChatEvent(finalAction))) {
-							Minecraft.getInstance().player.sendChatMessage(finalAction);
-						}
-					}
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("quitgame")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					Minecraft.getInstance().shutdown();
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("joinserver")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					Minecraft.getInstance().displayGuiScreen(new ConnectingScreen(Minecraft.getInstance().currentScreen, Minecraft.getInstance(), new ServerData("", finalAction, true)));
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("loadworld")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					if (Minecraft.getInstance().getSaveLoader().canLoadWorld(finalAction)) {
-						//launchIntegratedServer
-						Minecraft.getInstance().func_238191_a_(finalAction);
-					}
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("openfile")) { //for files and folders
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					File f = new File(finalAction.replace("\\", "/"));
-					if (f.exists()) {
-						this.openFile(f);
-					}
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("prevbackground")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					MenuHandlerBase handler = MenuHandlerRegistry.getLastActiveHandler();
-					if (handler != null) {
-						int cur = handler.getCurrentBackgroundAnimationId();
-						if (cur > 0) {
-							for (IAnimationRenderer an : handler.backgroundAnimations()) {
-								if (an instanceof AdvancedAnimation) {
-									((AdvancedAnimation)an).stopAudio();
-								}
-							}
-							handler.setBackgroundAnimation(cur-1);
-						}
-					}
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("nextbackground")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					MenuHandlerBase handler = MenuHandlerRegistry.getLastActiveHandler();
-					if (handler != null) {
-						int cur = handler.getCurrentBackgroundAnimationId();
-						if (cur < handler.backgroundAnimations().size()-1) {
-							for (IAnimationRenderer an : handler.backgroundAnimations()) {
-								if (an instanceof AdvancedAnimation) {
-									((AdvancedAnimation)an).stopAudio();
-								}
-							}
-							handler.setBackgroundAnimation(cur+1);
-						}
-					}
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("opencustomgui")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					if (CustomGuiLoader.guiExists(finalAction)) {
-						Minecraft.getInstance().displayGuiScreen(CustomGuiLoader.getGui(finalAction, Minecraft.getInstance().currentScreen, null));
-					}
-				});
-			}
-			if (buttonaction.equalsIgnoreCase("opengui")) {
-				this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
-					Screen s = GuiConstructor.tryToConstruct(finalAction);
-					if (s != null) {
-						Minecraft.getInstance().displayGuiScreen(s);
-					} else {
-						PopupHandler.displayPopup(new NotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
-					}
-				});
-			}
-			
+
 			if ((this.button != null) && (backNormal != null) && (backHover != null)) {
 				File f = new File(backNormal.replace("\\", "/"));
 				File f2 = new File(backHover.replace("\\", "/"));
@@ -174,6 +107,18 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	public void render(MatrixStack matrix, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
+			return;
+		}
+
+		if (this.onlyOutgame && (Minecraft.getInstance().world != null)) {
+			return;
+		}
+
+		if (this.onlyMultiplayer && ((Minecraft.getInstance().world == null) || Minecraft.getInstance().isSingleplayer())) {
+			return;
+		}
+
+		if (this.onlySingleplayer && ((Minecraft.getInstance().world == null) || !Minecraft.getInstance().isSingleplayer())) {
 			return;
 		}
 
@@ -206,35 +151,6 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			return false;
 		}
 		return super.shouldRender();
-	}
-
-	private void openWebLink(String url) {
-		try {
-			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-			URL u = new URL(url);
-			if (!Minecraft.IS_RUNNING_ON_MAC) {
-				if (s.contains("win")) {
-					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
-				} else {
-					if (u.getProtocol().equals("file")) {
-						url = url.replace("file:", "file://");
-					}
-					Runtime.getRuntime().exec(new String[]{"xdg-open", url});
-				}
-			} else {
-				Runtime.getRuntime().exec(new String[]{"open", url});
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-    }
-
-	private void openFile(File f) {
-		try {
-			this.openWebLink(f.toURI().toURL().toString());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 	
 	public AdvancedButton getButton() {

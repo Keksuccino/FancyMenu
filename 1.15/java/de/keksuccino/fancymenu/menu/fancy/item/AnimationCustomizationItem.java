@@ -2,9 +2,10 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import de.keksuccino.core.properties.PropertiesSection;
-import de.keksuccino.core.rendering.animation.IAnimationRenderer;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.screen.Screen;
 
 public class AnimationCustomizationItem extends CustomizationItemBase {
@@ -17,6 +18,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 		if ((this.action != null) && this.action.equalsIgnoreCase("addanimation")) {
 			this.value = item.getEntryValue("name");
 			if ((this.value != null) && AnimationHandler.animationExists(this.value)) {
+				this.value = MenuCustomization.convertString(this.value);
 				this.renderer = AnimationHandler.getAnimation(this.value);
 			} else {
 				System.out.println("################################ WARNING ################################");
@@ -25,6 +27,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
+	@Override
 	public void render(Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
