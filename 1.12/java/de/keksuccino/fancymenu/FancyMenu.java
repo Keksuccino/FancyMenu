@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -20,10 +21,10 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:findme;after:konkrete")
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:findme;required-after:konkrete@[1.1.0,]")
 public class FancyMenu {
 	
-	public static final String VERSION = "1.5.1";
+	public static final String VERSION = "1.6.0";
 	
 	public static Config config;
 	
@@ -48,6 +49,8 @@ public class FancyMenu {
 
 	    		AnimationHandler.init();
 	    		AnimationHandler.loadCustomAnimations();
+	    		
+	    		PanoramaHandler.init();
 	    		
 	    		CustomGuiLoader.loadCustomGuis();
 	    		
@@ -113,6 +116,8 @@ public class FancyMenu {
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");
     		config.registerValue("playbackgroundsounds", true, "general", "If menu background sounds added by FancyMenu should be played or not.");
+    		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
+    		config.registerValue("showdebugwarnings", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		config.registerValue("softmode", false, "customization", "Maximizes mod compatibility. Disables background customization support for scrollable menu screens. Restart is needed after changing this value.");
@@ -134,11 +139,11 @@ public class FancyMenu {
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
+			config.registerValue("loadinganimationcolor", "#E22837", "loading");
 			
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
 			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
-			
-			config.registerValue("showundoredocontrols", false, "layouteditor", "If the undo/redo control buttons of the layout editor should be visible or not.");
+
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			
 			config.syncConfig();
@@ -147,6 +152,8 @@ public class FancyMenu {
 			config.setCategory("enablehotkeys", "general");
 			config.setCategory("playmenumusic", "general");
 			config.setCategory("playbackgroundsounds", "general");
+			config.setCategory("defaultguiscale", "general");
+			config.setCategory("showdebugwarnings", "general");
     		
 			config.setCategory("showcustomizationbuttons", "customization");
 			config.setCategory("softmode", "customization");
@@ -168,11 +175,11 @@ public class FancyMenu {
 			config.setCategory("showanimationloadingstatus", "loading");
 			config.setCategory("allowgameintroskip", "loading");
 			config.setCategory("customgameintroskiptext", "loading");
-
+			config.setCategory("loadinganimationcolor", "loading");
+			
 			config.setCategory("customwindowicon", "minecraftwindow");
 			config.setCategory("customwindowtitle", "minecraftwindow");
-			
-			config.setCategory("showundoredocontrols", "layouteditor");
+
 			config.setCategory("showvanillamovewarning", "layouteditor");
 			
 			config.clearUnusedValues();

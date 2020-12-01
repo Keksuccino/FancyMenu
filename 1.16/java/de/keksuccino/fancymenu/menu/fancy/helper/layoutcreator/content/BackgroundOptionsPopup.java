@@ -7,12 +7,14 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
+import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
 import de.keksuccino.konkrete.gui.screens.popup.Popup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
@@ -34,17 +36,25 @@ public class BackgroundOptionsPopup extends Popup {
 	
 	protected AdvancedButton addRemoveAnimationButton;
 	
+	//TODO übernehmen
+	protected AdvancedButton setPanoramaButton;
+	protected AdvancedButton clearPanoramaButton;
+	
 	protected HorizontalSwitcher typeSwitcher;
 	protected HorizontalSwitcher animationSwitcher;
+	//TODO übernehmen
+	protected HorizontalSwitcher panoramaSwitcher;
 	
 	public BackgroundOptionsPopup(LayoutCreatorScreen handler) {
 		super(240);
 		
 		this.handler = handler;
 		
+		//TODO übernehmen
 		this.typeSwitcher = new HorizontalSwitcher(120, true,
 				Locals.localize("helper.creator.backgroundoptions.backgroundanimation"),
-				Locals.localize("helper.creator.backgroundoptions.backgroundimage"));
+				Locals.localize("helper.creator.backgroundoptions.backgroundimage"),
+				Locals.localize("helper.creator.backgroundoptions.backgroundpanorama"));
 		this.typeSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.typeSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
@@ -54,6 +64,15 @@ public class BackgroundOptionsPopup extends Popup {
 		}
 		this.animationSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.animationSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
+		
+		//TODO übernehmen
+		this.panoramaSwitcher = new HorizontalSwitcher(120, true);
+		for (String s : PanoramaHandler.getPanoramaNames()) {
+			this.panoramaSwitcher.addValue(s);
+		}
+		this.panoramaSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
+		this.panoramaSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
+		//---------------------
 		
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			BackgroundOptionsPopup.this.handler.setMenusUseable(false);
@@ -108,7 +127,35 @@ public class BackgroundOptionsPopup extends Popup {
 			this.panoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.panorama"));
 		});
 		this.addButton(noPanoramaButton);
-		
+
+		//TODO übernehmen
+		this.setPanoramaButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.panoramas.set"), true, (press) -> {
+			if (this.panoramaSwitcher.getSelectedValue() != null) {
+				if (PanoramaHandler.panoramaExists(this.panoramaSwitcher.getSelectedValue())) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					this.handler.backgroundPanorama = PanoramaHandler.getPanorama(this.panoramaSwitcher.getSelectedValue());
+				}
+			}
+		});
+		this.setPanoramaButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.backgroundoptions.panoramas.set.desc"), "%n%"));
+		this.addButton(setPanoramaButton);
+		if (this.panoramaSwitcher.getSelectedValue() == null) {
+			this.setPanoramaButton.active = false;
+		}
+
+		//TODO übernehmen
+		this.clearPanoramaButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.panoramas.clear"), true, (press) -> {
+			if (this.handler.backgroundPanorama != null) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			this.handler.backgroundPanorama = null;
+		});
+		this.clearPanoramaButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.backgroundoptions.panoramas.clear.desc"), "%n%"));
+		this.addButton(clearPanoramaButton);
+		if (this.panoramaSwitcher.getSelectedValue() == null) {
+			this.clearPanoramaButton.active = false;
+		}
+				
 		this.addRemoveAnimationButton = new AdvancedButton(0, 0, 100, 20, "", true, (press) -> {
 			if (this.animationSwitcher.getSelectedValue() != null) {
 				if (this.handler.backgroundAnimationNames.contains(this.animationSwitcher.getSelectedValue())) {
@@ -181,6 +228,10 @@ public class BackgroundOptionsPopup extends Popup {
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
 				this.noPanoramaButton.visible = false;
+				//TODO übernehmen
+				this.setPanoramaButton.visible = false;
+				this.clearPanoramaButton.visible = false;
+				//------------
 			}
 			
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundimage"))) {
@@ -201,6 +252,34 @@ public class BackgroundOptionsPopup extends Popup {
 				this.addRemoveAnimationButton.visible = false;
 				this.randomButton.visible = false;
 				this.notRandomButton.visible = false;
+				//TODO übernehmen
+				this.setPanoramaButton.visible = false;
+				this.clearPanoramaButton.visible = false;
+				//------------
+			}
+			
+			//TODO übernehmen
+			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundpanorama"))) {
+				
+				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.panoramas"), renderIn.width / 2, (renderIn.height / 2) - 50, Color.WHITE.getRGB());
+				
+				this.panoramaSwitcher.render(matrix, (renderIn.width / 2) - (this.panoramaSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
+				
+				this.setPanoramaButton.x = (renderIn.width / 2) - (this.setPanoramaButton.getWidth() / 2);
+				this.setPanoramaButton.y = (renderIn.height / 2) - 5;
+				
+				this.clearPanoramaButton.x = (renderIn.width / 2) - (this.clearPanoramaButton.getWidth() / 2);
+				this.clearPanoramaButton.y = (renderIn.height / 2) + 20;
+				
+				this.setPanoramaButton.visible = true;
+				this.clearPanoramaButton.visible = true;
+				
+				this.addRemoveAnimationButton.visible = false;
+				this.randomButton.visible = false;
+				this.notRandomButton.visible = false;
+				this.chooseTextureButton.visible = false;
+				this.panoramaButton.visible = false;
+				this.noPanoramaButton.visible = false;
 			}
 			
 			

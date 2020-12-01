@@ -11,6 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -56,25 +57,31 @@ public class MainMenuHandler extends MenuHandlerBase {
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			// Resetting values to defaults
-			fadeFooter = 0.1F;
-			tickFooter = 0;
-			
-			if (this.splash == null) {
-				this.splash = Minecraft.getInstance().getSplashes().getSplashText();
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				// Resetting values to defaults
+				fadeFooter = 0.1F;
+				tickFooter = 0;
+
+				if (this.splash == null) {
+					this.splash = Minecraft.getInstance().getSplashes().getSplashText();
+				}
+				
+				this.setWidthCopyrightRest(Integer.MAX_VALUE);
+				
+				super.onButtonsCached(e);
 			}
 		}
-		
-		super.onButtonsCached(e);
 	}
 	
 	@SubscribeEvent
 	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getGui())) {
-			e.setCanceled(true);
-			e.getGui().renderBackground();
-			
-			this.renderFooter(e);
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				e.setCanceled(true);
+				e.getGui().renderBackground();
+
+				this.renderFooter(e);
+			}
 		}
 	}
 	
@@ -236,6 +243,17 @@ public class MainMenuHandler extends MenuHandlerBase {
 			e.printStackTrace();
 		}
 		return buttons;
+	}
+	
+	private void setWidthCopyrightRest(int i) {
+		try {
+			if (Minecraft.getInstance().currentScreen instanceof MainMenuScreen) {
+				Field f = ObfuscationReflectionHelper.findField(MainMenuScreen.class, "field_193979_N");
+				f.set(Minecraft.getInstance().currentScreen, i);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {

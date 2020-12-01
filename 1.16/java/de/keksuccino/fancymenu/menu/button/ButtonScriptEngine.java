@@ -93,8 +93,7 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
 				if (Minecraft.getInstance().getSaveLoader().canLoadWorld(value)) {
-					//launchIntegratedServer
-					Minecraft.getInstance().func_238191_a_(value);
+					Minecraft.getInstance().loadWorld(value);
 				}
 			}
 			if (action.equalsIgnoreCase("openfile")) { //for files and folders

@@ -1,12 +1,16 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
+import java.io.File;
+import java.io.IOException;
+
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.music.AdvancedMusicTicker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MusicTicker;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -15,55 +19,8 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 public class MenuCustomizationEvents {
 	
 	private boolean idle = false;
-
-
-//	//TODO remove debug
-//	@SubscribeEvent
-//	public void onMenuOpen(GuiOpenEvent e) {
-//		
-//		e.setCanceled(true);
-//		this.openScaledGui(e.getGui(), 1);
-//
-//	}
-//	
-//	//TODO remove debug
-//	private void openScaledGui(GuiScreen screen, int scale) {
-//		Minecraft mc = Minecraft.getMinecraft();
-//		GuiScreen old = mc.currentScreen;
-//		
-//        if (old != null && screen != old) {
-//            old.onGuiClosed();
-//        }
-//
-//        if (screen instanceof GuiMainMenu || screen instanceof GuiMultiplayer) {
-//            mc.gameSettings.showDebugInfo = false;
-//            mc.ingameGUI.getChatGUI().clearChatMessages(true);
-//        }
-//
-//        mc.currentScreen = screen;
-//
-//        if (screen != null) {
-//            mc.setIngameNotInFocus();
-//            KeyBinding.unPressAllKeys();
-//
-//            while (Mouse.next()) {
-//                ;
-//            }
-//
-//            while (Keyboard.next()) {
-//                ;
-//            }
-//
-//            AdvancedScaledResolution res = new AdvancedScaledResolution(scale);
-//            int i = res.getScaledWidth();
-//            int j = res.getScaledHeight();
-//            screen.setWorldAndResolution(mc, i, j);
-//            mc.skipRenderWorld = false;
-//        } else {
-//            mc.getSoundHandler().resumeSounds();
-//            mc.setIngameFocus();
-//        }
-//	}
+	private boolean iconSetAfterFullscreen = false;
+	private boolean scaleChecked = false;
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -72,7 +29,7 @@ public class MenuCustomizationEvents {
 			this.idle = false;
 		}
 		
-		if (!MenuCustomization.isValidScreen(Minecraft.getMinecraft().currentScreen)) {
+		if (MenuCustomization.isValidScreen(e.getGui()) && !MenuCustomization.isMenuCustomizable(e.getGui()) && !(e.getGui() instanceof LayoutCreatorScreen)) {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 		}
@@ -93,11 +50,47 @@ public class MenuCustomizationEvents {
 			MenuCustomization.resetSounds();
 			this.idle = true;
 		}
+		
+		if (Minecraft.getMinecraft().isFullScreen()) {
+			this.iconSetAfterFullscreen = false;
+		} else {
+			if (!this.iconSetAfterFullscreen) {
+				MainWindowHandler.updateWindowIcon();
+				this.iconSetAfterFullscreen = true;
+			}
+		}
+		
+		if (!scaleChecked && (Minecraft.getMinecraft().gameSettings != null)) {
+			scaleChecked = true;
+			
+			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
+			if (scale != -1) {
+				File f = new File("mods/fancymenu");
+				if (!f.exists()) {
+					f.mkdirs();
+				}
+				
+				File f2 = new File(f.getPath() + "/defaultscaleset.fancymenu");
+				if (!f2.exists()) {
+					try {
+						f2.createNewFile();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					
+					Minecraft.getMinecraft().gameSettings.guiScale = scale;
+					Minecraft.getMinecraft().gameSettings.saveOptions();
+					
+					Minecraft mc = Minecraft.getMinecraft();
+					if (mc.currentScreen != null) {
+						ScaledResolution scaledresolution = new ScaledResolution(mc);
+			            int j = scaledresolution.getScaledWidth();
+			            int k = scaledresolution.getScaledHeight();
+			            mc.currentScreen.setWorldAndResolution(mc, j, k);
+					}
+				}
+			}
+		}
 	}
 	
-	@SubscribeEvent
-	public void onMenuReload(MenuReloadedEvent e) {
-		MenuCustomization.reloadExcludedMenus();
-	}
-
 }

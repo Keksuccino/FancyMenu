@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.serverselection;
 import java.lang.reflect.Field;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMultiplayer;
@@ -16,8 +17,8 @@ public class ServerSelectionMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+	public void onButtonsCached(ButtonCachedEvent e) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			try {
 				Field f = ReflectionHelper.findField(GuiMultiplayer.class, "field_146804_i", "savedServerList");
 				ServerList savedServers = (ServerList) f.get(e.getGui());
@@ -32,7 +33,7 @@ public class ServerSelectionMenuHandler extends MenuHandlerBase {
 			}
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 
 }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.animation;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,6 +12,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
@@ -31,6 +33,17 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		this.fallback = fallbackGui;
 		
 		this.setDarkmode(FancyMenu.config.getOrDefault("loadingscreendarkmode", false));
+		
+		//TODO übernehmen (helles grau als default bei älteren versionen nehmen)
+		String defaultColor = "#ffffffff";
+		String hex = FancyMenu.config.getOrDefault("loadinganimationcolor", defaultColor);
+		Color c = RenderUtils.getColorFromHexString(hex);
+		if (c != null) {
+			this.setLoadingAnimationColor(hex);
+		} else {
+			this.setLoadingAnimationColor(defaultColor);
+		}
+		//--------------
 	}
 
 	@Override

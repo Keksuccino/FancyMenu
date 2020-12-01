@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -23,7 +24,7 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			if (isScrollable()) {
 				try {
 					VideoSettingsList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, this);

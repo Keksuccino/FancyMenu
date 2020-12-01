@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.worldselection;
 import java.lang.reflect.Field;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiWorldSelection;
@@ -15,8 +16,8 @@ public class WorldSelectionMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+	public void onButtonsCached(ButtonCachedEvent e) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			try {
 
 				WorldSelectionMenuList l = new WorldSelectionMenuList((GuiWorldSelection) e.getGui(), Minecraft.getMinecraft(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 64, 36, this);
@@ -29,7 +30,7 @@ public class WorldSelectionMenuHandler extends MenuHandlerBase {
 			}
 		}
 
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 
 }

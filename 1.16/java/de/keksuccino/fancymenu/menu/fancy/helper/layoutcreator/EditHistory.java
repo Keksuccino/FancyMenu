@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.input.KeyboardData;
@@ -23,7 +22,8 @@ public class EditHistory {
 	private static final ResourceLocation BACK = new ResourceLocation("keksuccino", "arrow_left.png");
 	private static final ResourceLocation FORWARD = new ResourceLocation("keksuccino", "arrow_right.png");
 	
-	private LayoutCreatorScreen editor;
+	//TODO übernehmen (procected)
+	protected LayoutCreatorScreen editor;
 	private List<Snapshot> history = new ArrayList<Snapshot>();
 	private int current = -1;
 	
@@ -34,12 +34,14 @@ public class EditHistory {
 		
 		this.editor = editor;
 		
-		this.backBtn = new AdvancedImageButton(10, 10, 20, 20, BACK, true, (press) -> {
+		//TODO übernehmen
+		this.backBtn = new AdvancedImageButton(10, 10, 19, 19, BACK, true, (press) -> {
 			this.stepBack();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.backBtn);
 		
-		this.forwardBtn = new AdvancedImageButton(35, 10, 20, 20, FORWARD, true, (press) -> {
+		//TODO übernehmen
+		this.forwardBtn = new AdvancedImageButton(35, 10, 19, 19, FORWARD, true, (press) -> {
 			this.stepForward();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.forwardBtn);
@@ -81,17 +83,17 @@ public class EditHistory {
 	
 	public void stepBack() {
 		if (this.current > -1) {
-			
+
 			if (this.current <= this.history.size()-1) {
-				
+
 				Snapshot snap = this.history.get(this.current);
 				List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 				l.add(snap.snapshot);
-				
+
 				this.current--;
-				
+
 				snap.preSnapshotState = this.createSnapshot();
-				
+
 				PreloadedLayoutCreatorScreen neweditor = new PreloadedLayoutCreatorScreen(this.editor.screen, l);
 				neweditor.history = this;
 				String single = null;
@@ -101,9 +103,9 @@ public class EditHistory {
 				neweditor.single = single;
 				neweditor.expanded = this.editor.expanded;
 				this.editor = neweditor;
-				
+
 				Minecraft.getInstance().displayGuiScreen(neweditor);
-				
+
 			}
 			
 		}
@@ -111,17 +113,17 @@ public class EditHistory {
 	
 	public void stepForward() {
 		if (this.current >= -1) {
-			
+
 			if (this.current < this.history.size()-1) {
 
 				this.current++;
-				
+
 				Snapshot snap = this.history.get(this.current).preSnapshotState;
-				
+
 				if (snap != null) {
 					List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 					l.add(snap.snapshot);
-					
+
 					PreloadedLayoutCreatorScreen neweditor = new PreloadedLayoutCreatorScreen(this.editor.screen, l);
 					neweditor.history = this;
 					String single = null;
@@ -131,20 +133,29 @@ public class EditHistory {
 					neweditor.single = single;
 					neweditor.expanded = this.editor.expanded;
 					this.editor = neweditor;
-					
+
 					Minecraft.getInstance().displayGuiScreen(neweditor);
 				}
-				
+
 			}
-			
+
 		}
 	}
 	
+	//TODO übernehmen
 	public void render(MatrixStack matrix) {
-		if (FancyMenu.config.getOrDefault("showundoredocontrols", false)) {
+		if (this.editor.expanded && (this.editor.addObjectButton != null)) {
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			float partial = Minecraft.getInstance().getRenderPartialTicks();
+			
+			AdvancedButton addBtn = this.editor.addObjectButton;
+			
+			this.backBtn.x = addBtn.x;
+			this.backBtn.y = addBtn.y - this.backBtn.getHeightRealms() - 2;
+			
+			this.forwardBtn.x = this.backBtn.x + this.backBtn.getWidth() + 2;
+			this.forwardBtn.y = addBtn.y - this.backBtn.getHeightRealms() - 2;
 			
 			this.backBtn.render(matrix, mouseX, mouseY, partial);
 			this.forwardBtn.render(matrix, mouseX, mouseY, partial);
@@ -152,7 +163,8 @@ public class EditHistory {
 	}
 	
 	private void onCtrlAltZCtrlAltY(KeyboardData d) {
-		if (KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed() && (this.editor == Minecraft.getInstance().currentScreen)) {
+		//TODO übernehmen (editor.history == this)
+		if (KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed() && (this.editor == Minecraft.getInstance().currentScreen) && (this.editor.history == this)) {
 			if (d.keycode == 89) {
 				this.stepBack();
 			}

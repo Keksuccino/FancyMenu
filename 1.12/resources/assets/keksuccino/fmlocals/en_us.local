@@ -173,7 +173,7 @@ helper.creator.web.enterurl = Enter URL
 helper.creator.add.webimage = Web Image
 helper.creator.add.webtext = Web Text
 
-helper.creator.editlayout = Edit Layout
+helper.creator.editlayout = Edit Layouts
 helper.creator.editlayout.popup.loadall = Load All
 helper.creator.editlayout.popup.loadselected = Load Selected Layout
 helper.creator.editlayout.popup.layouts = Layouts
@@ -195,9 +195,9 @@ helper.creator.items.button.hoversound.reset = Reset Hoversound
 
 helper.creator.editlayout.unsupportedvalues = §c§lUnsupported values!%n%%n%%n%Your layout contains unsupported values!%n%These values do not work in the layout creator.%n%%n%You're probably using some sort of §lposition or size calculation%n%in one of your customization sections.%n%%n%Please manually convert these calculations to absolute values and try again.
 
-helper.creator.backgroundoptions.setpanorama = Panoramic Image?
-helper.creator.backgroundoptions.panorama = Panoramic
-helper.creator.backgroundoptions.nopanorama = Not Panoramic
+helper.creator.backgroundoptions.setpanorama = Wide Image?
+helper.creator.backgroundoptions.panorama = Wide
+helper.creator.backgroundoptions.nopanorama = Normal
 
 helper.creator.textures.invalidcharacters = §c§lInvalid characters!%n%%n%%n%The filename of your image contains invalid characters!%n%%n%Please only use characters "a-z", "0-9", ".", "_" and "-".%n%Spaces, uppercase letters and any other special characters are unsupported.
 
@@ -238,7 +238,7 @@ helper.creator.items.button.delayappearance = Delay Appearance
 helper.creator.items.button.delayappearance.desc = Delay Appearance For Seconds [Decimal Value Support]
 helper.creator.items.button.delayappearance.invalidvalue = §c§lInvalid Value!%n%%n%%n%This is not a valid seconds value!%n%Maybe your value is too long. (..DON'T BE PROUD OF THIS!)%n%%n%Value Examples: 3, 2.0, 0.05, 0.8, 10.5
 
-custombuttons.action.opengui.cannotopengui = §c§lUnable To Open GUI!%n%%n%%n%The GUI you want to open either does not exist or isn't supported!%n%%n%If this is an existing GUI, please contact the developer to add support for it.
+custombuttons.action.opengui.cannotopengui = §c§lUnable To Open GUI!%n%%n%%n%The GUI you want to open either does not exist or isn't supported!%n%%n%If this is an existing GUI, please contact the developer of FancyMenu to add support for it.
 
 helper.creator.custombutton.config.actiontype.opengui.desc = Opens a GUI by its menu identifier.
 helper.creator.custombutton.config.actiontype.opengui.desc.value = Menu Identifier
@@ -318,3 +318,46 @@ helper.creator.items.custombutton.onlydisplayin.reset = RESET
 
 helper.creator.items.button.clicksound = Set Clicksound
 helper.creator.items.button.clicksound.reset = Reset Clicksound
+
+helper.popup.togglecustomization.enable = Customization: §cOff
+helper.popup.togglecustomization.disable = Customization: §aOn
+
+helper.creator.object.stretch = Stretch
+helper.creator.object.stretch.x = To Screen Width
+helper.creator.object.stretch.y = To Screen Height
+
+helper.creator.object.stretch.unsupportedorientation = §c§lUnsupported Orientation!%n%%n%%n%The current orientation of this object is not supported by this stretch action.%n%%n%§lSupported Orientations: {}
+
+helper.creator.backgroundoptions.backgroundpanorama = Background Panorama
+helper.creator.backgroundoptions.panoramas = Panoramas
+helper.creator.backgroundoptions.panoramas.set = Set
+helper.creator.backgroundoptions.panoramas.set.desc = Sets the selected panorama%n%as active background panorama.
+helper.creator.backgroundoptions.panoramas.clear = Clear
+helper.creator.backgroundoptions.panoramas.clear.desc = Removes the currently%n%active background panorama.
+
+helper.creator.items.button.btndescription = Description
+helper.creator.items.button.btndescription.desc = Button description to display%n%when the button is getting hovered.%n%%n%Use '&n' for a new line.
+
+helper.buttons.customization.btndesc = Contains useful menu customization tools.
+helper.buttons.customization.onoff.btndesc = Enables or disables customizations%n%for the currently displayed menu.%n%%n%§cThis needs to be enabled for%n%§clayouts to work!
+helper.buttons.customization.menuinfo.btndesc = Displays the §cmenu identifier%n%of the currently displayed menu.%n%%n%You can leftclick the identifier%n%to copy it.
+helper.buttons.customization.buttoninfo.btndesc = Displays useful informations%n%about §cvanilla buttons%n%when hovering them.
+helper.buttons.customization.createlayout.btndesc = Customize the currently displayed%n%menu in a fancy GUI editor!%n%%n%§cIMPORTANT:%n%Should always be used when%n%you want to edit already%n%existing menus!
+helper.buttons.customization.editlayout.btndesc = Edit layouts for the currently%n%displayed menu.
+helper.buttons.customization.creategui.btndesc = Create a new empty GUI%n%and fill it with everything you want!%n%%n%§cIMPORTANT:%n%Should NEVER be used if you%n%just want to edit an existing menu%n%without overriding it completely!%n%%n%To edit a menu, use%n%§oCreate Layout §rinstead!
+helper.buttons.customization.customguis.btndesc = List of all your custom GUIs.%n%%n%This list is empty if you%n%never created a custom GUI.
+helper.buttons.customization.overridewith.btndesc = Override the currently displayed menu%n%with one of your custom GUIs.%n%%n%§cIMPORTANT:%n%Should NEVER be used if you%n%just want to edit an existing menu%n%without overriding it completely!%n%%n%To edit a menu, use%n%§oCreate Layout §rinstead!
+helper.buttons.customization.closecustomgui.btndesc = Close the currently displayed%n%custom GUI.
+
+helper.buttons.reload.btndesc = Will reload the menu, all layouts,%n%the mod config and more.%n%%n%Useful when manually changing%n%layouts or after editing the config.%n%%n%§cIMPORTANT:%n%This will NOT reload animations!%n%You need to restart your game%n%after adding or editing animations!
+
+helper.buttons.customization.managelayouts = Manage Layouts
+helper.buttons.customization.managelayouts.enable = §aEnable §rLayout
+helper.buttons.customization.managelayouts.enabled = §aEnabled
+helper.buttons.customization.managelayouts.disable = §cDisable §rLayout
+helper.buttons.customization.managelayouts.disabled = §cDisabled
+helper.buttons.customization.managelayouts.delete = Delete Layout
+helper.buttons.customization.managelayouts.delete.msg = §c§lAre you sure?%n%%n%%n%Do you really want to §c§ldelete §rthis layout?%n%%n%§c§lThis action cannot be undone!
+helper.buttons.customization.managelayouts.btndesc = Manage all layouts for the%n%currently displayed menu.
+helper.buttons.customization.managelayouts.layout.btndesc = §lLayout Info:%n%%n%Status: {}%n%Customization Actions: {}%n%%n%§cLeftclick for more options!
+

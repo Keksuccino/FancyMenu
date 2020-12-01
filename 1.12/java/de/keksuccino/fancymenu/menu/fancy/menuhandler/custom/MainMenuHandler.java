@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.Runnables;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -49,6 +50,7 @@ import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class MainMenuHandler extends MenuHandlerBase {
 
@@ -75,69 +77,77 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			// Resetting values to defaults
-			fadeFooter = 0.1F;
-			tickFooter = 0;
-			
-			if (this.splash == null) {
-		        this.splash = "missingno";
-		        IResource iresource = null;
-		        try {
-		            List<String> list = Lists.<String>newArrayList();
-		            iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
-		            BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
-		            String s;
-		            while ((s = bufferedreader.readLine()) != null) {
-		                s = s.trim();
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				// Resetting values to defaults
+				fadeFooter = 0.1F;
+				tickFooter = 0;
 
-		                if (!s.isEmpty()) {
-		                    list.add(s);
-		                }
-		            }
-		            if (!list.isEmpty()) {
-		                while (true) {
-		                    this.splash = list.get(RANDOM.nextInt(list.size()));
+				if (this.splash == null) {
+					this.splash = "missingno";
+					IResource iresource = null;
+					try {
+						List<String> list = Lists.<String>newArrayList();
+						iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
+						BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
+						String s;
+						while ((s = bufferedreader.readLine()) != null) {
+							s = s.trim();
 
-		                    if (this.splash.hashCode() != 125780783) {
-		                        break;
-		                    }
-		                }
-		            }
-		            
-		            Calendar calendar = Calendar.getInstance();
-		            calendar.setTime(new Date());
+							if (!s.isEmpty()) {
+								list.add(s);
+							}
+						}
+						if (!list.isEmpty()) {
+							while (true) {
+								this.splash = list.get(RANDOM.nextInt(list.size()));
 
-		            if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
-		                this.splash = "Merry X-mas!";
-		            }
-		            else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
-		                this.splash = "Happy new year!";
-		            }
-		            else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
-		                this.splash = "OOoooOOOoooo! Spooky!";
-		            }
-		            
-		        } catch (IOException var8) {
-		        } finally {
-		            IOUtils.closeQuietly((Closeable)iresource);
-		        }
+								if (this.splash.hashCode() != 125780783) {
+									break;
+								}
+							}
+						}
+
+						Calendar calendar = Calendar.getInstance();
+						calendar.setTime(new Date());
+
+						if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
+							this.splash = "Merry X-mas!";
+						}
+						else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
+							this.splash = "Happy new year!";
+						}
+						else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
+							this.splash = "OOoooOOOoooo! Spooky!";
+						}
+
+					} catch (IOException var8) {
+					} finally {
+						IOUtils.closeQuietly((Closeable)iresource);
+					}
+				}
+
+				this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
+				
+				this.setWidthCopyrightRest(Integer.MAX_VALUE);
+				
 			}
 			
-			this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	@SubscribeEvent
 	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getGui())) {
-			e.setCanceled(true);
-			e.getGui().drawDefaultBackground();
-			
-			this.renderFooter(e);
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				e.setCanceled(true);
+				e.getGui().drawDefaultBackground();
+
+				this.renderFooter(e);
+			}
 		}
 	}
 	
@@ -320,6 +330,17 @@ public class MainMenuHandler extends MenuHandlerBase {
 			e.printStackTrace();
 		}
 		return labels;
+	}
+	
+	private void setWidthCopyrightRest(int i) {
+		try {
+			if (Minecraft.getMinecraft().currentScreen instanceof GuiMainMenu) {
+				Field f = ReflectionHelper.findField(GuiMainMenu.class, "field_193979_N", "widthCopyrightRest");
+				f.set(Minecraft.getMinecraft().currentScreen, i);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {

@@ -173,7 +173,7 @@ helper.creator.web.enterurl = Colocar URL
 helper.creator.add.webimage = Imagem da Web
 helper.creator.add.webtext = Texto da Web
 
-helper.creator.editlayout = Editar Layout
+helper.creator.editlayout = Editar Layouts
 helper.creator.editlayout.popup.loadall = Carregar todos
 helper.creator.editlayout.popup.loadselected = Carregar Layout selecionado
 helper.creator.editlayout.popup.layouts = Layouts
@@ -195,9 +195,9 @@ helper.creator.items.button.hoversound.reset = Resetar flutuarsom
 
 helper.creator.editlayout.unsupportedvalues = §c§lValor não suportado!%n%%n%%n%Seu layout tem valores não suportados!%n%Esses valores não funcionam no criador de layout.%n%%n%Você provavelmente está usando §lposição ou cálculo de tamanho%n%em alguma seção de customização.%n%%n%Por favor converta os cálculos manualmente para valores absolutos e tente denovo.
 
-helper.creator.backgroundoptions.setpanorama = Imagem Panorâmica?
-helper.creator.backgroundoptions.panorama = Panorâmica
-helper.creator.backgroundoptions.nopanorama = Não Panorâmica
+helper.creator.backgroundoptions.setpanorama = Wide Image?
+helper.creator.backgroundoptions.panorama = Wide
+helper.creator.backgroundoptions.nopanorama = Normal
 
 helper.creator.textures.invalidcharacters = §c§lCaractéres inválidos!%n%%n%%n%O nome de sua imagem tem caracteres inválidos!%n%%n%Por favor use apenas "a-z", "0-9", ".", "_" e "-".%n%Espaço, letras em CAPSLOCK ou caracteres especiais não são suportados.
 

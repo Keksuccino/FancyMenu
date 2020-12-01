@@ -29,14 +29,17 @@ import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.ResourceLocation;
 
 public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 
@@ -68,7 +71,6 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 					this.renderorder = "background";
 				}
 
-				//TODO übernehmen
 				String biggerthanwidth = meta.getEntryValue("biggerthanwidth");
 				if (biggerthanwidth != null) {
 					biggerthanwidth = biggerthanwidth.replace(" ", "");
@@ -77,8 +79,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						this.biggerThanWidth = i;
 					}
 				}
-				
-				//TODO übernehmen
+
 				String biggerthanheight = meta.getEntryValue("biggerthanheight");
 				if (biggerthanheight != null) {
 					biggerthanheight = biggerthanheight.replace(" ", "");
@@ -87,8 +88,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						this.biggerThanHeight = i;
 					}
 				}
-				
-				//TODO übernehmen
+
 				String smallerthanwidth = meta.getEntryValue("smallerthanwidth");
 				if (smallerthanwidth != null) {
 					smallerthanwidth = smallerthanwidth.replace(" ", "");
@@ -97,8 +97,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						this.smallerThanWidth = i;
 					}
 				}
-				
-				//TODO übernehmen
+
 				String smallerthanheight = meta.getEntryValue("smallerthanheight");
 				if (smallerthanheight != null) {
 					smallerthanheight = smallerthanheight.replace(" ", "");
@@ -107,8 +106,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						this.smallerThanHeight = i;
 					}
 				}
-				
-				//TODO remove deprecated action
+
 				String biggerthan = meta.getEntryValue("biggerthan");
 				if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
 					String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
@@ -119,7 +117,6 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 					}
 				}
 
-				//TODO remove deprecated action
 				String smallerthan = meta.getEntryValue("smallerthan");
 				if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
 					String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
@@ -153,9 +150,24 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						}
 					}
 
+					//TODO übernehmen
+					if (action.equalsIgnoreCase("setbackgroundpanorama")) {
+						String name = sec.getEntryValue("name");
+						if (name != null) {
+							if (PanoramaHandler.panoramaExists(name)) {
+								this.backgroundPanorama = PanoramaHandler.getPanorama(name);
+							}
+						}
+					}
+					
 					if (action.equalsIgnoreCase("texturizebackground")) {
 						String value = sec.getEntryValue("path");
-						String pano = sec.getEntryValue("panorama");
+						//TODO übernehmen
+						String pano = sec.getEntryValue("wideformat");
+						if (pano == null) {
+							pano = sec.getEntryValue("panorama");
+						}
+						//------------
 						if (value != null) {
 							File f = new File(value.replace("\\", "/"));
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
@@ -261,6 +273,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						String posX = sec.getEntryValue("x");
 						String posY = sec.getEntryValue("y");
 						String orientation = sec.getEntryValue("orientation");
+						
 						if ((orientation != null) && (posX != null) && (posY != null) && MathUtils.isInteger(posX) && MathUtils.isInteger(posY) && (b != null)) {
 							int x = Integer.parseInt(posX);
 							int y = Integer.parseInt(posY);
@@ -403,21 +416,58 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 					if (action.equalsIgnoreCase("addwebtext")) {
 						con.add(new LayoutWebString(new WebStringCustomizationItem(sec), this));
 					}
-					
+
 					if (action.equalsIgnoreCase("addtexture")) {
-						con.add(new LayoutTexture(new TextureCustomizationItem(sec), this));
+						LayoutTexture o = new LayoutTexture(new TextureCustomizationItem(sec), this);
+						int i = isObjectStretched(sec);
+						if (i == 3) {
+							o.setStretchedX(true, false);
+							o.setStretchedY(true, false);
+						}
+						if (i == 2) {
+							o.setStretchedY(true, false);
+						}
+						if (i == 1) {
+							o.setStretchedX(true, false);
+						}
+						con.add(o);
 					}
-					
+
 					if (action.equalsIgnoreCase("addwebtexture")) {
-						con.add(new LayoutWebTexture(new WebTextureCustomizationItem(sec), this));
+						LayoutWebTexture o = new LayoutWebTexture(new WebTextureCustomizationItem(sec), this);
+						int i = isObjectStretched(sec);
+						if (i == 3) {
+							o.setStretchedX(true, false);
+							o.setStretchedY(true, false);
+						}
+						if (i == 2) {
+							o.setStretchedY(true, false);
+						}
+						if (i == 1) {
+							o.setStretchedX(true, false);
+						}
+						con.add(o);
 					}
-					
+
 					if (action.equalsIgnoreCase("addanimation")) {
-						con.add(new LayoutAnimation(new AnimationCustomizationItem(sec), this));
+						LayoutAnimation o = new LayoutAnimation(new AnimationCustomizationItem(sec), this);
+						int i = isObjectStretched(sec);
+						if (i == 3) {
+							o.setStretchedX(true, false);
+							o.setStretchedY(true, false);
+						}
+						if (i == 2) {
+							o.setStretchedY(true, false);
+						}
+						if (i == 1) {
+							o.setStretchedX(true, false);
+						}
+						con.add(o);
 					}
 					
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
+						
 						String baction = sec.getEntryValue("buttonaction");
 						String actionvalue = sec.getEntryValue("value");
 						String backNormal = sec.getEntryValue("backgroundnormal");
@@ -428,6 +478,8 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						String firsttime = sec.getEntryValue("delayonlyfirsttime");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
 						String clicksound = sec.getEntryValue("clicksound");
+						//TODO übernehmen
+						String desc = sec.getEntryValue("description");
 
 						if (onlydisplayin != null) {
 							if (onlydisplayin.equalsIgnoreCase("outgame")) {
@@ -442,6 +494,18 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						}
 
 						LayoutButton lb = new LayoutButton(bc.width, bc.height, bc.value, onlydisplayin, this);
+
+						int i = isObjectStretched(sec);
+						if (i == 3) {
+							lb.setStretchedX(true, false);
+							lb.setStretchedY(true, false);
+						}
+						if (i == 2) {
+							lb.setStretchedY(true, false);
+						}
+						if (i == 1) {
+							lb.setStretchedX(true, false);
+						}
 						
 						if (baction == null) {
 							continue;
@@ -460,10 +524,22 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 							}
 						}
 						
+						//TODO übernehmen
+						if (desc != null) {
+							lb.description = desc;
+						}
+						
 						if ((backNormal != null) && (backHover != null)) {
 							lb.backNormal = backNormal.replace("\\", "/");
 							lb.backHovered = backHover.replace("\\", "/");
-							((LayoutButtonDummyCustomizationItem)lb.object).setTexture(TextureHandler.getResource(lb.backNormal).getResourceLocation());
+							ExternalTextureResourceLocation r = TextureHandler.getResource(lb.backNormal);
+							ResourceLocation l = null;
+							if (r != null) {
+								l = r.getResourceLocation();
+							}
+							if (l != null) {
+								((LayoutButtonDummyCustomizationItem)lb.object).setTexture(l);
+							}
 						}
 						
 						if (hoverSound != null) {
@@ -515,10 +591,11 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						}
 					}
 
+					//TODO übernehmen
 					if (action.equalsIgnoreCase("setscale")) {
 						String scale = sec.getEntryValue("scale");
-						if ((scale != null) && MathUtils.isInteger(scale)) {
-							int sc = Integer.parseInt(scale);
+						if ((scale != null) && (MathUtils.isInteger(scale) || MathUtils.isDouble(scale))) {
+							int sc = (int) Double.parseDouble(scale);
 							if (sc >= 0) {
 								this.scale = sc;
 							}
@@ -595,6 +672,45 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 			}
 		}
 		this.setMenusUseable(true);
+	}
+
+	/**
+	 * Returns:<br>
+	 * 0 for FALSE<br>
+	 * 1 for HORIZONTALLY STRETCHED<br>
+	 * 2 for VERTICALLY STRETCHED<br>
+	 * 3 for BOTH
+	 */
+	public static int isObjectStretched(PropertiesSection sec) {
+		String w = sec.getEntryValue("width");
+		String h = sec.getEntryValue("height");
+		String x = sec.getEntryValue("x");
+		String y = sec.getEntryValue("y");
+		
+		boolean stretchX = false;
+		if ((w != null) && (x != null)) {
+			if (w.equals("%guiwidth%") && x.equals("0")) {
+				stretchX = true;
+			}
+		}
+		boolean stretchY = false;
+		if ((h != null) && (y != null)) {
+			if (h.equals("%guiheight%") && y.equals("0")) {
+				stretchY = true;
+			}
+		}
+		
+		if (stretchX && stretchY) {
+			return 3;
+		}
+		if (stretchY) {
+			return 2;
+		}
+		if (stretchX) {
+			return 1;
+		}
+		
+		return 0;
 	}
 
 }

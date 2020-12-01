@@ -64,7 +64,14 @@ public class ButtonCache {
 			
 			boolean cache = true;
 			
-			if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+			if (s instanceof LayoutCreatorScreen) {
+				return;
+			}
+			if (s instanceof SimpleLoadingScreen) {
+				return;
+			}
+			
+			if (!MenuCustomization.isMenuCustomizable(s)) {
 				replaced.clear();
 				buttons.clear();
 				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
@@ -95,15 +102,6 @@ public class ButtonCache {
 				return;
 			}
 			
-			//Don't refresh cache if screen is instance of LayoutCreator
-			if (s instanceof LayoutCreatorScreen) {
-				cache = false;
-			}
-			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
-			if (s instanceof SimpleLoadingScreen) {
-				cache = false;
-			}
-			
 			if ((s == Minecraft.getMinecraft().currentScreen) && cache) {
 				updateButtons(s, getGuiButtons(s));
 			}
@@ -119,7 +117,7 @@ public class ButtonCache {
 		replaced.clear();
 		buttons.clear();
 		
-		if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+		if (!MenuCustomization.isMenuCustomizable(s)) {
 			return;
 		}
 		
@@ -161,15 +159,17 @@ public class ButtonCache {
 					if (!buttons.containsKey(id.getId())) {
 						buttons.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().displayString), s));
 					} else {
-						System.out.println("");
-						System.out.println("#### WARNING [FANCYMENU]: Overlapping buttons found!");
-						System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
-						System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
-						System.out.println("");
-						System.out.println("If one or booth of these buttons are added by a mod, please contact the developer(s) to fix this!");
-						System.out.println("FancyMenu cannot customize overlapping buttons!");
-						System.out.println("#####################################################");
-						System.out.println("");
+						if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
+							System.out.println("");
+							System.out.println("#### WARNING [FANCYMENU]: Overlapping buttons found!");
+							System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
+							System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
+							System.out.println("");
+							System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
+							System.out.println("FancyMenu cannot customize overlapping buttons!");
+							System.out.println("#####################################################");
+							System.out.println("");
+						}
 					}
 					i++;
 				}
@@ -183,7 +183,7 @@ public class ButtonCache {
 		try {
 			//Resetting the button list
 			Field f0 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
-			f0.set(s, new ArrayList<GuiButton>());
+			((List<GuiButton>)f0.get(s)).clear();
 
 			//Setting all important values for the GuiScreen to allow it to initialize itself
 			s.mc = Minecraft.getMinecraft();
@@ -200,6 +200,8 @@ public class ButtonCache {
 
 			s.initGui();
 
+			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Post(s, (List<GuiButton>) f0.get(s)));
+
 			//Reflecting the buttons list field to cache all buttons of the menu
 			Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
 
@@ -211,8 +213,6 @@ public class ButtonCache {
 				}
 				buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.displayString), s));
 			}
-			
-			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Post(s, (List<GuiButton>) f0.get(s)));
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -263,38 +263,31 @@ public class ButtonCache {
 			AdvancedButton b = new AdvancedButton(d.getButton().x, d.getButton().y, d.getButton().width, d.getButton().height, d.getButton().displayString, handleClick, (press) -> {
 				GuiButton w = replaced.get(d.getId());
 				if (w != null) {
-					//TODO experimental
 					clickButton(w);
 				}
-			});
-			
-			//TODO experimental
+			}) {
+				GuiButton w;
+				@Override
+				public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+					if (w != null) {
+						this.enabled = w.enabled;
+						this.visible = w.visible;
+					} else {
+						w = replaced.get(d.getId());
+					}
+					super.drawButton(mc, mouseX, mouseY, partialTicks);
+				}
+			};
+
 			b.enabled = d.getButton().enabled;
 			b.visible = d.getButton().visible;
-			d.getButton().visible = false;
-			//------------
+//			d.getButton().visible = false;
 			
 			replaceButton(id, b);
 			return b;
 		}
 		return null;
 	}
-	
-//	public static AdvancedButton convertToAdvancedButton(long id, boolean handleClick) {
-//		ButtonData d = getButtonForId(id);
-//		if ((d != null) && !(d.getButton() instanceof AdvancedButton)) {
-//			AdvancedButton b = new AdvancedButton(d.getButton().x, d.getButton().y, d.getButton().width, d.getButton().height, d.getButton().displayString, handleClick, (press) -> {
-//				GuiButton w = replaced.get(d.getId());
-//				if (w != null) {
-//					//TODO experimental
-//					clickButton(w);
-//				}
-//			});
-//			replaceButton(id, b);
-//			return b;
-//		}
-//		return null;
-//	}
 
 	public static AdvancedButton convertToAdvancedButton(String key, boolean handleClick) {
 		ButtonData d = getButtonForKey(key);

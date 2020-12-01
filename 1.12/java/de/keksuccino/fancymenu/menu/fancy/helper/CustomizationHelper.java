@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.io.Files;
+
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -13,7 +15,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization.ExcludeMode;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
@@ -30,6 +31,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -37,6 +39,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiScreenRealmsProxy;
 import net.minecraft.client.renderer.GlStateManager;
@@ -53,11 +56,8 @@ public class CustomizationHelper {
 	private PopupMenu dropdown;
 	private PopupMenu overridePopup;
 	private PopupMenu customGuisPopup;
-	private PopupMenu excludePopup;
-	private PopupMenu excludeSubPopup;
-	private PopupMenu removeExcludedPopup;
 	private ManageCustomGuiPopupMenu manageCustomGuiPopup;
-	
+	private ManageLayoutsPopupMenu manageLayoutsPopup;
 	private boolean showButtonInfo = false;
 	private boolean showMenuInfo = false;
 	private List<ButtonData> buttons = new ArrayList<ButtonData>();
@@ -66,8 +66,8 @@ public class CustomizationHelper {
 	private AdvancedButton reloadButton;
 	private AdvancedButton overrideButton;
 	private AdvancedButton customGuisButton;
-	private AdvancedButton excludeButton;
-	private AdvancedButton removeExcludedButton;
+	private AdvancedButton toggleCustomizationButton;
+	private AdvancedButton manageLayoutsButton;
 	private int tick = 0;
 	
 	public GuiScreen current;
@@ -110,6 +110,7 @@ public class CustomizationHelper {
 			this.onInfoButtonPress();
 		}); 
 		this.buttonInfoButton = iButton;
+		this.buttonInfoButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.buttoninfo.btndesc"), "%n%"));
 
 		String minfoLabel = Locals.localize("helper.button.menuinfo");
 		if (this.showMenuInfo) {
@@ -119,10 +120,12 @@ public class CustomizationHelper {
 			this.onMoreInfoButtonPress();
 		});
 		this.menuInfoButton = miButton;
+		this.menuInfoButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.menuinfo.btndesc"), "%n%"));
 
 		this.reloadButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.button.reload"), true, (onPress) -> {
 			onReloadButtonPress();
 		});
+		this.reloadButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.reload.btndesc"), "%n%"));
 
 		AdvancedButton layoutCreatorButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, Locals.localize("helper.button.createlayout"), true, (onPress) -> {
 			Minecraft.getMinecraft().displayGuiScreen(new LayoutCreatorScreen(this.current));
@@ -138,6 +141,7 @@ public class CustomizationHelper {
 				}
 			}
 		});
+		layoutCreatorButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.createlayout.btndesc"), "%n%"));
 
 		AdvancedButton editLayoutButton = new CustomizationButton(e.getGui().width - 245, 5, 90, 20, Locals.localize("helper.creator.editlayout"), true, (onPress) -> {
 			String identifier = this.current.getClass().getName();
@@ -170,6 +174,7 @@ public class CustomizationHelper {
 				PopupHandler.displayPopup(new EditLayoutPopup(l));
 			}
 		});
+		editLayoutButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.editlayout.btndesc"), "%n%"));
 
 		String overrLabel = Locals.localize("helper.buttons.tools.overridemenu");
 		if (this.isScreenOverridden()) {
@@ -279,10 +284,12 @@ public class CustomizationHelper {
 				}
 			}
 		});
+		overrideButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.overridewith.btndesc"), "%n%"));
 
 		AdvancedButton createGuiButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.buttons.tools.creategui"), true, (onPress) -> {
 			PopupHandler.displayPopup(new CreateCustomGuiPopup());
 		});
+		createGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.creategui.btndesc"), "%n%"));
 
 		this.manageCustomGuiPopup = new ManageCustomGuiPopupMenu(100, 20, -1);
 		this.customGuisPopup = new PopupMenu(100, 20, -1);
@@ -352,50 +359,59 @@ public class CustomizationHelper {
 
 		this.customGuisButton = new CustomizationButton(e.getGui().width - 55, 5, 50, 20, Locals.localize("helper.buttons.tools.customguis"), true, (press) -> {
 			this.customGuisPopup.openMenuAt(press.x - this.customGuisPopup.getWidth() - 2, press.y);
-			this.excludePopup.closeMenu();
 		});
+		customGuisButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.customguis.btndesc"), "%n%"));
 		
 		AdvancedButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.closecustomgui"), (press) -> {
 			if (e.getGui() instanceof CustomGuiBase) {
 				((CustomGuiBase)e.getGui()).onClose();
 			}
 		});
+		closeCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.closecustomgui.btndesc"), "%n%"));
+
+		String toggleLabel = Locals.localize("helper.popup.togglecustomization.enable");
+		if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+			toggleLabel = Locals.localize("helper.popup.togglecustomization.disable");
+		}
+		this.toggleCustomizationButton = new CustomizationButton(0, 0, 0, 0, toggleLabel, (press) -> {
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				press.displayString = Locals.localize("helper.popup.togglecustomization.enable");
+				MenuCustomization.disableCustomizationForMenu(e.getGui());
+				onReloadButtonPress();
+			} else {
+				press.displayString = Locals.localize("helper.popup.togglecustomization.disable");
+				MenuCustomization.enableCustomizationForMenu(e.getGui());
+				onReloadButtonPress();
+			}
+		});
+		toggleCustomizationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.onoff.btndesc"), "%n%"));
+
+		this.manageLayoutsPopup = new ManageLayoutsPopupMenu(0, 20, -1);
+		this.manageLayoutsButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts"), (press) -> {
+			this.manageLayoutsPopup.openMenuAt(press);
+		});
+		manageLayoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.btndesc"), "%n%"));
 		
-		this.excludePopup = new PopupMenu(120, 20, -1);
-		
-		AdvancedButton excludeSoftBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.soft"), true, (press) -> {
-			this.buildSubExcludePopup(ExcludeMode.SOFT);
-			this.excludeSubPopup.openMenuAt(press.x - this.excludeSubPopup.getWidth() - 2, press.y);
-		});
-		this.excludePopup.addContent(excludeSoftBtn);
-		
-		AdvancedButton excludeFullBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.full"), true, (press) -> {
-			this.buildSubExcludePopup(ExcludeMode.FULL);
-			this.excludeSubPopup.openMenuAt(press.x - this.excludeSubPopup.getWidth() - 2, press.y);
-		});
-		this.excludePopup.addContent(excludeFullBtn);
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+			iButton.enabled = false;
+			layoutCreatorButton.enabled = false;
+			editLayoutButton.enabled = false;
+			overrideButton.enabled = false;
+			manageLayoutsButton.enabled = false;
+		}
 
-		this.excludeButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu"), true, (press) -> {
-			this.excludePopup.openMenuAt(press.x - this.excludePopup.getWidth() - 2, press.y);
-			this.customGuisPopup.closeMenu();
-		});
+		this.dropdown = new PopupMenu(120, 20, -1);
 
-		this.removeExcludedButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.remove"), true, (press) -> {
-			MenuCustomization.reloadExcludedMenus();
-			this.buildRemoveExcludedPopup();
-			this.removeExcludedPopup.openMenuAt(press.x - this.removeExcludedPopup.getWidth() - 2, press.y);
-		});
-
-		this.dropdown = new PopupMenu(100, 20, -1);
-
-		this.dropdown.addContent(iButton);
+		if (!(e.getGui() instanceof CustomGuiBase)) {
+			this.dropdown.addContent(toggleCustomizationButton);
+		}
 		this.dropdown.addContent(miButton);
-		this.dropdown.addContent(createGuiButton);
-		this.dropdown.addContent(customGuisButton);
+		this.dropdown.addContent(iButton);
 		this.dropdown.addContent(layoutCreatorButton);
 		this.dropdown.addContent(editLayoutButton);
-		this.dropdown.addContent(this.excludeButton);
-		this.dropdown.addContent(this.removeExcludedButton);
+		this.dropdown.addContent(manageLayoutsButton);
+		this.dropdown.addContent(createGuiButton);
+		this.dropdown.addContent(customGuisButton);
 		if (this.isScreenOverridden()) {
 			this.dropdown.addContent(overrideButton);
 		} else if (!(e.getGui() instanceof CustomGuiBase)) {
@@ -404,17 +420,17 @@ public class CustomizationHelper {
 			this.dropdown.addContent(closeCustomGuiButton);
 		}
 
-		this.dropdownButton = new CustomizationButton(e.getGui().width - 160, 5, 100, 20, Locals.localize("helper.buttons.tools.dropdownlabel"), true, (press) -> {
+		this.dropdownButton = new CustomizationButton(e.getGui().width - 180, 5, 120, 20, Locals.localize("helper.buttons.tools.dropdownlabel"), true, (press) -> {
 			if (!this.dropdown.isOpen()) {
 				this.dropdown.openMenuAt(press.x, press.y + press.height - 1);
 			} else {
 				this.dropdown.closeMenu();
 			}
 		});
-		//------------------
+		this.dropdownButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.btndesc"), "%n%"));
 	}
 	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
 		if (PopupHandler.isPopupActive()) {
 			return;
@@ -435,7 +451,7 @@ public class CustomizationHelper {
 				MouseInput.unblockVanillaInput("customizationhelper");
 			}
 			
-			if (this.dropdown.isOpen() && !this.customGuisPopup.isHovered() && !this.excludePopup.isHovered() && !this.dropdownButton.isMouseOver() && !this.dropdown.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+			if (this.dropdown.isOpen() && !this.customGuisPopup.isHovered() && !this.manageLayoutsPopup.isHovered() && !this.dropdownButton.isMouseOver() && !this.dropdown.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
 				this.dropdown.closeMenu();
 			}
 			if (this.overridePopup != null) {
@@ -462,28 +478,13 @@ public class CustomizationHelper {
 					}
 				}
 			}
-			if (this.excludePopup != null) {
-				this.excludePopup.render(e.getMouseX(), e.getMouseY());
-				if (this.excludePopup.isOpen() && !this.excludePopup.isHovered() && !this.excludeButton.isMouseOver() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
-					this.excludePopup.closeMenu();
+			if (this.manageLayoutsPopup != null) {
+				this.manageLayoutsPopup.render(e.getMouseX(), e.getMouseY());
+				if (this.manageLayoutsPopup.isOpen() && !this.manageLayoutsPopup.isHovered() && !this.manageLayoutsButton.isMouseOver() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+					this.manageLayoutsPopup.closeMenu();
 				}
 				if (!this.dropdown.isOpen()) {
-					this.excludePopup.closeMenu();
-				}
-				if (this.excludeSubPopup != null) {
-					this.excludeSubPopup.render(e.getMouseX(), e.getMouseY());
-					if (!this.excludePopup.isOpen()) {
-						this.excludeSubPopup.closeMenu();
-					}
-				}
-			}
-			if (this.removeExcludedPopup != null) {
-				this.removeExcludedPopup.render(e.getMouseX(), e.getMouseY());
-				if (this.removeExcludedPopup.isOpen() && !this.removeExcludedPopup.isHovered() && !this.removeExcludedButton.isMouseOver() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
-					this.removeExcludedPopup.closeMenu();
-				}
-				if (!this.dropdown.isOpen()) {
-					this.removeExcludedPopup.closeMenu();
+					this.manageLayoutsPopup.closeMenu();
 				}
 			}
 		}
@@ -588,47 +589,6 @@ public class CustomizationHelper {
 					
 					break;
 				}
-			}
-		}
-	}
-	
-	private void buildSubExcludePopup(ExcludeMode m) {
-		this.excludeSubPopup = new PopupMenu(120, 20, -1);
-
-		AdvancedButton currentBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.current"), true, (press) -> {
-			MenuCustomization.addExcludedMenu(Minecraft.getMinecraft().currentScreen.getClass().getName(), m, false);
-			onReloadButtonPress();
-		});
-		this.excludeSubPopup.addContent(currentBtn);
-
-		AdvancedButton byIdentifierBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.excludemenu.byidentifier"), true, (press) -> {
-			PopupHandler.displayPopup(new ExcludeMenuPopup(m));
-		});
-		this.excludeSubPopup.addContent(byIdentifierBtn);
-	}
-
-	private void buildRemoveExcludedPopup() {
-		int i = 120;
-		List<String> l = MenuCustomization.getExcludedMenus();
-		for (String s : l) {
-			int i2 = Minecraft.getMinecraft().fontRenderer.getStringWidth(s);
-			if (i2 > i) {
-				i = i2;
-			}
-		}
-		this.removeExcludedPopup = new PopupMenu(i + 5, 20, -1);
-		
-		if (l.isEmpty()) {
-			AdvancedButton b = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), true, (press) -> {
-			});
-			this.removeExcludedPopup.addContent(b);
-		} else {
-			for (String s : l) {
-				AdvancedButton b = new CustomizationButton(0, 0, 0, 0, s, true, (press) -> {
-					MenuCustomization.removeExcludedMenu(s);
-					onReloadButtonPress();
-				});
-				this.removeExcludedPopup.addContent(b);
 			}
 		}
 	}
@@ -789,4 +749,170 @@ public class CustomizationHelper {
 			this.openMenuAt(x, y);
 		}
 	}
+	
+	private static class ManageLayoutsPopupMenu extends PopupMenu {
+
+		private ManageLayoutsSubPopupMenu manageSubPopup;
+		
+		public ManageLayoutsPopupMenu(int width, int buttonHeight, int space) {
+			super(width, buttonHeight, space);
+			
+			this.manageSubPopup = new ManageLayoutsSubPopupMenu(120, 20, -1);
+		}
+
+		public void openMenuAt(GuiButton parentBtn) {
+			this.content.clear();
+
+			String identifier = Minecraft.getMinecraft().currentScreen.getClass().getName();
+			if (Minecraft.getMinecraft().currentScreen instanceof CustomGuiBase) {
+				identifier = ((CustomGuiBase) Minecraft.getMinecraft().currentScreen).getIdentifier();
+			}
+			
+			int finalwidth = 80;
+			
+			List<PropertiesSet> enabled = MenuCustomizationProperties.getPropertiesWithIdentifier(identifier);
+			if (!enabled.isEmpty()) {
+				for (PropertiesSet s : enabled) {
+					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
+					if (secs.isEmpty()) {
+						secs = s.getPropertiesOfType("type-meta");
+					}
+					if (!secs.isEmpty()) {
+						String name = "<missing name>";
+						PropertiesSection meta = secs.get(0);
+						File f = new File(meta.getEntryValue("path"));
+						if (f.isFile()) {
+							name = f.getName();
+							int namewidth = Minecraft.getMinecraft().fontRenderer.getStringWidth(name);
+							if (namewidth + 5 > finalwidth) {
+								finalwidth = namewidth + 5;
+							}
+							
+							int totalactions = s.getProperties().size() - 1;
+							CustomizationButton layoutEntryBtn = new CustomizationButton(0, 0, 0, 0, "§a" + name, (press) -> {
+								this.manageSubPopup.openMenuAt(press.x - this.manageSubPopup.getWidth() - 2, press.y, f, false);
+							});
+							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.enabled"), "" + totalactions), "%n%"));
+							this.addContent(layoutEntryBtn);
+						}
+					}
+				}
+			}
+			
+			List<PropertiesSet> disabled = MenuCustomizationProperties.getDisabledPropertiesWithIdentifier(identifier);
+			if (!disabled.isEmpty()) {
+				for (PropertiesSet s : disabled) {
+					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
+					if (secs.isEmpty()) {
+						secs = s.getPropertiesOfType("type-meta");
+					}
+					if (!secs.isEmpty()) {
+						String name = "<missing name>";
+						PropertiesSection meta = secs.get(0);
+						File f = new File(meta.getEntryValue("path"));
+						if (f.isFile()) {
+							name = f.getName();
+							int namewidth = Minecraft.getMinecraft().fontRenderer.getStringWidth(name);
+							if (namewidth + 5 > finalwidth) {
+								finalwidth = namewidth + 5;
+							}
+							
+							int totalactions = s.getProperties().size() - 1;
+							CustomizationButton layoutEntryBtn = new CustomizationButton(0, 0, 0, 0, "§c" + name, (press) -> {
+								this.manageSubPopup.openMenuAt(press.x - this.manageSubPopup.getWidth() - 2, press.y, f, true);
+							});
+							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.disabled"), "" + totalactions), "%n%"));
+							this.addContent(layoutEntryBtn);
+						}
+					}
+				}
+			}
+			
+			if (enabled.isEmpty() && disabled.isEmpty()) {
+				CustomizationButton emptyBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), (press) -> {});
+				this.addContent(emptyBtn);
+			}
+			
+			this.setWidth(finalwidth);
+
+			this.openMenuAt(parentBtn.x - this.getWidth() - 2, parentBtn.y);
+		}
+		
+		@Override
+		public void render(int mouseX, int mouseY) {
+			super.render(mouseX, mouseY);
+			
+			if (this.manageSubPopup != null) {
+				this.manageSubPopup.render(mouseX, mouseY);
+				if (!this.isOpen()) {
+					this.manageSubPopup.closeMenu();
+				}
+			}
+		}
+		
+		@Override
+		public void closeMenu() {
+			if (!this.manageSubPopup.isHovered()) {
+				super.closeMenu();
+			}
+		}
+		
+		@Override
+		public boolean isHovered() {
+			if (this.manageSubPopup.isOpen() && this.manageSubPopup.isHovered()) {
+				return true;
+			} else {
+				return super.isHovered();
+			}
+		}
+		
+	}
+
+	private static class ManageLayoutsSubPopupMenu extends PopupMenu {
+
+		public ManageLayoutsSubPopupMenu(int width, int buttonHeight, int space) {
+			super(width, buttonHeight, space);
+		}
+
+		public void openMenuAt(int x, int y, File layout, boolean disabled) {
+			
+			this.content.clear();
+			
+			String toggleLabel = Locals.localize("helper.buttons.customization.managelayouts.disable");
+			if (disabled) {
+				toggleLabel = Locals.localize("helper.buttons.customization.managelayouts.enable");
+			}
+			CustomizationButton toggleLayoutBtn = new CustomizationButton(0, 0, 0, 0, toggleLabel, (press) -> {
+				if (disabled) {
+					String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationPath().getPath(), Files.getNameWithoutExtension(layout.getName()), "txt");
+					FileUtils.copyFile(layout, new File(FancyMenu.getCustomizationPath().getPath() + "/" + name));
+					layout.delete();
+				} else {
+					String disPath = FancyMenu.getCustomizationPath().getPath() + "/.disabled";
+					String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(layout.getName()), "txt");
+					FileUtils.copyFile(layout, new File(disPath + "/" + name));
+					layout.delete();
+				}
+				CustomizationHelper.getInstance().onReloadButtonPress();
+			});
+			this.addContent(toggleLayoutBtn);
+			
+			CustomizationButton deleteLayoutBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.delete"), (press) -> {
+				PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
+					if (call) {
+						if (layout.exists()) {
+							layout.delete();
+							CustomizationHelper.getInstance().onReloadButtonPress();
+						}
+					}
+				}, Locals.localize("helper.buttons.customization.managelayouts.delete.msg"), "", "", "", ""));
+				CustomizationHelper.getInstance().onReloadButtonPress();
+			});
+			this.addContent(deleteLayoutBtn);
+			
+			this.openMenuAt(x, y);
+			
+		}
+	}
+	
 }

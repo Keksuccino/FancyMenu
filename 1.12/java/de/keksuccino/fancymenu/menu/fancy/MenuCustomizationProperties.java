@@ -16,21 +16,28 @@ import net.minecraftforge.fml.common.Loader;
 public class MenuCustomizationProperties {
 	
 	private static List<PropertiesSet> properties = new ArrayList<PropertiesSet>();
+	private static List<PropertiesSet> disabled = new ArrayList<PropertiesSet>();
 	
 	public static void loadProperties() {
-		properties.clear();
-		
 		File f = FancyMenu.getCustomizationPath();
-		if (!f.exists()) {
-			f.mkdirs();
+		properties = parsePropertiesFromDir(f);
+
+		File f3 = new File(FancyMenu.getCustomizationPath().getPath() + "/.disabled");
+		disabled = parsePropertiesFromDir(f3);
+	}
+	
+	public static List<PropertiesSet> parsePropertiesFromDir(File dir) {
+		List<PropertiesSet> props = new ArrayList<PropertiesSet>();
+
+		if (!dir.exists()) {
+			dir.mkdirs();
 		}
 		
-		for (File f2 : f.listFiles()) {
+		for (File f2 : dir.listFiles()) {
 			if (f2.getPath().toLowerCase().endsWith(".txt")) {
 				PropertiesSet s = PropertiesSerializer.getProperties(f2.getAbsolutePath());
 				if ((s != null) && s.getPropertiesType().equalsIgnoreCase("menu")) {
 					List<PropertiesSection> l = s.getPropertiesOfType("customization-meta");
-					//TODO remove deprecated "type-meta" section name
 					if (l.isEmpty()) {
 						l = s.getPropertiesOfType("type-meta");
 					}
@@ -41,7 +48,7 @@ public class MenuCustomizationProperties {
 						String s5 = l.get(0).getEntryValue("maximumfmversion");
 						String s6 = l.get(0).getEntryValue("minimummcversion");
 						String s7 = l.get(0).getEntryValue("maximummcversion");
-
+						
 						if (s2 == null) {
 							continue;
 						}
@@ -54,13 +61,15 @@ public class MenuCustomizationProperties {
 						if (!allRequiredModsLoaded(s3)) {
 							continue;
 						}
-
+						
 						l.get(0).addEntry("path", f2.getPath());
-						properties.add(s);
+						props.add(s);
 					}
 				}
 			}
 		}
+		
+		return props;
 	}
 	
 	private static String fillUpToLength(String s, String fillWith, int length) {
@@ -133,9 +142,31 @@ public class MenuCustomizationProperties {
 		return properties;
 	}
 	
+	public static List<PropertiesSet> getDisabledProperties() {
+		return disabled;
+	}
+	
 	public static List<PropertiesSet> getPropertiesWithIdentifier(String identifier) {
 		List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 		for (PropertiesSet s : getProperties()) {
+			List<PropertiesSection> l2 = s.getPropertiesOfType("customization-meta");
+			if (l2.isEmpty()) {
+				l2 = s.getPropertiesOfType("type-meta");
+			}
+			if (l2.isEmpty()) {
+				continue;
+			}
+			String s2 = l2.get(0).getEntryValue("identifier");
+			if (s2.equalsIgnoreCase(identifier)) {
+				l.add(s);
+			}
+		}
+		return l;
+	}
+	
+	public static List<PropertiesSet> getDisabledPropertiesWithIdentifier(String identifier) {
+		List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+		for (PropertiesSet s : getDisabledProperties()) {
 			List<PropertiesSection> l2 = s.getPropertiesOfType("customization-meta");
 			if (l2.isEmpty()) {
 				l2 = s.getPropertiesOfType("type-meta");

@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.AbstractOption;
 import net.minecraft.client.FullscreenResolutionOption;
@@ -25,7 +26,7 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			if (isScrollable()) {
 				try {
 					OptionsRowList l = new VideoSettingsList(Minecraft.getInstance(), e.getGui().width, e.getGui().height, 32, e.getGui().height - 32, 25, this);
@@ -33,7 +34,7 @@ public class VideoSettingsMenuHandler extends MenuHandlerBase {
 				    l.addOption(AbstractOption.BIOME_BLEND_RADIUS);
 				    l.addOptions(OPTIONS);
 					Field f = ObfuscationReflectionHelper.findField(VideoSettingsScreen.class, "field_146501_h");
-					e.getGui().children().remove(f.get(e.getGui()));
+					e.getGui().getEventListeners().remove(f.get(e.getGui()));
 					f.set(e.getGui(), l);
 					addChildren(e.getGui(), l);
 				} catch(Exception ex) {

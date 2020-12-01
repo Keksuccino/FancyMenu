@@ -63,7 +63,14 @@ public class ButtonCache {
 			
 			boolean cache = true;
 
-			if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+			if (s instanceof LayoutCreatorScreen) {
+				return;
+			}
+			if (s instanceof SimpleLoadingScreen) {
+				return;
+			}
+			
+			if (!MenuCustomization.isMenuCustomizable(s)) {
 				replaced.clear();
 				buttons.clear();
 				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
@@ -94,15 +101,6 @@ public class ButtonCache {
 				return;
 			}
 			
-			//Don't refresh cache if screen is instance of LayoutCreator
-			if (s instanceof LayoutCreatorScreen) {
-				cache = false;
-			}
-			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
-			if (s instanceof SimpleLoadingScreen) {
-				cache = false;
-			}
-			
 			if ((s == Minecraft.getInstance().currentScreen) && cache) {
 				updateButtons(s, getGuiButtons(s));
 			}
@@ -118,7 +116,7 @@ public class ButtonCache {
 		replaced.clear();
 		buttons.clear();
 
-		if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+		if (!MenuCustomization.isMenuCustomizable(s)) {
 			return;
 		}
 		
@@ -160,15 +158,17 @@ public class ButtonCache {
 					if (!buttons.containsKey(id.getId())) {
 						buttons.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().getMessage()), s));
 					} else {
-						System.out.println("");
-						System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
-						System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
-						System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
-						System.out.println("");
-						System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
-						System.out.println("FancyMenu cannot customize overlapping buttons!");
-						System.out.println("#####################################################");
-						System.out.println("");
+						if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
+							System.out.println("");
+							System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
+							System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
+							System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
+							System.out.println("");
+							System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
+							System.out.println("FancyMenu cannot customize overlapping buttons!");
+							System.out.println("#####################################################");
+							System.out.println("");
+						}
 					}
 					i++;
 				}
@@ -257,11 +257,21 @@ public class ButtonCache {
 				if (w != null) {
 					w.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
 				}
-			});
-			
+			}) {
+				Widget w;
+				@Override
+				public void render(int mouseX, int mouseY, float partialTicks) {
+					if (w != null) {
+						this.active = w.active;
+						this.visible = w.visible;
+					} else {
+						w = replaced.get(d.getId());
+					}
+					super.renderButton(mouseX, mouseY, partialTicks);
+				}
+			};
 			b.active = d.getButton().active;
 			b.visible = d.getButton().visible;
-			d.getButton().visible = false;
 			
 			replaceButton(id, b);
 			return b;

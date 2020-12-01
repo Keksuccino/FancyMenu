@@ -9,9 +9,9 @@ license="GPLv3"
 # The modid of the mod
 modId="fancymenu" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="1.5.1" #mandatory
+version="1.6.0" #mandatory
  # A display name for the mod
-displayName="§dFancy§5Menu" #mandatory
+displayName="FancyMenu" #mandatory
 # A text field displayed in the mod UI
 authors="Keksuccino" #optional
 # The description text for the mod (multi line!) (#mandatory)
@@ -24,7 +24,7 @@ COPYRIGHT:
 modId="konkrete"
 mandatory=true
 ordering="NONE"
-versionRange="[1.0,)"
+versionRange="[1.1.0,)"
 side="BOTH"
 [[dependencies.fancymenu]]
 modId="findme"

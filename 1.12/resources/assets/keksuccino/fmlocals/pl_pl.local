@@ -195,9 +195,9 @@ helper.creator.items.button.hoversound.reset = Zresetuj Dźwięk Po Wskazaniu
 
 helper.creator.editlayout.unsupportedvalues = §c§lNieobsługiwane wartości!%n%%n%%n%Twój układ zawiera nieobsługiwane wartości!%n%Te wartości nie działają w kreatorze układu.%n%%n%Prawdopodobnie używasz jakiegoś §lobliczenia pozycji lub rozmiaru%n%w jednej z sekcji dostosowywania..%n%%n%Ręcznie przekonwertuj te obliczenia na wartości bezwzględne i spróbuj ponownie.
 
-helper.creator.backgroundoptions.setpanorama = Panorama?
-helper.creator.backgroundoptions.panorama = Panorama
-helper.creator.backgroundoptions.nopanorama = Brak Panoramy
+helper.creator.backgroundoptions.setpanorama = Wide Image?
+helper.creator.backgroundoptions.panorama = Wide
+helper.creator.backgroundoptions.nopanorama = Normal
 
 helper.creator.textures.invalidcharacters = §c§lNieprawidłowe znaki!%n%%n%%n%Nazwa pliku obrazu zawiera nieprawidłowe znaki!%n%%n%Proszę używać tylko znaków "a-z", "0-9", ".", "_" and "-".%n%Spacje, wielkie litery i wszelkie inne znaki specjalne nie są obsługiwane.
 

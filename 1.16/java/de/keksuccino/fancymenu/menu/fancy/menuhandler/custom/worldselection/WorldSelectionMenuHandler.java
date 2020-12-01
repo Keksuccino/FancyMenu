@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -20,7 +21,7 @@ public class WorldSelectionMenuHandler extends MenuHandlerBase {
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			try {
 				Field f = ObfuscationReflectionHelper.findField(WorldSelectionScreen.class, "field_212352_g");
 				TextFieldWidget t = (TextFieldWidget) f.get(e.getGui());
@@ -36,7 +37,7 @@ public class WorldSelectionMenuHandler extends MenuHandlerBase {
 				});
 				
 				Field f2 = ObfuscationReflectionHelper.findField(WorldSelectionScreen.class, "field_184866_u");
-				e.getGui().children().remove(f2.get(e.getGui()));
+				e.getGui().getEventListeners().remove(f2.get(e.getGui()));
 				
 				f2.set(e.getGui(), l);
 				addChildren(e.getGui(), l);

@@ -72,17 +72,17 @@ public class HideForPopup extends TextInputPopup {
 		AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.width / 2, (renderIn.height / 2) - (height / 2) + 10, Color.WHITE.getRGB());
 		
 		this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
-		this.textField.setY((renderIn.height / 2) - (this.textField.func_238483_d_() / 2));
+		this.textField.setY((renderIn.height / 2) - (this.textField.getHeightRealms() / 2));
 		this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 
 		this.delayEverytimeBtn.setX((renderIn.width / 2) - this.delayEverytimeBtn.getWidth() - 5);
-		this.delayEverytimeBtn.setY(((renderIn.height  / 2) + 50) - this.delayEverytimeBtn.func_238483_d_() - 5);
+		this.delayEverytimeBtn.setY(((renderIn.height  / 2) + 50) - this.delayEverytimeBtn.getHeightRealms() - 5);
 		
 		this.delayOnlyFirstTimeBtn.setX((renderIn.width / 2) + 5);
-		this.delayOnlyFirstTimeBtn.setY(((renderIn.height  / 2) + 50) - this.delayOnlyFirstTimeBtn.func_238483_d_() - 5);
+		this.delayOnlyFirstTimeBtn.setY(((renderIn.height  / 2) + 50) - this.delayOnlyFirstTimeBtn.getHeightRealms() - 5);
 		
 		this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
-		this.doneButton.setY(((renderIn.height / 2) + 90) - this.doneButton.func_238483_d_() - 5);
+		this.doneButton.setY(((renderIn.height / 2) + 90) - this.doneButton.getHeightRealms() - 5);
 		
 		this.renderButtons(matrix, mouseX, mouseY);
 	}

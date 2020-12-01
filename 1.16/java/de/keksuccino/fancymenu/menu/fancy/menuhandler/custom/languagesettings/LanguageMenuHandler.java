@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.languagesettings;
 
 import java.lang.reflect.Field;
 
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
@@ -33,7 +34,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			
 			Widget uni = null;
 			Widget confirm = null;
@@ -51,7 +52,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 				e.removeWidget(confirm);
 			}
 			
-			e.getGui().children().clear();
+			e.getGui().getEventListeners().clear();
 			
 			GameSettings s = Minecraft.getInstance().gameSettings;
 			
@@ -63,13 +64,13 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 			});
 			e.addWidget(this.unicodeButton);
 			
-			this.confirmSettingsBtn = new Button(e.getGui().width / 2 - 155 + 160, e.getGui().height - 38, 150, 20, DialogTexts.field_240632_c_, (press) -> {
+			this.confirmSettingsBtn = new Button(e.getGui().width / 2 - 155 + 160, e.getGui().height - 38, 150, 20, DialogTexts.GUI_DONE, (press) -> {
 				LanguageMenuList.LanguageEntry languagescreen$list$languageentry = this.list.getSelected();
 				if (languagescreen$list$languageentry != null && !languagescreen$list$languageentry.field_214398_b.getCode().equals(Minecraft.getInstance().getLanguageManager().getCurrentLanguage().getCode())) {
 					Minecraft.getInstance().getLanguageManager().setCurrentLanguage(languagescreen$list$languageentry.field_214398_b);
 					s.language = languagescreen$list$languageentry.field_214398_b.getCode();
 					net.minecraftforge.client.ForgeHooksClient.refreshResources(Minecraft.getInstance(), net.minecraftforge.resource.VanillaResourceType.LANGUAGES);
-					press.setMessage(DialogTexts.field_240632_c_);
+					press.setMessage(DialogTexts.GUI_DONE);
 					this.unicodeButton.setMessage(AbstractOption.FORCE_UNICODE_FONT.func_238152_c_(s));
 					s.saveOptions();
 				}
@@ -86,7 +87,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 
 	@SubscribeEvent
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			e.getGui().renderBackground(e.getMatrixStack());
 		}
 	}
@@ -95,7 +96,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		super.drawToBackground(e);
 
-		if (this.shouldCustomize(e.getGui()) && (this.list != null)) {
+		if (this.shouldCustomize(e.getGui()) && (this.list != null) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			if (this.list != null) {
 				this.list.render(CurrentScreenHandler.getMatrixStack(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
 			}

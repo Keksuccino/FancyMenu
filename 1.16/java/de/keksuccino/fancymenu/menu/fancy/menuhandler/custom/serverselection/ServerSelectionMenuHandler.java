@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -20,7 +21,7 @@ public class ServerSelectionMenuHandler extends MenuHandlerBase {
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			try {
 				Field f = ObfuscationReflectionHelper.findField(MultiplayerScreen.class, "field_146804_i");
 				ServerList savedServers = (ServerList) f.get(e.getGui());
@@ -30,7 +31,7 @@ public class ServerSelectionMenuHandler extends MenuHandlerBase {
 				
 				Field f3 = ObfuscationReflectionHelper.findField(MultiplayerScreen.class, "field_146803_h");
 				
-				e.getGui().children().remove(f3.get(e.getGui()));
+				e.getGui().getEventListeners().remove(f3.get(e.getGui()));
 				f3.set(e.getGui(), list);
 				addChildren(e.getGui(), list);
 			} catch (Exception ex) {

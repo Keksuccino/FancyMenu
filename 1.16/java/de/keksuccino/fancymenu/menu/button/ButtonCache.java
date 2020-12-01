@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
@@ -61,9 +63,19 @@ public class ButtonCache {
 		if (!cached) {
 			cached = true;
 			
+			//TODO Maybe remove this, kinda useless now
 			boolean cache = true;
 
-			if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+			//TODO übernehmen
+			if (s instanceof LayoutCreatorScreen) {
+				return;
+			}
+			if (s instanceof SimpleLoadingScreen) {
+				return;
+			}
+			//------------
+			
+			if (!MenuCustomization.isMenuCustomizable(s)) {
 				replaced.clear();
 				buttons.clear();
 				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
@@ -94,14 +106,15 @@ public class ButtonCache {
 				return;
 			}
 			
-			//Don't refresh cache if screen is instance of LayoutCreator
-			if (s instanceof LayoutCreatorScreen) {
-				cache = false;
-			}
-			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
-			if (s instanceof SimpleLoadingScreen) {
-				cache = false;
-			}
+			//TODO übernehmen
+//			//Don't refresh cache if screen is instance of LayoutCreator
+//			if (s instanceof LayoutCreatorScreen) {
+//				cache = false;
+//			}
+//			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
+//			if (s instanceof SimpleLoadingScreen) {
+//				cache = false;
+//			}
 			
 			if ((s == Minecraft.getInstance().currentScreen) && cache) {
 				updateButtons(s, getGuiButtons(s));
@@ -118,7 +131,7 @@ public class ButtonCache {
 		replaced.clear();
 		buttons.clear();
 
-		if (MenuCustomization.isExcludedSoft(s.getClass().getName()) || MenuCustomization.isExcludedFull(s.getClass().getName())) {
+		if (!MenuCustomization.isMenuCustomizable(s)) {
 			return;
 		}
 		
@@ -160,15 +173,18 @@ public class ButtonCache {
 					if (!buttons.containsKey(id.getId())) {
 						buttons.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().getMessage().getString()), s));
 					} else {
-						System.out.println("");
-						System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
-						System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
-						System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
-						System.out.println("");
-						System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
-						System.out.println("FancyMenu cannot customize overlapping buttons!");
-						System.out.println("#####################################################");
-						System.out.println("");
+						//TODO übernehmen
+						if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
+							System.out.println("");
+							System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
+							System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
+							System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
+							System.out.println("");
+							System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
+							System.out.println("FancyMenu cannot customize overlapping buttons!");
+							System.out.println("#####################################################");
+							System.out.println("");
+						}
 					}
 					i++;
 				}
@@ -248,19 +264,30 @@ public class ButtonCache {
 			replaceButton(d.getId(), w);
 		}
 	}
-
+	
 	public static AdvancedButton convertToAdvancedButton(long id, boolean handleClick) {
 		ButtonData d = getButtonForId(id);
 		if ((d != null) && !(d.getButton() instanceof AdvancedButton)) {
-			AdvancedButton b = new AdvancedButton(d.getButton().x, d.getButton().y, d.getButton().getWidth(), d.getButton().func_238483_d_(), d.getButton().getMessage().getString(), handleClick, (press) -> {
+			AdvancedButton b = new AdvancedButton(d.getButton().x, d.getButton().y, d.getButton().getWidth(), d.getButton().getHeightRealms(), d.getButton().getMessage().getString(), handleClick, (press) -> {
 				Widget w = replaced.get(d.getId());
 				if (w != null) {
 					w.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
 				}
-			});
+			}) {
+				Widget w;
+				@Override
+				public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+					if (w != null) {
+						this.active = w.active;
+						this.visible = w.visible;
+					} else {
+						w = replaced.get(d.getId());
+					}
+					super.renderButton(matrix, mouseX, mouseY, partialTicks);
+				}
+			};
 			b.active = d.getButton().active;
 			b.visible = d.getButton().visible;
-			d.getButton().visible = false;
 			
 			replaceButton(id, b);
 			return b;

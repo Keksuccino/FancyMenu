@@ -77,13 +77,10 @@ public class AnimationHandler {
 			String name = null;
 			String mainAudio = null;
 			String introAudio = null;
-			//TODO übernehmen
 			int fps = 0;
 			boolean loop = true;
-			//TODO Übernehmen
 			int width = 0;
 			int height = 0;
-			//-----------------
 			int x = 0;
 			int y = 0;
 			boolean replayIntro = false;
@@ -163,7 +160,6 @@ public class AnimationHandler {
 					introAudio = audio2.getPath();
 				}
 				
-				//TODO übernehmen
 				if (name != null) {
 					File gifIntro = new File(a.getPath() + "/intro.gif");
 					File gifAni = new File(a.getPath() + "/animation.gif");

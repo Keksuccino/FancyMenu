@@ -32,6 +32,8 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
+import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -84,11 +86,14 @@ public class MenuHandlerBase {
 	private boolean panoMoveBack = false;
 	private boolean panoStop = false;
 	
+	private ExternalTexturePanoramaRenderer panoramacube;
+	
 	private List<Long> onlyDelayFirstTime = new ArrayList<Long>();
 	private Map<ButtonData, Double> hidefor = new HashMap<ButtonData, Double>();
 	private List<ButtonData> hidden = new ArrayList<ButtonData>();
 
 	private List<PropertiesSet> props;
+	private boolean preinit = false;
 	
 	protected static int oriscale = Minecraft.getMinecraft().gameSettings.guiScale;
 	protected static GuiScreen scaleChangedIn = null;
@@ -117,7 +122,7 @@ public class MenuHandlerBase {
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		
 		boolean scaled = false;
-		
+
 		//Resetting scale to the normal value if it was changed in another screen
 		if ((scaleChangedIn != null) && (scaleChangedIn != e.getGui())) {
 			scaleChangedIn = null;
@@ -148,138 +153,132 @@ public class MenuHandlerBase {
 		if (ButtonCache.isCaching()) {
 			return;
 		}
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+			return;
+		}
+
+		preinit = true;
 
 		this.props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
 
-		if (!MenuCustomization.isExcludedFull(this.getMenuIdentifier())) {
-			
-			//Applying customizations which needs to be done before other ones
-			for (PropertiesSet s : this.props) {
-				List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
-				if (metas.isEmpty()) {
-					metas = s.getPropertiesOfType("type-meta");
-				}
-				if (metas.isEmpty()) {
-					continue;
-				}
+		//Applying customizations which needs to be done before other ones
+		for (PropertiesSet s : this.props) {
+			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+			if (metas.isEmpty()) {
+				metas = s.getPropertiesOfType("type-meta");
+			}
+			if (metas.isEmpty()) {
+				continue;
+			}
 
-				//TODO übernehmen
-				String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
-				if (biggerthanwidth != null) {
-					biggerthanwidth = biggerthanwidth.replace(" ", "");
-					if (MathUtils.isInteger(biggerthanwidth)) {
-						int i = Integer.parseInt(biggerthanwidth);
-						if (Minecraft.getMinecraft().displayWidth < i) {
-							continue;
-						}
+			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
+			if (biggerthanwidth != null) {
+				biggerthanwidth = biggerthanwidth.replace(" ", "");
+				if (MathUtils.isInteger(biggerthanwidth)) {
+					int i = Integer.parseInt(biggerthanwidth);
+					if (Minecraft.getMinecraft().displayWidth < i) {
+						continue;
 					}
 				}
-				
-				//TODO übernehmen
-				String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
-				if (biggerthanheight != null) {
-					biggerthanheight = biggerthanheight.replace(" ", "");
-					if (MathUtils.isInteger(biggerthanheight)) {
-						int i = Integer.parseInt(biggerthanheight);
-						if (Minecraft.getMinecraft().displayHeight < i) {
-							continue;
-						}
-					}
-				}
-				
-				//TODO übernehmen
-				String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
-				if (smallerthanwidth != null) {
-					smallerthanwidth = smallerthanwidth.replace(" ", "");
-					if (MathUtils.isInteger(smallerthanwidth)) {
-						int i = Integer.parseInt(smallerthanwidth);
-						if (Minecraft.getMinecraft().displayWidth > i) {
-							continue;
-						}
-					}
-				}
-				
-				//TODO übernehmen
-				String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
-				if (smallerthanheight != null) {
-					smallerthanheight = smallerthanheight.replace(" ", "");
-					if (MathUtils.isInteger(smallerthanheight)) {
-						int i = Integer.parseInt(smallerthanheight);
-						if (Minecraft.getMinecraft().displayHeight > i) {
-							continue;
-						}
-					}
-				}
-				
-				//TODO remove deprecated action
-				String biggerthan = metas.get(0).getEntryValue("biggerthan");
-				if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
-					String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
-					String hRaw = biggerthan.replace(" ", "").split("[x]", 2)[1];
-					if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
-						int w = Integer.parseInt(wRaw);
-						int h = Integer.parseInt(hRaw);
-						if ((Minecraft.getMinecraft().displayWidth < w) || (Minecraft.getMinecraft().displayHeight < h)) {
-							continue;
-						}
-					}
-				}
+			}
 
-				//TODO remove deprecated action
-				String smallerthan = metas.get(0).getEntryValue("smallerthan");
-				if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
-					String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
-					String hRaw = smallerthan.replace(" ", "").split("[x]", 2)[1];
-					if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
-						int w = Integer.parseInt(wRaw);
-						int h = Integer.parseInt(hRaw);
-						if ((Minecraft.getMinecraft().displayWidth > w) || (Minecraft.getMinecraft().displayHeight > h)) {
-							continue;
-						}
+			String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
+			if (biggerthanheight != null) {
+				biggerthanheight = biggerthanheight.replace(" ", "");
+				if (MathUtils.isInteger(biggerthanheight)) {
+					int i = Integer.parseInt(biggerthanheight);
+					if (Minecraft.getMinecraft().displayHeight < i) {
+						continue;
 					}
 				}
-				
-				for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
-					String action = sec.getEntryValue("action");
-					if (action != null) {
-						String identifier = sec.getEntryValue("identifier");
+			}
 
-						if (action.equalsIgnoreCase("overridemenu")) {
-							if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
-								CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (GuiScreen)null, e.getGui(), (onClose) -> {
-									e.getGui().onGuiClosed();
-								});
-								Minecraft.getMinecraft().displayGuiScreen(cus);
-								return;
-							}
+			String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
+			if (smallerthanwidth != null) {
+				smallerthanwidth = smallerthanwidth.replace(" ", "");
+				if (MathUtils.isInteger(smallerthanwidth)) {
+					int i = Integer.parseInt(smallerthanwidth);
+					if (Minecraft.getMinecraft().displayWidth > i) {
+						continue;
+					}
+				}
+			}
+
+			String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
+			if (smallerthanheight != null) {
+				smallerthanheight = smallerthanheight.replace(" ", "");
+				if (MathUtils.isInteger(smallerthanheight)) {
+					int i = Integer.parseInt(smallerthanheight);
+					if (Minecraft.getMinecraft().displayHeight > i) {
+						continue;
+					}
+				}
+			}
+
+			String biggerthan = metas.get(0).getEntryValue("biggerthan");
+			if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
+				String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
+				String hRaw = biggerthan.replace(" ", "").split("[x]", 2)[1];
+				if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
+					int w = Integer.parseInt(wRaw);
+					int h = Integer.parseInt(hRaw);
+					if ((Minecraft.getMinecraft().displayWidth < w) || (Minecraft.getMinecraft().displayHeight < h)) {
+						continue;
+					}
+				}
+			}
+
+			String smallerthan = metas.get(0).getEntryValue("smallerthan");
+			if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
+				String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
+				String hRaw = smallerthan.replace(" ", "").split("[x]", 2)[1];
+				if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
+					int w = Integer.parseInt(wRaw);
+					int h = Integer.parseInt(hRaw);
+					if ((Minecraft.getMinecraft().displayWidth > w) || (Minecraft.getMinecraft().displayHeight > h)) {
+						continue;
+					}
+				}
+			}
+
+			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+				String action = sec.getEntryValue("action");
+				if (action != null) {
+					String identifier = sec.getEntryValue("identifier");
+
+					if (action.equalsIgnoreCase("overridemenu")) {
+						if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
+							CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (GuiScreen)null, e.getGui(), (onClose) -> {
+								e.getGui().onGuiClosed();
+							});
+							Minecraft.getMinecraft().displayGuiScreen(cus);
+							return;
 						}
+					}
 
-						//TODO experimental
-						if (action.contentEquals("setscale")) {
-							//Prevent force-scaling in screens that save gamesettings (this is crap, will change this later)
-							if (isForcescalingAllowed(e.getGui())) {
-								String scale = sec.getEntryValue("scale");
-								if ((scale != null) && MathUtils.isInteger(scale.replace(" ", ""))) {
-									if (scaleChangedIn == null) {
-										oriscale = Minecraft.getMinecraft().gameSettings.guiScale;
-									}
-									scaleChangedIn = e.getGui();
-									int newscale = Integer.parseInt(scale.replace(" ", ""));
-									if (newscale <= 0) {
-										newscale = 1;
-									}
-									Minecraft.getMinecraft().gameSettings.guiScale = newscale;
-									ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
-									e.getGui().width = res.getScaledWidth();
-									e.getGui().height = res.getScaledHeight();
-									scaled = true;
+					if (action.contentEquals("setscale")) {
+						//Prevent force-scaling in screens that save gamesettings (this is crap, will change this later)
+						if (isForcescalingAllowed(e.getGui())) {
+							String scale = sec.getEntryValue("scale");
+							if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
+								if (scaleChangedIn == null) {
+									oriscale = Minecraft.getMinecraft().gameSettings.guiScale;
 								}
+								scaleChangedIn = e.getGui();
+								int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
+								if (newscale <= 0) {
+									newscale = 1;
+								}
+								Minecraft.getMinecraft().gameSettings.guiScale = newscale;
+								ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+								e.getGui().width = res.getScaledWidth();
+								e.getGui().height = res.getScaledHeight();
+								scaled = true;
 							}
 						}
 					}
 				}
 			}
-
 		}
 		
 		//Resetting scale in the same menu when scale customization action was removed
@@ -294,11 +293,9 @@ public class MenuHandlerBase {
 		}
 		
 	}
-	
-	//TODO namen noch ändern
+
 	@SubscribeEvent
-	public void onInitPost(ButtonCachedEvent e) {
-		
+	public void onButtonsCached(ButtonCachedEvent e) {
 		if (e.getGui() != Minecraft.getMinecraft().currentScreen) {
 			return;
 		}
@@ -320,7 +317,21 @@ public class MenuHandlerBase {
 		if (ButtonCache.isCaching()) {
 			return;
 		}
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+			return;
+		}
 
+		if (!this.preinit) {
+			System.out.println("################ WARNING [FANCYMENU] ################");
+			System.out.println("MenuHandler pre-init skipped! Trying to re-initialize menu!");
+			System.out.println("Menu Type: " + e.getGui().getClass().getName());
+			System.out.println("Menu Handler: " + this.getClass().getName());
+			System.out.println("This probably happened because a mod has overridden a menu with this one.");
+			System.out.println("#####################################################");
+			e.getGui().setWorldAndResolution(Minecraft.getMinecraft(), e.getGui().width, e.getGui().height);
+			return;
+		}
+		
 		if (this.props == null) {
 			return;
 		}
@@ -330,6 +341,7 @@ public class MenuHandlerBase {
 		audio.clear();
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
+		this.panoramacube = null;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -339,449 +351,454 @@ public class MenuHandlerBase {
 		
 		boolean backgroundTextureSet = false;
 
-		if (!MenuCustomization.isExcludedFull(this.getMenuIdentifier())) {
-			
-			for (PropertiesSet s : props) {
-				List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
-				if (metas.isEmpty()) {
-					metas = s.getPropertiesOfType("type-meta");
-				}
-				if (metas.isEmpty()) {
-					continue;
-				}
+		for (PropertiesSet s : props) {
+			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+			if (metas.isEmpty()) {
+				metas = s.getPropertiesOfType("type-meta");
+			}
+			if (metas.isEmpty()) {
+				continue;
+			}
 
-				String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
-				if (biggerthanwidth != null) {
-					biggerthanwidth = biggerthanwidth.replace(" ", "");
-					if (MathUtils.isInteger(biggerthanwidth)) {
-						int i = Integer.parseInt(biggerthanwidth);
-						if (Minecraft.getMinecraft().displayWidth < i) {
-							continue;
-						}
-					}
-				}
-
-				String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
-				if (biggerthanheight != null) {
-					biggerthanheight = biggerthanheight.replace(" ", "");
-					if (MathUtils.isInteger(biggerthanheight)) {
-						int i = Integer.parseInt(biggerthanheight);
-						if (Minecraft.getMinecraft().displayHeight < i) {
-							continue;
-						}
-					}
-				}
-
-				String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
-				if (smallerthanwidth != null) {
-					smallerthanwidth = smallerthanwidth.replace(" ", "");
-					if (MathUtils.isInteger(smallerthanwidth)) {
-						int i = Integer.parseInt(smallerthanwidth);
-						if (Minecraft.getMinecraft().displayWidth > i) {
-							continue;
-						}
-					}
-				}
-
-				String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
-				if (smallerthanheight != null) {
-					smallerthanheight = smallerthanheight.replace(" ", "");
-					if (MathUtils.isInteger(smallerthanheight)) {
-						int i = Integer.parseInt(smallerthanheight);
-						if (Minecraft.getMinecraft().displayHeight > i) {
-							continue;
-						}
-					}
-				}
-				
-				//TODO remove deprecated action
-				String biggerthan = metas.get(0).getEntryValue("biggerthan");
-				if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
-					String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
-					String hRaw = biggerthan.replace(" ", "").split("[x]", 2)[1];
-					if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
-						int w = Integer.parseInt(wRaw);
-						int h = Integer.parseInt(hRaw);
-						if ((Minecraft.getMinecraft().displayWidth < w) || (Minecraft.getMinecraft().displayHeight < h)) {
-							continue;
-						}
-					}
-				}
-
-				//TODO remove deprecated action
-				String smallerthan = metas.get(0).getEntryValue("smallerthan");
-				if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
-					String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
-					String hRaw = smallerthan.replace(" ", "").split("[x]", 2)[1];
-					if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
-						int w = Integer.parseInt(wRaw);
-						int h = Integer.parseInt(hRaw);
-						if ((Minecraft.getMinecraft().displayWidth > w) || (Minecraft.getMinecraft().displayHeight > h)) {
-							continue;
-						}
-					}
-				}
-				
-				String renderOrder = metas.get(0).getEntryValue("renderorder");
-				for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
-					String action = sec.getEntryValue("action");
-					if (action != null) {
-						String identifier = sec.getEntryValue("identifier");
-						GuiButton b = null;
-						ButtonData bd = null;
-						if (identifier != null) {
-							bd = getButton(identifier);
-							if (bd != null) {
-								b = bd.getButton();
-							}
-						}
-
-						if (action.equalsIgnoreCase("texturizebackground")) {
-							String value = sec.getEntryValue("path");
-							String pano = sec.getEntryValue("panorama");
-							if (value != null) {
-								File f = new File(value.replace("\\", "/"));
-								if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-									if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
-										this.backgroundTexture = TextureHandler.getResource(value);
-									}
-									if ((pano != null) && pano.equalsIgnoreCase("true")) {
-										this.panoramaback = true;
-									} else {
-										this.panoramaback = false;
-									}
-									backgroundTextureSet = true;
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("animatebackground")) {
-							String value = sec.getEntryValue("name");
-							String random = sec.getEntryValue("random");
-							boolean ran = false;
-							if ((random != null) && random.equalsIgnoreCase("true")) {
-								ran = true;
-							}
-							if (value != null) {
-								value = MenuCustomization.convertString(value);
-								if (value.contains(",")) {
-									for (String s2 : value.split("[,]")) {
-										int i = 0;
-										for (char c : s2.toCharArray()) {
-											if (c != " ".charAt(0)) {
-												break;
-											}
-											i++;
-										}
-										if (i > s2.length()) {
-											continue;
-										}
-										String temp = new StringBuilder(s2.substring(i)).reverse().toString();
-										int i2 = 0;
-										for (char c : temp.toCharArray()) {
-											if (c != " ".charAt(0)) {
-												break;
-											}
-											i2++;
-										}
-										String name = new StringBuilder(temp.substring(i2)).reverse().toString();
-										if (AnimationHandler.animationExists(name)) {
-											this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
-										}
-									}
-								} else {
-									if (AnimationHandler.animationExists(value)) {
-										this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
-									}
-								}
-								
-								if (!this.backgroundAnimations.isEmpty()) {
-									if (ran) {
-										if ((MenuHandlerRegistry.getLastActiveHandler() == null) || (MenuHandlerRegistry.getLastActiveHandler() != this)) {
-											this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
-										}
-										this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
-									} else {
-										if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
-											this.backgroundAnimation = this.lastBackgroundAnimation;
-										} else {
-											this.backgroundAnimationId = 0;
-											this.backgroundAnimation = this.backgroundAnimations.get(0);
-										}
-										this.lastBackgroundAnimation = this.backgroundAnimation;
-									}
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("hidebuttonfor")) {
-							String time = sec.getEntryValue("seconds");
-							String onlyfirsttime = sec.getEntryValue("onlyfirsttime");
-							if (b != null) {
-								if (MenuHandlerRegistry.getLastActiveHandler() != this) {
-									if ((time != null) && MathUtils.isDouble(time) && !this.onlyDelayFirstTime.contains(bd.getId())) {
-										b.visible = false;
-										this.hidefor.put(bd, Double.parseDouble(time));
-									}
-									if ((onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true") && !this.onlyDelayFirstTime.contains(bd.getId())) {
-										this.onlyDelayFirstTime.add(bd.getId());
-									}
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("hidebutton")) {
-							if (b != null) {
-								this.hidden.add(bd);
-							}
-						}
-						
-						if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
-							String value = sec.getEntryValue("value");
-							if ((value != null) && (b != null)) {
-								value = MenuCustomization.convertString(value);
-								b.displayString = value;
-							}
-						}
-						
-						if (action.equalsIgnoreCase("resizebutton")) {
-							String width = sec.getEntryValue("width");
-							String height = sec.getEntryValue("height");
-							if (width != null) {
-								width = MenuCustomization.convertString(width);
-							}
-							if (height != null) {
-								height = MenuCustomization.convertString(height);
-							}
-							if ((width != null) && (height != null) && (b != null)) {
-								int w = (int) MathUtils.calculateFromString(width);
-								int h = (int) MathUtils.calculateFromString(height);
-								b.width = w;
-								b.height = h;
-							}
-						}
-						
-						if (action.equalsIgnoreCase("movebutton")) {
-							String posX = sec.getEntryValue("x");
-							String posY = sec.getEntryValue("y");
-							if (posX != null) {
-								posX = MenuCustomization.convertString(posX);
-							}
-							if (posY != null) {
-								posY = MenuCustomization.convertString(posY);
-							}
-							String orientation = sec.getEntryValue("orientation");
-							if ((orientation != null) && (posX != null) && (posY != null) && (b != null)) {
-								int x = (int) MathUtils.calculateFromString(posX);
-								int y = (int) MathUtils.calculateFromString(posY);
-								int w = e.getGui().width;
-								int h = e.getGui().height;
-
-								//TODO Remove deprecated "original" orientation
-								if (orientation.equalsIgnoreCase("original")) {
-									b.x = b.x + x;
-									b.y = b.y + y;
-								}
-								//-----------------------------
-								if (orientation.equalsIgnoreCase("top-left")) {
-									b.x = x;
-									b.y = y;
-								}
-								
-								if (orientation.equalsIgnoreCase("mid-left")) {
-									b.x = x;
-									b.y = (h / 2) + y;
-								}
-								
-								if (orientation.equalsIgnoreCase("bottom-left")) {
-									b.x = x;
-									b.y = h + y;
-								}
-								//----------------------------
-								if (orientation.equalsIgnoreCase("top-centered")) {
-									b.x = (w / 2) + x;
-									b.y = y;
-								}
-								
-								if (orientation.equalsIgnoreCase("mid-centered")) {
-									b.x = (w / 2) + x;
-									b.y = (h / 2) + y;
-								}
-								
-								if (orientation.equalsIgnoreCase("bottom-centered")) {
-									b.x = (w / 2) + x;
-									b.y = h + y;
-								}
-								//-----------------------------
-								if (orientation.equalsIgnoreCase("top-right")) {
-									b.x = w + x;
-									b.y = y;
-								}
-								
-								if (orientation.equalsIgnoreCase("mid-right")) {
-									b.x = w + x;
-									b.y = (h / 2) + y;
-								}
-								
-								if (orientation.equalsIgnoreCase("bottom-right")) {
-									b.x = w + x;
-									b.y = h + y;
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("setbuttontexture")) {
-							if (b != null) {
-								String backNormal = sec.getEntryValue("backgroundnormal");
-								String backHover = sec.getEntryValue("backgroundhovered");
-								if ((backNormal != null) && (backHover != null)) {
-									backNormal = MenuCustomization.convertString(backNormal);
-									backHover = MenuCustomization.convertString(backHover);
-									File f = new File(backNormal.replace("\\", "/"));
-									File f2 = new File(backHover.replace("\\", "/"));
-									if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
-										frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
-									}
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("setbuttonclicksound")) {
-							if (b != null) {
-								String path = sec.getEntryValue("path");
-								if (path != null) {
-									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
-								}
-							}
-						}
-
-						if (action.equalsIgnoreCase("addhoversound")) {
-							if (b != null) {
-								if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-									backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
-								} else {
-									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
-								}
-							}
-						}
-
-						if (action.equalsIgnoreCase("sethoverlabel")) {
-							if (b != null) {
-								if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-									backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
-								} else {
-									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("clickbutton")) {
-							if (b != null) {
-								String clicks = sec.getEntryValue("clicks");
-								if ((clicks != null) && (MathUtils.isInteger(clicks))) {
-									for (int i = 0; i < Integer.parseInt(clicks); i++) {
-										b.mousePressed(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY());
-										try {
-											Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
-											m.invoke(Minecraft.getMinecraft().currentScreen, b);
-										} catch (Exception ex) {
-											ex.printStackTrace();
-										}
-									}
-								}
-							}
-						}
-						
-						if (action.equalsIgnoreCase("addtext")) {
-							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new StringCustomizationItem(sec));
-							} else {
-								frontRenderItems.add(new StringCustomizationItem(sec));
-							}
-						}
-						
-						if (action.equalsIgnoreCase("addwebtext")) {
-							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new WebStringCustomizationItem(sec));
-							} else {
-								frontRenderItems.add(new WebStringCustomizationItem(sec));
-							}
-						}
-						
-						if (action.equalsIgnoreCase("addtexture")) {
-							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new TextureCustomizationItem(sec));
-							} else {
-								frontRenderItems.add(new TextureCustomizationItem(sec));
-							}
-						}
-						
-						if (action.equalsIgnoreCase("addwebtexture")) {
-							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new WebTextureCustomizationItem(sec));
-							} else {
-								frontRenderItems.add(new WebTextureCustomizationItem(sec));
-							}
-						}
-						
-						if (action.equalsIgnoreCase("addanimation")) {
-							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(new AnimationCustomizationItem(sec));
-							} else {
-								frontRenderItems.add(new AnimationCustomizationItem(sec));
-							}
-						}
-						
-						if (action.equalsIgnoreCase("addbutton")) {
-							ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
-							AdvancedButton cbtn = i.getButton();
-							String hide = sec.getEntryValue("hideforseconds");
-							String firsttime = sec.getEntryValue("delayonlyfirsttime");
-							
-							if (MenuHandlerRegistry.getLastActiveHandler() != this) {
-								if ((hide != null) && MathUtils.isDouble(hide) && (cbtn != null) && !this.onlyDelayFirstTime.contains(i.getId())) {
-									cbtn.visible = false;
-									hidefor.put(new ButtonData(cbtn, i.getId(), null, e.getGui()), Double.parseDouble(hide));
-								}
-								if ((firsttime != null) && firsttime.equalsIgnoreCase("true") && !this.onlyDelayFirstTime.contains(i.getId())) {
-									this.onlyDelayFirstTime.add(i.getId());
-								}
-							}
-							
-							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-								backgroundRenderItems.add(i);
-							} else {
-								frontRenderItems.add(i);
-							}
-						}
-
-						if (action.equalsIgnoreCase("addaudio")) {
-							if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
-								String path = sec.getEntryValue("path");
-								String loopString = sec.getEntryValue("loop");
-								boolean loop = false; 
-								if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
-									loop = true;
-								}
-								if (path != null) {
-									File f = new File(path);
-									if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-										try {
-											String name = path + Files.size(f.toPath());
-											MenuCustomization.registerSound(name, path);
-											this.audio.put(name, loop);
-										} catch (Exception ex) {
-											ex.printStackTrace();
-										}
-									}
-								}
-							}
-						}
-						
+			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
+			if (biggerthanwidth != null) {
+				biggerthanwidth = biggerthanwidth.replace(" ", "");
+				if (MathUtils.isInteger(biggerthanwidth)) {
+					int i = Integer.parseInt(biggerthanwidth);
+					if (Minecraft.getMinecraft().displayWidth < i) {
+						continue;
 					}
 				}
 			}
-			
+
+			String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
+			if (biggerthanheight != null) {
+				biggerthanheight = biggerthanheight.replace(" ", "");
+				if (MathUtils.isInteger(biggerthanheight)) {
+					int i = Integer.parseInt(biggerthanheight);
+					if (Minecraft.getMinecraft().displayHeight < i) {
+						continue;
+					}
+				}
+			}
+
+			String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
+			if (smallerthanwidth != null) {
+				smallerthanwidth = smallerthanwidth.replace(" ", "");
+				if (MathUtils.isInteger(smallerthanwidth)) {
+					int i = Integer.parseInt(smallerthanwidth);
+					if (Minecraft.getMinecraft().displayWidth > i) {
+						continue;
+					}
+				}
+			}
+
+			String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
+			if (smallerthanheight != null) {
+				smallerthanheight = smallerthanheight.replace(" ", "");
+				if (MathUtils.isInteger(smallerthanheight)) {
+					int i = Integer.parseInt(smallerthanheight);
+					if (Minecraft.getMinecraft().displayHeight > i) {
+						continue;
+					}
+				}
+			}
+
+			String biggerthan = metas.get(0).getEntryValue("biggerthan");
+			if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
+				String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
+				String hRaw = biggerthan.replace(" ", "").split("[x]", 2)[1];
+				if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
+					int w = Integer.parseInt(wRaw);
+					int h = Integer.parseInt(hRaw);
+					if ((Minecraft.getMinecraft().displayWidth < w) || (Minecraft.getMinecraft().displayHeight < h)) {
+						continue;
+					}
+				}
+			}
+
+			String smallerthan = metas.get(0).getEntryValue("smallerthan");
+			if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
+				String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
+				String hRaw = smallerthan.replace(" ", "").split("[x]", 2)[1];
+				if (MathUtils.isInteger(wRaw) && MathUtils.isInteger(hRaw)) {
+					int w = Integer.parseInt(wRaw);
+					int h = Integer.parseInt(hRaw);
+					if ((Minecraft.getMinecraft().displayWidth > w) || (Minecraft.getMinecraft().displayHeight > h)) {
+						continue;
+					}
+				}
+			}
+
+			String renderOrder = metas.get(0).getEntryValue("renderorder");
+			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+				String action = sec.getEntryValue("action");
+				if (action != null) {
+					String identifier = sec.getEntryValue("identifier");
+					GuiButton b = null;
+					ButtonData bd = null;
+					if (identifier != null) {
+						bd = getButton(identifier);
+						if (bd != null) {
+							b = bd.getButton();
+						}
+					}
+
+					if (action.equalsIgnoreCase("setbackgroundpanorama")) {
+						String name = sec.getEntryValue("name");
+						if (name != null) {
+							if (PanoramaHandler.panoramaExists(name)) {
+								this.panoramacube = PanoramaHandler.getPanorama(name);
+							}
+						}
+					}
+					
+					if (action.equalsIgnoreCase("texturizebackground")) {
+						String value = sec.getEntryValue("path");
+						String pano = sec.getEntryValue("wideformat");
+						if (pano == null) {
+							pano = sec.getEntryValue("panorama");
+						}
+						if (value != null) {
+							File f = new File(value.replace("\\", "/"));
+							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
+								if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
+									this.backgroundTexture = TextureHandler.getResource(value);
+								}
+								if ((pano != null) && pano.equalsIgnoreCase("true")) {
+									this.panoramaback = true;
+								} else {
+									this.panoramaback = false;
+								}
+								backgroundTextureSet = true;
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("animatebackground")) {
+						String value = sec.getEntryValue("name");
+						String random = sec.getEntryValue("random");
+						boolean ran = false;
+						if ((random != null) && random.equalsIgnoreCase("true")) {
+							ran = true;
+						}
+						if (value != null) {
+							value = MenuCustomization.convertString(value);
+							if (value.contains(",")) {
+								for (String s2 : value.split("[,]")) {
+									int i = 0;
+									for (char c : s2.toCharArray()) {
+										if (c != " ".charAt(0)) {
+											break;
+										}
+										i++;
+									}
+									if (i > s2.length()) {
+										continue;
+									}
+									String temp = new StringBuilder(s2.substring(i)).reverse().toString();
+									int i2 = 0;
+									for (char c : temp.toCharArray()) {
+										if (c != " ".charAt(0)) {
+											break;
+										}
+										i2++;
+									}
+									String name = new StringBuilder(temp.substring(i2)).reverse().toString();
+									if (AnimationHandler.animationExists(name)) {
+										this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
+									}
+								}
+							} else {
+								if (AnimationHandler.animationExists(value)) {
+									this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
+								}
+							}
+
+							if (!this.backgroundAnimations.isEmpty()) {
+								if (ran) {
+									if ((MenuHandlerRegistry.getLastActiveHandler() == null) || (MenuHandlerRegistry.getLastActiveHandler() != this)) {
+										this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
+									}
+									this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
+								} else {
+									if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
+										this.backgroundAnimation = this.lastBackgroundAnimation;
+									} else {
+										this.backgroundAnimationId = 0;
+										this.backgroundAnimation = this.backgroundAnimations.get(0);
+									}
+									this.lastBackgroundAnimation = this.backgroundAnimation;
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("hidebuttonfor")) {
+						String time = sec.getEntryValue("seconds");
+						String onlyfirsttime = sec.getEntryValue("onlyfirsttime");
+						if (b != null) {
+							if (MenuHandlerRegistry.getLastActiveHandler() != this) {
+								if ((time != null) && MathUtils.isDouble(time) && !this.onlyDelayFirstTime.contains(bd.getId())) {
+									b.visible = false;
+									this.hidefor.put(bd, Double.parseDouble(time));
+								}
+								if ((onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true") && !this.onlyDelayFirstTime.contains(bd.getId())) {
+									this.onlyDelayFirstTime.add(bd.getId());
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("hidebutton")) {
+						if (b != null) {
+							this.hidden.add(bd);
+						}
+					}
+
+					if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
+						String value = sec.getEntryValue("value");
+						if ((value != null) && (b != null)) {
+							value = MenuCustomization.convertString(value);
+							b.displayString = value;
+						}
+					}
+
+					if (action.equalsIgnoreCase("resizebutton")) {
+						String width = sec.getEntryValue("width");
+						String height = sec.getEntryValue("height");
+						if (width != null) {
+							width = MenuCustomization.convertString(width);
+						}
+						if (height != null) {
+							height = MenuCustomization.convertString(height);
+						}
+						if ((width != null) && (height != null) && (b != null)) {
+							int w = (int) MathUtils.calculateFromString(width);
+							int h = (int) MathUtils.calculateFromString(height);
+							b.width = w;
+							b.height = h;
+						}
+					}
+
+					if (action.equalsIgnoreCase("movebutton")) {
+						String posX = sec.getEntryValue("x");
+						String posY = sec.getEntryValue("y");
+						if (posX != null) {
+							posX = MenuCustomization.convertString(posX);
+						}
+						if (posY != null) {
+							posY = MenuCustomization.convertString(posY);
+						}
+						String orientation = sec.getEntryValue("orientation");
+						if ((orientation != null) && (posX != null) && (posY != null) && (b != null)) {
+							int x = (int) MathUtils.calculateFromString(posX);
+							int y = (int) MathUtils.calculateFromString(posY);
+							int w = e.getGui().width;
+							int h = e.getGui().height;
+
+							if (orientation.equalsIgnoreCase("original")) {
+								b.x = b.x + x;
+								b.y = b.y + y;
+							}
+							//-----------------------------
+							if (orientation.equalsIgnoreCase("top-left")) {
+								b.x = x;
+								b.y = y;
+							}
+
+							if (orientation.equalsIgnoreCase("mid-left")) {
+								b.x = x;
+								b.y = (h / 2) + y;
+							}
+
+							if (orientation.equalsIgnoreCase("bottom-left")) {
+								b.x = x;
+								b.y = h + y;
+							}
+							//----------------------------
+							if (orientation.equalsIgnoreCase("top-centered")) {
+								b.x = (w / 2) + x;
+								b.y = y;
+							}
+
+							if (orientation.equalsIgnoreCase("mid-centered")) {
+								b.x = (w / 2) + x;
+								b.y = (h / 2) + y;
+							}
+
+							if (orientation.equalsIgnoreCase("bottom-centered")) {
+								b.x = (w / 2) + x;
+								b.y = h + y;
+							}
+							//-----------------------------
+							if (orientation.equalsIgnoreCase("top-right")) {
+								b.x = w + x;
+								b.y = y;
+							}
+
+							if (orientation.equalsIgnoreCase("mid-right")) {
+								b.x = w + x;
+								b.y = (h / 2) + y;
+							}
+
+							if (orientation.equalsIgnoreCase("bottom-right")) {
+								b.x = w + x;
+								b.y = h + y;
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setbuttontexture")) {
+						if (b != null) {
+							String backNormal = sec.getEntryValue("backgroundnormal");
+							String backHover = sec.getEntryValue("backgroundhovered");
+							if ((backNormal != null) && (backHover != null)) {
+								backNormal = MenuCustomization.convertString(backNormal);
+								backHover = MenuCustomization.convertString(backHover);
+								File f = new File(backNormal.replace("\\", "/"));
+								File f2 = new File(backHover.replace("\\", "/"));
+								if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
+									frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setbuttonclicksound")) {
+						if (b != null) {
+							String path = sec.getEntryValue("path");
+							if (path != null) {
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("addhoversound")) {
+						if (b != null) {
+							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+							} else {
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("sethoverlabel")) {
+						if (b != null) {
+							if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+								backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+							} else {
+								frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("clickbutton")) {
+						if (b != null) {
+							String clicks = sec.getEntryValue("clicks");
+							if ((clicks != null) && (MathUtils.isInteger(clicks))) {
+								for (int i = 0; i < Integer.parseInt(clicks); i++) {
+									b.mousePressed(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY());
+									try {
+										Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
+										m.invoke(Minecraft.getMinecraft().currentScreen, b);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("addtext")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new StringCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new StringCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addwebtext")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new WebStringCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new WebStringCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addtexture")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new TextureCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new TextureCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addwebtexture")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new WebTextureCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new WebTextureCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addanimation")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new AnimationCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new AnimationCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addbutton")) {
+						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
+						AdvancedButton cbtn = i.getButton();
+						String hide = sec.getEntryValue("hideforseconds");
+						String firsttime = sec.getEntryValue("delayonlyfirsttime");
+
+						if (MenuHandlerRegistry.getLastActiveHandler() != this) {
+							if ((hide != null) && MathUtils.isDouble(hide) && (cbtn != null) && !this.onlyDelayFirstTime.contains(i.getId())) {
+								cbtn.visible = false;
+								hidefor.put(new ButtonData(cbtn, i.getId(), null, e.getGui()), Double.parseDouble(hide));
+							}
+							if ((firsttime != null) && firsttime.equalsIgnoreCase("true") && !this.onlyDelayFirstTime.contains(i.getId())) {
+								this.onlyDelayFirstTime.add(i.getId());
+							}
+						}
+
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(i);
+						} else {
+							frontRenderItems.add(i);
+						}
+					}
+
+					if (action.equalsIgnoreCase("addaudio")) {
+						if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
+							String path = sec.getEntryValue("path");
+							String loopString = sec.getEntryValue("loop");
+							boolean loop = false; 
+							if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
+								loop = true;
+							}
+							if (path != null) {
+								File f = new File(path);
+								if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+									try {
+										String name = path + Files.size(f.toPath());
+										MenuCustomization.registerSound(name, path);
+										this.audio.put(name, loop);
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+								}
+							}
+						}
+					}
+
+				}
+			}
 		}
 		
 		MenuHandlerRegistry.setActiveHandler(this.getMenuIdentifier());
@@ -841,8 +858,10 @@ public class MenuHandlerBase {
 		if (PopupHandler.isPopupActive()) {
 			return;
 		}
-		
 		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
 			return;
 		}
 		
@@ -870,6 +889,9 @@ public class MenuHandlerBase {
 	@SubscribeEvent
 	public void drawToBackground(GuiScreenEvent.BackgroundDrawnEvent e) {	
 		if (this.shouldCustomize(e.getGui())) {
+			if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+				return;
+			}
 			//Rendering the background animation to the menu
 			if (this.canRenderBackground()) {
 				if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
@@ -935,9 +957,12 @@ public class MenuHandlerBase {
 					}
 					
 					GlStateManager.disableBlend();
+					
+				} else if (this.panoramacube != null) {
+					this.panoramacube.render();
 				}
 			}
-
+		
 			if (PopupHandler.isPopupActive()) {
 				return;
 			}
@@ -1033,7 +1058,7 @@ public class MenuHandlerBase {
 	}
 	
 	public boolean canRenderBackground() {
-		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null));
+		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null));
 	}
 	
 	public boolean setBackgroundAnimation(int id) {

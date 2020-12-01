@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -91,6 +92,11 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 					SoundHandler.registerSound(f.getPath(), f.getPath());
 					this.button.setClickSound(f.getPath());
 				}
+			}
+			
+			String desc = item.getEntryValue("description");
+			if (desc != null) {
+				this.button.setDescription(StringUtils.splitLines(desc.replace("§n", "&n"), "&n"));
 			}
 			
 			if ((this.button != null) && (backNormal != null) && (backHover != null)) {

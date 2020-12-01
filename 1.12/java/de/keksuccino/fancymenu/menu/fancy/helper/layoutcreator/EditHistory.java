@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.input.KeyboardData;
@@ -21,7 +20,7 @@ public class EditHistory {
 	private static final ResourceLocation BACK = new ResourceLocation("keksuccino", "arrow_left.png");
 	private static final ResourceLocation FORWARD = new ResourceLocation("keksuccino", "arrow_right.png");
 	
-	private LayoutCreatorScreen editor;
+	protected LayoutCreatorScreen editor;
 	private List<Snapshot> history = new ArrayList<Snapshot>();
 	private int current = -1;
 	
@@ -31,13 +30,13 @@ public class EditHistory {
 	public EditHistory(LayoutCreatorScreen editor) {
 		
 		this.editor = editor;
-		
-		this.backBtn = new AdvancedImageButton(10, 10, 20, 20, BACK, true, (press) -> {
+
+		this.backBtn = new AdvancedImageButton(10, 10, 19, 19, BACK, true, (press) -> {
 			this.stepBack();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.backBtn);
-		
-		this.forwardBtn = new AdvancedImageButton(35, 10, 20, 20, FORWARD, true, (press) -> {
+
+		this.forwardBtn = new AdvancedImageButton(35, 10, 19, 19, FORWARD, true, (press) -> {
 			this.stepForward();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.forwardBtn);
@@ -139,10 +138,18 @@ public class EditHistory {
 	}
 	
 	public void render() {
-		if (FancyMenu.config.getOrDefault("showundoredocontrols", false)) {
+		if (this.editor.expanded && (this.editor.addObjectButton != null)) {
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			float partial = Minecraft.getMinecraft().getRenderPartialTicks();
+			
+			AdvancedButton addBtn = this.editor.addObjectButton;
+			
+			this.backBtn.x = addBtn.x;
+			this.backBtn.y = addBtn.y - this.backBtn.height - 2;
+			
+			this.forwardBtn.x = this.backBtn.x + this.backBtn.width + 2;
+			this.forwardBtn.y = addBtn.y - this.backBtn.height - 2;
 			
 			this.backBtn.drawButton(Minecraft.getMinecraft(), mouseX, mouseY, partial);
 			this.forwardBtn.drawButton(Minecraft.getMinecraft(), mouseX, mouseY, partial);
@@ -150,7 +157,7 @@ public class EditHistory {
 	}
 	
 	private void onCtrlAltZCtrlAltY(KeyboardData d) {
-		if (KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed() && (this.editor == Minecraft.getMinecraft().currentScreen)) {
+		if (KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed() && (this.editor == Minecraft.getMinecraft().currentScreen) && (this.editor.history == this)) {
 			if (d.keycode == 44) {
 				this.stepBack();
 			}

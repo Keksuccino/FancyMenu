@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.controls;
 import java.lang.reflect.Field;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiControls;
@@ -15,8 +16,8 @@ public class ControlsMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+	public void onButtonsCached(ButtonCachedEvent e) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			try {
 				ControlsList l = new ControlsList((GuiControls) e.getGui(), Minecraft.getMinecraft(), this);
 				Field f = ReflectionHelper.findField(GuiControls.class, "keyBindingList", "field_146494_r");
@@ -26,7 +27,7 @@ public class ControlsMenuHandler extends MenuHandlerBase {
 			}
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 
 }

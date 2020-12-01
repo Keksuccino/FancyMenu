@@ -82,7 +82,7 @@ public class VideoSettingsList extends OptionsRowList {
 		bufferbuilder.pos((double)this.x1, (double)(this.y1 - 4), 0.0D).tex(1.0F, 0.0F).color(0, 0, 0, 0).endVertex();
 		bufferbuilder.pos((double)this.x0, (double)(this.y1 - 4), 0.0D).tex(0.0F, 0.0F).color(0, 0, 0, 0).endVertex();
 		tessellator.draw();
-		int k1 = this.getMaxScroll();
+		int k1 = this.getMaxScrollValue();
 		if (k1 > 0) {
 			int l1 = (int)((float)((this.y1 - this.y0) * (this.y1 - this.y0)) / (float)this.getMaxPosition());
 			l1 = MathHelper.clamp(l1, 32, this.y1 - this.y0 - 8);
@@ -123,9 +123,9 @@ public class VideoSettingsList extends OptionsRowList {
 		}
 		return false;
 	}
-	
-	private int getMaxScroll() {
+
+	protected int getMaxScrollValue() {
 		return Math.max(0, this.getMaxPosition() - (this.y1 - this.y0 - 4));
 	}
-
+	
 }

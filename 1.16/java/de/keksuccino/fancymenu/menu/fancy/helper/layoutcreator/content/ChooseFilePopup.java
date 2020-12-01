@@ -63,14 +63,14 @@ public class ChooseFilePopup extends TextInputPopup {
 		AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.width / 2, (renderIn.height  / 2) - 40, Color.WHITE.getRGB());
 		
 		this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
-		this.textField.setY((renderIn.height  / 2) - (this.textField.func_238483_d_() / 2));
+		this.textField.setY((renderIn.height  / 2) - (this.textField.getHeightRealms() / 2));
 		this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 		
 		this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
-		this.doneButton.setY(((renderIn.height  / 2) + 100) - this.doneButton.func_238483_d_() - 5);
+		this.doneButton.setY(((renderIn.height  / 2) + 100) - this.doneButton.getHeightRealms() - 5);
 		
 		this.chooseFileBtn.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
-		this.chooseFileBtn.setY(((renderIn.height  / 2) + 50) - this.doneButton.func_238483_d_() - 5);
+		this.chooseFileBtn.setY(((renderIn.height  / 2) + 50) - this.doneButton.getHeightRealms() - 5);
 		
 		this.renderButtons(matrix, mouseX, mouseY);
 	}

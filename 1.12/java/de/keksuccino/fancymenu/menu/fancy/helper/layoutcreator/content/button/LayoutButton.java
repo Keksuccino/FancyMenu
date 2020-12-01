@@ -34,6 +34,7 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 	public boolean delayonlyfirsttime = false;
 	public String onlydisplayin = null;
 	public String clicksound = null;
+	public String description;
 	private AdvancedButton onlyOutgameBtn;
 	private AdvancedButton onlySingleplayerBtn;
 	private AdvancedButton onlyMultiplayerBtn;
@@ -46,6 +47,9 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 
 	@Override
 	protected void init() {
+		
+		this.stretchable = true;
+		
 		super.init();
 		
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
@@ -293,6 +297,25 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 		});
 		this.rightclickMenu.addContent(b9);
 		LayoutCreatorScreen.colorizeCreatorButton(b9);
+		
+		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
+			this.handler.setMenusUseable(false);
+			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
+				if ((this.description == null) || (call == null) || !this.description.equals(call)) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				}
+				this.description = call;
+				this.handler.setMenusUseable(true);
+			});
+			
+			if (this.description != null) {
+				in.setText(this.description);
+			}
+			PopupHandler.displayPopup(in);
+		});
+		b12.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.button.btndescription.desc"), "%n%"));
+		this.rightclickMenu.addContent(b12);
+		LayoutCreatorScreen.colorizeCreatorButton(b12);
 
 	}
 
@@ -390,11 +413,21 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addbutton");
 			s.addEntry("label", this.object.value);
-			s.addEntry("x", "" + this.object.posX);
-			s.addEntry("y", "" + this.object.posY);
+			if (this.stretchX) {
+				s.addEntry("x", "0");
+				s.addEntry("width", "%guiwidth%");
+			} else {
+				s.addEntry("x", "" + this.object.posX);
+				s.addEntry("width", "" + this.object.width);
+			}
+			if (this.stretchY) {
+				s.addEntry("y", "0");
+				s.addEntry("height", "%guiheight%");
+			} else {
+				s.addEntry("y", "" + this.object.posY);
+				s.addEntry("height", "" + this.object.height);
+			}
 			s.addEntry("orientation", this.object.orientation);
-			s.addEntry("width", "" + this.object.width);
-			s.addEntry("height", "" + this.object.height);
 			s.addEntry("buttonaction", this.actionType);
 			s.addEntry("value", this.actionContent);
 			if ((this.backHovered != null) && (this.backNormal != null)) {
@@ -418,6 +451,9 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 			}
 			if (this.clicksound != null) {
 				s.addEntry("clicksound", this.clicksound);
+			}
+			if (this.description != null) {
+				s.addEntry("description", this.description);
 			}
 			l.add(s);
 		}

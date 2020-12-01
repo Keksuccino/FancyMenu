@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -19,7 +20,7 @@ public class ControlsMenuHandler extends MenuHandlerBase {
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			try {
 				ControlsList l = new ControlsList((ControlsScreen) e.getGui(), Minecraft.getInstance(), this);
 				Field f = ObfuscationReflectionHelper.findField(ControlsScreen.class, "field_146494_r");

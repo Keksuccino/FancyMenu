@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.ActionType;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
@@ -36,6 +37,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.IMenu;
@@ -125,6 +127,7 @@ public class LayoutCreatorScreen extends GuiScreen {
 	protected IAnimationRenderer backgroundAnimation;
 	public ExternalTextureResourceLocation backgroundTexture;
 	public String backgroundTexturePath;
+	public ExternalTexturePanoramaRenderer backgroundPanorama;
 	public List<String> backgroundAnimationNames = new ArrayList<String>();
 	public boolean randomBackgroundAnimation = false;
 	public boolean panorama = false;
@@ -476,13 +479,15 @@ public class LayoutCreatorScreen extends GuiScreen {
 			LayoutCreatorScreen.colorizeCreatorButton(backOptionsB);
 			
 			AdvancedButton resetBackB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.resetbackground"), true, (press) -> {
-				if ((this.backgroundTexture != null) || (this.backgroundAnimation != null)) {
+				if ((this.backgroundTexture != null) || (this.backgroundAnimation != null) || (this.backgroundPanorama != null)) {
 					this.history.saveSnapshot(this.history.createSnapshot());
 				}
 				
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 				}
+				this.backgroundAnimationNames = new ArrayList<String>();
+				this.backgroundPanorama = null;
 				this.backgroundAnimation = null;
 				this.backgroundTexture = null;
 				this.backgroundRightclickMenu.closeMenu();
@@ -674,12 +679,19 @@ public class LayoutCreatorScreen extends GuiScreen {
 			l.add(ps);
 		}
 		
+		if (this.backgroundPanorama != null) {
+			PropertiesSection ps = new PropertiesSection("customization");
+			ps.addEntry("action", "setbackgroundpanorama");
+			ps.addEntry("name", this.backgroundPanorama.getName());
+			l.add(ps);
+		}
+		
 		if (this.backgroundTexture != null) {
 			PropertiesSection ps = new PropertiesSection("customization");
 			ps.addEntry("action", "texturizebackground");
 			ps.addEntry("path", this.backgroundTexturePath);
 			if (this.panorama) {
-				ps.addEntry("panorama", "true");
+				ps.addEntry("wideformat", "true");
 			}
 			l.add(ps);
 		}
@@ -1307,6 +1319,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 			this.backgroundAnimation.render();
 			this.backgroundAnimation.setStretchImageToScreensize(b);
 		}
+		
+		if (this.backgroundPanorama != null) {
+			this.backgroundPanorama.render();
+		}
 	}
 	
 	public boolean isFocused(LayoutObject object) {
@@ -1324,12 +1340,10 @@ public class LayoutCreatorScreen extends GuiScreen {
 			return;
 		}
 		if (b) {
-			//TODO irgendwie n bisschen sinnlos oder wenigstens teilweise sinnlos.
 			if (this.backgroundRightclickMenu.isHovered() || this.renderorderPopup.isHovered()) {
 				return;
 			}
 			this.focused = object;
-			//---------
 		} else {
 			if ((this.focused != null) && (this.focused == object)) {
 				this.focused = null;
@@ -1607,7 +1621,23 @@ public class LayoutCreatorScreen extends GuiScreen {
 				if (name.contains(".")) {
 					name = new StringBuilder(new StringBuilder(name).reverse().toString().split("[.]", 2)[0]).reverse().toString();
 				}
-				this.saveToCustomizationFile(this.generateCustomizationFileName(FancyMenu.getCustomizationPath().getPath(), name));
+				String filename = this.generateCustomizationFileName(FancyMenu.getCustomizationPath().getPath(), name);
+				
+				this.saveToCustomizationFile(filename);
+
+				Snapshot snap = this.history.createSnapshot();
+
+				List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+				l.add(snap.snapshot);
+
+				PreloadedLayoutCreatorScreen neweditor = new PreloadedLayoutCreatorScreen(this.screen, l);
+				neweditor.history = this.history;
+				this.history.editor = neweditor;
+				neweditor.expanded = this.expanded;
+				neweditor.single = FancyMenu.getCustomizationPath().getPath() + "/" + filename;
+
+				Minecraft.getMinecraft().displayGuiScreen(neweditor);
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

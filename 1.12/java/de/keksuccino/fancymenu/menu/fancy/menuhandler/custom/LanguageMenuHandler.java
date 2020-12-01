@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
@@ -39,8 +40,8 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
-	public void onInitPost(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui())) {
+	public void onButtonsCached(ButtonCachedEvent e) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			this.current = e.getGui();
 
 			this.forceUnicodeFontBtn = new GuiOptionButton(100, e.getGui().width / 2 - 155, e.getGui().height - 38, GameSettings.Options.FORCE_UNICODE_FONT, Minecraft.getMinecraft().gameSettings.getKeyBinding(GameSettings.Options.FORCE_UNICODE_FONT));
@@ -55,12 +56,12 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 			this.currentButtons = e.getButtonList();
 		}
 		
-		super.onInitPost(e);
+		super.onButtonsCached(e);
 	}
 	
 	@SubscribeEvent
 	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			e.setCanceled(true);
 			e.getGui().drawDefaultBackground();
 		}
@@ -70,21 +71,27 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		super.drawToBackground(e);
 		
-		if (this.shouldCustomize(e.getGui())) {
-			this.list.drawScreen(MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getMinecraft().getRenderPartialTicks());
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
+			if (this.list != null) {
+				this.list.drawScreen(MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getMinecraft().getRenderPartialTicks());
+			}
 			e.getGui().drawCenteredString(Minecraft.getMinecraft().fontRenderer, I18n.format("options.language"), e.getGui().width / 2, 16, 16777215);
 	        e.getGui().drawCenteredString(Minecraft.getMinecraft().fontRenderer, "(" + I18n.format("options.languageWarning") + ")", e.getGui().width / 2, e.getGui().height - 56, 8421504);
 
-			for(int i = 0; i < this.currentButtons.size(); ++i) {
-				this.currentButtons.get(i).drawButton(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getMinecraft().getRenderPartialTicks());
+			if (this.currentButtons != null) {
+				for(int i = 0; i < this.currentButtons.size(); ++i) {
+					this.currentButtons.get(i).drawButton(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getMinecraft().getRenderPartialTicks());
+				}
 			}
 		}
 	}
 	
 	@SubscribeEvent
 	public void onMouseInput(GuiScreenEvent.MouseInputEvent.Post e) {
-		if (this.shouldCustomize(e.getGui())) {
-			this.list.handleMouseInput();
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
+			if (this.list != null) {
+				this.list.handleMouseInput();
+			}
 		}
 	}
 

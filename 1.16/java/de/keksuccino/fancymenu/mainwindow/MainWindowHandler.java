@@ -67,13 +67,13 @@ public class MainWindowHandler {
 			setWindowTitle();
 		} else {
 			windowtitle = null;
-			Minecraft.getInstance().func_230150_b_();
+			Minecraft.getInstance().setDefaultMinecraftTitle();
 		}
 	}
 	
 	private static void setWindowTitle() {
 		if (windowtitle != null) {
-			Minecraft.getInstance().getMainWindow().func_230148_b_(windowtitle);
+			Minecraft.getInstance().getMainWindow().setWindowTitle(windowtitle);
 		}
 	}
 	

@@ -26,9 +26,9 @@ public class CustomGuiBase extends Screen {
 		this.overrides = overrides;
 		this.parent = parent;
 	}
-	
+
 	@Override
-	public void onClose() {
+	public void closeScreen() {
 		Minecraft.getInstance().displayGuiScreen(this.parent);
 	}
 	

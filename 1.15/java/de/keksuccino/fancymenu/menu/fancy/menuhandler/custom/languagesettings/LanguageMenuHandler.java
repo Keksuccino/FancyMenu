@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.languagesettings;
 
 import java.lang.reflect.Field;
 
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.GameSettings;
@@ -32,7 +33,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	public void onInitPost(GuiScreenEvent.InitGuiEvent.Post e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			
 			Widget uni = null;
 			Widget confirm = null;
@@ -86,7 +87,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 
 	@SubscribeEvent
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getGui()) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			e.getGui().renderBackground();
 		}
 	}
@@ -95,7 +96,7 @@ public class LanguageMenuHandler extends MenuHandlerBase {
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		super.drawToBackground(e);
 
-		if (this.shouldCustomize(e.getGui()) && (this.list != null)) {
+		if (this.shouldCustomize(e.getGui()) && (this.list != null) && MenuCustomization.isMenuCustomizable(e.getGui())) {
 			if (this.list != null) {
 				this.list.render(MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
 			}

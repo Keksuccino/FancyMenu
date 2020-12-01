@@ -2,12 +2,12 @@ package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.loadingdarkmode.LoadingDarkmodeEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
@@ -28,18 +28,19 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.realms.RealmsScreenProxy;
-import net.minecraftforge.client.gui.NotificationModUpdateScreen;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
 public class MenuCustomization {
 	
+	private static PropertiesSet customizableMenus;
+	
 	private static boolean initDone = false;
 	private static List<String> sounds = new ArrayList<String>();
-
-	private static Map<String, PropertiesSection> excludedmenus = new HashMap<String, PropertiesSection>();
-	public static final File EXCLUDED_MENUS_FILE = new File("config/fancymenu/excludedmenus.txt");
+	
+	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
 	
 	public static void init() {
 		if (!initDone) {
@@ -72,14 +73,86 @@ public class MenuCustomization {
 			
 			LoadingDarkmodeEvents.init();
 
-			reloadExcludedMenus();
+			updateCustomizeableMenuCache();
 			
 			initDone = true;
 		}
 	}
 	
+	private static void updateCustomizeableMenuCache() {
+		try {
+			if (!CUSTOMIZABLE_MENUS_FILE.exists()) {
+				CUSTOMIZABLE_MENUS_FILE.createNewFile();
+				PropertiesSerializer.writeProperties(new PropertiesSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+			}
+			PropertiesSet s = PropertiesSerializer.getProperties(CUSTOMIZABLE_MENUS_FILE.getPath());
+			if (s == null) {
+				PropertiesSerializer.writeProperties(new PropertiesSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				s = PropertiesSerializer.getProperties(CUSTOMIZABLE_MENUS_FILE.getPath());
+			}
+			customizableMenus = s;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void syncCustomizeableMenusToFile() {
+		PropertiesSerializer.writeProperties(customizableMenus, CUSTOMIZABLE_MENUS_FILE.getPath());
+	}
+
+	public static void enableCustomizationForMenu(Screen menu) {
+		if (menu != null) {
+			if (!(menu instanceof CustomGuiBase)) {
+				String identifier = menu.getClass().getName();
+				if ((identifier != null) && (customizableMenus != null)) {
+					PropertiesSection sec = new PropertiesSection(identifier);
+					customizableMenus.addProperties(sec);
+					syncCustomizeableMenusToFile();
+				}
+			}
+		}
+	}
+
+	public static void disableCustomizationForMenu(Screen menu) {
+		if (menu != null) {
+			if (!(menu instanceof CustomGuiBase)) {
+				String identifier = menu.getClass().getName();
+				if ((identifier != null) && (customizableMenus != null)) {
+					List<PropertiesSection> l = new ArrayList<PropertiesSection>();
+					for (PropertiesSection sec : customizableMenus.getProperties()) {
+						if (!sec.getSectionType().equals(identifier)) {
+							l.add(sec);
+						}
+					}
+					customizableMenus = new PropertiesSet("customizablemenus");
+					for (PropertiesSection sec : l) {
+						customizableMenus.addProperties(sec);
+					}
+					syncCustomizeableMenusToFile();
+				}
+			}
+		}
+	}
+
+	public static boolean isMenuCustomizable(Screen menu) {
+		if (menu != null) {
+			if (menu instanceof CustomGuiBase) {
+				return true;
+			}
+			String identifier = menu.getClass().getName();
+			if ((identifier != null) && (customizableMenus != null)) {
+				List<PropertiesSection> s = customizableMenus.getPropertiesOfType(identifier);
+				if ((s != null) && !s.isEmpty()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	public static void reload() {
 		if (initDone) {
+			updateCustomizeableMenuCache();
 			//Resets itself automatically and can be used for both loading and reloading
 			MenuCustomizationProperties.loadProperties();
 		}
@@ -89,10 +162,13 @@ public class MenuCustomization {
 		if (screen == null) {
 			return false;
 		}
-		if (screen instanceof NotificationModUpdateScreen) {
-			return false;
-		}
-		if (screen instanceof RealmsScreenProxy) {
+//		if (screen instanceof NotificationModUpdateScreen) {
+//			return false;
+//		}
+//		if (screen instanceof RealmsScreenProxy) {
+//			return false;
+//		}
+		if (Minecraft.getInstance().currentScreen != screen) {
 			return false;
 		}
 		return true;
@@ -123,17 +199,18 @@ public class MenuCustomization {
 			SoundHandler.resetSound(s);
 		}
 	}
-	
-	//TODO übernehmen
+
 	public static boolean isSoundRegistered(String key) {
 		return sounds.contains(key);
 	}
-	
-	//TODO übernehmen
+
 	public static List<String> getSounds() {
 		return sounds;
 	}
 
+	/**
+	 * Will NOT return TRUE, when only values to stretch the object were used for width and/or height.
+	 */
 	public static boolean containsCalculations(PropertiesSet properties) {
 		for (PropertiesSection s : properties.getPropertiesOfType("customization")) {
 			String width = s.getEntryValue("width");
@@ -143,10 +220,14 @@ public class MenuCustomization {
 			String posX = s.getEntryValue("posX");
 			String posY = s.getEntryValue("posY");
 			if ((width != null) && !MathUtils.isInteger(width)) {
-				return true;
+				if (!width.equals("%guiwidth%")) {
+					return true;
+				}
 			}
 			if ((height != null) && !MathUtils.isInteger(height)) {
-				return true;
+				if (!height.equals("%guiheight%")) {
+					return true;
+				}
 			}
 			if ((x != null) && !MathUtils.isInteger(x)) {
 				return true;
@@ -192,143 +273,82 @@ public class MenuCustomization {
 		
 		//Replace mc version placeholder
 		s = s.replace("%mcversion%", mcversion);
+
+		//Replace mod version placeholder
+		s = replaceModVersionPlaceolder(s);
+
+		//Replace loaded mods placeholder
+		s = s.replace("%loadedmods%", "" + getLoadedMods());
+
+		//Replace total mods placeholder
+		s = s.replace("%totalmods%", "" + getTotalMods());
 		
 		return s;
 	}
 
-	public static void reloadExcludedMenus() {
+	private static String replaceModVersionPlaceolder(String in) {
 		try {
-			excludedmenus.clear();
-			
-			PropertiesSet s = PropertiesSerializer.getProperties(EXCLUDED_MENUS_FILE.getPath());
-			if (s == null) {
-				s = new PropertiesSet("excludedmenus");
-				PropertiesSection sec = new PropertiesSection("some.example.menu.identifier.to.exclude");
-				sec.addEntry("mode", "soft");
-				sec.addEntry("startswith", "false");
-				s.addProperties(sec);
-				PropertiesSerializer.writeProperties(s, EXCLUDED_MENUS_FILE.getPath());
-			}
-			
-			for (PropertiesSection ps : s.getProperties()) {
-				String excludefrom = ps.getEntryValue("mode");
-				if ((excludefrom != null) && (excludefrom.equalsIgnoreCase("full") || excludefrom.equalsIgnoreCase("soft"))) {
-					excludedmenus.put(ps.getSectionType(),  ps);
+			if (in.contains("%version:")) {
+				List<String> l = new ArrayList<String>();
+				int index = -1;
+				int i = 0;
+				while (i < in.length()) {
+					String s = "" + in.charAt(i);
+					if (s.equals("%")) {
+						if (index == -1) {
+							index = i;
+						} else {
+							String sub = in.substring(index, i+1);
+							if (sub.startsWith("%version:") && sub.endsWith("%")) {
+								l.add(sub);
+							}
+							index = -1;
+						}
+					}
+					i++;
+				}
+				for (String s : l) {
+					if (s.contains(":")) {
+						String blank = s.substring(1, s.length()-1);
+						String mod = blank.split(":", 2)[1];
+						if (ModList.get().isLoaded(mod)) {
+							Optional<? extends ModContainer> o = ModList.get().getModContainerById(mod);
+							if (o.isPresent()) {
+								ModContainer c = o.get();
+								String version = c.getModInfo().getVersion().toString();
+								in = in.replace(s, version);
+							}
+						}
+					}
 				}
 			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return in;
 	}
 
-	public static void addExcludedMenu(String menuIdentifier, ExcludeMode mode, boolean startsWith) {
-		reloadExcludedMenus();
-		
-		removeExcludedMenu(menuIdentifier);
-		
-		PropertiesSet s = new PropertiesSet("excludedmenus");
-		
-		for (PropertiesSection ps : excludedmenus.values()) {
-			s.addProperties(ps);
-		}
-		
-		PropertiesSection sec = new PropertiesSection(menuIdentifier);
-		sec.addEntry("mode", mode.getMode());
-		sec.addEntry("startswith", "" + startsWith);
-		s.addProperties(sec);
-		
-		excludedmenus.put(menuIdentifier, sec);
-		
-		PropertiesSerializer.writeProperties(s, EXCLUDED_MENUS_FILE.getPath());
-	}
-
-	public static void removeExcludedMenu(String menuIdentifier) {
-		reloadExcludedMenus();
-		
-		if (excludedmenus.containsKey(menuIdentifier)) {
-			excludedmenus.remove(menuIdentifier);
-			
-			PropertiesSet s = new PropertiesSet("excludedmenus");
-			
-			for (PropertiesSection ps : excludedmenus.values()) {
-				s.addProperties(ps);
-			}
-			
-			PropertiesSerializer.writeProperties(s, EXCLUDED_MENUS_FILE.getPath());
-		}
-	}
-
-	/**
-	 * Checks if the given menu identifier is in the list of excluded menus and returns the {@link PropertiesSection}
-	 * entry if it is excluded or NULL if no entry was found for this identifier.
-	 */
-	public static PropertiesSection getExcludedMenu(String menuIdentifier) {
-		for (PropertiesSection sec : excludedmenus.values()) {
-			String startswith = sec.getEntryValue("startswith");
-			if (startswith == null) {
-				startswith = "false";
-			}
-			if (startswith.equalsIgnoreCase("true")) {
-				if (menuIdentifier.toLowerCase().startsWith(sec.getSectionType().toLowerCase())) {
-					return sec;
-				}
-			} else {
-				if (menuIdentifier.equalsIgnoreCase(sec.getSectionType())) {
-					return sec;
+	private static int getTotalMods() {
+		File modDir = new File("mods");
+		if (modDir.exists()) {
+			int i = 0;
+			for (File f : modDir.listFiles()) {
+				if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
+					i++;
 				}
 			}
+			return i+2;
 		}
-		
-		return null;
+		return -1;
 	}
 
-	public static boolean isExcludedSoft(String menuIdentifier) {
-		PropertiesSection sec = getExcludedMenu(menuIdentifier);
-		
-		if (sec != null) {
-			String s = sec.getEntryValue("mode");
-			if ((s != null) && s.equalsIgnoreCase("soft")) {
-				return true;
-			}
+	private static int getLoadedMods() {
+		try {
+			return ModList.get().getMods().size();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		return false;
-	}
-
-	public static boolean isExcludedFull(String menuIdentifier) {
-		PropertiesSection sec = getExcludedMenu(menuIdentifier);
-		
-		if (sec != null) {
-			String s = sec.getEntryValue("mode");
-			if ((s != null) && s.equalsIgnoreCase("full")) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-
-	public static List<String> getExcludedMenus() {
-		List<String> l = new ArrayList<String>();
-		l.addAll(excludedmenus.keySet());
-		return l;
-	}
-
-	public static enum ExcludeMode {
-		
-		FULL("full"),
-		SOFT("soft");
-		
-		private String s;
-		
-		private ExcludeMode(String s) {
-			this.s = s;
-		}
-		
-		public String getMode() {
-			return this.s;
-		}
+		return -1;
 	}
 	
 }
