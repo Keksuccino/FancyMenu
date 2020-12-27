@@ -1,0 +1,216 @@
+general.width = Breite
+general.height = Höhe
+general.on = An
+general.off = Aus
+
+loading.animation.loadingframes = Lade Animationsframes für {}
+loading.animation.prerendering = Pre-rendering Animation {}
+loading.animation.done = Fertig!
+
+popup.done = Fertig
+
+popup.yesno.confirm = Bestätigen
+popup.yesno.cancel = Abbrechen
+
+popup.notification.accept = Bestätigen
+
+helper.button.menuinfo = Menü Info
+helper.button.buttoninfo = Button Info
+helper.button.reload = Neuladen
+helper.button.createlayout = Layout erstellen
+
+helper.menuinfo.identifier = Menü Identifier
+
+helper.buttoninfo.idnotfound = <ID nicht gefunden>
+helper.buttoninfo.keynotfound = <Button hat keinen Key>
+helper.buttoninfo
+helper.buttoninfo.id = ID
+helper.buttoninfo.key = Key
+helper.buttoninfo.labelwidth = Label Breite
+
+helper.creator.menu.add = Neu
+helper.creator.menu.audio = Audio
+helper.creator.menu.hidden = Verst.
+helper.creator.menu.save = Sichern
+helper.creator.menu.close = Ende
+
+helper.creator.messages.sure = Bist du sicher?
+helper.creator.empty = LEER
+
+helper.creator.layoutempty.title = Layout ist leer!
+helper.creator.layoutempty.desc = Dein Layout hat keinen Inhalt.%n%%n%Verleih ihm erst deinen persönlichen Charme, bevor du es speicherst!
+
+helper.creator.audioalreadyloaded.title = Audio bereits geladen!
+helper.creator.audioalreadyloaded.desc = Diese Audiodatei ist bereits Teil des Layouts!%n%%n%Du kannst nicht mehrmals die selbe Audiodatei hinzufügen.
+
+helper.creator.invalidaudio.title = Ungültige Audiodatei!
+helper.creator.invalidaudio.desc = Die Audiodatei, die du hinzufügen möchtest,%n%existiert nicht oder hat einen nicht unterstützten Dateityp.%n%%n%Bitte überprüfe, ob die Datei an dem festgelegten Pfad%n%existiert und den WAV-Dateityp besitzt!
+
+helper.creator.invalidimage.title = Ungültige Bilddatei!
+helper.creator.invalidimage.desc = Die Bilddatei, die du hinzufügen möchtest,%n%existiert nicht oder hat einen nicht unterstützten Dateityp.%n%%n%Unterstützte Dateitypen sind JPG/JPEG und PNG.
+
+helper.creator.imagenotfound.title = Bild nicht gefunden!
+helper.creator.imagenotfound.desc = Das Bild, das du hinzufügen möchtest, existiert nicht bei dem angegebenen Pfad.
+
+helper.creator.animationnotfound.title = Animation nicht gefunden!
+helper.creator.animationnotfound.desc = Die Animation, die du hinzufügen möchtest, existiert nicht.%n%%n%Eventuell hast du vergessen, alle notwendigen Werte in ihre Properties einzutragen?%n%%n%Bitte bedenke, dass du dein Spiel neustarten musst,%n%nachdem du eine neue Animation erstellt hast.
+
+helper.creator.texttooshort.title = Text zu kurz!
+helper.creator.texttooshort.desc = Dein Text braucht mindestens einen Buchstaben, um ein Text zu sein!%n%Sonst..wäre er...nichts.%n%%n%Niemand will ein Nichts sein, also tu' das deinem Text nicht an!
+
+helper.creator.cannotdelete.title = Objekt kann nicht gelöscht werden!
+helper.creator.cannotdelete.desc = Tut mir leid, aber dieses Objekt kannst du nicht löschen.%n%%n%Du wirst wohl irgendwie lernen müssen, mit ihm zu leben..
+
+helper.creator.savefile = Möchtest du dein Layout jetzt als Customization-Datei speichern?
+helper.creator.savefile.keep = Speichern und andere Layouts aktiv lassen
+helper.creator.savefile.disable = Speichern und Andere deaktivieren
+helper.creator.savefile.cancel = Abbrechen
+
+helper.creator.layoutoptions.renderorder = Renderordnung
+helper.creator.layoutoptions.renderorder.background = Hintergrund
+helper.creator.layoutoptions.renderorder.foreground = Vordergrund
+
+helper.creator.layoutoptions.version.mc = Minecraft Version
+helper.creator.layoutoptions.version.fm = FancyMenu Version
+helper.creator.layoutoptions.version.minimum = Niedrigste
+helper.creator.layoutoptions.version.minimum.mc = Minimale Minecraft Version
+helper.creator.layoutoptions.version.minimum.fm = Minimale FancyMenu Version
+helper.creator.layoutoptions.version.maximum = Höchste
+helper.creator.layoutoptions.version.maximum.mc = Maximale Minecraft Version
+helper.creator.layoutoptions.version.maximum.fm = Maximale FancyMenu Version
+
+helper.creator.layoutoptions.resetbackground = Hintergrund löschen
+
+helper.creator.layoutoptions.requiredmods = Benötigte Mods
+helper.creator.layoutoptions.requiredmods.desc = Benötigte Mods [Modid, durch Kommas getrennt]
+
+helper.creator.close = Möchtest du den Layout Creator wirklich schließen?
+
+helper.creator.audio.delete = Löschen
+helper.creator.audio.delete.msg = Möchtest du dieses Audio wirklich löschen?
+helper.creator.audio.enableloop = Loop An
+helper.creator.audio.disableloop = Loop Aus
+
+helper.creator.add.image = Bild
+helper.creator.add.image.path = Bildpfad
+
+helper.creator.add.animation = Animation
+helper.creator.add.animation.entername = Namen eintragen
+helper.creator.add.animation.entername.title = Animationsname
+
+helper.creator.add.text = Text
+helper.creator.add.text.newtext = Neuer Text
+
+helper.creator.add.button = Button
+helper.creator.add.button.label = Button Label
+
+helper.creator.add.audio = Audio
+
+helper.creator.vanillabutton.autoclick = Button klicken
+helper.creator.vanillabutton.autoclick.popup = Automatische Button Klicks
+
+helper.creator.backgroundoptions = Hintergrundoptionen
+helper.creator.backgroundoptions.backgroundanimation = Hintergrundanimationen
+helper.creator.backgroundoptions.backgroundimage = Hintergrundbild
+helper.creator.backgroundoptions.chooseimage = Bild wählen
+helper.creator.backgroundoptions.random = Zufällig
+helper.creator.backgroundoptions.notrandom = Nicht Zufällig
+helper.creator.backgroundoptions.addanimation = Hinzufügen
+helper.creator.backgroundoptions.removeanimation = Entfernen
+helper.creator.backgroundoptions.animations = Animationen
+helper.creator.backgroundoptions.randomizeanimations = Zufällige Animationen
+
+helper.creator.custombutton.config = Buttonaktion
+helper.creator.custombutton.config.actionvalue = Inhalt der Aktion [{}]
+helper.creator.custombutton.config.actiontype = Aktionstyp
+helper.creator.custombutton.config.actiontype.sendmessage.desc = Sende eine Chatnachricht oder einen Befehl.
+helper.creator.custombutton.config.actiontype.sendmessage.desc.value = Nachricht/Befehl
+helper.creator.custombutton.config.actiontype.openlink.desc = Öffne einen Link in deinem Standardbrowser.
+helper.creator.custombutton.config.actiontype.openlink.desc.value = Link
+helper.creator.custombutton.config.actiontype.quitgame.desc = Minecraft beenden.
+helper.creator.custombutton.config.actiontype.joinserver.desc = Betrete einen Minecraftserver.
+helper.creator.custombutton.config.actiontype.joinserver.desc.value = Server IP
+helper.creator.custombutton.config.actiontype.loadworld.desc = Lade eine Minecraftwelt.
+helper.creator.custombutton.config.actiontype.loadworld.desc.value = Name des Weltordners
+helper.creator.custombutton.config.actiontype.openfile.desc = Öffne eine Datei oder einen Ordner.
+helper.creator.custombutton.config.actiontype.openfile.desc.value = Pfad
+helper.creator.custombutton.config.actiontype.prevbackground.desc = Zur vorherigen Hintergrundanimation wechseln.
+helper.creator.custombutton.config.actiontype.nextbackground.desc = Zur nächsten Hintergrundanimation wechseln.
+
+helper.creator.custombutton.config.texture = Button Textur
+helper.creator.custombutton.config.texture.normal = Normal
+helper.creator.custombutton.config.texture.hovered = Hovered
+helper.creator.custombutton.config.texture.reset = Zurücksetzen
+
+helper.creator.items.setorientation = Orientierung
+helper.creator.items.delete = Löschen
+helper.creator.items.border.posx = posX
+helper.creator.items.border.posy = posY
+helper.creator.items.border.orientation = orientierung
+helper.creator.items.border.width = breite
+helper.creator.items.border.height = höhe
+
+helper.creator.items.button.editlabel = Label bearbeiten
+
+helper.creator.items.vanillabutton.resetorientation = Orientierung löschen
+helper.creator.items.vanillabutton.hide = Button verstecken
+
+helper.creator.items.vanillabutton.noorientation.title = Besondere Pflege notwendig!
+helper.creator.items.vanillabutton.noorientation.desc = §oStandard Buttons müssen erst etwas verwöhnt werden, bevor sie auf dich hören.%n%%n%%n%Um §lGröße oder Position §rzu ändern, musst du ihnen eine §lOrientierung §rzuweisen!%n%%n%Das kannst du tun, indem du einen §lRechtsklick §rauf den Button machst.
+
+helper.creator.items.string.setscale = Schriftgröße
+helper.creator.items.string.setcentered = Zentrieren
+helper.creator.items.string.setuncentered = Nicht zentrieren
+helper.creator.items.string.setshadow = Schatten
+helper.creator.items.string.setnoshadow = Kein Schatten
+helper.creator.items.string.edit = Text bearbeiten
+helper.creator.items.string.border.centered = zentriert
+helper.creator.items.string.border.scale = größe
+
+helper.creator.items.string.scale.invalidvalue.title = Ungültiger Wert!
+helper.creator.items.string.scale.invalidvalue.desc = Der Wert, den du setzen möchtest, ist keine gültige Schriftgröße!%n%%n%Beispiele für Schriftgrößen: 1.0, 2.0, 0.5
+
+helper.creator.deleteobject = Möchtest du dieses Objekt wirklich §lLÖSCHEN§r?%n%%n%§lDiese Aktion kann nicht rückgängig gemacht werden!
+
+helper.creator.choosefile.enterorchoose = §lDateipfad festlegen oder Datei wählen
+helper.creator.choosefile.choose = Datei wählen
+helper.creator.choosefile.notsupported = §cDateisuche deaktiviert oder nicht unterstützt! Bitte Pfad manuell festlegen.
+
+helper.creator.webstring.multiline = Mehrzeilig
+helper.creator.webstring.nomultiline = Nicht Mehrzeilig
+
+helper.creator.web.invalidurl = §c§lUngültige URL!%n%%n%Diese URL ist entweder keine gültige URL oder existiert nicht!
+helper.creator.web.enterurl = URL eingeben
+
+helper.creator.add.webimage = Web Bild
+helper.creator.add.webtext = Web Text
+
+helper.creator.editlayout = Layout editieren
+helper.creator.editlayout.popup.loadall = Alle laden
+helper.creator.editlayout.popup.loadselected = Ausgewähltes laden
+helper.creator.editlayout.popup.layouts = Layouts
+helper.creator.editlayout.popup.cancel = Abbrechen
+helper.creator.editlayout.popup.actionscount = {} Anpassungsaktionen
+helper.creator.editlayout.nolayouts.msg = §c§lKeine Layouts gefunden!%n%%n%%n%Für dieses Menü gibt es noch keine Layouts!%n%%n%Möchtest du dieses Menu anpassen, nutze bitte den "Layout erstellen" Button!
+helper.creator.editlayout.popup.msg = Es existiert mehr als ein Layout für dieses Menü!%n%%n%Möchtest du das komplette Layout laden und alle kombinieren%n%oder nur ein ganz Bestimmtes?%n%%n%§cVariablen aus Meta-Sektionen von Layouts gehen beim Kombinieren verloren!
+
+helper.creator.editlayout.single.override = Bestehendes Layout überschreiben
+helper.creator.editlayout.single.asnew.keep = Als Neues speichern und andere aktiv lassen
+helper.creator.editlayout.single.asnew.disable = Als Neues speichern und andere deaktivieren
+
+helper.creator.items.button.hoverlabel = Hoverlabel
+helper.creator.items.button.hoverlabel.text = Hoverlabel Text
+helper.creator.items.button.hoverlabel.reset = Hoverlabel resetten
+helper.creator.items.button.hoversound = Hoversound
+helper.creator.items.button.hoversound.path = Hoversound Pfad
+helper.creator.items.button.hoversound.reset = Hoversound resetten
+
+helper.creator.editlayout.unsupportedvalues = §c§lNicht unterstützte Werte!%n%%n%%n%Dein Layout beinhaltet nicht unterstützte Werte!%n%Diese Werte kann der Layout Creator nicht verarbeiten.%n%%n%Du nutzt vermutlich §lPositions- oder Größenberechnungen%n%in einer deiner Anpassungs-Sektionen.%n%%n%Bitte ändere diese Werte manuell zu Absoluten und versuche es erneut.
+
+helper.creator.backgroundoptions.setpanorama = Panoramabild?
+helper.creator.backgroundoptions.panorama = Panorama
+helper.creator.backgroundoptions.nopanorama = Kein Panorama
+
+helper.creator.textures.invalidcharacters = §c§lNicht unterstützte Zeichen!%n%%n%%n%Der Dateiname deines Bildes enthält nicht unterstützte Zeichen!%n%%n%Bitte nutze nur die Zeichen "a-z", "0-9", ".", "_" und "-".%n%Leerzeichen, Großbuchstaben und sonstige spezielle Zeichen sind nicht erlaubt.
+
+

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "de.keksuccino.fancymenu.menu.fancy.loadingdarkmode.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [
+    "MixinMinecraftClient"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "fancymenu.mixins.loadingdarkmode-refmap.json"
+}

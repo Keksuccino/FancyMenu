@@ -1,0 +1,186 @@
+general.width = Ширина
+general.height = Высота
+general.on = Вкл
+general.off = Выкл
+
+loading.animation.loadingframes = Загрузка анимационных кадров для {}
+loading.animation.prerendering = Предварительная визуализация анимации {}
+loading.animation.done = Готово!
+
+popup.done = Done
+
+popup.yesno.confirm = Подтвердить
+popup.yesno.cancel = Отменить
+
+popup.notification.accept = Принять
+
+helper.button.menuinfo = Детали меню
+helper.button.buttoninfo = Детали кнопок
+helper.button.reload = Обновить
+helper.button.createlayout = Создание Макета
+
+helper.menuinfo.identifier = Идентификаторы Меню
+
+helper.buttoninfo.idnotfound = <id not found>
+helper.buttoninfo.keynotfound = <button has no key>
+helper.buttoninfo
+helper.buttoninfo.id = ID
+helper.buttoninfo.key = Key
+helper.buttoninfo.labelwidth = Ширина названия
+
+helper.creator.menu.add = Добавить
+helper.creator.menu.audio = Аудио
+helper.creator.menu.hidden = Скрыть
+helper.creator.menu.save = Сохранить
+helper.creator.menu.close = Закрыть
+
+helper.creator.messages.sure = - А ты уверен?
+helper.creator.empty = ПУСТО
+
+helper.creator.layoutempty.title = Макет пуст!
+helper.creator.layoutempty.desc = В вашем макете нет никакого контента.%n%%n%сначала сделайте немного магии настройки, прежде чем сохранить его!
+
+helper.creator.audioalreadyloaded.title = Аудио уже загружено!
+helper.creator.audioalreadyloaded.desc = Аудио, которое вы хотите добавить, уже является частью этого макета!%n%%n%вы не можете добавить один и тот же звук несколько раз.
+
+helper.creator.invalidaudio.title = Неверный аудио файл!
+helper.creator.invalidaudio.desc = Файл, который вы хотите загрузить, не существует или имеет неподдерживаемый тип файла.%n%%n%пожалуйста, проверьте свой путь к файлу и убедитесь, что ваш файл является действительным аудиофайлом WAV!
+
+helper.creator.invalidimage.title = Неверный файл изображения!
+helper.creator.invalidimage.desc = Изображение, которое вы хотите загрузить, не существует или имеет неподдерживаемый тип файла.%n%%n % поддерживаемые типы файлов: JPG/JPEG и PNG.
+
+helper.creator.imagenotfound.title = Изображение не найдено!
+helper.creator.imagenotfound.desc = Изображение, которое вы хотите добавить, не существует%n%в указанном месте.
+
+helper.creator.animationnotfound.title = Анимация не найдена!
+helper.creator.animationnotfound.desc = Анимация, которую вы хотите добавить, не существует.%n%%n%может быть, вы забыли добавить все обязательные переменные в его свойства?%n%%n%всегда помните, что вы должны перезапустить свою игру%n%после добавления новой анимации в папку animations.
+
+helper.creator.texttooshort.title = Текст слишком короткий!
+helper.creator.texttooshort.desc = Ваш текст должен иметь хотя бы один символ, чтобы быть текстом!%n%в противном случае...это ... было бы ничем.%n%%n%никто не хочет быть никем, так что не делайте этого с вашим текстом!
+
+helper.creator.cannotdelete.title = Объект не может быть удален!
+helper.creator.cannotdelete.desc = Извините, но вы не можете удалить этот объект.%n%%n%вам нужно будет научиться жить с этим..
+
+helper.creator.savefile = Вы хотите сохранить свой макет в файле настройки?
+helper.creator.savefile.keep = Сохранение данного макета и сохранение других макетов включено
+helper.creator.savefile.disable = Сохранение и отключение других макетов
+helper.creator.savefile.cancel = Отмена
+
+helper.creator.layoutoptions.renderorder = Порядок рендеринга
+helper.creator.layoutoptions.renderorder.background = Задний фон
+helper.creator.layoutoptions.renderorder.foreground = Передний фон
+
+helper.creator.layoutoptions.version.mc = Minecraft Version
+helper.creator.layoutoptions.version.fm = FancyMenu Version
+helper.creator.layoutoptions.version.minimum = Set Minimum
+helper.creator.layoutoptions.version.minimum.mc = Minimum Minecraft Version
+helper.creator.layoutoptions.version.minimum.fm = Minimum FancyMenu Version
+helper.creator.layoutoptions.version.maximum = Set Maximum
+helper.creator.layoutoptions.version.maximum.mc = Maximum Minecraft Version
+helper.creator.layoutoptions.version.maximum.fm = Maximum FancyMenu Version
+
+helper.creator.layoutoptions.resetbackground = Обновить фон
+
+helper.creator.layoutoptions.requiredmods = Обязательные Моды
+helper.creator.layoutoptions.requiredmods.desc = Обязательные Моды [мод, должны быть разделены запятыми]
+
+helper.creator.close = Вы действительно хотите закрыть редактирование макета?
+
+helper.creator.audio.delete = Удалить
+helper.creator.audio.delete.msg = Вы действительно хотите удалить это аудио?
+helper.creator.audio.enableloop = Включить Цикл
+helper.creator.audio.disableloop = Отключить Цикл
+
+helper.creator.add.image = Изображение
+helper.creator.add.image.path = Путь К Изображению
+
+helper.creator.add.animation = Анимация
+helper.creator.add.animation.entername = Название Анимации 
+helper.creator.add.animation.entername.title = Название анимации
+
+helper.creator.add.text = Текст
+helper.creator.add.text.newtext = Новый текст
+
+helper.creator.add.button = Кнопка
+helper.creator.add.button.label = Название кнопки
+
+helper.creator.add.audio = Звук/музыка
+
+helper.creator.vanillabutton.autoclick = Автоклик
+helper.creator.vanillabutton.autoclick.popup = Автоматические Щелчки Кнопок
+
+helper.creator.backgroundoptions = Параметры Фона
+helper.creator.backgroundoptions.backgroundanimation = Фоновая Анимация
+helper.creator.backgroundoptions.backgroundimage = фоновое изображение
+helper.creator.backgroundoptions.chooseimage = выбранное изображение
+helper.creator.backgroundoptions.random = Случайно
+helper.creator.backgroundoptions.notrandom = не случайный
+helper.creator.backgroundoptions.addanimation = Добавить
+helper.creator.backgroundoptions.removeanimation = Удалить
+helper.creator.backgroundoptions.animations = Анимации
+helper.creator.backgroundoptions.randomizeanimations = Случайные Анимации
+
+helper.creator.custombutton.config = Действие Кнопки
+helper.creator.custombutton.config.actionvalue = Значение Действия [{}]
+helper.creator.custombutton.config.actiontype = тип действия
+helper.creator.custombutton.config.actiontype.sendmessage.desc = Отправьте сообщение чата или команду.
+helper.creator.custombutton.config.actiontype.sendmessage.desc.value = Сообщение / Команда
+helper.creator.custombutton.config.actiontype.openlink.desc = Ссылка для открытия страницы в браузере
+helper.creator.custombutton.config.actiontype.openlink.desc.value = Ссылка
+helper.creator.custombutton.config.actiontype.quitgame.desc = Выход из игры
+helper.creator.custombutton.config.actiontype.joinserver.desc = Присоедениться к серверу Minecraft
+helper.creator.custombutton.config.actiontype.joinserver.desc.value = Server IP
+helper.creator.custombutton.config.actiontype.loadworld.desc = Загрузите мир Майнкрафт.
+helper.creator.custombutton.config.actiontype.loadworld.desc.value = Имя папки с миром
+helper.creator.custombutton.config.actiontype.openfile.desc = Откройте файл или папку.
+helper.creator.custombutton.config.actiontype.openfile.desc.value = Путь
+helper.creator.custombutton.config.actiontype.prevbackground.desc = Переключитесь на предыдущий фон меню.
+helper.creator.custombutton.config.actiontype.nextbackground.desc = Переключение на следующий фон меню
+
+helper.creator.custombutton.config.texture = Текстура Кнопок
+helper.creator.custombutton.config.texture.normal = В обычном состоянии
+helper.creator.custombutton.config.texture.hovered = При наведении 
+helper.creator.custombutton.config.texture.reset = Обновить Текстуры
+
+helper.creator.items.setorientation = Установить ориентацию
+helper.creator.items.delete = Удалить
+helper.creator.items.border.posx = posX
+helper.creator.items.border.posy = posY
+helper.creator.items.border.orientation = Ориентация
+helper.creator.items.border.width = Ширина
+helper.creator.items.border.height = высота
+
+helper.creator.items.button.editlabel = Редактировать название
+
+helper.creator.items.vanillabutton.resetorientation = Сброс Ориентации
+helper.creator.items.vanillabutton.hide = Скрыть кнопку
+
+helper.creator.items.vanillabutton.noorientation.title = Требуется особый уход!
+helper.creator.items.vanillabutton.noorientation.desc = §oСтандартные кнопки нужно немного погладить по голове, прежде чем они вас послушают.%n%%n%%n%Что-бы §lизменить размер или переместить, Сделайте: §lщелчок правой кнопкой мыши по §rкнопке
+
+helper.creator.items.string.setscale = Установить Масштаб
+helper.creator.items.string.setcentered = Установить По Центру
+helper.creator.items.string.setuncentered = Установить не по центру
+helper.creator.items.string.setshadow = Установить тень
+helper.creator.items.string.setnoshadow = Убрать тень
+helper.creator.items.string.edit = Редактировать Контент
+helper.creator.items.string.border.centered = Центр
+helper.creator.items.string.border.scale = масштаб
+
+helper.creator.items.string.scale.invalidvalue.title = Неверное Значение!
+helper.creator.items.string.scale.invalidvalue.desc = Значение, которое вы хотите установить, не является допустимым значением шкалы!%n%%n%Примеры значений шкалы: 1.0, 2.0, 0.5
+
+helper.creator.deleteobject = Вы действительно хотите §lУДАЛИТЬ объект? %n%%n%§lЭто действие не может быть отменено!
+
+helper.creator.choosefile.enterorchoose = §lEnter Path Or Choose File
+helper.creator.choosefile.choose = Choose File
+helper.creator.choosefile.notsupported = §cFile chooser not supported or disabled! Please manually enter the path.
+
+helper.creator.webstring.multiline = Set Multilined
+helper.creator.webstring.nomultiline = Set Not Multilined
+
+helper.creator.web.invalidurl = §c§lInvalid URL!%n%%n%This URL is not a valid URL or does not exists!
+helper.creator.web.enterurl = Enter URL
+
+helper.creator.add.webimage = Web Image
+helper.creator.add.webtext = Web Text
