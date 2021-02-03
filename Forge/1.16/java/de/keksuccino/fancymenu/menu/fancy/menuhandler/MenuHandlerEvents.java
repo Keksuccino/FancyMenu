@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
+import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
@@ -11,6 +12,8 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class MenuHandlerEvents {
+
+	private MenuHandlerBase current;
 	
 	@SubscribeEvent
 	public void onOpenGui(GuiOpenEvent e) {
@@ -19,13 +22,15 @@ public class MenuHandlerEvents {
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+		
 		//Second try to register the menu handler, if onOpenGui failed because of changing the menu by another mod
 		this.initHandler(e.getGui());
+		
 	}
 
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
-		
+
 		//Resetting scale to the normal value when no GUI is active
 		if ((MenuHandlerBase.scaleChangedIn != null) && (Minecraft.getInstance().currentScreen == null)) {
 			MenuHandlerBase.scaleChangedIn = null;
@@ -33,6 +38,23 @@ public class MenuHandlerEvents {
 			MainWindow m = Minecraft.getInstance().getMainWindow();
 			m.setGuiScale((double)mcscale);
 		}
+
+		//Resetting last active menu handler when no GUI is displayed
+		if (Minecraft.getInstance().currentScreen == null) {
+			MenuHandlerRegistry.setActiveHandler(null);
+		}
+
+		//Play menu close audio on menu close/switch
+		if (this.current != MenuHandlerRegistry.getLastActiveHandler()) {
+			if (this.current != null) {
+				String audio = this.current.closeAudio;
+				if (audio != null) {
+					SoundHandler.resetSound(audio);
+					SoundHandler.playSound(audio);
+				}
+			}
+		}
+		this.current = MenuHandlerRegistry.getLastActiveHandler();
 		
 	}
 	

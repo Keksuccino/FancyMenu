@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -34,6 +34,7 @@ public class LayoutVanillaButton extends LayoutObject implements ILayoutButton {
 	public double hideforsec = 0;
 	public boolean delayonlyfirsttime = false;
 	public String clicksound = null;
+	public String description = null;
 	
 	public LayoutVanillaButton(ButtonData button, LayoutCreatorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(button.label, button.width, button.height, button.x, button.y), false, handler);
@@ -43,6 +44,8 @@ public class LayoutVanillaButton extends LayoutObject implements ILayoutButton {
 
 	@Override
 	public void init() {
+		this.orderable = false;
+		
 		super.init();
 		
 		AdvancedButton b0 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.vanillabutton.resetorientation"), (press) -> {
@@ -84,7 +87,7 @@ public class LayoutVanillaButton extends LayoutObject implements ILayoutButton {
 		this.rightclickMenu.addContent(b3);
 		LayoutCreatorScreen.colorizeCreatorButton(b3);
 		
-		PopupMenu texturePopup = new PopupMenu(100, 16, -1);
+		ContextMenu texturePopup = new ContextMenu(100, 16, -1);
 		this.rightclickMenu.addChild(texturePopup);
 		
 		AdvancedButton tpop1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.normal"), (press) -> {
@@ -347,6 +350,31 @@ public class LayoutVanillaButton extends LayoutObject implements ILayoutButton {
 		this.rightclickMenu.addContent(b10);
 		LayoutCreatorScreen.colorizeCreatorButton(b10);
 		
+		AdvancedButton b13 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
+			this.handler.setMenusUseable(false);
+			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
+				if (call != null) {
+					if ((this.description == null) || (call == null) || !this.description.equals(call)) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					this.description = call;
+					if (call.equals("")) {
+						this.description = null;
+					}
+					this.handler.setVanillaDescription(this, this.description);
+				}
+				this.handler.setMenusUseable(true);
+			});
+			
+			if (this.description != null) {
+				in.setText(this.description);
+			}
+			PopupHandler.displayPopup(in);
+		});
+		b13.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.button.btndescription.desc"), "%n%"));
+		this.rightclickMenu.addContent(b13);
+		LayoutCreatorScreen.colorizeCreatorButton(b13);
+		
 	}
 	
 	@Override
@@ -479,6 +507,14 @@ public class LayoutVanillaButton extends LayoutObject implements ILayoutButton {
 			s.addEntry("action", "setbuttonclicksound");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
 			s.addEntry("path", this.clicksound);
+			l.add(s);
+		}
+		//setbuttondescription
+		if (this.description != null) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "setbuttondescription");
+			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			s.addEntry("description", this.description);
 			l.add(s);
 		}
 		

@@ -21,11 +21,11 @@ public class EditHistory {
 	
 	private static final ResourceLocation BACK = new ResourceLocation("keksuccino", "arrow_left.png");
 	private static final ResourceLocation FORWARD = new ResourceLocation("keksuccino", "arrow_right.png");
-	
-	//TODO übernehmen (procected)
+
 	protected LayoutCreatorScreen editor;
 	private List<Snapshot> history = new ArrayList<Snapshot>();
 	private int current = -1;
+	private boolean preventSnapshotSaving = false;
 	
 	private AdvancedButton backBtn;
 	private AdvancedButton forwardBtn;
@@ -33,14 +33,12 @@ public class EditHistory {
 	public EditHistory(LayoutCreatorScreen editor) {
 		
 		this.editor = editor;
-		
-		//TODO übernehmen
+
 		this.backBtn = new AdvancedImageButton(10, 10, 19, 19, BACK, true, (press) -> {
 			this.stepBack();
 		});
 		LayoutCreatorScreen.colorizeCreatorButton(this.backBtn);
-		
-		//TODO übernehmen
+
 		this.forwardBtn = new AdvancedImageButton(35, 10, 19, 19, FORWARD, true, (press) -> {
 			this.stepForward();
 		});
@@ -51,24 +49,26 @@ public class EditHistory {
 	}
 	
 	public void saveSnapshot(Snapshot snap) {
-		if (this.current < 0) {
-			this.history.clear();
-			this.history.add(snap);
-			this.current = 0;
-		} else {
-			if (this.current <= this.history.size()-1) {
-				List<Snapshot> l = new ArrayList<Snapshot>();
-				int i = 0;
-				while (i <= this.current) {
-					l.add(this.history.get(i));
-					i++;
-				}
-				l.add(snap);
-				this.history = l;
-				this.current = this.history.size()-1;
+		if (!this.preventSnapshotSaving) {
+			if (this.current < 0) {
+				this.history.clear();
+				this.history.add(snap);
+				this.current = 0;
 			} else {
-				this.current = this.history.size()-1;
-				this.saveSnapshot(snap);
+				if (this.current <= this.history.size()-1) {
+					List<Snapshot> l = new ArrayList<Snapshot>();
+					int i = 0;
+					while (i <= this.current) {
+						l.add(this.history.get(i));
+						i++;
+					}
+					l.add(snap);
+					this.history = l;
+					this.current = this.history.size()-1;
+				} else {
+					this.current = this.history.size()-1;
+					this.saveSnapshot(snap);
+				}
 			}
 		}
 	}
@@ -79,6 +79,10 @@ public class EditHistory {
 	
 	public Snapshot createSnapshot() {
 		return new Snapshot(editor, null);
+	}
+
+	public void setPreventSnapshotSaving(boolean b) {
+		this.preventSnapshotSaving = b;
 	}
 	
 	public void stepBack() {
@@ -141,8 +145,7 @@ public class EditHistory {
 
 		}
 	}
-	
-	//TODO übernehmen
+
 	public void render(MatrixStack matrix) {
 		if (this.editor.expanded && (this.editor.addObjectButton != null)) {
 			int mouseX = MouseInput.getMouseX();
@@ -163,7 +166,6 @@ public class EditHistory {
 	}
 	
 	private void onCtrlAltZCtrlAltY(KeyboardData d) {
-		//TODO übernehmen (editor.history == this)
 		if (KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed() && (this.editor == Minecraft.getInstance().currentScreen) && (this.editor.history == this)) {
 			if (d.keycode == 89) {
 				this.stepBack();

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundExcept
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
 
+@SuppressWarnings("deprecation")
 public class AdvancedAnimation implements IAnimationRenderer {
 	
 	private IAnimationRenderer introRenderer;

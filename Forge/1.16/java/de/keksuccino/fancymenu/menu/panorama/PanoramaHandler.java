@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.panorama;
 
 import java.io.File;

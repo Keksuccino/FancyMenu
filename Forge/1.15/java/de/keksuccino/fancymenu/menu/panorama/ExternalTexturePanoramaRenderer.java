@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
@@ -26,6 +27,9 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 	private String dir;
 	private boolean prepared = false;
 	private List<ExternalTextureResourceLocation> pano = new ArrayList<ExternalTextureResourceLocation>();
+	private float speed = 1.0F;
+	private double fov = 85.0D;
+	private float angle = 25.0F;
 	
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -48,6 +52,18 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 						System.out.println("############## ERROR [FANCYMENU] ##############");
 						System.out.println("Missing 'name' value in properties file for panorama cube: " + this.dir);
 						System.out.println("###############################################");
+					}
+					String sp = l.get(0).getEntryValue("speed");
+					if ((sp != null) && MathUtils.isFloat(sp)) {
+						this.speed = Float.parseFloat(sp);
+					}
+					String fo = l.get(0).getEntryValue("fov");
+					if ((fo != null) && MathUtils.isDouble(fo)) {
+						this.fov = Double.parseDouble(fo);
+					}
+					String an = l.get(0).getEntryValue("angle");
+					if ((an != null) && MathUtils.isFloat(an)) {
+						this.angle = Float.parseFloat(an);
 					}
 				} else {
 					System.out.println("############## ERROR [FANCYMENU] ##############");
@@ -101,15 +117,20 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 			
 		}
 	}
+	
+	public void render() {
+		
+		this.renderRaw(1.0F);
+		
+	}
 
 	@SuppressWarnings("deprecation")
-	public void render() {
+	protected void renderRaw(float panoramaAlpha) {
 		if (this.prepared) {
-			this.time += Minecraft.getInstance().getRenderPartialTicks();
-			
-			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + 25.0F;
+			this.time += Minecraft.getInstance().getRenderPartialTicks() * this.speed;
+
+			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;
-			float alpha = 1.0F;
 			Minecraft mc = Minecraft.getInstance();
 			Tessellator tessellator = Tessellator.getInstance();
 			BufferBuilder bufferbuilder = tessellator.getBuffer();
@@ -117,7 +138,7 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 			RenderSystem.matrixMode(5889);
 			RenderSystem.pushMatrix();
 			RenderSystem.loadIdentity();
-			RenderSystem.multMatrix(Matrix4f.perspective(85.0D, (float)mc.getMainWindow().getFramebufferWidth() / (float)mc.getMainWindow().getFramebufferHeight(), 0.05F, 10.0F));
+			RenderSystem.multMatrix(Matrix4f.perspective(this.fov, (float)mc.getMainWindow().getFramebufferWidth() / (float)mc.getMainWindow().getFramebufferHeight(), 0.05F, 10.0F));
 			RenderSystem.matrixMode(5888);
 			RenderSystem.pushMatrix();
 			RenderSystem.loadIdentity();
@@ -145,7 +166,7 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 						}
 						mc.getTextureManager().bindTexture(r.getResourceLocation());
 						bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-						int l = Math.round(255.0F * alpha) / (j + 1);
+						int l = Math.round(255.0F * panoramaAlpha) / (j + 1);
 						if (k == 0) {
 							bufferbuilder.pos(-1.0D, -1.0D, 1.0D).tex(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
 							bufferbuilder.pos(-1.0D, 1.0D, 1.0D).tex(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
@@ -212,12 +233,29 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 				Minecraft.getInstance().getTextureManager().bindTexture(this.overlay_texture.getResourceLocation());
 				blit(0, 0, 0.0F, 0.0F, Minecraft.getInstance().currentScreen.width, Minecraft.getInstance().currentScreen.height, Minecraft.getInstance().currentScreen.width, Minecraft.getInstance().currentScreen.height);
 			}
-			
 		}
 	}
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public void setSpeed(float speed) {
+		if (speed < 0.0F) {
+			speed = 0.0F;
+		}
+		this.speed = speed;
+	}
+
+	public void setFov(double fov) {
+		if (fov > 179.0D) {
+			fov = 179.0D;
+		}
+		this.fov = fov;
+	}
+
+	public void setAngle(float angle) {
+		this.angle = angle;
 	}
 
 }

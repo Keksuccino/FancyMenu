@@ -17,6 +17,7 @@ public class MenuCustomizationEvents {
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
 	private boolean scaleChecked = false;
+	private boolean resumeWorldMusic = false;
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -30,8 +31,15 @@ public class MenuCustomizationEvents {
 		}
 		
 		//Stopping menu music when deactivated in config
-		if ((MinecraftClient.getInstance().world == null) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
-			MinecraftClient.getInstance().getMusicTracker().stop();
+		if ((MinecraftClient.getInstance().world == null)) {
+			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+				MinecraftClient.getInstance().getMusicTracker().stop();
+			}
+		} else {
+			if (MenuCustomization.isMenuCustomizable(e.getGui()) && FancyMenu.config.getOrDefault("stopworldmusicwhencustomizable", false)) {
+				MinecraftClient.getInstance().getSoundManager().pauseAll();
+				this.resumeWorldMusic = true;
+			}
 		}
 	}
 
@@ -42,6 +50,11 @@ public class MenuCustomizationEvents {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 			this.idle = true;
+		}
+		
+		if ((MinecraftClient.getInstance().world != null) && (MinecraftClient.getInstance().currentScreen == null) && this.resumeWorldMusic) {
+			MinecraftClient.getInstance().getSoundManager().resumeAll();
+			this.resumeWorldMusic = false;
 		}
 		
 		if (MinecraftClient.getInstance().getWindow().isFullscreen()) {

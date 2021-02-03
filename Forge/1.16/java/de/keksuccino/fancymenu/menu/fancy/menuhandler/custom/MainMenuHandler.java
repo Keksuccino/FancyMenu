@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
+import java.awt.Color;
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,9 +15,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -57,6 +62,13 @@ public class MainMenuHandler extends MenuHandlerBase {
 	public MainMenuHandler() {
 		super(MainMenuScreen.class.getName());
 	}
+
+	@Override
+	public void onMenuReloaded(MenuReloadedEvent e) {
+		super.onMenuReloaded(e);
+		
+		this.splash = getRandomSplashText();
+	}
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
@@ -67,10 +79,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 				tickFooter = 0;
 
 				if (this.splash == null) {
-					this.splash = Minecraft.getInstance().getSplashes().getSplashText();
+					this.splash = getRandomSplashText();
 				}
-				
-				//TODO übernehmen
+
 				this.setWidthCopyrightRest(Integer.MAX_VALUE);
 				
 				super.onButtonsCached(e);
@@ -83,7 +94,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		if (this.shouldCustomize(e.getGui())) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 				e.setCanceled(true);
-				e.getGui().renderBackground(e.getMatrixStack());;
+				e.getGui().renderBackground(e.getMatrixStack());
 				
 				this.renderFooter(e);
 			}
@@ -202,24 +213,80 @@ public class MainMenuHandler extends MenuHandlerBase {
 			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {
 				this.drawRealmsNotification(matrix, e.getGui());
 			}
-			
-			//Draw splashtext string to the main menu if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
-				int offsetx = FancyMenu.config.getOrDefault("splashoffsetx", 0);
-				int offsety = FancyMenu.config.getOrDefault("splashoffsety", 0);
-				int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
-				RenderSystem.pushMatrix();
-				RenderSystem.translatef((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
-				RenderSystem.rotatef((float)rotation, 0.0F, 0.0F, 1.0F);
-				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (Util.milliTime() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-				f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
-				RenderSystem.scalef(f, f, f);
-				e.getGui();
-				AbstractGui.drawCenteredString(matrix, font, new StringTextComponent(this.splash), 0, -8, -256);
-				RenderSystem.popMatrix();
-			}
+
+			this.renderSplash(matrix, font, e.getGui());
 			
 		}
+	}
+
+	protected void renderSplash(MatrixStack matrix, FontRenderer font, Screen s) {
+		
+		if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
+			
+			float finalPosX = (s.width / 2 + 90);
+			float finalPosY = 70.0F;
+
+			int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
+			int posX = FancyMenu.config.getOrDefault("splashx", 0);
+			int posY = FancyMenu.config.getOrDefault("splashy", 0);
+			String orientation = FancyMenu.config.getOrDefault("splashorientation", "original");
+
+			int originX = 0;
+			int originY = 0;
+
+			boolean setpos = true;
+			
+			if (orientation.equalsIgnoreCase("original")) {
+				originX = (int) finalPosX;
+				originY = (int) finalPosY;
+			} else if (orientation.equalsIgnoreCase("top-left")) {
+				; //do nuffin
+			} else if (orientation.equalsIgnoreCase("mid-left")) {
+				originY = s.height / 2;
+			} else if (orientation.equalsIgnoreCase("bottom-left")) {
+				originY = s.height;
+			} else if (orientation.equalsIgnoreCase("top-centered")) {
+				originX = s.width / 2;
+			} else if (orientation.equalsIgnoreCase("mid-centered")) {
+				originX = s.width / 2;
+				originY = s.height / 2;
+			} else if (orientation.equalsIgnoreCase("bottom-centered")) {
+				originX = s.width / 2;
+				originY = s.height;
+			} else if (orientation.equalsIgnoreCase("top-right")) {
+				originX = s.width;
+			} else if (orientation.equalsIgnoreCase("mid-right")) {
+				originX = s.width;
+				originY = s.height / 2;
+			} else if (orientation.equalsIgnoreCase("bottom-right")) {
+				originX = s.width;
+				originY = s.height;
+			} else {
+				setpos = false;
+			}
+
+			//I'm doing this to signalize when an invalid orientation was used
+			if (setpos) {
+				finalPosX = originX + posX;
+				finalPosY = originY + posY;
+			}
+
+			RenderSystem.pushMatrix();
+			RenderSystem.translatef(finalPosX, finalPosY, 0.0F);
+			RenderSystem.rotatef((float)rotation, 0.0F, 0.0F, 1.0F);
+			float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (Util.milliTime() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+			f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
+			RenderSystem.scalef(f, f, f);
+
+			Color c = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("splashcolor", "#ffff00"));
+			if (c == null) {
+				c = new Color(255, 255, 0);
+			}
+			AbstractGui.drawCenteredString(matrix, font, new StringTextComponent(this.splash), 0, -8, c.getRGB());
+			RenderSystem.popMatrix();
+			
+		}
+		
 	}
 	
 	private void renderButtons(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
@@ -259,8 +326,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 		return buttons;
 	}
-	
-	//TODO übernehmen
+
 	private void setWidthCopyrightRest(int i) {
 		try {
 			if (Minecraft.getInstance().currentScreen instanceof MainMenuScreen) {
@@ -271,8 +337,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			e.printStackTrace();
 		}
 	}
-	
-	@SuppressWarnings("deprecation")
+
 	private void renderFooter(GuiScreenEvent.DrawScreenEvent e) {
 		if (!FancyMenu.config.getOrDefault("showmainmenufooter", true)) {
 			return;
@@ -322,5 +387,21 @@ public class MainMenuHandler extends MenuHandlerBase {
 				fadeFooter += 0.005F;
 			}
 		}
+	}
+
+	protected static String getRandomSplashText() {
+		String customSplashPath = FancyMenu.config.getOrDefault("splashtextfile", "");
+		if ((customSplashPath != null) && !customSplashPath.equals("")) {
+			File f = new File(customSplashPath);
+			if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
+				List<String> l = FileUtils.getFileLines(f);
+				if ((l != null) && !l.isEmpty()) {
+					int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
+					return l.get(random);
+				}
+			}
+		}
+		
+		return Minecraft.getInstance().getSplashes().getSplashText();
 	}
 }

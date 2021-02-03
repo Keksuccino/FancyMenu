@@ -2,8 +2,10 @@ package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import java.awt.Color;
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.common.io.Files;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -41,9 +43,14 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.gui.screen.DirtMessageScreen;
+import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.WorldLoadProgressScreen;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.realms.RealmsScreenProxy;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.chunk.listener.TrackingChunkStatusListener;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -57,6 +64,7 @@ public class CustomizationHelper {
 	private PopupMenu dropdown;
 	private PopupMenu overridePopup;
 	private PopupMenu customGuisPopup;
+	private PopupMenu miscPopup;
 	private ManageCustomGuiPopupMenu manageCustomGuiPopup;
 	private ManageLayoutsPopupMenu manageLayoutsPopup;
 	private boolean showButtonInfo = false;
@@ -184,6 +192,8 @@ public class CustomizationHelper {
 		this.overrideButton = new CustomizationButton(e.getGui().width - 150, 5, 90, 20, overrLabel, true, (onPress) -> {
 			if (!this.isScreenOverridden()) {
 				this.overridePopup = new PopupMenu(100, 20, -1);
+				this.overridePopup.setAutoAlignment(false);
+				this.overridePopup.setAlignment(false, false);
 
 				List<String> l = CustomGuiLoader.getCustomGuis();
 
@@ -293,7 +303,13 @@ public class CustomizationHelper {
 		createGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.creategui.btndesc"), "%n%"));
 
 		this.manageCustomGuiPopup = new ManageCustomGuiPopupMenu(100, 20, -1);
+		this.manageCustomGuiPopup.setAutoAlignment(false);
+		this.manageCustomGuiPopup.setAlignment(false, false);
+		
 		this.customGuisPopup = new PopupMenu(100, 20, -1);
+		this.customGuisPopup.setAutoAlignment(false);
+		this.customGuisPopup.setAlignment(false, false);
+		
 		List<String> l = CustomGuiLoader.getCustomGuis();
 		if (!l.isEmpty()) {
 			
@@ -363,6 +379,36 @@ public class CustomizationHelper {
 		});
 		customGuisButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.customguis.btndesc"), "%n%"));
 		
+		this.miscPopup = new PopupMenu(130, 20, -1);
+		this.miscPopup.setAutoclose(true);
+		this.miscPopup.setAutoAlignment(false);
+		this.miscPopup.setAlignment(false, false);
+		
+		AdvancedButton miscBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.misc"), true, (press) -> {
+			this.miscPopup.openMenuAt(press.x - this.miscPopup.getWidth() - 2, press.y);
+		});
+		miscBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.tools.misc.btndesc"), "%n%"));
+		this.miscPopup.setParentButton(miscBtn);
+		
+		AdvancedButton openMainMenuBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.misc.openmainmenu"), true, (press) -> {
+			Minecraft.getInstance().displayGuiScreen(new MainMenuScreen());
+		});
+		openMainMenuBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.tools.misc.openmainmenu.btndesc"), "%n%"));
+		this.miscPopup.addContent(openMainMenuBtn);
+		
+		AdvancedButton openLoadingScreenBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.misc.openloadingscreen"), true, (press) -> {
+			WorldLoadProgressScreen wl = new WorldLoadProgressScreen(new TrackingChunkStatusListener(0));
+			Minecraft.getInstance().displayGuiScreen(wl);
+		});
+		openLoadingScreenBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.tools.misc.openloadingscreen.btndesc"), "%n%"));
+		this.miscPopup.addContent(openLoadingScreenBtn);
+		
+		AdvancedButton openMessageScreenBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.misc.openmessagescreen"), true, (press) -> {
+			Minecraft.getInstance().displayGuiScreen(new DirtMessageScreen(new StringTextComponent("hello ・ω・")));
+		});
+		openMessageScreenBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.tools.misc.openmessagescreen.btndesc"), "%n%"));
+		this.miscPopup.addContent(openMessageScreenBtn);
+		
 		AdvancedButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.closecustomgui"), (press) -> {
 			e.getGui().onClose();
 		});
@@ -386,6 +432,8 @@ public class CustomizationHelper {
 		toggleCustomizationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.onoff.btndesc"), "%n%"));
 
 		this.manageLayoutsPopup = new ManageLayoutsPopupMenu(0, 20, -1);
+		this.manageLayoutsPopup.setAutoAlignment(false);
+		this.manageLayoutsPopup.setAlignment(false, false);
 		this.manageLayoutsButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts"), (press) -> {
 			this.manageLayoutsPopup.openMenuAt(press);
 		});
@@ -400,6 +448,8 @@ public class CustomizationHelper {
 		}
 
 		this.dropdown = new PopupMenu(120, 20, -1);
+		this.dropdown.setAutoAlignment(false);
+		this.dropdown.setAlignment(false, false);
 
 		if (!(e.getGui() instanceof CustomGuiBase)) {
 			this.dropdown.addContent(toggleCustomizationButton);
@@ -411,6 +461,7 @@ public class CustomizationHelper {
 		this.dropdown.addContent(manageLayoutsButton);
 		this.dropdown.addContent(createGuiButton);
 		this.dropdown.addContent(customGuisButton);
+		this.dropdown.addContent(miscBtn);
 		if (this.isScreenOverridden()) {
 			this.dropdown.addContent(overrideButton);
 		} else if (!(e.getGui() instanceof CustomGuiBase)) {
@@ -451,7 +502,7 @@ public class CustomizationHelper {
 				MouseInput.unblockVanillaInput("customizationhelper");
 			}
 			
-			if (this.dropdown.isOpen() && !this.customGuisPopup.isHovered() && !this.manageLayoutsPopup.isHovered() && !this.dropdownButton.isHovered() && !this.dropdown.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
+			if (this.dropdown.isOpen() && !this.miscPopup.isHovered() && !this.customGuisPopup.isHovered() && !this.manageLayoutsPopup.isHovered() && !this.dropdownButton.isHovered() && !this.dropdown.isHovered() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
 				this.dropdown.closeMenu();
 			}
 			if (this.overridePopup != null) {
@@ -477,6 +528,9 @@ public class CustomizationHelper {
 						this.manageCustomGuiPopup.closeMenu();
 					}
 				}
+			}
+			if (this.miscPopup != null) {
+				this.miscPopup.render(e.getMouseX(), e.getMouseY());
 			}
 			if (this.manageLayoutsPopup != null) {
 				this.manageLayoutsPopup.render(e.getMouseX(), e.getMouseY());
@@ -756,7 +810,6 @@ public class CustomizationHelper {
 		
 		public ManageLayoutsPopupMenu(int width, int buttonHeight, int space) {
 			super(width, buttonHeight, space);
-			
 			this.manageSubPopup = new ManageLayoutsSubPopupMenu(120, 20, -1);
 		}
 
@@ -897,6 +950,12 @@ public class CustomizationHelper {
 			});
 			this.addContent(toggleLayoutBtn);
 			
+			CustomizationButton openInTextEditorBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.openintexteditor"), (press) -> {
+				openFile(layout);
+			});
+			openInTextEditorBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.openintexteditor.desc"), "%n%"));
+			this.addContent(openInTextEditorBtn);
+			
 			CustomizationButton deleteLayoutBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.delete"), (press) -> {
 				PopupHandler.displayPopup(new YesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
@@ -912,6 +971,28 @@ public class CustomizationHelper {
 			
 			this.openMenuAt(x, y);
 			
+		}
+	}
+	
+	private static void openFile(File f) {
+		try {
+			String url = f.toURI().toURL().toString();
+			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+			URL u = new URL(url);
+			if (!Minecraft.IS_RUNNING_ON_MAC) {
+				if (s.contains("win")) {
+					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
+				} else {
+					if (u.getProtocol().equals("file")) {
+						url = url.replace("file:", "file://");
+					}
+					Runtime.getRuntime().exec(new String[]{"xdg-open", url});
+				}
+			} else {
+				Runtime.getRuntime().exec(new String[]{"open", url});
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

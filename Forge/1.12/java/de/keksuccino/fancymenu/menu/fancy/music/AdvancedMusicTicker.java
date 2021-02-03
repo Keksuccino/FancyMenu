@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.music;
 import java.lang.reflect.Field;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.MusicTicker;
@@ -19,6 +20,11 @@ public class AdvancedMusicTicker extends MusicTicker {
 		if ((type != null) && (type == MusicType.MENU) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
 			return;
 		}
+		if ((Minecraft.getMinecraft().world != null) && FancyMenu.config.getOrDefault("stopworldmusicwhencustomizable", false) && (Minecraft.getMinecraft().currentScreen != null) && MenuCustomization.isMenuCustomizable(Minecraft.getMinecraft().currentScreen)) {
+			Minecraft.getMinecraft().getSoundHandler().pauseSounds();
+			return;
+		}
+		
 		super.playMusic(type);
 	}
 	

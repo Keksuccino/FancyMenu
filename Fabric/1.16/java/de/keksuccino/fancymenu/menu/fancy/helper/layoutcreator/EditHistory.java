@@ -20,10 +20,11 @@ public class EditHistory {
 	
 	private static final Identifier BACK = new Identifier("keksuccino", "arrow_left.png");
 	private static final Identifier FORWARD = new Identifier("keksuccino", "arrow_right.png");
-	
+
 	protected LayoutCreatorScreen editor;
 	private List<Snapshot> history = new ArrayList<Snapshot>();
 	private int current = -1;
+	private boolean preventSnapshotSaving = false;
 	
 	private AdvancedButton backBtn;
 	private AdvancedButton forwardBtn;
@@ -31,7 +32,7 @@ public class EditHistory {
 	public EditHistory(LayoutCreatorScreen editor) {
 		
 		this.editor = editor;
-		
+
 		this.backBtn = new AdvancedImageButton(10, 10, 19, 19, BACK, true, (press) -> {
 			this.stepBack();
 		});
@@ -47,24 +48,26 @@ public class EditHistory {
 	}
 	
 	public void saveSnapshot(Snapshot snap) {
-		if (this.current < 0) {
-			this.history.clear();
-			this.history.add(snap);
-			this.current = 0;
-		} else {
-			if (this.current <= this.history.size()-1) {
-				List<Snapshot> l = new ArrayList<Snapshot>();
-				int i = 0;
-				while (i <= this.current) {
-					l.add(this.history.get(i));
-					i++;
-				}
-				l.add(snap);
-				this.history = l;
-				this.current = this.history.size()-1;
+		if (!this.preventSnapshotSaving) {
+			if (this.current < 0) {
+				this.history.clear();
+				this.history.add(snap);
+				this.current = 0;
 			} else {
-				this.current = this.history.size()-1;
-				this.saveSnapshot(snap);
+				if (this.current <= this.history.size()-1) {
+					List<Snapshot> l = new ArrayList<Snapshot>();
+					int i = 0;
+					while (i <= this.current) {
+						l.add(this.history.get(i));
+						i++;
+					}
+					l.add(snap);
+					this.history = l;
+					this.current = this.history.size()-1;
+				} else {
+					this.current = this.history.size()-1;
+					this.saveSnapshot(snap);
+				}
 			}
 		}
 	}
@@ -76,20 +79,24 @@ public class EditHistory {
 	public Snapshot createSnapshot() {
 		return new Snapshot(editor, null);
 	}
+
+	public void setPreventSnapshotSaving(boolean b) {
+		this.preventSnapshotSaving = b;
+	}
 	
 	public void stepBack() {
 		if (this.current > -1) {
-			
+
 			if (this.current <= this.history.size()-1) {
-				
+
 				Snapshot snap = this.history.get(this.current);
 				List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 				l.add(snap.snapshot);
-				
+
 				this.current--;
-				
+
 				snap.preSnapshotState = this.createSnapshot();
-				
+
 				PreloadedLayoutCreatorScreen neweditor = new PreloadedLayoutCreatorScreen(this.editor.screen, l);
 				neweditor.history = this;
 				String single = null;
@@ -99,9 +106,9 @@ public class EditHistory {
 				neweditor.single = single;
 				neweditor.expanded = this.editor.expanded;
 				this.editor = neweditor;
-				
+
 				MinecraftClient.getInstance().openScreen(neweditor);
-				
+
 			}
 			
 		}
@@ -109,17 +116,17 @@ public class EditHistory {
 	
 	public void stepForward() {
 		if (this.current >= -1) {
-			
+
 			if (this.current < this.history.size()-1) {
 
 				this.current++;
-				
+
 				Snapshot snap = this.history.get(this.current).preSnapshotState;
-				
+
 				if (snap != null) {
 					List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 					l.add(snap.snapshot);
-					
+
 					PreloadedLayoutCreatorScreen neweditor = new PreloadedLayoutCreatorScreen(this.editor.screen, l);
 					neweditor.history = this;
 					String single = null;
@@ -129,15 +136,15 @@ public class EditHistory {
 					neweditor.single = single;
 					neweditor.expanded = this.editor.expanded;
 					this.editor = neweditor;
-					
+
 					MinecraftClient.getInstance().openScreen(neweditor);
 				}
-				
+
 			}
-			
+
 		}
 	}
-	
+
 	public void render(MatrixStack matrix) {
 		if (this.editor.expanded && (this.editor.addObjectButton != null)) {
 			int mouseX = MouseInput.getMouseX();

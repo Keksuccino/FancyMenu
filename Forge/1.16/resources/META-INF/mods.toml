@@ -1,7 +1,7 @@
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml" #mandatory
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[33,36)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+loaderVersion="[33,37)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 # The mod license
 license="GPLv3"
 # A list of mods - how many allowed here is determined by the individual mod loader
@@ -9,7 +9,7 @@ license="GPLv3"
 # The modid of the mod
 modId="fancymenu" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="1.6.0" #mandatory
+version="1.8.0" #mandatory
  # A display name for the mod
 displayName="FancyMenu" #mandatory
 # A text field displayed in the mod UI
@@ -18,13 +18,13 @@ authors="Keksuccino" #optional
 description='''Give your life a fancy touch. You deserve it.
 
 COPYRIGHT:
-> FancyMenu (c) Copyright 2020 Keksuccino'''
+> FancyMenu © Copyright 2020-2021 Keksuccino'''
 
 [[dependencies.fancymenu]]
 modId="konkrete"
 mandatory=true
 ordering="NONE"
-versionRange="[1.1.0,)"
+versionRange="[1.1.3,)"
 side="BOTH"
 [[dependencies.fancymenu]]
 modId="findme"

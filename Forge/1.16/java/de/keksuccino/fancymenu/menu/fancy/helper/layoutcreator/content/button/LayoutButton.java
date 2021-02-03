@@ -35,7 +35,6 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 	public boolean delayonlyfirsttime = false;
 	public String onlydisplayin = null;
 	public String clicksound = null;
-	//TODO übernehmen
 	public String description;
 	private AdvancedButton onlyOutgameBtn;
 	private AdvancedButton onlySingleplayerBtn;
@@ -299,15 +298,19 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 		});
 		this.rightclickMenu.addContent(b9);
 		LayoutCreatorScreen.colorizeCreatorButton(b9);
-		
-		//TODO übernehmen
+
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			this.handler.setMenusUseable(false);
 			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
-				if ((this.description == null) || (call == null) || !this.description.equals(call)) {
-					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				if (call != null) {
+					if ((this.description == null) || (call == null) || !this.description.equals(call)) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					this.description = call;
+					if (call.equals("")) {
+						this.description = null;
+					}
 				}
-				this.description = call;
 				this.handler.setMenusUseable(true);
 			});
 			
@@ -455,7 +458,6 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 			if (this.clicksound != null) {
 				s.addEntry("clicksound", this.clicksound);
 			}
-			//TODO übernehmen
 			if (this.description != null) {
 				s.addEntry("description", this.description);
 			}

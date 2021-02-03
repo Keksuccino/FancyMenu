@@ -12,6 +12,7 @@ import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.GuiScreen;
 
+@SuppressWarnings("deprecation")
 public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	
 	private ButtonData parent;

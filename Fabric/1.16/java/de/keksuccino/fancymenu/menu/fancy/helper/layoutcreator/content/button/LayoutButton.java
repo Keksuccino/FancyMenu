@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.content.PopupMenu;
+import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -68,7 +68,7 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 		this.rightclickMenu.addContent(b3);
 		LayoutCreatorScreen.colorizeCreatorButton(b3);
 		
-		PopupMenu texturePopup = new PopupMenu(100, 16, -1);
+		ContextMenu texturePopup = new ContextMenu(100, 16, -1);
 		this.rightclickMenu.addChild(texturePopup);
 		
 		AdvancedButton tpop1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.normal"), (press) -> {
@@ -299,10 +299,15 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			this.handler.setMenusUseable(false);
 			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
-				if ((this.description == null) || (call == null) || !this.description.equals(call)) {
-					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				if (call != null) {
+					if ((this.description == null) || (call == null) || !this.description.equals(call)) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					this.description = call;
+					if (call.equals("")) {
+						this.description = null;
+					}
 				}
-				this.description = call;
 				this.handler.setMenusUseable(true);
 			});
 			
@@ -318,7 +323,7 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 	}
 
 	private void initOnlyDisplayInMenu() {
-		PopupMenu onlyDisplayInMenu = new PopupMenu(100, 16, -1);
+		ContextMenu onlyDisplayInMenu = new ContextMenu(100, 16, -1);
 		this.rightclickMenu.addChild(onlyDisplayInMenu);
 		
 		String outgame = Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame");

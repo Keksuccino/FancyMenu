@@ -15,12 +15,12 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 
-//Yes, I'm using too much "XYEvents" classes, but seperating events for every part of the mod helps me to find stuff more easily.
 public class MenuCustomizationEvents {
 	
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
 	private boolean scaleChecked = false;
+	private boolean resumeWorldMusic = false;
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -33,11 +33,19 @@ public class MenuCustomizationEvents {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 		}
-		
-		if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
-			MusicTicker m = Minecraft.getMinecraft().getMusicTicker();
-			if (m instanceof AdvancedMusicTicker) {
-				((AdvancedMusicTicker)m).stop();
+
+		//Stopping menu music when deactivated in config
+		if ((Minecraft.getMinecraft().world == null)) {
+			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+				MusicTicker m = Minecraft.getMinecraft().getMusicTicker();
+				if (m instanceof AdvancedMusicTicker) {
+					((AdvancedMusicTicker)m).stop();
+				}
+			}
+		} else {
+			if (MenuCustomization.isMenuCustomizable(e.getGui()) && FancyMenu.config.getOrDefault("stopworldmusicwhencustomizable", false)) {
+				Minecraft.getMinecraft().getSoundHandler().pauseSounds();
+				this.resumeWorldMusic = true;
 			}
 		}
 	}
@@ -49,6 +57,11 @@ public class MenuCustomizationEvents {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 			this.idle = true;
+		}
+		
+		if ((Minecraft.getMinecraft().world != null) && (Minecraft.getMinecraft().currentScreen == null) && this.resumeWorldMusic) {
+			Minecraft.getMinecraft().getSoundHandler().resumeSounds();
+			this.resumeWorldMusic = false;
 		}
 		
 		if (Minecraft.getMinecraft().isFullScreen()) {

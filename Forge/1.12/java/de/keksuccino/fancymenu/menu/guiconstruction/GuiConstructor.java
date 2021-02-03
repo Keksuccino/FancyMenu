@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.entity.player.EntityPlayer;
 
 public class GuiConstructor {
 	
@@ -22,6 +23,9 @@ public class GuiConstructor {
 		parameters.put(GuiScreen.class, null);
 		parameters.put(GameSettings.class, Minecraft.getMinecraft().gameSettings);
 		parameters.put(LanguageManager.class, Minecraft.getMinecraft().getLanguageManager());
+		parameters.put(boolean.class, true);
+		parameters.put(EntityPlayer.class, null);
+		parameters.put(String.class, "");
 		
 	}
 	
@@ -29,6 +33,8 @@ public class GuiConstructor {
 		try {
 			//Update last screen
 			parameters.put(GuiScreen.class, Minecraft.getMinecraft().currentScreen);
+			//Update player
+			parameters.put(EntityPlayer.class, Minecraft.getMinecraft().player);
 			
 			Class<?> gui = Class.forName(identifier);
 			if ((gui != null) && GuiScreen.class.isAssignableFrom(gui)) {

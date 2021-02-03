@@ -16,8 +16,8 @@ public class MenuCustomizationEvents {
 	
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
-	//TODO übernehmen
 	private boolean scaleChecked = false;
+	private boolean resumeWorldMusic = false;
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -25,15 +25,21 @@ public class MenuCustomizationEvents {
 		if (MenuCustomization.isValidScreen(e.getGui()) && !LayoutCreatorScreen.isActive) {
 			this.idle = false;
 		}
-		//TODO übernehmen
 		if (MenuCustomization.isValidScreen(e.getGui()) && !MenuCustomization.isMenuCustomizable(e.getGui()) && !(e.getGui() instanceof LayoutCreatorScreen)) {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 		}
-		
+
 		//Stopping menu music when deactivated in config
-		if ((Minecraft.getInstance().world == null) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
-			Minecraft.getInstance().getMusicTicker().stop();
+		if ((Minecraft.getInstance().world == null)) {
+			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+				Minecraft.getInstance().getMusicTicker().stop();
+			}
+		} else {
+			if (MenuCustomization.isMenuCustomizable(e.getGui()) && FancyMenu.config.getOrDefault("stopworldmusicwhencustomizable", false)) {
+				Minecraft.getInstance().getSoundHandler().pause();
+				this.resumeWorldMusic = true;
+			}
 		}
 	}
 
@@ -46,6 +52,11 @@ public class MenuCustomizationEvents {
 			this.idle = true;
 		}
 
+		if ((Minecraft.getInstance().world != null) && (Minecraft.getInstance().currentScreen == null) && this.resumeWorldMusic) {
+			Minecraft.getInstance().getSoundHandler().resume();
+			this.resumeWorldMusic = false;
+		}
+
 		if (Minecraft.getInstance().getMainWindow().isFullscreen()) {
 			this.iconSetAfterFullscreen = false;
 		} else {
@@ -54,8 +65,7 @@ public class MenuCustomizationEvents {
 				this.iconSetAfterFullscreen = true;
 			}
 		}
-		
-		//TODO übernehmen
+
 		if (!scaleChecked && (Minecraft.getInstance().gameSettings != null)) {
 			scaleChecked = true;
 			

@@ -5,9 +5,10 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 
-public abstract class CustomizationItemBase {
+public abstract class CustomizationItemBase extends Gui {
 	
 	/**
 	 * This value CANNOT BE NULL!<br>

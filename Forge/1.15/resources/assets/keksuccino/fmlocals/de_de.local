@@ -318,3 +318,83 @@ helper.creator.items.custombutton.onlydisplayin.reset = ZURÜCKSETZEN
 
 helper.creator.items.button.clicksound = Klicksound
 helper.creator.items.button.clicksound.reset = Klicksound resetten
+
+helper.popup.togglecustomization.enable = Anpassungen: §cAus
+helper.popup.togglecustomization.disable = Anpassungen: §aAn
+
+helper.creator.object.stretch = Dehnen
+helper.creator.object.stretch.x = Zu Fensterbreite
+helper.creator.object.stretch.y = Zu Fensterhöhe
+
+helper.creator.object.stretch.unsupportedorientation = §c§lNicht unterstützte Orientierung!%n%%n%%n%Die aktuelle Orientierung dieses Objekts verhindert das Dehnen.%n%%n%§lUnterstützte Orientierungen: {}
+
+helper.creator.backgroundoptions.backgroundpanorama = Hintergrund-Panorama
+helper.creator.backgroundoptions.panoramas = Panoramas
+helper.creator.backgroundoptions.panoramas.set = Aktivieren
+helper.creator.backgroundoptions.panoramas.set.desc = Setzt das ausgewählte Panorama%n%als aktives Hintergrund-Panorama.
+helper.creator.backgroundoptions.panoramas.clear = Zurücksetzen
+helper.creator.backgroundoptions.panoramas.clear.desc = Setzt das aktive%n%Hintergrund-Panorama zurück.
+
+helper.creator.items.button.btndescription = Beschreibung
+helper.creator.items.button.btndescription.desc = Beschreibung, die gezeigt wird,%n%wenn der Button mit der Maus%n%überfahren wird.%n%%n%Nutze '&n' für eine neue Zeile.
+
+helper.buttons.customization.btndesc = Beinhaltet nützliche Anpassungstools.%n%%n%§cTIPP:%n%Rechtsklick funktioniert als%n%alternative Klickaktion,%n%falls der Button von einem anderen%n%überlappt wird.%n%%n%§cTIPP:%n%Du kannst diese Buttons verstecken,%n%indem du §lSTRG + C §rdrückst!%n%Diesen Hotkey kannst du%n%in den Steuerungs-Optionen%n%anpassen.
+helper.buttons.customization.onoff.btndesc = Aktiviert oder deaktiviert Anpassungen%n%für das momentan aktive Menü.%n%%n%§cDies muss aktiviert sein,%n%§cwenn Layouts angezeigt werden sollen.
+helper.buttons.customization.menuinfo.btndesc = Zeigt den §cMenü Identifier%n%des aktiven Menüs an.%n%%n%Du kannst den Identifier%n%linksklicken, um ihn zu kopieren.
+helper.buttons.customization.buttoninfo.btndesc = Zeigt Informationen zu%n%§cVanilla Buttons §ran, wenn%n%man sie mit der Maus überfährt.
+helper.buttons.customization.createlayout.btndesc = Passe das aktuelle Menü in%n%einem schicken GUI Editor an!%n%%n%§cWICHTIG:%n%Sollte im Normalfall immer%n%genutzt werden, wenn du bereits%n%existierende Menüs bearbeiten willst!
+helper.buttons.customization.editlayout.btndesc = Bearbeite die Layouts für%n%das aktuelle Menü.
+helper.buttons.customization.creategui.btndesc = Erstelle ein leeres GUI und%n%fülle es mit allem, was du willst!%n%%n%§cWICHTIG:%n%Sollte NIEMALS genutzt werden, wenn%n%du nur das Aussehen eines Menüs%n%bearbeiten möchtest, ohne es%n%komplett zu überschreiben!%n%%n%Um ein Menü zu bearbeiten, nutze%n%stattdessen §oLayout erstellen§r!
+helper.buttons.customization.customguis.btndesc = Liste all deiner eigenen GUIs.%n%%n%Diese Liste ist leer, wenn%n%du noch keins erstellt hast.
+helper.buttons.customization.overridewith.btndesc = Überschreibe das aktuelle Menü%n%mit einem deiner eigenen GUIs.%n%%n%§cWICHTIG:%n%Sollte NIEMALS genutzt werden, wenn%n%du nur das Aussehen eines Menüs%n%bearbeiten möchtest, ohne es%n%komplett zu überschreiben!%n%%n%Um ein Menü zu bearbeiten, nutze%n%stattdessen §oLayout erstellen§r!
+helper.buttons.customization.closecustomgui.btndesc = Schließe dein aktuell aktives eigenes GUI.
+
+helper.buttons.reload.btndesc = Lädt das Menü, alle Layouts,%n%die Mod Config und Weiteres neu.%n%%n%Nützlich, wenn du Layouts manuell%n%editierst oder die Config bearbeitet hast.%n%%n%§cWICHTIG:%n%Lädt NICHT deine Animationen neu!%n%Du musst dein Spiel neustarten,%n%nachdem du Animationen bearbeitet%n%oder hinzugefügt hast!
+
+helper.buttons.customization.managelayouts = Layouts verwalten
+helper.buttons.customization.managelayouts.enable = Layout §aaktivieren
+helper.buttons.customization.managelayouts.enabled = §aAktiviert
+helper.buttons.customization.managelayouts.disable = Layout §cdeaktivieren
+helper.buttons.customization.managelayouts.disabled = §cDeaktiviert
+helper.buttons.customization.managelayouts.delete = Layout löschen
+helper.buttons.customization.managelayouts.delete.msg = §c§lBist du sicher?%n%%n%%n%Möchtest du dieses Layout wirklich §c§llöschen§r?%n%%n%§c§lDies kann nicht rückgängig gemacht werden!
+helper.buttons.customization.managelayouts.btndesc = Verwalte all deine Layouts für%n%das aktuelle Menü.
+helper.buttons.customization.managelayouts.layout.btndesc = §lLayout Info:%n%%n%Status: {}%n%Customization Actions: {}%n%%n%§cLinksklick für weitere Optionen!
+
+helper.creator.object.moveup = Ebene hoch
+helper.creator.object.moveup.desc = Verschiebt das Objekt eine Ebene%n%nach oben.%n%%n%§cWICHTIG:%n%Ausgewählte Objekte werden immer%n%ganz oben angezeigt, du wirst%n%den Effekt also erst sehen, wenn%n%das Objekt nicht mehr ausgewählt ist.{}
+helper.creator.object.moveup.desc.subtext = %n%%n%§6§lLetzte Aktion:%n%Über §7{} §rgeschoben
+helper.creator.object.movedown = Ebene runter
+helper.creator.object.movedown.desc = Verschiebt das Objekt eine Ebene%n%nach unten.%n%%n%§cWICHTIG:%n%Ausgewählte Objekte werden immer%n%ganz oben angezeigt, du wirst%n%den Effekt also erst sehen, wenn%n%das Objekt nicht mehr ausgewählt ist.{}
+helper.creator.object.movedown.desc.subtext = %n%%n%§6§lLetzte Aktion:%n%Unter §7{} §rgeschoben
+
+helper.buttons.customization.managelayouts.openintexteditor = Öffne in Text Editor
+helper.buttons.customization.managelayouts.openintexteditor.desc = Öffnet die Layout Datei in%n%deinem Standard Text Editor.%n%%n%§cWICHTIG:%n%Du musst den "Neuladen" Button%n%klicken, nachdem du Layout Dateien%n%manuell bearbeitet hast!
+
+helper.creator.opencloseaudio = Öffnen/Schließ Sound
+helper.creator.opencloseaudio.desc = Spielt einen Sound ab, wenn%n%das Menü geöffnet oder geschlossen wird.
+helper.creator.opencloseaudio.reset.desc = Setzt den Sound zurück.
+helper.creator.openaudio = Öffnen-Sound
+helper.creator.openaudio.reset = Öffnen-Sound löschen
+helper.creator.openaudio.desc = Wird gespielt, denn das Menü%n%geöffnet wird.
+helper.creator.closeaudio = Schließ-Sound
+helper.creator.closeaudio.reset = Schließ-Sound löschen
+helper.creator.closeaudio.desc = Wird gespielt, wenn das Menu%n%geschlossen wird.
+
+helper.creator.deleteselectedobjects = Möchtest du wirklich alle ausgewählten Objekte §lLÖSCHEN?
+
+helper.creator.multiselect.object.deleteall = Alle löschen
+helper.creator.multiselect.object.deleteall.btndesc = Löscht alle ausgewählten Objekte.
+helper.creator.multiselect.object.stretchall = Alle dehnen
+helper.creator.multiselect.object.stretchall.btndesc = Dehnt alle §ldehnbaren §rObjekte%n%zur Fenster-Breite oder -Höhe.
+helper.creator.multiselect.vanillabutton.resetorientation = Orientierung resetten
+helper.creator.multiselect.vanillabutton.resetorientation.btndesc = Setzt die Orientierung für%n%alle ausgewählten Vanilla Buttons%n%zurück.
+helper.creator.multiselect.vanillabutton.hideall = Alle verstecken
+helper.creator.multiselect.vanillabutton.hideall.btndesc = Versteckt alle ausgewählten Vanilla Buttons.
+helper.creator.multiselect.button.buttontexture.btndesc = Setzt Standard- und Hover-Texturen%n%für alle ausgewählten Buttons.
+helper.creator.multiselect.button.buttontexture.reset.btndesc = Löscht alle Texturen für alle%n%ausgewählten Buttons.
+helper.creator.multiselect.button.clicksound.btndesc = Setzt den Klicksound%n%für alle ausgewählten Buttons.
+helper.creator.multiselect.button.clicksound.reset.btndesc = Löscht den Klicksound für%n%alle ausgewählten Buttons.
+helper.creator.multiselect.button.hoversound.btndesc = Setzt den Hoversound für%n%alle ausgewählten Buttons.
+helper.creator.multiselect.button.hoversound.reset.btndesc = Löscht den Hoversound für%n%alle ausgewählten Buttons.
+

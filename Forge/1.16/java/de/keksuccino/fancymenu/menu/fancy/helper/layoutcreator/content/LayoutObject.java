@@ -15,6 +15,7 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -24,6 +25,7 @@ import de.keksuccino.konkrete.gui.screens.popup.YesNoPopup;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -50,6 +52,7 @@ public abstract class LayoutObject extends AbstractGui {
 	protected boolean stretchable = false;
 	protected boolean stretchX = false;
 	protected boolean stretchY = false;
+	protected boolean orderable = true;
 
 	protected List<LayoutObject> hoveredLayers = new ArrayList<LayoutObject>();
 	
@@ -85,7 +88,7 @@ public abstract class LayoutObject extends AbstractGui {
 	
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
-	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_CURSOR_NORMAL);
+	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
 	
 	public LayoutObject(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutCreatorScreen handler) {
 		this.handler = handler;
@@ -185,6 +188,7 @@ public abstract class LayoutObject extends AbstractGui {
 		this.orientationButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 			this.orientationMenu.openMenuAt(press.x + press.getWidth(), press.y);
 		});
+		this.orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
 		LayoutCreatorScreen.colorizeCreatorButton(this.orientationButton);
 
 		this.layersButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.chooselayer"), true, (press) -> {
@@ -202,6 +206,7 @@ public abstract class LayoutObject extends AbstractGui {
 					}
 				}
 				AdvancedButton btn = new AdvancedButton(0, 0, 0, 0, label, (press2) -> {
+					this.handler.clearFocusedObjects();
 					this.handler.setObjectFocused(o, true, true);
 				});
 				LayoutCreatorScreen.colorizeCreatorButton(btn);
@@ -240,9 +245,38 @@ public abstract class LayoutObject extends AbstractGui {
 		LayoutCreatorScreen.colorizeCreatorButton(stretchYBtn);
 		this.stretchPopup.addContent(stretchYBtn);
 		this.setStretchedY(this.stretchY, false);
+
+		AdvancedButton moveUpBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.moveup"), (press) -> {
+			LayoutObject o = this.handler.moveUp(this);
+			if (o != null) {
+				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.moveup.desc", Locals.localize("helper.creator.object.moveup.desc.subtext", o.object.value)), "%n%"));
+			}
+		});
+		moveUpBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.moveup.desc", ""), "%n%"));
+		LayoutCreatorScreen.colorizeCreatorButton(moveUpBtn);
+
+		AdvancedButton moveDownBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.movedown"), (press) -> {
+			LayoutObject o = this.handler.moveDown(this);
+			if (o != null) {
+				if (o instanceof LayoutVanillaButton) {
+					((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", Locals.localize("helper.creator.object.movedown.desc.subtext.vanillabutton")), "%n%"));
+				} else {
+					((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", Locals.localize("helper.creator.object.movedown.desc.subtext", o.object.value)), "%n%"));
+				}
+			}
+		});
+		moveDownBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", ""), "%n%"));
+		LayoutCreatorScreen.colorizeCreatorButton(moveDownBtn);
 				
 		this.rightclickMenu = new PopupMenu(110, 16, -1);
+		//TODO übernehmen
+		this.rightclickMenu.setAlwaysOnTop(true);
+		this.rightclickMenu.menuScale = LayoutCreatorScreen.getPopupMenuScale();
 		this.rightclickMenu.addContent(this.layersButton);
+		if (this.orderable) {
+			this.rightclickMenu.addContent(moveUpBtn);
+			this.rightclickMenu.addContent(moveDownBtn);
+		}
 		this.rightclickMenu.addContent(this.orientationButton);
 		this.rightclickMenu.addChild(this.orientationMenu);
 		if (this.stretchable) {
@@ -324,10 +358,8 @@ public abstract class LayoutObject extends AbstractGui {
 		return mouseY;
 	}
 
-	//TODO übernehmen
 	public void setStretchedX(boolean b, boolean saveSnapshot) {
 		if (this.isOrientationSupportedByStretchAction(b, this.stretchY)) {
-			//TODO übernehmen
 			if (saveSnapshot) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			}
@@ -342,10 +374,8 @@ public abstract class LayoutObject extends AbstractGui {
 		}
 	}
 
-	//TODO übernehmen
 	public void setStretchedY(boolean b, boolean saveSnapshot) {
 		if (this.isOrientationSupportedByStretchAction(this.stretchX, b)) {
-			//TODO übernehmen
 			if (saveSnapshot) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			}
@@ -463,8 +493,7 @@ public abstract class LayoutObject extends AbstractGui {
 		if (this.handler.isFocused(this)) {
 			this.renderBorder(matrix, mouseX, mouseY);
 		} else {
-			LayoutObject f = this.handler.getFocusedObject();
-			if ((this.handler.getTopHoverObject() == this) && (!this.handler.isObjectFocused() || (!f.isHovered() && !f.isDragged() && !f.isGettingResized() && !f.isGrabberPressed()))) {
+			if ((this.handler.getTopHoverObject() == this) && (!this.handler.isObjectFocused() || (!this.handler.isFocusedHovered() && !this.handler.isFocusedDragged() && !this.handler.isFocusedGettingResized() && !this.handler.isFocusedGrabberPressed()))) {
 				this.renderHighlightBorder(matrix);
 			}
 		}
@@ -485,32 +514,35 @@ public abstract class LayoutObject extends AbstractGui {
 		
 		//Handles the resizing process
 		if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
-			if (!this.resizing) {
-				this.cachedSnapshot = this.handler.history.createSnapshot();
-				
-				this.lastGrabber = this.getActiveResizeGrabber();
+			if (this.handler.getFocusedObjects().size() == 1) {
+				if (!this.resizing) {
+					this.cachedSnapshot = this.handler.history.createSnapshot();
+
+					this.lastGrabber = this.getActiveResizeGrabber();
+				}
+				this.resizing = true;
+				this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 			}
-			this.resizing = true;
-			this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 		}
 		
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
-
-			if (!this.moving) {
-				this.cachedSnapshot = this.handler.history.createSnapshot();
-			}
-
-			this.moving = true;
-			
-			if ((mouseX >= 5) && (mouseX <= this.handler.width -5)) {
-				if (!this.stretchX) {
-					this.object.posX = this.orientationMouseX(mouseX) - this.startDiffX;
+			if (this.handler.getFocusedObjects().size() == 1) {
+				if (!this.moving) {
+					this.cachedSnapshot = this.handler.history.createSnapshot();
 				}
-			}
-			if ((mouseY >= 5) && (mouseY <= this.handler.height -5)) {
-				if (!this.stretchY) {
-					this.object.posY = this.orientationMouseY(mouseY) - this.startDiffY;
+
+				this.moving = true;
+				
+				if ((mouseX >= 5) && (mouseX <= this.handler.width -5)) {
+					if (!this.stretchX) {
+						this.object.posX = this.orientationMouseX(mouseX) - this.startDiffX;
+					}
+				}
+				if ((mouseY >= 5) && (mouseY <= this.handler.height -5)) {
+					if (!this.stretchY) {
+						this.object.posY = this.orientationMouseY(mouseY) - this.startDiffY;
+					}
 				}
 			}
 		}
@@ -544,12 +576,14 @@ public abstract class LayoutObject extends AbstractGui {
 		//Handle button options menu
         if (this.rightclickMenu != null) {
         	if (this.isRightClicked() && this.handler.isFocused(this)) {
-            	this.rightclickMenu.openMenuAt(mouseX, mouseY);
-            	this.hoveredLayers.clear();
-            	for (LayoutObject o : this.handler.getContent()) {
-            		if (o.isHovered()) {
-            			this.hoveredLayers.add(o);
-            		}
+            	if (this.handler.getFocusedObjects().size() == 1) {
+            		this.rightclickMenu.openMenuAt(mouseX, mouseY);
+                	this.hoveredLayers.clear();
+                	for (LayoutObject o : this.handler.getContent()) {
+                		if (o.isHovered()) {
+                			this.hoveredLayers.add(o);
+                		}
+                	}
             	}
             }
         	
@@ -864,6 +898,10 @@ public abstract class LayoutObject extends AbstractGui {
 	
 	public boolean isDestroyable() {
 		return this.destroyable;
+	}
+
+	public boolean isStretchable() {
+		return this.stretchable;
 	}
 	
 	public void destroyObject() {

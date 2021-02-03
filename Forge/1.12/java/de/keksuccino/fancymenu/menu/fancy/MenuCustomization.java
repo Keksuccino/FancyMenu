@@ -31,6 +31,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 
+@SuppressWarnings("deprecation")
 public class MenuCustomization {
 	
 	private static PropertiesSet customizableMenus;
@@ -49,6 +50,8 @@ public class MenuCustomization {
 			MenuHandlerRegistry.registerHandler(new MainMenuHandler());
 			MenuHandlerRegistry.registerHandler(new MoreRefinedStorageMainHandler());
 			MenuHandlerRegistry.registerHandler(new DummyCoreMainHandler());
+			//TODO disabled for now bc useless
+//			MenuHandlerRegistry.registerHandler(new WorldLoadingScreenHandler());
 			
 			if (!FancyMenu.config.getOrDefault("softmode", false)) {
 				MenuHandlerRegistry.registerHandler(new WorldSelectionMenuHandler());
@@ -244,13 +247,9 @@ public class MenuCustomization {
 	public static String convertString(String s) {
 		int width = 0;
 		int height = 0;
-		String playername = "";
-		String playeruuid = "";
+		String playername = Minecraft.getMinecraft().getSession().getUsername();
+		String playeruuid = Minecraft.getMinecraft().getSession().getPlayerID();
 		String mcversion = ForgeVersion.mcVersion;
-		if (Minecraft.getMinecraft().player != null) {
-			playername = Minecraft.getMinecraft().player.getName();
-			playeruuid = Minecraft.getMinecraft().player.getUniqueID().toString();
-		}
 		if (Minecraft.getMinecraft().currentScreen != null) {
 			width = Minecraft.getMinecraft().currentScreen.width;
 			height = Minecraft.getMinecraft().currentScreen.height;

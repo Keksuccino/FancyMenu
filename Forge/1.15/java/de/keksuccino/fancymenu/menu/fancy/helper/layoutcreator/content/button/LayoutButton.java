@@ -300,10 +300,15 @@ public class LayoutButton extends LayoutObject implements ILayoutButton {
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			this.handler.setMenusUseable(false);
 			TextInputPopup in = new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
-				if ((this.description == null) || (call == null) || !this.description.equals(call)) {
-					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				if (call != null) {
+					if ((this.description == null) || (call == null) || !this.description.equals(call)) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					this.description = call;
+					if (call.equals("")) {
+						this.description = null;
+					}
 				}
-				this.description = call;
 				this.handler.setMenusUseable(true);
 			});
 			

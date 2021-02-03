@@ -16,6 +16,9 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutObject;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutPlayerEntity;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutShape;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSlideshow;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutString;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutTexture;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutWebString;
@@ -25,11 +28,16 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.La
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.PlayerEntityCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.menu.fancy.item.SlideshowCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -150,7 +158,6 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						}
 					}
 
-					//TODO übernehmen
 					if (action.equalsIgnoreCase("setbackgroundpanorama")) {
 						String name = sec.getEntryValue("name");
 						if (name != null) {
@@ -159,15 +166,22 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 							}
 						}
 					}
+
+					if (action.equalsIgnoreCase("setbackgroundslideshow")) {
+						String name = sec.getEntryValue("name");
+						if (name != null) {
+							if (SlideshowHandler.slideshowExists(name)) {
+								this.backgroundSlideshow = SlideshowHandler.getSlideshow(name);
+							}
+						}
+					}
 					
 					if (action.equalsIgnoreCase("texturizebackground")) {
 						String value = sec.getEntryValue("path");
-						//TODO übernehmen
 						String pano = sec.getEntryValue("wideformat");
 						if (pano == null) {
 							pano = sec.getEntryValue("panorama");
 						}
-						//------------
 						if (value != null) {
 							File f = new File(value.replace("\\", "/"));
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
@@ -478,7 +492,6 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						String firsttime = sec.getEntryValue("delayonlyfirsttime");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
 						String clicksound = sec.getEntryValue("clicksound");
-						//TODO übernehmen
 						String desc = sec.getEntryValue("description");
 
 						if (onlydisplayin != null) {
@@ -523,8 +536,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 								lb.delayonlyfirsttime = true;
 							}
 						}
-						
-						//TODO übernehmen
+
 						if (desc != null) {
 							lb.description = desc;
 						}
@@ -591,13 +603,121 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 						}
 					}
 
-					//TODO übernehmen
 					if (action.equalsIgnoreCase("setscale")) {
 						String scale = sec.getEntryValue("scale");
 						if ((scale != null) && (MathUtils.isInteger(scale) || MathUtils.isDouble(scale))) {
 							int sc = (int) Double.parseDouble(scale);
 							if (sc >= 0) {
 								this.scale = sc;
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setopenaudio")) {
+						String path = sec.getEntryValue("path");
+						if (path != null) {
+							File f = new File(path);
+							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
+								this.openAudio = path;
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setcloseaudio")) {
+						String path = sec.getEntryValue("path");
+						if (path != null) {
+							File f = new File(path);
+							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
+								this.closeAudio = path;
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setbuttondescription")) {
+						if (b != null) {
+							String desc = sec.getEntryValue("description");
+							if (desc != null) {
+								if (!vanillas.containsKey(b.getId())) {
+									LayoutVanillaButton van = new LayoutVanillaButton(b, this);
+									vanillas.put(b.getId(), van);
+									con.add(van);
+								}
+								vanillas.get(b.getId()).description = desc;
+								this.vanillaDescriptions.put(b.getId(), desc);
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("addentity")) {
+						LayoutPlayerEntity o = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(sec), this);
+						
+						String playername = sec.getEntryValue("playername");
+						if ((playername != null) && (playername.replace(" ", "").equals("%playername%"))) {
+							o.isCLientPlayerName = true;
+						}
+						
+						String capePath = sec.getEntryValue("capepath");
+						if (capePath != null) {
+							o.capePath = capePath;
+						}
+						
+						String capeUrl = sec.getEntryValue("capeurl");
+						if (capeUrl != null) {
+							o.capeUrl = capeUrl;
+						}
+						
+						String skinPath = sec.getEntryValue("skinpath");
+						if (skinPath != null) {
+							o.skinPath = skinPath;
+						}
+						
+						String skinUrl = sec.getEntryValue("skinurl");
+						if (skinUrl != null) {
+							o.skinUrl = skinUrl;
+						}
+						
+						con.add(o);
+					}
+
+					if (action.equalsIgnoreCase("addslideshow")) {
+						String name = sec.getEntryValue("name");
+						if (name != null) {
+							if (SlideshowHandler.slideshowExists(name)) {
+								LayoutSlideshow ls = new LayoutSlideshow(new SlideshowCustomizationItem(sec), this);
+								int i = isObjectStretched(sec);
+								if (i == 3) {
+									ls.setStretchedX(true, false);
+									ls.setStretchedY(true, false);
+								}
+								if (i == 2) {
+									ls.setStretchedY(true, false);
+								}
+								if (i == 1) {
+									ls.setStretchedX(true, false);
+								}
+								con.add(ls);
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("addshape")) {
+						String shape = sec.getEntryValue("shape");
+						if (shape != null) {
+							Shape sh = Shape.byName(shape);
+							if (sh != null) {
+								LayoutShape ls = new LayoutShape(new ShapeCustomizationItem(sec), this);
+								int i = isObjectStretched(sec);
+								if (i == 3) {
+									ls.setStretchedX(true, false);
+									ls.setStretchedY(true, false);
+								}
+								if (i == 2) {
+									ls.setStretchedY(true, false);
+								}
+								if (i == 1) {
+									ls.setStretchedX(true, false);
+								}
+								con.add(ls);
 							}
 						}
 					}
@@ -608,8 +728,7 @@ public class PreloadedLayoutCreatorScreen extends LayoutCreatorScreen {
 		
 		this.content.addAll(con);
 	}
-	
-	//init
+
 	@Override
 	protected void init() {
 		super.init();

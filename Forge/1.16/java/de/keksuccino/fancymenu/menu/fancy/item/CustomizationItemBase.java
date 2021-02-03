@@ -7,9 +7,10 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 
-public abstract class CustomizationItemBase {
+public abstract class CustomizationItemBase extends AbstractGui {
 	
 	/**
 	 * This value CANNOT BE NULL!<br>

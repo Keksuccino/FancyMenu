@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.DummyCoreMainHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MoreRefinedStorageMainHandler;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.WorldLoadingScreenHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.controls.ControlsMenuHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.languagesettings.LanguageMenuHandler;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.serverselection.ServerSelectionMenuHandler;
@@ -33,6 +34,7 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
+@SuppressWarnings("deprecation")
 public class MenuCustomization {
 	
 	private static PropertiesSet customizableMenus;
@@ -51,6 +53,7 @@ public class MenuCustomization {
 			MenuHandlerRegistry.registerHandler(new MainMenuHandler());
 			MenuHandlerRegistry.registerHandler(new MoreRefinedStorageMainHandler());
 			MenuHandlerRegistry.registerHandler(new DummyCoreMainHandler());
+			MenuHandlerRegistry.registerHandler(new WorldLoadingScreenHandler());
 			
 			if (!FancyMenu.config.getOrDefault("softmode", false)) {
 				MenuHandlerRegistry.registerHandler(new WorldSelectionMenuHandler());
@@ -248,13 +251,10 @@ public class MenuCustomization {
 	public static String convertString(String s) {
 		int width = 0;
 		int height = 0;
-		String playername = "";
-		String playeruuid = "";
+		String playername = Minecraft.getInstance().getSession().getUsername();
+		String playeruuid = Minecraft.getInstance().getSession().getPlayerID();
 		String mcversion = MCPVersion.getMCVersion();
-		if (Minecraft.getInstance().player != null) {
-			playername = Minecraft.getInstance().player.getName().getString();
-			playeruuid = Minecraft.getInstance().player.getUniqueID().toString();
-		}
+		
 		if (Minecraft.getInstance().currentScreen != null) {
 			width = Minecraft.getInstance().currentScreen.width;
 			height = Minecraft.getInstance().currentScreen.height;

@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
@@ -22,9 +24,12 @@ import com.google.common.util.concurrent.Runnables;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -77,55 +82,22 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	@Override
+	public void onMenuReloaded(MenuReloadedEvent e) {
+		super.onMenuReloaded(e);
+		
+		this.splash = getRandomSplashText();
+	}
+	
+	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 				// Resetting values to defaults
 				fadeFooter = 0.1F;
 				tickFooter = 0;
-
+				
 				if (this.splash == null) {
-					this.splash = "missingno";
-					IResource iresource = null;
-					try {
-						List<String> list = Lists.<String>newArrayList();
-						iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
-						BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
-						String s;
-						while ((s = bufferedreader.readLine()) != null) {
-							s = s.trim();
-
-							if (!s.isEmpty()) {
-								list.add(s);
-							}
-						}
-						if (!list.isEmpty()) {
-							while (true) {
-								this.splash = list.get(RANDOM.nextInt(list.size()));
-
-								if (this.splash.hashCode() != 125780783) {
-									break;
-								}
-							}
-						}
-
-						Calendar calendar = Calendar.getInstance();
-						calendar.setTime(new Date());
-
-						if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
-							this.splash = "Merry X-mas!";
-						}
-						else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
-							this.splash = "Happy new year!";
-						}
-						else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
-							this.splash = "OOoooOOOoooo! Spooky!";
-						}
-
-					} catch (IOException var8) {
-					} finally {
-						IOUtils.closeQuietly((Closeable)iresource);
-					}
+					this.splash = getRandomSplashText();
 				}
 
 				this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
@@ -260,20 +232,92 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 			
 			//Draw splashtext string to the main menu if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
-				int offsetx = FancyMenu.config.getOrDefault("splashoffsetx", 0);
-				int offsety = FancyMenu.config.getOrDefault("splashoffsety", 0);
-				int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
-				GlStateManager.pushMatrix();
-				GlStateManager.translate((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
-				GlStateManager.rotate((float)rotation, 0.0F, 0.0F, 1.0F);
-				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-				f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
-				GlStateManager.scale(f, f, f);
-				e.getGui().drawCenteredString(font, this.splash, 0, -8, -256);
-				GlStateManager.popMatrix();
-			}
+//			if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
+//				int offsetx = FancyMenu.config.getOrDefault("splashoffsetx", 0);
+//				int offsety = FancyMenu.config.getOrDefault("splashoffsety", 0);
+//				int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
+//				GlStateManager.pushMatrix();
+//				GlStateManager.translate((float) (width / 2 + 90) + offsetx, 70.0F + offsety, 0.0F);
+//				GlStateManager.rotate((float)rotation, 0.0F, 0.0F, 1.0F);
+//				float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+//				f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
+//				GlStateManager.scale(f, f, f);
+//				e.getGui().drawCenteredString(font, this.splash, 0, -8, -256);
+//				GlStateManager.popMatrix();
+//			}
+			
+			this.renderSplash(font, e.getGui());
 		}
+	}
+	
+	protected void renderSplash(FontRenderer font, GuiScreen s) {
+		
+		if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
+			
+			float finalPosX = (s.width / 2 + 90);
+			float finalPosY = 70.0F;
+
+			int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
+			int posX = FancyMenu.config.getOrDefault("splashx", 0);
+			int posY = FancyMenu.config.getOrDefault("splashy", 0);
+			String orientation = FancyMenu.config.getOrDefault("splashorientation", "original");
+
+			int originX = 0;
+			int originY = 0;
+
+			boolean setpos = true;
+			
+			if (orientation.equalsIgnoreCase("original")) {
+				originX = (int) finalPosX;
+				originY = (int) finalPosY;
+			} else if (orientation.equalsIgnoreCase("top-left")) {
+				; //do nuffin
+			} else if (orientation.equalsIgnoreCase("mid-left")) {
+				originY = s.height / 2;
+			} else if (orientation.equalsIgnoreCase("bottom-left")) {
+				originY = s.height;
+			} else if (orientation.equalsIgnoreCase("top-centered")) {
+				originX = s.width / 2;
+			} else if (orientation.equalsIgnoreCase("mid-centered")) {
+				originX = s.width / 2;
+				originY = s.height / 2;
+			} else if (orientation.equalsIgnoreCase("bottom-centered")) {
+				originX = s.width / 2;
+				originY = s.height;
+			} else if (orientation.equalsIgnoreCase("top-right")) {
+				originX = s.width;
+			} else if (orientation.equalsIgnoreCase("mid-right")) {
+				originX = s.width;
+				originY = s.height / 2;
+			} else if (orientation.equalsIgnoreCase("bottom-right")) {
+				originX = s.width;
+				originY = s.height;
+			} else {
+				setpos = false;
+			}
+
+			//I'm doing this to signalize when an invalid orientation was used
+			if (setpos) {
+				finalPosX = originX + posX;
+				finalPosY = originY + posY;
+			}
+
+			GlStateManager.pushMatrix();
+			GlStateManager.translate(finalPosX, finalPosY, 0.0F);
+			GlStateManager.rotate((float)rotation, 0.0F, 0.0F, 1.0F);
+			float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+			f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
+			GlStateManager.scale(f, f, f);
+
+			Color c = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("splashcolor", "#ffff00"));
+			if (c == null) {
+				c = new Color(255, 255, 0);
+			}
+			s.drawCenteredString(font, this.splash, 0, -8, c.getRGB());
+			GlStateManager.popMatrix();
+			
+		}
+		
 	}
 	
 	private void renderButtonsAndLabels(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
@@ -532,4 +576,62 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
     	return -1;
     }
+    
+    protected static String getRandomSplashText() {
+		String customSplashPath = FancyMenu.config.getOrDefault("splashtextfile", "");
+		if ((customSplashPath != null) && !customSplashPath.equals("")) {
+			File f = new File(customSplashPath);
+			if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
+				List<String> l = FileUtils.getFileLines(f);
+				if ((l != null) && !l.isEmpty()) {
+					int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
+					return l.get(random);
+				}
+			}
+		}
+		
+		String sp = "missingno";
+		IResource iresource = null;
+		try {
+			List<String> list = Lists.<String>newArrayList();
+			iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
+			BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
+			String s;
+			while ((s = bufferedreader.readLine()) != null) {
+				s = s.trim();
+
+				if (!s.isEmpty()) {
+					list.add(s);
+				}
+			}
+			if (!list.isEmpty()) {
+				while (true) {
+					sp = list.get(RANDOM.nextInt(list.size()));
+
+					if (sp.hashCode() != 125780783) {
+						break;
+					}
+				}
+			}
+
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(new Date());
+
+			if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
+				sp = "Merry X-mas!";
+			}
+			else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
+				sp = "Happy new year!";
+			}
+			else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
+				sp = "OOoooOOOoooo! Spooky!";
+			}
+
+		} catch (IOException var8) {
+		} finally {
+			IOUtils.closeQuietly((Closeable)iresource);
+		}
+		
+		return sp;
+	}
 }

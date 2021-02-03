@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
+import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -28,6 +29,9 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.item.PlayerEntityCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.SlideshowCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
@@ -35,6 +39,8 @@ import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
+import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -57,7 +63,6 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-
 public class MenuHandlerBase {
 
 	protected List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
@@ -76,9 +81,10 @@ public class MenuHandlerBase {
 	private double panoPos = 0.0;
 	private boolean panoMoveBack = false;
 	private boolean panoStop = false;
-	
-	//TODO übernehmen
+
 	private ExternalTexturePanoramaRenderer panoramacube;
+
+	private ExternalTextureSlideshowRenderer slideshow;
 
 	private List<Long> onlyDelayFirstTime = new ArrayList<Long>();
 	private Map<ButtonData, Double> hidefor = new HashMap<ButtonData, Double>();
@@ -87,6 +93,9 @@ public class MenuHandlerBase {
 	private List<PropertiesSet> props;
 	private boolean preinit = false;
 
+	protected String closeAudio;
+	protected String openAudio;
+	
 	protected static Screen scaleChangedIn = null;
 
 	/**
@@ -251,10 +260,8 @@ public class MenuHandlerBase {
 
 					if (action.contentEquals("setscale")) {
 						String scale = sec.getEntryValue("scale");
-						//TODO übernehmen (int || double)
 						if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
 							scaleChangedIn = e.getGui();
-							//TODO übernehmen
 							int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
 							if (newscale <= 0) {
 								newscale = 1;
@@ -331,8 +338,8 @@ public class MenuHandlerBase {
 		audio.clear();
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
-		//TODO übernehmen
 		this.panoramacube = null;
+		this.slideshow = null;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -341,6 +348,11 @@ public class MenuHandlerBase {
 		this.backgroundDrawable = false;
 
 		boolean backgroundTextureSet = false;
+
+		boolean closeAudioSet = false;
+		boolean openAudioSet = false;
+
+		Map<ButtonData, String> descriptions = new HashMap<ButtonData, String>();
 
 		for (PropertiesSet s : this.props) {
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -435,7 +447,15 @@ public class MenuHandlerBase {
 						}
 					}
 
-					//TODO übernehmen
+					if (action.equalsIgnoreCase("setbackgroundslideshow")) {
+						String name = sec.getEntryValue("name");
+						if (name != null) {
+							if (SlideshowHandler.slideshowExists(name)) {
+								this.slideshow = SlideshowHandler.getSlideshow(name);
+							}
+						}
+					}
+					
 					if (action.equalsIgnoreCase("setbackgroundpanorama")) {
 						String name = sec.getEntryValue("name");
 						if (name != null) {
@@ -447,12 +467,10 @@ public class MenuHandlerBase {
 					
 					if (action.equalsIgnoreCase("texturizebackground")) {
 						String value = sec.getEntryValue("path");
-						//TODO übernehmen
 						String pano = sec.getEntryValue("wideformat");
 						if (pano == null) {
 							pano = sec.getEntryValue("panorama");
 						}
-						//---------------
 						if (value != null) {
 							File f = new File(value.replace("\\", "/"));
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
@@ -739,6 +757,30 @@ public class MenuHandlerBase {
 						}
 					}
 
+					if (action.equalsIgnoreCase("addshape")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new ShapeCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new ShapeCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addslideshow")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new SlideshowCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new SlideshowCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addentity")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new PlayerEntityCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new PlayerEntityCustomizationItem(sec));
+						}
+					}
+
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
 						AdvancedButton cbtn = i.getButton();
@@ -764,24 +806,76 @@ public class MenuHandlerBase {
 
 					if (action.equalsIgnoreCase("addaudio")) {
 						if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
-							String path = sec.getEntryValue("path");
-							String loopString = sec.getEntryValue("loop");
+							if ((Minecraft.getInstance().world == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
+								String path = sec.getEntryValue("path");
+								String loopString = sec.getEntryValue("loop");
 
-							boolean loop = false; 
-							if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
-								loop = true;
-							}
-							if (path != null) {
-								File f = new File(path);
-								if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-									try {
-										String name = path + Files.size(f.toPath());
-										MenuCustomization.registerSound(name, path);
-										this.audio.put(name, loop);
-									} catch (Exception ex) {
-										ex.printStackTrace();
+								boolean loop = false; 
+								if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
+									loop = true;
+								}
+								if (path != null) {
+									File f = new File(path);
+									if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+										try {
+											//TODO change to md5 instead of filesize
+											String name = path + Files.size(f.toPath());
+											MenuCustomization.registerSound(name, path);
+											this.audio.put(name, loop);
+										} catch (Exception ex) {
+											ex.printStackTrace();
+										}
 									}
 								}
+							}
+						}
+					}
+					
+					if (action.equalsIgnoreCase("setcloseaudio")) {
+						String path = sec.getEntryValue("path");
+
+						if (path != null) {
+							File f = new File(path);
+							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+								try {
+									//TODO change to md5 instead of filesize
+									String name = "closesound_" + path + Files.size(f.toPath());
+									MenuCustomization.registerSound(name, path);
+									this.closeAudio = name;
+									closeAudioSet = true;
+								} catch (Exception ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setopenaudio")) {
+						String path = sec.getEntryValue("path");
+
+						if (path != null) {
+							File f = new File(path);
+							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+								try {
+									//TODO change to md5 instead of filesize
+									String name = "opensound_" + path + Files.size(f.toPath());
+									MenuCustomization.registerSound(name, path);
+									SoundHandler.resetSound(name);
+									SoundHandler.playSound(name);
+									this.openAudio = name;
+									openAudioSet = true;
+								} catch (Exception ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setbuttondescription")) {
+						if (b != null) {
+							String desc = sec.getEntryValue("description");
+							if (desc != null) {
+								descriptions.put(bd, desc);
 							}
 						}
 					}
@@ -792,11 +886,28 @@ public class MenuHandlerBase {
 
 		MenuHandlerRegistry.setActiveHandler(this.getMenuIdentifier());
 
+		for (Map.Entry<ButtonData, String> m : descriptions.entrySet()) {
+			Widget w = m.getKey().getButton();
+			if (w != null) {
+				VanillaButtonDescriptionHandler.setDescriptionFor(w, m.getValue());
+			}
+		}
+		
 		for (String s : MenuCustomization.getSounds()) {
-			if (!this.audio.containsKey(s)) {
+			if (!this.audio.containsKey(s) && !s.equals(this.openAudio) && !s.equals(this.closeAudio)) {
 				SoundHandler.stopSound(s);
 				SoundHandler.resetSound(s);
 			}
+		}
+
+		if (!closeAudioSet && (this.closeAudio != null)) {
+			MenuCustomization.unregisterSound(this.closeAudio);
+			this.closeAudio = null;
+		}
+
+		if (!openAudioSet && (this.openAudio != null)) {
+			MenuCustomization.unregisterSound(this.openAudio);
+			this.openAudio = null;
 		}
 
 		for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
@@ -855,7 +966,7 @@ public class MenuHandlerBase {
 		}
 
 		if (!this.backgroundDrawable) {
-			//Rendering all items which SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
+			//Rendering all items that SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
 			for (CustomizationItemBase i : this.backgroundRenderItems) {
 				try {
 					i.render(e.getMatrixStack(), e.getGui());
@@ -865,7 +976,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//Rendering all items which should be rendered in the foreground
+		//Rendering all items that should be rendered in the foreground
 		for (CustomizationItemBase i : this.frontRenderItems) {
 			try {
 				i.render(e.getMatrixStack(), e.getGui());
@@ -951,10 +1062,30 @@ public class MenuHandlerBase {
 					}
 
 					RenderSystem.disableBlend();
-					
-			    //TODO übernehmen
+
 				} else if (this.panoramacube != null) {
+					
 					this.panoramacube.render();
+
+				} else if (this.slideshow != null) {
+					
+					int sw = this.slideshow.width;
+					int sh = this.slideshow.height;
+					int sx = this.slideshow.x;
+					int sy = this.slideshow.y;
+					
+					this.slideshow.height = e.getGui().height;
+					this.slideshow.width = e.getGui().width;
+					this.slideshow.x = 0;
+					this.slideshow.y = 0;
+					
+					this.slideshow.render(e.getMatrixStack());
+					
+					this.slideshow.width = sw;
+					this.slideshow.height = sh;
+					this.slideshow.x = sx;
+					this.slideshow.y = sy;
+					
 				}
 			}
 
@@ -1011,8 +1142,7 @@ public class MenuHandlerBase {
 	}
 
 	public boolean canRenderBackground() {
-		//TODO übernehmen
-		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null));
+		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null) || (this.slideshow != null));
 	}
 
 	public boolean setBackgroundAnimation(int id) {

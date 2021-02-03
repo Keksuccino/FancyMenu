@@ -95,8 +95,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 					this.button.setClickSound(f.getPath());
 				}
 			}
-			
-			//TODO übernehmen
+
 			String desc = item.getEntryValue("description");
 			if (desc != null) {
 				this.button.setDescription(StringUtils.splitLines(desc.replace("§n", "&n"), "&n"));

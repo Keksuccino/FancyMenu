@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
+import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -28,6 +29,9 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScre
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.item.PlayerEntityCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.SlideshowCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
@@ -35,6 +39,8 @@ import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
+import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -79,6 +85,8 @@ public class MenuHandlerBase extends DrawableHelper {
 	private boolean panoStop = false;
 	
 	private ExternalTexturePanoramaRenderer panoramacube;
+	
+	private ExternalTextureSlideshowRenderer slideshow;
 
 	private List<Long> onlyDelayFirstTime = new ArrayList<Long>();
 	private Map<ButtonData, Double> hidefor = new HashMap<ButtonData, Double>();
@@ -87,6 +95,9 @@ public class MenuHandlerBase extends DrawableHelper {
 	private List<PropertiesSet> props;
 	private boolean preinit = false;
 
+	protected String closeAudio;
+	protected String openAudio;
+	
 	protected static Screen scaleChangedIn = null;
 	
 	/**
@@ -330,6 +341,7 @@ public class MenuHandlerBase extends DrawableHelper {
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
 		this.panoramacube = null;
+		this.slideshow = null;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -338,7 +350,12 @@ public class MenuHandlerBase extends DrawableHelper {
 		this.backgroundDrawable = false;
 		
 		boolean backgroundTextureSet = false;
+		
+		boolean closeAudioSet = false;
+		boolean openAudioSet = false;
 
+		Map<ButtonData, String> descriptions = new HashMap<ButtonData, String>();
+		
 		for (PropertiesSet s : this.props) {
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
 			if (metas.isEmpty()) {
@@ -429,6 +446,15 @@ public class MenuHandlerBase extends DrawableHelper {
 						bd = getButton(identifier);
 						if (bd != null) {
 							b = bd.getButton();
+						}
+					}
+					
+					if (action.equalsIgnoreCase("setbackgroundslideshow")) {
+						String name = sec.getEntryValue("name");
+						if (name != null) {
+							if (SlideshowHandler.slideshowExists(name)) {
+								this.slideshow = SlideshowHandler.getSlideshow(name);
+							}
 						}
 					}
 					
@@ -733,6 +759,30 @@ public class MenuHandlerBase extends DrawableHelper {
 						}
 					}
 
+					if (action.equalsIgnoreCase("addshape")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new ShapeCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new ShapeCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addslideshow")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new SlideshowCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new SlideshowCustomizationItem(sec));
+						}
+					}
+
+					if (action.equalsIgnoreCase("addentity")) {
+						if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+							backgroundRenderItems.add(new PlayerEntityCustomizationItem(sec));
+						} else {
+							frontRenderItems.add(new PlayerEntityCustomizationItem(sec));
+						}
+					}
+					
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
 						AdvancedButton cbtn = i.getButton();
@@ -758,24 +808,76 @@ public class MenuHandlerBase extends DrawableHelper {
 
 					if (action.equalsIgnoreCase("addaudio")) {
 						if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
-							String path = sec.getEntryValue("path");
-							String loopString = sec.getEntryValue("loop");
+							if ((MinecraftClient.getInstance().world == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
+								String path = sec.getEntryValue("path");
+								String loopString = sec.getEntryValue("loop");
 
-							boolean loop = false; 
-							if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
-								loop = true;
-							}
-							if (path != null) {
-								File f = new File(path);
-								if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-									try {
-										String name = path + Files.size(f.toPath());
-										MenuCustomization.registerSound(name, path);
-										this.audio.put(name, loop);
-									} catch (Exception ex) {
-										ex.printStackTrace();
+								boolean loop = false; 
+								if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
+									loop = true;
+								}
+								if (path != null) {
+									File f = new File(path);
+									if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+										try {
+											//TODO change to md5 instead of filesize
+											String name = path + Files.size(f.toPath());
+											MenuCustomization.registerSound(name, path);
+											this.audio.put(name, loop);
+										} catch (Exception ex) {
+											ex.printStackTrace();
+										}
 									}
 								}
+							}
+						}
+					}
+					
+					if (action.equalsIgnoreCase("setcloseaudio")) {
+						String path = sec.getEntryValue("path");
+
+						if (path != null) {
+							File f = new File(path);
+							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+								try {
+									//TODO change to md5 instead of filesize
+									String name = "closesound_" + path + Files.size(f.toPath());
+									MenuCustomization.registerSound(name, path);
+									this.closeAudio = name;
+									closeAudioSet = true;
+								} catch (Exception ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setopenaudio")) {
+						String path = sec.getEntryValue("path");
+
+						if (path != null) {
+							File f = new File(path);
+							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+								try {
+									//TODO change to md5 instead of filesize
+									String name = "opensound_" + path + Files.size(f.toPath());
+									MenuCustomization.registerSound(name, path);
+									SoundHandler.resetSound(name);
+									SoundHandler.playSound(name);
+									this.openAudio = name;
+									openAudioSet = true;
+								} catch (Exception ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
+					}
+
+					if (action.equalsIgnoreCase("setbuttondescription")) {
+						if (b != null) {
+							String desc = sec.getEntryValue("description");
+							if (desc != null) {
+								descriptions.put(bd, desc);
 							}
 						}
 					}
@@ -785,12 +887,29 @@ public class MenuHandlerBase extends DrawableHelper {
 		}
 
 		MenuHandlerRegistry.setActiveHandler(this.getMenuIdentifier());
+		
+		for (Map.Entry<ButtonData, String> m : descriptions.entrySet()) {
+			AbstractButtonWidget w = m.getKey().getButton();
+			if (w != null) {
+				VanillaButtonDescriptionHandler.setDescriptionFor(w, m.getValue());
+			}
+		}
 
 		for (String s : MenuCustomization.getSounds()) {
-			if (!this.audio.containsKey(s)) {
+			if (!this.audio.containsKey(s) && !s.equals(this.openAudio) && !s.equals(this.closeAudio)) {
 				SoundHandler.stopSound(s);
 				SoundHandler.resetSound(s);
 			}
+		}
+		
+		if (!closeAudioSet && (this.closeAudio != null)) {
+			MenuCustomization.unregisterSound(this.closeAudio);
+			this.closeAudio = null;
+		}
+
+		if (!openAudioSet && (this.openAudio != null)) {
+			MenuCustomization.unregisterSound(this.openAudio);
+			this.openAudio = null;
 		}
 
 		for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
@@ -947,7 +1066,28 @@ public class MenuHandlerBase extends DrawableHelper {
 					RenderSystem.disableBlend();
 					
 				} else if (this.panoramacube != null) {
+					
 					this.panoramacube.render();
+					
+				} else if (this.slideshow != null) {
+					
+					int sw = this.slideshow.width;
+					int sh = this.slideshow.height;
+					int sx = this.slideshow.x;
+					int sy = this.slideshow.y;
+					
+					this.slideshow.height = e.getGui().height;
+					this.slideshow.width = e.getGui().width;
+					this.slideshow.x = 0;
+					this.slideshow.y = 0;
+					
+					this.slideshow.render(e.getMatrixStack());
+					
+					this.slideshow.width = sw;
+					this.slideshow.height = sh;
+					this.slideshow.x = sx;
+					this.slideshow.y = sy;
+					
 				}
 			}
 
@@ -995,6 +1135,9 @@ public class MenuHandlerBase extends DrawableHelper {
 	}
 	
 	protected boolean shouldCustomize(Screen menu) {
+		if (menu == null) {
+			return false;
+		}
 		if (getMenuIdentifier() != null) {
 			if (!this.getMenuIdentifier().equals(menu.getClass().getName())) {
 				return false;
@@ -1004,7 +1147,7 @@ public class MenuHandlerBase extends DrawableHelper {
 	}
 	
 	public boolean canRenderBackground() {
-		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null));
+		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null) || (this.slideshow != null));
 	}
 	
 	public boolean setBackgroundAnimation(int id) {

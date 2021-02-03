@@ -2,30 +2,37 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.network.FMLNetworkConstants;
 
 @Mod("fancymenu")
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "1.6.0";
+	public static final String VERSION = "1.7.1";
 	
 	public static Config config;
 	
@@ -33,9 +40,15 @@ public class FancyMenu {
 	private static File customizationPath = new File("config/fancymenu/customization");
 	private static File customGuiPath = new File("config/fancymenu/customguis");
 	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
+	private static File panoramaPath = new File("config/fancymenu/panoramas");
+	private static File slideshowPath = new File("config/fancymenu/slideshows");
 	
 	public FancyMenu() {
 		try {
+
+			//TODO übernehmen
+			ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
+			
 			//Check if FancyMenu was loaded client- or serverside
 	    	if (FMLEnvironment.dist == Dist.CLIENT) {
 	    		
@@ -44,14 +57,17 @@ public class FancyMenu {
 	    		customizationPath.mkdirs();
 	    		customGuiPath.mkdirs();
 	    		buttonscriptPath.mkdirs();
+	    		panoramaPath.mkdirs();
+	    		slideshowPath.mkdirs();
 
 	    		updateConfig();
 
 	    		AnimationHandler.init();
 	    		AnimationHandler.loadCustomAnimations();
-	    		
-	    		//TODO übernehmen
+
 	    		PanoramaHandler.init();
+
+	    		SlideshowHandler.init();
 	    		
 	    		CustomGuiLoader.loadCustomGuis();
 	    		
@@ -64,6 +80,8 @@ public class FancyMenu {
 	        	}
 
 	        	ButtonScriptEngine.init();
+
+	        	VanillaButtonDescriptionHandler.init();
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 	        	
@@ -116,10 +134,10 @@ public class FancyMenu {
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");
     		config.registerValue("playbackgroundsounds", true, "general", "If menu background sounds added by FancyMenu should be played or not.");
-    		//TODO übernehmen
+    		config.registerValue("playbackgroundsoundsinworld", false, "general", "If menu background sounds added by FancyMenu should be played when a world is loaded.");
+    		config.registerValue("stopworldmusicwhencustomizable", false, "general", "Stop vanilla world music when in a customizable menu.");
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
-    		//---------------
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
     		config.registerValue("softmode", false, "customization", "Maximizes mod compatibility. Disables background customization support for scrollable menu screens. Restart is needed after changing this value.");
@@ -133,8 +151,11 @@ public class FancyMenu {
 			config.registerValue("hideforgenotifications", false, "mainmenu");
 
 			config.registerValue("hidesplashtext", false, "mainmenu_splash");
-			config.registerValue("splashoffsetx", 0, "mainmenu_splash");
-			config.registerValue("splashoffsety", 0, "mainmenu_splash");
+			config.registerValue("splashx", 0, "mainmenu_splash");
+			config.registerValue("splashy", 0, "mainmenu_splash");
+			config.registerValue("splashorientation", "original", "mainmenu_splash");
+			config.registerValue("splashcolor", "#ffff00", "mainmenu_splash");
+			config.registerValue("splashtextfile", "", "mainmenu_splash");
 			config.registerValue("splashrotation", -20, "mainmenu_splash");
 			
 			config.registerValue("gameintroanimation", "", "loading");
@@ -142,15 +163,16 @@ public class FancyMenu {
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
-			//TODO übernehmen (helles grau bei älteren versionen nutzen)
 			config.registerValue("loadinganimationcolor", "#ffffffff", "loading");
 
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
 			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
 
-			//TODO übernehmen
-//			config.registerValue("showundoredocontrols", false, "layouteditor", "If the undo/redo control buttons of the layout editor should be visible or not.");
+			config.registerValue("showloadingscreenanimation", true, "world_loading_screen");
+			config.registerValue("showloadingscreenpercent", true, "world_loading_screen");
+			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
+			config.registerValue("popupmenuscale", 1.0F, "layouteditor");
 			
 			config.syncConfig();
 			
@@ -158,10 +180,10 @@ public class FancyMenu {
 			config.setCategory("enablehotkeys", "general");
 			config.setCategory("playmenumusic", "general");
 			config.setCategory("playbackgroundsounds", "general");
-			//TODO übernehmen
+			config.setCategory("playbackgroundsoundsinworld", "general");
+			config.setCategory("stopworldmusicwhencustomizable", "general");
 			config.setCategory("defaultguiscale", "general");
 			config.setCategory("showdebugwarnings", "general");
-			//--------------
     		
 			config.setCategory("showcustomizationbuttons", "customization");
 			config.setCategory("softmode", "customization");
@@ -175,8 +197,11 @@ public class FancyMenu {
 			config.setCategory("hideforgenotifications", "mainmenu");
 			
 			config.setCategory("hidesplashtext", "mainmenu_splash");
-			config.setCategory("splashoffsetx", "mainmenu_splash");
-			config.setCategory("splashoffsety", "mainmenu_splash");
+			config.setCategory("splashx", "mainmenu_splash");
+			config.setCategory("splashy", "mainmenu_splash");
+			config.setCategory("splashorientation", "mainmenu_splash");
+			config.setCategory("splashcolor", "mainmenu_splash");
+			config.setCategory("splashtextfile", "mainmenu_splash");
 			config.setCategory("splashrotation", "mainmenu_splash");
 			
 			config.setCategory("gameintroanimation", "loading");
@@ -184,15 +209,16 @@ public class FancyMenu {
 			config.setCategory("showanimationloadingstatus", "loading");
 			config.setCategory("allowgameintroskip", "loading");
 			config.setCategory("customgameintroskiptext", "loading");
-			//TODO übernehmen
 			config.setCategory("loadinganimationcolor", "loading");
 
 			config.setCategory("customwindowicon", "minecraftwindow");
 			config.setCategory("customwindowtitle", "minecraftwindow");
 
-			//TODO übernehmen
-//			config.setCategory("showundoredocontrols", "layouteditor");
+			config.setCategory("showloadingscreenanimation", "world_loading_screen");
+			config.setCategory("showloadingscreenpercent", "world_loading_screen");
+			
 			config.setCategory("showvanillamovewarning", "layouteditor");
+			config.setCategory("popupmenuscale", "layouteditor");
 			
 			config.clearUnusedValues();
 		} catch (InvalidValueException e) {
@@ -226,6 +252,20 @@ public class FancyMenu {
 			buttonscriptPath.mkdirs();
 		}
 		return buttonscriptPath;
+	}
+
+	public static File getPanoramaPath() {
+		if (!panoramaPath.exists()) {
+			panoramaPath.mkdirs();
+		}
+		return panoramaPath;
+	}
+
+	public static File getSlideshowPath() {
+		if (!slideshowPath.exists()) {
+			slideshowPath.mkdirs();
+		}
+		return slideshowPath;
 	}
 
 }

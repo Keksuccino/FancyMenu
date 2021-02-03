@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.lwjgl.util.glu.Project;
 
+import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
@@ -26,6 +27,9 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 	private String dir;
 	private boolean prepared = false;
 	private List<ExternalTextureResourceLocation> pano = new ArrayList<ExternalTextureResourceLocation>();
+	private float speed = 1.0F;
+	private float fov = 85.0F;
+	private float angle = 25.0F;
 	
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -48,6 +52,18 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 						System.out.println("############## ERROR [FANCYMENU] ##############");
 						System.out.println("Missing 'name' value in properties file for panorama cube: " + this.dir);
 						System.out.println("###############################################");
+					}
+					String sp = l.get(0).getEntryValue("speed");
+					if ((sp != null) && MathUtils.isFloat(sp)) {
+						this.speed = Float.parseFloat(sp);
+					}
+					String fo = l.get(0).getEntryValue("fov");
+					if ((fo != null) && MathUtils.isFloat(fo)) {
+						this.fov = Float.parseFloat(fo);
+					}
+					String an = l.get(0).getEntryValue("angle");
+					if ((an != null) && MathUtils.isFloat(an)) {
+						this.angle = Float.parseFloat(an);
 					}
 				} else {
 					System.out.println("############## ERROR [FANCYMENU] ##############");
@@ -101,14 +117,19 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 			
 		}
 	}
-
+	
 	public void render() {
+		
+		this.renderRaw(1.0F);
+		
+	}
+
+	public void renderRaw(float panoramaAlpha) {
 		if (this.prepared) {
-			this.time += Minecraft.getMinecraft().getRenderPartialTicks();
+			this.time += Minecraft.getMinecraft().getRenderPartialTicks() * this.speed;
 			
-			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + 25.0F;
+			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;
-			float alpha = 1.0F;
 			Minecraft mc = Minecraft.getMinecraft();
 			Tessellator tessellator = Tessellator.getInstance();
 			BufferBuilder bufferbuilder = tessellator.getBuffer();
@@ -118,7 +139,7 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 			GlStateManager.loadIdentity();
 //			GlStateManager.multMatrix(Matrix4f.perspective(85.0D, (float)mc.getMainWindow().getFramebufferWidth() / (float)mc.getMainWindow().getFramebufferHeight(), 0.05F, 10.0F));
 //			Project.gluPerspective(120.0F, 1.0F, 0.05F, 10.0F);
-			Project.gluPerspective(85.0F, (float)mc.getFramebuffer().framebufferWidth / (float)mc.getFramebuffer().framebufferHeight, 0.05F, 10.0F);
+			Project.gluPerspective(this.fov, (float)mc.getFramebuffer().framebufferWidth / (float)mc.getFramebuffer().framebufferHeight, 0.05F, 10.0F);
 			GlStateManager.matrixMode(5888);
 			GlStateManager.pushMatrix();
 			GlStateManager.loadIdentity();
@@ -146,7 +167,7 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 						}
 						mc.getTextureManager().bindTexture(r.getResourceLocation());
 						bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-						int l = Math.round(255.0F * alpha) / (j + 1);
+						int l = Math.round(255.0F * panoramaAlpha) / (j + 1);
 						if (k == 0) {
 							bufferbuilder.pos(-1.0D, -1.0D, 1.0D).tex(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
 							bufferbuilder.pos(-1.0D, 1.0D, 1.0D).tex(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
@@ -219,6 +240,24 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public void setSpeed(float speed) {
+		if (speed < 0.0F) {
+			speed = 0.0F;
+		}
+		this.speed = speed;
+	}
+
+	public void setFov(float fov) {
+		if (fov > 179.0F) {
+			fov = 179.0F;
+		}
+		this.fov = fov;
+	}
+
+	public void setAngle(float angle) {
+		this.angle = angle;
 	}
 
 }

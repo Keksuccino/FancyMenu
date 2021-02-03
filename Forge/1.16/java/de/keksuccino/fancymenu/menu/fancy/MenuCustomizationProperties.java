@@ -16,10 +16,8 @@ import net.minecraftforge.versions.mcp.MCPVersion;
 public class MenuCustomizationProperties {
 	
 	private static List<PropertiesSet> properties = new ArrayList<PropertiesSet>();
-	//TODO übernehmen
 	private static List<PropertiesSet> disabled = new ArrayList<PropertiesSet>();
-	
-	//TODO übernehmen
+
 	public static void loadProperties() {
 		File f = FancyMenu.getCustomizationPath();
 		properties = parsePropertiesFromDir(f);
@@ -27,8 +25,7 @@ public class MenuCustomizationProperties {
 		File f3 = new File(FancyMenu.getCustomizationPath().getPath() + "/.disabled");
 		disabled = parsePropertiesFromDir(f3);
 	}
-	
-	//TODO übernehmen
+
 	public static List<PropertiesSet> parsePropertiesFromDir(File dir) {
 		List<PropertiesSet> props = new ArrayList<PropertiesSet>();
 
@@ -143,8 +140,7 @@ public class MenuCustomizationProperties {
 	public static List<PropertiesSet> getProperties() {
 		return properties;
 	}
-	
-	//TODO übernehmen
+
 	public static List<PropertiesSet> getDisabledProperties() {
 		return disabled;
 	}
@@ -166,8 +162,7 @@ public class MenuCustomizationProperties {
 		}
 		return l;
 	}
-	
-	//TODO übernehmen
+
 	public static List<PropertiesSet> getDisabledPropertiesWithIdentifier(String identifier) {
 		List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 		for (PropertiesSet s : getDisabledProperties()) {

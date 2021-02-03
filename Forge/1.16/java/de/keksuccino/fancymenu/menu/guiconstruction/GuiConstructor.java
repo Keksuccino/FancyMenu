@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.PackScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.resources.LanguageManager;
+import net.minecraft.entity.player.PlayerEntity;
 
 public class GuiConstructor {
 	
@@ -24,6 +25,11 @@ public class GuiConstructor {
 		parameters.put(Screen.class, null);
 		parameters.put(GameSettings.class, Minecraft.getInstance().gameSettings);
 		parameters.put(LanguageManager.class, Minecraft.getInstance().getLanguageManager());
+		//TODO übernehmen
+		parameters.put(boolean.class, true);
+		parameters.put(PlayerEntity.class, null);
+		parameters.put(String.class, "");
+		//-----------------
 		
 	}
 	
@@ -31,6 +37,10 @@ public class GuiConstructor {
 		try {
 			//Update last screen
 			parameters.put(Screen.class, Minecraft.getInstance().currentScreen);
+			//TODO übernehmen
+			//Update player
+			parameters.put(PlayerEntity.class, Minecraft.getInstance().player);
+			//--------------
 			
 			Class<?> gui = Class.forName(identifier);
 			if ((gui != null) && Screen.class.isAssignableFrom(gui)) {

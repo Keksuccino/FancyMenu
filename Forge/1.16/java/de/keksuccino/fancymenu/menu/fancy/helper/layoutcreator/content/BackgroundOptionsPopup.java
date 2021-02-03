@@ -8,6 +8,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutCreatorScreen;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
 import de.keksuccino.konkrete.gui.screens.popup.Popup;
@@ -35,26 +36,27 @@ public class BackgroundOptionsPopup extends Popup {
 	protected AdvancedButton noPanoramaButton;
 	
 	protected AdvancedButton addRemoveAnimationButton;
-	
-	//TODO übernehmen
+
 	protected AdvancedButton setPanoramaButton;
+	protected AdvancedButton setSlideshowButton;
 	protected AdvancedButton clearPanoramaButton;
+	protected AdvancedButton clearSlideshowButton;
 	
 	protected HorizontalSwitcher typeSwitcher;
 	protected HorizontalSwitcher animationSwitcher;
-	//TODO übernehmen
 	protected HorizontalSwitcher panoramaSwitcher;
+	protected HorizontalSwitcher slideshowSwitcher;
 	
 	public BackgroundOptionsPopup(LayoutCreatorScreen handler) {
 		super(240);
 		
 		this.handler = handler;
-		
-		//TODO übernehmen
+
 		this.typeSwitcher = new HorizontalSwitcher(120, true,
 				Locals.localize("helper.creator.backgroundoptions.backgroundanimation"),
 				Locals.localize("helper.creator.backgroundoptions.backgroundimage"),
-				Locals.localize("helper.creator.backgroundoptions.backgroundpanorama"));
+				Locals.localize("helper.creator.backgroundoptions.backgroundpanorama"),
+				Locals.localize("helper.creator.backgroundoptions.backgroundslideshow"));
 		this.typeSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.typeSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
@@ -64,15 +66,20 @@ public class BackgroundOptionsPopup extends Popup {
 		}
 		this.animationSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.animationSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
-		
-		//TODO übernehmen
+
 		this.panoramaSwitcher = new HorizontalSwitcher(120, true);
 		for (String s : PanoramaHandler.getPanoramaNames()) {
 			this.panoramaSwitcher.addValue(s);
 		}
 		this.panoramaSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
 		this.panoramaSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
-		//---------------------
+
+		this.slideshowSwitcher = new HorizontalSwitcher(120, true);
+		for (String s : SlideshowHandler.getSlideshowNames()) {
+			this.slideshowSwitcher.addValue(s);
+		}
+		this.slideshowSwitcher.setButtonColor(new Color(102, 102, 153), new Color(133, 133, 173), new Color(163, 163, 194), new Color(163, 163, 194), 1);
+		this.slideshowSwitcher.setValueBackgroundColor(new Color(102, 102, 153));
 		
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			BackgroundOptionsPopup.this.handler.setMenusUseable(false);
@@ -127,13 +134,18 @@ public class BackgroundOptionsPopup extends Popup {
 			this.panoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.panorama"));
 		});
 		this.addButton(noPanoramaButton);
-
-		//TODO übernehmen
+		
 		this.setPanoramaButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.panoramas.set"), true, (press) -> {
 			if (this.panoramaSwitcher.getSelectedValue() != null) {
 				if (PanoramaHandler.panoramaExists(this.panoramaSwitcher.getSelectedValue())) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					this.handler.backgroundPanorama = PanoramaHandler.getPanorama(this.panoramaSwitcher.getSelectedValue());
+
+					this.handler.setBackgroundAnimations((String[])null);
+					this.handler.backgroundAnimationNames.clear();
+					this.handler.backgroundTexture = null;
+					this.handler.backgroundTexturePath = null;
+					this.handler.backgroundSlideshow = null;
 				}
 			}
 		});
@@ -143,7 +155,6 @@ public class BackgroundOptionsPopup extends Popup {
 			this.setPanoramaButton.active = false;
 		}
 
-		//TODO übernehmen
 		this.clearPanoramaButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.panoramas.clear"), true, (press) -> {
 			if (this.handler.backgroundPanorama != null) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -154,6 +165,39 @@ public class BackgroundOptionsPopup extends Popup {
 		this.addButton(clearPanoramaButton);
 		if (this.panoramaSwitcher.getSelectedValue() == null) {
 			this.clearPanoramaButton.active = false;
+		}
+
+		this.setSlideshowButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.backgroundslideshow.set"), true, (press) -> {
+			if (this.slideshowSwitcher.getSelectedValue() != null) {
+				if (SlideshowHandler.slideshowExists(this.slideshowSwitcher.getSelectedValue())) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					this.handler.backgroundSlideshow = SlideshowHandler.getSlideshow(this.slideshowSwitcher.getSelectedValue());
+
+					this.handler.setBackgroundAnimations((String[])null);
+					this.handler.backgroundAnimationNames.clear();
+					this.handler.backgroundTexture = null;
+					this.handler.backgroundTexturePath = null;
+					this.handler.backgroundPanorama = null;
+					
+				}
+			}
+		});
+		this.setSlideshowButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.backgroundoptions.backgroundslideshow.set.desc"), "%n%"));
+		this.addButton(setSlideshowButton);
+		if (this.slideshowSwitcher.getSelectedValue() == null) {
+			this.setSlideshowButton.active = false;
+		}
+
+		this.clearSlideshowButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.backgroundslideshow.clear"), true, (press) -> {
+			if (this.handler.backgroundSlideshow != null) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			this.handler.backgroundSlideshow = null;
+		});
+		this.clearSlideshowButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.backgroundoptions.backgroundslideshow.clear.desc"), "%n%"));
+		this.addButton(clearSlideshowButton);
+		if (this.slideshowSwitcher.getSelectedValue() == null) {
+			this.clearSlideshowButton.active = false;
 		}
 				
 		this.addRemoveAnimationButton = new AdvancedButton(0, 0, 100, 20, "", true, (press) -> {
@@ -228,10 +272,10 @@ public class BackgroundOptionsPopup extends Popup {
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
 				this.noPanoramaButton.visible = false;
-				//TODO übernehmen
 				this.setPanoramaButton.visible = false;
 				this.clearPanoramaButton.visible = false;
-				//------------
+				this.setSlideshowButton.visible = false;
+				this.clearSlideshowButton.visible = false;
 			}
 			
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundimage"))) {
@@ -252,13 +296,12 @@ public class BackgroundOptionsPopup extends Popup {
 				this.addRemoveAnimationButton.visible = false;
 				this.randomButton.visible = false;
 				this.notRandomButton.visible = false;
-				//TODO übernehmen
 				this.setPanoramaButton.visible = false;
 				this.clearPanoramaButton.visible = false;
-				//------------
+				this.setSlideshowButton.visible = false;
+				this.clearSlideshowButton.visible = false;
 			}
-			
-			//TODO übernehmen
+
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundpanorama"))) {
 				
 				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.panoramas"), renderIn.width / 2, (renderIn.height / 2) - 50, Color.WHITE.getRGB());
@@ -280,8 +323,36 @@ public class BackgroundOptionsPopup extends Popup {
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
 				this.noPanoramaButton.visible = false;
+				this.setSlideshowButton.visible = false;
+				this.clearSlideshowButton.visible = false;
+				
 			}
-			
+
+			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundslideshow"))) {
+				
+				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.slideshows"), renderIn.width / 2, (renderIn.height / 2) - 50, Color.WHITE.getRGB());
+				
+				this.slideshowSwitcher.render(matrix, (renderIn.width / 2) - (this.slideshowSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
+				
+				this.setSlideshowButton.x = (renderIn.width / 2) - (this.setSlideshowButton.getWidth() / 2);
+				this.setSlideshowButton.y = (renderIn.height / 2) - 5;
+				
+				this.clearSlideshowButton.x = (renderIn.width / 2) - (this.clearSlideshowButton.getWidth() / 2);
+				this.clearSlideshowButton.y = (renderIn.height / 2) + 20;
+				
+				this.setSlideshowButton.visible = true;
+				this.clearSlideshowButton.visible = true;
+				
+				this.addRemoveAnimationButton.visible = false;
+				this.randomButton.visible = false;
+				this.notRandomButton.visible = false;
+				this.chooseTextureButton.visible = false;
+				this.panoramaButton.visible = false;
+				this.noPanoramaButton.visible = false;
+				this.setPanoramaButton.visible = false;
+				this.clearPanoramaButton.visible = false;
+				
+			}
 			
 			this.doneButton.x = (renderIn.width / 2) - (this.doneButton.getWidth() / 2);
 			this.doneButton.y = (renderIn.height / 2) + 85;

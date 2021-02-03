@@ -15,6 +15,7 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 
+@SuppressWarnings("deprecation")
 public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	public AdvancedButton button;

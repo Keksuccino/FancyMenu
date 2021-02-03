@@ -66,14 +66,12 @@ public class ButtonCache {
 			//TODO Maybe remove this, kinda useless now
 			boolean cache = true;
 
-			//TODO übernehmen
 			if (s instanceof LayoutCreatorScreen) {
 				return;
 			}
 			if (s instanceof SimpleLoadingScreen) {
 				return;
 			}
-			//------------
 			
 			if (!MenuCustomization.isMenuCustomizable(s)) {
 				replaced.clear();
@@ -105,16 +103,6 @@ public class ButtonCache {
 				MinecraftForge.EVENT_BUS.post(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
 				return;
 			}
-			
-			//TODO übernehmen
-//			//Don't refresh cache if screen is instance of LayoutCreator
-//			if (s instanceof LayoutCreatorScreen) {
-//				cache = false;
-//			}
-//			//Don't refresh cache if screen is instance of one of FancyMenu's loading screens
-//			if (s instanceof SimpleLoadingScreen) {
-//				cache = false;
-//			}
 			
 			if ((s == Minecraft.getInstance().currentScreen) && cache) {
 				updateButtons(s, getGuiButtons(s));
@@ -173,7 +161,6 @@ public class ButtonCache {
 					if (!buttons.containsKey(id.getId())) {
 						buttons.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().getMessage().getString()), s));
 					} else {
-						//TODO übernehmen
 						if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
 							System.out.println("");
 							System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
