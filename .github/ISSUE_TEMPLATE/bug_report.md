@@ -18,7 +18,7 @@ Steps to reproduce the behavior:
 4. See error
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+A clear and detailed description of what you expected to happen.
 
 **Crash Log**
 If the bug includes a crash, please paste or link it here.
@@ -29,6 +29,6 @@ If applicable, add screenshots to help explain your problem.
 **Basic Informations (please complete the following information):**
  - OS: [e.g. Windows]
  - FancyMenu Version [e.g. 0.2]
- - Forge Version [e.g. 31.2.24]
+ - Forge/Fabric Version [e.g. 31.2.24]
  - Minecraft Version [e.g. 1.15.1]
  - Active Mods [e.g. Optifine, 5zig, TooManyItems]
