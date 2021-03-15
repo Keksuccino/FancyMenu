@@ -2,7 +2,10 @@
 
 ## About   [![](https://img.shields.io/badge/download-CurseForge-blueviolet)](https://www.curseforge.com/minecraft/mc-mods/fancymenu)
 
-The source code for the Minecraft mod "FancyMenu".
+The source code for legacy versions of the Minecraft mod "FancyMenu".
+
+New versions (v2.X+) of FancyMenu are currently not open-sourced.<br>
+This can change again in the future.
 
 ## DOWNLOAD
 
