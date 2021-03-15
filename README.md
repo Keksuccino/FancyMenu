@@ -13,13 +13,13 @@ FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-m
 
 ## Licensing
 
-FancyMenu is licensed under GPLv3.<br>
+FancyMenu v1.X is licensed under GPLv3.<br>
 See LICENSE.md for more information.
 
 ## Copyright
 
 - FancyMenu<br>
-Copyright © 2020 Keksuccino.
+Copyright © 2020-2021 Keksuccino.
 
 - Minecraft Cave Animation<br>
 Copyright © Mojang AB.
