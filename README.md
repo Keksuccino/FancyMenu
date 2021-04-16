@@ -2,24 +2,14 @@
 
 ## About   [![](https://img.shields.io/badge/download-CurseForge-blueviolet)](https://www.curseforge.com/minecraft/mc-mods/fancymenu)
 
-The source code for legacy versions of the Minecraft mod "FancyMenu".
+This repository is only for issue reports about FancyMenu.
 
-New versions (v2.X+) of FancyMenu are currently not open-sourced.<br>
-This can change again in the future.
+If you're searching for the code of legacy versions of FancyMenu, use [this repo](https://github.com/Keksuccino/FancyMenu-Legacy) instead.
 
 ## DOWNLOAD
 
 FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
 
-## Licensing
-
-FancyMenu v1.X is licensed under GPLv3.<br>
-See LICENSE.md for more information.
-
 ## Copyright
 
-- FancyMenu<br>
-Copyright © 2020-2021 Keksuccino.
-
-- Minecraft Cave Animation<br>
-Copyright © Mojang AB.
+- FancyMenu Copyright © 2020-2021 Keksuccino.
