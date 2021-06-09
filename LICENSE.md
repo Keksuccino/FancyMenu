@@ -25,7 +25,7 @@ TERMS AND CONDITIONS
  
 *: "My mod" refers to the mod licensed under this license and any parts** of it.
 **: In this context, "dependency" means that your project is accessing methods, fields and resources of my mod*. Dependencies can be mandatory and non-mandatory. 
-***: The "official download source" is CurseForge (Forge: https://www.curseforge.com/minecraft/mc-mods/fancymenu | Fabric: CurseForge (https://www.curseforge.com/minecraft/mc-mods/fancymenu-fabric)).
+***: The "official download source" is CurseForge (Forge: https://www.curseforge.com/minecraft/mc-mods/fancymenu | Fabric: https://www.curseforge.com/minecraft/mc-mods/fancymenu-fabric).
 ****: In this context, "external library" refers to a JAR file separated from the project.
 *****: "Parts" of my mod* are any resources (images, sounds, etc.) and the mod code. 
 ******: You can ask me for permission via Discord (Keksuccino#0425).
