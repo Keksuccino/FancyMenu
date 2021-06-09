@@ -4,7 +4,7 @@
 
 Source code for the FancyMenu Minecraft mod.
 
-**The source code for the different versions of FancyMenu (Forge, Fabric, multiple MC versions) is separated by branches.**
+**The source code for the different versions of FancyMenu (Forge, Fabric, multiple MC versions) is separated by branches.**<br>
 **For example, if you want to see the code for FancyMenu Forge 1.16, use the `forge-1.16` branch.**
 
 ## Download
