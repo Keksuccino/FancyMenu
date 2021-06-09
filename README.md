@@ -2,14 +2,17 @@
 
 ## About
 
-This repository is only for issue reports about FancyMenu.
+Source code for the FancyMenu Minecraft mod.
 
-If you're searching for the code of legacy versions of FancyMenu, use [this repo](https://github.com/Keksuccino/FancyMenu-Legacy) instead.
-
-## DOWNLOAD
+## Download
 
 FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
 
+## Licensing
+
+FancyMenu is licensed under KML (Keksuccino Mod License).<br>
+See LICENSE.md for more informations.
+
 ## Copyright
 
-- FancyMenu Copyright © 2020-2021 Keksuccino.
+- FancyMenu Copyright © 2020-2021 Keksuccino.<br>
