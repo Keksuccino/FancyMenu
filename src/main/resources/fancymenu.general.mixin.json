@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "de.keksuccino.fancymenu.mixin.client",
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.7",
+  "client": [
+    "MixinGuiButton",
+    "MixinGuiButtonImage",
+    "MixinGuiSlot",
+    "MixinGuiScreen",
+    "MixinGuiButtonLanguage",
+    "MixinMinecraft"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "fancymenu.general.mixin-refmap.json"
+}
