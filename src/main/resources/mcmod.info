@@ -8,9 +8,9 @@
   
   > FancyMenu © Copyright 2020-2021 Keksuccino.
     FancyMenu is licensed under KML.
-    See https://github.com/Keksuccino/FancyMenu/blob/main/LICENSE.md for more infos about this license.
+    See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more infos about this license.
   ",
-  "version": "2.1.0",
+  "version": "2.1.2",
   "mcversion": "${mcversion}",
   "updateUrl": "",
   "authorList": ["Keksuccino"],

@@ -26,16 +26,16 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.1.6,]", clientSideOnly = true)
 public class FancyMenu {
 	
-	public static final String VERSION = "2.1.0";
+	public static final String VERSION = "2.1.2";
 	
 	public static Config config;
 	
-	private static File animationsPath = new File("config/fancymenu/animations");
-	private static File customizationPath = new File("config/fancymenu/customization");
-	private static File customGuiPath = new File("config/fancymenu/customguis");
-	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
-	private static File panoramaPath = new File("config/fancymenu/panoramas");
-	private static File slideshowPath = new File("config/fancymenu/slideshows");
+	private static final File animationsPath = new File("config/fancymenu/animations");
+	private static final File customizationPath = new File("config/fancymenu/customization");
+	private static final File customGuiPath = new File("config/fancymenu/customguis");
+	private static final File buttonscriptPath = new File("config/fancymenu/buttonscripts");
+	private static final File panoramaPath = new File("config/fancymenu/panoramas");
+	private static final File slideshowPath = new File("config/fancymenu/slideshows");
 	
 	private static boolean optifineLoaded = false;
 	

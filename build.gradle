@@ -65,6 +65,8 @@ jar {
         attributes "TweakOrder": "0"
         attributes "MixinConfigs": "fancymenu.general.mixin.json"
     }
+	
+	rename 'mixin.refmap.json', 'fancymenu.general.mixin-refmap.json'
 }
 
 processResources {

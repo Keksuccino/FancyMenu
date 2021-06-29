@@ -171,22 +171,11 @@ public class BackgroundOptionsPopup extends FMPopup {
 		if (this.slideshowSwitcher.getSelectedValue() == null) {
 			this.clearSlideshowButton.enabled = false;
 		}
-		
+
 		this.setAnimationButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.creator.backgroundoptions.backgroundanimation.set"), true, (press) -> {
 			if (this.animationSwitcher.getSelectedValue() != null) {
-				if (SlideshowHandler.slideshowExists(this.slideshowSwitcher.getSelectedValue())) {
-					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-					
-					this.handler.backgroundAnimationNames.clear();
-					this.handler.randomBackgroundAnimation = false;
-					this.handler.backgroundAnimationNames.add(this.animationSwitcher.getSelectedValue());
-					this.handler.setBackgroundAnimations(this.animationSwitcher.getSelectedValue());
-
-					this.handler.backgroundSlideshow = null;
-					this.handler.backgroundTexture = null;
-					this.handler.backgroundTexturePath = null;
-					this.handler.backgroundPanorama = null;
-				}
+				this.handler.backgroundAnimationNames.clear();
+				this.handler.setBackgroundAnimations(this.animationSwitcher.getSelectedValue());
 			}
 		});
 		this.setAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.backgroundoptions.backgroundanimation.set.desc"), "%n%"));
