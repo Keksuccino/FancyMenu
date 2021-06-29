@@ -30,7 +30,7 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.1.0";
+	public static final String VERSION = "2.1.2";
 	
 	public static Config config;
 	

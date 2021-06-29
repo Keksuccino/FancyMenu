@@ -89,7 +89,9 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				this.gif.setPosY(y);
 				this.gif.setWidth(this.width);
 				this.gif.setHeight(this.height);
-				
+
+				this.gif.setOpacity(this.opacity);
+
 				this.gif.render();
 				
 				this.gif.setPosX(x2);

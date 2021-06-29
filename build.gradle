@@ -83,6 +83,9 @@ jar {
             "MixinConfigs" : "fancymenu.general.mixin.json"
         ])
     }
+	
+	rename 'mixin.refmap.json', 'fancymenu.general.mixin-refmap.json'
+	
 }
 
 jar.finalizedBy('reobfJar') 
