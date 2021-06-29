@@ -24,7 +24,7 @@ import net.minecraft.util.Identifier;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.1.1";
+	public static final String VERSION = "2.1.2";
 	
 	public static Config config;
 	
@@ -39,7 +39,7 @@ public class FancyMenu implements ModInitializer {
 	
     @Override
     public void onInitialize() {
-    	
+
     	try {
 			//Check if FancyMenu was loaded client- or serverside
     		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {

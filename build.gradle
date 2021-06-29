@@ -58,6 +58,7 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
+	rename 'fancymenu-refmap.json', 'fancymenu.general.mixin-refmap.json'
 }
 
 // configure the maven publication

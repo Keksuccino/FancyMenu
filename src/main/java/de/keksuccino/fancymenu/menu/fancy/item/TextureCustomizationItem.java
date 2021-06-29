@@ -10,6 +10,7 @@ import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -78,7 +79,6 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				int h = this.gif.getHeight();
 				int x2 = this.gif.getPosX();
 				int y2 = this.gif.getPosY();
-				//TODO neu in 1.17
 				float op = this.gif.getOpacity();
 				
 				RenderSystem.enableBlend();
@@ -89,16 +89,16 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				this.gif.setPosY(y);
 				this.gif.setWidth(this.width);
 				this.gif.setHeight(this.height);
-				//TODO neu in 1.17
 				this.gif.setOpacity(this.opacity);
 				
 				this.gif.render(matrix);
+
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 				
 				this.gif.setPosX(x2);
 				this.gif.setPosY(y2);
 				this.gif.setWidth(w);
 				this.gif.setHeight(h);
-				//TODO neu in 1.17
 				this.gif.setOpacity(op);
 				
 			} else if (this.texture != null) {
