@@ -58,12 +58,10 @@ public class CustomizationHelper {
 		FancyMenu.updateConfig();
 		
 		MenuCustomization.resetSounds();
-		//TODO übernehmen
 		MenuCustomization.stopSounds();
 		AnimationHandler.resetAnimations();
 		AnimationHandler.resetAnimationSounds();
 		AnimationHandler.stopAnimationSounds();
-		//---------
 		MenuCustomization.reload();
 		MenuHandlerRegistry.setActiveHandler(null);
 		CustomGuiLoader.loadCustomGuis();

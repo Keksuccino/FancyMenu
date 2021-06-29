@@ -33,15 +33,12 @@ public class MenuCustomization {
 	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
 
 	protected static boolean isCurrentScrollable = false;
-	//TODO übernehmen
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
-	//------------------
 	
 	public static void init() {
 		if (!initDone) {
 			//Registering (base) events for the MenuCustomization system
-			//TODO übernehmen
 			MinecraftForge.EVENT_BUS.register(eventsInstance);
 			
 			//Registering all custom menu handlers
@@ -201,13 +198,11 @@ public class MenuCustomization {
 		String s = UUID.randomUUID().toString();
 		return s + ms;
 	}
-	
-	//TODO übernehmen
+
 	public static boolean isNewMenu() {
 		return isNewMenu;
 	}
-	
-	//TODO übernehmen
+
 	public static void setIsNewMenu(boolean b) {
 		isNewMenu = b;
 		eventsInstance.lastScreen = null;

@@ -47,7 +47,6 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class MainMenuHandler extends MenuHandlerBase {
 
-	//TODO übernehmen
 	public static boolean isLoadingScreen = false;
 	
 	private final RenderSkybox panorama = new RenderSkybox(new RenderSkyboxCube(new ResourceLocation("textures/gui/title/background/panorama")));
@@ -70,7 +69,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		//TODO übernehmen (!isLoadingScreen)
 		if (this.shouldCustomize(e.getGui()) && !isLoadingScreen) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 
@@ -95,7 +93,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 
-	//TODO übernehmen
 	@SubscribeEvent
 	public void onRenderLoadingScreen(ResourceLoadingFadeScreenPostRenderEvent e) {
 		if (this.shouldCustomize(e.screen)) {
@@ -107,7 +104,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 
-	//TODO übernehmen
 	protected void renderEarlyBackground(MatrixStack matrix, Screen s) {
 
 		if (this.canRenderBackground()) {
@@ -386,7 +382,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 				finalPosY = originY + posY;
 			}
 
-			//TODO übernehmen
 			if (this.splash == null) {
 				this.splash = "";
 			}

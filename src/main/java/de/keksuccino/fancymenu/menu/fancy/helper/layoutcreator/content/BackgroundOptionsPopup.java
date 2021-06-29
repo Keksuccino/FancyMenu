@@ -30,24 +30,15 @@ public class BackgroundOptionsPopup extends FMPopup {
 	
 	protected AdvancedButton chooseTextureButton;
 	
-	//TODO übernehmen
-//	protected AdvancedButton randomButton;
-//	protected AdvancedButton notRandomButton;
-	
 	protected AdvancedButton panoramaButton;
 	protected AdvancedButton noPanoramaButton;
-	
-	//TODO übernehmen
-//	protected AdvancedButton addRemoveAnimationButton;
 
 	protected AdvancedButton setPanoramaButton;
 	protected AdvancedButton setSlideshowButton;
 	protected AdvancedButton clearPanoramaButton;
 	protected AdvancedButton clearSlideshowButton;
-	//TODO übernehmen
 	protected AdvancedButton setAnimationButton;
 	protected AdvancedButton clearAnimationButton;
-	//-------------
 	
 	protected HorizontalSwitcher typeSwitcher;
 	protected HorizontalSwitcher animationSwitcher;
@@ -98,28 +89,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			PopupHandler.displayPopup(cf);
 		});
 		this.addButton(chooseTextureButton);
-		
-		//TODO übernehmen
-//		String ran = Locals.localize("helper.creator.backgroundoptions.random");
-//		String nRan = Locals.localize("helper.creator.backgroundoptions.notrandom");
-//		if (this.handler.randomBackgroundAnimation) {
-//			ran = "§a" + ran;
-//		} else {
-//			nRan = "§a" + nRan;
-//		}
-//		this.randomButton = new AdvancedButton(0, 0, 100, 20, ran, true, (press) -> {
-//			this.handler.randomBackgroundAnimation = true;
-//			press.setMessage(new StringTextComponent("§a" + Locals.localize("helper.creator.backgroundoptions.random")));
-//			this.notRandomButton.setMessage(Locals.localize("helper.creator.backgroundoptions.notrandom"));
-//		});
-//		this.addButton(randomButton);
-//		
-//		this.notRandomButton = new AdvancedButton(0, 0, 100, 20, nRan, true, (press) -> {
-//			this.handler.randomBackgroundAnimation = false;
-//			press.setMessage(new StringTextComponent("§a" + Locals.localize("helper.creator.backgroundoptions.notrandom")));
-//			this.randomButton.setMessage(Locals.localize("helper.creator.backgroundoptions.random"));
-//		});
-//		this.addButton(notRandomButton);
 		
 		String pan = Locals.localize("helper.creator.backgroundoptions.panorama");
 		String nPan = Locals.localize("helper.creator.backgroundoptions.nopanorama");
@@ -206,23 +175,11 @@ public class BackgroundOptionsPopup extends FMPopup {
 		if (this.slideshowSwitcher.getSelectedValue() == null) {
 			this.clearSlideshowButton.active = false;
 		}
-		
-		//TODO übernehmen
+
 		this.setAnimationButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.creator.backgroundoptions.backgroundanimation.set"), true, (press) -> {
 			if (this.animationSwitcher.getSelectedValue() != null) {
-				if (SlideshowHandler.slideshowExists(this.slideshowSwitcher.getSelectedValue())) {
-					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-					
-					this.handler.backgroundAnimationNames.clear();
-					this.handler.randomBackgroundAnimation = false;
-					this.handler.backgroundAnimationNames.add(this.animationSwitcher.getSelectedValue());
-					this.handler.setBackgroundAnimations(this.animationSwitcher.getSelectedValue());
-
-					this.handler.backgroundSlideshow = null;
-					this.handler.backgroundTexture = null;
-					this.handler.backgroundTexturePath = null;
-					this.handler.backgroundPanorama = null;
-				}
+				this.handler.backgroundAnimationNames.clear();
+				this.handler.setBackgroundAnimations(this.animationSwitcher.getSelectedValue());
 			}
 		});
 		this.setAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.backgroundoptions.backgroundanimation.set.desc"), "%n%"));
@@ -231,7 +188,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			this.setAnimationButton.active = false;
 		}
 
-		//TODO übernehmen
 		this.clearAnimationButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear"), true, (press) -> {
 			if (!this.handler.backgroundAnimationNames.isEmpty()) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -244,24 +200,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 		if (this.animationSwitcher.getSelectedValue() == null) {
 			this.clearAnimationButton.active = false;
 		}
-		
-		//TODO übernehmen
-//		this.addRemoveAnimationButton = new AdvancedButton(0, 0, 100, 20, "", true, (press) -> {
-//			if (this.animationSwitcher.getSelectedValue() != null) {
-//				if (this.handler.backgroundAnimationNames.contains(this.animationSwitcher.getSelectedValue())) {
-//					this.handler.backgroundAnimationNames.remove(this.animationSwitcher.getSelectedValue());
-//					if (this.handler.backgroundAnimationNames.isEmpty()) {
-//						this.handler.setBackgroundAnimations((String[])null);
-//					} else {
-//						this.handler.setBackgroundAnimations(this.handler.backgroundAnimationNames.toArray(new String[0]));
-//					}
-//				} else {
-//					this.handler.backgroundAnimationNames.add(this.animationSwitcher.getSelectedValue());
-//					this.handler.setBackgroundAnimations(this.handler.backgroundAnimationNames.toArray(new String[0]));
-//				}
-//			}
-//		});
-//		this.addButton(addRemoveAnimationButton);
 		
 		this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.done"), true, (press) -> {
 			this.setDisplayed(false);
@@ -290,8 +228,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.animations"), renderIn.width / 2, (renderIn.height / 2) - 50, Color.WHITE.getRGB());
 				
 				this.animationSwitcher.render(matrix, (renderIn.width / 2) - (this.animationSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
-				
-				//TODO übernehmen
+
 				this.setAnimationButton.x = (renderIn.width / 2) - (this.setAnimationButton.getWidth() / 2);
 				this.setAnimationButton.y = (renderIn.height / 2) - 5;
 				
@@ -300,33 +237,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 				
 				this.setAnimationButton.visible = true;
 				this.clearAnimationButton.visible = true;
-				//------------------
-				
-				//TODO übernehmen
-//				if (this.animationSwitcher.getSelectedValue() != null) {
-//					this.addRemoveAnimationButton.x = (renderIn.width / 2) - (this.addRemoveAnimationButton.getWidth() / 2);
-//					this.addRemoveAnimationButton.y = (renderIn.height / 2) - 5;
-//					if (this.handler.backgroundAnimationNames.contains(this.animationSwitcher.getSelectedValue())) {
-//						this.addRemoveAnimationButton.setMessage(Locals.localize("helper.creator.backgroundoptions.removeanimation"));
-//					} else {
-//						this.addRemoveAnimationButton.setMessage(Locals.localize("helper.creator.backgroundoptions.addanimation"));
-//					}
-//					this.addRemoveAnimationButton.visible = true;
-//				} else {
-//					this.addRemoveAnimationButton.visible = false;
-//				}
-				
-				//TODO übernehmen
-//				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.backgroundoptions.randomizeanimations"), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
-				
-				//TODO übernehmen
-//				this.randomButton.x = (renderIn.width / 2) - this.randomButton.getWidth() - 5;
-//				this.randomButton.y = (renderIn.height / 2) + 45;
-//				this.randomButton.visible = true;
-//				
-//				this.notRandomButton.x = (renderIn.width / 2) + 5;
-//				this.notRandomButton.y = (renderIn.height / 2) + 45;
-//				this.notRandomButton.visible = true;
 
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
@@ -352,14 +262,8 @@ public class BackgroundOptionsPopup extends FMPopup {
 				this.noPanoramaButton.y = (renderIn.height / 2) + 30;
 				this.noPanoramaButton.visible = true;
 
-				//TODO übernehmen
-//				this.addRemoveAnimationButton.visible = false;
-//				this.randomButton.visible = false;
-//				this.notRandomButton.visible = false;
-				//TODO übernehmen
 				this.setAnimationButton.visible = false;
 				this.clearAnimationButton.visible = false;
-				//---------------------
 				this.setPanoramaButton.visible = false;
 				this.clearPanoramaButton.visible = false;
 				this.setSlideshowButton.visible = false;
@@ -380,15 +284,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 				
 				this.setPanoramaButton.visible = true;
 				this.clearPanoramaButton.visible = true;
-				
-				//TODO übernehmen
-//				this.addRemoveAnimationButton.visible = false;
-//				this.randomButton.visible = false;
-//				this.notRandomButton.visible = false;
-				//TODO übernehmen
+
 				this.setAnimationButton.visible = false;
 				this.clearAnimationButton.visible = false;
-				//---------------------
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
 				this.noPanoramaButton.visible = false;
@@ -411,15 +309,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 				
 				this.setSlideshowButton.visible = true;
 				this.clearSlideshowButton.visible = true;
-				
-				//TODO übernehmen
-//				this.addRemoveAnimationButton.visible = false;
-//				this.randomButton.visible = false;
-//				this.notRandomButton.visible = false;
-				//TODO übernehmen
+
 				this.setAnimationButton.visible = false;
 				this.clearAnimationButton.visible = false;
-				//---------------------
 				this.chooseTextureButton.visible = false;
 				this.panoramaButton.visible = false;
 				this.noPanoramaButton.visible = false;

@@ -84,10 +84,8 @@ public class LayoutEditorUI extends UIBase {
 			AdvancedButton newLayoutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.new"), true, (press) -> {
 				this.displayUnsavedWarning((call) -> {
 					if (call) {
-						//TODO übernehmen
 						MenuCustomization.stopSounds();
 						MenuCustomization.resetSounds();
-						//------------
 						Minecraft.getInstance().displayGuiScreen(new LayoutEditorScreen(this.parent.screen));
 					}
 				});
@@ -413,8 +411,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(resetBackgroundButton);
 			
 			this.addSeparator();
-			
-			//TODO übernehmen
+
 			/** RANDOM MODE **/
 			String randomModeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.on");
 			if (!this.parent.randomMode) {
@@ -487,8 +484,7 @@ public class LayoutEditorUI extends UIBase {
 			};
 			randomModeFirstTimeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.btn.desc"), "%n%"));
 			this.addContent(randomModeFirstTimeButton);
-			
-			//TODO übernehmen
+
 			this.addSeparator();
 
 			/** RENDERING ORDER **/

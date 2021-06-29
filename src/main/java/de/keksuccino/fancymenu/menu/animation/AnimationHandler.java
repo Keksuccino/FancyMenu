@@ -285,15 +285,13 @@ public class AnimationHandler {
 		}
 		return null;
 	}
-	
-	//TODO übernehmen
+
 	public static void resetAnimations() {
 		for (AnimationData d : animations.values()) {
 			d.animation.resetAnimation();
 		}
 	}
-	
-	//TODO übernehmen
+
 	public static void resetAnimationSounds() {
 		for (AnimationData d : animations.values()) {
 			if (d.animation instanceof AdvancedAnimation) {
@@ -301,8 +299,7 @@ public class AnimationHandler {
 			}
 		}
 	}
-	
-	//TODO übernehmen
+
 	public static void stopAnimationSounds() {
 		for (AnimationData d : animations.values()) {
 			if (d.animation instanceof AdvancedAnimation) {

@@ -15,13 +15,11 @@ import net.minecraft.client.gui.LoadingGui;
 @Mixin(value = Minecraft.class)
 public class MixinMinecraft {
 
-	//TODO übernehmen
 	private static boolean customWindowInit = false;
 	
 	@Inject(at = @At(value = "HEAD"), method = "getWindowTitle", cancellable = true)
 	public void onGetWindowTitle(CallbackInfoReturnable<String> info) {
-		
-		//TODO übernehmen
+
 		if (FancyMenu.config != null) {
 			if (!customWindowInit) {
 				MainWindowHandler.init();
@@ -37,8 +35,7 @@ public class MixinMinecraft {
 		}
 		
 	}
-	
-	//TODO übernehmen
+
 	@Inject(at = @At(value = "HEAD"), method = "setLoadingGui", cancellable = false)
 	public void onSetLoadingGui(LoadingGui loadingGuiIn, CallbackInfo info) {
 		if (loadingGuiIn == null) {

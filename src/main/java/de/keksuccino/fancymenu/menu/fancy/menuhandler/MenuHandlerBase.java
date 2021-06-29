@@ -77,7 +77,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class MenuHandlerBase {
 
-	//TODO übernehmen (ALLE ZU PROTECTED ÄNDERN)
 	protected List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
 	protected List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
 	
@@ -110,24 +109,16 @@ public class MenuHandlerBase {
 	protected List<Long> delayAppearanceFirstTimeVanilla = new ArrayList<Long>();
 	protected List<ThreadCaller> delayThreads = new ArrayList<ThreadCaller>();
 
-	//TODO übernehmen
-//	protected List<PropertiesSet> props;
 	protected boolean preinit = false;
-	
-	//TODO übernehmen
+
 	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<String, RandomLayoutContainer>();
 	protected List<PropertiesSet> normalLayouts = new ArrayList<PropertiesSet>();
 	protected SharedLayoutProperties sharedLayoutProps = new SharedLayoutProperties();
-	//----------------
 
 	protected String closeAudio;
 	protected String openAudio;
 	
 	protected static Screen scaleChangedIn = null;
-
-	//TODO übernehmen
-//	protected static Screen lastScreen = null;
-//	protected boolean isNewMenu = true;
 
 	/**
 	 * @param identifier Has to be the valid and full class name of the GUI screen.
@@ -146,9 +137,6 @@ public class MenuHandlerBase {
 		this.delayAppearanceFirstTime.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
-		//TODO übernehmen
-//		this.isNewMenu = true;
-		//TODO übernehmen
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
 			c.lastLayoutPath = null;
 		}
@@ -160,20 +148,12 @@ public class MenuHandlerBase {
 
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		
-		//TODO übernehmen
-//		if ((lastScreen == null) || (!lastScreen.getClass().getName().equals(e.getGui().getClass().getName()))) {
-//			this.isNewMenu = true;
-//		}
-//		lastScreen = e.getGui();
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
 		}
 		this.delayThreads.clear();
-		
-		//TODO übernehmen
-//		boolean scaled = false;
+
 		int mcscale = Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont());
 
 		if (e.getGui() != Minecraft.getInstance().currentScreen) {
@@ -213,27 +193,18 @@ public class MenuHandlerBase {
 
 		preinit = true;
 
-		//TODO übernehmen
-//		this.props = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
-		
-		//TODO übernehmen
 		List<PropertiesSet> rawLayouts = MenuCustomizationProperties.getPropertiesWithIdentifier(this.getMenuIdentifier());
-		//TODO übernehmen
 		String defaultGroup = "-100397";
-		
-		//TODO übernehmen
+
 		this.normalLayouts.clear();
-		
-		//TODO übernehmen
+
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
 			c.onlyFirstTime = false;
 			c.clearLayouts();
 		}
-		
-		//TODO übernehmen
+
 		this.sharedLayoutProps = new SharedLayoutProperties();
-		
-		//TODO übernehmen
+
 		for (PropertiesSet s : rawLayouts) {
 			
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -311,8 +282,7 @@ public class MenuHandlerBase {
 			}
 			
 		}
-		
-		//TODO übernehmen
+
 		List<String> trashLayoutGroups = new ArrayList<String>();
 		for (Map.Entry<String, RandomLayoutContainer> m : this.randomLayoutGroups.entrySet()) {
 			if (m.getValue().getLayouts().isEmpty()) {
@@ -322,10 +292,8 @@ public class MenuHandlerBase {
 		for (String s : trashLayoutGroups) {
 			this.randomLayoutGroups.remove(s);
 		}
-		//---------------------
 
 		//Applying customizations which needs to be done before other ones
-		//TODO übernehmen
 		for (PropertiesSet s : this.normalLayouts) {
 			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
 				this.applyLayoutPre(sec, e);
@@ -339,10 +307,8 @@ public class MenuHandlerBase {
 				}
 			}
 		}
-		//----------------------
 
 		//Resetting scale in the same menu when scale customization action was removed
-		//TODO übernehmen (sharedLayoutProps)
 		if (!this.sharedLayoutProps.scaled) {
 			if (scaleChangedIn != null) {
 				scaleChangedIn = null;
@@ -354,8 +320,7 @@ public class MenuHandlerBase {
 		}
 
 	}
-	
-	//TODO übernehmen
+
 	protected void applyLayoutPre(PropertiesSection sec, GuiScreenEvent.InitGuiEvent.Pre e) {
 		
 		String action = sec.getEntryValue("action");
@@ -429,11 +394,6 @@ public class MenuHandlerBase {
 			return;
 		}
 
-		//TODO übernehmen
-//		if (this.props == null) {
-//			return;
-//		}
-
 		this.hidden.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
@@ -452,15 +412,6 @@ public class MenuHandlerBase {
 		}
 		this.backgroundDrawable = false;
 
-		//TODO übernehmen (variablen entfernen)
-//		boolean backgroundTextureSet = false;
-//
-//		boolean closeAudioSet = false;
-//		boolean openAudioSet = false;
-//
-//		Map<ButtonData, String> descriptions = new HashMap<ButtonData, String>();
-
-		//TODO übernehmen (dafür altes handling weg und nach unten in extra methode schieben)
 		for (PropertiesSet s : this.normalLayouts) {
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
 			if (metas.isEmpty()) {
@@ -484,11 +435,9 @@ public class MenuHandlerBase {
 				}
 			}
 		}
-		//---------------------
 
 		MenuHandlerRegistry.setActiveHandler(this.getMenuIdentifier());
 
-		//TODO übernehmen
 		for (Map.Entry<ButtonData, String> m : this.sharedLayoutProps.descriptions.entrySet()) {
 			Widget w = m.getKey().getButton();
 			if (w != null) {
@@ -503,13 +452,11 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
 		if (!this.sharedLayoutProps.closeAudioSet && (this.closeAudio != null)) {
 			MenuCustomization.unregisterSound(this.closeAudio);
 			this.closeAudio = null;
 		}
 
-		//TODO übernehmen
 		if (!this.sharedLayoutProps.openAudioSet && (this.openAudio != null)) {
 			MenuCustomization.unregisterSound(this.openAudio);
 			this.openAudio = null;
@@ -522,7 +469,6 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
 		if (!this.sharedLayoutProps.backgroundTextureSet) {
 			this.backgroundTexture = null;
 		}
@@ -530,8 +476,7 @@ public class MenuHandlerBase {
 		for (ButtonData d : this.hidden) {
 			d.getButton().visible = false;
 		}
-		
-		//TODO übernehmen (isNewMenu)
+
 		if (MenuCustomization.isNewMenu()) {
 			for (CustomizationItemBase i : this.frontRenderItems) {
 				this.handleAppearanceDelayFor(i);
@@ -548,12 +493,8 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
-//		this.isNewMenu = false;
-		
 	}
-	
-	//TODO übernehmen
+
 	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
 		
 		String action = sec.getEntryValue("action");
@@ -649,7 +590,6 @@ public class MenuHandlerBase {
 
 					if (!this.backgroundAnimations.isEmpty()) {
 						if (ran) {
-							//TODO übernehmen (isNewMenu)
 							if (MenuCustomization.isNewMenu()) {
 								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
 							}
@@ -673,7 +613,6 @@ public class MenuHandlerBase {
 				String fadein = sec.getEntryValue("fadein");
 				String fadeinspeed = sec.getEntryValue("fadeinspeed");
 				if (b != null) {
-					//TODO übernehmen (isNewMenu)
 					if (MenuCustomization.isNewMenu()) {
 						boolean ft = false;
 						if ((onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true")) {
@@ -1499,8 +1438,7 @@ public class MenuHandlerBase {
 	private static class ThreadCaller {
 		AtomicBoolean running = new AtomicBoolean(true);
 	}
-	
-	//TODO übernehmen
+
 	public static class RandomLayoutContainer {
 		
 		public final String id;
@@ -1588,8 +1526,7 @@ public class MenuHandlerBase {
 		}
 		
 	}
-	
-	//TODO übernehmen
+
 	public static class SharedLayoutProperties {
 		
 		public boolean scaled = false;

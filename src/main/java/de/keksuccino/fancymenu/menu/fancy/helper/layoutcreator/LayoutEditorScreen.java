@@ -139,12 +139,10 @@ public class LayoutEditorScreen extends Screen {
 	protected int biggerThanHeight = 0;
 	protected int smallerThanWidth = 0;
 	protected int smallerThanHeight = 0;
-	
-	//TODO übernehmen
+
 	protected boolean randomMode = false;
 	protected String randomGroup = "1";
 	protected boolean randomOnlyFirstTime = false;
-	//---------------
 
 	protected int scale = 0;
 
@@ -219,12 +217,10 @@ public class LayoutEditorScreen extends Screen {
 		PropertiesSection meta = new PropertiesSection("customization-meta");
 		meta.addEntry("identifier", this.getScreenToCustomizeIdentifier());
 		meta.addEntry("renderorder", this.renderorder);
-		
-		//TODO übernehmen
+
 		meta.addEntry("randommode", "" + this.randomMode);
 		meta.addEntry("randomgroup", this.randomGroup);
 		meta.addEntry("randomonlyfirsttime", "" + this.randomOnlyFirstTime);
-		//-------------------
 		
 		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
 			meta.addEntry("requiredmods", this.requiredmods);

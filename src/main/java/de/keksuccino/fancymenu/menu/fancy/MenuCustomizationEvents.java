@@ -23,11 +23,9 @@ public class MenuCustomizationEvents {
 	private boolean iconSetAfterFullscreen = false;
 	private boolean scaleChecked = false;
 	private boolean resumeWorldMusic = false;
-	
-	//TODO übernehmen
+
 	protected Screen lastScreen = null;
-	
-	//TODO übernehmen
+
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onInitPrePre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		if (!ButtonCache.isCaching()) {
@@ -50,8 +48,7 @@ public class MenuCustomizationEvents {
 			}
 		}
 	}
-	
-	//TODO übernehmen
+
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onMenuReloaded(MenuReloadedEvent e) {
 		MenuCustomization.isNewMenu = true;

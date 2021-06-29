@@ -124,7 +124,6 @@ public class DarkResourceLoadingScreen extends ResourceLoadProgressGui {
 			}
 
 			if (mc.currentScreen != null) {
-				//TODO übernehmen
 				MainMenuHandler.isLoadingScreen = false;
 				mc.currentScreen.init(mc, mc.getMainWindow().getScaledWidth(), mc.getMainWindow().getScaledHeight());
 			}

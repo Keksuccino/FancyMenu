@@ -6,7 +6,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
 		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
@@ -19,7 +19,7 @@ version = '1.0'
 group = 'de.keksuccino'
 archivesBaseName = 'fancymenu'
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
 compileJava {
 	[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 }
@@ -68,6 +68,9 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 
     minecraft 'net.minecraftforge:forge:1.16.5-36.0.1'
+	
+	annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+	testAnnotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
 
 }
 
@@ -91,6 +94,9 @@ jar {
             "MixinConfigs" : "fancymenu.general.mixin.json"
         ])
     }
+	
+	rename 'mixin.refmap.json', 'fancymenu.general.mixin-refmap.json'
+	
 }
 
 jar.finalizedBy('reobfJar') 

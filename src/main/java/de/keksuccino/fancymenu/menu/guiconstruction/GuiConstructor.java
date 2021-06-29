@@ -29,7 +29,6 @@ public class GuiConstructor {
 		parameters.put(boolean.class, true);
 		parameters.put(PlayerEntity.class, null);
 		parameters.put(String.class, "");
-		//TODO übernehmen
 		parameters.put(ClientAdvancementManager.class, null);
 		
 	}
@@ -40,7 +39,6 @@ public class GuiConstructor {
 			parameters.put(Screen.class, Minecraft.getInstance().currentScreen);
 			//Update player
 			parameters.put(PlayerEntity.class, Minecraft.getInstance().player);
-			//TODO übernehmen
 			if ((Minecraft.getInstance().player != null) && (Minecraft.getInstance().player.connection != null)) {
 				parameters.put(ClientAdvancementManager.class, Minecraft.getInstance().player.connection.getAdvancementManager());
 			}

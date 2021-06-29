@@ -57,7 +57,6 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		if (current == null) {
 			this.done = true;
 			this.onFinished();
-			//TODO übernehmen
 			MainMenuHandler.isLoadingScreen = false;
 			if (this.fallback != null) {
 				Minecraft.getInstance().displayGuiScreen(this.fallback);

@@ -60,8 +60,6 @@ public class MainWindowHandler {
 			setWindowTitle();
 		} else {
 			windowtitle = null;
-			//TODO übernehmen
-//			Minecraft.getInstance().setDefaultMinecraftTitle();
 		}
 	}
 	
