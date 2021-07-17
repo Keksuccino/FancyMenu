@@ -249,7 +249,9 @@ public class CustomizationHelperUI extends UIBase {
 				advancedButton.active = false;
 			}
 			advancedButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.advanced.desc"), "%n%"));
-			currentMenu.addContent(advancedButton);
+			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
+				currentMenu.addContent(advancedButton);
+			}
 			
 			CustomizationButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
 				Minecraft.getInstance().displayGuiScreen(null);
@@ -296,7 +298,9 @@ public class CustomizationHelperUI extends UIBase {
 				customGuiMenu.setParentButton((AdvancedButton) press);
 				customGuiMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
-			bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
+			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
+				bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
+			}
 			/** CUSTOM GUI TAB END **/
 			
 			/** TOOLS TAB START **/

@@ -30,7 +30,7 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.1.2";
+	public static final String VERSION = "2.2.0";
 	
 	public static Config config;
 	
@@ -130,6 +130,7 @@ public class FancyMenu {
 
 	public static void updateConfig() {
     	try {
+
     		config = new Config("config/fancymenu/config.txt");
 
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
@@ -141,6 +142,7 @@ public class FancyMenu {
     		config.registerValue("showdebugwarnings", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
+			config.registerValue("advancedmode", false, "customization");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
@@ -177,51 +179,8 @@ public class FancyMenu {
 			
 			config.syncConfig();
 			
-			//Updating all categorys at start to keep them synchronized with older config files
-			config.setCategory("enablehotkeys", "general");
-			config.setCategory("playmenumusic", "general");
-			config.setCategory("playbackgroundsounds", "general");
-			config.setCategory("playbackgroundsoundsinworld", "general");
-			config.setCategory("stopworldmusicwhencustomizable", "general");
-			config.setCategory("defaultguiscale", "general");
-			config.setCategory("showdebugwarnings", "general");
-    		
-			config.setCategory("showcustomizationbuttons", "customization");
-			
-			config.setCategory("hidebranding", "mainmenu");
-			config.setCategory("hidelogo", "mainmenu");
-			config.setCategory("hiderealmsnotifications", "mainmenu");
-			config.setCategory("copyrightposition", "mainmenu");
-			config.setCategory("hideforgenotifications", "mainmenu");
-			config.setCategory("copyrightcolor", "mainmenu");
-			
-			config.setCategory("hidesplashtext", "mainmenu_splash");
-			config.setCategory("splashx", "mainmenu_splash");
-			config.setCategory("splashy", "mainmenu_splash");
-			config.setCategory("splashorientation", "mainmenu_splash");
-			config.setCategory("splashcolor", "mainmenu_splash");
-			config.setCategory("splashtextfile", "mainmenu_splash");
-			config.setCategory("splashrotation", "mainmenu_splash");
-			
-			config.setCategory("gameintroanimation", "loading");
-			config.setCategory("loadingscreendarkmode", "loading");
-			config.setCategory("showanimationloadingstatus", "loading");
-			config.setCategory("allowgameintroskip", "loading");
-			config.setCategory("customgameintroskiptext", "loading");
-			config.setCategory("loadinganimationcolor", "loading");
-
-			config.setCategory("customwindowicon", "minecraftwindow");
-			config.setCategory("customwindowtitle", "minecraftwindow");
-
-			config.setCategory("showloadingscreenanimation", "world_loading_screen");
-			config.setCategory("showloadingscreenpercent", "world_loading_screen");
-			
-			config.setCategory("showvanillamovewarning", "layouteditor");
-			config.setCategory("editordeleteconfirmation", "layouteditor");
-
-			config.setCategory("uiscale", "ui");
-			
 			config.clearUnusedValues();
+
 		} catch (InvalidValueException e) {
 			e.printStackTrace();
 		}

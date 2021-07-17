@@ -692,7 +692,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(mcVersionMenu);
 			
 			AdvancedButton minMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.minimumMC != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -709,7 +709,7 @@ public class LayoutEditorUI extends UIBase {
 			mcVersionMenu.addContent(minMcVersionButton);
 			
 			AdvancedButton maxMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.maximumMC != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -737,7 +737,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(fmVersionMenu);
 			
 			AdvancedButton minFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.minimumFM != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -754,7 +754,7 @@ public class LayoutEditorUI extends UIBase {
 			fmVersionMenu.addContent(minFmVersionButton);
 			
 			AdvancedButton maxFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
-				TextInputPopup p = new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.maximumFM != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -891,7 +891,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(animationMenu);
 			
 			AdvancedButton inputAnimationButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation.entername"), true, (press) -> {
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.animation.entername.title") + ":", null, 240, this.parent::addAnimation));
+				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.animation.entername.title") + ":", null, 240, this.parent::addAnimation));
 			});
 			animationMenu.addContent(inputAnimationButton);
 			
@@ -916,7 +916,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(slideshowMenu);
 
 			AdvancedButton inputSlideshowButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.slideshow.entername"), true, (press) -> {
-				PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.slideshow.entername.title") + ":", null, 240, this.parent::addSlideshow));
+				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.slideshow.entername.title") + ":", null, 240, this.parent::addSlideshow));
 			});
 			slideshowMenu.addContent(inputSlideshowButton);
 			

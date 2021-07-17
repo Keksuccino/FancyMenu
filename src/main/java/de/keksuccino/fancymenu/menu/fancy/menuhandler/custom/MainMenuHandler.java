@@ -43,8 +43,6 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class MainMenuHandler extends MenuHandlerBase {
 	
-	public static boolean isLoadingScreen = false;
-	
 	private final RenderSkybox panorama = new RenderSkybox(new RenderSkyboxCube(new ResourceLocation("textures/gui/title/background/panorama")));
 	private static final ResourceLocation MINECRAFT_TITLE_TEXTURES = new ResourceLocation("textures/gui/title/minecraft.png");
 	private static final ResourceLocation MINECRAFT_TITLE_EDITION = new ResourceLocation("textures/gui/title/edition.png");
@@ -62,10 +60,22 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		this.splash = getRandomSplashText();
 	}
+
+	@Override
+	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+		if (this.shouldCustomize(e.getGui())) {
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				if (e.getGui() instanceof MainMenuScreen) {
+					setShowFadeInAnimation(false, (MainMenuScreen) e.getGui());
+				}
+			}
+		}
+		super.onInitPre(e);
+	}
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui()) && !isLoadingScreen) {
+		if (this.shouldCustomize(e.getGui())) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 
 				if (this.splash == null) {
@@ -87,122 +97,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 				e.getGui().renderBackground();
 			}
 		}
-	}
-	
-	@SubscribeEvent
-	public void onRenderLoadingScreen(ResourceLoadingFadeScreenPostRenderEvent e) {
-		if (this.shouldCustomize(e.screen)) {
-			try {
-				this.renderEarlyBackground(e.screen);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-	
-	protected void renderEarlyBackground(Screen s) {
-
-		if (this.canRenderBackground()) {
-			if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
-				boolean b = this.backgroundAnimation.isStretchedToStreensize();
-				this.backgroundAnimation.setStretchImageToScreensize(true);
-				this.backgroundAnimation.render();
-				this.backgroundAnimation.setStretchImageToScreensize(b);
-			} else if (this.backgroundTexture != null) {
-				RenderSystem.enableBlend();
-				Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
-
-				if (!this.panoramaback) {
-					IngameGui.blit(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
-				} else {
-					int w = this.backgroundTexture.getWidth();
-					int h = this.backgroundTexture.getHeight();
-					double ratio = (double) w / (double) h;
-					int wfinal = (int)(s.height * ratio);
-
-					//Check if the panorama background should move to the left side or to the ride side
-					if ((panoPos + (wfinal - s.width)) <= 0) {
-						panoMoveBack = true;
-					}
-					if (panoPos >= 0) {
-						panoMoveBack = false;
-					}
-
-					//Fix pos after resizing
-					if (panoPos + (wfinal - s.width) < 0) {
-						panoPos = 0 - (wfinal - s.width);
-					}
-					if (panoPos > 0) {
-						panoPos = 0;
-					}
-
-					if (!panoStop) {
-						if (panoTick >= 1) {
-							panoTick = 0;
-							if (panoMoveBack) {
-								panoPos = panoPos + 0.5;
-							} else {
-								panoPos = panoPos - 0.5;
-							}
-
-							if (panoPos + (wfinal - s.width) == 0) {
-								panoStop = true;
-							}
-							if (panoPos == 0) {
-								panoStop = true;
-							}
-						} else {
-							panoTick++;
-						}
-					} else {
-						if (panoTick >= 300) {
-							panoStop = false;
-							panoTick = 0;
-						} else {
-							panoTick++;
-						}
-					}
-					if (wfinal <= s.width) {
-						IngameGui.blit(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
-					} else {
-						RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
-					}
-				}
-
-				RenderSystem.disableBlend();
-
-			} else if (this.panoramacube != null) {
-
-				this.panoramacube.render();
-
-			} else if (this.slideshow != null) {
-
-				int sw = this.slideshow.width;
-				int sh = this.slideshow.height;
-				int sx = this.slideshow.x;
-				int sy = this.slideshow.y;
-
-				this.slideshow.height = s.height;
-				this.slideshow.width = s.width;
-				this.slideshow.x = 0;
-				this.slideshow.y = 0;
-
-				this.slideshow.render();
-
-				this.slideshow.width = sw;
-				this.slideshow.height = sh;
-				this.slideshow.x = sx;
-				this.slideshow.y = sy;
-
-			}
-		} else {
-			this.panorama.render(Minecraft.getInstance().getRenderPartialTicks(), 1.0F);
-			Minecraft.getInstance().getTextureManager().bindTexture(new ResourceLocation("textures/gui/title/background/panorama_overlay.png"));
-			RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			IngameGui.blit(0, 0, s.width, s.height, 0.0F, 0.0F, 16, 128, 16, 128);
-		}
-
 	}
 	
 	/**
@@ -446,7 +340,15 @@ public class MainMenuHandler extends MenuHandlerBase {
 			e.printStackTrace();
 		}
 	}
-	
+
+	protected static void setShowFadeInAnimation(boolean showFadeIn, MainMenuScreen s) {
+		try {
+			Field f = ObfuscationReflectionHelper.findField(MainMenuScreen.class, "field_213102_y");
+			f.setBoolean(s, showFadeIn);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	protected static String getRandomSplashText() {
 		String customSplashPath = FancyMenu.config.getOrDefault("splashtextfile", "");

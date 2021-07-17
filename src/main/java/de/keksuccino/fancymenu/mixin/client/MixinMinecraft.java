@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.client;
 
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -8,7 +9,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.LoadingGui;
 
@@ -38,7 +38,10 @@ public class MixinMinecraft {
 	@Inject(at = @At(value = "HEAD"), method = "setLoadingGui", cancellable = false)
 	public void onSetLoadingGui(LoadingGui loadingGuiIn, CallbackInfo info) {
 		if (loadingGuiIn == null) {
-			MainMenuHandler.isLoadingScreen = false;
+			MenuCustomization.isLoadingScreen = false;
+			MenuCustomization.reloadCurrentMenu();
+		} else {
+			MenuCustomization.isLoadingScreen = true;
 		}
 	}
 	

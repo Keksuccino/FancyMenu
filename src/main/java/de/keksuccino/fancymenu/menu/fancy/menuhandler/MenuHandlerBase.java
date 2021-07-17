@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -125,6 +126,23 @@ public class MenuHandlerBase {
 
 	public String getMenuIdentifier() {
 		return this.identifier;
+	}
+
+	@SubscribeEvent
+	public void onSoftReload(SoftMenuReloadEvent e) {
+		if (this.shouldCustomize(e.screen)) {
+			this.delayAppearanceFirstTimeVanilla.clear();
+			this.delayAppearanceFirstTime.clear();
+			this.delayAppearanceVanilla.clear();
+			this.fadeInVanilla.clear();
+			for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
+				c.lastLayoutPath = null;
+			}
+
+			if (this.lastBackgroundAnimation != null) {
+				this.lastBackgroundAnimation.resetAnimation();
+			}
+		}
 	}
 
 	@SubscribeEvent
