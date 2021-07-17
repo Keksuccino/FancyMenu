@@ -1,4 +1,3 @@
-//TODO neu in 1.17
 package de.keksuccino.fancymenu.events;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;

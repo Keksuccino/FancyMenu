@@ -133,8 +133,7 @@ public class MenuHandlerBase extends DrawableHelper {
 	public String getMenuIdentifier() {
 		return this.identifier;
 	}
-	
-	//TODO neu in 1.17
+
 	@SubscribeEvent
 	public void onSoftReload(SoftMenuReloadEvent e) {
 		if (this.shouldCustomize(e.screen)) {

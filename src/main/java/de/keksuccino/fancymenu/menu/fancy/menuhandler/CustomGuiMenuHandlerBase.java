@@ -19,7 +19,6 @@ public class CustomGuiMenuHandlerBase  extends MenuHandlerBase {
 		super(identifier);
 	}
 
-	//TODO neu in 1.17
 	@SubscribeEvent
 	@Override
 	public void onSoftReload(SoftMenuReloadEvent e) {

@@ -59,7 +59,6 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			this.onFinished();
 			if (this.fallback != null) {
 				MinecraftClient.getInstance().openScreen(this.fallback);
-				//TODO neu in 1.17
 				MenuCustomization.reloadCurrentMenu();
 			}
 		} else {
@@ -72,20 +71,31 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			}
 			
 			if (!current.isReady()) {
+//				if (!this.preparing) {
+//					AnimationLoadingScreen loading = this;
+//					this.preparing = true;
+//					new Thread(new Runnable() {
+//						@Override
+//						public void run() {
+//							if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
+//								loading.setStatusText(Locals.localize("loading.animation.loadingframes", current.getPath().replace("/", ".").replace("\\", ".")));
+//							}
+//							current.prepareAnimation();
+//							System.gc();
+//							loading.preparing = false;
+//						}
+//					}).start();
+//				}
 				if (!this.preparing) {
-					AnimationLoadingScreen loading = this;
+					if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
+						this.setStatusText(Locals.localize("loading.animation.loadingframes", current.getPath().replace("/", ".").replace("\\", ".")));
+					}
 					this.preparing = true;
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							if (FancyMenu.config.getOrDefault("showanimationloadingstatus", true)) {
-								loading.setStatusText(Locals.localize("loading.animation.loadingframes", current.getPath().replace("/", ".").replace("\\", ".")));
-							}
-							current.prepareAnimation();
-							System.gc();
-							loading.preparing = false;
-						}
-					}).start();
+				} else {
+					//Needs to be called in the main thread in <1.15 (I hate laggy loading screens..)
+					current.prepareAnimation();
+					System.gc();
+					this.preparing = false;
 				}
 			} else {
 				if (!current.isFinished()) {
@@ -118,10 +128,25 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		}
 		
 	}
-	
+
 	private IAnimationRenderer getCurrentRenderer() {
 		if (!this.renderers.isEmpty()) {
-			return this.renderers.get(0);
+			IAnimationRenderer r = renderers.get(0);
+			if (r instanceof ResourcePackAnimationRenderer) {
+				this.renderers.remove(0);
+				return this.getCurrentRenderer();
+			}
+			if (r instanceof AdvancedAnimation) {
+				IAnimationRenderer main = ((AdvancedAnimation)r).getMainAnimationRenderer();
+				if (main == null) {
+					return null;
+				}
+				if (main instanceof ResourcePackAnimationRenderer) {
+					this.renderers.remove(0);
+					return this.getCurrentRenderer();
+				}
+			}
+			return r;
 		}
 		return null;
 	}

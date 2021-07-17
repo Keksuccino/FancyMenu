@@ -30,7 +30,6 @@ public class DummyCoreMainHandler extends MainMenuHandler {
 		super.onInitPre(e);
 	}
 
-	//TODO neu in 1.17
 	@SubscribeEvent
 	@Override
 	public void onSoftReload(SoftMenuReloadEvent e) {

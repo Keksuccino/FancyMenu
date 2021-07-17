@@ -35,8 +35,7 @@ public class MenuCustomization {
 	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
-	
-	//TODO neu in 1.17
+
 	public static boolean isLoadingScreen = true;
 	
 	public static void init() {
@@ -208,12 +207,12 @@ public class MenuCustomization {
 		isNewMenu = b;
 		eventsInstance.lastScreen = null;
 	}
-	
-	//TODO neu in 1.17
+
 	public static void reloadCurrentMenu() {
 		Screen s = MinecraftClient.getInstance().currentScreen;
 		if (s != null) {
 			if (isMenuCustomizable(s)) {
+				setIsNewMenu(true);
 				SoftMenuReloadEvent e = new SoftMenuReloadEvent(s);
 				Konkrete.getEventHandler().callEventsFor(e);
 				MinecraftClient.getInstance().openScreen(s);

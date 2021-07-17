@@ -67,8 +67,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	public void onInitPre(Pre e) {
 		super.onInitPre(e);
 	}
-	
-	//TODO neu in 1.17
+
 	@SubscribeEvent
 	@Override
 	public void onSoftReload(SoftMenuReloadEvent e) {

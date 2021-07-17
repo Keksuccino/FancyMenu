@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
+import de.keksuccino.fancymenu.events.SplashScreenRenderEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -63,9 +64,16 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 			this.reloadStartTime = l;
 		}
 
-		//Variables for the loading screen dark mode
-		int color = new Color(26, 26, 26).getRGB();
+		SplashScreenRenderEvent.Pre event = new SplashScreenRenderEvent.Pre((SplashScreen) ((Object)this), matrix, mouseX, mouseY, delta, i, j);
+		Konkrete.getEventHandler().callEventsFor(event);
+		if (event.isCanceled()) {
+			return;
+		}
+
+		//Variables for dark mode and custom background color
+		int darkBackground = new Color(26, 26, 26).getRGB();
 		boolean isDarkmode = FancyMenu.config.getOrDefault("loadingscreendarkmode", false);
+		boolean isCustomBackground = event.getBackgroundColor() != -1;
 		
 		float f = this.reloadCompleteTime > -1L ? (float)(l - this.reloadCompleteTime) / 1000.0F : -1.0F;
 		float g = this.reloadStartTime > -1L ? (float)(l - this.reloadStartTime) / 500.0F : -1.0F;
@@ -82,13 +90,16 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 
 			m = MathHelper.ceil((1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
 			//Disabling background transparency when fading to customizable menus to prevent layout bugs
-			if ((MinecraftClient.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
+			if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
 				m = 255;
 			}
-			if (!isDarkmode) {
-				fill(matrix, 0, 0, i, j, withAlpha(BRAND_ARGB.getAsInt(), m));
+			//Handle background color
+			if (isCustomBackground) {
+				fill(matrix, 0, 0, i, j, withAlpha(event.getBackgroundColor(), m));
+			} else if (isDarkmode) {
+				fill(matrix, 0, 0, i, j, withAlpha(darkBackground, m));
 			} else {
-				fill(matrix, 0, 0, i, j, withAlpha(color, m));
+				fill(matrix, 0, 0, i, j, withAlpha(BRAND_ARGB.getAsInt(), m));
 			}
 			s = 1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F);
 		} else if (this.reloading) {
@@ -102,18 +113,24 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 
 			m = MathHelper.ceil(MathHelper.clamp((double)g, 0.15D, 1.0D) * 255.0D);
 			//Disabling background transparency when fading to customizable menus to prevent layout bugs
-			if ((MinecraftClient.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
+			if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
 				m = 255;
 			}
-			if (!isDarkmode) {
-				fill(matrix, 0, 0, i, j, withAlpha(BRAND_ARGB.getAsInt(), m));
+			//Handle background color
+			if (isCustomBackground) {
+				fill(matrix, 0, 0, i, j, withAlpha(event.getBackgroundColor(), m));
+			} else if (isDarkmode) {
+				fill(matrix, 0, 0, i, j, withAlpha(darkBackground, m));
 			} else {
-				fill(matrix, 0, 0, i, j, withAlpha(color, m));
+				fill(matrix, 0, 0, i, j, withAlpha(BRAND_ARGB.getAsInt(), m));
 			}
 			s = MathHelper.clamp(g, 0.0F, 1.0F);
 		} else {
-			if (isDarkmode) {
-				m = color;
+			//Handle background color
+			if (isCustomBackground) {
+				m = event.getBackgroundColor();
+			} else if (isDarkmode) {
+				m = darkBackground;
 			} else {
 				m = BRAND_ARGB.getAsInt();
 			}
@@ -131,30 +148,34 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 		int v = (int)(d * 0.5D);
 		double e = d * 4.0D;
 		int w = (int)(e * 0.5D);
-		RenderSystem.setShaderTexture(0, LOGO);
-		RenderSystem.enableBlend();
-		RenderSystem.blendEquation(32774);
-		RenderSystem.blendFunc(770, 1);
-		RenderSystem.setShader(GameRenderer::getPositionTexShader);
-		//Disabling logo transparency when fading to customizable menus to prevent layout bugs
-		if ((MinecraftClient.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
-			s = 1.0F;
+		if (event.isRenderLogo()) {
+			RenderSystem.setShaderTexture(0, LOGO);
+			RenderSystem.enableBlend();
+			RenderSystem.blendEquation(32774);
+			RenderSystem.blendFunc(770, 1);
+			RenderSystem.setShader(GameRenderer::getPositionTexShader);
+			//Disabling logo transparency when fading to customizable menus to prevent layout bugs
+			if ((MinecraftClient.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
+				s = 1.0F;
+			}
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, s);
+			drawTexture(matrix, m - w, u - v, w, (int) d, -0.0625F, 0.0F, 120, 60, 120, 120);
+			drawTexture(matrix, m, u - v, w, (int) d, 0.0625F, 60.0F, 120, 60, 120, 120);
+			RenderSystem.defaultBlendFunc();
+			RenderSystem.disableBlend();
 		}
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, s);
-		drawTexture(matrix, m - w, u - v, w, (int)d, -0.0625F, 0.0F, 120, 60, 120, 120);
-		drawTexture(matrix, m, u - v, w, (int)d, 0.0625F, 60.0F, 120, 60, 120, 120);
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.disableBlend();
 		int x = (int)((double)this.mc.getWindow().getScaledHeight() * 0.8325D);
 		float y = this.reload.getProgress();
 		this.progress = MathHelper.clamp(this.progress * 0.95F + y * 0.050000012F, 0.0F, 1.0F);
 		if (f < 1.0F) {
-			float barTransparency = 1.0F - MathHelper.clamp(f, 0.0F, 1.0F);
-			//Disabling background transparency when fading to customizable menus to prevent layout bugs
-			if ((MinecraftClient.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
-				barTransparency = 1.0F;
+			if (event.isRenderBar()) {
+				float barTransparency = 1.0F - MathHelper.clamp(f, 0.0F, 1.0F);
+				//Disabling bar transparency when fading to customizable menus to prevent layout bugs
+				if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+					barTransparency = 1.0F;
+				}
+				this.renderProgressBar(matrix, i / 2 - w, x - 5, i / 2 + w, x + 5, barTransparency);
 			}
-			this.renderProgressBar(matrix, i / 2 - w, x - 5, i / 2 + w, x + 5, barTransparency);
 		}
 
 		if (f >= 2.0F) {
@@ -174,6 +195,12 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 				this.mc.currentScreen.init(this.mc, this.mc.getWindow().getScaledWidth(), this.mc.getWindow().getScaledHeight());
 			}
 		}
+
+		SplashScreenRenderEvent.Post event2 = new SplashScreenRenderEvent.Post((SplashScreen) ((Object)this), matrix, mouseX, mouseY, delta, i, j);
+		event2.setRenderBar(event.isRenderBar());
+		event2.setRenderLogo(event.isRenderLogo());
+		event2.setBackgroundColor(event.getBackgroundColor());
+		Konkrete.getEventHandler().callEventsFor(event2);
 
 	}
 

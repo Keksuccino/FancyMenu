@@ -1,5 +1,9 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,6 +52,40 @@ public class PlayerEntityCache {
 			return slimskin.get(playerName);
 		}
 		return false;
+	}
+
+	/**
+	 * Returns the calculated SHA-1 or <b>null</b> if calculating failed.
+	 */
+	public static String calculateSHA1(File file) {
+		try {
+			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+			InputStream input = new FileInputStream(file);
+			byte[] buffer = new byte[8192];
+			int len = input.read(buffer);
+
+			while (len != -1) {
+				sha1.update(buffer, 0, len);
+				len = input.read(buffer);
+			}
+
+			return bytesToHexString(sha1.digest());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	protected static String bytesToHexString(byte[] bytes) {
+		StringBuilder sb = new StringBuilder();
+		for (byte b : bytes) {
+			int value = b & 0xFF;
+			if (value < 16) {
+				sb.append("0");
+			}
+			sb.append(Integer.toHexString(value).toUpperCase());
+		}
+		return sb.toString();
 	}
 	
 }

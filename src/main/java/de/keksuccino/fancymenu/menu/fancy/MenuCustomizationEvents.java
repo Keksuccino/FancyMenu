@@ -54,8 +54,7 @@ public class MenuCustomizationEvents {
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
-	
-	//TODO neu in 1.17
+
 	@SubscribeEvent(priority =  EventPriority.HIGH)
 	public void onSoftReload(SoftMenuReloadEvent e) {
 		MenuCustomization.isNewMenu = true;

@@ -5,6 +5,7 @@ import java.awt.Color;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -39,6 +40,7 @@ public class GameIntroScreen extends Screen {
 					this.renderer.resetAnimation();
 					GameIntroHandler.introDisplayed = true;
 					MinecraftClient.getInstance().openScreen(this.main);
+					MenuCustomization.reloadCurrentMenu();
 					KeyboardHandler.removeKeyPressedListener(this.keypress);
 				}
 			}
@@ -81,6 +83,7 @@ public class GameIntroScreen extends Screen {
 				this.renderer.resetAnimation();
 				GameIntroHandler.introDisplayed = true;
 				MinecraftClient.getInstance().openScreen(this.main);
+				MenuCustomization.reloadCurrentMenu();
 			}
 		}
 		

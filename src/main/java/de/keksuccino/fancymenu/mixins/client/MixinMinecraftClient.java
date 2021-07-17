@@ -34,54 +34,15 @@ public class MixinMinecraftClient {
 			info.setReturnValue(title);
 		}
 	}
-	
-	//TODO neu in 1.17
+
 	@Inject(at = @At(value = "TAIL"), method = "setOverlay")
 	private void onSetOverlay(Overlay overlay, CallbackInfo info) {
-		
 		if (overlay == null) {
 			MenuCustomization.isLoadingScreen = false;
 			MenuCustomization.reloadCurrentMenu();
 		} else {
 			MenuCustomization.isLoadingScreen = true;
 		}
-		
-//		if (FancyMenu.config.getOrDefault("loadingscreendarkmode", false)) {
-//			if (overlay instanceof SplashScreen) {
-//				MinecraftClient.getInstance().overlay = new DarkResourceLoadingScreen(MinecraftClient.getInstance(), getReloader((SplashScreen)overlay), getCallback((SplashScreen)overlay), getReloading((SplashScreen)overlay));
-//			}
-//		}
-		
 	}
-	
-//	private static Consumer<Optional<Throwable>> getCallback(SplashScreen screen) {
-//		try {
-//			Field f = ReflectionHelper.findField(SplashScreen.class, "exceptionHandler", "field_18218");
-//			return (Consumer<Optional<Throwable>>) f.get(screen);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		return null;
-//	}
-	
-//	private static ResourceReloadMonitor getReloader(SplashScreen screen) {
-//		try {
-//			Field f = ReflectionHelper.findField(SplashScreen.class, "reloadMonitor", "field_17767");
-//			return (ResourceReloadMonitor) f.get(screen);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		return null;
-//	}
-	
-//	private static boolean getReloading(SplashScreen screen) {
-//		try {
-//			Field f = ReflectionHelper.findField(SplashScreen.class, "reloading", "field_18219");
-//			return (boolean) f.get(screen);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		return false;
-//	}
 	
 }

@@ -63,14 +63,14 @@ public class MenuHandlerEvents {
 			if (s instanceof CustomGuiBase) {
 				if (!MenuHandlerRegistry.isHandlerRegistered(((CustomGuiBase)s).getIdentifier())) {
 					MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(((CustomGuiBase)s).getIdentifier()));
-					//TODO neu in 1.17
+					//TODO neu in 1.17 (vllt nur in Fabric wichtig)
 					MenuCustomization.reloadCurrentMenu();
 				}
 			} else {
 				if (!MenuHandlerRegistry.isHandlerRegistered(s.getClass().getName())) {
 					if (MenuCustomization.isValidScreen(s)) {
 						MenuHandlerRegistry.registerHandler(new MenuHandlerBase(s.getClass().getName()));
-						//TODO neu in 1.17
+						//TODO neu in 1.17 (vllt nur in Fabric wichtig)
 						MenuCustomization.reloadCurrentMenu();
 					}
 				}

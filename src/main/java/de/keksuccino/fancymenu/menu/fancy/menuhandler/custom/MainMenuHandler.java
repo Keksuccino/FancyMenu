@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.events.ResourceLoadingFadeScreenPostRenderEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -25,7 +24,6 @@ import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.InitGuiEvent.Pre;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -52,9 +50,6 @@ import net.minecraft.util.math.Vec3f;
 @SuppressWarnings("resource")
 public class MainMenuHandler extends MenuHandlerBase {
 	
-	//TODO neu in 1.17
-//	public static boolean isLoadingScreen = true;
-	
 	private static final CubeMapRenderer PANORAMA_CUBE_MAP = new CubeMapRenderer(new Identifier("textures/gui/title/background/panorama"));
 	private static final Identifier PANORAMA_OVERLAY = new Identifier("textures/gui/title/background/panorama_overlay.png");
 	private static final Identifier MINECRAFT_TITLE_TEXTURE = new Identifier("textures/gui/title/minecraft.png");
@@ -69,7 +64,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 		super(TitleScreen.class.getName());
 	}
 
-	//TODO neu in 1.17
 	@SubscribeEvent
 	@Override
 	public void onSoftReload(SoftMenuReloadEvent e) {
@@ -83,11 +77,26 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		this.splash = getRandomSplashText();
 	}
+
+	@SubscribeEvent
+	@Override
+	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+		if (this.shouldCustomize(e.getGui())) {
+			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+				if (e.getGui() instanceof TitleScreen) {
+					setShowFadeInAnimation(false, (TitleScreen) e.getGui());
+				}
+			}
+		}
+		super.onInitPre(e);
+	}
 	
 	@SubscribeEvent
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
-		if (this.shouldCustomize(e.getGui()) && !MenuCustomization.isLoadingScreen) {
+		//TODO schauen, ob alles ohne isLoadingScreen funktioniert (wenn nicht, einfach lassen)
+//		if (this.shouldCustomize(e.getGui()) && !MenuCustomization.isLoadingScreen) {
+		if (this.shouldCustomize(e.getGui())) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 
 				if (this.splash == null) {
@@ -99,12 +108,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 				super.onButtonsCached(e);
 			}
 		}
-	}
-	
-	@SubscribeEvent
-	@Override
-	public void onInitPre(Pre e) {
-		super.onInitPre(e);
 	}
 	
 	@SubscribeEvent
@@ -121,124 +124,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 				e.getGui().renderBackground(e.getMatrixStack());
 			}
 		}
-	}
-	
-	@SubscribeEvent
-	public void onRenderLoadingScreen(ResourceLoadingFadeScreenPostRenderEvent e) {
-		if (this.shouldCustomize(e.screen)) {
-			try {
-				this.renderEarlyBackground(e.matrix, e.screen);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-	
-	protected void renderEarlyBackground(MatrixStack matrix, Screen s) {
-
-		if (this.canRenderBackground()) {
-			if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
-				boolean b = this.backgroundAnimation.isStretchedToStreensize();
-				this.backgroundAnimation.setStretchImageToScreensize(true);
-				this.backgroundAnimation.render(CurrentScreenHandler.getMatrixStack());
-				this.backgroundAnimation.setStretchImageToScreensize(b);
-			} else if (this.backgroundTexture != null) {
-				//TODO neu in 1.17
-				RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-
-				if (!this.panoramaback) {
-					drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
-				} else {
-					int w = this.backgroundTexture.getWidth();
-					int h = this.backgroundTexture.getHeight();
-					double ratio = (double) w / (double) h;
-					int wfinal = (int)(s.height * ratio);
-
-					//Check if the panorama background should move to the left side or to the ride side
-					if ((panoPos + (wfinal - s.width)) <= 0) {
-						panoMoveBack = true;
-					}
-					if (panoPos >= 0) {
-						panoMoveBack = false;
-					}
-
-					//Fix pos after resizing
-					if (panoPos + (wfinal - s.width) < 0) {
-						panoPos = 0 - (wfinal - s.width);
-					}
-					if (panoPos > 0) {
-						panoPos = 0;
-					}
-
-					if (!panoStop) {
-						if (panoTick >= 1) {
-							panoTick = 0;
-							if (panoMoveBack) {
-								panoPos = panoPos + 0.5;
-							} else {
-								panoPos = panoPos - 0.5;
-							}
-
-							if (panoPos + (wfinal - s.width) == 0) {
-								panoStop = true;
-							}
-							if (panoPos == 0) {
-								panoStop = true;
-							}
-						} else {
-							panoTick++;
-						}
-					} else {
-						if (panoTick >= 300) {
-							panoStop = false;
-							panoTick = 0;
-						} else {
-							panoTick++;
-						}
-					}
-					if (wfinal <= s.width) {
-						drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
-					} else {
-						RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
-					}
-				}
-
-				RenderSystem.disableBlend();
-
-			} else if (this.panoramacube != null) {
-
-				this.panoramacube.render();
-
-			} else if (this.slideshow != null) {
-
-				int sw = this.slideshow.width;
-				int sh = this.slideshow.height;
-				int sx = this.slideshow.x;
-				int sy = this.slideshow.y;
-
-				this.slideshow.height = s.height;
-				this.slideshow.width = s.width;
-				this.slideshow.x = 0;
-				this.slideshow.y = 0;
-
-				this.slideshow.render(matrix);
-
-				this.slideshow.width = sw;
-				this.slideshow.height = sh;
-				this.slideshow.x = sx;
-				this.slideshow.y = sy;
-
-			}
-		} else {
-			//TODO neu in 1.17
-			this.panorama.render(MinecraftClient.getInstance().getTickDelta(), 1.0F);
-			RenderUtils.bindTexture(PANORAMA_OVERLAY);
-			RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			drawTexture(matrix, 0, 0, s.width, s.height, 0.0F, 0.0F, 16, 128, 16, 128);
-			//------------------
-		}
-
 	}
 	
 	/**
@@ -514,6 +399,15 @@ public class MainMenuHandler extends MenuHandlerBase {
 				Field f = ReflectionHelper.findField(TitleScreen.class, "copyrightTextX", "field_2606");
 				f.set(MinecraftClient.getInstance().currentScreen, i);
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
+		try {
+			Field f = ReflectionHelper.findField(TitleScreen.class, "doBackgroundFade", "field_18222");
+			f.setBoolean(s, showFadeIn);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

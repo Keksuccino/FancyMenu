@@ -1,10 +1,7 @@
 package de.keksuccino.fancymenu.menu.animation;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
@@ -13,6 +10,9 @@ import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.client.GuiOpenEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.properties.PropertiesSerializer;
+import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -24,6 +24,7 @@ public class AnimationHandler {
 	private static Map<String, AnimationData> animations = new HashMap<String, AnimationData>();
 	private static List<String> custom = new ArrayList<String>();
 	protected static boolean ready = false;
+	protected static boolean containsAnimationsWithOldFormat = false;
 
 	public static void init() {
 		Konkrete.getEventHandler().registerEventsFrom(new AnimationHandlerEvents());
@@ -63,16 +64,17 @@ public class AnimationHandler {
 			}
 		}
 	}
-	
+
 	public static void loadCustomAnimations() {
 		File f = FancyMenu.getAnimationPath();
 		if (!f.exists() || !f.isDirectory()) {
 			return;
 		}
-		
+
 		ready = false;
+		containsAnimationsWithOldFormat = false;
 		clearCustomAnimations();
-		
+
 		for (File a : f.listFiles()) {
 			String name = null;
 			String mainAudio = null;
@@ -84,26 +86,152 @@ public class AnimationHandler {
 			int x = 0;
 			int y = 0;
 			boolean replayIntro = false;
-			
+			List<String> frameNamesMain = new ArrayList<String>();
+			List<String> frameNamesIntro = new ArrayList<String>();
+			String resourceNamespace = null;
+			boolean isNewFormat = false;
+
 			if (a.isDirectory()) {
 				File p = new File(a.getAbsolutePath() + "/properties.txt");
-				Map<String, String> props = parseProperties(p);
-				if (!props.isEmpty()) {
-					
+				if (!p.exists()) {
+					p = new File(a.getAbsolutePath() + "/animation.properties");
+					isNewFormat = true;
+				}
+				if (!p.exists()) {
+					continue;
+				}
+
+				if (isNewFormat) {
+
+					PropertiesSet props = PropertiesSerializer.getProperties(p.getPath());
+					if (props == null) {
+						continue;
+					}
+
+					/** ANIMATION META **/
+					List<PropertiesSection> metas = props.getPropertiesOfType("animation-meta");
+					if (metas.isEmpty()) {
+						continue;
+					}
+					PropertiesSection m = metas.get(0);
+
+					name = m.getEntryValue("name");
+					if (name == null) {
+						continue;
+					}
+
+					String fpsString = m.getEntryValue("fps");
+					if ((fpsString != null) && MathUtils.isInteger(fpsString)) {
+						fps = Integer.parseInt(fpsString);
+					}
+
+					String loopString = m.getEntryValue("loop");
+					if ((loopString != null) && loopString.equalsIgnoreCase("false")) {
+						loop = false;
+					}
+
+					String replayString = m.getEntryValue("replayintro");
+					if ((replayString != null) && replayString.equalsIgnoreCase("true")) {
+						replayIntro = true;
+					}
+
+					resourceNamespace = m.getEntryValue("namespace");
+					if (resourceNamespace == null) {
+						continue;
+					}
+
+					/** MAIN FRAME NAMES **/
+					List<PropertiesSection> mainFrameSecs = props.getPropertiesOfType("frames-main");
+					if (mainFrameSecs.isEmpty()) {
+						continue;
+					}
+					PropertiesSection mainFrames = mainFrameSecs.get(0);
+					Map<String, String> mainFramesMap = mainFrames.getEntries();
+					List<String> mainFrameKeys = new ArrayList<String>();
+					for(Map.Entry<String, String> me : mainFramesMap.entrySet()) {
+						if (me.getKey().startsWith("frame_")) {
+							String frameNumber = me.getKey().split("[_]", 2)[1];
+							if (MathUtils.isInteger(frameNumber)) {
+								mainFrameKeys.add(me.getKey());
+							}
+						}
+					}
+					Collections.sort(mainFrameKeys, new Comparator<String>() {
+						public int compare(String o1, String o2) {
+							String n1 = o1.split("[_]", 2)[1];
+							String n2 = o2.split("[_]", 2)[1];
+							int i1 = Integer.parseInt(n1);
+							int i2 = Integer.parseInt(n2);
+
+							if (i1 > i2) {
+								return 1;
+							}
+							if (i1 < i2) {
+								return -1;
+							}
+							return 0;
+						}
+					});
+					for (String s : mainFrameKeys) {
+						frameNamesMain.add("frames_main/" + mainFramesMap.get(s));
+					}
+
+					/** INTRO FRAME NAMES **/
+					List<PropertiesSection> introFrameSecs = props.getPropertiesOfType("frames-intro");
+					if (!introFrameSecs.isEmpty()) {
+						PropertiesSection introFrames = introFrameSecs.get(0);
+						Map<String, String> introFramesMap = introFrames.getEntries();
+						List<String> introFrameKeys = new ArrayList<String>();
+						for (Map.Entry<String, String> me : introFramesMap.entrySet()) {
+							if (me.getKey().startsWith("frame_")) {
+								String frameNumber = me.getKey().split("[_]", 2)[1];
+								if (MathUtils.isInteger(frameNumber)) {
+									introFrameKeys.add(me.getKey());
+								}
+							}
+						}
+						Collections.sort(introFrameKeys, new Comparator<String>() {
+							public int compare(String o1, String o2) {
+								String n1 = o1.split("[_]", 2)[1];
+								String n2 = o2.split("[_]", 2)[1];
+								int i1 = Integer.parseInt(n1);
+								int i2 = Integer.parseInt(n2);
+
+								if (i1 > i2) {
+									return 1;
+								}
+								if (i1 < i2) {
+									return -1;
+								}
+								return 0;
+							}
+						});
+						for (String s : introFrameKeys) {
+							frameNamesIntro.add("frames_intro/" + introFramesMap.get(s));
+						}
+					}
+
+				} else {
+
+					Map<String, String> props = parseProperties(p);
+					if (props.isEmpty()) {
+						continue;
+					}
+
 					if (props.containsKey("name")) {
 						String s = props.get("name");
 						if ((s != null) && !s.equals("")) {
 							name = s;
 						}
 					}
-					
+
 					if (props.containsKey("fps")) {
 						String s = props.get("fps");
 						if ((s != null) && !s.equals("") && MathUtils.isInteger(s)) {
 							fps = Integer.parseInt(s);
 						}
 					}
-					
+
 					if (props.containsKey("loop")) {
 						String s = props.get("loop");
 						if ((s != null) && !s.equals("")) {
@@ -112,49 +240,49 @@ public class AnimationHandler {
 							}
 						}
 					}
-					
+
 					if (props.containsKey("width")) {
 						String s = props.get("width");
 						if ((s != null) && !s.equals("") && MathUtils.isInteger(s)) {
 							width = Integer.parseInt(s);
 						}
 					}
-					
+
 					if (props.containsKey("height")) {
 						String s = props.get("height");
 						if ((s != null) && !s.equals("") && MathUtils.isInteger(s)) {
 							height = Integer.parseInt(s);
 						}
 					}
-					
+
 					if (props.containsKey("x")) {
 						String s = props.get("x");
 						if ((s != null) && !s.equals("") && MathUtils.isInteger(s)) {
 							x = Integer.parseInt(s);
 						}
 					}
-					
+
 					if (props.containsKey("y")) {
 						String s = props.get("y");
 						if ((s != null) && !s.equals("") && MathUtils.isInteger(s)) {
 							y = Integer.parseInt(s);
 						}
 					}
-					
+
 					if (props.containsKey("replayintro")) {
 						String s = props.get("replayintro");
 						if ((s != null) && s.equalsIgnoreCase("true")) {
 							replayIntro = true;
 						}
 					}
-					
+
 				}
-				
+
 				File audio1 = new File(a.getAbsolutePath() + "/audio/mainaudio.wav");
 				if (audio1.exists()) {
 					mainAudio = audio1.getPath();
 				}
-				
+
 				File audio2 = new File(a.getAbsolutePath() + "/audio/introaudio.wav");
 				if (audio2.exists()) {
 					introAudio = audio2.getPath();
@@ -165,13 +293,22 @@ public class AnimationHandler {
 					File gifAni = new File(a.getPath() + "/animation.gif");
 					IAnimationRenderer in = null;
 					IAnimationRenderer an = null;
-					
-					if (gifAni.exists()) {
+
+					if (isNewFormat) {
+						if (!frameNamesIntro.isEmpty() && !frameNamesMain.isEmpty()) {
+							in = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesIntro, fps, loop, 0, 0, 100, 100);
+							an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+						} else if (!frameNamesMain.isEmpty()) {
+							an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+						}
+					} else if (gifAni.exists()) {
 						if ((gifIntro.exists()) && (gifAni.exists())) {
 							in = new ExternalGifAnimationRenderer(gifIntro.getPath(), loop, x, y, width, height);
 							an = new ExternalGifAnimationRenderer(gifAni.getPath(), loop, x, y, width, height);
+							containsAnimationsWithOldFormat = true;
 						} else if (gifAni.exists()) {
 							an = new ExternalGifAnimationRenderer(gifAni.getPath(), loop, x, y, width, height);
+							containsAnimationsWithOldFormat = true;
 						}
 					} else {
 						String intro = getIntroPath(a.getPath());
@@ -179,17 +316,27 @@ public class AnimationHandler {
 						if ((intro != null) && (ani != null)) {
 							in = new ExternalTextureAnimationRenderer(intro, fps, loop, x, y, width, height);
 							an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
+							containsAnimationsWithOldFormat = true;
 						} else if (ani != null) {
 							an = new ExternalTextureAnimationRenderer(ani, fps, loop, x, y, width, height);
+							containsAnimationsWithOldFormat = true;
 						}
 					}
-					
+
 					try {
 						if ((in != null) && (an != null)) {
-							registerAnimation(new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro), name, Type.EXTERNAL);
+							AdvancedAnimation ani = new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro);
+							registerAnimation(ani, name, Type.EXTERNAL);
+							if (isNewFormat) {
+								ani.prepareAnimation();
+							}
 							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
 						} else if (an != null) {
-							registerAnimation(new AdvancedAnimation(null, an, introAudio, mainAudio, false), name, Type.EXTERNAL);
+							AdvancedAnimation ani = new AdvancedAnimation(null, an, introAudio, mainAudio, false);
+							registerAnimation(ani, name, Type.EXTERNAL);
+							if (isNewFormat) {
+								ani.prepareAnimation();
+							}
 							System.out.println("[FM AnimationHandler] Custom animation found and registered: " + name + "");
 						} else {
 							System.out.println("[FM AnimationHandler] ### ERROR: This is not a valid animation: " + name);
@@ -199,6 +346,9 @@ public class AnimationHandler {
 					}
 				}
 			}
+		}
+		if (!containsAnimationsWithOldFormat) {
+			ready = true;
 		}
 	}
 	
@@ -247,7 +397,7 @@ public class AnimationHandler {
 	}
 	
 	public static void setupAnimations(GuiOpenEvent e) {
-		if (!animations.isEmpty()) {
+		if (!animations.isEmpty() && containsAnimationsWithOldFormat) {
 			Screen s = null;
 			if (e.getGui() != null) {
 				s = e.getGui();
