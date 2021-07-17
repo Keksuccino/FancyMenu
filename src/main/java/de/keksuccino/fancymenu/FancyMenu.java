@@ -17,7 +17,6 @@ import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
@@ -26,7 +25,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.1.6,]", clientSideOnly = true)
 public class FancyMenu {
 	
-	public static final String VERSION = "2.1.2";
+	public static final String VERSION = "2.2.0";
 	
 	public static Config config;
 	
@@ -44,7 +43,7 @@ public class FancyMenu {
 			
 			//Useless now bc of clientSideOnly, but will keep this here to keep the code in sync with MC 1.15+ :)
 			if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
-	    		
+
 	    		//Create all important directorys
 	    		animationsPath.mkdirs();
 	    		customizationPath.mkdirs();
@@ -52,8 +51,6 @@ public class FancyMenu {
 	    		buttonscriptPath.mkdirs();
 	    		panoramaPath.mkdirs();
 	    		slideshowPath.mkdirs();
-
-	    		Minecraft.getMinecraft().getRenderPartialTicks();
 	    		
 	    		updateConfig();
 
@@ -127,6 +124,7 @@ public class FancyMenu {
 	
 	public static void updateConfig() {
     	try {
+
     		config = new Config("config/fancymenu/config.txt");
     		
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
@@ -138,6 +136,7 @@ public class FancyMenu {
     		config.registerValue("showdebugwarnings", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
+			config.registerValue("advancedmode", false, "customization");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
@@ -159,6 +158,7 @@ public class FancyMenu {
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
 			config.registerValue("loadinganimationcolor", "#E22837", "loading");
+			config.registerValue("preloadanimations", true, "loading");
 			
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
 			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
@@ -170,47 +170,8 @@ public class FancyMenu {
 			
 			config.syncConfig();
 			
-			//Updating all categorys at start to keep them synchronized with older config files
-			config.setCategory("enablehotkeys", "general");
-			config.setCategory("playmenumusic", "general");
-			config.setCategory("playbackgroundsounds", "general");
-			config.setCategory("playbackgroundsoundsinworld", "general");
-			config.setCategory("stopworldmusicwhencustomizable", "general");
-			config.setCategory("defaultguiscale", "general");
-			config.setCategory("showdebugwarnings", "general");
-    		
-			config.setCategory("showcustomizationbuttons", "customization");
-			
-			config.setCategory("hidebranding", "mainmenu");
-			config.setCategory("hidelogo", "mainmenu");
-			config.setCategory("hiderealmsnotifications", "mainmenu");
-			config.setCategory("copyrightposition", "mainmenu");
-			config.setCategory("hideforgenotifications", "mainmenu");
-			config.setCategory("copyrightcolor", "mainmenu");
-			
-			config.setCategory("hidesplashtext", "mainmenu_splash");
-			config.setCategory("splashx", "mainmenu_splash");
-			config.setCategory("splashy", "mainmenu_splash");
-			config.setCategory("splashorientation", "mainmenu_splash");
-			config.setCategory("splashcolor", "mainmenu_splash");
-			config.setCategory("splashtextfile", "mainmenu_splash");
-			config.setCategory("splashrotation", "mainmenu_splash");
-			
-			config.setCategory("gameintroanimation", "loading");
-			config.setCategory("showanimationloadingstatus", "loading");
-			config.setCategory("allowgameintroskip", "loading");
-			config.setCategory("customgameintroskiptext", "loading");
-			config.setCategory("loadinganimationcolor", "loading");
-			
-			config.setCategory("customwindowicon", "minecraftwindow");
-			config.setCategory("customwindowtitle", "minecraftwindow");
-
-			config.setCategory("showvanillamovewarning", "layouteditor");
-			config.setCategory("editordeleteconfirmation", "layouteditor");
-			
-			config.setCategory("uiscale", "ui");
-			
 			config.clearUnusedValues();
+
 		} catch (InvalidValueException e) {
 			e.printStackTrace();
 		}

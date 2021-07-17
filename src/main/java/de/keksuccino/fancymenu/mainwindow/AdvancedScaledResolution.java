@@ -11,12 +11,10 @@ public class AdvancedScaledResolution {
     private int scaledWidth;
     private int scaledHeight;
 
-    //TODO unicode müll
     public AdvancedScaledResolution(int scale) {
     	Minecraft mc = Minecraft.getMinecraft();
         int w = mc.displayWidth;
         int h = mc.displayHeight;
-//        boolean flag = mc.isUnicode();
 
         if (scale <= 0) {
             scale = 1;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -207,6 +208,18 @@ public class MenuCustomization {
 	public static void setIsNewMenu(boolean b) {
 		isNewMenu = b;
 		eventsInstance.lastScreen = null;
+	}
+
+	public static void reloadCurrentMenu() {
+		GuiScreen s = Minecraft.getMinecraft().currentScreen;
+		if (s != null) {
+			if (isMenuCustomizable(s)) {
+				setIsNewMenu(true);
+				SoftMenuReloadEvent e = new SoftMenuReloadEvent(s);
+				MinecraftForge.EVENT_BUS.post(e);
+				Minecraft.getMinecraft().displayGuiScreen(s);
+			}
+		}
 	}
 	
 }

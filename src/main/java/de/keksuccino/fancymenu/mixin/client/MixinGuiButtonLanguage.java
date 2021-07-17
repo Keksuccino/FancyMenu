@@ -33,7 +33,8 @@ public class MixinGuiButtonLanguage {
 		GuiButtonLanguage b = ((GuiButtonLanguage)((Object)this));
 		int mouseX = MouseInput.getMouseX();
 		int mouseY = MouseInput.getMouseY();
-		
+		boolean hovered = mouseX >= b.x && mouseY >= b.y && mouseX < b.x + b.width && mouseY < b.y + b.height;
+
 		RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre((GuiButton)((Object)this), ep.getAlpha());
 		MinecraftForge.EVENT_BUS.post(e);
 		if (!e.isCanceled()) {
@@ -41,10 +42,9 @@ public class MixinGuiButtonLanguage {
 	            Minecraft.getMinecraft().getTextureManager().bindTexture(BUTTON_TEXTURES);
 	            GlStateManager.enableBlend();
 	            GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
-	            boolean flag = mouseX >= b.x && mouseY >= b.y && mouseX < b.x + b.width && mouseY < b.y + b.height;
 	            int i = 106;
 
-	            if (flag) {
+	            if (hovered) {
 	                i += b.height;
 	            }
 

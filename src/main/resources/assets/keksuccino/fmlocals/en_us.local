@@ -144,7 +144,7 @@ helper.creator.items.vanillabutton.resetorientation = Reset Orientation
 helper.creator.items.vanillabutton.hide = Hide Button
 
 helper.creator.items.vanillabutton.noorientation.title = Special care required!
-helper.creator.items.vanillabutton.noorientation.desc = §oStandard buttons need some head pats before they listen to you.%n%%n%%n%To §lresize or move §rthem, you have to give them an §lorientation §rfirst!%n%%n%You can do that by §lright-clicking §rthe button.
+helper.creator.items.vanillabutton.noorientation.desc = §oDefault buttons need some head pats before they listen to you.%n%%n%%n%To §lresize or move §rthem, you have to give them an §lorientation §rfirst!%n%%n%You can do that by §lright-clicking §rthe button.
 
 helper.creator.items.string.setscale = Set Scale
 helper.creator.items.string.setshadow = Shadow: §cOff
@@ -499,6 +499,7 @@ fancymenu.config.categories.customization = CUSTOMIZATION
 
 fancymenu.config.showcustomizationbuttons = Customization Controls
 fancymenu.config.softmode = Soft Mode
+fancymenu.config.advancedmode = Advanced Mode
 
 fancymenu.config.categories.mainmenu = MAIN MENU [GENERAL]
 
@@ -533,6 +534,7 @@ fancymenu.config.showanimationloadingstatus = Animation Loading Status
 fancymenu.config.allowgameintroskip = Game Intro Skipping
 fancymenu.config.customgameintroskiptext = Game Intro Skip Text
 fancymenu.config.loadinganimationcolor = FM Loading Animation Color
+fancymenu.config.preloadanimations = Pre-Load Animations
 
 fancymenu.config.categories.minecraftwindow = MINECRAFT WINDOW
 
@@ -558,6 +560,7 @@ fancymenu.config.showdebugwarnings.desc = If FancyMenu should print warnings%n%t
 
 fancymenu.config.showcustomizationbuttons.desc = Show FancyMenu's customization controls in menus.%n%This can be toggled by pressing §lCTRL + ALT + C%n%in a normal menu screen.
 fancymenu.config.softmode.desc = Maximizes mod compatibility by%n%disabling background customization support%n%for scrollable menus like the%n%singleplayer and multiplayer menus.
+fancymenu.config.advancedmode.desc = Enables some advanced features that%n%could harm or break the game if%n%not correctly used.
 
 fancymenu.config.hidebranding.desc = Hide the branding text in the%n%bottom-left corner of the main menu.
 fancymenu.config.hidelogo.desc = Hide the default minecraft logo%n%in the main menu.
@@ -584,6 +587,7 @@ fancymenu.config.showanimationloadingstatus.desc = When enabled, the animation l
 fancymenu.config.allowgameintroskip.desc = If the user can skip the%n%game intro by pressing SPACE, or not.
 fancymenu.config.customgameintroskiptext.desc = Set a custom skip text for%n%the game intro animation.
 fancymenu.config.loadinganimationcolor.desc = Set the color of the%n%animation loading screen indicator.%n%This is the animation you see while%n%FancyMenu is loading all%n%animations.
+fancymenu.config.preloadanimations.desc = Will pre-load animation textures%n%when the game starts.%n%This causes the loading screen%n%to freeze at the end, but%n%prevents animations from lagging%n%when rendered for the first time.
 
 fancymenu.config.customwindowtitle.desc = Specify a custom minecraft window title.
 fancymenu.config.customwindowicon.desc = Enable custom Minecraft window icons.%n%For more informations,%n%take a look at the Wiki:%n%§lfm.keksuccino.de
@@ -593,7 +597,7 @@ fancymenu.config.editordeleteconfirmation.desc = If a confirmation popup should%
 
 fancymenu.config.uiscale.desc = The scale of the FancyMenu customization UI.
 
-helper.ui.dynamicvariabletextfield.variables.desc = §lSession-Specific Values%n%%n%Insert placeholders into the text%n%that will later be replaced with%n%session-specific values like%n%the player name or the MC version.%n%%n%§l§cIMPORTANT:%n%You will see these values as%n%placeholders in the editor and%n%as real values in the actual menu.
+helper.ui.dynamicvariabletextfield.variables.desc = §lPlaceholder Text Values%n%%n%Insert placeholders into the text%n%that will later be replaced with%n%real values like%n%the player name or the MC version.%n%%n%§l§cIMPORTANT:%n%You will see these values as%n%placeholders in the editor and%n%as real values in the actual menu.
 helper.ui.dynamicvariabletextfield.variables.playername = Player Name
 helper.ui.dynamicvariabletextfield.variables.playername.desc = Gets the player name.
 helper.ui.dynamicvariabletextfield.variables.playeruuid = Player UUID
@@ -610,7 +614,7 @@ helper.ui.dynamicvariabletextfield.variables.loadedmods = Active Mods Count
 helper.ui.dynamicvariabletextfield.variables.loadedmods.desc = Gets the active mods count.%n%This doesn't include disabled mods.
 
 helper.creator.items.string.alignment = Alignment
-helper.creator.items.string.alignment.desc = Sets the text alignment.%n%%n%§cUseful when the text width is%n%§cnot always the same, like for%n%§csession-based values.
+helper.creator.items.string.alignment.desc = Sets the text alignment.%n%%n%§cUseful when the text width is%n%§cnot always the same, like for%n%§cplaceholder text values.
 helper.creator.items.string.alignment.left = Left
 helper.creator.items.string.alignment.right = Right
 helper.creator.items.string.alignment.centered = Centered

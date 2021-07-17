@@ -9,6 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -54,6 +55,7 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			this.onFinished();
 			if (this.fallback != null) {
 				Minecraft.getMinecraft().displayGuiScreen(this.fallback);
+//				MenuCustomization.reloadCurrentMenu();
 			}
 		} else {
 			if (!this.ready) {
@@ -107,10 +109,25 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		}
 		
 	}
-	
+
 	private IAnimationRenderer getCurrentRenderer() {
 		if (!this.renderers.isEmpty()) {
-			return this.renderers.get(0);
+			IAnimationRenderer r = renderers.get(0);
+			if (r instanceof ResourcePackAnimationRenderer) {
+				this.renderers.remove(0);
+				return this.getCurrentRenderer();
+			}
+			if (r instanceof AdvancedAnimation) {
+				IAnimationRenderer main = ((AdvancedAnimation)r).getMainAnimationRenderer();
+				if (main == null) {
+					return null;
+				}
+				if (main instanceof ResourcePackAnimationRenderer) {
+					this.renderers.remove(0);
+					return this.getCurrentRenderer();
+				}
+			}
+			return r;
 		}
 		return null;
 	}

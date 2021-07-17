@@ -28,11 +28,12 @@ public class CustomGuiBase extends GuiScreen {
 	}
 
 	public void onClose() {
-		//TODO wird in 1.12 nicht von gameloop gecallt
+		//TODO Isn't called by game loop in 1.12
+		// (Shouldn't matter, implemented this at another point, if I'm not wrong. I mean, it works, I think?)
 		if (this.parent != null) {
 			Minecraft.getMinecraft().displayGuiScreen(this.parent);
 		} else {
-			Minecraft.getMinecraft().displayGuiScreen((GuiScreen)null);
+			Minecraft.getMinecraft().displayGuiScreen(null);
 		}
 	}
 

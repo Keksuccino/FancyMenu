@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.client;
 
+import de.keksuccino.konkrete.input.MouseInput;
+import net.minecraft.client.gui.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,17 +15,17 @@ import de.keksuccino.fancymenu.events.RenderWidgetEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetLabelEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundHandler;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = GuiButton.class)
 public abstract class MixinGuiButton extends Gui {
 	
 	protected float alpha = 1.0F;
+
+	@Shadow protected boolean hovered;
 	
 	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;enableBlend()V", ordinal = 0, shift = Shift.AFTER), method = "drawButton", cancellable = true)
 	private void onRenderButton(Minecraft mc, int mouseX, int mouseY, float partial, CallbackInfo info) {
@@ -98,6 +100,17 @@ public abstract class MixinGuiButton extends Gui {
 	private void onButtonClickSoundPost(SoundHandler handler, CallbackInfo info) {
 		PlayWidgetClickSoundEvent.Post e = new PlayWidgetClickSoundEvent.Post((GuiButton)((Object)this));
 		MinecraftForge.EVENT_BUS.post(e);
+	}
+
+	//Fixes GuiLanguageButton not updating it's hovered state like a normal button would
+	@Inject(at = @At("HEAD"), method = "isMouseOver", cancellable = true)
+	protected void onIsMouseOver(CallbackInfoReturnable info) {
+		GuiButton b = (GuiButton) ((Object)this);
+		if ((b instanceof GuiButtonImage) || (b instanceof GuiButtonLanguage)) {
+			boolean hovered = MouseInput.getMouseX() >= b.x && MouseInput.getMouseY() >= b.y && MouseInput.getMouseX() < b.x + b.width && MouseInput.getMouseY() < b.y + b.height;
+			this.hovered = hovered;
+			info.setReturnValue(hovered);
+		}
 	}
 	
 	@Shadow protected abstract void mouseDragged(Minecraft mc, int mouseX, int mouseY);

@@ -1,9 +1,15 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.util.ResourceLocation;
+
+import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 
 public class PlayerEntityCache {
 	
@@ -48,6 +54,28 @@ public class PlayerEntityCache {
 			return slimskin.get(playerName);
 		}
 		return false;
+	}
+
+	/**
+	 * Returns the calculated SHA-1 or <b>null</b> if calculating failed.
+	 */
+	public static String calculateSHA1(File file) {
+		try {
+			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+			InputStream input = new FileInputStream(file);
+			byte[] buffer = new byte[8192];
+			int len = input.read(buffer);
+
+			while (len != -1) {
+				sha1.update(buffer, 0, len);
+				len = input.read(buffer);
+			}
+
+			return new HexBinaryAdapter().marshal(sha1.digest());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 }
