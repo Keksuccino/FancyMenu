@@ -249,7 +249,10 @@ public class CustomizationHelperUI extends UIBase {
 				advancedButton.active = false;
 			}
 			advancedButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.advanced.desc"), "%n%"));
-			currentMenu.addContent(advancedButton);
+			//TODO übernehmen
+			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
+				currentMenu.addContent(advancedButton);
+			}
 			
 			CustomizationButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
 				Minecraft.getInstance().displayGuiScreen(null);
@@ -270,7 +273,7 @@ public class CustomizationHelperUI extends UIBase {
 			FMContextMenu customGuiMenu = new FMContextMenu();
 			customGuiMenu.setAutoclose(true);
 			bar.addChild(customGuiMenu, "fm.ui.tab.customguis", ElementAlignment.LEFT);
-			
+
 			CustomizationButton newCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis.new"), true, (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
@@ -280,23 +283,26 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			newCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.customguis.new.desc"), "%n%"));
 			customGuiMenu.addContent(newCustomGuiButton);
-			
+
 			ManageCustomGuiContextMenu manageCustomGuiMenu = new ManageCustomGuiContextMenu();
 			manageCustomGuiMenu.setAutoclose(true);
 			customGuiMenu.addChild(manageCustomGuiMenu);
-			
+
 			CustomizationButton manageCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis.manage"), true, (press) -> {
 				manageCustomGuiMenu.setParentButton((AdvancedButton) press);
 				manageCustomGuiMenu.openMenuAt(0, press.y);
 			});
 			manageCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.customguis.manage.desc"), "%n%"));
 			customGuiMenu.addContent(manageCustomGuiButton);
-			
+
 			CustomizationButton customGuiTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis"), true, (press) -> {
 				customGuiMenu.setParentButton((AdvancedButton) press);
 				customGuiMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
-			bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
+			//TODO übernehmen
+			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
+				bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
+			}
 			/** CUSTOM GUI TAB END **/
 			
 			/** TOOLS TAB START **/

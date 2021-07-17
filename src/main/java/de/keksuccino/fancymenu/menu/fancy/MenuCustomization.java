@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
-import de.keksuccino.fancymenu.menu.fancy.loadingdarkmode.LoadingDarkmodeEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.DummyCoreMainHandler;
@@ -35,6 +35,9 @@ public class MenuCustomization {
 	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
+
+	//TODO übernehmen
+	public static boolean isLoadingScreen = true;
 	
 	public static void init() {
 		if (!initDone) {
@@ -57,8 +60,9 @@ public class MenuCustomization {
 			
 			//Caching menu customization properties from config/fancymain/customization
 			MenuCustomizationProperties.loadProperties();
-			
-			LoadingDarkmodeEvents.init();
+
+			//TODO übernehmen
+//			LoadingDarkmodeEvents.init();
 
 			updateCustomizeableMenuCache();
 			
@@ -206,6 +210,19 @@ public class MenuCustomization {
 	public static void setIsNewMenu(boolean b) {
 		isNewMenu = b;
 		eventsInstance.lastScreen = null;
+	}
+
+	//TODO übernehmen
+	public static void reloadCurrentMenu() {
+		Screen s = Minecraft.getInstance().currentScreen;
+		if (s != null) {
+			if (isMenuCustomizable(s)) {
+				setIsNewMenu(true);
+				SoftMenuReloadEvent e = new SoftMenuReloadEvent(s);
+				MinecraftForge.EVENT_BUS.post(e);
+				Minecraft.getInstance().displayGuiScreen(s);
+			}
+		}
 	}
 	
 }

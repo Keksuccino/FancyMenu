@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -129,6 +130,24 @@ public class MenuHandlerBase {
 
 	public String getMenuIdentifier() {
 		return this.identifier;
+	}
+
+	//TODO übernehmen
+	@SubscribeEvent
+	public void onSoftReload(SoftMenuReloadEvent e) {
+		if (this.shouldCustomize(e.screen)) {
+			this.delayAppearanceFirstTimeVanilla.clear();
+			this.delayAppearanceFirstTime.clear();
+			this.delayAppearanceVanilla.clear();
+			this.fadeInVanilla.clear();
+			for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
+				c.lastLayoutPath = null;
+			}
+
+			if (this.lastBackgroundAnimation != null) {
+				this.lastBackgroundAnimation.resetAnimation();
+			}
+		}
 	}
 
 	@SubscribeEvent
@@ -881,7 +900,6 @@ public class MenuHandlerBase {
 							File f = new File(path);
 							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 								try {
-									//TODO change to md5 instead of filesize
 									String name = path + Files.size(f.toPath());
 									MenuCustomization.registerSound(name, path);
 									this.audio.put(name, loop);
@@ -901,7 +919,6 @@ public class MenuHandlerBase {
 					File f = new File(path);
 					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 						try {
-							//TODO change to md5 instead of filesize
 							String name = "closesound_" + path + Files.size(f.toPath());
 							MenuCustomization.registerSound(name, path);
 							this.closeAudio = name;
@@ -920,7 +937,6 @@ public class MenuHandlerBase {
 					File f = new File(path);
 					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 						try {
-							//TODO change to md5 instead of filesize
 							String name = "opensound_" + path + Files.size(f.toPath());
 							MenuCustomization.registerSound(name, path);
 							SoundHandler.resetSound(name);

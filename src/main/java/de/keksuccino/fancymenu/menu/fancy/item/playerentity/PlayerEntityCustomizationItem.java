@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -32,6 +33,7 @@ import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.entity.model.ParrotModel;
 import net.minecraft.client.renderer.entity.model.PlayerModel;
+import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.entity.Entity;
@@ -95,7 +97,25 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		if ((skin != null) && (this.entity.skinLocation == null)) {
 			ExternalTextureResourceLocation r = TextureHandler.getResource(skin);
 			if (r != null) {
-				this.entity.skinLocation = r.getResourceLocation();
+				//TODO übernehmen
+				if (r.getHeight() < 64) {
+					File f = new File(skin);
+					if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
+						String sha1 = PlayerEntityCache.calculateSHA1(f);
+						if (sha1 != null) {
+							if (!PlayerEntityCache.isSkinCached(sha1)) {
+								SkinExternalTextureResourceLocation sr = new SkinExternalTextureResourceLocation(skin);
+								sr.loadTexture();
+								PlayerEntityCache.cacheSkin(sha1, sr.getResourceLocation());
+								this.entity.skinLocation = sr.getResourceLocation();
+							} else {
+								this.entity.skinLocation = PlayerEntityCache.getSkin(sha1);
+							}
+						}
+					}
+				} else {
+					this.entity.skinLocation = r.getResourceLocation();
+				}
 			}
 		}
 		
@@ -663,6 +683,11 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 																WebTextureResourceLocation wt = TextureHandler.getWebResource(skinUrl);
 																if (skinLocation == null) {
 																	if (wt != null) {
+																		//TODO übernehmen
+																		if (wt.getHeight() < 64) {
+																			wt = new SkinWebTextureResourceLocation(skinUrl);
+																			wt.loadTexture();
+																		}
 																		skinLocation = wt.getResourceLocation();
 																		PlayerEntityCache.cacheSkin(playerName, wt.getResourceLocation());
 																	} else {

@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -57,9 +57,12 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		if (current == null) {
 			this.done = true;
 			this.onFinished();
-			MainMenuHandler.isLoadingScreen = false;
+			//TODO übernehmen
+//			MainMenuHandler.isLoadingScreen = false;
 			if (this.fallback != null) {
 				Minecraft.getInstance().displayGuiScreen(this.fallback);
+				//TODO übernehmen
+				MenuCustomization.reloadCurrentMenu();
 			}
 		} else {
 			if (!this.ready) {
@@ -117,10 +120,26 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		}
 		
 	}
-	
+
+	//TODO übernehmen
 	private IAnimationRenderer getCurrentRenderer() {
 		if (!this.renderers.isEmpty()) {
-			return this.renderers.get(0);
+			IAnimationRenderer r = renderers.get(0);
+			if (r instanceof ResourcePackAnimationRenderer) {
+				this.renderers.remove(0);
+				return this.getCurrentRenderer();
+			}
+			if (r instanceof AdvancedAnimation) {
+				IAnimationRenderer main = ((AdvancedAnimation)r).getMainAnimationRenderer();
+				if (main == null) {
+					return null;
+				}
+				if (main instanceof ResourcePackAnimationRenderer) {
+					this.renderers.remove(0);
+					return this.getCurrentRenderer();
+				}
+			}
+			return r;
 		}
 		return null;
 	}

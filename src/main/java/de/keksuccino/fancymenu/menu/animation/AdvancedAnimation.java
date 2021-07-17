@@ -18,14 +18,14 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	private String mainAudioPath;
 	private String introAudioPath;
 	private boolean muted = false;
-	private boolean replayIntro = false;
+	private boolean replayIntro;
+
+	//TODO übernehmen
+	protected boolean prepared = false;
 	
 	/**
 	 * Container to hold a {@link IAnimationRenderer} instance with an optional intro which plays before the main animation starts.
-	 * 
-	 * @param introAnimation The intro animation. Can be null.
-	 * @param mainAnimation The main animation.
-	 * @param audioKey The path of the audio to play with the animation. Can be null.
+	 *
 	 * @throws AnimationNotFoundException If the main animation is null.
 	 */
 	public AdvancedAnimation(@Nullable IAnimationRenderer introAnimation, IAnimationRenderer mainAnimation, @Nullable String introAudioPath, @Nullable String mainAudioPath, boolean replayIntro) throws AnimationNotFoundException {
@@ -56,20 +56,24 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		
 		return false;
 	}
-	
+
 	@Override
+	//TODO übernehmen
 	public void prepareAnimation() {
-		if (this.mainAudioPath != null) {
-			SoundHandler.registerSound(this.animationRenderer.getPath(), mainAudioPath);
-		}
-		if ((this.introAudioPath != null) && this.hasIntro()) {
-			SoundHandler.registerSound(this.introRenderer.getPath(), introAudioPath);
-		}
-		if (this.animationRenderer != null) {
-			this.animationRenderer.prepareAnimation();
-		}
-		if (this.hasIntro()) {
-			this.introRenderer.prepareAnimation();
+		if (!this.prepared) {
+			if (this.mainAudioPath != null) {
+				SoundHandler.registerSound(mainAudioPath, mainAudioPath);
+			}
+			if ((this.introAudioPath != null) && this.hasIntro()) {
+				SoundHandler.registerSound(introAudioPath, introAudioPath);
+			}
+			if (this.animationRenderer != null) {
+				this.animationRenderer.prepareAnimation();
+			}
+			if (this.hasIntro()) {
+				this.introRenderer.prepareAnimation();
+			}
+			this.prepared = true;
 		}
 	}
 	
@@ -92,26 +96,27 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 	
 	@Override
+	//TODO übernehmen
 	public void render(MatrixStack matrix) {
 		if (this.isReady()) {
 			this.started = true;
 			
 			if (!this.muted) {
-				if (this.hasIntroAudio() && !this.introRenderer.isFinished() && ((this.introRenderer.currentFrame() == 1) || (this.introRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(this.introRenderer.getPath()))) {
-					SoundHandler.stopSound(this.animationRenderer.getPath());
-					SoundHandler.resetSound(this.introRenderer.getPath());
-					SoundHandler.playSound(this.introRenderer.getPath());
+				if (this.hasIntroAudio() && !this.introRenderer.isFinished() && ((this.introRenderer.currentFrame() == 1) || (this.introRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(introAudioPath))) {
+					SoundHandler.stopSound(mainAudioPath);
+					SoundHandler.resetSound(introAudioPath);
+					SoundHandler.playSound(introAudioPath);
 				}
 				if (this.hasIntroAudio() && this.introRenderer.isFinished()) {
-					SoundHandler.stopSound(this.introRenderer.getPath());
+					SoundHandler.stopSound(introAudioPath);
 				}
-				if (this.hasMainAudio() && !this.animationRenderer.isFinished() && ((this.animationRenderer.currentFrame() == 1) || (this.animationRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(this.animationRenderer.getPath()))) {
+				if (this.hasMainAudio() && !this.animationRenderer.isFinished() && ((this.animationRenderer.currentFrame() == 1) || (this.animationRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(mainAudioPath))) {
 					if (this.hasIntroAudio()) {
-						SoundHandler.stopSound(this.introRenderer.getPath());
+						SoundHandler.stopSound(introAudioPath);
 					}
-					SoundHandler.resetSound(this.animationRenderer.getPath());
-					SoundHandler.playSound(this.animationRenderer.getPath());
-					SoundHandler.setLooped(this.animationRenderer.getPath(), true);
+					SoundHandler.resetSound(mainAudioPath);
+					SoundHandler.playSound(mainAudioPath);
+					SoundHandler.setLooped(mainAudioPath, true);
 				}
 			}
 			
@@ -302,27 +307,41 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	public void setMuteAudio(boolean b) {
 		this.muted = b;
 	}
-	
+
+	//TODO übernehmen
 	public boolean hasMainAudio() {
-		return ((this.mainAudioPath != null) && SoundHandler.soundExists(this.animationRenderer.getPath()));
+		return ((this.mainAudioPath != null) && SoundHandler.soundExists(mainAudioPath));
 	}
-	
+
+	//TODO übernehmen
 	public boolean hasIntroAudio() {
-		return (this.hasIntro() && (this.introAudioPath != null) && SoundHandler.soundExists(this.introRenderer.getPath()));
+		return (this.hasIntro() && (this.introAudioPath != null) && SoundHandler.soundExists(introAudioPath));
 	}
-	
+
+	//TODO übernehmen
 	public void stopAudio() {
-		SoundHandler.stopSound(this.animationRenderer.getPath());
+		SoundHandler.stopSound(mainAudioPath);
 		if (this.hasIntro()) {
-			SoundHandler.stopSound(this.introRenderer.getPath());
+			SoundHandler.stopSound(introAudioPath);
 		}
 	}
-	
+
+	//TODO übernehmen
 	public void resetAudio() {
-		SoundHandler.resetSound(this.animationRenderer.getPath());
+		SoundHandler.resetSound(mainAudioPath);
 		if (this.hasIntro()) {
-			SoundHandler.resetSound(this.introRenderer.getPath());
+			SoundHandler.resetSound(introAudioPath);
 		}
+	}
+
+	//TODO übernehmen
+	public IAnimationRenderer getMainAnimationRenderer() {
+		return this.animationRenderer;
+	}
+
+	//TODO übernehmen
+	public IAnimationRenderer getIntroAnimationRenderer() {
+		return this.introRenderer;
 	}
 	
 	public boolean replayIntro() {
