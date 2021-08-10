@@ -42,9 +42,11 @@ public class CustomizationHelper {
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
 
 		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fancyhud.")) {
-			
-			CustomizationHelperUI.render(e.getGui());
-			
+			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
+
+				CustomizationHelperUI.render(e.getGui());
+
+			}
 		}
 
 	}

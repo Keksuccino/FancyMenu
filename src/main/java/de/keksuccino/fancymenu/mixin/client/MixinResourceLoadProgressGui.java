@@ -56,143 +56,150 @@ public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 
 	@Inject(at = @At("HEAD"), method = "render", cancellable = true)
 	protected void onRender(int mouseX, int mouseY, float partialTicks, CallbackInfo info) {
-		info.cancel();
+		if (!FancyMenu.isDrippyLoadingScreenLoaded()) {
 
-		try {
+			info.cancel();
 
-			int i = this.mc.getMainWindow().getScaledWidth();
-			int j = this.mc.getMainWindow().getScaledHeight();
-			long k = Util.milliTime();
+			try {
 
-			SplashScreenRenderEvent.Pre event = new SplashScreenRenderEvent.Pre((ResourceLoadProgressGui) ((Object)this), mouseX, mouseY, partialTicks, i, j);
-			MinecraftForge.EVENT_BUS.post(event);
-			if (event.isCanceled()) {
-				return;
-			}
+				int i = this.mc.getMainWindow().getScaledWidth();
+				int j = this.mc.getMainWindow().getScaledHeight();
+				long k = Util.milliTime();
 
-			if (this.reloading && (this.asyncReloader.asyncPartDone() || this.mc.currentScreen != null) && this.fadeInStart == -1L) {
-				this.fadeInStart = k;
-			}
-
-			//Variables for dark mode and custom background color
-			int darkBackground = new Color(26, 26, 26).getRGB();
-			boolean isDarkmode = FancyMenu.config.getOrDefault("loadingscreendarkmode", false);
-			boolean isCustomBackground = event.getBackgroundColor() != -1;
-
-			float f = this.fadeOutStart > -1L ? (float)(k - this.fadeOutStart) / 1000.0F : -1.0F;
-			float f1 = this.fadeInStart > -1L ? (float)(k - this.fadeInStart) / 500.0F : -1.0F;
-			float f2;
-			if (f >= 1.0F) {
-				if (this.mc.currentScreen != null) {
-					this.mc.currentScreen.render(0, 0, partialTicks);
+				SplashScreenRenderEvent.Pre event = new SplashScreenRenderEvent.Pre((ResourceLoadProgressGui) ((Object)this), mouseX, mouseY, partialTicks, i, j);
+				MinecraftForge.EVENT_BUS.post(event);
+				if (event.isCanceled()) {
+					return;
 				}
 
-				int l = MathHelper.ceil((1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
-				//Disabling background transparency when fading to customizable menus to prevent layout bugs
-				if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
-					l = 255;
+				if (this.reloading && (this.asyncReloader.asyncPartDone() || this.mc.currentScreen != null) && this.fadeInStart == -1L) {
+					this.fadeInStart = k;
 				}
-				//Handle background color
-				if (isCustomBackground) {
-					fill(0, 0, i, j, event.getBackgroundColor() | l << 24);
-				} else if (isDarkmode) {
-					fill(0, 0, i, j, darkBackground | l << 24);
+
+				//Variables for dark mode and custom background color
+				int darkBackground = new Color(26, 26, 26).getRGB();
+				boolean isDarkmode = FancyMenu.config.getOrDefault("loadingscreendarkmode", false);
+				boolean isCustomBackground = event.getBackgroundColor() != -1;
+
+				float f = this.fadeOutStart > -1L ? (float)(k - this.fadeOutStart) / 1000.0F : -1.0F;
+				float f1 = this.fadeInStart > -1L ? (float)(k - this.fadeInStart) / 500.0F : -1.0F;
+				float f2;
+				if (f >= 1.0F) {
+					if (this.mc.currentScreen != null) {
+						if (!MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+							this.mc.currentScreen.render(0, 0, partialTicks);
+						}
+					}
+
+					int l = MathHelper.ceil((1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
+					//Disabling background transparency when fading to customizable menus to prevent layout bugs
+					if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+						l = 255;
+					}
+					//Handle background color
+					if (isCustomBackground) {
+						fill(0, 0, i, j, event.getBackgroundColor() | l << 24);
+					} else if (isDarkmode) {
+						fill(0, 0, i, j, darkBackground | l << 24);
+					} else {
+						fill(0, 0, i, j, 16777215 | l << 24);
+					}
+					f2 = 1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F);
+				} else if (this.reloading) {
+					if (this.mc.currentScreen != null && f1 < 1.0F) {
+						if (!MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+							this.mc.currentScreen.render(mouseX, mouseY, partialTicks);
+						}
+					}
+
+					int j1 = MathHelper.ceil(MathHelper.clamp((double)f1, 0.15D, 1.0D) * 255.0D);
+					//Disabling background transparency when fading to customizable menus to prevent layout bugs
+					if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+						j1 = 255;
+					}
+					//Handle background color
+					if (isCustomBackground) {
+						fill(0, 0, i, j, event.getBackgroundColor() | j1 << 24);
+					} else if (isDarkmode) {
+						fill(0, 0, i, j, darkBackground | j1 << 24);
+					} else {
+						fill(0, 0, i, j, 16777215 | j1 << 24);
+					}
+					f2 = MathHelper.clamp(f1, 0.0F, 1.0F);
 				} else {
-					fill(0, 0, i, j, 16777215 | l << 24);
-				}
-				f2 = 1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F);
-			} else if (this.reloading) {
-				if (this.mc.currentScreen != null && f1 < 1.0F) {
-					this.mc.currentScreen.render(mouseX, mouseY, partialTicks);
-				}
-
-				int j1 = MathHelper.ceil(MathHelper.clamp((double)f1, 0.15D, 1.0D) * 255.0D);
-				//Disabling background transparency when fading to customizable menus to prevent layout bugs
-				if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
-					j1 = 255;
-				}
-				//Handle background color
-				if (isCustomBackground) {
-					fill(0, 0, i, j, event.getBackgroundColor() | j1 << 24);
-				} else if (isDarkmode) {
-					fill(0, 0, i, j, darkBackground | j1 << 24);
-				} else {
-					fill(0, 0, i, j, 16777215 | j1 << 24);
-				}
-				f2 = MathHelper.clamp(f1, 0.0F, 1.0F);
-			} else {
-				//Handle background color
-				if (isCustomBackground) {
-					fill(0, 0, i, j, event.getBackgroundColor());
-				} else if (isDarkmode) {
-					fill(0, 0, i, j, darkBackground);
-				} else {
-					fill(0, 0, i, j, -1);
-				}
-				f2 = 1.0F;
-			}
-
-			int k1 = (this.mc.getMainWindow().getScaledWidth() - 256) / 2;
-			int i1 = (this.mc.getMainWindow().getScaledHeight() - 256) / 2;
-			if (event.isRenderLogo()) {
-				if (isDarkmode) {
-					this.mc.getTextureManager().bindTexture(MOJANG_DARK);
-				} else {
-					this.mc.getTextureManager().bindTexture(MOJANG_LOGO_TEXTURE);
-				}
-				RenderSystem.enableBlend();
-				//Disabling logo transparency when fading to customizable menus to prevent layout bugs
-				if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+					//Handle background color
+					if (isCustomBackground) {
+						fill(0, 0, i, j, event.getBackgroundColor());
+					} else if (isDarkmode) {
+						fill(0, 0, i, j, darkBackground);
+					} else {
+						fill(0, 0, i, j, -1);
+					}
 					f2 = 1.0F;
 				}
-				RenderSystem.color4f(1.0F, 1.0F, 1.0F, f2);
-				this.blit(k1, i1, 0, 0, 256, 256);
-			}
-			float f3 = this.asyncReloader.estimateExecutionSpeed();
-			this.progress = MathHelper.clamp(this.progress * 0.95F + f3 * 0.050000012F, 0.0F, 1.0F);
-			if (event.isRenderForgeText()) {
-				renderMessages(isDarkmode, MenuCustomization.isMenuCustomizable(mc.currentScreen));
-			}
-			if (f < 1.0F) {
-				if (event.isRenderBar()) {
-					float barTransparency = 1.0F - MathHelper.clamp(f, 0.0F, 1.0F);
-					//Disabling bar transparency when fading to customizable menus to prevent layout bugs
-					if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
-						barTransparency = 1.0F;
+
+				int k1 = (this.mc.getMainWindow().getScaledWidth() - 256) / 2;
+				int i1 = (this.mc.getMainWindow().getScaledHeight() - 256) / 2;
+				if (event.isRenderLogo()) {
+					if (isDarkmode) {
+						this.mc.getTextureManager().bindTexture(MOJANG_DARK);
+					} else {
+						this.mc.getTextureManager().bindTexture(MOJANG_LOGO_TEXTURE);
 					}
-					this.renderProgressBar(i / 2 - 150, j / 4 * 3, i / 2 + 150, j / 4 * 3 + 10, barTransparency);
+					RenderSystem.enableBlend();
+					//Disabling logo transparency when fading to customizable menus to prevent layout bugs
+					if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+						f2 = 1.0F;
+					}
+					RenderSystem.color4f(1.0F, 1.0F, 1.0F, f2);
+					this.blit(k1, i1, 0, 0, 256, 256);
 				}
+				float f3 = this.asyncReloader.estimateExecutionSpeed();
+				this.progress = MathHelper.clamp(this.progress * 0.95F + f3 * 0.050000012F, 0.0F, 1.0F);
+				if (event.isRenderForgeText()) {
+					renderMessages(isDarkmode, MenuCustomization.isMenuCustomizable(mc.currentScreen));
+				}
+				if (f < 1.0F) {
+					if (event.isRenderBar()) {
+						float barTransparency = 1.0F - MathHelper.clamp(f, 0.0F, 1.0F);
+						//Disabling bar transparency when fading to customizable menus to prevent layout bugs
+						if (MenuCustomization.isMenuCustomizable(mc.currentScreen)) {
+							barTransparency = 1.0F;
+						}
+						this.renderProgressBar(i / 2 - 150, j / 4 * 3, i / 2 + 150, j / 4 * 3 + 10, barTransparency);
+					}
+				}
+
+				if (f >= 2.0F) {
+					this.mc.setLoadingGui(null);
+				}
+
+				if (this.fadeOutStart == -1L && this.asyncReloader.fullyDone() && (!this.reloading || f1 >= 2.0F)) {
+					this.fadeOutStart = Util.milliTime();
+					try {
+						this.asyncReloader.join();
+						this.completedCallback.accept(Optional.empty());
+					} catch (Throwable throwable) {
+						this.completedCallback.accept(Optional.of(throwable));
+					}
+
+					if (this.mc.currentScreen != null) {
+						this.mc.currentScreen.init(this.mc, this.mc.getMainWindow().getScaledWidth(), this.mc.getMainWindow().getScaledHeight());
+					}
+				}
+
+				SplashScreenRenderEvent.Post event2 = new SplashScreenRenderEvent.Post((ResourceLoadProgressGui) ((Object)this), mouseX, mouseY, partialTicks, i, j);
+				event2.setRenderBar(event.isRenderBar());
+				event2.setRenderLogo(event.isRenderLogo());
+				event2.setBackgroundColor(event.getBackgroundColor());
+				event2.setRenderForgeText(event.isRenderForgeText());
+				MinecraftForge.EVENT_BUS.post(event2);
+
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 
-			if (f >= 2.0F) {
-				this.mc.setLoadingGui(null);
-			}
-
-			if (this.fadeOutStart == -1L && this.asyncReloader.fullyDone() && (!this.reloading || f1 >= 2.0F)) {
-				this.fadeOutStart = Util.milliTime();
-				try {
-					this.asyncReloader.join();
-					this.completedCallback.accept(Optional.empty());
-				} catch (Throwable throwable) {
-					this.completedCallback.accept(Optional.of(throwable));
-				}
-
-				if (this.mc.currentScreen != null) {
-					this.mc.currentScreen.init(this.mc, this.mc.getMainWindow().getScaledWidth(), this.mc.getMainWindow().getScaledHeight());
-				}
-			}
-
-			SplashScreenRenderEvent.Post event2 = new SplashScreenRenderEvent.Post((ResourceLoadProgressGui) ((Object)this), mouseX, mouseY, partialTicks, i, j);
-			event2.setRenderBar(event.isRenderBar());
-			event2.setRenderLogo(event.isRenderLogo());
-			event2.setBackgroundColor(event.getBackgroundColor());
-			event2.setRenderForgeText(event.isRenderForgeText());
-			MinecraftForge.EVENT_BUS.post(event2);
-
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
-
 	}
 
 	private static int withAlpha(int color, int alpha) {
