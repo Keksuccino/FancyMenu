@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;

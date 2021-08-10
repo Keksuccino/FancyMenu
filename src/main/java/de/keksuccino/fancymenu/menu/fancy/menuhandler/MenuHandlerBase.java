@@ -132,7 +132,6 @@ public class MenuHandlerBase {
 		return this.identifier;
 	}
 
-	//TODO übernehmen
 	@SubscribeEvent
 	public void onSoftReload(SoftMenuReloadEvent e) {
 		if (this.shouldCustomize(e.screen)) {

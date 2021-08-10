@@ -527,7 +527,6 @@ public class LayoutEditorUI extends UIBase {
 			
 			/** MENU SCALE **/
 			AdvancedButton menuScaleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
-				//TODO übernehmen (FMTextInput)
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 					if ((call != null) && MathUtils.isInteger(call)) {
 						int s = Integer.parseInt(call);
@@ -695,7 +694,6 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(mcVersionMenu);
 			
 			AdvancedButton minMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
-				//TODO übernehmen (FMTextInputPopup)
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.minimumMC != call) {
@@ -741,7 +739,6 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(fmVersionMenu);
 			
 			AdvancedButton minFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
-				//TODO übernehmen (FMTextInputPopup)
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.minimumFM != call) {
@@ -759,7 +756,6 @@ public class LayoutEditorUI extends UIBase {
 			fmVersionMenu.addContent(minFmVersionButton);
 			
 			AdvancedButton maxFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
-				//TODO übernehmen (FMTextInputPopup)
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.maximumFM != call) {
@@ -897,7 +893,6 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(animationMenu);
 			
 			AdvancedButton inputAnimationButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation.entername"), true, (press) -> {
-				//TODO übernehmen (FMTextInputPopup)
 				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.animation.entername.title") + ":", null, 240, this.parent::addAnimation));
 			});
 			animationMenu.addContent(inputAnimationButton);
@@ -923,7 +918,6 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(slideshowMenu);
 
 			AdvancedButton inputSlideshowButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.slideshow.entername"), true, (press) -> {
-				//TODO übernehmen (FMTextInputPopup)
 				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.slideshow.entername.title") + ":", null, 240, this.parent::addSlideshow));
 			});
 			slideshowMenu.addContent(inputSlideshowButton);

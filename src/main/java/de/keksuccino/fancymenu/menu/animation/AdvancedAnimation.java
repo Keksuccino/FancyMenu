@@ -20,7 +20,6 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	private boolean muted = false;
 	private boolean replayIntro;
 
-	//TODO übernehmen
 	protected boolean prepared = false;
 	
 	/**
@@ -58,7 +57,6 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 
 	@Override
-	//TODO übernehmen
 	public void prepareAnimation() {
 		if (!this.prepared) {
 			if (this.mainAudioPath != null) {
@@ -96,7 +94,6 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 	
 	@Override
-	//TODO übernehmen
 	public void render(MatrixStack matrix) {
 		if (this.isReady()) {
 			this.started = true;
@@ -308,17 +305,14 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		this.muted = b;
 	}
 
-	//TODO übernehmen
 	public boolean hasMainAudio() {
 		return ((this.mainAudioPath != null) && SoundHandler.soundExists(mainAudioPath));
 	}
 
-	//TODO übernehmen
 	public boolean hasIntroAudio() {
 		return (this.hasIntro() && (this.introAudioPath != null) && SoundHandler.soundExists(introAudioPath));
 	}
 
-	//TODO übernehmen
 	public void stopAudio() {
 		SoundHandler.stopSound(mainAudioPath);
 		if (this.hasIntro()) {
@@ -326,7 +320,6 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		}
 	}
 
-	//TODO übernehmen
 	public void resetAudio() {
 		SoundHandler.resetSound(mainAudioPath);
 		if (this.hasIntro()) {
@@ -334,12 +327,10 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		}
 	}
 
-	//TODO übernehmen
 	public IAnimationRenderer getMainAnimationRenderer() {
 		return this.animationRenderer;
 	}
 
-	//TODO übernehmen
 	public IAnimationRenderer getIntroAnimationRenderer() {
 		return this.introRenderer;
 	}

@@ -36,7 +36,6 @@ public class MenuCustomization {
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
 
-	//TODO übernehmen
 	public static boolean isLoadingScreen = true;
 	
 	public static void init() {
@@ -60,9 +59,6 @@ public class MenuCustomization {
 			
 			//Caching menu customization properties from config/fancymain/customization
 			MenuCustomizationProperties.loadProperties();
-
-			//TODO übernehmen
-//			LoadingDarkmodeEvents.init();
 
 			updateCustomizeableMenuCache();
 			
@@ -212,7 +208,6 @@ public class MenuCustomization {
 		eventsInstance.lastScreen = null;
 	}
 
-	//TODO übernehmen
 	public static void reloadCurrentMenu() {
 		Screen s = Minecraft.getInstance().currentScreen;
 		if (s != null) {

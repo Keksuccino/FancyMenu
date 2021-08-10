@@ -97,7 +97,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		if ((skin != null) && (this.entity.skinLocation == null)) {
 			ExternalTextureResourceLocation r = TextureHandler.getResource(skin);
 			if (r != null) {
-				//TODO übernehmen
 				if (r.getHeight() < 64) {
 					File f = new File(skin);
 					if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
@@ -683,7 +682,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 																WebTextureResourceLocation wt = TextureHandler.getWebResource(skinUrl);
 																if (skinLocation == null) {
 																	if (wt != null) {
-																		//TODO übernehmen
 																		if (wt.getHeight() < 64) {
 																			wt = new SkinWebTextureResourceLocation(skinUrl);
 																			wt.loadTexture();

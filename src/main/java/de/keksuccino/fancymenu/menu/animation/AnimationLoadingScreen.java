@@ -57,11 +57,8 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		if (current == null) {
 			this.done = true;
 			this.onFinished();
-			//TODO übernehmen
-//			MainMenuHandler.isLoadingScreen = false;
 			if (this.fallback != null) {
 				Minecraft.getInstance().displayGuiScreen(this.fallback);
-				//TODO übernehmen
 				MenuCustomization.reloadCurrentMenu();
 			}
 		} else {
@@ -121,7 +118,6 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 		
 	}
 
-	//TODO übernehmen
 	private IAnimationRenderer getCurrentRenderer() {
 		if (!this.renderers.isEmpty()) {
 			IAnimationRenderer r = renderers.get(0);

@@ -36,7 +36,6 @@ public class MixinMinecraft {
 		
 	}
 
-	//TODO übernehmen
 	@Inject(at = @At(value = "HEAD"), method = "setLoadingGui", cancellable = false)
 	public void onSetLoadingGui(LoadingGui loadingGuiIn, CallbackInfo info) {
 		if (loadingGuiIn == null) {

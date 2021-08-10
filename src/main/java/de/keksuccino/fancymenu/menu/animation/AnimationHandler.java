@@ -24,7 +24,6 @@ public class AnimationHandler {
 	private static Map<String, AnimationData> animations = new HashMap<String, AnimationData>();
 	private static List<String> custom = new ArrayList<String>();
 	protected static boolean ready = false;
-	//TODO übernehmen
 	protected static boolean containsAnimationsWithOldFormat = false;
 
 	public static void init() {
@@ -66,7 +65,6 @@ public class AnimationHandler {
 		}
 	}
 
-	//TODO übernehmen
 	public static void loadCustomAnimations() {
 		File f = FancyMenu.getAnimationPath();
 		if (!f.exists() || !f.isDirectory()) {
@@ -399,7 +397,6 @@ public class AnimationHandler {
 	}
 	
 	public static void setupAnimations(GuiOpenEvent e) {
-		//TODO übernehmen (if)
 		if (!animations.isEmpty() && containsAnimationsWithOldFormat) {
 			Screen s = null;
 			if (e.getGui() != null) {

@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.events;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;

@@ -54,7 +54,6 @@ public class PlayerEntityCache {
 		return false;
 	}
 
-	//TODO übernehmen
 	/**
 	 * Returns the calculated SHA-1 or <b>null</b> if calculating failed.
 	 */

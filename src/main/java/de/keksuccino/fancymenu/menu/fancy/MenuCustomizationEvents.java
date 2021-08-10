@@ -56,7 +56,6 @@ public class MenuCustomizationEvents {
 		this.lastScreen = null;
 	}
 
-	//TODO übernehmen
 	@SubscribeEvent(priority =  EventPriority.HIGH)
 	public void onSoftReload(SoftMenuReloadEvent e) {
 		MenuCustomization.isNewMenu = true;

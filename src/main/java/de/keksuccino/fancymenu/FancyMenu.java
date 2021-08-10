@@ -30,8 +30,7 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
-	public static final String VERSION = "2.2.0";
+	public static final String VERSION = "2.2.1";
 	
 	public static Config config;
 	
@@ -144,7 +143,6 @@ public class FancyMenu {
     		config.registerValue("showdebugwarnings", true, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
-    		//TODO übernehmen
 			config.registerValue("advancedmode", false, "customization");
     		
 			config.registerValue("hidebranding", true, "mainmenu");
@@ -181,51 +179,6 @@ public class FancyMenu {
 			config.registerValue("uiscale", 1.0F, "ui");
 			
 			config.syncConfig();
-
-			//TODO übernehmen
-//			//Updating all categorys at start to keep them synchronized with older config files
-//			config.setCategory("enablehotkeys", "general");
-//			config.setCategory("playmenumusic", "general");
-//			config.setCategory("playbackgroundsounds", "general");
-//			config.setCategory("playbackgroundsoundsinworld", "general");
-//			config.setCategory("stopworldmusicwhencustomizable", "general");
-//			config.setCategory("defaultguiscale", "general");
-//			config.setCategory("showdebugwarnings", "general");
-//
-//			config.setCategory("showcustomizationbuttons", "customization");
-//
-//			config.setCategory("hidebranding", "mainmenu");
-//			config.setCategory("hidelogo", "mainmenu");
-//			config.setCategory("hiderealmsnotifications", "mainmenu");
-//			config.setCategory("copyrightposition", "mainmenu");
-//			config.setCategory("hideforgenotifications", "mainmenu");
-//			config.setCategory("copyrightcolor", "mainmenu");
-//
-//			config.setCategory("hidesplashtext", "mainmenu_splash");
-//			config.setCategory("splashx", "mainmenu_splash");
-//			config.setCategory("splashy", "mainmenu_splash");
-//			config.setCategory("splashorientation", "mainmenu_splash");
-//			config.setCategory("splashcolor", "mainmenu_splash");
-//			config.setCategory("splashtextfile", "mainmenu_splash");
-//			config.setCategory("splashrotation", "mainmenu_splash");
-//
-//			config.setCategory("gameintroanimation", "loading");
-//			config.setCategory("loadingscreendarkmode", "loading");
-//			config.setCategory("showanimationloadingstatus", "loading");
-//			config.setCategory("allowgameintroskip", "loading");
-//			config.setCategory("customgameintroskiptext", "loading");
-//			config.setCategory("loadinganimationcolor", "loading");
-//
-//			config.setCategory("customwindowicon", "minecraftwindow");
-//			config.setCategory("customwindowtitle", "minecraftwindow");
-//
-//			config.setCategory("showloadingscreenanimation", "world_loading_screen");
-//			config.setCategory("showloadingscreenpercent", "world_loading_screen");
-//
-//			config.setCategory("showvanillamovewarning", "layouteditor");
-//			config.setCategory("editordeleteconfirmation", "layouteditor");
-//
-//			config.setCategory("uiscale", "ui");
 			
 			config.clearUnusedValues();
 
@@ -278,6 +231,14 @@ public class FancyMenu {
 
 	public static boolean isOptifineLoaded() {
 		return optifineLoaded;
+	}
+
+	public static boolean isDrippyLoadingScreenLoaded() {
+		try {
+			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			return true;
+		} catch (Exception e) {}
+		return false;
 	}
 
 }

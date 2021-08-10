@@ -40,7 +40,6 @@ public class GameIntroScreen extends Screen {
 					this.renderer.resetAnimation();
 					GameIntroHandler.introDisplayed = true;
 					Minecraft.getInstance().displayGuiScreen(this.main);
-					//TODO übernehmen
 					MenuCustomization.reloadCurrentMenu();
 					KeyboardHandler.removeKeyPressedListener(this.keypress);
 				}
@@ -84,7 +83,6 @@ public class GameIntroScreen extends Screen {
 				this.renderer.resetAnimation();
 				GameIntroHandler.introDisplayed = true;
 				Minecraft.getInstance().displayGuiScreen(this.main);
-				//TODO übernehmen
 				MenuCustomization.reloadCurrentMenu();
 			}
 		}

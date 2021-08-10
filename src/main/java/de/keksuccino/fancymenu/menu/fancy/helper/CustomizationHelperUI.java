@@ -249,7 +249,6 @@ public class CustomizationHelperUI extends UIBase {
 				advancedButton.active = false;
 			}
 			advancedButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.advanced.desc"), "%n%"));
-			//TODO übernehmen
 			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
 				currentMenu.addContent(advancedButton);
 			}
@@ -299,7 +298,6 @@ public class CustomizationHelperUI extends UIBase {
 				customGuiMenu.setParentButton((AdvancedButton) press);
 				customGuiMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
-			//TODO übernehmen
 			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
 				bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
 			}
