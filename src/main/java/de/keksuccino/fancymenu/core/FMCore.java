@@ -16,6 +16,8 @@ import java.util.Map;
 public class FMCore implements IFMLLoadingPlugin {
 
     public FMCore() {
+
+        System.out.println("LOADING FANCYMENU MIXIN CORE!");
     	
         MixinBootstrap.init();
 

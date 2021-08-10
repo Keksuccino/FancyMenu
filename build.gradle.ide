@@ -60,13 +60,13 @@ jar {
     }
 
     manifest {
-	    attributes "ForceLoadAsMod": "true"
+        attributes "FMLCorePlugin": "de.keksuccino.fancymenu.core.FMCore"
+        attributes "FMLCorePluginContainsFMLMod": "true"
+        attributes "ForceLoadAsMod": "true"
         attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
         attributes "TweakOrder": "0"
         attributes "MixinConfigs": "fancymenu.general.mixin.json"
     }
-	
-	rename 'mixin.refmap.json', 'fancymenu.general.mixin-refmap.json'
 }
 
 processResources {

@@ -92,7 +92,7 @@ public class ButtonScriptEngine {
 				Minecraft.getMinecraft().shutdown();
 			}
 			if (action.equalsIgnoreCase("joinserver")) {
-				Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), new ServerData("", value, true)));
+				Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), new ServerData("", value, false)));
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
 				if (Minecraft.getMinecraft().getSaveLoader().canLoadWorld(value)) {
