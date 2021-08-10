@@ -41,7 +41,13 @@ public class CustomizationHelper {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
 
-		CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fancyhud.")) {
+			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
+
+				CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+
+			}
+		}
 
 	}
 	

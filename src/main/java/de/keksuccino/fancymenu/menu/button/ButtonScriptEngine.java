@@ -35,6 +35,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ServerAddress;
+import net.minecraft.client.network.ServerInfo;
 
 public class ButtonScriptEngine {
 
@@ -92,13 +93,13 @@ public class ButtonScriptEngine {
 					String ip = value.replace(" ", "");
 					int port = 25565;
 					if (ip.contains(":")) {
-						ip = ip.split("[:]", 2)[0];
 						String portString = ip.split("[:]", 2)[1];
-						if (MathUtils.isInteger(ip)) {
+						ip = ip.split("[:]", 2)[0];
+						if (MathUtils.isInteger(portString)) {
 							port = Integer.parseInt(portString);
 						}
 					}
-					ConnectScreen.connect(MinecraftClient.getInstance().currentScreen, MinecraftClient.getInstance(), new ServerAddress(ip, port), null);
+					ConnectScreen.connect(MinecraftClient.getInstance().currentScreen, MinecraftClient.getInstance(), new ServerAddress(ip, port), new ServerInfo("", value.replace(" ", ""), false));
 				}
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
