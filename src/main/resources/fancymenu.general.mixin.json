@@ -8,10 +8,12 @@
     "MixinAbstractList",
     "MixinScreen",
     "MixinMinecraft",
-    "MixinResourceLoadProgressGui"
+    "MixinResourceLoadProgressGui",
+    "MixinAbstractGui"
   ],
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "fancymenu.general.mixin-refmap.json"
+  "refmap": "fancymenu.general.mixin-refmap.json",
+  "minVersion": "0.8"
 }

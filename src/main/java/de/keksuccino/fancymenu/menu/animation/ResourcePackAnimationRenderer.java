@@ -190,6 +190,11 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         return this.resources.size();
     }
 
+    //TODO übernehmen
+    public List<ResourceLocation> getAnimationFrames() {
+        return this.resources;
+    }
+
     @Override
     public String getPath() {
         return this.resourceNamespace;
