@@ -30,7 +30,7 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.2.1";
+	public static final String VERSION = "2.2.2";
 	
 	public static Config config;
 	
@@ -160,11 +160,11 @@ public class FancyMenu {
 			config.registerValue("splashrotation", -20, "mainmenu_splash");
 			
 			config.registerValue("gameintroanimation", "", "loading");
-			config.registerValue("loadingscreendarkmode", false, "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
 			config.registerValue("loadinganimationcolor", "#ffffffff", "loading");
+			config.registerValue("preloadanimations", false, "loading");
 
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
 			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");

@@ -534,6 +534,7 @@ fancymenu.config.showanimationloadingstatus = Animation Loading Status
 fancymenu.config.allowgameintroskip = Game Intro Skipping
 fancymenu.config.customgameintroskiptext = Game Intro Skip Text
 fancymenu.config.loadinganimationcolor = FM Loading Animation Color
+fancymenu.config.preloadanimations = Pre-Load Animations
 
 fancymenu.config.categories.minecraftwindow = MINECRAFT WINDOW
 
@@ -586,6 +587,7 @@ fancymenu.config.showanimationloadingstatus.desc = When enabled, the animation l
 fancymenu.config.allowgameintroskip.desc = If the user can skip the%n%game intro by pressing SPACE, or not.
 fancymenu.config.customgameintroskiptext.desc = Set a custom skip text for%n%the game intro animation.
 fancymenu.config.loadinganimationcolor.desc = Set the color of the%n%animation loading screen indicator.%n%This is the animation you see while%n%FancyMenu is loading all%n%animations.
+fancymenu.config.preloadanimations.desc = Will pre-load animation textures%n%when the game starts.%n%This causes the loading screen%n%to freeze at the end, but%n%prevents animations from lagging%n%when rendered for the first time.
 
 fancymenu.config.customwindowtitle.desc = Specify a custom minecraft window title.
 fancymenu.config.customwindowicon.desc = Enable custom Minecraft window icons.%n%For more informations,%n%take a look at the Wiki:%n%§lfm.keksuccino.de
