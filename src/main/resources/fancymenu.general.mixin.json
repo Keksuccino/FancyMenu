@@ -2,7 +2,7 @@
   "required": true,
   "package": "de.keksuccino.fancymenu.mixin.client",
   "compatibilityLevel": "JAVA_8",
-  "minVersion": "0.7",
+  "minVersion": "0.8",
   "client": [
     "MixinGuiButton",
     "MixinGuiButtonImage",

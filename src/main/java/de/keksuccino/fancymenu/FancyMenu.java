@@ -25,7 +25,7 @@ import net.minecraftforge.fml.relauncher.Side;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.1.6,]", clientSideOnly = true)
 public class FancyMenu {
 	
-	public static final String VERSION = "2.2.1";
+	public static final String VERSION = "2.2.2";
 	
 	public static Config config;
 	
@@ -40,15 +40,9 @@ public class FancyMenu {
 	
 	public FancyMenu() {
 		try {
-
-			//TODO remove debug
-			System.out.println("###################### FM TRIGGER 1");
 			
 			//Useless now bc of clientSideOnly, but will keep this here to keep the code in sync with MC 1.15+ :)
 			if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
-
-				//TODO remove debug
-				System.out.println("###################### FM TRIGGER 2");
 
 	    		//Create all important directories
 	    		animationsPath.mkdirs();
@@ -82,9 +76,6 @@ public class FancyMenu {
 	        	VanillaButtonDescriptionHandler.init();
 	        	
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
-
-				//TODO remove debug
-				System.out.println("###################### FM TRIGGER 3");
 	        	
 	    	} else {
 	    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
