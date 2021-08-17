@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "de.keksuccino.fancymenu.mixins.client",
+  "package": "de.keksuccino.fancymenu.mixin.client",
   "compatibilityLevel": "JAVA_16",
   "mixins": [],
   "client": [
@@ -8,11 +8,13 @@
     "MixinEntryListWidget",
     "MixinMinecraftClient",
     "MixinTexturedButtonWidget",
-    "MixinSplashScreen"
+    "MixinSplashScreen",
+    "MixinDrawableHelper"
   ],
   "server": [],
   "injectors": {
     "defaultRequire": 1
   },
-  "refmap": "fancymenu.general.mixin-refmap.json"
+  "refmap": "fancymenu.general.mixin-refmap.json",
+  "minVersion": "0.8"
 }

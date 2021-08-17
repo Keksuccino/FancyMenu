@@ -235,7 +235,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 				fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
 				
 				if (MouseInput.isLeftMouseDown()) {
-					MinecraftClient.getInstance().openScreen(new CreditsScreen(false, Runnables.doNothing()));
+					MinecraftClient.getInstance().setScreen(new CreditsScreen(false, Runnables.doNothing()));
 				}
 			}
 

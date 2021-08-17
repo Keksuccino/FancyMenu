@@ -113,7 +113,7 @@ public class CustomizationHelperUI extends UIBase {
 			CustomizationButton newLayoutButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.new"), true, (press) -> {
 				LayoutEditorScreen.isActive = true;
 				Screen s = MinecraftClient.getInstance().currentScreen;
-				MinecraftClient.getInstance().openScreen(new LayoutEditorScreen(s));
+				MinecraftClient.getInstance().setScreen(new LayoutEditorScreen(s));
 				MenuCustomization.stopSounds();
 				MenuCustomization.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
@@ -230,7 +230,7 @@ public class CustomizationHelperUI extends UIBase {
 
 					CustomizationHelper.reloadSystemAndMenu();
 					if (MinecraftClient.getInstance().currentScreen instanceof CustomGuiBase) {
-						MinecraftClient.getInstance().openScreen(((CustomGuiBase) MinecraftClient.getInstance().currentScreen).getOverriddenScreen());
+						MinecraftClient.getInstance().setScreen(((CustomGuiBase) MinecraftClient.getInstance().currentScreen).getOverriddenScreen());
 					}
 				}
 			});
@@ -254,7 +254,7 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			
 			CustomizationButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
-				MinecraftClient.getInstance().openScreen(null);
+				MinecraftClient.getInstance().setScreen(null);
 			});
 			closeCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
 			if ((MinecraftClient.getInstance().currentScreen instanceof CustomGuiBase) && (((CustomGuiBase)MinecraftClient.getInstance().currentScreen).getOverriddenScreen() == null)) {
@@ -351,20 +351,20 @@ public class CustomizationHelperUI extends UIBase {
 			bar.addChild(miscMenu, "fm.ui.tab.misc", ElementAlignment.LEFT);
 			
 			CustomizationButton closeGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
-				MinecraftClient.getInstance().openScreen(null);
+				MinecraftClient.getInstance().setScreen(null);
 			});
 			closeGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
 			miscMenu.addContent(closeGuiButton);
 			
 			CustomizationButton openWorldLoadingScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openworldloading"), true, (press) -> {
 				LevelLoadingScreen wl = new LevelLoadingScreen(new WorldGenerationProgressTracker(0));
-				MinecraftClient.getInstance().openScreen(wl);
+				MinecraftClient.getInstance().setScreen(wl);
 			});
 			openWorldLoadingScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openworldloading.desc"), "%n%"));
 			miscMenu.addContent(openWorldLoadingScreenButton);
 			
 			CustomizationButton openMessageScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openmessagescreen"), true, (press) -> {
-				MinecraftClient.getInstance().openScreen(new SaveLevelScreen(new LiteralText("hello ・ω・")));
+				MinecraftClient.getInstance().setScreen(new SaveLevelScreen(new LiteralText("hello ・ω・")));
 			});
 			openMessageScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openmessagescreen.desc"), "%n%"));
 			miscMenu.addContent(openMessageScreenButton);
@@ -378,7 +378,7 @@ public class CustomizationHelperUI extends UIBase {
 			
 			/** CLOSE GUI BUTTON START **/
 			AdvancedImageButton closeGuiButtonTab = new AdvancedImageButton(20, 20, 20, 20, CLOSE_BUTTON_TEXTURE, true, (press) -> {
-				MinecraftClient.getInstance().openScreen(null);
+				MinecraftClient.getInstance().setScreen(null);
 			}) {
 				@Override
 				public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
@@ -666,7 +666,7 @@ public class CustomizationHelperUI extends UIBase {
 					PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.buttons.tools.customguis.openbyname"), null, 240, (call) -> {
 						if (call != null) {
 							if (CustomGuiLoader.guiExists(call)) {
-								MinecraftClient.getInstance().openScreen(CustomGuiLoader.getGui(call, MinecraftClient.getInstance().currentScreen, null));
+								MinecraftClient.getInstance().setScreen(CustomGuiLoader.getGui(call, MinecraftClient.getInstance().currentScreen, null));
 							} else {
 								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.buttons.tools.customguis.invalididentifier")));
 							}
@@ -737,7 +737,7 @@ public class CustomizationHelperUI extends UIBase {
 			
 			CustomizationButton openMenuButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.open"), (press) -> {
 				if (CustomGuiLoader.guiExists(customGuiIdentifier)) {
-					MinecraftClient.getInstance().openScreen(CustomGuiLoader.getGui(customGuiIdentifier, MinecraftClient.getInstance().currentScreen, null));
+					MinecraftClient.getInstance().setScreen(CustomGuiLoader.getGui(customGuiIdentifier, MinecraftClient.getInstance().currentScreen, null));
 				}
 			});
 			this.addContent(openMenuButton);

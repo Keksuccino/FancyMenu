@@ -1416,7 +1416,7 @@ public class LayoutEditorScreen extends Screen {
 				this.history.editor = neweditor;
 				neweditor.single = ((PreloadedLayoutEditorScreen)this).single;
 
-				MinecraftClient.getInstance().openScreen(neweditor);
+				MinecraftClient.getInstance().setScreen(neweditor);
 			}
 
 		} else {
@@ -1448,7 +1448,7 @@ public class LayoutEditorScreen extends Screen {
 							this.history.editor = neweditor;
 							neweditor.single = file;
 
-							MinecraftClient.getInstance().openScreen(neweditor);
+							MinecraftClient.getInstance().setScreen(neweditor);
 						}
 					} else {
 						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));

@@ -352,7 +352,7 @@ public class MenuHandlerBase extends DrawableHelper {
 					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getGui(), (onClose) -> {
 						e.getGui().onClose();
 					});
-					MinecraftClient.getInstance().openScreen(cus);
+					MinecraftClient.getInstance().setScreen(cus);
 				}
 			}
 

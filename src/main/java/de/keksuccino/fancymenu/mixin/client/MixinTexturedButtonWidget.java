@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixins.client;
+package de.keksuccino.fancymenu.mixin.client;
 
 import java.lang.reflect.Field;
 
@@ -55,7 +55,7 @@ public abstract class MixinTexturedButtonWidget extends DrawableHelper {
 		Konkrete.getEventHandler().callEventsFor(e2);
 
 		if (b.isHovered()) {
-			b.renderToolTip(matrix, mouseX, mouseY);
+			b.renderTooltip(matrix, mouseX, mouseY);
 		}
 
 	}

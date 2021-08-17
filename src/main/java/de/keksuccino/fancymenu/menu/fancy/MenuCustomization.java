@@ -215,7 +215,7 @@ public class MenuCustomization {
 				setIsNewMenu(true);
 				SoftMenuReloadEvent e = new SoftMenuReloadEvent(s);
 				Konkrete.getEventHandler().callEventsFor(e);
-				MinecraftClient.getInstance().openScreen(s);
+				MinecraftClient.getInstance().setScreen(s);
 			}
 		}
 	}

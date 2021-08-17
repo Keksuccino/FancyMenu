@@ -58,7 +58,7 @@ public class AnimationLoadingScreen extends SimpleLoadingScreen {
 			this.done = true;
 			this.onFinished();
 			if (this.fallback != null) {
-				MinecraftClient.getInstance().openScreen(this.fallback);
+				MinecraftClient.getInstance().setScreen(this.fallback);
 				MenuCustomization.reloadCurrentMenu();
 			}
 		} else {

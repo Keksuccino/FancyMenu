@@ -39,7 +39,7 @@ public class GameIntroScreen extends Screen {
 					this.renderer.setStretchImageToScreensize(this.stretched);
 					this.renderer.resetAnimation();
 					GameIntroHandler.introDisplayed = true;
-					MinecraftClient.getInstance().openScreen(this.main);
+					MinecraftClient.getInstance().setScreen(this.main);
 					MenuCustomization.reloadCurrentMenu();
 					KeyboardHandler.removeKeyPressedListener(this.keypress);
 				}
@@ -82,7 +82,7 @@ public class GameIntroScreen extends Screen {
 				this.renderer.setStretchImageToScreensize(this.stretched);
 				this.renderer.resetAnimation();
 				GameIntroHandler.introDisplayed = true;
-				MinecraftClient.getInstance().openScreen(this.main);
+				MinecraftClient.getInstance().setScreen(this.main);
 				MenuCustomization.reloadCurrentMenu();
 			}
 		}

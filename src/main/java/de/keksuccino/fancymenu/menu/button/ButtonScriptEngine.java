@@ -144,13 +144,13 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("opencustomgui")) {
 				if (CustomGuiLoader.guiExists(value)) {
-					MinecraftClient.getInstance().openScreen(CustomGuiLoader.getGui(value, MinecraftClient.getInstance().currentScreen, null));
+					MinecraftClient.getInstance().setScreen(CustomGuiLoader.getGui(value, MinecraftClient.getInstance().currentScreen, null));
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
 				Screen s = GuiConstructor.tryToConstruct(value);
 				if (s != null) {
-					MinecraftClient.getInstance().openScreen(s);
+					MinecraftClient.getInstance().setScreen(s);
 				} else {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
 				}
@@ -245,7 +245,7 @@ public class ButtonScriptEngine {
 				runCMD(value);
 			}
 			if (action.equalsIgnoreCase("closegui")) {
-				MinecraftClient.getInstance().openScreen(null);
+				MinecraftClient.getInstance().setScreen(null);
 			}
 			
 		} catch (Exception e) {

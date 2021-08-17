@@ -142,8 +142,8 @@ public class CreateCustomGuiPopup extends FMPopup {
 				CustomGuiLoader.loadCustomGuis();
 				CustomGuiBase gui = CustomGuiLoader.getGui(this.identifierText.getText(), MinecraftClient.getInstance().currentScreen, null);
 				if (gui != null) {
-					MinecraftClient.getInstance().openScreen(gui);
-					MinecraftClient.getInstance().openScreen(new LayoutEditorScreen(gui));
+					MinecraftClient.getInstance().setScreen(gui);
+					MinecraftClient.getInstance().setScreen(new LayoutEditorScreen(gui));
 				}
 			}
 		} catch (Exception e) {

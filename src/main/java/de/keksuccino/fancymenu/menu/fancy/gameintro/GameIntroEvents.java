@@ -14,7 +14,7 @@ public class GameIntroEvents {
 		if ((e.getGui() instanceof TitleScreen) && AnimationHandler.isReady() && !GameIntroHandler.introDisplayed) {
 			IAnimationRenderer intro = GameIntroHandler.getGameIntroAnimation();
 			if (intro != null) {
-				MinecraftClient.getInstance().openScreen(new GameIntroScreen(intro, (TitleScreen) e.getGui()));
+				MinecraftClient.getInstance().setScreen(new GameIntroScreen(intro, (TitleScreen) e.getGui()));
 			} else {
 				GameIntroHandler.introDisplayed = true;
 			}

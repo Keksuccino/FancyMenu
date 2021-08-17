@@ -66,7 +66,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			this.handler.postRenderTasks.add(new Runnable() {
 				@Override
 				public void run() {
-					MinecraftClient.getInstance().openScreen(LayoutVanillaButton.this.handler);
+					MinecraftClient.getInstance().setScreen(LayoutVanillaButton.this.handler);
 				}
 			});
 		});

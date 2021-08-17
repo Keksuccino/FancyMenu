@@ -85,7 +85,7 @@ public class LayoutEditorUI extends UIBase {
 					if (call) {
 						MenuCustomization.stopSounds();
 						MenuCustomization.resetSounds();
-						MinecraftClient.getInstance().openScreen(new LayoutEditorScreen(this.parent.screen));
+						MinecraftClient.getInstance().setScreen(new LayoutEditorScreen(this.parent.screen));
 					}
 				});
 			});
@@ -279,7 +279,7 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.height = MinecraftClient.getInstance().getWindow().getScaledHeight();
 				this.parent.width = MinecraftClient.getInstance().getWindow().getScaledWidth();
 
-				MinecraftClient.getInstance().openScreen(this.parent.screen);
+				MinecraftClient.getInstance().setScreen(this.parent.screen);
 			}
 		});
 	}
@@ -1163,7 +1163,7 @@ public class LayoutEditorUI extends UIBase {
 							}
 						}
 						this.closeMenu();
-						MinecraftClient.getInstance().openScreen(this.parent);
+						MinecraftClient.getInstance().setScreen(this.parent);
 					});
 					resetOriBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation.btndesc"), "%n%"));
 					this.addContent(resetOriBtn);

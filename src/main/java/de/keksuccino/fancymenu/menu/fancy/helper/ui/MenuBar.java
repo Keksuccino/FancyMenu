@@ -46,7 +46,7 @@ public class MenuBar extends UIBase {
 		//Add default FancyMenu button
 		AdvancedButton fmBtn = new AdvancedImageButton(0, 0, 0, 0, FM_LOGO_TEXTURE, true, (press) -> {
 
-			MinecraftClient.getInstance().openScreen(new FMConfigScreen(MinecraftClient.getInstance().currentScreen));
+			MinecraftClient.getInstance().setScreen(new FMConfigScreen(MinecraftClient.getInstance().currentScreen));
 
 		}) {
 			@Override

@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.mixins.client;
+package de.keksuccino.fancymenu.mixin.client;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

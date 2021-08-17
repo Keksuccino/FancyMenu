@@ -75,7 +75,7 @@ public class CustomizationHelper {
 		Konkrete.getEventHandler().callEventsFor(new MenuReloadedEvent(MinecraftClient.getInstance().currentScreen));
 		
 		try {
-			MinecraftClient.getInstance().openScreen(MinecraftClient.getInstance().currentScreen);
+			MinecraftClient.getInstance().setScreen(MinecraftClient.getInstance().currentScreen);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -125,7 +125,7 @@ public class CustomizationHelper {
 					meta.get(0).addEntry("path", layout.getPath());
 					
 					LayoutEditorScreen.isActive = true;
-					MinecraftClient.getInstance().openScreen(new PreloadedLayoutEditorScreen(current, l));
+					MinecraftClient.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
 					MenuCustomization.stopSounds();
 					MenuCustomization.resetSounds();
 					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {

@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.events;
 
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.screen.SplashScreen;
+import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.client.util.math.MatrixStack;
 
 public class SplashScreenRenderEvent extends EventBase {
 
-    protected SplashScreen screen;
+    protected SplashOverlay screen;
     protected MatrixStack matrix;
     protected int mouseX;
     protected int mouseY;
@@ -18,7 +18,7 @@ public class SplashScreenRenderEvent extends EventBase {
     protected boolean renderBar = true;
     protected int backgroundColor = -1;
 
-    public SplashScreenRenderEvent(SplashScreen screen, MatrixStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
+    public SplashScreenRenderEvent(SplashOverlay screen, MatrixStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
         this.screen = screen;
         this.matrix = matrix;
         this.mouseX = mouseX;
@@ -37,7 +37,7 @@ public class SplashScreenRenderEvent extends EventBase {
         return this.matrix;
     }
 
-    public SplashScreen getGui() {
+    public SplashOverlay getGui() {
         return this.screen;
     }
 
@@ -87,7 +87,7 @@ public class SplashScreenRenderEvent extends EventBase {
 
     public static class Pre extends SplashScreenRenderEvent {
 
-        public Pre(SplashScreen screen, MatrixStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
+        public Pre(SplashOverlay screen, MatrixStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
             super(screen, matrix, mouseX, mouseY, partialTicks, screenWidth, screenHeight);
         }
 
@@ -100,7 +100,7 @@ public class SplashScreenRenderEvent extends EventBase {
 
     public static class Post extends SplashScreenRenderEvent {
 
-        public Post(SplashScreen screen, MatrixStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
+        public Post(SplashOverlay screen, MatrixStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
             super(screen, matrix, mouseX, mouseY, partialTicks, screenWidth, screenHeight);
         }
 
