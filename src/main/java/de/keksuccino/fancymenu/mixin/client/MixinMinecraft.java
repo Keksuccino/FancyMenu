@@ -17,17 +17,23 @@ public class MixinMinecraft {
 	
 	@Inject(at = @At(value = "HEAD"), method = "displayGuiScreen", cancellable = true)
 	public void onGetWindowTitle(CallbackInfo info) {
-
-		if (FancyMenu.config != null) {
-			if (!customWindowInit) {
-				MainWindowHandler.init();
-				MainWindowHandler.updateWindowIcon();
-				String title = MainWindowHandler.getCustomWindowTitle();
-				Display.setTitle(title);
-				customWindowInit = true;
-			}
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
 		}
-		
+
+		try {
+			if (FancyMenu.config != null) {
+				if (!customWindowInit) {
+					MainWindowHandler.init();
+					MainWindowHandler.updateWindowIcon();
+					String title = MainWindowHandler.getCustomWindowTitle();
+					Display.setTitle(title);
+					customWindowInit = true;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 }

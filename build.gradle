@@ -32,8 +32,8 @@ minecraft {
     clientJvmArgs += "-Dfml.coreMods.load=de.keksuccino.fancymenu.core.FMCore"
     serverJvmArgs += "-Dfml.coreMods.load=de.keksuccino.fancymenu.core.FMCore"
 	
-    clientRunArgs += "--mixin fancymenu.general.mixin.json"
-    serverRunArgs += "--mixin fancymenu.general.mixin.json"
+    //clientRunArgs += "--mixin fancymenu.general.mixin.json"
+    //serverRunArgs += "--mixin fancymenu.general.mixin.json"
 }
 
 repositories {
@@ -61,9 +61,11 @@ jar {
 
     manifest {
 	    attributes "ForceLoadAsMod": "true"
+		attributes "FMLCorePluginContainsFMLMod": "true"
+		attributes "FMLCorePlugin": "de.keksuccino.fancymenu.core.FMCore"
         attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
         attributes "TweakOrder": "0"
-        attributes "MixinConfigs": "fancymenu.general.mixin.json"
+        attributes "loadMixinConfigInKonkrete": "fancymenu.general.mixin.json"
     }
 	
 	rename 'mixin.refmap.json', 'fancymenu.general.mixin-refmap.json'

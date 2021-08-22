@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.client;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,6 +23,10 @@ public class MixinGuiButtonLanguage {
 	 
 	@Inject(at = @At(value = "HEAD"), method = "drawButton", cancellable = true)
 	private void onRenderButton(CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		info.cancel();
 
 		RenderWidgetEvent.Pre ep = new RenderWidgetEvent.Pre((GuiButton)((Object)this), 1.0F);

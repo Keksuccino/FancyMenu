@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.client;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,6 +25,10 @@ public abstract class MixinGuiButtonImage extends Gui {
 	
 	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;disableDepth()V", ordinal = 0, shift = Shift.AFTER), method = "drawButton", cancellable = true)
 	private void onRenderButton(CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		info.cancel();
 		
 		RenderWidgetEvent.Pre ep = new RenderWidgetEvent.Pre((GuiButton)((Object)this), 1.0F);

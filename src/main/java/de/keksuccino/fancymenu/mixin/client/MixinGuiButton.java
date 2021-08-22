@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.client;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.*;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +30,10 @@ public abstract class MixinGuiButton extends Gui {
 	
 	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GlStateManager;enableBlend()V", ordinal = 0, shift = Shift.AFTER), method = "drawButton", cancellable = true)
 	private void onRenderButton(Minecraft mc, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		info.cancel();
 		
 		FontRenderer font = mc.fontRenderer;
@@ -73,6 +78,10 @@ public abstract class MixinGuiButton extends Gui {
 	
 	@Inject(at = @At(value = "HEAD"), method = "drawButton", cancellable = true)
 	private void onRenderPre(Minecraft mc, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre((GuiButton)((Object)this), this.alpha);
 		MinecraftForge.EVENT_BUS.post(e);
 		this.alpha = e.getAlpha();
@@ -83,12 +92,20 @@ public abstract class MixinGuiButton extends Gui {
 	
 	@Inject(at = @At(value = "TAIL"), method = "drawButton", cancellable = true)
 	private void onRenderPost(Minecraft mc, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		RenderWidgetEvent.Post e = new RenderWidgetEvent.Post((GuiButton)((Object)this), this.alpha);
 		MinecraftForge.EVENT_BUS.post(e);
 	}
 	
 	@Inject(at = @At(value = "HEAD"), method = "playPressSound", cancellable = true)
 	private void onButtonClickSoundPre(SoundHandler handler, CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		PlayWidgetClickSoundEvent.Pre e = new PlayWidgetClickSoundEvent.Pre((GuiButton)((Object)this));
 		MinecraftForge.EVENT_BUS.post(e);
 		if (e.isCanceled()) {
@@ -98,6 +115,10 @@ public abstract class MixinGuiButton extends Gui {
 	
 	@Inject(at = @At(value = "TAIL"), method = "playPressSound", cancellable = true)
 	private void onButtonClickSoundPost(SoundHandler handler, CallbackInfo info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		PlayWidgetClickSoundEvent.Post e = new PlayWidgetClickSoundEvent.Post((GuiButton)((Object)this));
 		MinecraftForge.EVENT_BUS.post(e);
 	}
@@ -105,6 +126,10 @@ public abstract class MixinGuiButton extends Gui {
 	//Fixes GuiLanguageButton not updating it's hovered state like a normal button would
 	@Inject(at = @At("HEAD"), method = "isMouseOver", cancellable = true)
 	protected void onIsMouseOver(CallbackInfoReturnable info) {
+		if (!FancyMenu.isKonkreteLoaded()) {
+			return;
+		}
+
 		GuiButton b = (GuiButton) ((Object)this);
 		if ((b instanceof GuiButtonImage) || (b instanceof GuiButtonLanguage)) {
 			boolean hovered = MouseInput.getMouseX() >= b.x && MouseInput.getMouseY() >= b.y && MouseInput.getMouseX() < b.x + b.width && MouseInput.getMouseY() < b.y + b.height;

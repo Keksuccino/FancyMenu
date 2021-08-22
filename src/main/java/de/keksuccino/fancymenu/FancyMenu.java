@@ -22,7 +22,7 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.1.6,]", clientSideOnly = true)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.1.7,]", clientSideOnly = true)
 public class FancyMenu {
 	
 	public static final String VERSION = "2.2.2";
@@ -74,7 +74,7 @@ public class FancyMenu {
 	        	ButtonScriptEngine.init();
 	        	
 	        	VanillaButtonDescriptionHandler.init();
-	        	
+
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 	        	
 	    	} else {
@@ -228,6 +228,16 @@ public class FancyMenu {
 			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
 			return true;
 		} catch (Exception e) {}
+		return false;
+	}
+
+	public static boolean isKonkreteLoaded() {
+		try {
+			Class.forName("de.keksuccino.konkrete.Konkrete");
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 
