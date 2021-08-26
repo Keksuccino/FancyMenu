@@ -25,7 +25,7 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 	@Shadow private long reloadStartTime;
 
 
-	@Inject(at = @At("HEAD"), method = "render", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "render", cancellable = false)
 	protected void onRender(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, CallbackInfo info) {
 
 		if (!FancyMenu.isDrippyLoadingScreenLoaded()) {
@@ -49,7 +49,7 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "renderProgressBar", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "renderProgressBar", cancellable = false)
 	private void onRenderLoadingBar(MatrixStack matrix, int i1, int i2, int i3, int i4, float f1, CallbackInfo info) {
 		MixinCache.isSplashScreenRendering = false;
 	}
