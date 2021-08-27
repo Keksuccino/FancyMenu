@@ -178,7 +178,7 @@ helper.creator.editlayout.popup.layouts = 布局
 helper.creator.editlayout.popup.cancel = 取消
 helper.creator.editlayout.popup.actionscount = {} 个自定义操作
 helper.creator.editlayout.nolayouts.msg = §c§l未找到任何布局！%n%%n%%n%此菜单不包含任何布局！%n%%n%如果你想自定义这个菜单，请使用“创建布局”按钮！
-helper.creator.editlayout.popup.msg = 有复数个自定义文件是关于此菜单的！%n%%n%你想要加载全部布局并组合它们，%n%还是仅想加载指定的一个？%n%%n%§c自定义的元值会在组合数个布局时丢失！
+helper.creator.editlayout.popup.msg = 有多个自定义文件是关于此菜单的！%n%%n%你想要加载全部布局并组合它们，%n%还是仅想加载指定的一个？%n%%n%§c自定义的元值会在组合数个布局时丢失！
 
 helper.creator.editlayout.single.override = 重写已有布局
 helper.creator.editlayout.single.asnew.keep = 保存为新布局并保持其他布局启用
