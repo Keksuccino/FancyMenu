@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.MusicTicker;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class AdvancedMusicTicker extends MusicTicker {
 
@@ -38,7 +38,9 @@ public class AdvancedMusicTicker extends MusicTicker {
 	
 	protected ISound getCurrentMusic() {
 		try {
-			Field f = ReflectionHelper.findField(MusicTicker.class, "currentMusic", "field_147678_c");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(MusicTicker.class, "currentMusic", "field_147678_c");
+			Field f = ObfuscationReflectionHelper.findField(MusicTicker.class, "field_147678_c"); //currentMusic
 			return (ISound) f.get(this);
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -48,7 +50,9 @@ public class AdvancedMusicTicker extends MusicTicker {
 	
 	protected void setCurrentMusic(ISound sound) {
 		try {
-			Field f = ReflectionHelper.findField(MusicTicker.class, "currentMusic", "field_147678_c");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(MusicTicker.class, "currentMusic", "field_147678_c");
+			Field f = ObfuscationReflectionHelper.findField(MusicTicker.class, "field_147678_c"); //currentMusic
 			f.set(this, sound);
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -57,7 +61,9 @@ public class AdvancedMusicTicker extends MusicTicker {
 	
 	protected void setTimeUntilNext(int time) {
 		try {
-			Field f = ReflectionHelper.findField(MusicTicker.class, "timeUntilNextMusic", "field_147676_d");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(MusicTicker.class, "timeUntilNextMusic", "field_147676_d");
+			Field f = ObfuscationReflectionHelper.findField(MusicTicker.class, "field_147676_d"); //timeUntilNextMusic
 			f.set(this, time);
 		} catch(Exception e) {
 			e.printStackTrace();

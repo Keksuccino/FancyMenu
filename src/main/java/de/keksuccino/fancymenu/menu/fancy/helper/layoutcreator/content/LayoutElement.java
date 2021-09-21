@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -80,13 +81,14 @@ public abstract class LayoutElement extends Gui {
 	private static boolean shiftListener = false;
 	
 	private final boolean destroyable;
+	public boolean enableVisibilityRequirements = true;
 	
 	public final String objectId = UUID.randomUUID().toString();
 	
 	private Snapshot cachedSnapshot;
 	private boolean moving = false;
-	
-	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
+
+	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
 		this.object = object;
 		this.destroyable = destroyable;
@@ -110,15 +112,32 @@ public abstract class LayoutElement extends Gui {
 			});
 			shiftListener = true;
 		}
-		
-		this.init();
+
+		if (doInit) {
+			this.init();
+		}
+	}
+
+	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
+		this(object, destroyable, handler, true);
 	}
 
 	public void init() {
 		
 		this.rightclickMenu = new FMContextMenu();
 		this.rightclickMenu.setAlwaysOnTop(true);
-		
+
+		/** COPY ELEMENT ID **/
+		AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
+			if (!(this instanceof LayoutVanillaButton)) {
+				GuiScreen.setClipboardString(this.object.getActionId());
+			} else {
+				GuiScreen.setClipboardString("vanillabtn:" + ((LayoutVanillaButton)this).button.getId());
+			}
+		});
+		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(copyIdButton);
+
 		/** ORIENTATION **/
 		FMContextMenu orientationMenu = new FMContextMenu();
 		orientationMenu.setAutoclose(true);
@@ -283,6 +302,15 @@ public abstract class LayoutElement extends Gui {
 		if (this.orderable) {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
+
+		/** VISIBILITY REQUIREMENTS **/
+		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
+			PopupHandler.displayPopup(new VisibilityRequirementsPopup(this.object));
+		});
+		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
+		if (this.enableVisibilityRequirements) {
+			this.rightclickMenu.addContent(visibilityRequirementsButton);
+		}
 		
 		/** COPY **/
 		AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
@@ -431,42 +459,42 @@ public abstract class LayoutElement extends Gui {
 		this.rightclickMenu.addSeparator();
 
 	}
-	
+
 	protected void setOrientation(String pos) {
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-		
+
 		if (pos.equals("mid-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
-			this.object.posY = -(this.object.height / 2);
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
-			this.object.posY = -this.object.height;
+			this.object.posY = -this.object.getHeight();
 		} else if (pos.equals("top-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
+			this.object.posX = -(this.object.getWidth() / 2);
 			this.object.posY = 0;
 		} else if (pos.equals("mid-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
-			this.object.posY = -(this.object.height / 2);
+			this.object.posX = -(this.object.getWidth() / 2);
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
-			this.object.posY = -this.object.height;
+			this.object.posX = -(this.object.getWidth() / 2);
+			this.object.posY = -this.object.getHeight();
 		} else if (pos.equals("top-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
+			this.object.posX = -this.object.getWidth();
 			this.object.posY = 0;
 		} else if (pos.equals("mid-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
-			this.object.posY = -(this.object.height / 2);
+			this.object.posX = -this.object.getWidth();
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
-			this.object.posY = -this.object.height;
+			this.object.posX = -this.object.getWidth();
+			this.object.posY = -this.object.getHeight();
 		} else {
 			this.object.orientation = pos;
 			this.object.posX = 0;
@@ -557,11 +585,11 @@ public abstract class LayoutElement extends Gui {
 		try {
 			if (this.stretchX) {
 				this.object.posX = 0;
-				this.object.width = Minecraft.getMinecraft().currentScreen.width;
+				this.object.setWidth(Minecraft.getMinecraft().currentScreen.width);
 			}
 			if (this.stretchY) {
 				this.object.posY = 0;
-				this.object.height = Minecraft.getMinecraft().currentScreen.height;
+				this.object.setHeight(Minecraft.getMinecraft().currentScreen.height);
 			}
 			if (this.stretchX && !this.stretchY) {
 				this.o1.enabled = true;
@@ -884,50 +912,51 @@ public abstract class LayoutElement extends Gui {
 				int w = this.startWidth + this.getOpponentInt(diffX);
 				if (w >= 5) {
 					this.object.posX = this.startX + diffX;
-					this.object.width = w;
+					this.object.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
 						if (h >= 5) {
-							this.object.height = h;
+							this.object.setHeight(h);
 						}
 					}
 				}
 			}
 			if (g == 1) { //right
-				int w = this.object.width + (diffX - this.object.width);
+				int w = this.object.getWidth() + (diffX - this.object.getWidth());
 				if (w >= 5) {
-					this.object.width = w;
+					this.object.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
 						if (h >= 5) {
-							this.object.height = h;
+							this.object.setHeight(h);
 						}
 					}
 				}
 			}
 		}
+
 		if (!this.stretchY) {
 			if (g == 2) { //top
 				int h = this.startHeight + this.getOpponentInt(diffY);
 				if (h >= 5) {
 					this.object.posY = this.startY + diffY;
-					this.object.height = h;
+					this.object.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
 						if (w >= 5) {
-							this.object.width = w;
+							this.object.setWidth(w);
 						}
 					}
 				}
 			}
 			if (g == 3) { //bottom
-				int h = this.object.height + (diffY - this.object.height);
+				int h = this.object.getHeight() + (diffY - this.object.getHeight());
 				if (h >= 5) {
-					this.object.height = h;
+					this.object.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
 						if (w >= 5) {
-							this.object.width = w;
+							this.object.setWidth(w);
 						}
 					}
 				}
@@ -942,9 +971,9 @@ public abstract class LayoutElement extends Gui {
 			return Math.abs(i);
 		}
 	}
-	
+
 	protected void updateHovered(int mouseX, int mouseY) {
-		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.width) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.height) {
+		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.getWidth()) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.getHeight()) {
 			this.hovered = true;
 		} else {
 			this.hovered = false;
@@ -998,21 +1027,21 @@ public abstract class LayoutElement extends Gui {
 	public int getY() {
 		return this.object.getPosY(handler);
 	}
-	
+
 	public void setWidth(int width) {
-		this.object.width = width;
+		this.object.setWidth(width);
 	}
-	
+
 	public void setHeight(int height) {
-		this.object.height = height;
+		this.object.setHeight(height);
 	}
-	
+
 	public int getWidth() {
-		return this.object.width;
+		return this.object.getWidth();
 	}
-	
+
 	public int getHeight() {
-		return this.object.height;
+		return this.object.getHeight();
 	}
 	
 	public boolean isDestroyable() {
@@ -1051,5 +1080,131 @@ public abstract class LayoutElement extends Gui {
 	}
 	
 	public abstract List<PropertiesSection> getProperties();
+
+	protected void addVisibilityPropertiesTo(PropertiesSection sec) {
+
+		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
+
+		if (c.vrCheckForSingleplayer) {
+			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
+		}
+		if (c.vrCheckForMultiplayer) {
+			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
+		}
+		if (c.vrCheckForRealTimeHour) {
+			String val = "";
+			for (int i : c.vrRealTimeHour) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimehour", "" + c.vrShowIfRealTimeHour);
+				sec.addEntry("vr:value:realtimehour", val);
+			}
+		}
+		if (c.vrCheckForRealTimeMinute) {
+			String val = "";
+			for (int i : c.vrRealTimeMinute) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeminute", "" + c.vrShowIfRealTimeMinute);
+				sec.addEntry("vr:value:realtimeminute", val);
+			}
+		}
+		if (c.vrCheckForRealTimeSecond) {
+			String val = "";
+			for (int i : c.vrRealTimeSecond) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimesecond", "" + c.vrShowIfRealTimeSecond);
+				sec.addEntry("vr:value:realtimesecond", val);
+			}
+		}
+		if (c.vrCheckForWindowWidth) {
+			String val = "";
+			for (int i : c.vrWindowWidth) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
+				sec.addEntry("vr:value:windowwidth", val);
+			}
+		}
+		if (c.vrCheckForWindowHeight) {
+			String val = "";
+			for (int i : c.vrWindowHeight) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
+				sec.addEntry("vr:value:windowheight", val);
+			}
+		}
+		if (c.vrCheckForWindowWidthBiggerThan) {
+			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
+			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
+		}
+		if (c.vrCheckForWindowHeightBiggerThan) {
+			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
+			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
+		}
+		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
+			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
+			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
+		}
+		if (c.vrCheckForWorldLoaded) {
+			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
+		}
+		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
+			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
+			sec.addEntry("vr:value:language", "" + c.vrLanguage);
+		}
+		if (c.vrCheckForFullscreen) {
+			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
+		}
+		if (c.vrCheckForOsWindows) {
+			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
+		}
+		if (c.vrCheckForOsMac) {
+			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
+		}
+		if (c.vrCheckForOsLinux) {
+			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
+		}
+		if (c.vrCheckForModLoaded) {
+			String val = "";
+			for (String s : c.vrModLoaded) {
+				val += s + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
+				sec.addEntry("vr:value:modloaded", val);
+			}
+		}
+		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
+			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
+			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
+		}
+
+	}
 
 }

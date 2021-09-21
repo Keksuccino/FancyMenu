@@ -9,7 +9,9 @@
     "MixinGuiSlot",
     "MixinGuiScreen",
     "MixinGuiButtonLanguage",
-    "MixinMinecraft"
+    "MixinMinecraft",
+    "MixinScaledResolution",
+    "MixinGuiScreenResourcePacks"
   ],
   "injectors": {
     "defaultRequire": 1

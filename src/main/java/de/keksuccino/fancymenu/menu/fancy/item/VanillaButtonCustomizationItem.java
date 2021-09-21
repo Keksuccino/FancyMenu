@@ -6,6 +6,7 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.GuiScreen;
@@ -16,6 +17,10 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	
 	private String normalLabel = "";
 	private boolean hovered = false;
+
+	public String hoverLabelRaw;
+	public String labelRaw;
+	protected boolean normalLabelCached = false;
 	
 	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent) {
 		super(item);
@@ -39,17 +44,18 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 					}
 				}
 			}
-			
+
 			if (this.action.equalsIgnoreCase("sethoverlabel")) {
-				this.value = item.getEntryValue("label");
+				this.hoverLabelRaw = item.getEntryValue("label");
 				if (this.parent != null) {
-					if (this.value != null) {
-						if (!isEditorActive()) {
-							this.value = DynamicValueHelper.convertFromRaw(this.value);
-						}
-					}
 					this.normalLabel = this.parent.getButton().displayString;
 				}
+				this.updateValues();
+			}
+
+			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
+				this.labelRaw = item.getEntryValue("value");
+				this.updateValues();
 			}
 			
 		}
@@ -58,6 +64,9 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	@Override
 	public void render(GuiScreen menu) throws IOException {
 		if (this.parent != null) {
+
+			this.updateValues();
+
 			if (this.action.equals("addhoversound")) {
 				if (this.parent.getButton().isMouseOver() && !hovered && (this.value != null)) {
 					SoundHandler.resetSound(this.value);
@@ -68,13 +77,28 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 					this.hovered = false;
 				}
 			}
-			
+
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
 					if (this.parent.getButton().isMouseOver()) {
+						if (!this.normalLabelCached) {
+							this.normalLabelCached = true;
+							this.normalLabel = this.parent.getButton().displayString;
+						}
 						this.parent.getButton().displayString = this.value;
 					} else {
-						this.parent.getButton().displayString = this.normalLabel;
+						if (this.normalLabelCached) {
+							this.normalLabelCached = false;
+							this.parent.getButton().displayString = this.normalLabel;
+						}
+					}
+				}
+			}
+
+			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
+				if (this.value != null) {
+					if (!this.parent.getButton().isMouseOver()) {
+						this.parent.getButton().displayString = this.value;
 					}
 				}
 			}
@@ -82,26 +106,28 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-//	private void setHovered(GuiButton w, boolean hovered) {
-//		try {
-//			Field f = ReflectionHelper.findField(GuiButton.class, "field_146123_n", "hovered");
-//			f.set(w, hovered);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-//	
-//	private void click() {
-//		this.parent.visible = true;
-//		this.parent.mousePressed(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY());
-//		this.parent.visible = false;
-//		
-//		try {
-//			Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
-//			m.invoke(Minecraft.getMinecraft().currentScreen, this.parent);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
+	protected void updateValues() {
+
+		if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
+			if (this.labelRaw != null) {
+				if (!isEditorActive()) {
+					this.value = DynamicValueHelper.convertFromRaw(this.labelRaw);
+				} else {
+					this.value = StringUtils.convertFormatCodes(this.labelRaw, "&", "§");
+				}
+			}
+		}
+
+		if (this.action.equals("sethoverlabel")) {
+			if (this.hoverLabelRaw != null) {
+				if (!isEditorActive()) {
+					this.value = DynamicValueHelper.convertFromRaw(this.hoverLabelRaw);
+				} else {
+					this.value = StringUtils.convertFormatCodes(this.hoverLabelRaw, "&", "§");
+				}
+			}
+		}
+
+	}
 
 }

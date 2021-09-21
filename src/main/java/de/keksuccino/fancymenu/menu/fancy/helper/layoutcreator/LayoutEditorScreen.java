@@ -8,6 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
+import de.keksuccino.fancymenu.menu.fancy.item.*;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -39,16 +43,8 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
-import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.SlideshowCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.SplashTextCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.StringCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
@@ -90,18 +86,11 @@ public class LayoutEditorScreen extends GuiScreen {
 	protected List<LayoutElement> newContentPaste = new ArrayList<LayoutElement>();
 	public List<LayoutElement> deleteContentQueue = new ArrayList<LayoutElement>();
 	protected List<LayoutElement> vanillaButtonContent = new ArrayList<LayoutElement>();
-	protected List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	public Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
-	public Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
-	public Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
-	public Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
-	public Map<Long, String> vanillaClickSounds = new HashMap<Long, String>();
-	public Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
+	public Map<Long, MenuHandlerBase.ButtonCustomizationContainer> vanillaButtonCustomizationContainers = new HashMap<Long, MenuHandlerBase.ButtonCustomizationContainer>();
 	public Map<Long, Float> vanillaDelayAppearance = new HashMap<Long, Float>();
 	public Map<Long, Boolean> vanillaDelayAppearanceFirstTime = new HashMap<Long, Boolean>();
 	public Map<Long, Float> vanillaFadeIn = new HashMap<Long, Float>();
-	public Map<Long, String> vanillaDescriptions = new HashMap<Long, String>();
 	protected List<LayoutElement> focusedObjects = new ArrayList<LayoutElement>();
 	protected List<LayoutElement> focusedObjectsCache = new ArrayList<LayoutElement>();
 	
@@ -122,6 +111,7 @@ public class LayoutEditorScreen extends GuiScreen {
 	protected double panoPos = 0.0;
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
+	protected boolean keepBackgroundAspectRatio = false;
 
 	protected String openAudio;
 	protected String closeAudio;
@@ -141,6 +131,11 @@ public class LayoutEditorScreen extends GuiScreen {
 	protected boolean randomMode = false;
 	protected String randomGroup = "1";
 	protected boolean randomOnlyFirstTime = false;
+
+	//Unused
+	protected int autoScalingWidth = 0;
+	//Unused
+	protected int autoScalingHeight = 0;
 
 	protected int scale = 0;
 	public int oriscale = -1;
@@ -200,6 +195,13 @@ public class LayoutEditorScreen extends GuiScreen {
 				this.width = res.getScaledWidth();
 				this.height = res.getScaledHeight();
 			}
+		}
+
+		//Unused
+		if ((this.autoScalingWidth != 0) && (this.autoScalingHeight != 0)) {
+			// EMPTY ---------------
+		} else if (this.scale <= 0) {
+			// EMPTY ---------------
 		}
 
 		this.focusedObjects.clear();
@@ -308,6 +310,15 @@ public class LayoutEditorScreen extends GuiScreen {
 			l.add(ps);
 		}
 
+		//Unused
+		if ((this.autoScalingWidth != 0) && (this.autoScalingHeight != 0)) {
+			PropertiesSection ps = new PropertiesSection("customization");
+			ps.addEntry("action", "autoscale");
+			ps.addEntry("basewidth", "" + this.autoScalingWidth);
+			ps.addEntry("baseheight", "" + this.autoScalingHeight);
+			l.add(ps);
+		}
+
 		if (this.openAudio != null) {
 			PropertiesSection ps = new PropertiesSection("customization");
 			ps.addEntry("action", "setopenaudio");
@@ -329,6 +340,12 @@ public class LayoutEditorScreen extends GuiScreen {
 			s.addEntry("loop", "" + m.getValue());
 			l.add(s);
 		}
+
+		//Background Options Section
+		PropertiesSection s = new PropertiesSection("customization");
+		s.addEntry("action", "backgroundoptions");
+		s.addEntry("keepaspectratio", "" + this.keepBackgroundAspectRatio);
+		l.add(s);
 		
 		for (LayoutElement o : this.content) {
 			l.addAll(o.getProperties());
@@ -346,27 +363,28 @@ public class LayoutEditorScreen extends GuiScreen {
 			if (!(o instanceof LayoutVanillaButton)) {
 				l.add(o);
 			} else {
-				if (!o.object.orientation.equals("original") || ((LayoutVanillaButton)o).hidden) {
+				if (!o.object.orientation.equals("original") || ((LayoutVanillaButton)o).customizationContainer.isButtonHidden) {
 					l.add(o);
 				}
 			}
 		}
-		
+
 		ButtonCache.cacheFrom(this.screen, this.width, this.height);
-		
+
 		this.content.clear();
-		
-		//Sync labels, textures, auto-clicks and other stuff for vanilla buttons
+
+		//Sync labels, textures, auto clicks and other stuff for vanilla buttons
 		for (ButtonData b : ButtonCache.getButtons()) {
 			if (!this.containsVanillaButton(l, b)) {
-				LayoutVanillaButton v = new LayoutVanillaButton(b, this);
-				
-				if (this.vanillaButtonNames.containsKey(b.getId())) {
-					v.object.value = this.vanillaButtonNames.get(b.getId()); 
+				if (!this.vanillaButtonCustomizationContainers.containsKey(b.getId())) {
+					MenuHandlerBase.ButtonCustomizationContainer cc = new MenuHandlerBase.ButtonCustomizationContainer();
+					PropertiesSection dummySec = new PropertiesSection("customization");
+					cc.visibilityRequirementContainer = new VisibilityRequirementContainer(dummySec, new CustomizationItemBase(dummySec) {
+						@Override public void render(GuiScreen menu){}
+					});
+					this.vanillaButtonCustomizationContainers.put(b.getId(), cc);
 				}
-				if (this.vanillaButtonClicks.containsKey(b.getId())) {
-					v.clicks = LayoutEditorScreen.this.vanillaButtonClicks.get(b.getId()); 
-				}
+				LayoutVanillaButton v = new LayoutVanillaButton(this.vanillaButtonCustomizationContainers.get(b.getId()), b, this);
 				if (this.vanillaDelayAppearance.containsKey(b.getId())) {
 					v.object.delayAppearance = true;
 					v.object.delayAppearanceSec = this.vanillaDelayAppearance.get(b.getId());
@@ -378,24 +396,6 @@ public class LayoutEditorScreen extends GuiScreen {
 						v.object.fadeInSpeed = this.vanillaFadeIn.get(b.getId());
 					}
 				}
-				if (this.vanillaHoverLabels.containsKey(b.getId())) {
-					v.hoverLabel = this.vanillaHoverLabels.get(b.getId()); 
-				}
-				if (this.vanillaHoverSounds.containsKey(b.getId())) {
-					v.hoverSound = this.vanillaHoverSounds.get(b.getId()); 
-				}
-				if (this.vanillaClickSounds.containsKey(b.getId())) {
-					v.clicksound = this.vanillaClickSounds.get(b.getId()); 
-				}
-				if (this.vanillaButtonTextures.containsKey(b.getId())) {
-					List<String> l2 = this.vanillaButtonTextures.get(b.getId());
-					v.backNormal = l2.get(0);
-					v.backHovered = l2.get(1);
-					((LayoutButtonDummyCustomizationItem)v.object).setTexture(TextureHandler.getResource(l2.get(0)).getResourceLocation());
-				}
-				if (this.vanillaDescriptions.containsKey(b.getId())) {
-					v.description = this.vanillaDescriptions.get(b.getId()); 
-				}
 
 				l.add(v);
 			}
@@ -403,16 +403,16 @@ public class LayoutEditorScreen extends GuiScreen {
 		this.content.addAll(l);
 
 		this.vanillaButtonContent.clear();
-		
+
 		for (LayoutElement o : this.content) {
-			
+
 			o.init();
-			
+
 			if (o instanceof LayoutVanillaButton) {
 				this.vanillaButtonContent.add(o);
 			}
+
 		}
-		
 	}
 	
 	protected boolean containsVanillaButton(List<LayoutElement> l, ButtonData b) {
@@ -425,9 +425,24 @@ public class LayoutEditorScreen extends GuiScreen {
 		}
 		return false;
 	}
-	
+
 	public boolean isHidden(LayoutElement b) {
-		return this.hidden.contains(b);
+		if (b instanceof LayoutVanillaButton) {
+			return ((LayoutVanillaButton) b).customizationContainer.isButtonHidden;
+		}
+		return false;
+	}
+
+	public List<LayoutVanillaButton> getHiddenButtons() {
+		List<LayoutVanillaButton> l = new ArrayList<LayoutVanillaButton>();
+		for (LayoutElement e : this.vanillaButtonContent) {
+			if (e instanceof LayoutVanillaButton) {
+				if (((LayoutVanillaButton) e).customizationContainer.isButtonHidden) {
+					l.add((LayoutVanillaButton) e);
+				}
+			}
+		}
+		return l;
 	}
 
 	protected void closeMultiselectChildMenus() {
@@ -435,103 +450,22 @@ public class LayoutEditorScreen extends GuiScreen {
 			m.closeMenu();
 		}
 	}
-	
-	public void setVanillaButtonName(LayoutVanillaButton button, String text) {
-		if ((this.vanillaButtonNames.get(button.button.getId()) == null) || !(this.vanillaButtonNames.get(button.button.getId()).equals(text))) {
-			this.history.saveSnapshot(this.history.createSnapshot());
-		}
-		
-		this.vanillaButtonNames.put(button.button.getId(), text);
-		button.object.value = text;
-	}
 
-	public void setVanillaTexture(LayoutVanillaButton button, String backNormal, String backHover) {
-		if ((backNormal != null) && (backHover != null)) {
-			List<String> l = new ArrayList<String>();
-			l.add(backNormal);
-			l.add(backHover);
-
-			this.vanillaButtonTextures.put(button.button.getId(), l);
-		} else {
-			if (this.vanillaButtonTextures.containsKey(button.button.getId())) {
-				this.vanillaButtonTextures.remove(button.button.getId());
-			}
-		}
-	}
-
-	public void setVanillaClicks(LayoutVanillaButton button, int clicks) {
-		if (clicks > 0) {
-			this.vanillaButtonClicks.put(button.button.getId(), clicks);
-		} else {
-			if (this.vanillaButtonClicks.containsKey(button.button.getId())) {
-				this.vanillaButtonClicks.remove(button.button.getId());
-			}
-		}
-	}
-
-//	public void setVanillaHideFor(LayoutVanillaButton button, double seconds) {
-//		this.vanillaHideFor.put(button.button.getId(), seconds);
-//	}
-
-	public void setVanillaDescription(LayoutVanillaButton button, String desc) {
-		if (desc == null) {
-			this.vanillaDescriptions.remove(button.button.getId());
-		} else {
-			this.vanillaDescriptions.put(button.button.getId(), desc);
-		}
-	}
-	
-//	public void setVanillaDelayOnlyFirstTime(LayoutVanillaButton button, boolean onlyfirsttime) {
-//		this.vanillaDelayOnlyFirstTime.put(button.button.getId(), onlyfirsttime);
-//	}
-
-	public void setVanillaHoverLabel(LayoutVanillaButton button, String label) {
-		if (label != null) {
-			this.vanillaHoverLabels.put(button.button.getId(), label);
-		} else {
-			if (this.vanillaHoverLabels.containsKey(button.button.getId())) {
-				this.vanillaHoverLabels.remove(button.button.getId());
-			}
-		}
-	}
-
-	public void setVanillaHoverSound(LayoutVanillaButton button, String sound) {
-		if (sound != null) {
-			this.vanillaHoverSounds.put(button.button.getId(), sound);
-		} else {
-			if (this.vanillaHoverSounds.containsKey(button.button.getId())) {
-				this.vanillaHoverSounds.remove(button.button.getId());
-			}
-		}
-	}
-
-	public void setVanillaClickSound(LayoutVanillaButton button, String sound) {
-		if (sound != null) {
-			this.vanillaClickSounds.put(button.button.getId(), sound);
-		} else {
-			if (this.vanillaClickSounds.containsKey(button.button.getId())) {
-				this.vanillaClickSounds.remove(button.button.getId());
-			}
-		}
-	}
-	
 	public void hideVanillaButton(LayoutVanillaButton b) {
-		if (!this.hidden.contains(b) && this.content.contains(b)) {
+		if (!b.customizationContainer.isButtonHidden && this.content.contains(b)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
-			
-			this.hidden.add(b);
-			b.hidden = true;
+
+			b.customizationContainer.isButtonHidden = true;
 			this.setObjectFocused(b, false, true);
 			b.resetObjectStates();
 		}
 	}
-	
+
 	public void showVanillaButton(LayoutVanillaButton b) {
-		if (this.hidden.contains(b)) {
+		if (b.customizationContainer.isButtonHidden) {
 			this.history.saveSnapshot(this.history.createSnapshot());
-			
-			this.hidden.remove(b);
-			b.hidden = false;
+
+			b.customizationContainer.isButtonHidden = false;
 			b.resetObjectStates();
 		}
 	}
@@ -589,16 +523,16 @@ public class LayoutEditorScreen extends GuiScreen {
 
 		this.renderCreatorBackground();
 
+		this.drawGrid();
+
 		if (this.renderorder.equalsIgnoreCase("foreground")) {
 			this.renderVanillaButtons(mouseX, mouseY);
 		}
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
 		for (LayoutElement l : this.content) {
 			if (!(l instanceof LayoutVanillaButton)) {
-				if (!this.isHidden(l)) {
-					if (!this.isFocused(l)) {
-						l.render(mouseX, mouseY);
-					}
+				if (!this.isFocused(l)) {
+					l.render(mouseX, mouseY);
 				}
 			}
 		}
@@ -703,6 +637,42 @@ public class LayoutEditorScreen extends GuiScreen {
 
 	}
 
+	protected void drawGrid() {
+		if (FancyMenu.config.getOrDefault("showgrid", false)) {
+			Color c = new Color(255, 255, 255, 100);
+			int gridSize = FancyMenu.config.getOrDefault("gridsize", 10);
+			int lineThickness = 1;
+			int verticalLines = this.screen.width / gridSize;
+			int horizontalLines = this.screen.height / gridSize;
+
+			//Draw vertical lines
+			int i1 = 1;
+			int space1 = 0;
+			while (i1 <= verticalLines) {
+				int minX = (gridSize * i1) + space1;
+				int maxX = minX + lineThickness;
+				int minY = 0;
+				int maxY = this.screen.height;
+				drawRect(minX, minY, maxX, maxY, c.getRGB());
+				i1++;
+				space1 += lineThickness;
+			}
+
+			//Draw horizontal lines
+			int i2 = 1;
+			int space2 = 0;
+			while (i2 <= horizontalLines) {
+				int minX = 0;
+				int maxX = this.screen.width;
+				int minY = (gridSize * i2) + space2;
+				int maxY = minY + lineThickness;
+				drawRect( minX, minY, maxX, maxY, c.getRGB());
+				i2++;
+				space2 += lineThickness;
+			}
+		}
+	}
+
 	protected void renderVanillaButtons(int mouseX, int mouseY) {
 		for (LayoutElement l : this.vanillaButtonContent) {
 			if (!this.isHidden(l)) {
@@ -722,7 +692,20 @@ public class LayoutEditorScreen extends GuiScreen {
 			Minecraft.getMinecraft().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 			
 			if (!this.panorama) {
-				drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+				if (!this.keepBackgroundAspectRatio) {
+					drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+				} else {
+					int w = this.backgroundTexture.getWidth();
+					int h = this.backgroundTexture.getHeight();
+					double ratio = (double) w / (double) h;
+					int wfinal = (int)(this.height * ratio);
+					int screenCenterX = this.width / 2;
+					if (wfinal < this.width) {
+						drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					} else {
+						drawModalRectWithCustomSizedTexture(screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, this.height + 1, wfinal + 1, this.height + 1);
+					}
+				}
 			} else {
 				int w = this.backgroundTexture.getWidth();
 				int h = this.backgroundTexture.getHeight();
@@ -779,11 +762,33 @@ public class LayoutEditorScreen extends GuiScreen {
 			}
 		}
 		GlStateManager.disableBlend();
-		
+
 		if (this.backgroundAnimation != null) {
 			boolean b = this.backgroundAnimation.isStretchedToStreensize();
-			this.backgroundAnimation.setStretchImageToScreensize(true);
+			int wOri = this.backgroundAnimation.getWidth();
+			int hOri = this.backgroundAnimation.getHeight();
+			int xOri = this.backgroundAnimation.getPosX();
+			int yOri = this.backgroundAnimation.getPosY();
+			if (!this.keepBackgroundAspectRatio) {
+				this.backgroundAnimation.setStretchImageToScreensize(true);
+			} else {
+				double ratio = (double) wOri / (double) hOri;
+				int wfinal = (int)(this.height * ratio);
+				int screenCenterX = this.width / 2;
+				if (wfinal < this.width) {
+					this.backgroundAnimation.setStretchImageToScreensize(true);
+				} else {
+					this.backgroundAnimation.setWidth(wfinal + 1);
+					this.backgroundAnimation.setHeight(this.height + 1);
+					this.backgroundAnimation.setPosX(screenCenterX - (wfinal / 2));
+					this.backgroundAnimation.setPosY(0);
+				}
+			}
 			this.backgroundAnimation.render();
+			this.backgroundAnimation.setWidth(wOri);
+			this.backgroundAnimation.setHeight(hOri);
+			this.backgroundAnimation.setPosX(xOri);
+			this.backgroundAnimation.setPosY(yOri);
 			this.backgroundAnimation.setStretchImageToScreensize(b);
 		}
 
@@ -796,14 +801,29 @@ public class LayoutEditorScreen extends GuiScreen {
 			int sh = this.backgroundSlideshow.height;
 			int sx = this.backgroundSlideshow.x;
 			int sy = this.backgroundSlideshow.y;
-			
-			this.backgroundSlideshow.height = this.height;
-			this.backgroundSlideshow.width = this.width;
-			this.backgroundSlideshow.x = 0;
+
+			if (!this.keepBackgroundAspectRatio) {
+				this.backgroundSlideshow.width = this.width + 1;
+				this.backgroundSlideshow.height = this.height +1;
+				this.backgroundSlideshow.x = 0;
+			} else {
+				double ratio = (double) sw / (double) sh;
+				int wfinal = (int)(this.height * ratio);
+				int screenCenterX = this.width / 2;
+				if (wfinal < this.width) {
+					this.backgroundSlideshow.width = this.width + 1;
+					this.backgroundSlideshow.height = this.height +1;
+					this.backgroundSlideshow.x = 0;
+				} else {
+					this.backgroundSlideshow.width = wfinal + 1;
+					this.backgroundSlideshow.height = this.height +1;
+					this.backgroundSlideshow.x = screenCenterX - (wfinal / 2);
+				}
+			}
 			this.backgroundSlideshow.y = 0;
-			
+
 			this.backgroundSlideshow.render();
-			
+
 			this.backgroundSlideshow.width = sw;
 			this.backgroundSlideshow.height = sh;
 			this.backgroundSlideshow.x = sx;
@@ -965,80 +985,36 @@ public class LayoutEditorScreen extends GuiScreen {
 		}
 		return movedBehind;
 	}
-	
-	protected void setButtonTexturesForFocusedObjects(boolean hover) {
-		ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-			if (call != null) {
-				File home = new File("");
-				call = call.replace("\\", "/");
-				File f = new File(call);
-				String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
-				if (f.exists() && f.isFile() && (f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".png"))) {
-					if (filename.equals(f.getName())) {
-						if (call.startsWith(home.getAbsolutePath())) {
-							call = call.replace(home.getAbsolutePath(), "");
-							if (call.startsWith("\\") || call.startsWith("/")) {
-								call = call.substring(1);
-							}
-						}
 
-						this.history.saveSnapshot(this.history.createSnapshot());
-						this.history.setPreventSnapshotSaving(true);
-						
-						for (LayoutElement o : this.focusedObjectsCache) {
-							if (o instanceof LayoutVanillaButton) {
-								
-								LayoutVanillaButton vb = (LayoutVanillaButton) o;
-								
-								if (hover) {
-									vb.backHovered = call;
-									if (vb.backNormal == null) {
-										vb.backNormal = call;
-									}
-								} else {
-									vb.backNormal = call;
-									if (vb.backHovered == null) {
-										vb.backHovered = call;
-									}
-								}
-								
-								this.setVanillaTexture(vb, vb.backNormal, vb.backHovered);
-								
-								((LayoutButtonDummyCustomizationItem)vb.object).setTexture(TextureHandler.getResource(vb.backNormal).getResourceLocation());
-								
-							} else if (o instanceof LayoutButton) {
-								
-								LayoutButton lb = (LayoutButton) o;
-								
-								if (hover) {
-									lb.backHovered = call;
-									if (lb.backNormal == null) {
-										lb.backNormal = call;
-									}
-								} else {
-									lb.backNormal = call;
-									if (lb.backHovered == null) {
-										lb.backHovered = call;
-									}
-								}
-								
-								((LayoutButtonDummyCustomizationItem)lb.object).setTexture(TextureHandler.getResource(lb.backNormal).getResourceLocation());
-								
-							}
-						}
-						
-						this.history.setPreventSnapshotSaving(false);
-						
-					} else {
-						displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
-					}
-				} else {
-					displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+	protected void setButtonTexturesForFocusedObjects() {
+		MenuHandlerBase.ButtonCustomizationContainer cc = new MenuHandlerBase.ButtonCustomizationContainer();
+		ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this, cc, () -> {
+
+			this.history.saveSnapshot(this.history.createSnapshot());
+
+			for (LayoutElement o : this.focusedObjectsCache) {
+				if (o instanceof LayoutVanillaButton) {
+
+					LayoutVanillaButton vb = (LayoutVanillaButton) o;
+					vb.customizationContainer.normalBackground = cc.normalBackground;
+					vb.customizationContainer.hoverBackground = cc.hoverBackground;
+					vb.customizationContainer.loopAnimation = cc.loopAnimation;
+					vb.customizationContainer.restartAnimationOnHover = cc.restartAnimationOnHover;
+
+				} else if (o instanceof LayoutButton) {
+
+					LayoutButton lb = (LayoutButton) o;
+					lb.customizationContainer.normalBackground = cc.normalBackground;
+					lb.customizationContainer.hoverBackground = cc.hoverBackground;
+					lb.customizationContainer.loopAnimation = cc.loopAnimation;
+					lb.customizationContainer.restartAnimationOnHover = cc.restartAnimationOnHover;
+
 				}
 			}
-		}, "jpg", "jpeg", "png");
-		
-		PopupHandler.displayPopup(cf);
+
+		});
+		pop.saveSnapshots = false;
+		PopupHandler.displayPopup(pop);
 	}
 
 	protected void addTexture(String path) {
@@ -1110,8 +1086,8 @@ public class LayoutEditorScreen extends GuiScreen {
 			int w = SlideshowHandler.getSlideshow(name).width;
 			int h = SlideshowHandler.getSlideshow(name).height;
 			double ratio = (double) w / (double) h;
-			i.height = 100;
-			i.width = (int)(i.height * ratio);
+			i.setHeight(100);
+			i.setWidth((int)(i.getHeight() * ratio));
 			
 			this.addContent(new LayoutSlideshow(i, this));
 
@@ -1206,8 +1182,8 @@ public class LayoutEditorScreen extends GuiScreen {
 			int w = AnimationHandler.getAnimation(name).getWidth();
 			int h = AnimationHandler.getAnimation(name).getHeight();
 			double ratio = (double) w / (double) h;
-			i.height = 100;
-			i.width = (int)(i.height * ratio);
+			i.setHeight(100);
+			i.setWidth((int)(i.getHeight() * ratio));
 			AnimationHandler.getAnimation(name).resetAnimation();
 			this.addContent(new LayoutAnimation(i, this));
 
@@ -1226,7 +1202,7 @@ public class LayoutEditorScreen extends GuiScreen {
 		if (Minecraft.getMinecraft().fontRenderer.getStringWidth(label) + 10 > w) {
 			w = Minecraft.getMinecraft().fontRenderer.getStringWidth(label) + 10;
 		}
-		LayoutButton b = new LayoutButton(w, 20, label, null, this);
+		LayoutButton b = new LayoutButton(new MenuHandlerBase.ButtonCustomizationContainer(), w, 20, label, null, this);
 		b.object.posY = (int)(this.ui.bar.getHeight() * UIBase.getUIScale());
 		this.addContent(b);
 	}
@@ -1503,8 +1479,10 @@ public class LayoutEditorScreen extends GuiScreen {
 
 			//Init dummy preloaded editor to use it's customization action serializer for building the copied elements
 			PreloadedLayoutEditorScreen pe = new PreloadedLayoutEditorScreen(new CustomGuiBase("", "", false, null, null), l);
+			pe.initGui();
 
 			for (LayoutElement e : pe.content) {
+				e.object.setActionId(MenuCustomization.generateRandomActionId());
 				e.handler = this;
 				//Change the element position a bit to better see that the element was successfully pasted
 				e.object.posX += 1;
@@ -1515,6 +1493,7 @@ public class LayoutEditorScreen extends GuiScreen {
 			this.postRenderTasks.add(new Runnable() {
 				@Override
 				public void run() {
+					LayoutEditorScreen.this.initGui();
 					LayoutEditorScreen.this.focusedObjects.clear();
 					LayoutEditorScreen.this.focusedObjectsCache.clear();
 					LayoutEditorScreen.this.focusedObjects.addAll(pe.content);
@@ -1567,6 +1546,21 @@ public class LayoutEditorScreen extends GuiScreen {
 			if (d.keycode == 21) {
 				if (KeyboardHandler.isCtrlPressed()) {
 					((LayoutEditorScreen) c).history.stepForward();
+				}
+			}
+
+			//CTRL + G
+			if (d.keycode == 34) {
+				if (KeyboardHandler.isCtrlPressed()) {
+					try {
+						if (FancyMenu.config.getOrDefault("showgrid", false)) {
+							FancyMenu.config.setValue("showgrid", false);
+						} else {
+							FancyMenu.config.setValue("showgrid", true);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			

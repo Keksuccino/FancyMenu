@@ -14,32 +14,28 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFil
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.resources.TextureHandler;
 
 public class LayoutButton extends LayoutElement {
 
+	public MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
 	public String actionContent = "";
 	public String actionType = "openlink";
-	public String backNormal = null;
-	public String backHovered = null;
-	public String hoverSound;
-	public String hoverLabel;
 	public String onlydisplayin = null;
-	public String clicksound = null;
-	public String description;
 	private AdvancedButton onlyOutgameBtn;
 	private AdvancedButton onlySingleplayerBtn;
 	private AdvancedButton onlyMultiplayerBtn;
 
-	public LayoutButton(int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
-		super(new LayoutButtonDummyCustomizationItem(label, width, height, 0, 0), true, handler);
+	public LayoutButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
+		super(new LayoutButtonDummyCustomizationItem(customizationContainer, label, width, height, 0, 0), true, handler, false);
 		this.onlydisplayin = onlydisplayin;
+		this.customizationContainer = customizationContainer;
+		this.init();
 		this.initOnlyDisplayInMenu();
 	}
 
@@ -47,16 +43,9 @@ public class LayoutButton extends LayoutElement {
 	public void init() {
 
 		this.stretchable = true;
-		
+
 		super.init();
-		
-		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, this::editLabelCallback);
-			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
-			PopupHandler.displayPopup(i);
-		});
-		this.rightclickMenu.addContent(b2);
-		
+
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config"), (press) -> {
 			ButtonActionPopup i = new ButtonActionPopup(this::setActionContentCallback, this::setActionTypeCallback, this.actionType);
 			i.setText(this.actionContent);
@@ -64,212 +53,173 @@ public class LayoutButton extends LayoutElement {
 		});
 		this.rightclickMenu.addContent(b3);
 
-		FMContextMenu texturePopup = new FMContextMenu();
-		this.rightclickMenu.addChild(texturePopup);
-		
-		AdvancedButton tpop1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.normal"), (press) -> {
-			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				if (call != null) {
-					File home = new File("");
-					call = call.replace("\\", "/");
-					File f = new File(call);
-					String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
-					if (f.exists() && f.isFile() && (f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".png"))) {
-						if (filename.equals(f.getName())) {
-							if (call.startsWith(home.getAbsolutePath())) {
-								call = call.replace(home.getAbsolutePath(), "");
-								if (call.startsWith("\\") || call.startsWith("/")) {
-									call = call.substring(1);
-								}
-							}
-							if ((this.backNormal == null) || !this.backNormal.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-							}
-							
-							this.backNormal = call;
-							if (this.backHovered == null) {
-								this.backHovered = call;
-							}
-							((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
+		this.rightclickMenu.addSeparator();
 
-						} else {
-							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
-						}
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
-					}
-				}
-			}, "jpg", "jpeg", "png");
-			
-			if (this.backNormal != null) {
-				cf.setText(this.backNormal);
-			}
-			
-			PopupHandler.displayPopup(cf);
-			
+		AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), (press) -> {
+			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.handler, this.customizationContainer);
+			PopupHandler.displayPopup(pop);
 		});
-		texturePopup.addContent(tpop1);
-		
-		AdvancedButton tpop2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.hovered"), (press) -> {
-			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				if (call != null) {
-					File home = new File("");
-					call = call.replace("\\", "/");
-					File f = new File(call);
-					String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
-					if (f.exists() && f.isFile() && (f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".png"))) {
-						if (filename.equals(f.getName())) {
-							if (call.startsWith(home.getAbsolutePath())) {
-								call = call.replace(home.getAbsolutePath(), "");
-								if (call.startsWith("\\") || call.startsWith("/")) {
-									call = call.substring(1);
-								}
-							}
-							if ((this.backHovered == null) || !this.backHovered.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-							}
-							
-							this.backHovered = call;
-							if (this.backNormal == null) {
-								this.backNormal = call;
-							}
-							((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
+		this.rightclickMenu.addContent(buttonBackgroundButton);
 
-						} else {
-							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
-						}
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
-					}
-				}
-			}, "jpg", "jpeg", "png");
-			
-			if (this.backHovered != null) {
-				cf.setText(this.backHovered);
+		String loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on");
+		if (!this.customizationContainer.loopAnimation) {
+			loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off");
+		}
+		AdvancedButton loopBackgroundAnimationButton = new AdvancedButton(0, 0, 0, 0, loopAniLabel, (press) -> {
+			if (this.customizationContainer.loopAnimation) {
+				this.customizationContainer.loopAnimation = false;
+				((AdvancedButton)press).displayString = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off");
+			} else {
+				this.customizationContainer.loopAnimation = true;
+				((AdvancedButton)press).displayString = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on");
 			}
-			
-			PopupHandler.displayPopup(cf);
 		});
-		texturePopup.addContent(tpop2);
-		
-		AdvancedButton tpop3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.backHovered = null;
-			this.backNormal = null;
-			((LayoutButtonDummyCustomizationItem)this.object).setTexture(null);
+		loopBackgroundAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(loopBackgroundAnimationButton);
+
+		String restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on");
+		if (!this.customizationContainer.restartAnimationOnHover) {
+			restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off");
+		}
+		AdvancedButton restartAnimationOnHoverButton = new AdvancedButton(0, 0, 0, 0, restartAniLabel, (press) -> {
+			if (this.customizationContainer.restartAnimationOnHover) {
+				this.customizationContainer.restartAnimationOnHover = false;
+				((AdvancedButton)press).displayString = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off");
+			} else {
+				this.customizationContainer.restartAnimationOnHover = true;
+				((AdvancedButton)press).displayString = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on");
+			}
 		});
-		texturePopup.addContent(tpop3);
-		
-		AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture"), (press) -> {
-			texturePopup.setParentButton((AdvancedButton) press);
-			texturePopup.openMenuAt(0, press.y);
+		restartAnimationOnHoverButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(restartAnimationOnHoverButton);
+
+		this.rightclickMenu.addSeparator();
+
+		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
+			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, (call) -> {
+				if (call != null) {
+					if (!this.object.value.equals(call)) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					this.object.value = call;
+				}
+			});
+			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
+			PopupHandler.displayPopup(i);
 		});
-		this.rightclickMenu.addContent(b4);
+		this.rightclickMenu.addContent(b2);
+
+		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
 			FMTextInputPopup ip = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "", null, 240, (call) -> {
 				if (call != null) {
-					if ((this.hoverLabel == null) || !this.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
+					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(call)) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					}
-					
-					this.hoverLabel = StringUtils.convertFormatCodes(call, "&", "§");
+
+					this.customizationContainer.hoverLabel = call;
 				}
 			});
-			
-			if (this.hoverLabel != null) {
-				ip.setText(StringUtils.convertFormatCodes(this.hoverLabel, "§", "&"));
+
+			if (this.customizationContainer.hoverLabel != null) {
+				ip.setText(StringUtils.convertFormatCodes(this.customizationContainer.hoverLabel, "§", "&"));
 			}
 			PopupHandler.displayPopup(ip);
 		});
 		this.rightclickMenu.addContent(b5);
 
 		AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.hoverLabel = null;
+			if (this.customizationContainer.hoverLabel != null) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			this.customizationContainer.hoverLabel = null;
 			this.rightclickMenu.closeMenu();
 		});
 		this.rightclickMenu.addContent(b6);
 
+		this.rightclickMenu.addSeparator();
+
 		AdvancedButton b7 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
-					File f = new File(call);
-					if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-						if ((this.hoverSound == null) || !this.hoverSound.equals(call)) {
+					if (!call.replace(" ", "").equals("")) {
+						File f = new File(call);
+						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+							if ((this.customizationContainer.hoverSound == null) || !this.customizationContainer.hoverSound.equals(call)) {
+								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							}
+
+							this.customizationContainer.hoverSound = call;
+						} else {
+							LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						}
+					} else {
+						if (this.customizationContainer.hoverSound != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
-						this.hoverSound = call;
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						this.customizationContainer.hoverSound = null;
+						this.rightclickMenu.closeMenu();
 					}
 				}
 			}, "wav");
-			
-			if (this.hoverSound != null) {
-				cf.setText(this.hoverSound);
+
+			if (this.customizationContainer.hoverSound != null) {
+				cf.setText(this.customizationContainer.hoverSound);
 			}
 			PopupHandler.displayPopup(cf);
 		});
 		this.rightclickMenu.addContent(b7);
 
-		AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.hoverSound = null;
-			this.rightclickMenu.closeMenu();
-		});
-		this.rightclickMenu.addContent(b8);
-
 		AdvancedButton b10 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
-					File f = new File(call);
-					if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-						if ((this.clicksound == null) || !this.clicksound.equals(call)) {
+					if (!call.replace(" ", "").equals("")) {
+						File f = new File(call);
+						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+							if ((this.customizationContainer.clickSound == null) || !this.customizationContainer.clickSound.equals(call)) {
+								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							}
+							this.customizationContainer.clickSound = call;
+						} else {
+							LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						}
+					} else {
+						if (this.customizationContainer.clickSound != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
-						this.clicksound = call;
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						this.customizationContainer.clickSound = null;
+						this.rightclickMenu.closeMenu();
 					}
 				}
 			}, "wav");
-			
-			if (this.clicksound != null) {
-				cf.setText(this.clicksound);
+
+			if (this.customizationContainer.clickSound != null) {
+				cf.setText(this.customizationContainer.clickSound);
 			}
 			PopupHandler.displayPopup(cf);
 		});
 		this.rightclickMenu.addContent(b10);
 
-		AdvancedButton b11 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.clicksound = null;
-			this.rightclickMenu.closeMenu();
-		});
-		this.rightclickMenu.addContent(b11);
-
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			FMTextInputPopup in = new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
 				if (call != null) {
-					if ((this.description == null) || (call == null) || !this.description.equals(call)) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-					}
-					this.description = call;
-					if (call.equals("")) {
-						this.description = null;
+					if (!call.replace(" ", "").equals("")) {
+						if (!this.customizationContainer.buttonDescription.equals(call)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.customizationContainer.buttonDescription = call;
+					} else {
+						if (this.customizationContainer.buttonDescription != null) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.customizationContainer.buttonDescription = null;
 					}
 				}
 			});
-			
-			if (this.description != null) {
-				in.setText(this.description);
+
+			if (this.customizationContainer.buttonDescription != null) {
+				in.setText(this.customizationContainer.buttonDescription);
 			}
 			PopupHandler.displayPopup(in);
 		});
@@ -285,7 +235,7 @@ public class LayoutButton extends LayoutElement {
 	private void initOnlyDisplayInMenu() {
 		FMContextMenu onlyDisplayInMenu = new FMContextMenu();
 		this.rightclickMenu.addChild(onlyDisplayInMenu);
-		
+
 		String outgame = Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame");
 		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("outgame")) {
 			outgame = "§a" + outgame;
@@ -297,7 +247,7 @@ public class LayoutButton extends LayoutElement {
 			this.onlyMultiplayerBtn.displayString = Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer");
 		});
 		onlyDisplayInMenu.addContent(onlyOutgameBtn);
-		
+
 		String sp = Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer");
 		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("singleplayer")) {
 			sp = "§a" + sp;
@@ -309,7 +259,7 @@ public class LayoutButton extends LayoutElement {
 			this.onlyMultiplayerBtn.displayString = Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer");
 		});
 		onlyDisplayInMenu.addContent(onlySingleplayerBtn);
-		
+
 		String mp = Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer");
 		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("multiplayer")) {
 			mp = "§a" + mp;
@@ -321,7 +271,7 @@ public class LayoutButton extends LayoutElement {
 			this.onlyOutgameBtn.displayString = Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame");
 		});
 		onlyDisplayInMenu.addContent(onlyMultiplayerBtn);
-		
+
 		AdvancedButton odiResetBtn = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.custombutton.onlydisplayin.reset"), (press) -> {
 			this.onlydisplayin = null;
 			this.onlyMultiplayerBtn.displayString = Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer");
@@ -336,27 +286,15 @@ public class LayoutButton extends LayoutElement {
 		});
 		this.rightclickMenu.addContent(b10);
 	}
-	
-	private void editLabelCallback(String text) {
-		if (text == null) {
-			return;
-		} else {
-			if ((this.object.value == null) || !this.object.value.equals(StringUtils.convertFormatCodes(text, "&", "§"))) {
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			}
-			
-			this.object.value = StringUtils.convertFormatCodes(text, "&", "§");
-		}
-	}
-	
+
 	private void setActionContentCallback(String content) {
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-				
+
 		if (content != null) {
 			this.actionContent = content;
 		}
 	}
-	
+
 	private void setActionTypeCallback(String action) {
 		this.actionType = action;
 	}
@@ -383,41 +321,60 @@ public class LayoutButton extends LayoutElement {
 				s.addEntry("width", "%guiwidth%");
 			} else {
 				s.addEntry("x", "" + this.object.posX);
-				s.addEntry("width", "" + this.object.width);
+				s.addEntry("width", "" + this.object.getWidth());
 			}
 			if (this.stretchY) {
 				s.addEntry("y", "0");
 				s.addEntry("height", "%guiheight%");
 			} else {
 				s.addEntry("y", "" + this.object.posY);
-				s.addEntry("height", "" + this.object.height);
+				s.addEntry("height", "" + this.object.getHeight());
 			}
 			s.addEntry("orientation", this.object.orientation);
 			s.addEntry("buttonaction", this.actionType);
 			s.addEntry("value", this.actionContent);
-			if ((this.backHovered != null) && (this.backNormal != null)) {
-				s.addEntry("backgroundnormal", this.backNormal);
-				s.addEntry("backgroundhovered", this.backHovered);
+			if ((this.customizationContainer.normalBackground != null) || (this.customizationContainer.hoverBackground != null)) {
+				if (this.customizationContainer.normalBackground != null) {
+					if (this.customizationContainer.normalBackground.startsWith("animation:")) {
+						String aniName = this.customizationContainer.normalBackground.split("[:]", 2)[1];
+						s.addEntry("backgroundanimationnormal", aniName);
+					} else {
+						s.addEntry("backgroundnormal", this.customizationContainer.normalBackground);
+					}
+				}
+				if (this.customizationContainer.hoverBackground != null) {
+					if (this.customizationContainer.hoverBackground.startsWith("animation:")) {
+						String aniName = this.customizationContainer.hoverBackground.split("[:]", 2)[1];
+						s.addEntry("backgroundanimationhovered", aniName);
+					} else {
+						s.addEntry("backgroundhovered", this.customizationContainer.hoverBackground);
+					}
+				}
 			}
-			if (this.hoverSound != null) {
-				s.addEntry("hoversound", this.hoverSound);
+			s.addEntry("restartbackgroundanimations", "" + this.customizationContainer.restartAnimationOnHover);
+			s.addEntry("loopbackgroundanimations", "" + this.customizationContainer.loopAnimation);
+			if (this.customizationContainer.hoverSound != null) {
+				s.addEntry("hoversound", this.customizationContainer.hoverSound);
 			}
-			if (this.hoverLabel != null) {
-				s.addEntry("hoverlabel", this.hoverLabel);
+			if (this.customizationContainer.hoverLabel != null) {
+				s.addEntry("hoverlabel", this.customizationContainer.hoverLabel);
 			}
 			if (this.onlydisplayin != null) {
 				s.addEntry("onlydisplayin", this.onlydisplayin);
 			}
-			if (this.clicksound != null) {
-				s.addEntry("clicksound", this.clicksound);
+			if (this.customizationContainer.clickSound != null) {
+				s.addEntry("clicksound", this.customizationContainer.clickSound);
 			}
-			if (this.description != null) {
-				s.addEntry("description", this.description);
+			if (this.customizationContainer.buttonDescription != null) {
+				s.addEntry("description", this.customizationContainer.buttonDescription);
 			}
+
+			this.addVisibilityPropertiesTo(s);
+
 			l.add(s);
 		}
-		
+
 		return l;
 	}
-	
+
 }

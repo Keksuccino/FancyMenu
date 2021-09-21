@@ -30,8 +30,8 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 						this.texture = TextureHandler.getWebResource(this.value);
 
 						if ((this.texture == null) || !this.texture.isReady()) {
-							this.width = 100;
-							this.height = 100;
+							this.setWidth(100);
+							this.setHeight(100);
 							return;
 						}
 						
@@ -40,12 +40,12 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 						double ratio = (double) w / (double) h;
 
 						//Calculate missing width
-						if ((this.width < 0) && (this.height >= 0)) {
-							this.width = (int)(this.height * ratio);
+						if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+							this.setWidth((int)(this.getHeight() * ratio));
 						}
 						//Calculate missing height
-						if ((this.height < 0) && (this.width >= 0)) {
-							this.height = (int)(this.width / ratio);
+						if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+							this.setHeight((int)(this.getWidth() / ratio));
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -76,10 +76,10 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			GlStateManager.disableBlend();
 		}
 	}
-	
+
 	@Override
 	public boolean shouldRender() {
-		if ((this.width < 0) || (this.height < 0)) {
+		if ((this.getWidth() < 0) || (this.getHeight() < 0)) {
 			return false;
 		}
 		return super.shouldRender();

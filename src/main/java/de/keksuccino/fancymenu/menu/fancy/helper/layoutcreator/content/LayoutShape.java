@@ -99,6 +99,8 @@ public class LayoutShape extends LayoutElement {
 				s.addEntry("y", "" + this.object.posY);
 				s.addEntry("height", "" + this.object.height);
 			}
+
+			this.addVisibilityPropertiesTo(s);
 			
 			l.add(s);
 		}

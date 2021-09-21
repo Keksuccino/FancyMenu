@@ -219,6 +219,9 @@ public class LayoutWebString extends LayoutElement {
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("multiline", "" + this.getObject().multiline);
 		p1.addEntry("alignment", this.getObject().alignment.key);
+
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
 		
 		return l;

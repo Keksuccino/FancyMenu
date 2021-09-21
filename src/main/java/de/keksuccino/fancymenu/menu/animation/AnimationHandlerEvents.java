@@ -7,6 +7,7 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiScreenResourcePacks;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -33,6 +34,9 @@ public class AnimationHandlerEvents {
 			if (!AnimationHandler.isReady()) {
 				AnimationHandler.setupAnimations(e);
 			}
+
+			System.out.println("[FANCYMENU] Updating animation sizes..");
+			AnimationHandler.setupAnimationSizes();
 
 			//Pre-load animation frames to prevent them from lagging when rendered for the first time
 			if (FancyMenu.config.getOrDefault("preloadanimations", true)) {

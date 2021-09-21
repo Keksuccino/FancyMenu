@@ -42,8 +42,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase.RandomLayoutContainer;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase.SharedLayoutProperties;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
@@ -79,8 +78,8 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class MenuHandlerBase {
 
@@ -100,15 +99,15 @@ public class MenuHandlerBase {
 	protected double panoPos = 0.0;
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
+	protected boolean keepBackgroundAspectRatio = false;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
-	protected Map<ButtonData, String> vanillaClickSounds = new HashMap<ButtonData, String>();
-	protected Map<ButtonData, String> vanillaIdleTextures = new HashMap<ButtonData, String>();
-	protected Map<ButtonData, String> vanillaHoverTextures = new HashMap<ButtonData, String>();
+	protected Map<GuiButton, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<GuiButton, ButtonCustomizationContainer>();
+	protected Map<GuiButton, VisibilityRequirementContainer> vanillaButtonVisibilityRequirementContainers = new HashMap<GuiButton, VisibilityRequirementContainer>();
 
 	protected Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
 	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<ButtonData, Float>();
@@ -353,6 +352,12 @@ public class MenuHandlerBase {
 			}
 		}
 
+		//Unused
+		//Handle auto scaling
+		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
+			// EMPTY ------------
+		}
+
 	}
 	
 	protected void applyLayoutPre(PropertiesSection sec, GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -390,6 +395,18 @@ public class MenuHandlerBase {
 						e.getGui().height = res.getScaledHeight();
 						this.sharedLayoutProps.scaled = true;
 					}
+				}
+			}
+
+			//Unused
+			if (action.equalsIgnoreCase("autoscale")) {
+				String baseWidth = sec.getEntryValue("basewidth");
+				if (MathUtils.isInteger(baseWidth)) {
+					this.sharedLayoutProps.autoScaleBaseWidth = Integer.parseInt(baseWidth);
+				}
+				String baseHeight = sec.getEntryValue("baseheight");
+				if (MathUtils.isInteger(baseHeight)) {
+					this.sharedLayoutProps.autoScaleBaseHeight = Integer.parseInt(baseHeight);
 				}
 			}
 		}
@@ -439,9 +456,8 @@ public class MenuHandlerBase {
 		this.buttonAlphas.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
-		this.vanillaClickSounds.clear();
-		this.vanillaIdleTextures.clear();
-		this.vanillaHoverTextures.clear();
+		this.vanillaButtonCustomizations.clear();
+		this.vanillaButtonVisibilityRequirementContainers.clear();
 		audio.clear();
 		frontRenderItems.clear();
 		backgroundRenderItems.clear();
@@ -529,9 +545,29 @@ public class MenuHandlerBase {
 			}
 		}
 
+		//Handle vanilla button visibility requirements
+		for (Map.Entry<GuiButton, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
+			m.getKey().visible = m.getValue().isVisible();
+		}
+
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
-				this.handleVanillaAppearanceDelayFor(m.getKey());
+				if (this.visibilityRequirementsMet(m.getKey().getButton())) {
+					this.handleVanillaAppearanceDelayFor(m.getKey());
+				}
+			}
+		}
+
+		//Cache custom buttons
+		ButtonCache.clearCustomButtonCache();
+		for (CustomizationItemBase c : this.backgroundRenderItems) {
+			if (c instanceof ButtonCustomizationItem) {
+				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
+			}
+		}
+		for (CustomizationItemBase c : this.frontRenderItems) {
+			if (c instanceof ButtonCustomizationItem) {
+				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
 			}
 		}
 		
@@ -548,6 +584,13 @@ public class MenuHandlerBase {
 				bd = getButton(identifier);
 				if (bd != null) {
 					b = bd.getButton();
+				}
+			}
+
+			if (action.equalsIgnoreCase("backgroundoptions")) {
+				String keepAspect = sec.getEntryValue("keepaspectratio");
+				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
+					this.keepBackgroundAspectRatio = true;
 				}
 			}
 
@@ -688,10 +731,8 @@ public class MenuHandlerBase {
 			}
 
 			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
-				String value = sec.getEntryValue("value");
-				if ((value != null) && (b != null)) {
-					value = DynamicValueHelper.convertFromRaw(value);
-					b.displayString = value;
+				if (b != null) {
+					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 				}
 			}
 
@@ -784,11 +825,31 @@ public class MenuHandlerBase {
 
 			if (action.equalsIgnoreCase("setbuttontexture")) {
 				if (b != null) {
+					String loopBackAnimations = sec.getEntryValue("loopbackgroundanimations");
+					if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
+						this.getContainerForVanillaButton(b).loopAnimation = false;
+					}
+					String restartBackAnimationsOnHover = sec.getEntryValue("restartbackgroundanimations");
+					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
+						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
+					}
 					String backNormal = sec.getEntryValue("backgroundnormal");
 					String backHover = sec.getEntryValue("backgroundhovered");
-					if ((backNormal != null) && (backHover != null)) {
-						this.vanillaIdleTextures.put(bd, backNormal);
-						this.vanillaHoverTextures.put(bd, backHover);
+					if (backNormal != null) {
+						this.getContainerForVanillaButton(b).normalBackground = backNormal;
+					} else {
+						String backAniNormal = sec.getEntryValue("backgroundanimationnormal");
+						if (backAniNormal != null) {
+							this.getContainerForVanillaButton(b).normalBackground = "animation:" + backAniNormal;
+						}
+					}
+					if (backHover != null) {
+						this.getContainerForVanillaButton(b).hoverBackground = backHover;
+					} else {
+						String backAniHover = sec.getEntryValue("backgroundanimationhovered");
+						if (backAniHover != null) {
+							this.getContainerForVanillaButton(b).hoverBackground = "animation:" + backAniHover;
+						}
 					}
 				}
 			}
@@ -797,8 +858,14 @@ public class MenuHandlerBase {
 				if (b != null) {
 					String path = sec.getEntryValue("path");
 					if (path != null) {
-						this.vanillaClickSounds.put(bd, path);
+						this.getContainerForVanillaButton(b).clickSound = path;
 					}
+				}
+			}
+
+			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
+				if (b != null) {
+					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd).visibilityRequirementContainer);
 				}
 			}
 
@@ -829,7 +896,9 @@ public class MenuHandlerBase {
 						for (int i = 0; i < Integer.parseInt(clicks); i++) {
 							b.mousePressed(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY());
 							try {
-								Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
+								//TODO reflection method
+								//Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
+								Method m = ObfuscationReflectionHelper.findMethod(GuiScreen.class, "func_146284_a", Void.class, GuiButton.class);
 								m.invoke(Minecraft.getMinecraft().currentScreen, b);
 							} catch (Exception ex) {
 								ex.printStackTrace();
@@ -1193,15 +1262,50 @@ public class MenuHandlerBase {
 			if (this.canRenderBackground()) {
 				if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
 					boolean b = this.backgroundAnimation.isStretchedToStreensize();
-					this.backgroundAnimation.setStretchImageToScreensize(true);
+					int wOri = this.backgroundAnimation.getWidth();
+					int hOri = this.backgroundAnimation.getHeight();
+					int xOri = this.backgroundAnimation.getPosX();
+					int yOri = this.backgroundAnimation.getPosY();
+					if (!this.keepBackgroundAspectRatio) {
+						this.backgroundAnimation.setStretchImageToScreensize(true);
+					} else {
+						double ratio = (double) wOri / (double) hOri;
+						int wfinal = (int)(s.height * ratio);
+						int screenCenterX = s.width / 2;
+						if (wfinal < s.width) {
+							this.backgroundAnimation.setStretchImageToScreensize(true);
+						} else {
+							this.backgroundAnimation.setWidth(wfinal + 1);
+							this.backgroundAnimation.setHeight(s.height + 1);
+							this.backgroundAnimation.setPosX(screenCenterX - (wfinal / 2));
+							this.backgroundAnimation.setPosY(0);
+						}
+					}
 					this.backgroundAnimation.render();
+					this.backgroundAnimation.setWidth(wOri);
+					this.backgroundAnimation.setHeight(hOri);
+					this.backgroundAnimation.setPosX(xOri);
+					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
 				} else if (this.backgroundTexture != null) {
 					GlStateManager.enableBlend();
 					Minecraft.getMinecraft().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
 
 					if (!this.panoramaback) {
-						Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+						if (!this.keepBackgroundAspectRatio) {
+							Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+						} else {
+							int w = this.backgroundTexture.getWidth();
+							int h = this.backgroundTexture.getHeight();
+							double ratio = (double) w / (double) h;
+							int wfinal = (int)(s.height * ratio);
+							int screenCenterX = s.width / 2;
+							if (wfinal < s.width) {
+								Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							} else {
+								Gui.drawModalRectWithCustomSizedTexture(screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
+							}
+						}
 					} else {
 						int w = this.backgroundTexture.getWidth();
 						int h = this.backgroundTexture.getHeight();
@@ -1264,19 +1368,34 @@ public class MenuHandlerBase {
 					this.panoramacube.render();
 
 				} else if (this.slideshow != null) {
-					
+
 					int sw = this.slideshow.width;
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
-					
-					this.slideshow.height = s.height;
-					this.slideshow.width = s.width;
-					this.slideshow.x = 0;
+
+					if (!this.keepBackgroundAspectRatio) {
+						this.slideshow.width = s.width + 1;
+						this.slideshow.height = s.height +1;
+						this.slideshow.x = 0;
+					} else {
+						double ratio = (double) sw / (double) sh;
+						int wfinal = (int)(s.height * ratio);
+						int screenCenterX = s.width / 2;
+						if (wfinal < s.width) {
+							this.slideshow.width = s.width + 1;
+							this.slideshow.height = s.height +1;
+							this.slideshow.x = 0;
+						} else {
+							this.slideshow.width = wfinal + 1;
+							this.slideshow.height = s.height +1;
+							this.slideshow.x = screenCenterX - (wfinal / 2);
+						}
+					}
 					this.slideshow.y = 0;
-					
+
 					this.slideshow.render();
-					
+
 					this.slideshow.width = sw;
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
@@ -1306,31 +1425,27 @@ public class MenuHandlerBase {
 
 	@SubscribeEvent
 	public void onButtonClickSound(PlayWidgetClickSoundEvent.Pre e) {
-		
+
 		if (this.shouldCustomize(Minecraft.getMinecraft().currentScreen)) {
 			if (MenuCustomization.isMenuCustomizable(Minecraft.getMinecraft().currentScreen)) {
 
-				//Handle vanilla button click sounds
-				for (Map.Entry<ButtonData, String> m : this.vanillaClickSounds.entrySet()) {
+				ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(e.getWidget());
 
-					if (m.getKey().getButton() == e.getWidget()) {
-						File f = new File(m.getValue());
-
+				if (c != null) {
+					if (c.clickSound != null) {
+						File f = new File(c.clickSound);
 						if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
 
 							SoundHandler.registerSound(f.getPath(), f.getPath());
 							SoundHandler.resetSound(f.getPath());
 							SoundHandler.playSound(f.getPath());
 
+							e.setCanceled(true);
+
 						}
-
-						e.setCanceled(true);
-
-						break;
 					}
-
 				}
-				
+
 			}
 		}
 
@@ -1338,73 +1453,176 @@ public class MenuHandlerBase {
 
 	@SubscribeEvent
 	public void onButtonRenderBackground(RenderWidgetBackgroundEvent.Pre e) {
-
 		if (this.shouldCustomize(Minecraft.getMinecraft().currentScreen)) {
 			if (MenuCustomization.isMenuCustomizable(Minecraft.getMinecraft().currentScreen)) {
 
-				//Handle custom vanilla button background textures
-				for (Map.Entry<ButtonData, String> m : this.vanillaIdleTextures.entrySet()) {
-
-					GuiButton w = m.getKey().getButton();
-
-					if (w == e.getWidget()) {
-						String idle = m.getValue();
-						String hover = this.vanillaHoverTextures.get(m.getKey());
-
-						if ((hover != null) && (idle != null)) {
-							ExternalTextureResourceLocation idleR = TextureHandler.getResource(idle);
-							ExternalTextureResourceLocation hoverR = TextureHandler.getResource(hover);
-
-							if ((idleR != null) && (hoverR != null)) {
-
-								if (!idleR.isReady()) {
-									idleR.loadTexture();
-								}
-								if (!hoverR.isReady()) {
-									hoverR.loadTexture();
-								}
-
-								if (w.isMouseOver()) {
-									if (w.enabled) {
-										Minecraft.getMinecraft().getTextureManager().bindTexture(hoverR.getResourceLocation());
-									} else {
-										Minecraft.getMinecraft().getTextureManager().bindTexture(idleR.getResourceLocation());
-									}
-								} else {
-									Minecraft.getMinecraft().getTextureManager().bindTexture(idleR.getResourceLocation());
-								}
-								GlStateManager.enableBlend();
-								GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
-								Gui.drawModalRectWithCustomSizedTexture(w.x, w.y, 0.0F, 0.0F, w.width, w.height, w.width, w.height);
-
-								if ((w instanceof GuiButtonImage) || (w instanceof GuiButtonLanguage)) {
-									String msg = w.displayString;
-									if (msg != null) {
-										int j = 14737632;
-										if (w.packedFGColour != 0) {
-							                j = w.packedFGColour;
-							            } else if (!w.enabled) {
-							                j = 10526880;
-							            } else if (w.isMouseOver()) {
-							                j = 16777120;
-							            }
-										w.drawCenteredString(Minecraft.getMinecraft().fontRenderer, msg, w.x + w.width / 2, w.y + (w.height - 8) / 2, j | MathHelper.ceil(e.getAlpha() * 255.0F) << 24);
+				GuiButton w = e.getWidget();
+				ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
+				if (c != null) {
+					String normalBack = c.normalBackground;
+					String hoverBack = c.hoverBackground;
+					boolean hasCustomBackground = false;
+					if (c.lastHoverState != w.isMouseOver()) {
+						if (w.isMouseOver()) {
+							if (c.restartAnimationOnHover) {
+								for (IAnimationRenderer i : c.cachedAnimations) {
+									if (i != null) {
+										i.resetAnimation();
 									}
 								}
-								
-								e.setCanceled(true);
-
 							}
+						}
+					}
+					c.lastHoverState = w.isMouseOver();
 
+					if (!w.isMouseOver()) {
+						if (normalBack != null) {
+							if (this.renderCustomButtomBackground(e, normalBack)) {
+								hasCustomBackground = true;
+							}
+						}
+					}
+
+					if (w.isMouseOver()) {
+						if (w.enabled) {
+							if (hoverBack != null) {
+								if (this.renderCustomButtomBackground(e, hoverBack)) {
+									hasCustomBackground = true;
+								}
+							}
+						} else {
+							if (normalBack != null) {
+								if (this.renderCustomButtomBackground(e, normalBack)) {
+									hasCustomBackground = true;
+								}
+							}
+						}
+					}
+
+					if (hasCustomBackground) {
+						if ((w instanceof GuiButtonImage) || (w instanceof GuiButtonLanguage)) {
+							String msg = w.displayString;
+							if (msg != null) {
+								int j = 14737632;
+								if (w.packedFGColour != 0) {
+									j = w.packedFGColour;
+								} else if (!w.enabled) {
+									j = 10526880;
+								} else if (w.isMouseOver()) {
+									j = 16777120;
+								}
+								w.drawCenteredString(Minecraft.getMinecraft().fontRenderer, msg, w.x + w.width / 2, w.y + (w.height - 8) / 2, j | MathHelper.ceil(e.getAlpha() * 255.0F) << 24);
+							}
 						}
 
-						break;
+						e.setCanceled(true);
 					}
 
 				}
+
 			}
 		}
+	}
 
+	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background) {
+		GuiButton w = e.getWidget();
+		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
+		if (c != null) {
+			if (w != null) {
+				if (background != null) {
+					if (background.startsWith("animation:")) {
+						String aniName = background.split("[:]", 2)[1];
+						if (AnimationHandler.animationExists(aniName)) {
+							IAnimationRenderer a = AnimationHandler.getAnimation(aniName);
+							this.renderBackgroundAnimation(e, a);
+							if (!c.cachedAnimations.contains(a)) {
+								c.cachedAnimations.add(a);
+							}
+							return true;
+						}
+					} else {
+						File f = new File(background);
+						if (f.isFile()) {
+							if (f.getPath().toLowerCase().endsWith(".gif")) {
+								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+								this.renderBackgroundAnimation(e, a);
+								if (!c.cachedAnimations.contains(a)) {
+									c.cachedAnimations.add(a);
+								}
+								return true;
+							} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+								ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+								if (back != null) {
+									RenderUtils.bindTexture(back.getResourceLocation());
+									GlStateManager.enableBlend();
+									GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
+									Gui.drawModalRectWithCustomSizedTexture(w.x, w.y, 0.0F, 0.0F, w.width, w.height, w.width, w.height);
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	protected void renderBackgroundAnimation(RenderWidgetBackgroundEvent e, IAnimationRenderer ani) {
+		GuiButton w = e.getWidget();
+		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
+		if (c != null) {
+			if (ani != null) {
+				if (!ani.isReady()) {
+					ani.prepareAnimation();
+				}
+
+				int aniX = ani.getPosX();
+				int aniY = ani.getPosY();
+				int aniWidth = ani.getWidth();
+				int aniHeight = ani.getHeight();
+				boolean aniLoop = ani.isGettingLooped();
+
+				ani.setPosX(w.x);
+				ani.setPosY(w.y);
+				ani.setWidth(w.width);
+				ani.setHeight(w.height);
+				ani.setLooped(c.loopAnimation);
+				ani.setOpacity(e.getAlpha());
+				if (ani instanceof AdvancedAnimation) {
+					((AdvancedAnimation) ani).setMuteAudio(true);
+				}
+
+				ani.render();
+
+				ani.setPosX(aniX);
+				ani.setPosY(aniY);
+				ani.setWidth(aniWidth);
+				ani.setHeight(aniHeight);
+				ani.setLooped(aniLoop);
+				ani.setOpacity(1.0F);
+				if (ani instanceof AdvancedAnimation) {
+					((AdvancedAnimation) ani).setMuteAudio(false);
+				}
+			}
+		}
+	}
+
+	protected ButtonCustomizationContainer getContainerForVanillaButton(GuiButton w) {
+		if (!this.vanillaButtonCustomizations.containsKey(w)) {
+			ButtonCustomizationContainer c = new ButtonCustomizationContainer();
+			this.vanillaButtonCustomizations.put(w, c);
+			return c;
+		}
+		return this.vanillaButtonCustomizations.get(w);
+	}
+
+	protected boolean visibilityRequirementsMet(GuiButton b) {
+		VisibilityRequirementContainer c = this.vanillaButtonVisibilityRequirementContainers.get(b);
+		if (c != null) {
+			return c.isVisible();
+		}
+		return true;
 	}
 
 	@SubscribeEvent
@@ -1618,11 +1836,33 @@ public class MenuHandlerBase {
 	public static class SharedLayoutProperties {
 		
 		public boolean scaled = false;
+		public int autoScaleBaseWidth = 0;
+		public int autoScaleBaseHeight = 0;
 		public boolean backgroundTextureSet = false;
 		public boolean openAudioSet = false;
 		public boolean closeAudioSet = false;
 		public Map<ButtonData, String> descriptions = new HashMap<ButtonData, String>();
 		
+	}
+
+	public static class ButtonCustomizationContainer {
+
+		public String normalBackground = null;
+		public String hoverBackground = null;
+		public boolean loopAnimation = true;
+		public boolean restartAnimationOnHover = true;
+		public String clickSound = null;
+		public String hoverSound = null;
+		public String hoverLabel = null;
+		public int autoButtonClicks = 0;
+		public String customButtonLabel = null;
+		public String buttonDescription = null;
+		public boolean isButtonHidden = false;
+		public VisibilityRequirementContainer visibilityRequirementContainer = null;
+
+		public List<IAnimationRenderer> cachedAnimations = new ArrayList<IAnimationRenderer>();
+		public boolean lastHoverState = false;
+
 	}
 
 }

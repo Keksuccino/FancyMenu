@@ -17,19 +17,15 @@ public class StringCustomizationItem extends CustomizationItemBase {
 	public float scale = 1.0F;
 	public boolean shadow = false;
 	public Alignment alignment = Alignment.LEFT;
+
+	public String valueRaw;
 	
 	public StringCustomizationItem(PropertiesSection item) {
 		super(item);
 
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtext")) {
-			this.value = item.getEntryValue("value");
-			if (this.value != null) {
-				if (!isEditorActive()) {
-					this.value = DynamicValueHelper.convertFromRaw(this.value);
-				} else {
-					this.value = StringUtils.convertFormatCodes(this.value, "&", "§");
-				}
-			}
+			this.valueRaw = item.getEntryValue("value");
+			this.updateValue();
 			
 			String sh = item.getEntryValue("shadow");
 			if ((sh != null)) {
@@ -56,10 +52,27 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
+	protected void updateValue() {
+
+		if (this.valueRaw != null) {
+			if (!isEditorActive()) {
+				this.value = DynamicValueHelper.convertFromRaw(this.valueRaw);
+			} else {
+				this.value = StringUtils.convertFormatCodes(this.valueRaw, "&", "§");
+			}
+		}
+
+		this.width = (int) (Minecraft.getMinecraft().fontRenderer.getStringWidth(this.value) * this.scale);
+		this.height = (int) (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT * this.scale);
+
+	}
+
 	public void render(GuiScreen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}
+
+		this.updateValue();
 		
 		int x = this.getPosX(menu);
 		int y = this.getPosY(menu);

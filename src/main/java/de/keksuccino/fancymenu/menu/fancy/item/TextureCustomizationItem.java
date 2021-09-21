@@ -46,15 +46,15 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 						}
 						
 						ratio = (double) w / (double) h;
-					    
-					    //Calculate missing width
-					    if ((this.width < 0) && (this.height >= 0)) {
-					    	this.width = (int)(this.height * ratio);
-					    }
-					    //Calculate missing height
-					    if ((this.height < 0) && (this.width >= 0)) {
-					    	this.height = (int)(this.width / ratio);
-					    }
+
+						//Calculate missing width
+						if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+							this.setWidth((int)(this.getHeight() * ratio));
+						}
+						//Calculate missing height
+						if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+							this.setHeight((int)(this.getWidth() / ratio));
+						}
 						
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -82,8 +82,8 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				
 				this.gif.setPosX(x);
 				this.gif.setPosY(y);
-				this.gif.setWidth(this.width);
-				this.gif.setHeight(this.height);
+				this.gif.setWidth(this.getWidth());
+				this.gif.setHeight(this.getHeight());
 
 				this.gif.setOpacity(this.opacity);
 
@@ -115,7 +115,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 		if ((this.texture == null) && (this.gif == null)) {
 			return false;
 		}
-		if ((this.width < 0) || (this.height < 0)) {
+		if ((this.getWidth() < 0) || (this.getHeight() < 0)) {
 			return false;
 		}
 		return super.shouldRender();

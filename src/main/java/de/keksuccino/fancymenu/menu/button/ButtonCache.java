@@ -20,6 +20,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiVideoSettings;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ButtonCache {
@@ -29,6 +30,7 @@ public class ButtonCache {
 	private static GuiScreen current = null;
 	private static boolean cached = false;
 	private static boolean caching = false;
+	private static Map<String, GuiButton> customButtons = new HashMap<String, GuiButton>();
 	
 	@SubscribeEvent
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
@@ -146,13 +148,15 @@ public class ButtonCache {
 			}
 		}
 	}
-	
+
+	//TODO reflection
 	private static List<ButtonData> cacheButtons(GuiScreen s, int screenWidth, int screenHeight) {
 		caching = true;
 		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
 		try {
 			//Resetting the button list
-			Field f0 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			//Field f0 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			Field f0 = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 			((List<GuiButton>)f0.get(s)).clear();
 
 			//Setting all important values for the GuiScreen to allow it to initialize itself
@@ -160,10 +164,12 @@ public class ButtonCache {
 			s.width = screenWidth;
 			s.height = screenHeight;
 			//itemRender field
-			Field f1 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "itemRender", "field_146296_j");
+			//Field f1 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "itemRender", "field_146296_j");
+			Field f1 = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146296_j"); //itemRenderer
 			f1.set(s, Minecraft.getMinecraft().getRenderItem());
 			//fontRenderer field
-			Field f2 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "fontRenderer", "field_146289_q");
+			//Field f2 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "fontRenderer", "field_146289_q");
+			Field f2 = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146289_q"); //fontRenderer
 			f2.set(s, Minecraft.getMinecraft().fontRenderer);
 
 			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Pre(s, (List<GuiButton>) f0.get(s)));
@@ -173,7 +179,8 @@ public class ButtonCache {
 			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Post(s, (List<GuiButton>) f0.get(s)));
 
 			//Reflecting the buttons list field to cache all buttons of the menu
-			Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+			Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 
 			for (GuiButton w : (List<GuiButton>) f.get(s)) {
 				String idRaw = w.x + "" + w.y;
@@ -196,7 +203,9 @@ public class ButtonCache {
 		GuiButton ori = null;
 		if ((d != null) && (current != null)) {
 			try {
-				Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+				//TODO reflection
+				//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+				Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 				List<GuiButton> l = (List<GuiButton>) f.get(current);
 				List<GuiButton> l2 = new ArrayList<GuiButton>();
 				
@@ -306,23 +315,21 @@ public class ButtonCache {
 		b.addAll(buttons.values());
 		return b;
 	}
-	
-//	private static void clickButton(GuiButton b) {
-//		b.mousePressed(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY());
-//		
-//		try {
-//			Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
-//			m.invoke(Minecraft.getMinecraft().currentScreen, b);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-	
-	/**
-	 * MC 1.12 exclusive
-	 */
+
 	public static boolean isCaching() {
 		return caching;
+	}
+
+	public static void clearCustomButtonCache() {
+		customButtons.clear();
+	}
+
+	public static void cacheCustomButton(String id, GuiButton w) {
+		customButtons.put(id, w);
+	}
+
+	public static GuiButton getCustomButton(String id) {
+		return customButtons.get(id);
 	}
 
 }

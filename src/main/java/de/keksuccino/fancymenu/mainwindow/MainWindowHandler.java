@@ -16,11 +16,16 @@ import net.minecraft.client.gui.ScaledResolution;
 public class MainWindowHandler {
 
 	private static File icondir = new File("config/fancymenu/minecraftwindow/icons");
+
+	private static int scale = 1;
+	private static boolean isScaleSet = false;
 	
 	public static void init() {
+
 		if (!icondir.exists()) {
 			icondir.mkdirs();
 		}
+
 	}
 	
 	public static void updateWindowIcon() {
@@ -116,14 +121,23 @@ public class MainWindowHandler {
 		ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
 		return res.getScaledHeight();
 	}
-	
-	public static void updateFramebufferSize() {
-		Minecraft mc = Minecraft.getMinecraft();
-		mc.getFramebuffer().createBindFramebuffer(mc.displayWidth, mc.displayHeight);
 
-		if (mc.entityRenderer != null) {
-			mc.entityRenderer.updateShaderGroupSize(mc.displayWidth, mc.displayHeight);
-		}
+	public static void setGuiScale(int scale) {
+		MainWindowHandler.scale = scale;
+		isScaleSet = true;
+	}
+
+	public static int getGuiScale() {
+		return scale;
+	}
+
+	public static void resetGuiScale() {
+		scale = 1;
+		isScaleSet = false;
+	}
+
+	public static boolean isGuiScaleSet() {
+		return isScaleSet;
 	}
 
 }

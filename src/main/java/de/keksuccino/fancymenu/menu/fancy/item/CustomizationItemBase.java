@@ -5,8 +5,10 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -37,6 +39,8 @@ public abstract class CustomizationItemBase extends Gui {
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
+
+	public VisibilityRequirementContainer visibilityRequirementContainer;
 	
 	protected String actionId;
 	
@@ -122,6 +126,9 @@ public abstract class CustomizationItemBase extends Gui {
 				this.height = 0;
 			}
 		}
+
+		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
+
 	}
 
 	public abstract void render(GuiScreen menu) throws IOException;
@@ -190,9 +197,12 @@ public abstract class CustomizationItemBase extends Gui {
 		
 		return y;
 	}
-	
+
 	public boolean shouldRender() {
 		if (this.value == null) {
+			return false;
+		}
+		if (!this.visibilityRequirementsMet()) {
 			return false;
 		}
 		return this.visible;
@@ -201,9 +211,36 @@ public abstract class CustomizationItemBase extends Gui {
 	public String getActionId() {
 		return this.actionId;
 	}
-	
+
+	public void setActionId(String id) {
+		this.actionId = id;
+	}
+
 	protected static boolean isEditorActive() {
-		return LayoutEditorScreen.isActive;
+		return (Minecraft.getMinecraft().currentScreen instanceof LayoutEditorScreen);
+	}
+
+	protected boolean visibilityRequirementsMet() {
+		if (isEditorActive()) {
+			return true;
+		}
+		return this.visibilityRequirementContainer.isVisible();
+	}
+
+	public int getWidth() {
+		return this.width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return this.height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 	}
 
 	public static enum Alignment {

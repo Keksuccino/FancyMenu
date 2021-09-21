@@ -217,7 +217,9 @@ public class LayoutSplashText extends LayoutElement {
 		p1.addEntry("basecolor", this.getObject().basecolorString);
 		p1.addEntry("refresh", "" + this.getObject().refreshOnMenuReload);
 		p1.addEntry("bouncing", "" + this.getObject().bounce);
-		
+
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
 		
 		return l;

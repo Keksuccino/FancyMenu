@@ -1,12 +1,18 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.IOException;
 
+import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
@@ -16,34 +22,83 @@ import net.minecraft.util.ResourceLocation;
  */
 public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 
-	private ResourceLocation texture = null;
-	
-	public LayoutButtonDummyCustomizationItem(String label, int width, int height, int x, int y) {
+	protected MenuHandlerBase.ButtonCustomizationContainer button;
+
+	public LayoutButtonDummyCustomizationItem(MenuHandlerBase.ButtonCustomizationContainer button, String label, int width, int height, int x, int y) {
 		super(new PropertiesSection("customization"));
 		this.value = label;
 		this.action = "handlelayoutbutton";
-		this.width = width;
-		this.height = height;
+		this.setWidth(width);
+		this.setHeight(height);
 		this.posX = x;
 		this.posY = y;
+		this.button = button;
 	}
-	
+
 	@Override
 	public void render(GuiScreen menu) throws IOException {
+
 		GlStateManager.enableBlend();
-        if (this.texture == null) {
-        	Gui.drawRect(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.width, this.getPosY(menu) + this.height, new Color(138, 138, 138, 255).getRGB());
-        } else {
-        	Minecraft.getMinecraft().getTextureManager().bindTexture(this.texture);
-        	GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        	Gui.drawModalRectWithCustomSizedTexture(this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.width, this.height, this.width, this.height);
-        }
-        menu.drawCenteredString(Minecraft.getMinecraft().fontRenderer, this.value, this.getPosX(menu) + this.width / 2, this.getPosY(menu) + (this.height - 8) / 2, new Color(255, 255, 255, 255).getRGB());
-        GlStateManager.disableBlend();
-	}
-	
-	public void setTexture(ResourceLocation texture) {
-		this.texture = texture;
+
+		IAnimationRenderer animation = null;
+		ResourceLocation texture = null;
+		if (this.button.normalBackground != null) {
+			if (this.button.normalBackground.startsWith("animation:")) {
+				String aniName = this.button.normalBackground.split("[:]", 2)[1];
+				if (AnimationHandler.animationExists(aniName)) {
+					animation = AnimationHandler.getAnimation(aniName);
+					if (!animation.isReady()) {
+						animation.prepareAnimation();
+					}
+				}
+			} else {
+				File f = new File(this.button.normalBackground);
+				if (f.isFile()) {
+					if (f.getPath().toLowerCase().endsWith(".gif")) {
+						animation = TextureHandler.getGifResource(f.getPath());
+					} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+						ExternalTextureResourceLocation exTex = TextureHandler.getResource(f.getPath());
+						if (exTex != null) {
+							if (!exTex.isReady()) {
+								exTex.loadTexture();
+							}
+							texture = exTex.getResourceLocation();
+						}
+					}
+				}
+			}
+		}
+
+		if (texture != null) {
+			RenderUtils.bindTexture(texture);
+			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+			drawModalRectWithCustomSizedTexture(this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+		} else if (animation != null) {
+			int aniX = animation.getPosX();
+			int aniY = animation.getPosY();
+			int aniWidth = animation.getWidth();
+			int aniHeight = animation.getHeight();
+			boolean aniLoop = animation.isGettingLooped();
+
+			animation.setPosX(this.getPosX(menu));
+			animation.setPosY(this.getPosY(menu));
+			animation.setWidth(this.getWidth());
+			animation.setHeight(this.getHeight());
+			animation.setLooped(this.button.loopAnimation);
+
+			animation.render();
+
+			animation.setPosX(aniX);
+			animation.setPosY(aniY);
+			animation.setWidth(aniWidth);
+			animation.setHeight(aniHeight);
+			animation.setLooped(aniLoop);
+		} else {
+			drawRect(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());
+		}
+		drawCenteredString(Minecraft.getMinecraft().fontRenderer, this.value, this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, -1);
+		GlStateManager.disableBlend();
+
 	}
 
 }

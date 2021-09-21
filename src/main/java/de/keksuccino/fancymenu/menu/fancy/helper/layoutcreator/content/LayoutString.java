@@ -216,13 +216,14 @@ public class LayoutString extends LayoutElement {
 		this.setWidth((int)(Minecraft.getMinecraft().fontRenderer.getStringWidth(this.object.value)*scale));
 		this.setHeight((int)(7*scale));
 	}
-	
+
 	public void setText(String text) {
-		if (!this.getObject().value.equals(text)) {
+		if (!this.getObject().valueRaw.equals(text)) {
 			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 		}
-		
-		this.object.value = text;
+
+		this.getObject().valueRaw = text;
+		this.getObject().value = text;
 		this.setScale(this.getStringScale());
 	}
 	
@@ -280,6 +281,9 @@ public class LayoutString extends LayoutElement {
 		p1.addEntry("scale", "" + this.getObject().scale);
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("alignment", "" + this.getObject().alignment.key);
+
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
 		
 		return l;

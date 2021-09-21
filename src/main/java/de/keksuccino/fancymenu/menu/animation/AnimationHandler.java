@@ -461,5 +461,22 @@ public class AnimationHandler {
 	public static boolean isReady() {
 		return ready;
 	}
+
+	public static void setupAnimationSizes() {
+		for (IAnimationRenderer a : getAnimations()) {
+			if (a instanceof ResourcePackAnimationRenderer) {
+				((ResourcePackAnimationRenderer) a).setupAnimationSize();
+			} else if (a instanceof AdvancedAnimation) {
+				IAnimationRenderer main = ((AdvancedAnimation) a).getMainAnimationRenderer();
+				if ((main != null) && (main instanceof ResourcePackAnimationRenderer)) {
+					((ResourcePackAnimationRenderer) main).setupAnimationSize();
+				}
+				IAnimationRenderer intro = ((AdvancedAnimation) a).getIntroAnimationRenderer();
+				if ((intro != null) && (intro instanceof ResourcePackAnimationRenderer)) {
+					((ResourcePackAnimationRenderer) intro).setupAnimationSize();
+				}
+			}
+		}
+	}
 	
 }

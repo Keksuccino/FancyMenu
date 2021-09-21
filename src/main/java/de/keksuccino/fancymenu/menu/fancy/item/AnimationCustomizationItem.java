@@ -43,12 +43,12 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 			
 			this.renderer.setPosX(x);
 			this.renderer.setPosY(y);
-			
-			if (this.height > -1) {
-				this.renderer.setHeight(this.height);
+
+			if (this.getHeight() > -1) {
+				this.renderer.setHeight(this.getHeight());
 			}
-			if (this.width > -1) {
-				this.renderer.setWidth(this.width);
+			if (this.getWidth() > -1) {
+				this.renderer.setWidth(this.getWidth());
 			}
 			
 			this.renderer.render();
@@ -59,17 +59,17 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 			this.renderer.setHeight(cachedHeight);
 		}
 	}
-	
+
 	@Override
 	public AnimationCustomizationItem clone() {
 		AnimationCustomizationItem item = new AnimationCustomizationItem(new PropertiesSection(""));
-		item.height = this.height;
+		item.setHeight(this.getHeight());
 		item.orientation = this.orientation;
 		item.posX = this.posX;
 		item.posY = this.posY;
 		item.renderer = this.renderer;
 		item.value = this.value;
-		item.width = this.width;
+		item.setWidth(this.getWidth());
 		item.action = this.action;
 		return item;
 	}

@@ -10,8 +10,8 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiScreenWorking;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	 
@@ -54,34 +54,13 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
             
         }
 		
-//		TrackingChunkStatusListener tracker = getTracker(screen);
-//		FontRenderer font = Minecraft.getInstance().fontRenderer;
-//		int j = screen.width / 2;
-//		int k = screen.height / 2;
-//		String s = "";
-//		
-//		if (tracker != null) {
-//			s = MathHelper.clamp(getTracker(screen).getPercentDone(), 0, 100) + "%";
-//			long i = Util.milliTime();
-//			if (i - this.lastNarratorUpdateTime > 2000L) {
-//				this.lastNarratorUpdateTime = i;
-//				NarratorChatListener.INSTANCE.say((new TranslationTextComponent("narrator.loading", s)).getString());
-//			}
-//			
-//			if (FancyMenu.config.getOrDefault("showloadingscreenanimation", true)) {
-//				WorldLoadProgressScreen.func_238625_a_(matrix, getTracker(screen), j, k + 30, 2, 0);
-//			}
-//		}
-//		
-//		if (FancyMenu.config.getOrDefault("showloadingscreenpercent", true)) {
-//			AbstractGui.drawCenteredString(matrix, font, s, j, k - 9 / 2 - 30, 16777215);
-//		}
-		
 	}
 	
 	private static int getProgress(GuiScreen screen) {
 		try {
-			Field f = ReflectionHelper.findField(GuiScreenWorking.class, "progress", "");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "progress", "");
+			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146590_g"); //progress
 			return f.getInt(screen);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -91,7 +70,9 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static boolean getDoneWorking(GuiScreen screen) {
 		try {
-			Field f = ReflectionHelper.findField(GuiScreenWorking.class, "doneWorking", "");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "doneWorking", "");
+			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146592_h"); //doneWorking
 			return f.getBoolean(screen);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -101,7 +82,9 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static String getTitle(GuiScreen screen) {
 		try {
-			Field f = ReflectionHelper.findField(GuiScreenWorking.class, "title", "");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "title", "");
+			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146591_a"); //title
 			return (String) f.get(screen);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -111,7 +94,9 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static String getStage(GuiScreen screen) {
 		try {
-			Field f = ReflectionHelper.findField(GuiScreenWorking.class, "stage", "");
+			//TODO reflection
+			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "stage", "");
+			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146589_f"); //stage
 			return (String) f.get(screen);
 		} catch (Exception e) {
 			e.printStackTrace();

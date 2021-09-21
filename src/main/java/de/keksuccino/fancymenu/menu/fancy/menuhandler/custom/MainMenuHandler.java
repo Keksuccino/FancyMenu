@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.util.glu.Project;
 
@@ -54,7 +55,6 @@ import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 public class MainMenuHandler extends MenuHandlerBase {
 	
@@ -319,7 +319,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private void drawRealmsNotification(GuiScreen gui) {
 		if (Minecraft.getMinecraft().gameSettings.getOptionOrdinalValue(GameSettings.Options.REALMS_NOTIFICATIONS)) {
-			Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiMainMenu.class, "field_183503_M", "realmsNotification");
+			//TODO reflection
+			//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiMainMenu.class, "field_183503_M", "realmsNotification");
+			Field f = ObfuscationReflectionHelper.findField(GuiMainMenu.class, "field_183503_M"); //realmsNotification
 			GuiScreen realms = null;
 			try {
 				realms = (GuiScreen) f.get(gui);
@@ -333,7 +335,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	private List<GuiButton> getButtonList(GuiScreen gui) {
-		Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146292_n", "buttonList");
+		//TODO reflection
+		//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146292_n", "buttonList");
+		Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 		List<GuiButton> buttons = new ArrayList<GuiButton>();
 		try {
 			buttons = (List<GuiButton>) f.get(gui);
@@ -344,7 +348,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	private List<GuiLabel> getLabelList(GuiScreen gui) {
-		Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146293_o", "labelList");
+		//TODO reflection
+		//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146293_o", "labelList");
+		Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146293_o"); //labelList
 		List<GuiLabel> labels = new ArrayList<GuiLabel>();
 		try {
 			labels = (List<GuiLabel>) f.get(gui);
@@ -357,7 +363,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 	private void setWidthCopyrightRest(int i) {
 		try {
 			if (Minecraft.getMinecraft().currentScreen instanceof GuiMainMenu) {
-				Field f = ReflectionHelper.findField(GuiMainMenu.class, "field_193979_N", "widthCopyrightRest");
+				//TODO reflection
+				//Field f = ReflectionHelper.findField(GuiMainMenu.class, "field_193979_N", "widthCopyrightRest");
+				Field f = ObfuscationReflectionHelper.findField(GuiMainMenu.class, "field_193979_N"); //widthCopyrightRest
 				f.set(Minecraft.getMinecraft().currentScreen, i);
 			}
 		} catch (Exception e) {
@@ -501,7 +509,9 @@ public class MainMenuHandler extends MenuHandlerBase {
     }
     
     private static float getZlevel(Gui gui) {
-    	Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(Gui.class, "field_73735_i", "zLevel");
+		//TODO reflection
+    	//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(Gui.class, "field_73735_i", "zLevel");
+		Field f = ObfuscationReflectionHelper.findField(Gui.class, "field_73735_i"); //zLevel
     	try {
 			return f.getFloat(gui);
 		} catch (Exception e) {
