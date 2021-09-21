@@ -125,11 +125,6 @@ helper.creator.custombutton.config.actiontype.openfile.desc.value = Path
 helper.creator.custombutton.config.actiontype.prevbackground.desc = Switch to the previous menu background.
 helper.creator.custombutton.config.actiontype.nextbackground.desc = Switch to the next menu background.
 
-helper.creator.custombutton.config.texture = Button Texture
-helper.creator.custombutton.config.texture.normal = Normal
-helper.creator.custombutton.config.texture.hovered = Hovered
-helper.creator.custombutton.config.texture.reset = Reset Textures
-
 helper.creator.items.setorientation = Set Orientation
 helper.creator.items.delete = Delete
 helper.creator.items.border.posx = posX
@@ -244,7 +239,7 @@ helper.creator.custombutton.config.actiontype.opengui.desc.value = Menu Identifi
 helper.creator.popup.hidefor.delayeverytime = Delay Everytime
 helper.creator.popup.hidefor.delayfirsttime = Delay First Time
 
-helper.creator.windowsize = Windowsize Restricts
+helper.creator.windowsize = Window Size Restrictions
 helper.creator.windowsize.biggerthan = Bigger Than
 helper.creator.windowsize.smallerthan = Smaller Than
 helper.creator.windowsize.biggerthan.desc = Only Enable Layout if Window is Bigger Than X
@@ -297,8 +292,8 @@ helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = 
 helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = config/fancymenu/archive.zip;config/fancymenu/unpacked/
 helper.creator.custombutton.config.actiontype.runscript.desc.value.example = coolscript
 
-helper.creator.rightclick.scale = GUI Scale
-helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than zero!
+helper.creator.rightclick.scale = Force GUI Scale
+helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than 0!
 
 helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc = Mutes or unmutes the menu background sounds added by FancyMenu.
 helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc.value = true/false
@@ -736,6 +731,154 @@ fancymenu.helper.creator.backgroundoptions.backgroundanimation.set.desc = Sets t
 fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear = Clear
 fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear.desc = Removes the currently%n%active background animation.
 
+fancymenu.helper.editor.items.buttons.buttonbackground = Button Background
+fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground = Normal Background
+fancymenu.helper.editor.items.buttons.buttonbackground.hoverbackground = Hover Background
+fancymenu.helper.editor.items.buttons.buttonbackground.type.image = Image
+fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage = Choose Image
+fancymenu.helper.editor.items.buttons.buttonbackground.type.animation = Animation
+fancymenu.helper.editor.items.buttons.buttonbackground.type.animation.none = NONE
+fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on = Loop Background Animation: §aOn
+fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off = Loop Background Animation: §cOff
+fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc = Set the background animation to loop..or not.
+fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on = Restart On Hover: §aOn
+fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off = Restart On Hover: §cOff
+fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc = Restart the background animation on hover.
+
+fancymenu.helper.editor.items.visibilityrequirements = Visibility Requirements
+fancymenu.helper.editor.items.visibilityrequirements.btn.desc = Set requirements for the element to be visible.
+fancymenu.helper.editor.items.visibilityrequirements.enabled = {}: §aEnabled
+fancymenu.helper.editor.items.visibilityrequirements.disabled = {}: §cDisabled
+fancymenu.helper.editor.items.visibilityrequirements.toggle.btn.desc = §oLeftclick to toggle requirement.
+fancymenu.helper.editor.items.visibilityrequirements.showif = Show If
+fancymenu.helper.editor.items.visibilityrequirements.showif.btn.desc = Show element if condition is met.
+fancymenu.helper.editor.items.visibilityrequirements.showifnot = Show If Not
+fancymenu.helper.editor.items.visibilityrequirements.showifnot.btn.desc = Show element if condition is NOT met.
+fancymenu.helper.editor.items.visibilityrequirements.requirement = Requirement
+
+fancymenu.helper.editor.items.visibilityrequirements.singleplayer = Is Singleplayer
+fancymenu.helper.editor.items.visibilityrequirements.singleplayer.desc = Check if the user is in singleplayer.
+
+fancymenu.helper.editor.items.visibilityrequirements.multiplayer = Is Multiplayer
+fancymenu.helper.editor.items.visibilityrequirements.multiplayer.desc = Check if the user is in multiplayer.
+
+fancymenu.helper.editor.items.visibilityrequirements.worldloaded = Is World Loaded
+fancymenu.helper.editor.items.visibilityrequirements.worldloaded.desc = Check if a world is loaded.%n%%n%A world is loaded when the user%n%is in a SP or MP world.
+
+fancymenu.helper.editor.items.visibilityrequirements.realtimehour = Is Real Time Hour
+fancymenu.helper.editor.items.visibilityrequirements.realtimehour.desc = Check if the real time's current hour is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one hour%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.realtimehour.valuename = Real Time Hour(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.items.visibilityrequirements.realtimeminute = Is Real Time Minute
+fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.desc = Check if the real time's current minute is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one minute%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.valuename = Real Time Minute(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.items.visibilityrequirements.realtimesecond = Is Real Time Second
+fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.desc = Check if the real time's current second is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one second%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.valuename = Real Time Second(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth = Is Window Width
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc = Check if the window width is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one width%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename = Window Width(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.items.visibilityrequirements.windowheight = Is Window Height
+fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc = Check if the window height is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one height%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename = Window Height(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan = Is Window Width Bigger Than
+fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc = Check if the window width is bigger than X.
+fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.valuename = Window Width
+
+fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan = Is Window Height Bigger Than
+fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.desc = Check if the window height is bigger than X.
+fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.valuename = Window Height
+
+fancymenu.helper.editor.items.visibilityrequirements.buttonhovered = Is Button Hovered
+fancymenu.helper.editor.items.visibilityrequirements.buttonhovered.desc = Check if a specific button is hovered.%n%%n%§cTo get the element ID of a button,%n%§cright-click it and click 'Copy Element ID'.
+fancymenu.helper.editor.items.visibilityrequirements.buttonhovered.valuename = Element ID
+
+fancymenu.helper.editor.items.visibilityrequirements.language = Is Game Language
+fancymenu.helper.editor.items.visibilityrequirements.language.desc = Check for a specific game language.
+fancymenu.helper.editor.items.visibilityrequirements.language.valuename = Language ID
+
+fancymenu.helper.editor.items.visibilityrequirements.fullscreen = Is Fullscreen
+fancymenu.helper.editor.items.visibilityrequirements.fullscreen.desc = Check if the game window is fullscreen.
+
+fancymenu.helper.editor.items.visibilityrequirements.oswindows = Is OS Windows
+fancymenu.helper.editor.items.visibilityrequirements.oswindows.desc = Check if the operating system is Windows.
+
+fancymenu.helper.editor.items.visibilityrequirements.osmac = Is OS macOS
+fancymenu.helper.editor.items.visibilityrequirements.osmac.desc = Check if the operating system is macOS.
+
+fancymenu.helper.editor.items.visibilityrequirements.oslinux = Is OS Linux
+fancymenu.helper.editor.items.visibilityrequirements.oslinux.desc = Check if the operating system is Linux.
+
+fancymenu.helper.editor.items.visibilityrequirements.modloaded = Is Mod Loaded
+fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc = Check if a specific mod is loaded.%n%%n%You can separate multiple values by comma,%n%to check for more than one mod%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename = Mod ID(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.items.visibilityrequirements.serveronline = Is Server Online
+fancymenu.helper.editor.items.visibilityrequirements.serveronline.desc = Check if a specific server is online.
+fancymenu.helper.editor.items.visibilityrequirements.serveronline.valuename = Server IP
+
+fancymenu.helper.editor.items.copyid = Copy Element ID
+fancymenu.helper.editor.items.copyid.btn.desc = Copy the ID of this element, to use%n%it in visibility requirements, etc.
+
+fancymenu.helper.ui.dynamicvariabletextfield.variables.local = Localize Text
+fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace '<localization.key>' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.de%n%%n%§lExample:%n%%local:some.local.key%
+
+fancymenu.config.showgrid = Show Grid
+fancymenu.config.showgrid.desc = Add a grid to the editor for easier aligning.
+fancymenu.config.gridsize = Grid Size
+fancymenu.config.gridsize.desc = The inner size of one grid square.
+
+fancymenu.helper.editor.properties.scale.btn.desc = Force a GUI scale for this menu.%n%%n%This will override the scale%n%set in the Minecraft settings.%n%%n%§cOnly overrides the scale for the specific menu,%n%§cnot all menus.
+
+fancymenu.helper.editor.properties.autoscale.on = Layout Auto-Scaling: §aOn
+fancymenu.helper.editor.properties.autoscale.off = Layout Auto-Scaling: §cOff
+fancymenu.helper.editor.properties.autoscale.btn.desc = Let FancyMenu handle the scale of%n%the menu, so your layout works for%n%every scale and resolution.%n%%n%§cThis will make text elements look%n%§cblurry at some scales.%n%§cThis can't be fixed and the best%n%§cworkaround is to use images%n%§cwith background as text elements.
+fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1 = Here you can set the base window size of your layout.
+fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2 = This should be the size your layout was designed for.
+fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3 = If you made it in the current window size, just leave the values like they are.
+fancymenu.helper.editor.properties.autoscale.error = §c§lSomething went wront!%n%%n%Setting base size for auto-scaling failed!%n%Please check if both values are §lbigger than 0%n%and that they are §lvalid numbers§r.%n% %n% %n% %n% %n%
+
+fancymenu.helper.ui.dynamicvariabletextfield.categories.other = Other
+fancymenu.helper.ui.dynamicvariabletextfield.categories.server = Server
+fancymenu.helper.ui.dynamicvariabletextfield.categories.realtime = Real Life Time
+fancymenu.helper.ui.dynamicvariabletextfield.categories.player = Player
+fancymenu.helper.ui.dynamicvariabletextfield.categories.client = Client
+
+fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeyear = Year
+fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimemonth = Month
+fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeday = Day
+fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimehour = Hour
+fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeminute = Minute
+fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimesecond = Second
+
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd = Server MOTD
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd.desc = Gets the MOTD of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%servermotd:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping = Server PING
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping.desc = Gets the current ping to a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverping:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount = Server Players Count
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount.desc = Gets the player count of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverplayercount:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus = Server Status
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus.desc = Gets the status (online/offline) of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverstatus:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion = Server Version
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion.desc = Gets the MC version of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverversion:gommehd.net%
+
+fancymenu.helper.ui.dynamicvariabletextfield.variables.percentram = Currently Used RAM in %
+fancymenu.helper.ui.dynamicvariabletextfield.variables.usedram = Currently Used RAM in MB
+fancymenu.helper.ui.dynamicvariabletextfield.variables.maxram = Max RAM in MB
+
+fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground = Set Background
+fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc = Set an image, animation, panorama%n%or slideshow as background.
+fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.on = Keep Background Aspect Ratio: §aOn
+fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.off = Keep Background Aspect Ratio: §cOff
+fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.on = Slide Wide Background: §aOn
+fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.off = Slide Wide Background: §cOff
+fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.btn.desc = Slide the background image from%n%the left to the right window side,%n%if it has a wide format.%n%%n%§cOnly works for background images.%n%§cnot slideshows, animations or panorama cubes.
+fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear = Clear
+fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear.btn.desc = Removes the currently%n%active background image.
 
 
 

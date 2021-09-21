@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.menu.guiconstruction.instance;
 
 import java.lang.reflect.Constructor;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -12,47 +11,46 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.resource.ResourcePackProfile;
+import net.minecraft.text.TranslatableText;
 
 public class ResourcePacksScreenInstance extends GuiInstance {
 
 	public ResourcePacksScreenInstance(Constructor<?> con, List<Object> paras, Class<?> gui) {
 		super(con, paras, gui);
 	}
-	
-	@Override
+
 	protected void createInstance() {
 		try {
 
 			MinecraftClient mc = MinecraftClient.getInstance();
-			GameOptions settings = mc.options;
-			Consumer<ResourcePackManager> c = new Consumer<ResourcePackManager>() {
-				@Override
-				public void accept(ResourcePackManager t) {
-					List<String> list = ImmutableList.copyOf(settings.resourcePacks);
-					settings.resourcePacks.clear();
-					settings.incompatibleResourcePacks.clear();
-					Iterator<ResourcePackProfile> var3 = t.getEnabledProfiles().iterator();
 
-					while(var3.hasNext()) {
-						ResourcePackProfile resourcePackProfile = (ResourcePackProfile)var3.next();
-						if (!resourcePackProfile.isPinned()) {
-							settings.resourcePacks.add(resourcePackProfile.getName());
-							if (!resourcePackProfile.getCompatibility().isCompatible()) {
-								settings.incompatibleResourcePacks.add(resourcePackProfile.getName());
+			Consumer<ResourcePackManager> updateList = new Consumer<ResourcePackManager>() {
+				@Override
+				public void accept(ResourcePackManager repo) {
+					GameOptions options = MinecraftClient.getInstance().options;
+					List<String> list = ImmutableList.copyOf(options.resourcePacks);
+					options.resourcePacks.clear();
+					options.incompatibleResourcePacks.clear();
+
+					for(ResourcePackProfile pack : repo.getEnabledProfiles()) {
+						if (!pack.isPinned()) {
+							options.resourcePacks.add(pack.getName());
+							if (!pack.getCompatibility().isCompatible()) {
+								options.incompatibleResourcePacks.add(pack.getName());
 							}
 						}
 					}
 
-					settings.write();
-					List<String> list2 = ImmutableList.copyOf(settings.resourcePacks);
-					if (!list2.equals(list)) {
-						mc.reloadResources();
+					options.write();
+					List<String> list1 = ImmutableList.copyOf(options.resourcePacks);
+					if (!list1.equals(list)) {
+						MinecraftClient.getInstance().reloadResources();
 					}
 				}
 			};
-			
-			this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourceManager(), c, mc.getResourcePackDir());
-			
+
+			this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackManager(), updateList, mc.getResourcePackDir(), new TranslatableText("resourcePack.title"));
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -444,43 +444,43 @@ public class LayoutPlayerEntity extends LayoutElement {
 		this.rightclickMenu.addContent(parrotB);
 		
 	}
-	
+
 	@Override
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
-		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + this.object.width, this.getEntityPosY() + 1, Color.BLUE.getRGB());
+		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY() + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		fill(matrix, this.getEntityPosX(), this.getEntityPosY() + this.object.height, this.getEntityPosX() + this.object.width + 1, this.getEntityPosY() + this.object.height + 1, Color.BLUE.getRGB());
+		fill(matrix, this.getEntityPosX(), this.getEntityPosY() + this.object.getHeight(), this.getEntityPosX() + this.object.getWidth() + 1, this.getEntityPosY() + this.object.getHeight() + 1, Color.BLUE.getRGB());
 		//vertical line left
-		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + 1, this.getEntityPosY() + this.object.height, Color.BLUE.getRGB());
+		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + 1, this.getEntityPosY() + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line right
-		fill(matrix, this.getEntityPosX() + this.object.width, this.getEntityPosY(), this.getEntityPosX() + this.object.width + 1, this.getEntityPosY() + this.object.height, Color.BLUE.getRGB());
-	
+		fill(matrix, this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth() + 1, this.getEntityPosY() + this.object.getHeight(), Color.BLUE.getRGB());
+
 		//Render pos and size values
 		TextRenderer font = MinecraftClient.getInstance().textRenderer;
 		RenderUtils.setScale(matrix, 0.5F);
 		font.draw(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 35, Color.WHITE.getRGB());
 		font.draw(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getObject().scale, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 26, Color.WHITE.getRGB());
 		font.draw(matrix, Locals.localize("helper.creator.items.border.posx") + ": " + this.getEntityPosX(), this.getEntityPosX()*2, (this.getEntityPosY()*2) - 17, Color.WHITE.getRGB());
-		font.draw(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 8, Color.WHITE.getRGB());
-		
-		font.draw(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.getEntityPosY(), ((this.getEntityPosX() + this.object.width)*2)+3, ((this.getEntityPosY() + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		font.draw(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.getEntityPosX() + this.object.width)*2)+3, ((this.getEntityPosY() + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.getEntityPosX()*2, (this.getEntityPosY()*2) - 8, Color.WHITE.getRGB());
+
+		font.draw(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.getEntityPosY(), ((this.getEntityPosX() + this.object.getWidth())*2)+3, ((this.getEntityPosY() + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.getEntityPosX() + this.object.getWidth())*2)+3, ((this.getEntityPosY() + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
 	}
-	
+
 	@Override
 	protected void renderHighlightBorder(MatrixStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
-		
+
 		//horizontal line top
-		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + this.object.width, this.getEntityPosY() + 1, c.getRGB());
+		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY() + 1, c.getRGB());
 		//horizontal line bottom
-		fill(matrix, this.getEntityPosX(), this.getEntityPosY() + this.object.height, this.getEntityPosX() + this.object.width + 1, this.getEntityPosY() + this.object.height + 1, c.getRGB());
+		fill(matrix, this.getEntityPosX(), this.getEntityPosY() + this.object.getHeight(), this.getEntityPosX() + this.object.getWidth() + 1, this.getEntityPosY() + this.object.getHeight() + 1, c.getRGB());
 		//vertical line left
-		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + 1, this.getEntityPosY() + this.object.height, c.getRGB());
+		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + 1, this.getEntityPosY() + this.object.getHeight(), c.getRGB());
 		//vertical line right
-		fill(matrix, this.getEntityPosX() + this.object.width, this.getEntityPosY(), this.getEntityPosX() + this.object.width + 1, this.getEntityPosY() + this.object.height, c.getRGB());
+		fill(matrix, this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth() + 1, this.getEntityPosY() + this.object.getHeight(), c.getRGB());
 	}
 	
 	public void reloadEntity() {
@@ -518,19 +518,19 @@ public class LayoutPlayerEntity extends LayoutElement {
 	protected void setOrientation(String pos) {
 		super.setOrientation(pos);
 		if (this.object.orientation.startsWith("top-")) {
-			this.object.posY += this.object.height;
+			this.object.posY += this.object.getHeight();
 		}
 		if (this.object.orientation.startsWith("bottom-")) {
-			this.object.posY += this.object.height;
+			this.object.posY += this.object.getHeight();
 		}
 		if (this.object.orientation.startsWith("mid-")) {
-			this.object.posY += this.object.height;
+			this.object.posY += this.object.getHeight();
 		}
 		if (this.object.orientation.endsWith("-left")) {
-			this.object.posX += this.object.width;
+			this.object.posX += this.object.getWidth();
 		}
 		if (this.object.orientation.endsWith("-centered")) {
-			this.object.posX += this.object.width / 2;
+			this.object.posX += this.object.getWidth() / 2;
 		}
 	}
 	
@@ -543,10 +543,10 @@ public class LayoutPlayerEntity extends LayoutElement {
 		this.setWidth((int)(this.getObject().entity.getWidth()*scale));
 		this.setHeight((int)(this.getObject().entity.getHeight()*scale));
 	}
-	
+
 	@Override
 	protected void updateHovered(int mouseX, int mouseY) {
-		if ((mouseX >= this.getEntityPosX()) && (mouseX <= this.getEntityPosX() + this.object.width) && (mouseY >= this.getEntityPosY()) && mouseY <= this.getEntityPosY() + this.object.height) {
+		if ((mouseX >= this.getEntityPosX()) && (mouseX <= this.getEntityPosX() + this.object.getWidth()) && (mouseY >= this.getEntityPosY()) && mouseY <= this.getEntityPosY() + this.object.getHeight()) {
 			this.hovered = true;
 		} else {
 			this.hovered = false;
@@ -603,7 +603,9 @@ public class LayoutPlayerEntity extends LayoutElement {
 		p1.addEntry("parrot", "" + this.getEntity().hasParrot);
 		p1.addEntry("crouching", "" + this.getEntity().crouching);
 		p1.addEntry("showname", "" + this.getEntity().showName);
-		
+
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
 		
 		return l;

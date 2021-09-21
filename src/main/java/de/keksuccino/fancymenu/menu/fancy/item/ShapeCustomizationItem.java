@@ -49,8 +49,8 @@ public class ShapeCustomizationItem extends CustomizationItemBase {
 				
 				if (this.shape == Shape.RECTANGLE) {
 
-					fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.width, this.getPosY(menu) + this.height, c.getRGB());
-					
+					fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), c.getRGB());
+
 				}
 				
 			}

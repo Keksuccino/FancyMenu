@@ -19,7 +19,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 
 public class BackgroundOptionsPopup extends FMPopup {
 	
@@ -28,9 +27,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 	protected AdvancedButton doneButton;
 	
 	protected AdvancedButton chooseTextureButton;
-	
-	protected AdvancedButton panoramaButton;
-	protected AdvancedButton noPanoramaButton;
 
 	protected AdvancedButton setPanoramaButton;
 	protected AdvancedButton setSlideshowButton;
@@ -38,6 +34,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 	protected AdvancedButton clearSlideshowButton;
 	protected AdvancedButton setAnimationButton;
 	protected AdvancedButton clearAnimationButton;
+	protected AdvancedButton clearImageButton;
 	
 	protected HorizontalSwitcher typeSwitcher;
 	protected HorizontalSwitcher animationSwitcher;
@@ -81,6 +78,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
+				PopupHandler.displayPopup(this);
 			}, "jpg", "jpeg", "png");
 			if ((this.handler.backgroundTexture != null)) {
 				cf.setText(this.handler.backgroundTexturePath);
@@ -88,27 +86,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			PopupHandler.displayPopup(cf);
 		});
 		this.addButton(chooseTextureButton);
-		
-		String pan = Locals.localize("helper.creator.backgroundoptions.panorama");
-		String nPan = Locals.localize("helper.creator.backgroundoptions.nopanorama");
-		if (this.handler.panorama) {
-			pan = "§a" + pan;
-		} else {
-			nPan = "§a" + nPan;
-		}
-		this.panoramaButton = new AdvancedButton(0, 0, 100, 20, pan, true, (press) -> {
-			this.handler.panorama = true;
-			press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.backgroundoptions.panorama")));
-			this.noPanoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.nopanorama"));
-		});
-		this.addButton(panoramaButton);
-		
-		this.noPanoramaButton = new AdvancedButton(0, 0, 100, 20, nPan, true, (press) -> {
-			this.handler.panorama = false;
-			press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.backgroundoptions.nopanorama")));
-			this.panoramaButton.setMessage(Locals.localize("helper.creator.backgroundoptions.panorama"));
-		});
-		this.addButton(noPanoramaButton);
 		
 		this.setPanoramaButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.panoramas.set"), true, (press) -> {
 			if (this.panoramaSwitcher.getSelectedValue() != null) {
@@ -199,6 +176,16 @@ public class BackgroundOptionsPopup extends FMPopup {
 		if (this.animationSwitcher.getSelectedValue() == null) {
 			this.clearAnimationButton.active = false;
 		}
+
+		this.clearImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear"), true, (press) -> {
+			if (this.handler.backgroundTexture != null) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			this.handler.backgroundTexture = null;
+			this.handler.backgroundTexturePath = null;
+		});
+		this.clearImageButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear.btn.desc"), "%n%"));
+		this.addButton(clearImageButton);
 		
 		this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.done"), true, (press) -> {
 			this.setDisplayed(false);
@@ -214,12 +201,10 @@ public class BackgroundOptionsPopup extends FMPopup {
 		super.render(matrix, mouseX, mouseY, renderIn);
 		
 		if (this.isDisplayed()) {
-			
-			DrawableHelper.drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, "§l" + Locals.localize("helper.creator.backgroundoptions"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
-			
-			
+
+			drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, "§l" + Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), renderIn.width / 2, (renderIn.height / 2) - 110, -1);
+
 			this.typeSwitcher.render(matrix, (renderIn.width / 2) - (this.typeSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 85);
-			
 			
 			String s = this.typeSwitcher.getSelectedValue();
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundanimation"))) {
@@ -238,12 +223,11 @@ public class BackgroundOptionsPopup extends FMPopup {
 				this.clearAnimationButton.visible = true;
 
 				this.chooseTextureButton.visible = false;
-				this.panoramaButton.visible = false;
-				this.noPanoramaButton.visible = false;
 				this.setPanoramaButton.visible = false;
 				this.clearPanoramaButton.visible = false;
 				this.setSlideshowButton.visible = false;
 				this.clearSlideshowButton.visible = false;
+				this.clearImageButton.visible = false;
 			}
 			
 			if (s.equals(Locals.localize("helper.creator.backgroundoptions.backgroundimage"))) {
@@ -251,15 +235,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 				this.chooseTextureButton.y = (renderIn.height / 2) - 25;
 				this.chooseTextureButton.visible = true;
 
-				DrawableHelper.drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.backgroundoptions.setpanorama"), renderIn.width / 2, (renderIn.height / 2) + 13, Color.WHITE.getRGB());
-
-				this.panoramaButton.x = (renderIn.width / 2) - this.panoramaButton.getWidth() - 5;
-				this.panoramaButton.y = (renderIn.height / 2) + 30;
-				this.panoramaButton.visible = true;
-
-				this.noPanoramaButton.x = (renderIn.width / 2) + 5;
-				this.noPanoramaButton.y = (renderIn.height / 2) + 30;
-				this.noPanoramaButton.visible = true;
+				this.clearImageButton.x = (renderIn.width / 2) - (this.clearPanoramaButton.getWidth() / 2);
+				this.clearImageButton.y = (renderIn.height / 2);
+				this.clearImageButton.visible = true;
 
 				this.setAnimationButton.visible = false;
 				this.clearAnimationButton.visible = false;
@@ -287,10 +265,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 				this.setAnimationButton.visible = false;
 				this.clearAnimationButton.visible = false;
 				this.chooseTextureButton.visible = false;
-				this.panoramaButton.visible = false;
-				this.noPanoramaButton.visible = false;
 				this.setSlideshowButton.visible = false;
 				this.clearSlideshowButton.visible = false;
+				this.clearImageButton.visible = false;
 				
 			}
 
@@ -312,10 +289,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 				this.setAnimationButton.visible = false;
 				this.clearAnimationButton.visible = false;
 				this.chooseTextureButton.visible = false;
-				this.panoramaButton.visible = false;
-				this.noPanoramaButton.visible = false;
 				this.setPanoramaButton.visible = false;
 				this.clearPanoramaButton.visible = false;
+				this.clearImageButton.visible = false;
 				
 			}
 			

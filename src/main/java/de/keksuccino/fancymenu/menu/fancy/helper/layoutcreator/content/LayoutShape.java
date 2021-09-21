@@ -63,13 +63,15 @@ public class LayoutShape extends LayoutElement {
 		this.rightclickMenu.addContent(colorB);
 		
 	}
-	
+
 	@Override
 	public List<PropertiesSection> getProperties() {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
 		PropertiesSection s = new PropertiesSection("customization");
-		
+
 		if (this.getObject().shape != null) {
+
+			s.addEntry("action", "addshape");
 			s.addEntry("actionid", this.object.getActionId());
 			if (this.object.delayAppearance) {
 				s.addEntry("delayappearance", "true");
@@ -80,7 +82,6 @@ public class LayoutShape extends LayoutElement {
 					s.addEntry("fadeinspeed", "" + this.object.fadeInSpeed);
 				}
 			}
-			s.addEntry("action", "addshape");
 			s.addEntry("shape", this.getObject().shape.name);
 			s.addEntry("color", this.getObject().getColorString());
 			s.addEntry("orientation", this.object.orientation);
@@ -89,19 +90,21 @@ public class LayoutShape extends LayoutElement {
 				s.addEntry("width", "%guiwidth%");
 			} else {
 				s.addEntry("x", "" + this.object.posX);
-				s.addEntry("width", "" + this.object.width);
+				s.addEntry("width", "" + this.object.getWidth());
 			}
 			if (this.stretchY) {
 				s.addEntry("y", "0");
 				s.addEntry("height", "%guiheight%");
 			} else {
 				s.addEntry("y", "" + this.object.posY);
-				s.addEntry("height", "" + this.object.height);
+				s.addEntry("height", "" + this.object.getHeight());
 			}
-			
+
+			this.addVisibilityPropertiesTo(s);
+
 			l.add(s);
 		}
-		
+
 		return l;
 	}
 	

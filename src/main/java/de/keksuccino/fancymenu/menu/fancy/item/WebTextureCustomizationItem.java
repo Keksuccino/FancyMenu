@@ -9,7 +9,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.client.util.math.MatrixStack;
@@ -33,8 +32,8 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 						this.texture = TextureHandler.getWebResource(this.value);
 
 						if ((this.texture == null) || !this.texture.isReady()) {
-							this.width = 100;
-							this.height = 100;
+							this.setWidth(100);
+							this.setHeight(100);
 							return;
 						}
 						
@@ -43,12 +42,12 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 						double ratio = (double) w / (double) h;
 
 						//Calculate missing width
-						if ((this.width < 0) && (this.height >= 0)) {
-							this.width = (int)(this.height * ratio);
+						if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+							this.setWidth((int)(this.getHeight() * ratio));
 						}
 						//Calculate missing height
-						if ((this.height < 0) && (this.width >= 0)) {
-							this.height = (int)(this.width / ratio);
+						if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+							this.setHeight((int)(this.getWidth() / ratio));
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -66,24 +65,22 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			
 			int x = this.getPosX(menu);
 			int y = this.getPosY(menu);
-			
-			//TODO neu in 1.17
+
 			Identifier r = TextureManager.MISSING_IDENTIFIER;
 			if (this.texture != null) {
 				r = this.texture.getResourceLocation();
 			}
 			RenderUtils.bindTexture(r);
-			//--------------
 
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-			drawTexture(matrix, x, y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+			drawTexture(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 			RenderSystem.disableBlend();
 		}
 	}
-	
+
 	@Override
 	public boolean shouldRender() {
-		if ((this.width < 0) || (this.height < 0)) {
+		if ((this.getWidth() < 0) || (this.getHeight() < 0)) {
 			return false;
 		}
 		return super.shouldRender();

@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -30,12 +34,9 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.util.math.MatrixStack;
 
 public abstract class LayoutElement extends DrawableHelper {
-	
+
 	public CustomizationItemBase object;
 	public LayoutEditorScreen handler;
 	protected boolean hovered = false;
@@ -60,12 +61,12 @@ public abstract class LayoutElement extends DrawableHelper {
 	protected boolean fadeable = true;
 
 	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
-	
+
 	public FMContextMenu rightclickMenu;
-	
+
 	protected AdvancedButton stretchXButton;
 	protected AdvancedButton stretchYButton;
-	
+
 	protected AdvancedButton o1;
 	protected AdvancedButton o2;
 	protected AdvancedButton o3;
@@ -78,19 +79,20 @@ public abstract class LayoutElement extends DrawableHelper {
 
 	protected static boolean isShiftPressed = false;
 	private static boolean shiftListener = false;
-	
+
 	private final boolean destroyable;
+	public boolean enableVisibilityRequirements = true;
 
 	public final String objectId = UUID.randomUUID().toString();
 
 	private Snapshot cachedSnapshot;
 	private boolean moving = false;
-	
+
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-	
-	public LayoutElement(@NotNull CustomizationItemBase object, boolean destroyable, @NotNull LayoutEditorScreen handler) {
+
+	public LayoutElement(@NotNull CustomizationItemBase object, boolean destroyable, @NotNull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
 		this.object = object;
 		this.destroyable = destroyable;
@@ -114,83 +116,100 @@ public abstract class LayoutElement extends DrawableHelper {
 			});
 			shiftListener = true;
 		}
-		
-		this.init();
+
+		if (doInit) {
+			this.init();
+		}
 	}
-	
+
+	public LayoutElement(@NotNull CustomizationItemBase object, boolean destroyable, @NotNull LayoutEditorScreen handler) {
+		this(object, destroyable, handler, true);
+	}
+
 	public void init() {
-		
+
 		this.rightclickMenu = new FMContextMenu();
 		this.rightclickMenu.setAlwaysOnTop(true);
-		
+
+		/** COPY ELEMENT ID **/
+		AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
+			if (!(this instanceof LayoutVanillaButton)) {
+				MinecraftClient.getInstance().keyboard.setClipboard(this.object.getActionId());
+			} else {
+				MinecraftClient.getInstance().keyboard.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).button.getId());
+			}
+		});
+		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(copyIdButton);
+
 		/** ORIENTATION **/
 		FMContextMenu orientationMenu = new FMContextMenu();
 		orientationMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(orientationMenu);
-		
+
 		o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-left");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o1);
-		
+
 		o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-left");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o2);
-		
+
 		o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-left");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o3);
-		
+
 		o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-centered");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o4);
-		
+
 		o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-centered");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o5);
-		
+
 		o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-centered");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o6);
-		
+
 		o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("top-right");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o7);
-		
+
 		o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("mid-right");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o8);
-		
+
 		o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
 			this.setOrientation("bottom-right");
 			orientationMenu.closeMenu();
 		});
 		orientationMenu.addContent(o9);
-		
+
 		AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 			orientationMenu.setParentButton((AdvancedButton) press);
 			orientationMenu.openMenuAt(0, press.y);
@@ -202,11 +221,11 @@ public abstract class LayoutElement extends DrawableHelper {
 		FMContextMenu layersMenu = new FMContextMenu();
 		layersMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(layersMenu);
-		
+
 		AdvancedButton layersButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.chooselayer"), true, (press) -> {
-			
+
 			layersMenu.getContent().clear();
-			
+
 			for (LayoutElement o : this.hoveredLayers) {
 				String label = o.object.value;
 				if (label == null) {
@@ -222,10 +241,10 @@ public abstract class LayoutElement extends DrawableHelper {
 				});
 				layersMenu.addContent(btn);
 			}
-			
+
 			layersMenu.setParentButton((AdvancedButton) press);
 			layersMenu.openMenuAt(0, press.y);
-			
+
 		});
 		this.rightclickMenu.addContent(layersButton);
 
@@ -251,7 +270,7 @@ public abstract class LayoutElement extends DrawableHelper {
 			}
 		});
 		stretchMenu.addContent(stretchYButton);
-		
+
 		AdvancedButton stretchButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch"), true, (press) -> {
 			stretchMenu.setParentButton((AdvancedButton) press);
 			stretchMenu.openMenuAt(0, press.y);
@@ -287,7 +306,16 @@ public abstract class LayoutElement extends DrawableHelper {
 		if (this.orderable) {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
-		
+
+		/** VISIBILITY REQUIREMENTS **/
+		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
+			PopupHandler.displayPopup(new VisibilityRequirementPopup(this.object));
+		});
+		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
+		if (this.enableVisibilityRequirements) {
+			this.rightclickMenu.addContent(visibilityRequirementsButton);
+		}
+
 		/** COPY **/
 		AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
 			this.handler.copySelectedElements();
@@ -295,7 +323,7 @@ public abstract class LayoutElement extends DrawableHelper {
 		if (this.copyable) {
 			this.rightclickMenu.addContent(copyButton);
 		}
-		
+
 		/** DESTROY **/
 		AdvancedButton destroyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delete"), true, (press) -> {
 			this.destroyObject();
@@ -303,12 +331,12 @@ public abstract class LayoutElement extends DrawableHelper {
 		if (this.destroyable) {
 			this.rightclickMenu.addContent(destroyButton);
 		}
-		
+
 		/** DELAY APPEARANCE **/
 		FMContextMenu delayMenu = new FMContextMenu();
 		delayMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(delayMenu);
-		
+
 		String tdLabel = Locals.localize("helper.creator.items.delay.off");
 		if (this.object.delayAppearance) {
 			tdLabel = Locals.localize("helper.creator.items.delay.everytime");
@@ -333,7 +361,7 @@ public abstract class LayoutElement extends DrawableHelper {
 			}
 		});
 		delayMenu.addContent(toggleDelayButton);
-		
+
 		AdvancedButton delaySecondsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay.seconds"), true, (press) -> {
 			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + Locals.localize("helper.creator.items.delay.seconds"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 				if (call != null) {
@@ -357,14 +385,14 @@ public abstract class LayoutElement extends DrawableHelper {
 				} else {
 					this.active = true;
 				}
-				
+
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		delayMenu.addContent(delaySecondsButton);
-		
+
 		delayMenu.addSeparator();
-		
+
 		String fiLabel = Locals.localize("helper.creator.items.delay.fadein.off");
 		if (this.object.delayAppearance && this.object.fadeIn) {
 			fiLabel = Locals.localize("helper.creator.items.delay.fadein.on");
@@ -385,14 +413,14 @@ public abstract class LayoutElement extends DrawableHelper {
 				} else {
 					this.active = true;
 				}
-				
+
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		if (this.fadeable) {
 			delayMenu.addContent(toggleFadeButton);
 		}
-		
+
 		AdvancedButton fadeSpeedButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay.fadein.speed"), true, (press) -> {
 			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + Locals.localize("helper.creator.items.delay.fadein.speed"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 				if (call != null) {
@@ -416,14 +444,14 @@ public abstract class LayoutElement extends DrawableHelper {
 				} else {
 					this.active = true;
 				}
-				
+
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		if (this.fadeable) {
 			delayMenu.addContent(fadeSpeedButton);
 		}
-		
+
 		AdvancedButton delayButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay"), true, (press) -> {
 			delayMenu.setParentButton((AdvancedButton) press);
 			delayMenu.openMenuAt(0, press.y);
@@ -431,53 +459,53 @@ public abstract class LayoutElement extends DrawableHelper {
 		if (this.delayable) {
 			this.rightclickMenu.addContent(delayButton);
 		}
-		
+
 		this.rightclickMenu.addSeparator();
 
 	}
-	
+
 	protected void setOrientation(String pos) {
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 
 		if (pos.equals("mid-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
-			this.object.posY = -(this.object.height / 2);
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
-			this.object.posY = -this.object.height;
+			this.object.posY = -this.object.getHeight();
 		} else if (pos.equals("top-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
+			this.object.posX = -(this.object.getWidth() / 2);
 			this.object.posY = 0;
 		} else if (pos.equals("mid-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
-			this.object.posY = -(this.object.height / 2);
+			this.object.posX = -(this.object.getWidth() / 2);
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
-			this.object.posY = -this.object.height;
+			this.object.posX = -(this.object.getWidth() / 2);
+			this.object.posY = -this.object.getHeight();
 		} else if (pos.equals("top-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
+			this.object.posX = -this.object.getWidth();
 			this.object.posY = 0;
 		} else if (pos.equals("mid-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
-			this.object.posY = -(this.object.height / 2);
+			this.object.posX = -this.object.getWidth();
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
-			this.object.posY = -this.object.height;
+			this.object.posX = -this.object.getWidth();
+			this.object.posY = -this.object.getHeight();
 		} else {
 			this.object.orientation = pos;
 			this.object.posX = 0;
 			this.object.posY = 0;
 		}
 	}
-	
+
 	protected int orientationMouseX(int mouseX) {
 		if (this.object.orientation.endsWith("-centered")) {
 			return mouseX - (this.handler.width / 2);
@@ -487,7 +515,7 @@ public abstract class LayoutElement extends DrawableHelper {
 		}
 		return mouseX;
 	}
-	
+
 	protected int orientationMouseY(int mouseY) {
 		if (this.object.orientation.startsWith("mid-")) {
 			return mouseY - (this.handler.height / 2);
@@ -561,11 +589,11 @@ public abstract class LayoutElement extends DrawableHelper {
 		try {
 			if (this.stretchX) {
 				this.object.posX = 0;
-				this.object.width = MinecraftClient.getInstance().currentScreen.width;
+				this.object.setWidth(MinecraftClient.getInstance().currentScreen.width);
 			}
 			if (this.stretchY) {
 				this.object.posY = 0;
-				this.object.height = MinecraftClient.getInstance().currentScreen.height;
+				this.object.setHeight(MinecraftClient.getInstance().currentScreen.height);
 			}
 			if (this.stretchX && !this.stretchY) {
 				this.o1.active = true;
@@ -615,20 +643,20 @@ public abstract class LayoutElement extends DrawableHelper {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void render(MatrixStack matrix, int mouseX, int mouseY) {
 		this.updateHovered(mouseX, mouseY);
 
 		//Render the customization item
-        try {
+		try {
 			this.object.render(matrix, handler);
 
 			this.handleStretch();
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        
+
 		// Renders the border around the object if its focused (starts to render one tick after the object got focused)
 		if (this.handler.isFocused(this)) {
 			this.renderBorder(matrix, mouseX, mouseY);
@@ -637,12 +665,12 @@ public abstract class LayoutElement extends DrawableHelper {
 				this.renderHighlightBorder(matrix);
 			}
 		}
-		
+
 		//Reset cursor to default
 		if ((this.activeGrabber == -1) && (!MouseInput.isLeftMouseDown() || PopupHandler.isPopupActive())) {
 			GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), normalCursor);
 		}
-				
+
 		//Update dragging state
 		if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 			this.dragging = true;
@@ -651,7 +679,7 @@ public abstract class LayoutElement extends DrawableHelper {
 				this.dragging = false;
 			}
 		}
-		
+
 		//Handles the resizing process
 		if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
 			if (this.handler.getFocusedObjects().size() == 1) {
@@ -664,7 +692,7 @@ public abstract class LayoutElement extends DrawableHelper {
 				this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 			}
 		}
-		
+
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
 			if (this.handler.getFocusedObjects().size() == 1) {
@@ -673,7 +701,7 @@ public abstract class LayoutElement extends DrawableHelper {
 				}
 
 				this.moving = true;
-				
+
 				if ((mouseX >= 5) && (mouseX <= this.handler.width -5)) {
 					if (!this.stretchX) {
 						this.object.posX = this.orientationMouseX(mouseX) - this.startDiffX;
@@ -700,83 +728,83 @@ public abstract class LayoutElement extends DrawableHelper {
 		}
 
 		if (!MouseInput.isLeftMouseDown()) {
-			if (((this.startWidth != this.object.width) || (this.startHeight != this.object.height)) && this.resizing) {
+			if (((this.startWidth != this.object.getWidth()) || (this.startHeight != this.object.getHeight())) && this.resizing) {
 				if (this.cachedSnapshot != null) {
 					this.handler.history.saveSnapshot(this.cachedSnapshot);
 				}
 			}
-			
+
 			this.startX = this.object.posX;
 			this.startY = this.object.posY;
-			this.startWidth = this.object.width;
-			this.startHeight = this.object.height;
+			this.startWidth = this.object.getWidth();
+			this.startHeight = this.object.getHeight();
 			this.resizing = false;
 		}
 
 		//Handle rightclick context menu
 		if (this.rightclickMenu != null) {
-        	
-        	if (this.isRightClicked() && this.handler.isFocused(this)) {
-            	if (this.handler.getFocusedObjects().size() == 1) {
-            		UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
-                	this.hoveredLayers.clear();
-                	for (LayoutElement o : this.handler.getContent()) {
-                		if (o.isHovered()) {
-                			this.hoveredLayers.add(o);
-                		}
-                	}
-            	}
-            }
 
-        	if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHovered())) {
-        		this.rightclickMenu.closeMenu();
-        	}
-        	if (MouseInput.isRightMouseDown() && !this.isHovered() && !this.rightclickMenu.isHovered()) {
-        		this.rightclickMenu.closeMenu();
-        	}
-        	
-        	if (this.rightclickMenu.isOpen()) {
-        		this.handler.setFocusChangeBlocked(objectId, true);
-        	} else {
-        		this.handler.setFocusChangeBlocked(objectId, false);
-        	}
+			if (this.isRightClicked() && this.handler.isFocused(this)) {
+				if (this.handler.getFocusedObjects().size() == 1) {
+					UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
+					this.hoveredLayers.clear();
+					for (LayoutElement o : this.handler.getContent()) {
+						if (o.isHovered()) {
+							this.hoveredLayers.add(o);
+						}
+					}
+				}
+			}
 
-        }
-		
+			if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHovered())) {
+				this.rightclickMenu.closeMenu();
+			}
+			if (MouseInput.isRightMouseDown() && !this.isHovered() && !this.rightclickMenu.isHovered()) {
+				this.rightclickMenu.closeMenu();
+			}
+
+			if (this.rightclickMenu.isOpen()) {
+				this.handler.setFocusChangeBlocked(objectId, true);
+			} else {
+				this.handler.setFocusChangeBlocked(objectId, false);
+			}
+
+		}
 	}
-	
+
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
-		fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line left
-		fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line right
-		fill(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
-		
+		DrawableHelper.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		//--------------------------------
+
 		int w = 4;
 		int h = 4;
-		
-		int yHorizontal = this.object.getPosY(handler) + (this.object.height / 2) - (h / 2);
+
+		int yHorizontal = this.object.getPosY(handler) + (this.object.getHeight() / 2) - (h / 2);
 		int xHorizontalLeft = this.object.getPosX(handler) - (w / 2);
-		int xHorizontalRight = this.object.getPosX(handler) + this.object.width - (w / 2);
-		
-		int xVertical = this.object.getPosX(handler) + (this.object.width / 2) - (w / 2);
+		int xHorizontalRight = this.object.getPosX(handler) + this.object.getWidth() - (w / 2);
+
+		int xVertical = this.object.getPosX(handler) + (this.object.getWidth() / 2) - (w / 2);
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
-		int yVerticalBottom = this.object.getPosY(handler) + this.object.height - (h / 2);
+		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
 		if (!this.stretchX) {
 			//grabber left
-			fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
+			DrawableHelper.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 			//grabber right
-			fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
+			DrawableHelper.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 		}
 		if (!this.stretchY) {
 			//grabber top
-			fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
+			DrawableHelper.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
 			//grabber bottom
-			fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+			DrawableHelper.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
 		}
 
 		//Update cursor and active grabber when grabber is hovered
@@ -811,45 +839,45 @@ public abstract class LayoutElement extends DrawableHelper {
 		} else {
 			this.activeGrabber = -1;
 		}
-		
+
 		//Render pos and size values
 		RenderUtils.setScale(matrix, 0.5F);
-		drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
-		
-		drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+
+		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
 	}
-	
+
 	protected void renderHighlightBorder(MatrixStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
-		
+
 		//horizontal line top
-		fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, c.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
 		//horizontal line bottom
-		fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line left
-		fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line right
-		fill(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		DrawableHelper.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 	}
-	
+
 	/**
 	 * <b>Returns:</b><br><br>
-	 * 
+	 *
 	 * -1 if NO grabber is currently pressed<br>
 	 * 0 if the LEFT grabber is pressed<br>
 	 * 1 if the RIGHT grabber is pressed<br>
 	 * 2 if the TOP grabber is pressed<br>
 	 * 3 if the BOTTOM grabber is pressed
-	 * 
+	 *
 	 */
 	public int getActiveResizeGrabber() {
 		return this.activeGrabber;
 	}
-	
+
 	public boolean isGrabberPressed() {
 		return ((this.getActiveResizeGrabber() != -1) && MouseInput.isLeftMouseDown());
 	}
@@ -863,12 +891,12 @@ public abstract class LayoutElement extends DrawableHelper {
 		double ratio = (double) startW / (double) startH;
 		return (int)(width / ratio);
 	}
-	
+
 	protected void handleResize(int mouseX, int mouseY) {
 		int g = this.lastGrabber;
 		int diffX;
 		int diffY;
-		
+
 		//X difference
 		if (mouseX > this.startX) {
 			diffX = Math.abs(mouseX - this.startX);
@@ -887,23 +915,23 @@ public abstract class LayoutElement extends DrawableHelper {
 				int w = this.startWidth + this.getOpponentInt(diffX);
 				if (w >= 5) {
 					this.object.posX = this.startX + diffX;
-					this.object.width = w;
+					this.object.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
 						if (h >= 5) {
-							this.object.height = h;
+							this.object.setHeight(h);
 						}
 					}
 				}
 			}
 			if (g == 1) { //right
-				int w = this.object.width + (diffX - this.object.width);
+				int w = this.object.getWidth() + (diffX - this.object.getWidth());
 				if (w >= 5) {
-					this.object.width = w;
+					this.object.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
 						if (h >= 5) {
-							this.object.height = h;
+							this.object.setHeight(h);
 						}
 					}
 				}
@@ -915,30 +943,30 @@ public abstract class LayoutElement extends DrawableHelper {
 				int h = this.startHeight + this.getOpponentInt(diffY);
 				if (h >= 5) {
 					this.object.posY = this.startY + diffY;
-					this.object.height = h;
+					this.object.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
 						if (w >= 5) {
-							this.object.width = w;
+							this.object.setWidth(w);
 						}
 					}
 				}
 			}
 			if (g == 3) { //bottom
-				int h = this.object.height + (diffY - this.object.height);
+				int h = this.object.getHeight() + (diffY - this.object.getHeight());
 				if (h >= 5) {
-					this.object.height = h;
+					this.object.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
 						if (w >= 5) {
-							this.object.width = w;
+							this.object.setWidth(w);
 						}
 					}
 				}
 			}
 		}
 	}
-	
+
 	private int getOpponentInt(int i) {
 		if (Math.abs(i) == i) {
 			return Math.negateExact(i);
@@ -946,15 +974,15 @@ public abstract class LayoutElement extends DrawableHelper {
 			return Math.abs(i);
 		}
 	}
-	
+
 	protected void updateHovered(int mouseX, int mouseY) {
-		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.width) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.height) {
+		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.getWidth()) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.getHeight()) {
 			this.hovered = true;
 		} else {
 			this.hovered = false;
 		}
 	}
-	
+
 	public boolean isDragged() {
 		return this.dragging;
 	}
@@ -962,63 +990,63 @@ public abstract class LayoutElement extends DrawableHelper {
 	public boolean isGettingResized() {
 		return this.resizing;
 	}
-	
+
 	public boolean isLeftClicked() {
 		return (this.isHovered() && MouseInput.isLeftMouseDown());
 	}
-	
+
 	public boolean isRightClicked() {
 		return (this.isHovered() && MouseInput.isRightMouseDown());
 	}
-	
+
 	public boolean isHovered() {
 		return this.hovered;
 	}
-	
+
 	/**
 	 * Sets the BASE position of this object (NOT the absolute position!)
 	 */
 	public void setX(int x) {
 		this.object.posX = x;
 	}
-	
+
 	/**
 	 * Sets the BASE position of this object (NOT the absolute position!)
 	 */
 	public void setY(int y) {
 		this.object.posY = y;
 	}
-	
+
 	/**
 	 * Returns the ABSOLUTE position of this object (NOT the base position!)
 	 */
 	public int getX() {
 		return this.object.getPosX(handler);
 	}
-	
+
 	/**
 	 * Returns the ABSOLUTE position of this object (NOT the base position!)
 	 */
 	public int getY() {
 		return this.object.getPosY(handler);
 	}
-	
+
 	public void setWidth(int width) {
-		this.object.width = width;
+		this.object.setWidth(width);
 	}
-	
+
 	public void setHeight(int height) {
-		this.object.height = height;
+		this.object.setHeight(height);
 	}
-	
+
 	public int getWidth() {
-		return this.object.width;
+		return this.object.getWidth();
 	}
-	
+
 	public int getHeight() {
-		return this.object.height;
+		return this.object.getHeight();
 	}
-	
+
 	public boolean isDestroyable() {
 		return this.destroyable;
 	}
@@ -1026,7 +1054,7 @@ public abstract class LayoutElement extends DrawableHelper {
 	public boolean isStretchable() {
 		return this.stretchable;
 	}
-	
+
 	public void destroyObject() {
 		if (!this.destroyable) {
 			return;
@@ -1055,5 +1083,131 @@ public abstract class LayoutElement extends DrawableHelper {
 	}
 
 	public abstract List<PropertiesSection> getProperties();
+
+	protected void addVisibilityPropertiesTo(PropertiesSection sec) {
+
+		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
+
+		if (c.vrCheckForSingleplayer) {
+			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
+		}
+		if (c.vrCheckForMultiplayer) {
+			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
+		}
+		if (c.vrCheckForRealTimeHour) {
+			String val = "";
+			for (int i : c.vrRealTimeHour) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimehour", "" + c.vrShowIfRealTimeHour);
+				sec.addEntry("vr:value:realtimehour", val);
+			}
+		}
+		if (c.vrCheckForRealTimeMinute) {
+			String val = "";
+			for (int i : c.vrRealTimeMinute) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeminute", "" + c.vrShowIfRealTimeMinute);
+				sec.addEntry("vr:value:realtimeminute", val);
+			}
+		}
+		if (c.vrCheckForRealTimeSecond) {
+			String val = "";
+			for (int i : c.vrRealTimeSecond) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimesecond", "" + c.vrShowIfRealTimeSecond);
+				sec.addEntry("vr:value:realtimesecond", val);
+			}
+		}
+		if (c.vrCheckForWindowWidth) {
+			String val = "";
+			for (int i : c.vrWindowWidth) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
+				sec.addEntry("vr:value:windowwidth", val);
+			}
+		}
+		if (c.vrCheckForWindowHeight) {
+			String val = "";
+			for (int i : c.vrWindowHeight) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
+				sec.addEntry("vr:value:windowheight", val);
+			}
+		}
+		if (c.vrCheckForWindowWidthBiggerThan) {
+			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
+			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
+		}
+		if (c.vrCheckForWindowHeightBiggerThan) {
+			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
+			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
+		}
+		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
+			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
+			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
+		}
+		if (c.vrCheckForWorldLoaded) {
+			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
+		}
+		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
+			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
+			sec.addEntry("vr:value:language", "" + c.vrLanguage);
+		}
+		if (c.vrCheckForFullscreen) {
+			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
+		}
+		if (c.vrCheckForOsWindows) {
+			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
+		}
+		if (c.vrCheckForOsMac) {
+			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
+		}
+		if (c.vrCheckForOsLinux) {
+			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
+		}
+		if (c.vrCheckForModLoaded) {
+			String val = "";
+			for (String s : c.vrModLoaded) {
+				val += s + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
+				sec.addEntry("vr:value:modloaded", val);
+			}
+		}
+		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
+			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
+			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
+		}
+
+	}
 
 }

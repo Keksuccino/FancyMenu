@@ -9,16 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -46,6 +43,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
@@ -72,17 +70,16 @@ import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("resource")
 public class MenuHandlerBase extends DrawableHelper {
 
 	protected List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
 	protected List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
-	
+
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected IAnimationRenderer backgroundAnimation = null;
 	protected IAnimationRenderer lastBackgroundAnimation = null;
@@ -96,15 +93,15 @@ public class MenuHandlerBase extends DrawableHelper {
 	protected double panoPos = 0.0;
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
+	protected boolean keepBackgroundAspectRatio = false;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
-	protected Map<ButtonData, String> vanillaClickSounds = new HashMap<ButtonData, String>();
-	protected Map<ButtonData, String> vanillaIdleTextures = new HashMap<ButtonData, String>();
-	protected Map<ButtonData, String> vanillaHoverTextures = new HashMap<ButtonData, String>();
+	protected Map<PressableWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<PressableWidget, ButtonCustomizationContainer>();
+	protected Map<PressableWidget, VisibilityRequirementContainer> vanillaButtonVisibilityRequirementContainers = new HashMap<PressableWidget, VisibilityRequirementContainer>();
 
 	protected Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
 	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<ButtonData, Float>();
@@ -113,14 +110,14 @@ public class MenuHandlerBase extends DrawableHelper {
 	protected List<ThreadCaller> delayThreads = new ArrayList<ThreadCaller>();
 
 	protected boolean preinit = false;
-	
+
 	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<String, RandomLayoutContainer>();
 	protected List<PropertiesSet> normalLayouts = new ArrayList<PropertiesSet>();
 	protected SharedLayoutProperties sharedLayoutProps = new SharedLayoutProperties();
 
 	protected String closeAudio;
 	protected String openAudio;
-	
+
 	protected static Screen scaleChangedIn = null;
 
 	/**
@@ -222,11 +219,11 @@ public class MenuHandlerBase extends DrawableHelper {
 			c.onlyFirstTime = false;
 			c.clearLayouts();
 		}
-		
+
 		this.sharedLayoutProps = new SharedLayoutProperties();
 
 		for (PropertiesSet s : rawLayouts) {
-			
+
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
 			if (metas.isEmpty()) {
 				metas = s.getPropertiesOfType("type-meta");
@@ -234,7 +231,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			if (metas.isEmpty()) {
 				continue;
 			}
-			
+
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
 			if (biggerthanwidth != null) {
 				biggerthanwidth = biggerthanwidth.replace(" ", "");
@@ -275,10 +272,10 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				}
 			}
-			
+
 			String randomMode = metas.get(0).getEntryValue("randommode");
 			if ((randomMode != null) && randomMode.equalsIgnoreCase("true")) {
-				
+
 				String group = metas.get(0).getEntryValue("randomgroup");
 				if (group == null) {
 					group = defaultGroup;
@@ -294,15 +291,15 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 					c.addLayout(s);
 				}
-				
+
 			} else {
-				
+
 				this.normalLayouts.add(s);
-				
+
 			}
-			
+
 		}
-		
+
 		List<String> trashLayoutGroups = new ArrayList<String>();
 		for (Map.Entry<String, RandomLayoutContainer> m : this.randomLayoutGroups.entrySet()) {
 			if (m.getValue().getLayouts().isEmpty()) {
@@ -339,10 +336,28 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 		}
 
+		//Handle auto scaling
+		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
+			Window m = MinecraftClient.getInstance().getWindow();
+			double guiWidth = e.getGui().width * m.getScaleFactor();
+			double guiHeight = e.getGui().height * m.getScaleFactor();
+			double percentX = (guiWidth / (double)this.sharedLayoutProps.autoScaleBaseWidth) * 100.0D;
+			double percentY = (guiHeight / (double)this.sharedLayoutProps.autoScaleBaseHeight) * 100.0D;
+			double newScaleX = (percentX / 100.0D) * m.getScaleFactor();
+			double newScaleY = (percentY / 100.0D) * m.getScaleFactor();
+			double newScale = Math.min(newScaleX, newScaleY);
+
+			m.setScaleFactor(newScale);
+			e.getGui().width = m.getScaledWidth();
+			e.getGui().height = m.getScaledHeight();
+			this.sharedLayoutProps.scaled = true;
+			scaleChangedIn = e.getGui();
+		}
+
 	}
-	
+
 	protected void applyLayoutPre(PropertiesSection sec, GuiScreenEvent.InitGuiEvent.Pre e) {
-		
+
 		String action = sec.getEntryValue("action");
 		if (action != null) {
 			String identifier = sec.getEntryValue("identifier");
@@ -350,7 +365,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			if (action.equalsIgnoreCase("overridemenu")) {
 				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
 					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getGui(), (onClose) -> {
-						e.getGui().onClose();
+						e.getGui().removed();
 					});
 					MinecraftClient.getInstance().setScreen(cus);
 				}
@@ -371,8 +386,19 @@ public class MenuHandlerBase extends DrawableHelper {
 					this.sharedLayoutProps.scaled = true;
 				}
 			}
+
+			if (action.equalsIgnoreCase("autoscale")) {
+				String baseWidth = sec.getEntryValue("basewidth");
+				if (MathUtils.isInteger(baseWidth)) {
+					this.sharedLayoutProps.autoScaleBaseWidth = Integer.parseInt(baseWidth);
+				}
+				String baseHeight = sec.getEntryValue("baseheight");
+				if (MathUtils.isInteger(baseHeight)) {
+					this.sharedLayoutProps.autoScaleBaseHeight = Integer.parseInt(baseHeight);
+				}
+			}
 		}
-		
+
 	}
 
 	@SubscribeEvent
@@ -404,16 +430,12 @@ public class MenuHandlerBase extends DrawableHelper {
 		}
 
 		if (!this.preinit) {
-			
-			//Removed debug output because it false-triggers too often on fabric
-			
-//			System.out.println("################ WARNING [FANCYMENU] ################");
-//			System.out.println("MenuHandler pre-init skipped! Trying to re-initialize menu!");
-//			System.out.println("Menu Type: " + e.getGui().getClass().getName());
-//			System.out.println("Menu Handler: " + this.getClass().getName());
-//			System.out.println("This probably happened because a mod has overridden a menu with this one.");
-//			System.out.println("#####################################################");
-			
+			System.out.println("################ WARNING [FANCYMENU] ################");
+			System.out.println("MenuHandler pre-init skipped! Trying to re-initialize menu!");
+			System.out.println("Menu Type: " + e.getGui().getClass().getName());
+			System.out.println("Menu Handler: " + this.getClass().getName());
+			System.out.println("This probably happened because a mod has overridden a menu with this one.");
+			System.out.println("#####################################################");
 			e.getGui().init(MinecraftClient.getInstance(), e.getGui().width, e.getGui().height);
 			return;
 		}
@@ -421,12 +443,11 @@ public class MenuHandlerBase extends DrawableHelper {
 		this.hidden.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
-		this.vanillaClickSounds.clear();
-		this.vanillaIdleTextures.clear();
-		this.vanillaHoverTextures.clear();
-		audio.clear();
-		frontRenderItems.clear();
-		backgroundRenderItems.clear();
+		this.vanillaButtonCustomizations.clear();
+		this.vanillaButtonVisibilityRequirementContainers.clear();
+		this.audio.clear();
+		this.frontRenderItems.clear();
+		this.backgroundRenderItems.clear();
 		this.panoramacube = null;
 		this.slideshow = null;
 		this.backgroundAnimation = null;
@@ -435,7 +456,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 		}
 		this.backgroundDrawable = false;
-		
+
 		for (PropertiesSet s : this.normalLayouts) {
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
 			if (metas.isEmpty()) {
@@ -468,7 +489,7 @@ public class MenuHandlerBase extends DrawableHelper {
 				VanillaButtonDescriptionHandler.setDescriptionFor(w, m.getValue());
 			}
 		}
-		
+
 		for (String s : MenuCustomization.getSounds()) {
 			if (!this.audio.containsKey(s) && !s.equals(this.openAudio) && !s.equals(this.closeAudio)) {
 				SoundHandler.stopSound(s);
@@ -511,16 +532,36 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 		}
 
+		//Handle vanilla button visibility requirements
+		for (Map.Entry<PressableWidget, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
+			m.getKey().visible = m.getValue().isVisible();
+		}
+
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
-				this.handleVanillaAppearanceDelayFor(m.getKey());
+				if (this.visibilityRequirementsMet(m.getKey().getButton())) {
+					this.handleVanillaAppearanceDelayFor(m.getKey());
+				}
 			}
 		}
-		
+
+		//Cache custom buttons
+		ButtonCache.clearCustomButtonCache();
+		for (CustomizationItemBase c : this.backgroundRenderItems) {
+			if (c instanceof ButtonCustomizationItem) {
+				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
+			}
+		}
+		for (CustomizationItemBase c : this.frontRenderItems) {
+			if (c instanceof ButtonCustomizationItem) {
+				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
+			}
+		}
+
 	}
-	
+
 	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
-		
+
 		String action = sec.getEntryValue("action");
 		if (action != null) {
 			String identifier = sec.getEntryValue("identifier");
@@ -533,6 +574,13 @@ public class MenuHandlerBase extends DrawableHelper {
 				}
 			}
 
+			if (action.equalsIgnoreCase("backgroundoptions")) {
+				String keepAspect = sec.getEntryValue("keepaspectratio");
+				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
+					this.keepBackgroundAspectRatio = true;
+				}
+			}
+
 			if (action.equalsIgnoreCase("setbackgroundslideshow")) {
 				String name = sec.getEntryValue("name");
 				if (name != null) {
@@ -541,7 +589,7 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				}
 			}
-			
+
 			if (action.equalsIgnoreCase("setbackgroundpanorama")) {
 				String name = sec.getEntryValue("name");
 				if (name != null) {
@@ -550,7 +598,7 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				}
 			}
-			
+
 			if (action.equalsIgnoreCase("texturizebackground")) {
 				String value = sec.getEntryValue("path");
 				String pano = sec.getEntryValue("wideformat");
@@ -670,10 +718,8 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 
 			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
-				String value = sec.getEntryValue("value");
-				if ((value != null) && (b != null)) {
-					value = DynamicValueHelper.convertFromRaw(value);
-					b.setMessage(new LiteralText(value));
+				if (b != null) {
+					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
 				}
 			}
 
@@ -715,7 +761,7 @@ public class MenuHandlerBase extends DrawableHelper {
 							b.x = b.x + x;
 							b.y = b.y + y;
 						}
-						
+
 						if (orientation.equalsIgnoreCase("top-left")) {
 							b.x = x;
 							b.y = y;
@@ -730,7 +776,7 @@ public class MenuHandlerBase extends DrawableHelper {
 							b.x = x;
 							b.y = h + y;
 						}
-						
+
 						if (orientation.equalsIgnoreCase("top-centered")) {
 							b.x = (w / 2) + x;
 							b.y = y;
@@ -745,7 +791,7 @@ public class MenuHandlerBase extends DrawableHelper {
 							b.x = (w / 2) + x;
 							b.y = h + y;
 						}
-						
+
 						if (orientation.equalsIgnoreCase("top-right")) {
 							b.x = w + x;
 							b.y = y;
@@ -766,11 +812,31 @@ public class MenuHandlerBase extends DrawableHelper {
 
 			if (action.equalsIgnoreCase("setbuttontexture")) {
 				if (b != null) {
+					String loopBackAnimations = sec.getEntryValue("loopbackgroundanimations");
+					if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
+						this.getContainerForVanillaButton(b).loopAnimation = false;
+					}
+					String restartBackAnimationsOnHover = sec.getEntryValue("restartbackgroundanimations");
+					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
+						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
+					}
 					String backNormal = sec.getEntryValue("backgroundnormal");
 					String backHover = sec.getEntryValue("backgroundhovered");
-					if ((backNormal != null) && (backHover != null)) {
-						this.vanillaIdleTextures.put(bd, backNormal);
-						this.vanillaHoverTextures.put(bd, backHover);
+					if (backNormal != null) {
+						this.getContainerForVanillaButton(b).normalBackground = backNormal;
+					} else {
+						String backAniNormal = sec.getEntryValue("backgroundanimationnormal");
+						if (backAniNormal != null) {
+							this.getContainerForVanillaButton(b).normalBackground = "animation:" + backAniNormal;
+						}
+					}
+					if (backHover != null) {
+						this.getContainerForVanillaButton(b).hoverBackground = backHover;
+					} else {
+						String backAniHover = sec.getEntryValue("backgroundanimationhovered");
+						if (backAniHover != null) {
+							this.getContainerForVanillaButton(b).hoverBackground = "animation:" + backAniHover;
+						}
 					}
 				}
 			}
@@ -779,8 +845,14 @@ public class MenuHandlerBase extends DrawableHelper {
 				if (b != null) {
 					String path = sec.getEntryValue("path");
 					if (path != null) {
-						this.vanillaClickSounds.put(bd, path);
+						this.getContainerForVanillaButton(b).clickSound = path;
 					}
+				}
+			}
+
+			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
+				if (b != null) {
+					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd).visibilityRequirementContainer);
 				}
 			}
 
@@ -814,7 +886,7 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				}
 			}
-			
+
 			/** CUSTOM ITEMS **/
 
 			if (action.equalsIgnoreCase("addtext")) {
@@ -897,7 +969,7 @@ public class MenuHandlerBase extends DrawableHelper {
 						String path = sec.getEntryValue("path");
 						String loopString = sec.getEntryValue("loop");
 
-						boolean loop = false; 
+						boolean loop = false;
 						if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
 							loop = true;
 						}
@@ -916,7 +988,7 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				}
 			}
-			
+
 			if (action.equalsIgnoreCase("setcloseaudio")) {
 				String path = sec.getEntryValue("path");
 
@@ -963,31 +1035,30 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				}
 			}
-			
+
 			if (action.equalsIgnoreCase("addsplash")) {
 				String file = sec.getEntryValue("splashfilepath");
 				String text = sec.getEntryValue("text");
 				if ((file != null) || (text != null)) {
-					
+
 					SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
-					
+
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
 						backgroundRenderItems.add(i);
 					} else {
 						frontRenderItems.add(i);
 					}
-					
+
 				}
 			}
 
 		}
-		
+
 	}
 
 	protected void handleAppearanceDelayFor(CustomizationItemBase i) {
 		if (!(i instanceof VanillaButtonCustomizationItem)) {
 			if (i.delayAppearance) {
-				
 				if (i.getActionId() == null) {
 					return;
 				}
@@ -999,16 +1070,16 @@ public class MenuHandlerBase extends DrawableHelper {
 						delayAppearanceFirstTime.add(i.getActionId());
 					}
 				}
-				
+
 				i.visible = false;
-				
+
 				if (i.fadeIn) {
 					i.opacity = 0.1F;
 				}
-				
+
 				ThreadCaller c = new ThreadCaller();
 				this.delayThreads.add(c);
-				
+
 				Thread t = new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -1038,7 +1109,7 @@ public class MenuHandlerBase extends DrawableHelper {
 										return;
 									}
 								}
-								
+
 								Thread.sleep(50);
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -1047,26 +1118,26 @@ public class MenuHandlerBase extends DrawableHelper {
 					}
 				});
 				t.start();
-				
+
 			}
 		}
 	}
 
 	protected void handleVanillaAppearanceDelayFor(ButtonData d) {
 		if (this.delayAppearanceVanilla.containsKey(d)) {
-			
+
 			boolean fadein = this.fadeInVanilla.containsKey(d);
 			float delaysec = this.delayAppearanceVanilla.get(d);
-			
+
 			d.getButton().visible = false;
-			
+
 			if (fadein) {
 				d.getButton().setAlpha(0.1F);
 			}
-			
+
 			ThreadCaller c = new ThreadCaller();
 			this.delayThreads.add(c);
-			
+
 			Thread t = new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -1104,7 +1175,7 @@ public class MenuHandlerBase extends DrawableHelper {
 									return;
 								}
 							}
-							
+
 							Thread.sleep(50);
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -1113,48 +1184,44 @@ public class MenuHandlerBase extends DrawableHelper {
 				}
 			});
 			t.start();
-			
+
 		}
 	}
 
 	@SubscribeEvent
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
-		try {
-			if (PopupHandler.isPopupActive()) {
-				return;
-			}
-			if (!this.shouldCustomize(e.getGui())) {
-				return;
-			}
-			if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
-				return;
-			}
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+			return;
+		}
 
-			if (!this.backgroundDrawable) {
-				//Rendering all items that SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
-				List<CustomizationItemBase> backItems = new ArrayList<CustomizationItemBase>();
-				backItems.addAll(this.backgroundRenderItems);
-				for (CustomizationItemBase i : backItems) {
-					try {
-						i.render(e.getMatrixStack(), e.getGui());
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-				}
-			}
-
-			//Rendering all items that should be rendered in the foreground
-			List<CustomizationItemBase> frontItems = new ArrayList<CustomizationItemBase>();
-			frontItems.addAll(this.frontRenderItems);
-			for (CustomizationItemBase i : frontItems) {
+		if (!this.backgroundDrawable) {
+			//Rendering all items that SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
+			List<CustomizationItemBase> backItems = new ArrayList<CustomizationItemBase>();
+			backItems.addAll(this.backgroundRenderItems);
+			for (CustomizationItemBase i : backItems) {
 				try {
 					i.render(e.getMatrixStack(), e.getGui());
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		}
+
+		//Rendering all items that should be rendered in the foreground
+		List<CustomizationItemBase> frontItems = new ArrayList<CustomizationItemBase>();
+		frontItems.addAll(this.frontRenderItems);
+		for (CustomizationItemBase i : frontItems) {
+			try {
+				i.render(e.getMatrixStack(), e.getGui());
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
 		}
 	}
 
@@ -1175,15 +1242,50 @@ public class MenuHandlerBase extends DrawableHelper {
 			if (this.canRenderBackground()) {
 				if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
 					boolean b = this.backgroundAnimation.isStretchedToStreensize();
-					this.backgroundAnimation.setStretchImageToScreensize(true);
+					int wOri = this.backgroundAnimation.getWidth();
+					int hOri = this.backgroundAnimation.getHeight();
+					int xOri = this.backgroundAnimation.getPosX();
+					int yOri = this.backgroundAnimation.getPosY();
+					if (!this.keepBackgroundAspectRatio) {
+						this.backgroundAnimation.setStretchImageToScreensize(true);
+					} else {
+						double ratio = (double) wOri / (double) hOri;
+						int wfinal = (int)(s.height * ratio);
+						int screenCenterX = s.width / 2;
+						if (wfinal < s.width) {
+							this.backgroundAnimation.setStretchImageToScreensize(true);
+						} else {
+							this.backgroundAnimation.setWidth(wfinal + 1);
+							this.backgroundAnimation.setHeight(s.height + 1);
+							this.backgroundAnimation.setPosX(screenCenterX - (wfinal / 2));
+							this.backgroundAnimation.setPosY(0);
+						}
+					}
 					this.backgroundAnimation.render(CurrentScreenHandler.getMatrixStack());
+					this.backgroundAnimation.setWidth(wOri);
+					this.backgroundAnimation.setHeight(hOri);
+					this.backgroundAnimation.setPosX(xOri);
+					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
 				} else if (this.backgroundTexture != null) {
-					//TODO neu in 1.17
+					RenderSystem.enableBlend();
 					RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
 
 					if (!this.panoramaback) {
-						DrawableHelper.drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+						if (!this.keepBackgroundAspectRatio) {
+							drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+						} else {
+							int w = this.backgroundTexture.getWidth();
+							int h = this.backgroundTexture.getHeight();
+							double ratio = (double) w / (double) h;
+							int wfinal = (int)(s.height * ratio);
+							int screenCenterX = s.width / 2;
+							if (wfinal < s.width) {
+								drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							} else {
+								drawTexture(CurrentScreenHandler.getMatrixStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
+							}
+						}
 					} else {
 						int w = this.backgroundTexture.getWidth();
 						int h = this.backgroundTexture.getHeight();
@@ -1233,7 +1335,7 @@ public class MenuHandlerBase extends DrawableHelper {
 							}
 						}
 						if (wfinal <= s.width) {
-							DrawableHelper.drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
 							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
 						}
@@ -1242,28 +1344,41 @@ public class MenuHandlerBase extends DrawableHelper {
 					RenderSystem.disableBlend();
 
 				} else if (this.panoramacube != null) {
-					
+
 					this.panoramacube.render();
 
 				} else if (this.slideshow != null) {
-					
 					int sw = this.slideshow.width;
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
-					
-					this.slideshow.height = s.height;
-					this.slideshow.width = s.width;
-					this.slideshow.x = 0;
+
+					if (!this.keepBackgroundAspectRatio) {
+						this.slideshow.width = s.width + 1;
+						this.slideshow.height = s.height +1;
+						this.slideshow.x = 0;
+					} else {
+						double ratio = (double) sw / (double) sh;
+						int wfinal = (int)(s.height * ratio);
+						int screenCenterX = s.width / 2;
+						if (wfinal < s.width) {
+							this.slideshow.width = s.width + 1;
+							this.slideshow.height = s.height +1;
+							this.slideshow.x = 0;
+						} else {
+							this.slideshow.width = wfinal + 1;
+							this.slideshow.height = s.height +1;
+							this.slideshow.x = screenCenterX - (wfinal / 2);
+						}
+					}
 					this.slideshow.y = 0;
-					
+
 					this.slideshow.render(matrix);
-					
+
 					this.slideshow.width = sw;
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
-					
 				}
 			}
 
@@ -1288,31 +1403,27 @@ public class MenuHandlerBase extends DrawableHelper {
 
 	@SubscribeEvent
 	public void onButtonClickSound(PlayWidgetClickSoundEvent.Pre e) {
-		
+
 		if (this.shouldCustomize(MinecraftClient.getInstance().currentScreen)) {
 			if (MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
 
-				//Handle vanilla button click sounds
-				for (Map.Entry<ButtonData, String> m : this.vanillaClickSounds.entrySet()) {
+				ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(e.getWidget());
 
-					if (m.getKey().getButton() == e.getWidget()) {
-						File f = new File(m.getValue());
-
+				if (c != null) {
+					if (c.clickSound != null) {
+						File f = new File(c.clickSound);
 						if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
 
 							SoundHandler.registerSound(f.getPath(), f.getPath());
 							SoundHandler.resetSound(f.getPath());
 							SoundHandler.playSound(f.getPath());
 
+							e.setCanceled(true);
+
 						}
-
-						e.setCanceled(true);
-
-						break;
 					}
-
 				}
-				
+
 			}
 		}
 
@@ -1320,77 +1431,184 @@ public class MenuHandlerBase extends DrawableHelper {
 
 	@SubscribeEvent
 	public void onButtonRenderBackground(RenderWidgetBackgroundEvent.Pre e) {
-
 		if (this.shouldCustomize(MinecraftClient.getInstance().currentScreen)) {
 			if (MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
 
-				//Handle custom vanilla button background textures
-				for (Map.Entry<ButtonData, String> m : this.vanillaIdleTextures.entrySet()) {
-
-					PressableWidget w = m.getKey().getButton();
-					
-					if (w == e.getWidget()) {
-						String idle = m.getValue();
-						String hover = this.vanillaHoverTextures.get(m.getKey());
-
-						if ((hover != null) && (idle != null)) {
-							ExternalTextureResourceLocation idleR = TextureHandler.getResource(idle);
-							ExternalTextureResourceLocation hoverR = TextureHandler.getResource(hover);
-
-							if ((idleR != null) && (hoverR != null)) {
-
-								if (!idleR.isReady()) {
-									idleR.loadTexture();
-								}
-								if (!hoverR.isReady()) {
-									hoverR.loadTexture();
-								}
-
-								//TODO neu in 1.17
-								Identifier r = idleR.getResourceLocation();
-								if (w.isHovered() && w.active) {
-									r = hoverR.getResourceLocation();
-								}
-								RenderUtils.bindTexture(r);
-								RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha()); 
-								//--------------------------
-								DrawableHelper.drawTexture(e.getMatrixStack(), w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
-
-								if (w instanceof TexturedButtonWidget) {
-									Text msg = w.getMessage();
-									if (msg != null) {
-										DrawableHelper.drawCenteredText(e.getMatrixStack(), MinecraftClient.getInstance().textRenderer, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, this.getWidgetFGColor(w) | MathHelper.ceil(e.getAlpha() * 255.0F) << 24);
+				PressableWidget w = e.getWidget();
+				ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
+				if (c != null) {
+					String normalBack = c.normalBackground;
+					String hoverBack = c.hoverBackground;
+					boolean hasCustomBackground = false;
+					if (c.lastHoverState != w.isHovered()) {
+						if (w.isHovered()) {
+							if (c.restartAnimationOnHover) {
+								for (IAnimationRenderer i : c.cachedAnimations) {
+									if (i != null) {
+										i.resetAnimation();
 									}
 								}
-								
-								e.setCanceled(true);
-
 							}
-
 						}
+					}
+					c.lastHoverState = w.isHovered();
 
-						break;
+					if (!w.isHovered()) {
+						if (normalBack != null) {
+							if (this.renderCustomButtomBackground(e, normalBack)) {
+								hasCustomBackground = true;
+							}
+						}
 					}
 
+					if (w.isHovered()) {
+						if (w.active) {
+							if (hoverBack != null) {
+								if (this.renderCustomButtomBackground(e, hoverBack)) {
+									hasCustomBackground = true;
+								}
+							}
+						} else {
+							if (normalBack != null) {
+								if (this.renderCustomButtomBackground(e, normalBack)) {
+									hasCustomBackground = true;
+								}
+							}
+						}
+					}
+
+					if (hasCustomBackground) {
+						if (w instanceof TexturedButtonWidget) {
+							Text msg = w.getMessage();
+							if (msg != null) {
+								int j = w.active ? 16777215 : 10526880;
+								drawCenteredText(e.getMatrixStack(), MinecraftClient.getInstance().textRenderer, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, j | MathHelper.ceil(e.getAlpha() * 255.0F) << 24);
+							}
+						}
+
+						e.setCanceled(true);
+					}
+				}
+
+			}
+		}
+	}
+
+	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background) {
+		PressableWidget w = e.getWidget();
+		MatrixStack matrix = e.getMatrixStack();
+		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
+		if (c != null) {
+			if (w != null) {
+				if (background != null) {
+					if (background.startsWith("animation:")) {
+						String aniName = background.split("[:]", 2)[1];
+						if (AnimationHandler.animationExists(aniName)) {
+							IAnimationRenderer a = AnimationHandler.getAnimation(aniName);
+							this.renderBackgroundAnimation(e, a);
+							if (!c.cachedAnimations.contains(a)) {
+								c.cachedAnimations.add(a);
+							}
+							return true;
+						}
+					} else {
+						File f = new File(background);
+						if (f.isFile()) {
+							if (f.getPath().toLowerCase().endsWith(".gif")) {
+								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+								this.renderBackgroundAnimation(e, a);
+								if (!c.cachedAnimations.contains(a)) {
+									c.cachedAnimations.add(a);
+								}
+								return true;
+							} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+								ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+								if (back != null) {
+									RenderUtils.bindTexture(back.getResourceLocation());
+									RenderSystem.enableBlend();
+									RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha());
+									drawTexture(matrix, w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
+									return true;
+								}
+							}
+						}
+					}
 				}
 			}
 		}
+		return false;
+	}
 
+	protected void renderBackgroundAnimation(RenderWidgetBackgroundEvent e, IAnimationRenderer ani) {
+		PressableWidget w = e.getWidget();
+		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
+		if (c != null) {
+			if (ani != null) {
+				if (!ani.isReady()) {
+					ani.prepareAnimation();
+				}
+
+				int aniX = ani.getPosX();
+				int aniY = ani.getPosY();
+				int aniWidth = ani.getWidth();
+				int aniHeight = ani.getHeight();
+				boolean aniLoop = ani.isGettingLooped();
+
+				ani.setPosX(w.x);
+				ani.setPosY(w.y);
+				ani.setWidth(w.getWidth());
+				ani.setHeight(w.getHeight());
+				ani.setLooped(c.loopAnimation);
+				ani.setOpacity(e.getAlpha());
+				if (ani instanceof AdvancedAnimation) {
+					((AdvancedAnimation) ani).setMuteAudio(true);
+				}
+
+				ani.render(e.getMatrixStack());
+
+				ani.setPosX(aniX);
+				ani.setPosY(aniY);
+				ani.setWidth(aniWidth);
+				ani.setHeight(aniHeight);
+				ani.setLooped(aniLoop);
+				ani.setOpacity(1.0F);
+				if (ani instanceof AdvancedAnimation) {
+					((AdvancedAnimation) ani).setMuteAudio(false);
+				}
+			}
+		}
+	}
+
+	protected ButtonCustomizationContainer getContainerForVanillaButton(PressableWidget w) {
+		if (!this.vanillaButtonCustomizations.containsKey(w)) {
+			ButtonCustomizationContainer c = new ButtonCustomizationContainer();
+			this.vanillaButtonCustomizations.put(w, c);
+			return c;
+		}
+		return this.vanillaButtonCustomizations.get(w);
+	}
+
+	protected boolean visibilityRequirementsMet(PressableWidget b) {
+		VisibilityRequirementContainer c = this.vanillaButtonVisibilityRequirementContainers.get(b);
+		if (c != null) {
+			return c.isVisible();
+		}
+		return true;
 	}
 
 	@SubscribeEvent
 	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
 
 		Screen s = MinecraftClient.getInstance().currentScreen;
-		
+
 		if (this.shouldCustomize(s)) {
 			if (MenuCustomization.isMenuCustomizable(s)) {
 
 				//Allow background stuff to be rendered in scrollable GUIs
 				if (MinecraftClient.getInstance().currentScreen != null) {
-					
+
 					this.renderBackground(e.getMatrixStack(), s);
-					
+
 				}
 
 			}
@@ -1457,57 +1675,53 @@ public class MenuHandlerBase extends DrawableHelper {
 	public List<IAnimationRenderer> backgroundAnimations() {
 		return this.backgroundAnimations;
 	}
-	
-	private int getWidgetFGColor(PressableWidget w) {
-		return w.active ? 16777215 : 10526880;
-	}
 
 	private static class ThreadCaller {
 		AtomicBoolean running = new AtomicBoolean(true);
 	}
-	
+
 	public static class RandomLayoutContainer {
-		
+
 		public final String id;
 		protected List<PropertiesSet> layouts = new ArrayList<PropertiesSet>();
 		protected boolean onlyFirstTime = false;
 		protected String lastLayoutPath = null;
-		
+
 		public MenuHandlerBase parent;
-		
+
 		public RandomLayoutContainer(String id, MenuHandlerBase parent) {
 			this.id = id;
 			this.parent = parent;
 		}
-		
+
 		public List<PropertiesSet> getLayouts() {
 			return this.layouts;
 		}
-		
+
 		public void addLayout(PropertiesSet layout) {
 			this.layouts.add(layout);
 		}
-		
+
 		public void addLayouts(List<PropertiesSet> layouts) {
 			this.layouts.addAll(layouts);
 		}
-		
+
 		public void clearLayouts() {
 			this.layouts.clear();
 		}
-		
+
 		public void setOnlyFirstTime(boolean b) {
 			this.onlyFirstTime = b;
 		}
-		
+
 		public boolean isOnlyFirstTime() {
 			return this.onlyFirstTime;
 		}
-		
+
 		public void resetLastLayout() {
 			this.lastLayoutPath = null;
 		}
-		
+
 		@Nullable
 		public PropertiesSet getRandomLayout() {
 			if (!this.layouts.isEmpty()) {
@@ -1551,17 +1765,39 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 			return null;
 		}
-		
+
 	}
 
 	public static class SharedLayoutProperties {
-		
+
 		public boolean scaled = false;
+		public int autoScaleBaseWidth = 0;
+		public int autoScaleBaseHeight = 0;
 		public boolean backgroundTextureSet = false;
 		public boolean openAudioSet = false;
 		public boolean closeAudioSet = false;
 		public Map<ButtonData, String> descriptions = new HashMap<ButtonData, String>();
-		
+
+	}
+
+	public static class ButtonCustomizationContainer {
+
+		public String normalBackground = null;
+		public String hoverBackground = null;
+		public boolean loopAnimation = true;
+		public boolean restartAnimationOnHover = true;
+		public String clickSound = null;
+		public String hoverSound = null;
+		public String hoverLabel = null;
+		public int autoButtonClicks = 0;
+		public String customButtonLabel = null;
+		public String buttonDescription = null;
+		public boolean isButtonHidden = false;
+		public VisibilityRequirementContainer visibilityRequirementContainer = null;
+
+		public List<IAnimationRenderer> cachedAnimations = new ArrayList<IAnimationRenderer>();
+		public boolean lastHoverState = false;
+
 	}
 
 }

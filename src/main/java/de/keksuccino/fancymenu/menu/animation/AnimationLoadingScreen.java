@@ -19,6 +19,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 
+@Deprecated
 public class AnimationLoadingScreen extends SimpleLoadingScreen {
 
 	private Screen fallback;

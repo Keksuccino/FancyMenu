@@ -209,9 +209,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		} else {
 			this.value = "Player Entity";
 		}
-		
-		this.width = (int) (this.entity.getWidth()*this.scale);
-		this.height = (int) (this.entity.getHeight()*this.scale);
+
+		this.setWidth((int)(this.entity.getWidth()*this.scale));
+		this.setHeight((int)(this.entity.getHeight()*this.scale));
 		
 	}
 
@@ -229,8 +229,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 					}
 					
 					//Update object width and height for layout editor
-					this.width = (int) (this.entity.getWidth()*this.scale);
-					this.height = (int) (this.entity.getHeight()*this.scale);
+					this.setWidth((int)(this.entity.getWidth()*this.scale));
+					this.setHeight((int)(this.entity.getHeight()*this.scale));
 					
 					int mX = MouseInput.getMouseX();
 					int mY = MouseInput.getMouseY();
@@ -509,7 +509,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 				if (flag) {
 					fontrenderer.draw(displayNameIn, f2, 0, -1, false, matrix4f, bufferIn, false, 0, packedLightIn);
 				}
-
 				matrix.pop();
 			}
 		}

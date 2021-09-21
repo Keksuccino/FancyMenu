@@ -5,8 +5,10 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -38,6 +40,8 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
+
+	public VisibilityRequirementContainer visibilityRequirementContainer;
 	
 	protected String actionId;
 	
@@ -123,6 +127,8 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 				this.height = 0;
 			}
 		}
+
+		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
 		
 	}
 
@@ -192,9 +198,12 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 		
 		return y;
 	}
-	
+
 	public boolean shouldRender() {
 		if (this.value == null) {
+			return false;
+		}
+		if (!this.visibilityRequirementsMet()) {
 			return false;
 		}
 		return this.visible;
@@ -204,8 +213,35 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 		return this.actionId;
 	}
 
+	public void setActionId(String id) {
+		this.actionId = id;
+	}
+
 	protected static boolean isEditorActive() {
-		return LayoutEditorScreen.isActive;
+		return (MinecraftClient.getInstance().currentScreen instanceof LayoutEditorScreen);
+	}
+
+	protected boolean visibilityRequirementsMet() {
+		if (isEditorActive()) {
+			return true;
+		}
+		return this.visibilityRequirementContainer.isVisible();
+	}
+
+	public int getWidth() {
+		return this.width;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public int getHeight() {
+		return this.height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
 	}
 
 	public static enum Alignment {

@@ -7,11 +7,14 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
@@ -24,7 +27,7 @@ import net.minecraft.util.Identifier;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.2.2";
+	public static final String VERSION = "2.3.0";
 	
 	public static Config config;
 	
@@ -64,6 +67,8 @@ public class FancyMenu implements ModInitializer {
 	    		CustomGuiLoader.loadCustomGuis();
 	    		
 	    		GameIntroHandler.init();
+
+				VisibilityRequirementHandler.init();
 	    		
 	        	MenuCustomization.init();
 
@@ -93,10 +98,14 @@ public class FancyMenu implements ModInitializer {
 		try {
 
 			initLocals();
+
+			CustomLocalsHandler.loadLocalizations();
 			
 	    	GameMusicHandler.init();
 
         	GuiConstructor.init();
+
+			ServerCache.init();
         	
         	try {
                 Class.forName("optifine.Installer");
@@ -120,6 +129,7 @@ public class FancyMenu implements ModInitializer {
 		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
 		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
 		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
+		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
 		
 		Locals.getLocalsFromDir(f.getPath());
 	}
@@ -169,6 +179,8 @@ public class FancyMenu implements ModInitializer {
 			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			config.registerValue("editordeleteconfirmation", true, "layouteditor");
+			config.registerValue("showgrid", false, "layouteditor");
+			config.registerValue("gridsize", 10, "layouteditor");
 
 			config.registerValue("uiscale", 1.0F, "ui");
 			

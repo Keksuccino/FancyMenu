@@ -1,14 +1,19 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
+import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ServerInfo;
 
 public class DynamicValueHelper {
 	
@@ -50,6 +55,49 @@ public class DynamicValueHelper {
 			total = loaded;
 		}
 		in = in.replace("%totalmods%", "" + total);
+
+		in = replaceLocalsPlaceolder(in);
+
+		in = replaceServerMOTD(in);
+
+		in = replaceServerPing(in);
+
+		in = replaceServerVersion(in);
+
+		in = replaceServerPlayerCount(in);
+
+		in = replaceServerStatus(in);
+
+		if (in.contains("ram%")) {
+			long i = Runtime.getRuntime().maxMemory();
+			long j = Runtime.getRuntime().totalMemory();
+			long k = Runtime.getRuntime().freeMemory();
+			long l = j - k;
+
+			in = in.replace("%percentram%", (l * 100L / i) + "%");
+
+			in = in.replace("%usedram%", "" + bytesToMb(l));
+
+			in = in.replace("%maxram%", "" + bytesToMb(i));
+		}
+
+		if (in.contains("%realtime")) {
+
+			Calendar c = Calendar.getInstance();
+
+			in = in.replace("%realtimeyear%", "" + c.get(Calendar.YEAR));
+
+			in = in.replace("%realtimemonth%", formatToFancyDateTime(c.get(Calendar.MONTH) + 1));
+
+			in = in.replace("%realtimeday%", formatToFancyDateTime(c.get(Calendar.DAY_OF_MONTH)));
+
+			in = in.replace("%realtimehour%", formatToFancyDateTime(c.get(Calendar.HOUR_OF_DAY)));
+
+			in = in.replace("%realtimeminute%", formatToFancyDateTime(c.get(Calendar.MINUTE)));
+
+			in = in.replace("%realtimesecond%", formatToFancyDateTime(c.get(Calendar.SECOND)));
+
+		}
 		
 		return in;
 	}
@@ -58,11 +106,154 @@ public class DynamicValueHelper {
 		String s = convertFromRaw(in);
 		return !s.equals(in);
 	}
-	
+
+	private static String replaceLocalsPlaceolder(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%local:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String localizationKey = blank.split(":", 2)[1];
+					in = in.replace(s, Locals.localize(localizationKey));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	private static String replaceServerVersion(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%serverversion:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.version != null) {
+							in = in.replace(s, sd.version.getString());
+						} else {
+							in = in.replace(s, "---");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	private static String replaceServerStatus(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%serverstatus:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.ping != -1L) {
+							in = in.replace(s, "§aOnline");
+						} else {
+							in = in.replace(s, "§cOffline");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	private static String replaceServerPlayerCount(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%serverplayercount:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.playerCountLabel != null) {
+							in = in.replace(s, "" + sd.playerCountLabel.getString());
+						} else {
+							in = in.replace(s, "0/0");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	private static String replaceServerPing(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%serverping:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						in = in.replace(s, "" + sd.ping);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	private static String replaceServerMOTD(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%servermotd:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.label != null) {
+							in = in.replace(s, sd.label.getString());
+						} else {
+							in = in.replace(s, "---");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
 	private static String replaceModVersionPlaceolder(String in) {
 		try {
-			if (in.contains("%version:")) {
-				List<String> l = new ArrayList<String>();
+			for (String s : getReplaceablesWithValue(in, "%version:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String mod = blank.split(":", 2)[1];
+					if (FabricLoader.getInstance().isModLoaded(mod)) {
+						Optional<ModContainer> o = FabricLoader.getInstance().getModContainer(mod);
+						if (o.isPresent()) {
+							ModContainer c = o.get();
+							String version = c.getMetadata().getVersion().getFriendlyString();
+							in = in.replace(s, version);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	protected static List<String> getReplaceablesWithValue(String in, String placeholderBase) {
+		List<String> l = new ArrayList<String>();
+		try {
+			if (in.contains(placeholderBase)) {
 				int index = -1;
 				int i = 0;
 				while (i < in.length()) {
@@ -72,7 +263,7 @@ public class DynamicValueHelper {
 							index = i;
 						} else {
 							String sub = in.substring(index, i+1);
-							if (sub.startsWith("%version:") && sub.endsWith("%")) {
+							if (sub.startsWith(placeholderBase) && sub.endsWith("%")) {
 								l.add(sub);
 							}
 							index = -1;
@@ -80,25 +271,11 @@ public class DynamicValueHelper {
 					}
 					i++;
 				}
-				for (String s : l) {
-					if (s.contains(":")) {
-						String blank = s.substring(1, s.length()-1);
-						String mod = blank.split(":", 2)[1];
-						if (FabricLoader.getInstance().isModLoaded(mod)) {
-							Optional<ModContainer> o = FabricLoader.getInstance().getModContainer(mod);
-							if (o.isPresent()) {
-								ModContainer c = o.get();
-								String version = c.getMetadata().getVersion().getFriendlyString();
-								in = in.replace(s, version);
-							}
-						}
-					}
-				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return in;
+		return l;
 	}
 
 	//Just for forge-fabric compatibility (basically useless in fabric, since fabric doesn't support disabling mods and both values will always be the same)
@@ -113,6 +290,18 @@ public class DynamicValueHelper {
 			e.printStackTrace();
 		}
 		return -1;
+	}
+
+	private static String formatToFancyDateTime(int in) {
+		String s = "" + in;
+		if (s.length() < 2) {
+			s = "0" + s;
+		}
+		return s;
+	}
+
+	private static long bytesToMb(long bytes) {
+		return bytes / 1024L / 1024L;
 	}
 
 }

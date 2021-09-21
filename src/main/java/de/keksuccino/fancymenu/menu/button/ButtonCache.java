@@ -30,6 +30,7 @@ public class ButtonCache {
 	private static Screen current = null;
 	private static boolean cached = false;
 	private static boolean caching = false;
+	private static Map<String, PressableWidget> customButtons = new HashMap<String, PressableWidget>();
 	
 	@SubscribeEvent
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
@@ -267,6 +268,18 @@ public class ButtonCache {
 
 	public static boolean isCaching() {
 		return caching;
+	}
+
+	public static void clearCustomButtonCache() {
+		customButtons.clear();
+	}
+
+	public static void cacheCustomButton(String id, PressableWidget w) {
+		customButtons.put(id, w);
+	}
+
+	public static PressableWidget getCustomButton(String id) {
+		return customButtons.get(id);
 	}
 
 }

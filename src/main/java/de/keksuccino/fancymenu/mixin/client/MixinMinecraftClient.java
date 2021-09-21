@@ -51,6 +51,9 @@ public class MixinMinecraftClient {
 
 	@Inject(at = @At(value = "TAIL"), method = "setOverlay")
 	private void onSetOverlay(Overlay overlay, CallbackInfo info) {
+		if (FancyMenu.config == null) {
+			return;
+		}
 		if (overlay == null) {
 			preloadAnimations();
 			MixinCache.isSplashScreenRendering = false;
@@ -62,6 +65,9 @@ public class MixinMinecraftClient {
 	}
 
 	private static void preloadAnimations() {
+
+		System.out.println("[FANCYMENU] Updating animation sizes..");
+		AnimationHandler.setupAnimationSizes();
 
 		//Pre-load animation frames to prevent them from lagging when rendered for the first time
 		if (FancyMenu.config.getOrDefault("preloadanimations", true)) {

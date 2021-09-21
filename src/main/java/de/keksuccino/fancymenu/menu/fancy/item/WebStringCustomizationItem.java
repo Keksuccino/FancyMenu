@@ -87,8 +87,8 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 
 			RenderSystem.enableBlend();
 
-			this.width = (int)(this.unscaledWidth * this.scale);
-			this.height = (int)(this.unscaledHeight * this.scale);  
+			this.setWidth((int)(this.unscaledWidth * this.scale));
+			this.setHeight((int)(this.unscaledHeight * this.scale));
 			
 			int i = 0;
 			for (Map.Entry<String, Float> m : this.lines.entrySet()) {
@@ -97,12 +97,12 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				int x = (int) (this.getPosX(menu) / sc);
 				int y = (int) (this.getPosY(menu) / sc);
 				int stringwidth = (int) (font.getWidth(m.getKey()) * sc);
-				
+
 				if (this.alignment == Alignment.RIGHT) {
-					x = (int) (x + ((this.width - stringwidth) / sc));
+					x = (int) (x + ((this.getWidth() - stringwidth) / sc));
 				}
 				if (this.alignment == Alignment.CENTERED) {
-					x = (int) (x + (((this.width - stringwidth) / sc) / 2));
+					x = (int) (x + (((this.getWidth() - stringwidth) / sc) / 2));
 				}
 				
 				matrix.push();
@@ -121,14 +121,14 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			RenderSystem.disableBlend();
 		}
 	}
-	
+
 	@Override
 	public int getPosX(Screen menu) {
 		int x = super.getPosX(menu);
 		if (this.alignment == Alignment.CENTERED) {
-			x -= (int) ((this.width / 2));
+			x -= (int) ((this.getWidth() / 2));
 		} else if (this.alignment == Alignment.RIGHT) {
-			x -= (int) (this.width);
+			x -= (int) (this.getWidth());
 		}
 		return x;
 	}

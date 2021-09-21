@@ -22,7 +22,7 @@ public class LayoutSlideshow extends LayoutElement {
 	@Override
 	public List<PropertiesSection> getProperties() {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
-		
+
 		PropertiesSection p1 = new PropertiesSection("customization");
 		p1.addEntry("actionid", this.object.getActionId());
 		if (this.object.delayAppearance) {
@@ -42,17 +42,20 @@ public class LayoutSlideshow extends LayoutElement {
 			p1.addEntry("width", "%guiwidth%");
 		} else {
 			p1.addEntry("x", "" + this.object.posX);
-			p1.addEntry("width", "" + this.object.width);
+			p1.addEntry("width", "" + this.object.getWidth());
 		}
 		if (this.stretchY) {
 			p1.addEntry("y", "0");
 			p1.addEntry("height", "%guiheight%");
 		} else {
 			p1.addEntry("y", "" + this.object.posY);
-			p1.addEntry("height", "" + this.object.height);
+			p1.addEntry("height", "" + this.object.getHeight());
 		}
+
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
-		
+
 		return l;
 	}
 

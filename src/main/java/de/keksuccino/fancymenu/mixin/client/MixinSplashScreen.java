@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.mixin.cache.MixinCache;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Util;
@@ -13,6 +15,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = SplashOverlay.class)
@@ -24,8 +27,14 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 	@Shadow private long reloadCompleteTime;
 	@Shadow private long reloadStartTime;
 
+	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"), method = "render")
+	private void onRenderCurrentScreenInRender(Screen screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+		if (!MenuCustomization.isMenuCustomizable(screen)) {
+			screen.render(matrixStack, mouseX, mouseY, partialTicks);
+		}
+	}
 
-	@Inject(at = @At("HEAD"), method = "render", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "render")
 	protected void onRender(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, CallbackInfo info) {
 
 		if (!FancyMenu.isDrippyLoadingScreenLoaded()) {
@@ -49,7 +58,7 @@ public abstract class MixinSplashScreen extends DrawableHelper {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "renderProgressBar", cancellable = true)
+	@Inject(at = @At("HEAD"), method = "renderProgressBar")
 	private void onRenderLoadingBar(MatrixStack matrix, int i1, int i2, int i3, int i4, float f1, CallbackInfo info) {
 		MixinCache.isSplashScreenRendering = false;
 	}
