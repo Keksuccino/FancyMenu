@@ -145,29 +145,30 @@ public class LayoutWebString extends LayoutElement {
 		return -1;
 	}
 
+	//TODO übernehmen
 	@Override
 	protected void setOrientation(String pos) {
 		super.setOrientation(pos);
 		if (this.getObject().alignment == Alignment.CENTERED) {
 			if (this.object.orientation.endsWith("-right")) {
-				this.object.posX += this.object.width;
+				this.object.posX += this.object.getWidth();
 			}
 			if (this.object.orientation.endsWith("-centered")) {
-				this.object.posX += this.object.width / 2;
+				this.object.posX += this.object.getWidth() / 2;
 			}
 		} else if (this.getObject().alignment == Alignment.RIGHT) {
 			if (this.object.orientation.endsWith("-right")) {
-				this.object.posX += this.object.width;
+				this.object.posX += this.object.getWidth();
 			}
 			if (this.object.orientation.endsWith("-left")) {
-				this.object.posX += this.object.width;
+				this.object.posX += this.object.getWidth();
 			}
 			if (this.object.orientation.endsWith("-centered")) {
-				this.object.posX += this.object.width / 2;
+				this.object.posX += this.object.getWidth() / 2;
 			}
 		} else if (this.getObject().alignment == Alignment.LEFT) {
 			if (this.object.orientation.endsWith("-centered")) {
-				this.object.posX += this.object.width / 2;
+				this.object.posX += this.object.getWidth() / 2;
 			}
 		}
 	}
@@ -219,6 +220,10 @@ public class LayoutWebString extends LayoutElement {
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("multiline", "" + this.getObject().multiline);
 		p1.addEntry("alignment", this.getObject().alignment.key);
+
+		//TODO übernehmen
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
 		
 		return l;

@@ -49,15 +49,17 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 						}
 						
 						ratio = (double) w / (double) h;
-					    
+
+						//TODO übernehmen
 					    //Calculate missing width
-					    if ((this.width < 0) && (this.height >= 0)) {
-					    	this.width = (int)(this.height * ratio);
+					    if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+					    	this.setWidth((int)(this.getHeight() * ratio));
 					    }
 					    //Calculate missing height
-					    if ((this.height < 0) && (this.width >= 0)) {
-					    	this.height = (int)(this.width / ratio);
+					    if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+					    	this.setHeight((int)(this.getWidth() / ratio));
 					    }
+					    //-------------------
 						
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -84,8 +86,10 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				
 				this.gif.setPosX(x);
 				this.gif.setPosY(y);
-				this.gif.setWidth(this.width);
-				this.gif.setHeight(this.height);
+				//TODO übernehmen
+				this.gif.setWidth(this.getWidth());
+				this.gif.setHeight(this.getHeight());
+				//----------------
 
 				this.gif.setOpacity(this.opacity);
 				
@@ -103,7 +107,8 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				Minecraft.getInstance().getTextureManager().bindTexture(this.texture.getResourceLocation());
 				RenderSystem.enableBlend();
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
-				IngameGui.blit(matrix, x, y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				//TODO übernehmen
+				IngameGui.blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				RenderSystem.disableBlend();
 				
 			}
@@ -116,7 +121,8 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 		if ((this.texture == null) && (this.gif == null)) {
 			return false;
 		}
-		if ((this.width < 0) || (this.height < 0)) {
+		//TODO übernehmen
+		if ((this.getWidth() < 0) || (this.getHeight() < 0)) {
 			return false;
 		}
 		return super.shouldRender();

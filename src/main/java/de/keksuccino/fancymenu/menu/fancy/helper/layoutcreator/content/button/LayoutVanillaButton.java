@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -16,7 +17,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -25,44 +25,52 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
 
 public class LayoutVanillaButton extends LayoutElement {
 	
 	public final ButtonData button;
-	public boolean hidden = false;
-	public String backNormal = null;
-	public String backHovered = null;
-	public int clicks = 0;
-	public String hoverLabel;
-	public String hoverSound;
-	public String clicksound = null;
-	public String description = null;
-	
-	public LayoutVanillaButton(ButtonData button, LayoutEditorScreen handler) {
-		super(new LayoutButtonDummyCustomizationItem(button.label, button.width, button.height, button.x, button.y), true, handler);
+	//TODO übernehmen
+	public final MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
+	//TODO übernehmen
+//	public boolean hidden = false;
+//	public String backNormal = null;
+//	public String backHovered = null;
+//	public int clicks = 0;
+//	public String hoverLabel;
+//	public String hoverSound;
+//	public String clicksound = null;
+//	public String description = null;
+
+	//TODO übernehmen
+	public LayoutVanillaButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, ButtonData button, LayoutEditorScreen handler) {
+		super(new LayoutButtonDummyCustomizationItem(customizationContainer, button.label, button.width, button.height, button.x, button.y), true, handler, false);
 		this.button = button;
 		this.object.orientation = "original";
+		this.customizationContainer = customizationContainer;
+		this.object.visibilityRequirementContainer = this.customizationContainer.visibilityRequirementContainer;
+		this.init();
 	}
 
 	@Override
 	public void init() {
 		this.orderable = false;
 		this.copyable = false;
-				
+
 		super.init();
-		
+
 		AdvancedButton b0 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.vanillabutton.resetorientation"), (press) -> {
 			if (!this.object.orientation.equals("original")) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			}
-			
+
 			this.object.orientation = "original";
 			this.object.posX = this.button.x;
 			this.object.posY = this.button.y;
-			this.object.width = this.button.width;
-			this.object.height = this.button.height;
+			//TODO übernehmen
+			this.object.setWidth(this.button.width);
+			this.object.setHeight(this.button.height);
+			//----------------
 			this.rightclickMenu.closeMenu();
 			this.handler.postRenderTasks.add(new Runnable() {
 				@Override
@@ -72,260 +80,266 @@ public class LayoutVanillaButton extends LayoutElement {
 			});
 		});
 		this.rightclickMenu.addContent(b0);
-		
+
+		//TODO übernehmen (edit label nach weiter unten zu edit hoverlabel verschieben)
+//		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
+//			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel"), null, 240, (call) -> {
+//				if (call != null) {
+//					if ((this.customizationContainer.customButtonLabel == null) || (!this.customizationContainer.customButtonLabel.equals(call))) {
+//						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+//					}
+//					this.customizationContainer.customButtonLabel = call;
+//				}
+//			});
+//			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
+//			PopupHandler.displayPopup(i);
+//		});
+//		this.rightclickMenu.addContent(b2);
+//
+//		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.resetlabel"), (press) -> {
+//			this.customizationContainer.customButtonLabel = null;
+//			this.rightclickMenu.closeMenu();
+//		});
+//		this.rightclickMenu.addContent(b3);
+
+		//TODO übernehmen
+		this.rightclickMenu.addSeparator();
+
+		//TODO übernehmen (dafür alte button texture settings weg)
+		AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), (press) -> {
+			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.handler, this.customizationContainer);
+			PopupHandler.displayPopup(pop);
+		});
+		this.rightclickMenu.addContent(buttonBackgroundButton);
+
+		//TODO übernehmen
+		String loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on");
+		if (!this.customizationContainer.loopAnimation) {
+			loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off");
+		}
+		AdvancedButton loopBackgroundAnimationButton = new AdvancedButton(0, 0, 0, 0, loopAniLabel, (press) -> {
+			if (this.customizationContainer.loopAnimation) {
+				this.customizationContainer.loopAnimation = false;
+				((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off"));
+			} else {
+				this.customizationContainer.loopAnimation = true;
+				((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on"));
+			}
+		});
+		loopBackgroundAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(loopBackgroundAnimationButton);
+
+		//TODO übernehmen
+		String restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on");
+		if (!this.customizationContainer.restartAnimationOnHover) {
+			restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off");
+		}
+		AdvancedButton restartAnimationOnHoverButton = new AdvancedButton(0, 0, 0, 0, restartAniLabel, (press) -> {
+			if (this.customizationContainer.restartAnimationOnHover) {
+				this.customizationContainer.restartAnimationOnHover = false;
+				((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off"));
+			} else {
+				this.customizationContainer.restartAnimationOnHover = true;
+				((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on"));
+			}
+		});
+		restartAnimationOnHoverButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(restartAnimationOnHoverButton);
+
+		//TODO übernehmen
+		this.rightclickMenu.addSeparator();
+
+		//TODO übernehmen (von oben verschieben UND änderungen am Code übernehmen/ganzen Abschnitt kopieren)
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, this::editLabelCallback);
+			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel"), null, 240, (call) -> {
+				if (call != null) {
+					if ((this.customizationContainer.customButtonLabel == null) || !this.customizationContainer.customButtonLabel.equals(call)) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					}
+					this.customizationContainer.customButtonLabel = call;
+				}
+			});
 			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
 			PopupHandler.displayPopup(i);
 		});
 		this.rightclickMenu.addContent(b2);
 
+		//TODO übernehmen (von oben verschieben UND änderungen am Code übernehmen/ganzen Abschnitt kopieren)
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.resetlabel"), (press) -> {
-			this.editLabelCallback(this.button.label);
+			if (this.customizationContainer.customButtonLabel != null) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			this.customizationContainer.customButtonLabel = null;
 			this.rightclickMenu.closeMenu();
 		});
 		this.rightclickMenu.addContent(b3);
 
-		FMContextMenu texturePopup = new FMContextMenu();
-		this.rightclickMenu.addChild(texturePopup);
-		
-		AdvancedButton tpop1 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.normal"), (press) -> {
-			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				if (call != null) {
-					File home = new File("");
-					call = call.replace("\\", "/");
-					File f = new File(call);
-					String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
-					if (f.exists() && f.isFile() && (f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".png"))) {
-						if (filename.equals(f.getName())) {
-							if (call.startsWith(home.getAbsolutePath())) {
-								call = call.replace(home.getAbsolutePath(), "");
-								if (call.startsWith("\\") || call.startsWith("/")) {
-									call = call.substring(1);
-								}
-							}
-							if ((this.backNormal == null) || !this.backNormal.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-							}
-							
-							this.backNormal = call;
-							if (this.backHovered == null) {
-								this.backHovered = call;
-							}
-							this.handler.setVanillaTexture(this, this.backNormal, this.backHovered);
-							((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
+		//TODO übernehmen
+		this.rightclickMenu.addSeparator();
 
-						} else {
-							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
-						}
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
-					}
-				}
-			}, "jpg", "jpeg", "png");
-			
-			if (this.backNormal != null) {
-				cf.setText(this.backNormal);
-			}
-			
-			PopupHandler.displayPopup(cf);
-		});
-		texturePopup.addContent(tpop1);
-		
-		AdvancedButton tpop2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.hovered"), (press) -> {
-			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				if (call != null) {
-					File home = new File("");
-					call = call.replace("\\", "/");
-					File f = new File(call);
-					String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
-					if (f.exists() && f.isFile() && (f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".png"))) {
-						if (filename.equals(f.getName())) {
-							if (call.startsWith(home.getAbsolutePath())) {
-								call = call.replace(home.getAbsolutePath(), "");
-								if (call.startsWith("\\") || call.startsWith("/")) {
-									call = call.substring(1);
-								}
-							}
-
-							if ((this.backHovered == null) || !this.backHovered.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-							}
-							
-							this.backHovered = call;
-							if (this.backNormal == null) {
-								this.backNormal = call;
-							}
-							this.handler.setVanillaTexture(this, this.backNormal, this.backHovered);
-							((LayoutButtonDummyCustomizationItem)this.object).setTexture(TextureHandler.getResource(this.backNormal).getResourceLocation());
-
-						} else {
-							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
-						}
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
-					}
-				}
-			}, "jpg", "jpeg", "png");
-			
-			if (this.backHovered != null) {
-				cf.setText(this.backHovered);
-			}
-			
-			PopupHandler.displayPopup(cf);
-		});
-		texturePopup.addContent(tpop2);
-		
-		AdvancedButton tpop3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-
-			this.backHovered = null;
-			this.backNormal = null;
-			((LayoutButtonDummyCustomizationItem)this.object).setTexture(null);
-			this.handler.setVanillaTexture(this, null, null);
-		});
-		texturePopup.addContent(tpop3);
-		
-		AdvancedButton b4 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config.texture"), (press) -> {
-			texturePopup.setParentButton((AdvancedButton) press);
-			texturePopup.openMenuAt(0, ((AdvancedButton)press).getY());
-		});
-		this.rightclickMenu.addContent(b4);
-
+		//TODO übernehmen
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
-			FMTextInputPopup ip = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "", null, 240, (call) -> {
+			FMTextInputPopup ip = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.hoverlabel"), null, 240, (call) -> {
 				if (call != null) {
-					if ((this.hoverLabel == null) || !this.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
+					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					}
-					
-					this.hoverLabel = StringUtils.convertFormatCodes(call, "&", "§");
-					this.handler.setVanillaHoverLabel(this, this.hoverLabel);
+					this.customizationContainer.hoverLabel = StringUtils.convertFormatCodes(call, "&", "§");
 				}
 			});
 
-			if (this.hoverLabel != null) {
-				ip.setText(StringUtils.convertFormatCodes(this.hoverLabel, "§", "&"));
+			if (this.customizationContainer.hoverLabel != null) {
+				ip.setText(StringUtils.convertFormatCodes(this.customizationContainer.hoverLabel, "§", "&"));
 			}
 			PopupHandler.displayPopup(ip);
 		});
 		this.rightclickMenu.addContent(b5);
 
+		//TODO übernehmen
 		AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.hoverLabel = null;
-			this.handler.setVanillaHoverLabel(this, null);
+			if (this.customizationContainer.hoverLabel != null) {
+				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			}
+			this.customizationContainer.hoverLabel = null;
+			this.rightclickMenu.closeMenu();
 			this.rightclickMenu.closeMenu();
 		});
 		this.rightclickMenu.addContent(b6);
 
+		//TODO übernehmen
+		this.rightclickMenu.addSeparator();
+
+		//TODO übernehmen
 		AdvancedButton b7 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
-					File f = new File(call);
-					if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-						if ((this.hoverSound == null) || !this.hoverSound.equals(call)) {
+					if (!call.replace(" ", "").equals("")) {
+						File f = new File(call);
+						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+							if ((this.customizationContainer.hoverSound == null) || !this.customizationContainer.hoverSound.equals(call)) {
+								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							}
+
+							this.customizationContainer.hoverSound = call;
+						} else {
+							LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						}
+					} else {
+						if (this.customizationContainer.hoverSound != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
-						this.hoverSound = call;
-						this.handler.setVanillaHoverSound(this, call);
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						this.customizationContainer.hoverSound = null;
+						this.rightclickMenu.closeMenu();
 					}
 				}
 			}, "wav");
 
-			if (this.hoverSound != null) {
-				cf.setText(this.hoverSound);
+			if (this.customizationContainer.hoverSound != null) {
+				cf.setText(this.customizationContainer.hoverSound);
 			}
 			PopupHandler.displayPopup(cf);
 		});
 		this.rightclickMenu.addContent(b7);
 
-		AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.hoverSound = null;
-			this.handler.setVanillaHoverSound(this, null);
-			this.rightclickMenu.closeMenu();
-		});
-		this.rightclickMenu.addContent(b8);
+		//TODO übernehmen
+//		AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), (press) -> {
+//			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+//
+//			this.hoverSound = null;
+//			this.handler.setVanillaHoverSound(this, null);
+//			this.rightclickMenu.closeMenu();
+//		});
+//		this.rightclickMenu.addContent(b8);
 
+		//TODO übernehmen
 		AdvancedButton b11 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
-					File f = new File(call);
-					if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-						if ((this.clicksound == null) || !this.clicksound.equals(call)) {
+					if (!call.replace(" ", "").equals("")) {
+						File f = new File(call);
+						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+							if ((this.customizationContainer.clickSound == null) || !this.customizationContainer.clickSound.equals(call)) {
+								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							}
+
+							this.customizationContainer.clickSound = call;
+						} else {
+							LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						}
+					} else {
+						if (this.customizationContainer.clickSound != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
-						this.clicksound = call;
-						this.handler.setVanillaClickSound(this, call);
-					} else {
-						LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+						this.customizationContainer.clickSound = null;
+						this.rightclickMenu.closeMenu();
 					}
 				}
 			}, "wav");
-			
-			if (this.clicksound != null) {
-				cf.setText(this.clicksound);
+
+			if (this.customizationContainer.clickSound != null) {
+				cf.setText(this.customizationContainer.clickSound);
 			}
 			PopupHandler.displayPopup(cf);
 		});
 		this.rightclickMenu.addContent(b11);
 
-		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), (press) -> {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-			
-			this.clicksound = null;
-			this.handler.setVanillaClickSound(this, null);
-			this.rightclickMenu.closeMenu();
-		});
-		this.rightclickMenu.addContent(b12);
-		
+		//TODO übernehmen
+//		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), (press) -> {
+//			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+//
+//			this.clicksound = null;
+//			this.handler.setVanillaClickSound(this, null);
+//			this.rightclickMenu.closeMenu();
+//		});
+//		this.rightclickMenu.addContent(b12);
+
+		//TODO übernehmen
+		this.rightclickMenu.addSeparator();
+
+		//TODO übernehmen
 		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.vanillabutton.autoclick"), (press) -> {
 			FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.vanillabutton.autoclick.popup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 				if (call != null) {
-					if (call.equals("") || !MathUtils.isInteger(call)) {
-						if (this.clicks != 0) {
+					if (call.replace(" ", "").equals("") || !MathUtils.isInteger(call)) {
+						if (this.customizationContainer.autoButtonClicks != 0) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
-						this.clicks = 0;
+
+						this.customizationContainer.autoButtonClicks = 0;
 					} else {
-						if (this.clicks != Integer.parseInt(call)) {
+						if (this.customizationContainer.autoButtonClicks != Integer.parseInt(call)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
-						this.clicks = Integer.parseInt(call);
+
+						this.customizationContainer.autoButtonClicks = Integer.parseInt(call);
 					}
-					this.handler.setVanillaClicks(this, this.clicks);
 				}
 			});
-			pop.setText("" + this.clicks);
+			pop.setText("" + this.customizationContainer.autoButtonClicks);
 			PopupHandler.displayPopup(pop);
 		});
 		this.rightclickMenu.addContent(b9);
 
+		//TODO übernehmen
 		AdvancedButton b13 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			FMTextInputPopup in = new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
 				if (call != null) {
-					if ((this.description == null) || (call == null) || !this.description.equals(call)) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					if (!call.replace(" ", "").equals("")) {
+						if (!this.customizationContainer.buttonDescription.equals(call)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.customizationContainer.buttonDescription = call;
+					} else {
+						if (this.customizationContainer.buttonDescription != null) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.customizationContainer.buttonDescription = null;
 					}
-					this.description = call;
-					if (call.equals("")) {
-						this.description = null;
-					}
-					this.handler.setVanillaDescription(this, this.description);
 				}
 			});
-			
-			if (this.description != null) {
-				in.setText(this.description);
+
+			if (this.customizationContainer.buttonDescription != null) {
+				in.setText(this.customizationContainer.buttonDescription);
 			}
 			PopupHandler.displayPopup(in);
 		});
@@ -335,12 +349,19 @@ public class LayoutVanillaButton extends LayoutElement {
 		}
 		b13.setDescription(l.toArray(new String[0]));
 		this.rightclickMenu.addContent(b13);
-		
+
 	}
-	
+
 	@Override
 	public void render(MatrixStack matrix, int mouseX, int mouseY) {
-		
+
+		//TODO übernehmen
+		if (this.customizationContainer.customButtonLabel != null) {
+			this.object.value = StringUtils.convertFormatCodes(this.customizationContainer.customButtonLabel, "&", "§");
+		} else {
+			this.object.value = button.label;
+		}
+
 		if (!this.canBeModified()) {
 			//Cancel dragging
 			if (this.isDragged() && this.handler.isFocused(this) && ((this.startX != this.object.posX) || (this.startY != this.object.posY))) {
@@ -348,8 +369,10 @@ public class LayoutVanillaButton extends LayoutElement {
 				this.dragging = false;
 				this.object.posX = this.button.x;
 				this.object.posY = this.button.y;
-				this.object.width = this.button.width;
-				this.object.height = this.button.height;
+				//TODO übernehmen
+				this.object.setWidth(this.button.width);
+				this.object.setHeight(this.button.height);
+				//-------------------
 				GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
 				this.displaySetOrientationNotification();
 				return;
@@ -360,15 +383,17 @@ public class LayoutVanillaButton extends LayoutElement {
 				this.dragging = false;
 				this.object.posX = this.button.x;
 				this.object.posY = this.button.y;
-				this.object.width = this.button.width;
-				this.object.height = this.button.height;
+				//TODO übernehmen
+				this.object.setWidth(this.button.width);
+				this.object.setHeight(this.button.height);
+				//-------------------
 				this.handler.setObjectFocused(this, false, true);
 				GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
 				this.displaySetOrientationNotification();
 				return;
 			}
 		}
-		
+
         super.render(matrix, mouseX, mouseY);
 
         if (this.object.delayAppearance) {
@@ -386,9 +411,9 @@ public class LayoutVanillaButton extends LayoutElement {
 		} else {
 			this.handler.vanillaFadeIn.remove(this.button.getId());
 		}
-		
+
 	}
-	
+
 	@Override
 	public boolean isGrabberPressed() {
 		if (!this.canBeModified()) {
@@ -396,19 +421,20 @@ public class LayoutVanillaButton extends LayoutElement {
 		}
 		return super.isGrabberPressed();
 	}
-	
+
 	@Override
 	public List<PropertiesSection> getProperties() {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
-		
+
 		//hidebutton
-		if (this.hidden) {
+		//TODO übernehmen
+		if (this.customizationContainer.isButtonHidden) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "hidebutton");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
 			l.add(s);
-			//Return because no more sections needed
-			return l;
+			//TODO übernehmen
+//			return l;
 		}
 		//movebutton
 		if (this.canBeModified()) {
@@ -425,49 +451,74 @@ public class LayoutVanillaButton extends LayoutElement {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "resizebutton");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("width", "" + this.object.width);
-			s.addEntry("height", "" + this.object.height);
+			//TODO übernehmen
+			s.addEntry("width", "" + this.object.getWidth());
+			s.addEntry("height", "" + this.object.getHeight());
+			//-----------------------
 			l.add(s);
 		}
 		// renamebutton
-		if (this.object.value != this.button.label) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "setbuttonlabel");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("value", this.object.value);
-			l.add(s);
+		//TODO übernehmen
+		if (this.customizationContainer.customButtonLabel != null) {
+			if (!this.customizationContainer.customButtonLabel.equals(this.button.label)) {
+				PropertiesSection s = new PropertiesSection("customization");
+				s.addEntry("action", "setbuttonlabel");
+				s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+				s.addEntry("value", this.customizationContainer.customButtonLabel);
+				l.add(s);
+			}
 		}
 		// setbuttontexture
-		if ((this.backHovered != null) && (this.backNormal != null)) {
+		//TODO übernehmen
+		if ((this.customizationContainer.normalBackground != null) || (this.customizationContainer.hoverBackground != null)) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "setbuttontexture");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("backgroundnormal", this.backNormal);
-			s.addEntry("backgroundhovered", this.backHovered);
+			if (this.customizationContainer.normalBackground != null) {
+				if (this.customizationContainer.normalBackground.startsWith("animation:")) {
+					String aniName = this.customizationContainer.normalBackground.split("[:]", 2)[1];
+					s.addEntry("backgroundanimationnormal", aniName);
+				} else {
+					s.addEntry("backgroundnormal", this.customizationContainer.normalBackground);
+				}
+			}
+			if (this.customizationContainer.hoverBackground != null) {
+				if (this.customizationContainer.hoverBackground.startsWith("animation:")) {
+					String aniName = this.customizationContainer.hoverBackground.split("[:]", 2)[1];
+					s.addEntry("backgroundanimationhovered", aniName);
+				} else {
+					s.addEntry("backgroundhovered", this.customizationContainer.hoverBackground);
+				}
+			}
+			s.addEntry("restartbackgroundanimations", "" + this.customizationContainer.restartAnimationOnHover);
+			s.addEntry("loopbackgroundanimations", "" + this.customizationContainer.loopAnimation);
 			l.add(s);
 		}
 		// clickbutton
-		if (this.clicks > 0) {
+		//TODO übernehmen
+		if (this.customizationContainer.autoButtonClicks > 0) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "clickbutton");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("clicks", "" + this.clicks);
+			s.addEntry("clicks", "" + this.customizationContainer.autoButtonClicks);
 			l.add(s);
 		}
 		//addhoversound
-		if (this.hoverSound != null) {
+		//TODO übernehmen
+		if (this.customizationContainer.hoverSound != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addhoversound");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("path", this.hoverSound);
+			s.addEntry("path", this.customizationContainer.hoverSound);
 			l.add(s);
 		}
 		//sethoverlabel
-		if (this.hoverLabel != null) {
+		//TODO übernehmen
+		if (this.customizationContainer.hoverLabel != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "sethoverlabel");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("label", this.hoverLabel);
+			s.addEntry("label", this.customizationContainer.hoverLabel);
 			l.add(s);
 		}
 		//hidebuttonfor
@@ -484,22 +535,33 @@ public class LayoutVanillaButton extends LayoutElement {
 			l.add(s);
 		}
 		//setbuttonclicksound
-		if (this.clicksound != null) {
+		//TODO übernehmen
+		if (this.customizationContainer.clickSound != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "setbuttonclicksound");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("path", this.clicksound);
+			s.addEntry("path", this.customizationContainer.clickSound);
 			l.add(s);
 		}
 		//setbuttondescription
-		if (this.description != null) {
+		//TODO übernehmen
+		if (this.customizationContainer.buttonDescription != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "setbuttondescription");
 			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
-			s.addEntry("description", this.description);
+			s.addEntry("description", this.customizationContainer.buttonDescription);
 			l.add(s);
 		}
-		
+
+		//TODO übernehmen
+		//Visibility Requirements
+		PropertiesSection visReqs = new PropertiesSection("customization");
+		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
+		visReqs.addEntry("identifier", "%id=" + this.button.getId() + "%");
+		this.addVisibilityPropertiesTo(visReqs);
+		l.add(visReqs);
+		//-----------------
+
 		return l;
 	}
 
@@ -512,14 +574,15 @@ public class LayoutVanillaButton extends LayoutElement {
 	private boolean canBeModified() {
 		return !this.object.orientation.equals("original");
 	}
-	
-	private void editLabelCallback(String text) {
-		if (text == null) {
-			return;
-		} else {
-			this.handler.setVanillaButtonName(this, StringUtils.convertFormatCodes(text, "&", "§"));
-		}
-	}
+
+	//TODO übernehmen
+//	private void editLabelCallback(String text) {
+//		if (text == null) {
+//			return;
+//		} else {
+//			this.handler.setVanillaButtonName(this, StringUtils.convertFormatCodes(text, "&", "§"));
+//		}
+//	}
 
 	@Override
 	public void destroyObject() {

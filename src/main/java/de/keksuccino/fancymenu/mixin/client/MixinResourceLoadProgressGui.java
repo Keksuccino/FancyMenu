@@ -1,9 +1,10 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.mixin.cache.MixinCache;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
@@ -11,6 +12,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -24,8 +26,17 @@ public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 	@Shadow private long fadeOutStart;
 	@Shadow private long fadeInStart;
 
-	@Inject(at = @At("HEAD"), method = "render", cancellable = true)
-	protected void onRender(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, CallbackInfo info) {
+	//TODO übernehmen
+	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V"), method = "render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V")
+	private void onRenderCurrentScreenInRender(Screen screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+		if (!MenuCustomization.isMenuCustomizable(screen)) {
+			screen.render(matrixStack, mouseX, mouseY, partialTicks);
+		}
+	}
+
+	//TODO übernehmen (remove cancellable)
+	@Inject(at = @At("HEAD"), method = "render")
+	private void onRender(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, CallbackInfo info) {
 		if (!FancyMenu.isDrippyLoadingScreenLoaded()) {
 
 			MixinCache.isSplashScreenRendering = true;
@@ -47,7 +58,8 @@ public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 		}
 	}
 
-	@Inject(at = @At("HEAD"), method = "func_238629_a_", cancellable = true)
+	//TODO übernehmen (remove cancellable)
+	@Inject(at = @At("HEAD"), method = "func_238629_a_")
 	private void onRenderLoadingBar(MatrixStack matrix, int i1, int i2, int i3, int i4, float f1, CallbackInfo info) {
 		MixinCache.isSplashScreenRendering = false;
 	}

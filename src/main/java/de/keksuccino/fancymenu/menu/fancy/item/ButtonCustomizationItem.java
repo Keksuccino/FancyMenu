@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -13,6 +14,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
@@ -27,23 +29,28 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	private boolean onlyMultiplayer = false;
 	private boolean onlySingleplayer = false;
 	private boolean onlyOutgame = false;
+
+	//TODO übernehmen
+	public String hoverLabelRaw;
+	public String labelRaw;
+	//----------
 	
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
 		
 		if ((this.action != null) && this.action.equalsIgnoreCase("addbutton")) {
-			this.value = item.getEntryValue("label");
-			if (this.value == null) {
-				this.value = "";
+			//TODO übernehmen
+			this.labelRaw = item.getEntryValue("label");
+			if (this.labelRaw == null) {
+				this.labelRaw = "";
 			}
-			if (!isEditorActive()) {
-				this.value = DynamicValueHelper.convertFromRaw(this.value);
-			}
+			//-------------
 			
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
-			String backNormal = item.getEntryValue("backgroundnormal");
-			String backHover = item.getEntryValue("backgroundhovered");
+			//TODO übernehmen
+//			String backNormal = item.getEntryValue("backgroundnormal");
+//			String backHover = item.getEntryValue("backgroundhovered");
 
 			if (buttonaction == null) {
 				return;
@@ -66,12 +73,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			this.hoverLabel = item.getEntryValue("hoverlabel");
-			if (this.hoverLabel != null) {
-				if (!isEditorActive()) {
-					this.hoverLabel = DynamicValueHelper.convertFromRaw(this.hoverLabel);
-				}
-			}
+			//TODO übernehmen
+			this.hoverLabelRaw = item.getEntryValue("hoverlabel");
 
 			String onlyX = item.getEntryValue("onlydisplayin");
 			if (onlyX != null) {
@@ -87,7 +90,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			}
 
 			String finalAction = actionvalue;
-			this.button = new AdvancedButton(0, 0, this.width, this.height, this.value, true, (press) -> {
+			//TODO übernehmen
+			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), this.value, true, (press) -> {
 				ButtonScriptEngine.runButtonAction(buttonaction, finalAction);
 			});
 
@@ -107,13 +111,68 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				this.button.setDescription(StringUtils.splitLines(DynamicValueHelper.convertFromRaw(desc), "%n%"));
 			}
 
-			if ((this.button != null) && (backNormal != null) && (backHover != null)) {
-				File f = new File(backNormal.replace("\\", "/"));
-				File f2 = new File(backHover.replace("\\", "/"));
-				if (f.isFile() && f.exists() && f2.isFile() && f2.exists()) {
-					this.button.setBackgroundTexture(TextureHandler.getResource(backNormal.replace("\\", "/")), TextureHandler.getResource(backHover.replace("\\", "/")));
+			//TODO übernehmen
+			String backNormal = item.getEntryValue("backgroundnormal");
+			String backHover = item.getEntryValue("backgroundhovered");
+			String loopBackAnimations = item.getEntryValue("loopbackgroundanimations");
+			String restartBackAnimationsOnHover = item.getEntryValue("restartbackgroundanimations");
+			String backAnimationNormal = item.getEntryValue("backgroundanimationnormal");
+			String backAnimationHover = item.getEntryValue("backgroundanimationhovered");
+			//----------------------
+
+			//TODO übernehmen
+			if (this.button != null) {
+				if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
+					this.button.loopBackgroundAnimations = false;
+				}
+				if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
+					this.button.restartBackgroundAnimationsOnHover = false;
+				}
+				if (backNormal != null) {
+					File f = new File(backNormal.replace("\\", "/"));
+					if (f.isFile()) {
+						if (f.getPath().toLowerCase().endsWith(".gif")) {
+							this.button.setBackgroundNormal(TextureHandler.getGifResource(f.getPath()));
+						} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+							ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+							if (back != null) {
+								if (!back.isReady()) {
+									back.loadTexture();
+								}
+								this.button.setBackgroundNormal(back.getResourceLocation());
+							}
+						}
+					}
+				} else if (backAnimationNormal != null) {
+					if (AnimationHandler.animationExists(backAnimationNormal)) {
+						this.button.setBackgroundNormal(AnimationHandler.getAnimation(backAnimationNormal));
+					}
+				}
+				if (backHover != null) {
+					File f = new File(backHover.replace("\\", "/"));
+					if (f.isFile()) {
+						if (f.getPath().toLowerCase().endsWith(".gif")) {
+							this.button.setBackgroundHover(TextureHandler.getGifResource(f.getPath()));
+						} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+							ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+							if (back != null) {
+								if (!back.isReady()) {
+									back.loadTexture();
+								}
+								this.button.setBackgroundHover(back.getResourceLocation());
+							}
+						}
+					}
+				} else if (backAnimationHover != null) {
+					if (AnimationHandler.animationExists(backAnimationHover)) {
+						this.button.setBackgroundHover(AnimationHandler.getAnimation(backAnimationHover));
+					}
 				}
 			}
+
+			//TODO übernehmen
+			this.updateValues();
+
 		}
 	}
 
@@ -121,6 +180,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		if (!this.shouldRender()) {
 			return;
 		}
+
+		//TODO übernehmen
+		this.updateValues();
 
 		if (this.onlyOutgame && (Minecraft.getInstance().world != null)) {
 			return;
@@ -157,6 +219,26 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		}
 		
 		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
+	}
+
+	//TODO übernehmen
+	protected void updateValues() {
+
+		if (this.labelRaw != null) {
+			if (!isEditorActive()) {
+				this.value = DynamicValueHelper.convertFromRaw(this.labelRaw);
+			} else {
+				this.value = StringUtils.convertFormatCodes(this.labelRaw, "&", "§");
+			}
+		}
+		if (this.hoverLabelRaw != null) {
+			if (!isEditorActive()) {
+				this.hoverLabel = DynamicValueHelper.convertFromRaw(this.hoverLabelRaw);
+			} else {
+				this.hoverLabel = StringUtils.convertFormatCodes(this.hoverLabelRaw, "&", "§");
+			}
+		}
+
 	}
 	
 	@Override
@@ -195,7 +277,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			ori = 10;
 		}
 
-		String idRaw = "00" + ori + "" + Math.abs(this.posX) + "" + Math.abs(this.posY) + "" + Math.abs(this.width);
+		//TODO übernehmen
+		String idRaw = "00" + ori + "" + Math.abs(this.posX) + "" + Math.abs(this.posY) + "" + Math.abs(this.getWidth());
 		long id = 0;
 		if (MathUtils.isLong(idRaw)) {
 			id = Long.parseLong(idRaw);

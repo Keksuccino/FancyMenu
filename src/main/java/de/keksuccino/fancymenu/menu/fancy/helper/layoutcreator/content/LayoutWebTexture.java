@@ -42,15 +42,21 @@ public class LayoutWebTexture extends LayoutElement {
 			p1.addEntry("width", "%guiwidth%");
 		} else {
 			p1.addEntry("x", "" + this.object.posX);
-			p1.addEntry("width", "" + this.object.width);
+			//TODO übernehmen
+			p1.addEntry("width", "" + this.object.getWidth());
 		}
 		if (this.stretchY) {
 			p1.addEntry("y", "0");
 			p1.addEntry("height", "%guiheight%");
 		} else {
 			p1.addEntry("y", "" + this.object.posY);
-			p1.addEntry("height", "" + this.object.height);
+			//TODO übernehmen
+			p1.addEntry("height", "" + this.object.getHeight());
 		}
+
+		//TODO übernehmen
+		this.addVisibilityPropertiesTo(p1);
+
 		l.add(p1);
 		
 		return l;

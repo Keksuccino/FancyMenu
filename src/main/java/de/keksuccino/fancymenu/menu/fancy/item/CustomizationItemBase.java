@@ -7,8 +7,10 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 
@@ -39,6 +41,9 @@ public abstract class CustomizationItemBase extends AbstractGui {
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
+
+	//TODO übernehmen
+	public VisibilityRequirementContainer visibilityRequirementContainer;
 
 	protected String actionId;
 	
@@ -124,6 +129,10 @@ public abstract class CustomizationItemBase extends AbstractGui {
 				this.height = 0;
 			}
 		}
+
+		//TODO übernehmen
+		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
+
 	}
 
 	public abstract void render(MatrixStack matrix, Screen menu) throws IOException;
@@ -197,6 +206,10 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		if (this.value == null) {
 			return false;
 		}
+		//TODO übernehmen
+		if (!this.visibilityRequirementsMet()) {
+			return false;
+		}
 		return this.visible;
 	}
 
@@ -204,8 +217,42 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.actionId;
 	}
 
+	//TODO übernehmen
+	public void setActionId(String id) {
+		this.actionId = id;
+	}
+
+	//TODO übernehmen
 	protected static boolean isEditorActive() {
-		return LayoutEditorScreen.isActive;
+		return (Minecraft.getInstance().currentScreen instanceof LayoutEditorScreen);
+	}
+
+	//TODO übernehmen
+	protected boolean visibilityRequirementsMet() {
+		if (isEditorActive()) {
+			return true;
+		}
+		return this.visibilityRequirementContainer.isVisible();
+	}
+
+	//TODO übernehmen
+	public int getWidth() {
+		return this.width;
+	}
+
+	//TODO übernehmen
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	//TODO übernehmen
+	public int getHeight() {
+		return this.height;
+	}
+
+	//TODO übernehmen
+	public void setHeight(int height) {
+		this.height = height;
 	}
 
 	public static enum Alignment {

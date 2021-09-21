@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -82,6 +83,8 @@ public abstract class LayoutElement extends AbstractGui {
 	private static boolean shiftListener = false;
 	
 	private final boolean destroyable;
+	//TODO übernehmen
+	public boolean enableVisibilityRequirements = true;
 
 	public final String objectId = UUID.randomUUID().toString();
 
@@ -91,8 +94,9 @@ public abstract class LayoutElement extends AbstractGui {
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-	
-	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
+
+	//TODO übernehmen
+	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
 		this.object = object;
 		this.destroyable = destroyable;
@@ -116,14 +120,34 @@ public abstract class LayoutElement extends AbstractGui {
 			});
 			shiftListener = true;
 		}
-		
-		this.init();
+
+		//TODO übernehmen
+		if (doInit) {
+			this.init();
+		}
+	}
+
+	//TODO übernehmen
+	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
+		this(object, destroyable, handler, true);
 	}
 	
 	public void init() {
 		
 		this.rightclickMenu = new FMContextMenu();
 		this.rightclickMenu.setAlwaysOnTop(true);
+
+		//TODO übernehmen
+		/** COPY ELEMENT ID **/
+		AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
+			if (!(this instanceof LayoutVanillaButton)) {
+				Minecraft.getInstance().keyboardListener.setClipboardString(this.object.getActionId());
+			} else {
+				Minecraft.getInstance().keyboardListener.setClipboardString("vanillabtn:" + ((LayoutVanillaButton)this).button.getId());
+			}
+		});
+		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
+		this.rightclickMenu.addContent(copyIdButton);
 		
 		/** ORIENTATION **/
 		FMContextMenu orientationMenu = new FMContextMenu();
@@ -289,6 +313,16 @@ public abstract class LayoutElement extends AbstractGui {
 		if (this.orderable) {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
+
+		//TODO übernehmen
+		/** VISIBILITY REQUIREMENTS **/
+		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
+			PopupHandler.displayPopup(new VisibilityRequirementsPopup(this.object));
+		});
+		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
+		if (this.enableVisibilityRequirements) {
+			this.rightclickMenu.addContent(visibilityRequirementsButton);
+		}
 		
 		/** COPY **/
 		AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
@@ -437,42 +471,43 @@ public abstract class LayoutElement extends AbstractGui {
 		this.rightclickMenu.addSeparator();
 
 	}
-	
+
+	//TODO übernehmen
 	protected void setOrientation(String pos) {
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 
 		if (pos.equals("mid-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
-			this.object.posY = -(this.object.height / 2);
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-left")) {
 			this.object.orientation = pos;
 			this.object.posX = 0;
-			this.object.posY = -this.object.height;
+			this.object.posY = -this.object.getHeight();
 		} else if (pos.equals("top-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
+			this.object.posX = -(this.object.getWidth() / 2);
 			this.object.posY = 0;
 		} else if (pos.equals("mid-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
-			this.object.posY = -(this.object.height / 2);
+			this.object.posX = -(this.object.getWidth() / 2);
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-centered")) {
 			this.object.orientation = pos;
-			this.object.posX = -(this.object.width / 2);
-			this.object.posY = -this.object.height;
+			this.object.posX = -(this.object.getWidth() / 2);
+			this.object.posY = -this.object.getHeight();
 		} else if (pos.equals("top-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
+			this.object.posX = -this.object.getWidth();
 			this.object.posY = 0;
 		} else if (pos.equals("mid-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
-			this.object.posY = -(this.object.height / 2);
+			this.object.posX = -this.object.getWidth();
+			this.object.posY = -(this.object.getHeight() / 2);
 		} else if (pos.equals("bottom-right")) {
 			this.object.orientation = pos;
-			this.object.posX = -this.object.width;
-			this.object.posY = -this.object.height;
+			this.object.posX = -this.object.getWidth();
+			this.object.posY = -this.object.getHeight();
 		} else {
 			this.object.orientation = pos;
 			this.object.posX = 0;
@@ -563,11 +598,13 @@ public abstract class LayoutElement extends AbstractGui {
 		try {
 			if (this.stretchX) {
 				this.object.posX = 0;
-				this.object.width = Minecraft.getInstance().currentScreen.width;
+				//TODO übernehmen
+				this.object.setWidth(Minecraft.getInstance().currentScreen.width);
 			}
 			if (this.stretchY) {
 				this.object.posY = 0;
-				this.object.height = Minecraft.getInstance().currentScreen.height;
+				//TODO übernehmen
+				this.object.setHeight(Minecraft.getInstance().currentScreen.height);
 			}
 			if (this.stretchX && !this.stretchY) {
 				this.o1.active = true;
@@ -702,7 +739,8 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 
 		if (!MouseInput.isLeftMouseDown()) {
-			if (((this.startWidth != this.object.width) || (this.startHeight != this.object.height)) && this.resizing) {
+			//TODO übernehmen
+			if (((this.startWidth != this.object.getWidth()) || (this.startHeight != this.object.getHeight())) && this.resizing) {
 				if (this.cachedSnapshot != null) {
 					this.handler.history.saveSnapshot(this.cachedSnapshot);
 				}
@@ -710,8 +748,10 @@ public abstract class LayoutElement extends AbstractGui {
 			
 			this.startX = this.object.posX;
 			this.startY = this.object.posY;
-			this.startWidth = this.object.width;
-			this.startHeight = this.object.height;
+			//TODO übernehmen
+			this.startWidth = this.object.getWidth();
+			this.startHeight = this.object.getHeight();
+			//--------------
 			this.resizing = false;
 		}
 
@@ -747,25 +787,29 @@ public abstract class LayoutElement extends AbstractGui {
 	}
 	
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
+		//TODO übernehmen
 		//horizontal line top
-		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line left
-		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line right
-		AbstractGui.fill(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
-		
+		AbstractGui.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		//--------------------------------
+
 		int w = 4;
 		int h = 4;
-		
-		int yHorizontal = this.object.getPosY(handler) + (this.object.height / 2) - (h / 2);
+
+		//TODO übernehmen
+		int yHorizontal = this.object.getPosY(handler) + (this.object.getHeight() / 2) - (h / 2);
 		int xHorizontalLeft = this.object.getPosX(handler) - (w / 2);
-		int xHorizontalRight = this.object.getPosX(handler) + this.object.width - (w / 2);
+		int xHorizontalRight = this.object.getPosX(handler) + this.object.getWidth() - (w / 2);
 		
-		int xVertical = this.object.getPosX(handler) + (this.object.width / 2) - (w / 2);
+		int xVertical = this.object.getPosX(handler) + (this.object.getWidth() / 2) - (w / 2);
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
-		int yVerticalBottom = this.object.getPosY(handler) + this.object.height - (h / 2);
+		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
+		//--------------------------------
 
 		if (!this.stretchX) {
 			//grabber left
@@ -812,29 +856,32 @@ public abstract class LayoutElement extends AbstractGui {
 		} else {
 			this.activeGrabber = -1;
 		}
-		
+
+		//TODO übernehmen
 		//Render pos and size values
 		RenderUtils.setScale(matrix, 0.5F);
 		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
 		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
+		//--------------------------
 	}
-	
+
+	//TODO übernehmen
 	protected void renderHighlightBorder(MatrixStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
 		
 		//horizontal line top
-		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, c.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
 		//horizontal line bottom
-		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line left
-		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line right
-		AbstractGui.fill(matrix, this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		AbstractGui.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 	}
 	
 	/**
@@ -883,28 +930,29 @@ public abstract class LayoutElement extends AbstractGui {
 			diffY = Math.negateExact(this.startY - mouseY);
 		}
 
+		//TODO übernehmen (bis runter)
 		if (!this.stretchX) {
 			if (g == 0) { //left
 				int w = this.startWidth + this.getOpponentInt(diffX);
 				if (w >= 5) {
 					this.object.posX = this.startX + diffX;
-					this.object.width = w;
+					this.object.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
 						if (h >= 5) {
-							this.object.height = h;
+							this.object.setHeight(h);
 						}
 					}
 				}
 			}
 			if (g == 1) { //right
-				int w = this.object.width + (diffX - this.object.width);
+				int w = this.object.getWidth() + (diffX - this.object.getWidth());
 				if (w >= 5) {
-					this.object.width = w;
+					this.object.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
 						if (h >= 5) {
-							this.object.height = h;
+							this.object.setHeight(h);
 						}
 					}
 				}
@@ -916,28 +964,29 @@ public abstract class LayoutElement extends AbstractGui {
 				int h = this.startHeight + this.getOpponentInt(diffY);
 				if (h >= 5) {
 					this.object.posY = this.startY + diffY;
-					this.object.height = h;
+					this.object.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
 						if (w >= 5) {
-							this.object.width = w;
+							this.object.setWidth(w);
 						}
 					}
 				}
 			}
 			if (g == 3) { //bottom
-				int h = this.object.height + (diffY - this.object.height);
+				int h = this.object.getHeight() + (diffY - this.object.getHeight());
 				if (h >= 5) {
-					this.object.height = h;
+					this.object.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
 						if (w >= 5) {
-							this.object.width = w;
+							this.object.setWidth(w);
 						}
 					}
 				}
 			}
 		}
+		//-------------------------
 	}
 	
 	private int getOpponentInt(int i) {
@@ -947,9 +996,10 @@ public abstract class LayoutElement extends AbstractGui {
 			return Math.abs(i);
 		}
 	}
-	
+
+	//TODO übernehmen
 	protected void updateHovered(int mouseX, int mouseY) {
-		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.width) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.height) {
+		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.getWidth()) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.getHeight()) {
 			this.hovered = true;
 		} else {
 			this.hovered = false;
@@ -1003,21 +1053,25 @@ public abstract class LayoutElement extends AbstractGui {
 	public int getY() {
 		return this.object.getPosY(handler);
 	}
-	
+
+	//TODO übernehmen
 	public void setWidth(int width) {
-		this.object.width = width;
+		this.object.setWidth(width);
 	}
-	
+
+	//TODO übernehmen
 	public void setHeight(int height) {
-		this.object.height = height;
+		this.object.setHeight(height);
 	}
-	
+
+	//TODO übernehmen
 	public int getWidth() {
-		return this.object.width;
+		return this.object.getWidth();
 	}
-	
+
+	//TODO übernehmen
 	public int getHeight() {
-		return this.object.height;
+		return this.object.getHeight();
 	}
 	
 	public boolean isDestroyable() {
@@ -1056,5 +1110,132 @@ public abstract class LayoutElement extends AbstractGui {
 	}
 
 	public abstract List<PropertiesSection> getProperties();
+
+	//TODO übernehmen
+	protected void addVisibilityPropertiesTo(PropertiesSection sec) {
+
+		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
+
+		if (c.vrCheckForSingleplayer) {
+			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
+		}
+		if (c.vrCheckForMultiplayer) {
+			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
+		}
+		if (c.vrCheckForRealTimeHour) {
+			String val = "";
+			for (int i : c.vrRealTimeHour) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimehour", "" + c.vrShowIfRealTimeHour);
+				sec.addEntry("vr:value:realtimehour", val);
+			}
+		}
+		if (c.vrCheckForRealTimeMinute) {
+			String val = "";
+			for (int i : c.vrRealTimeMinute) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeminute", "" + c.vrShowIfRealTimeMinute);
+				sec.addEntry("vr:value:realtimeminute", val);
+			}
+		}
+		if (c.vrCheckForRealTimeSecond) {
+			String val = "";
+			for (int i : c.vrRealTimeSecond) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimesecond", "" + c.vrShowIfRealTimeSecond);
+				sec.addEntry("vr:value:realtimesecond", val);
+			}
+		}
+		if (c.vrCheckForWindowWidth) {
+			String val = "";
+			for (int i : c.vrWindowWidth) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
+				sec.addEntry("vr:value:windowwidth", val);
+			}
+		}
+		if (c.vrCheckForWindowHeight) {
+			String val = "";
+			for (int i : c.vrWindowHeight) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
+				sec.addEntry("vr:value:windowheight", val);
+			}
+		}
+		if (c.vrCheckForWindowWidthBiggerThan) {
+			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
+			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
+		}
+		if (c.vrCheckForWindowHeightBiggerThan) {
+			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
+			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
+		}
+		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
+			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
+			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
+		}
+		if (c.vrCheckForWorldLoaded) {
+			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
+		}
+		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
+			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
+			sec.addEntry("vr:value:language", "" + c.vrLanguage);
+		}
+		if (c.vrCheckForFullscreen) {
+			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
+		}
+		if (c.vrCheckForOsWindows) {
+			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
+		}
+		if (c.vrCheckForOsMac) {
+			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
+		}
+		if (c.vrCheckForOsLinux) {
+			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
+		}
+		if (c.vrCheckForModLoaded) {
+			String val = "";
+			for (String s : c.vrModLoaded) {
+				val += s + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
+				sec.addEntry("vr:value:modloaded", val);
+			}
+		}
+		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
+			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
+			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
+		}
+
+	}
 
 }

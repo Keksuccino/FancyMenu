@@ -104,9 +104,9 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			}
 			
 			this.value = "splash text";
-			
-			this.width = (int) (30 * basescale * this.scale);
-			this.height = (int) (10 * basescale * this.scale);
+
+			this.setWidth((int) (30 * basescale * this.scale));
+			this.setHeight((int) (10 * basescale * this.scale));
 			
 		}
 	}
@@ -117,9 +117,9 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			isNewMenu = false;
 		}
 		this.isNewMenuThis = isNewMenu;
-		
-		this.width = (int) (30 * basescale * this.scale);
-		this.height = (int) (10 * basescale * this.scale);
+
+		this.setWidth((int) (30 * basescale * this.scale));
+		this.setHeight((int) (10 * basescale * this.scale));
 		
 		if (this.shouldRender()) {
 			
@@ -181,7 +181,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			RenderSystem.scalef(this.scale, this.scale, this.scale);
 			
 			RenderSystem.pushMatrix();
-			RenderSystem.translatef(((this.getPosX(s) + (this.width / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
+			RenderSystem.translatef(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
 			RenderSystem.rotatef(this.rotation, 0.0F, 0.0F, 1.0F);
 			RenderSystem.scalef(f, f, f);
 

@@ -29,7 +29,6 @@ public class MixinMinecraft {
 
 	private static boolean customWindowInit = false;
 
-	//TODO übernehmen
 	private static boolean animationsLoaded = false;
 	
 	@Inject(at = @At(value = "HEAD"), method = "getWindowTitle", cancellable = true)
@@ -53,10 +52,11 @@ public class MixinMinecraft {
 
 	@Inject(at = @At(value = "HEAD"), method = "setLoadingGui", cancellable = false)
 	private void onSetLoadingGui(LoadingGui loadingGuiIn, CallbackInfo info) {
+		if (FancyMenu.config == null) {
+			return;
+		}
 		if (loadingGuiIn == null) {
-			//TODO übernehmen
 			preloadAnimations();
-			//TODO übernehmen
 			MixinCache.isSplashScreenRendering = false;
 			MenuCustomization.isLoadingScreen = false;
 			MenuCustomization.reloadCurrentMenu();
@@ -66,6 +66,9 @@ public class MixinMinecraft {
 	}
 
 	private static void preloadAnimations() {
+
+		System.out.println("[FANCYMENU] Updating animation sizes..");
+		AnimationHandler.setupAnimationSizes();
 
 		//Pre-load animation frames to prevent them from lagging when rendered for the first time
 		if (FancyMenu.config.getOrDefault("preloadanimations", true)) {

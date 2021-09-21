@@ -15,36 +15,35 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.math.MathHelper;
 
 public class StringCustomizationItem extends CustomizationItemBase {
-	
+
 	public float scale = 1.0F;
 	public boolean shadow = false;
 	public Alignment alignment = Alignment.LEFT;
-	
+
+	//TODO übernehmen
+	public String valueRaw;
+
 	public StringCustomizationItem(PropertiesSection item) {
 		super(item);
 
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtext")) {
-			this.value = item.getEntryValue("value");
-			if (this.value != null) {
-				if (!isEditorActive()) {
-					this.value = DynamicValueHelper.convertFromRaw(this.value);
-				} else {
-					this.value = StringUtils.convertFormatCodes(this.value, "&", "§");
-				}
-			}
-			
+			//TODO übernehmen
+			this.valueRaw = item.getEntryValue("value");
+			this.updateValue();
+			//-----------------
+
 			String sh = item.getEntryValue("shadow");
 			if ((sh != null)) {
 				if (sh.equalsIgnoreCase("true")) {
 					this.shadow = true;
 				}
 			}
-			
+
 			String sc = item.getEntryValue("scale");
 			if ((sc != null) && MathUtils.isFloat(sc)) {
 				this.scale = Float.parseFloat(sc);
 			}
-			
+
 			String al = item.getEntryValue("alignment");
 			if (al != null) {
 				if (al.equalsIgnoreCase("right")) {
@@ -54,15 +53,34 @@ public class StringCustomizationItem extends CustomizationItemBase {
 					this.alignment = Alignment.CENTERED;
 				}
 			}
-			
+
 		}
+	}
+
+	//TODO übernehmen
+	protected void updateValue() {
+
+		if (this.valueRaw != null) {
+			if (!isEditorActive()) {
+				this.value = DynamicValueHelper.convertFromRaw(this.valueRaw);
+			} else {
+				this.value = StringUtils.convertFormatCodes(this.valueRaw, "&", "§");
+			}
+		}
+
+		this.width = (int) (Minecraft.getInstance().fontRenderer.getStringWidth(this.value) * this.scale);
+		this.height = (int) (Minecraft.getInstance().fontRenderer.FONT_HEIGHT * this.scale);
+
 	}
 
 	public void render(MatrixStack matrix, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}
-		
+
+		//TODO übernehmen
+		this.updateValue();
+
 		int x = this.getPosX(menu);
 		int y = this.getPosY(menu);
 		FontRenderer font = Minecraft.getInstance().fontRenderer;

@@ -2,6 +2,9 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
+import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import org.apache.commons.lang3.tuple.Pair;
 
 import de.keksuccino.fancymenu.keybinding.Keybinding;
@@ -30,7 +33,8 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.2.2";
+	//TODO übernehmen
+	public static final String VERSION = "2.3.0";
 	
 	public static Config config;
 	
@@ -71,6 +75,9 @@ public class FancyMenu {
 	    		CustomGuiLoader.loadCustomGuis();
 	    		
 	    		GameIntroHandler.init();
+
+	    		//TODO übernehmen
+				VisibilityRequirementHandler.init();
 	    		
 	        	MenuCustomization.init();
 
@@ -99,10 +106,16 @@ public class FancyMenu {
 		try {
 
 			initLocals();
+
+			//TODO übernehmen
+			CustomLocalsHandler.loadLocalizations();
 			
 	    	GameMusicHandler.init();
 
         	GuiConstructor.init();
+
+        	//TODO übernehmen
+			ServerCache.init();
 
         	try {
                 Class.forName("optifine.Installer");
@@ -126,6 +139,8 @@ public class FancyMenu {
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
+		//TODO übernehmen
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
 		
 		Locals.getLocalsFromDir(f.getPath());
 	}
@@ -161,13 +176,10 @@ public class FancyMenu {
 			config.registerValue("splashrotation", -20, "mainmenu_splash");
 			
 			config.registerValue("gameintroanimation", "", "loading");
-			//TODO übernehmen
-//			config.registerValue("loadingscreendarkmode", false, "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
 			config.registerValue("loadinganimationcolor", "#ffffffff", "loading");
-			//TODO übernehmen
 			config.registerValue("preloadanimations", false, "loading");
 
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
@@ -178,6 +190,10 @@ public class FancyMenu {
 			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			config.registerValue("editordeleteconfirmation", true, "layouteditor");
+			//TODO übernehmen
+			config.registerValue("showgrid", false, "layouteditor");
+			config.registerValue("gridsize", 10, "layouteditor");
+			//--------------------
 
 			config.registerValue("uiscale", 1.0F, "ui");
 			

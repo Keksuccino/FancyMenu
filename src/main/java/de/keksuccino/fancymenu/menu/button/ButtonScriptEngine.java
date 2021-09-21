@@ -275,7 +275,7 @@ public class ButtonScriptEngine {
 		}
 	}
 
-	private  static boolean isMacOS() {
+	private static boolean isMacOS() {
 		return Minecraft.IS_RUNNING_ON_MAC;
 	}	
 

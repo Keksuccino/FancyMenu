@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.animation;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +11,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IngameGui;
+import net.minecraft.client.renderer.texture.NativeImage;
+import net.minecraft.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
@@ -35,6 +38,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     protected float opacity = 1.0F;
 
     private boolean ready = false;
+    protected boolean sizeSet = false;
 
     /** Renders an animation out of multiple images (frames). **/
     public ResourcePackAnimationRenderer(@Nullable String resourceNamespace, List<String> frameNames, int fps, boolean loop, int posX, int posY, int width, int height) {
@@ -190,7 +194,6 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         return this.resources.size();
     }
 
-    //TODO übernehmen
     public List<ResourceLocation> getAnimationFrames() {
         return this.resources;
     }
@@ -247,6 +250,32 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     @Override
     public int getPosY() {
         return this.y;
+    }
+
+    public boolean setupAnimationSize() {
+        if (sizeSet) {
+            return true;
+        }
+        try {
+            List<ResourceLocation> l = this.getAnimationFrames();
+            if (!l.isEmpty()) {
+                ResourceLocation r = l.get(0);
+                IResource res = Minecraft.getInstance().getResourceManager().getResource(r);
+                if (res != null) {
+                    InputStream in = res.getInputStream();
+                    if (in != null) {
+                        NativeImage i = NativeImage.read(in);
+                        this.width = i.getWidth();
+                        this.height = i.getHeight();
+                        System.out.println("[FANCYMENU] Successfully updated width and height for resource pack animation: " + this.resourceNamespace);
+                        this.sizeSet = true;
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception ex) {}
+        System.err.println("[FANCYMENU] ERROR: Failed to update width and height for resource pack animation: " + this.resourceNamespace);
+        return false;
     }
 
 }

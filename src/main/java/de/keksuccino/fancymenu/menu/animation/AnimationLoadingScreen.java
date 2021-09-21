@@ -20,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
 
+@Deprecated
 public class AnimationLoadingScreen extends SimpleLoadingScreen {
 
 	private Screen fallback;

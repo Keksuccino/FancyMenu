@@ -207,9 +207,11 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		} else {
 			this.value = "Player Entity";
 		}
-		
-		this.width = (int) (this.entity.getWidth()*this.scale);
-		this.height = (int) (this.entity.getHeight()*this.scale);
+
+		//TODO übernehmen
+		this.setWidth((int)(this.entity.getWidth()*this.scale));
+		this.setHeight((int)(this.entity.getHeight()*this.scale));
+		//--------------
 		
 	}
 
@@ -227,8 +229,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 					}
 					
 					//Update object width and height for layout editor
-					this.width = (int) (this.entity.getWidth()*this.scale);
-					this.height = (int) (this.entity.getHeight()*this.scale);
+					//TODO übernehmen
+					this.setWidth((int)(this.entity.getWidth()*this.scale));
+					this.setHeight((int)(this.entity.getHeight()*this.scale));
+					//--------------
 					
 					int mX = MouseInput.getMouseX();
 					int mY = MouseInput.getMouseY();
