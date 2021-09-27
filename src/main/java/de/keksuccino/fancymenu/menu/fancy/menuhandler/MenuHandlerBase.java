@@ -547,7 +547,29 @@ public class MenuHandlerBase {
 
 		//Handle vanilla button visibility requirements
 		for (Map.Entry<GuiButton, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
-			m.getKey().visible = m.getValue().isVisible();
+			boolean isBtnHidden = false;
+			for (ButtonData d : this.hidden) {
+				if (d.getButton() == m.getKey()) {
+					isBtnHidden = true;
+					break;
+				}
+			}
+			if (!isBtnHidden) {
+				PropertiesSection dummySec = new PropertiesSection("customization");
+				dummySec.addEntry("action", "vanilla_button_visibility_requirements");
+				ButtonData btn = null;
+				for (ButtonData d : ButtonCache.getButtons()) {
+					if (d.getButton() == m.getKey()) {
+						btn = d;
+						break;
+					}
+				}
+				if (btn != null) {
+					VanillaButtonCustomizationItem i = new VanillaButtonCustomizationItem(dummySec, btn, this);
+					i.visibilityRequirements = m.getValue();
+					this.backgroundRenderItems.add(i);
+				}
+			}
 		}
 
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
@@ -732,7 +754,7 @@ public class MenuHandlerBase {
 
 			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 				if (b != null) {
-					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 
@@ -865,16 +887,16 @@ public class MenuHandlerBase {
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 				if (b != null) {
-					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd).visibilityRequirementContainer);
+					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd, this).visibilityRequirementContainer);
 				}
 			}
 
 			if (action.equalsIgnoreCase("addhoversound")) {
 				if (b != null) {
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+						backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					} else {
-						frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+						frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					}
 				}
 			}
@@ -882,9 +904,9 @@ public class MenuHandlerBase {
 			if (action.equalsIgnoreCase("sethoverlabel")) {
 				if (b != null) {
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+						backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					} else {
-						frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd));
+						frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					}
 				}
 			}
@@ -1148,8 +1170,13 @@ public class MenuHandlerBase {
 			
 			boolean fadein = this.fadeInVanilla.containsKey(d);
 			float delaysec = this.delayAppearanceVanilla.get(d);
+
+			VisibilityRequirementContainer vis = this.vanillaButtonVisibilityRequirementContainers.get(d.getButton());
 			
 			d.getButton().visible = false;
+			if (vis != null) {
+				vis.forceHide = true;
+			}
 			
 			if (fadein) {
 				buttonAlphas.put(d.getButton(), 0.1F);
@@ -1177,6 +1204,9 @@ public class MenuHandlerBase {
 							if (!fade) {
 								if (now >= start + (int)delay) {
 									d.getButton().visible = true;
+									if (vis != null) {
+										vis.forceHide = false;
+									}
 									if (!fadein) {
 										return;
 									} else {
@@ -1831,6 +1861,15 @@ public class MenuHandlerBase {
 			return null;
 		}
 		
+	}
+
+	public boolean isVanillaButtonHidden(GuiButton w) {
+		for (ButtonData d : this.hidden) {
+			if (d.getButton() == w) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static class SharedLayoutProperties {

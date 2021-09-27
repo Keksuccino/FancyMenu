@@ -2,8 +2,12 @@ package de.keksuccino.fancymenu.menu.servers;
 
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiMultiplayer;
+import net.minecraft.client.gui.ServerListEntryNormal;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.network.ServerPinger;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +30,7 @@ public class ServerCache {
                     e.printStackTrace();
                 }
                 try {
-                    Thread.sleep(15000);
+                    Thread.sleep(30000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -37,6 +41,7 @@ public class ServerCache {
     public static void cacheServer(ServerData server) {
         if (server.serverIP != null) {
             try {
+                server.pingToServer = -1L;
                 servers.put(server.serverIP, server);
                 pingServers();
             } catch (Exception e) {
@@ -68,8 +73,13 @@ public class ServerCache {
                 new Thread(() -> {
                     try {
                         pinger.ping(d);
+                        if (d.populationInfo.equals("")) {
+                            d.pingToServer = -1L;
+                            d.serverMOTD = TextFormatting.DARK_RED + I18n.format("multiplayer.status.cannot_resolve");
+                        }
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        d.pingToServer = -1L;
+                        d.serverMOTD = TextFormatting.DARK_RED + I18n.format("multiplayer.status.cannot_resolve");
                     }
                 }).start();
             } catch (Exception e) {
