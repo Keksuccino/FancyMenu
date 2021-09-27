@@ -6,6 +6,8 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.sound.SoundHandler;
@@ -24,9 +26,13 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	public String labelRaw;
 	protected boolean normalLabelCached = false;
 
-	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent) {
+	public MenuHandlerBase handler;
+	public VisibilityRequirementContainer visibilityRequirements = null;
+
+	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent, MenuHandlerBase handler) {
 		super(item);
 		this.parent = parent;
+		this.handler = handler;
 
 		if ((this.action != null) && (this.parent != null)) {
 			
@@ -68,6 +74,15 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		if (this.parent != null) {
 
 			this.updateValues();
+
+			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
+				if (this.visibilityRequirements != null) {
+					if (!this.handler.isVanillaButtonHidden(this.parent.getButton())) {
+						this.visibilityRequirementContainer = this.visibilityRequirements;
+						this.parent.getButton().visible = this.visibilityRequirementsMet();
+					}
+				}
+			}
 			
 			if (this.action.equals("addhoversound")) {
 				if (this.parent.getButton().isHovered() && !hovered && (this.value != null)) {

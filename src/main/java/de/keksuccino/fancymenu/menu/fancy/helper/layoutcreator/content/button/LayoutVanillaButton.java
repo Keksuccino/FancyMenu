@@ -254,7 +254,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			FMTextInputPopup in = new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
-						if (!this.customizationContainer.buttonDescription.equals(call)) {
+						if ((this.customizationContainer.buttonDescription == null) || !this.customizationContainer.buttonDescription.equals(call)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
 						this.customizationContainer.buttonDescription = call;
