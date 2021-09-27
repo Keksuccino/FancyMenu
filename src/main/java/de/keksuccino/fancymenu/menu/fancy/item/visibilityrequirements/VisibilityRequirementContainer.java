@@ -16,6 +16,9 @@ import java.util.List;
 
 public class VisibilityRequirementContainer {
 
+    public boolean forceShow = false;
+    public boolean forceHide = false;
+
     //Visibility Requirements
     //VR show-if values are always the requirement that must be met to show the element.
     //So if the system should check for the main hand item and it's show-if value is set to FALSE, the element is visible if NO ITEM IS IN THE MAIN HAND.
@@ -375,6 +378,13 @@ public class VisibilityRequirementContainer {
     }
 
     public boolean isVisible() {
+
+        if (forceShow) {
+            return true;
+        }
+        if (forceHide) {
+            return false;
+        }
 
         //VR: Is Singleplayer
         if (this.vrCheckForSingleplayer) {

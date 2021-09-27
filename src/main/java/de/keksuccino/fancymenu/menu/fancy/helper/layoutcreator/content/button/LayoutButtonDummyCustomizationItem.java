@@ -7,6 +7,7 @@ import java.io.IOException;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -96,6 +97,10 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setHeight(this.getHeight());
 			//----------------
 			animation.setLooped(this.button.loopAnimation);
+			//TODO übernehmen 2.3.2
+			if (animation instanceof AdvancedAnimation) {
+				((AdvancedAnimation) animation).setMuteAudio(true);
+			}
 
 			animation.render(matrix);
 
@@ -104,6 +109,10 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setWidth(aniWidth);
 			animation.setHeight(aniHeight);
 			animation.setLooped(aniLoop);
+			//TODO übernehmen 2.3.2
+			if (animation instanceof AdvancedAnimation) {
+				((AdvancedAnimation) animation).setMuteAudio(false);
+			}
 		} else {
 			//TODO übernehmen
 			fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());

@@ -34,7 +34,7 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.3.0";
+	public static final String VERSION = "2.3.3";
 	
 	public static Config config;
 	
