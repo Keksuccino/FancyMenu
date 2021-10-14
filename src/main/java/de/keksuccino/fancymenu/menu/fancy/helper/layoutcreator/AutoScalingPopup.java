@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;

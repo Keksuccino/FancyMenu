@@ -553,14 +553,14 @@ public class LayoutVanillaButton extends LayoutElement {
 			l.add(s);
 		}
 
-		//TODO übernehmen
 		//Visibility Requirements
 		PropertiesSection visReqs = new PropertiesSection("customization");
 		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
 		visReqs.addEntry("identifier", "%id=" + this.button.getId() + "%");
 		this.addVisibilityPropertiesTo(visReqs);
-		l.add(visReqs);
-		//-----------------
+		if (visReqs.getEntries().size() > 2) {
+			l.add(visReqs);
+		}
 
 		return l;
 	}
