@@ -10,7 +10,7 @@
     FancyMenu is licensed under KML.
     See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more infos about this license.
   ",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "mcversion": "${mcversion}",
   "updateUrl": "",
   "authorList": ["Keksuccino"],

@@ -134,12 +134,12 @@ public class ButtonCache {
 				} else {
 					if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
 						System.out.println("");
-						System.out.println("#### WARNING [FANCYMENU]: Overlapping buttons found!");
-						System.out.println("At: X=" + button.x + " Y=" + button.y + "!");
+						System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
+						System.out.println("At: X=" + button.x + " Y=" + button.y);
 						System.out.println("Labels: " + button.label + ", " + buttons.get(id.getId()).label);
 						System.out.println("");
-						System.out.println("If one or both of these buttons are added by a mod, please contact the developer(s) to fix this!");
-						System.out.println("FancyMenu cannot customize overlapping buttons!");
+						System.out.println("FancyMenu found overlapping buttons and wasn't able to generate working IDs for them to make them customizable!");
+						System.out.println("Please report this to the mod author of FancyMenu and give informations about what buttons caused it.");
 						System.out.println("#####################################################");
 						System.out.println("");
 					}
@@ -153,6 +153,7 @@ public class ButtonCache {
 	private static List<ButtonData> cacheButtons(GuiScreen s, int screenWidth, int screenHeight) {
 		caching = true;
 		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
+		List<Long> ids = new ArrayList<Long>();
 		try {
 			//Resetting the button list
 			//Field f0 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
@@ -186,8 +187,9 @@ public class ButtonCache {
 				String idRaw = w.x + "" + w.y;
 				long id = 0;
 				if (MathUtils.isLong(idRaw)) {
-					id = Long.parseLong(idRaw);
+					id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
 				}
+				ids.add(id);
 				buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.displayString), s));
 			}
 			
@@ -197,44 +199,54 @@ public class ButtonCache {
 		caching = false;
 		return buttonlist;
 	}
-	
-	public static void replaceButton(long id, GuiButton w) {
-		ButtonData d = getButtonForId(id);
-		GuiButton ori = null;
-		if ((d != null) && (current != null)) {
-			try {
-				//TODO reflection
-				//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
-				Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
-				List<GuiButton> l = (List<GuiButton>) f.get(current);
-				List<GuiButton> l2 = new ArrayList<GuiButton>();
-				
-				for (GuiButton b : l) {
-					if (b == d.getButton()) {
-						l2.add(w);
-						ori = b;
-					} else {
-						l2.add(b);
-					}
-				}
-				
-				f.set(current, l2);
-				if (ori != null) {
-					replaced.put(d.getId(), ori);
-				}
-				d.replaceButton(w);
-			} catch (Exception e) {
-				e.printStackTrace();
+
+	protected static Long getAvailableIdFromBaseId(long baseId, List<Long> ids) {
+		if (ids.contains(baseId)) {
+			String newId = baseId + "1";
+			if (MathUtils.isLong(newId)) {
+				return getAvailableIdFromBaseId(Long.parseLong(newId), ids);
 			}
 		}
+		return baseId;
 	}
-
-	public static void replaceButton(String key, GuiButton w) {
-		ButtonData d = getButtonForKey(key);
-		if (d != null) {
-			replaceButton(d.getId(), w);
-		}
-	}
+	
+//	public static void replaceButton(long id, GuiButton w) {
+//		ButtonData d = getButtonForId(id);
+//		GuiButton ori = null;
+//		if ((d != null) && (current != null)) {
+//			try {
+//				//TODO reflection
+//				//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
+//				Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
+//				List<GuiButton> l = (List<GuiButton>) f.get(current);
+//				List<GuiButton> l2 = new ArrayList<GuiButton>();
+//
+//				for (GuiButton b : l) {
+//					if (b == d.getButton()) {
+//						l2.add(w);
+//						ori = b;
+//					} else {
+//						l2.add(b);
+//					}
+//				}
+//
+//				f.set(current, l2);
+//				if (ori != null) {
+//					replaced.put(d.getId(), ori);
+//				}
+//				d.replaceButton(w);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
+//
+//	public static void replaceButton(String key, GuiButton w) {
+//		ButtonData d = getButtonForKey(key);
+//		if (d != null) {
+//			replaceButton(d.getId(), w);
+//		}
+//	}
 	
 	public static void cacheFrom(GuiScreen s, int screenWidth, int screenHeight) {
 		updateButtons(s);
