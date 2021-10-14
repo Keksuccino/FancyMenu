@@ -27,7 +27,7 @@ import net.minecraft.util.Identifier;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.3.3";
+	public static final String VERSION = "2.3.4";
 	
 	public static Config config;
 	
