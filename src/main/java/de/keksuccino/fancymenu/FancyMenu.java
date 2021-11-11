@@ -24,11 +24,15 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.relauncher.Side;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 	
-	public static final String VERSION = "2.3.4";
+	public static final String VERSION = "2.3.6";
+
+	public static final Logger LOGGER = LogManager.getLogger();
 	
 	public static Config config;
 	

@@ -2,15 +2,8 @@
 {
   "modid": "fancymenu",
   "name": "FancyMenu",
-  "description": "Give your life a fancy touch. You deserve it.
-  
-  COPYRIGHT:
-  
-  > FancyMenu © Copyright 2020-2021 Keksuccino.
-    FancyMenu is licensed under KML.
-    See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more infos about this license.
-  ",
-  "version": "2.3.4",
+  "description": "Give your life a fancy touch. You deserve it.\n  \n  COPYRIGHT:\n  \n  > FancyMenu © Copyright 2020-2021 Keksuccino.\n    FancyMenu is licensed under KML.\n    See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more infos about this license.",
+  "version": "2.3.6",
   "mcversion": "${mcversion}",
   "updateUrl": "",
   "authorList": ["Keksuccino"],

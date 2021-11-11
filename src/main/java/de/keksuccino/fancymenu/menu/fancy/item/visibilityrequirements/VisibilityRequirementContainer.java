@@ -635,11 +635,11 @@ public class VisibilityRequirementContainer {
         if (this.vrCheckForServerOnline) {
             ServerData sd = ServerCache.getServer(this.vrServerOnline);
             if (this.vrShowIfServerOnline) {
-                if ((sd != null) && (sd.pingToServer == -1)) {
+                if ((sd != null) && (sd.pingToServer <= -1)) {
                     return false;
                 }
             } else {
-                if ((sd != null) && (sd.pingToServer != -1)) {
+                if ((sd != null) && (sd.pingToServer > -1)) {
                     return false;
                 }
             }

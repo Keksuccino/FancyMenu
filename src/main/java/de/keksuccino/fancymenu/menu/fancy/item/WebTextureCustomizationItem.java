@@ -1,79 +1,117 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.resources.TextureHandler;
-import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
+import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.util.ResourceLocation;
+
+import javax.imageio.ImageIO;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
-	
-	public WebTextureResourceLocation texture;
+
+	public volatile ResourceLocation texture;
+	public volatile WebTexture webTexture;
 	public String rawURL = "";
-	
+	public volatile boolean ready = false;
+
+	public static volatile Map<String, WebTexture> textureCache = new HashMap<>();
+
 	public WebTextureCustomizationItem(PropertiesSection item) {
 		super(item);
-		
+
 		if ((this.action != null) && this.action.equalsIgnoreCase("addwebtexture")) {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
 				this.value = DynamicValueHelper.convertFromRaw(this.value);
-				try {
+
+				if ((this.width <= 0) && (this.height <= 0)) {
+					this.setWidth(100);
+				}
+
+				new Thread(() -> {
 					try {
-						this.texture = TextureHandler.getWebResource(this.value);
 
-						if ((this.texture == null) || !this.texture.isReady()) {
-							this.setWidth(100);
-							this.setHeight(100);
-							return;
-						}
-						
-						int w = this.texture.getWidth();
-						int h = this.texture.getHeight();
-						double ratio = (double) w / (double) h;
+						if (isValidUrl(this.value)) {
+							this.webTexture = getWebTexture(this.value);
 
-						//Calculate missing width
-						if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-							this.setWidth((int)(this.getHeight() * ratio));
+							if (this.webTexture == null) {
+								if (this.width <= 0) {
+									this.setWidth(100);
+								}
+								if (this.height <= 0) {
+									this.setHeight(100);
+								}
+								this.ready = true;
+								return;
+							}
+
+							int w = this.webTexture.width;
+							int h = this.webTexture.height;
+							double ratio = (double) w / (double) h;
+
+							//Calculate missing width
+							if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+								this.setWidth((int)(this.getHeight() * ratio));
+							}
+							//Calculate missing height
+							if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+								this.setHeight((int)(this.getWidth() / ratio));
+							}
 						}
-						//Calculate missing height
-						if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-							this.setHeight((int)(this.getWidth() / ratio));
-						}
+
+						this.ready = true;
+
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				}
-				
+				}).start();
+
 			}
 		}
+
 	}
 
 	public void render(GuiScreen menu) throws IOException {
 		if (this.shouldRender()) {
-			
+
 			int x = this.getPosX(menu);
 			int y = this.getPosY(menu);
-			
-			if (this.texture != null) {
-				Minecraft.getMinecraft().getTextureManager().bindTexture(this.texture.getResourceLocation());
-			} else {
-				Minecraft.getMinecraft().getTextureManager().bindTexture(TextureManager.RESOURCE_LOCATION_EMPTY);
+
+			if (this.webTexture != null) {
+				this.texture = this.webTexture.getLocation();
 			}
-			
-			GlStateManager.enableBlend();
-			GlStateManager.color(1.0F, 1.0F, 1.0F, this.opacity);
-			Gui.drawModalRectWithCustomSizedTexture(x, y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
-			GlStateManager.disableBlend();
+
+			if (this.texture != null) {
+				RenderUtils.bindTexture(this.texture);
+			} else if (isEditorActive()) {
+				RenderUtils.bindTexture(TextureManager.RESOURCE_LOCATION_EMPTY);
+			}
+
+			if ((this.texture != null) || isEditorActive()) {
+				GlStateManager.enableBlend();
+				GlStateManager.color(1.0F, 1.0F, 1.0F, this.opacity);
+				drawModalRectWithCustomSizedTexture(x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+				GlStateManager.disableBlend();
+			}
+
+			if (!this.ready && isEditorActive()) {
+				drawCenteredString(Minecraft.getMinecraft().fontRenderer, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT / 2), -1);
+			}
+
 		}
 	}
 
@@ -83,6 +121,87 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			return false;
 		}
 		return super.shouldRender();
+	}
+
+	public static boolean isValidUrl(String url) {
+		if ((url != null) && (url.startsWith("http://") || url.startsWith("https://"))) {
+			try {
+				URL u = new URL(url);
+				HttpURLConnection c = (HttpURLConnection)u.openConnection();
+				c.addRequestProperty("User-Agent", "Mozilla/4.0");
+				c.setRequestMethod("HEAD");
+				int r = c.getResponseCode();
+				if (r == 200) {
+					return true;
+				}
+			} catch (Exception e1) {
+				try {
+					URL u = new URL(url);
+					HttpURLConnection c = (HttpURLConnection)u.openConnection();
+					c.addRequestProperty("User-Agent", "Mozilla/4.0");
+					int r = c.getResponseCode();
+					if (r == 200) {
+						return true;
+					}
+				} catch (Exception e2) {}
+			}
+			return false;
+		}
+		return false;
+	}
+
+	public static WebTexture getWebTexture(String url) {
+		WebTexture wt = null;
+		try {
+			if (!textureCache.containsKey(url)) {
+				URL u = new URL(url);
+				HttpURLConnection httpcon = (HttpURLConnection)u.openConnection();
+				httpcon.addRequestProperty("User-Agent", "Mozilla/4.0");
+				InputStream s = httpcon.getInputStream();
+				if (s != null) {
+					BufferedImage i = ImageIO.read(s);
+					wt = new WebTexture(i);
+					textureCache.put(url, wt);
+					s.close();
+				}
+			} else {
+				wt = textureCache.get(url);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return wt;
+	}
+
+	public static class WebTexture {
+
+		public int width;
+		public int height;
+		public ResourceLocation location = null;
+		public BufferedImage image;
+
+		public WebTexture(BufferedImage image) {
+			this.image = image;
+			if (image != null) {
+				this.width = image.getWidth();
+				this.height = image.getHeight();
+			}
+		}
+
+		public ResourceLocation getLocation() {
+			try {
+				if (this.location == null) {
+					if (this.image != null) {
+						this.location = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("webtexture", new SelfcleaningDynamicTexture(this.image));
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			this.image = null;
+			return this.location;
+		}
+
 	}
 
 }

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.net.UrlEscapers;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
@@ -413,6 +414,13 @@ public class LayoutEditorScreen extends GuiScreen {
 			}
 
 		}
+
+		for (LayoutElement e: this.vanillaButtonContent) {
+			for (LayoutElement e2 : this.content) {
+				e2.onUpdateVanillaButton((LayoutVanillaButton) e);
+			}
+		}
+
 	}
 	
 	protected boolean containsVanillaButton(List<LayoutElement> l, ButtonData b) {
@@ -1059,7 +1067,7 @@ public class LayoutEditorScreen extends GuiScreen {
 		}
 		if (WebUtils.isValidUrl(finalUrl)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
-			
+
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtexture");
 			s.addEntry("url", url);
@@ -1206,7 +1214,7 @@ public class LayoutEditorScreen extends GuiScreen {
 		b.object.posY = (int)(this.ui.bar.getHeight() * UIBase.getUIScale());
 		this.addContent(b);
 	}
-	
+
 	protected void addWebText(String url) {
 		String finalUrl = null;
 		if (url != null) {
@@ -1215,7 +1223,7 @@ public class LayoutEditorScreen extends GuiScreen {
 		}
 		if (WebUtils.isValidUrl(finalUrl)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
-			
+
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtext");
 			s.addEntry("url", url);
@@ -1387,6 +1395,22 @@ public class LayoutEditorScreen extends GuiScreen {
 	
 	public LayoutElement getTopHoverObject() {
 		return this.topObject;
+	}
+
+	public LayoutElement getElementByActionId(String actionId) {
+		for (LayoutElement e : this.content) {
+			if (e instanceof LayoutVanillaButton) {
+				String id = "vanillabtn:" + ((LayoutVanillaButton) e).button.getId();
+				if (id.equals(actionId)) {
+					return e;
+				}
+			} else {
+				if (e.object.getActionId().equals(actionId)) {
+					return e;
+				}
+			}
+		}
+		return null;
 	}
 
 	public void saveLayout() {

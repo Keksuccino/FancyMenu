@@ -85,6 +85,9 @@ public class LayoutShape extends LayoutElement {
 			s.addEntry("shape", this.getObject().shape.name);
 			s.addEntry("color", this.getObject().getColorString());
 			s.addEntry("orientation", this.object.orientation);
+			if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+				s.addEntry("orientation_element", this.object.orientationElementIdentifier);
+			}
 			if (this.stretchX) {
 				s.addEntry("x", "0");
 				s.addEntry("width", "%guiwidth%");

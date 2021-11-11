@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -12,6 +14,7 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
+import org.lwjgl.Sys;
 
 public class DynamicValueHelper {
 	
@@ -96,6 +99,11 @@ public class DynamicValueHelper {
 			in = in.replace("%realtimesecond%", formatToFancyDateTime(c.get(Calendar.SECOND)));
 
 		}
+
+		//Handle all custom placeholders added via the API
+		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
+			in = p.replacePlaceholders(in);
+		}
 		
 		return in;
 	}
@@ -150,7 +158,7 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.pingToServer != -1L) {
+						if (sd.pingToServer > -1L) {
 							in = in.replace(s, "§aOnline");
 						} else {
 							in = in.replace(s, "§cOffline");

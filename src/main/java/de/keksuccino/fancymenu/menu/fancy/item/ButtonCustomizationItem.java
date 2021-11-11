@@ -100,8 +100,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				this.button.setDescription(StringUtils.splitLines(DynamicValueHelper.convertFromRaw(desc), "%n%"));
 			}
 
-			String backNormal = item.getEntryValue("backgroundnormal");
-			String backHover = item.getEntryValue("backgroundhovered");
+			String backNormal = fixBackslashPath(item.getEntryValue("backgroundnormal"));
+			String backHover = fixBackslashPath(item.getEntryValue("backgroundhovered"));
 			String loopBackAnimations = item.getEntryValue("loopbackgroundanimations");
 			String restartBackAnimationsOnHover = item.getEntryValue("restartbackgroundanimations");
 			String backAnimationNormal = item.getEntryValue("backgroundanimationnormal");

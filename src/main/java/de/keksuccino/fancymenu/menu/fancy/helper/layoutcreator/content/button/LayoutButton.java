@@ -331,6 +331,9 @@ public class LayoutButton extends LayoutElement {
 				s.addEntry("height", "" + this.object.getHeight());
 			}
 			s.addEntry("orientation", this.object.orientation);
+			if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+				s.addEntry("orientation_element", this.object.orientationElementIdentifier);
+			}
 			s.addEntry("buttonaction", this.actionType);
 			s.addEntry("value", this.actionContent);
 			if ((this.customizationContainer.normalBackground != null) || (this.customizationContainer.hoverBackground != null)) {
