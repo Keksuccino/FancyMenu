@@ -95,7 +95,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			}
 		}
 
-		String skin = item.getEntryValue("skinpath");
+		String skin = fixBackslashPath(item.getEntryValue("skinpath"));
 		if ((skin != null) && (this.entity.skinLocation == null)) {
 			ExternalTextureResourceLocation r = TextureHandler.getResource(skin);
 			if (r != null) {
@@ -119,7 +119,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 				}
 			}
 		}
-		
+
 		String capeUrl = item.getEntryValue("capeurl");
 		if (capeUrl != null) {
 			capeUrl = DynamicValueHelper.convertFromRaw(capeUrl);
@@ -128,8 +128,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 				this.entity.capeLocation = wt.getResourceLocation();
 			}
 		}
-		
-		String cape = item.getEntryValue("capepath");
+
+		String cape = fixBackslashPath(item.getEntryValue("capepath"));
 		if ((cape != null) && (this.entity.capeLocation == null)) {
 			ExternalTextureResourceLocation r = TextureHandler.getResource(cape);
 			if (r != null) {

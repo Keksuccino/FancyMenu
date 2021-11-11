@@ -6,6 +6,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -97,6 +99,11 @@ public class DynamicValueHelper {
 
 			in = in.replace("%realtimesecond%", formatToFancyDateTime(c.get(Calendar.SECOND)));
 
+		}
+
+		//Handle all custom placeholders added via the API
+		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
+			in = p.replacePlaceholders(in);
 		}
 		
 		return in;

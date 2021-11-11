@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.net.UrlEscapers;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
@@ -201,6 +202,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		skinPopup.addContent(localSkinB);
 		
 		AdvancedButton urlSkinB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.playerentity.texture.url"), true, (press) -> {
+
 			FMTextInputPopup t = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
@@ -220,16 +222,16 @@ public class LayoutPlayerEntity extends LayoutElement {
 						} else {
 							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
 						}
-						
+
 					} else {
-						
+
 						if (this.skinUrl != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
+
 						this.skinUrl = null;
 						this.reloadEntity();
-						
+
 					}
 				}
 			});
@@ -326,16 +328,16 @@ public class LayoutPlayerEntity extends LayoutElement {
 						} else {
 							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
 						}
-						
+
 					} else {
-						
+
 						if (this.capeUrl != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
+
 						this.capeUrl = null;
 						this.reloadEntity();
-						
+
 					}
 				}
 			});
@@ -572,6 +574,9 @@ public class LayoutPlayerEntity extends LayoutElement {
 		p1.addEntry("x", "" + this.object.posX);
 		p1.addEntry("y", "" + this.object.posY);
 		p1.addEntry("orientation", this.object.orientation);
+		if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+			p1.addEntry("orientation_element", this.object.orientationElementIdentifier);
+		}
 		p1.addEntry("scale", "" + this.getObject().scale);
 		if (this.getObject().playerName != null) {
 			if (this.isCLientPlayerName) {

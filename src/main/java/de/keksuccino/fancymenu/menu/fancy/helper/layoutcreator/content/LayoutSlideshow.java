@@ -37,6 +37,9 @@ public class LayoutSlideshow extends LayoutElement {
 		p1.addEntry("action", "addslideshow");
 		p1.addEntry("name", this.object.value);
 		p1.addEntry("orientation", this.object.orientation);
+		if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+			p1.addEntry("orientation_element", this.object.orientationElementIdentifier);
+		}
 		if (this.stretchX) {
 			p1.addEntry("x", "0");
 			p1.addEntry("width", "%guiwidth%");

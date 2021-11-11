@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.api.item.CustomizationItem;
+import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
+import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
@@ -300,6 +303,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							int x = Integer.parseInt(posX);
 							int y = Integer.parseInt(posY);
 							van.object.orientation = orientation;
+							van.object.orientationElementIdentifier = sec.getEntryValue("orientation_element");
 							van.object.posX = x;
 							van.object.posY = y;
 						}
@@ -598,6 +602,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 
 						lb.object.orientation = bc.orientation;
+						lb.object.orientationElementIdentifier = bc.orientationElementIdentifier;
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
 
@@ -778,11 +783,31 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						con.add(new LayoutSplashText(new SplashTextCustomizationItem(sec), this));
 					}
 
+					/** CUSTOM ITEMS (API) **/
+					if (action.startsWith("custom_layout_element:")) {
+						String cusId = action.split("[:]", 2)[1];
+						CustomizationItemContainer cusItem = CustomizationItemRegistry.getItem(cusId);
+						if (cusItem != null) {
+							CustomizationItem cusItemInstance = cusItem.constructCustomizedItemInstance(sec);
+							con.add(cusItem.constructEditorElementInstance(cusItemInstance, this));
+						}
+					}
+
 				}
 			}
 		}
 
 		this.content.addAll(con);
+
+		for (LayoutElement e : this.content) {
+			if (e.object.orientationElementIdentifier != null) {
+				LayoutElement oe = this.getElementByActionId(e.object.orientationElementIdentifier);
+				if (oe != null) {
+					e.object.orientationElement = oe.object;
+				}
+			}
+		}
+
 		this.init();
 
 	}

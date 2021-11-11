@@ -24,11 +24,15 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.3.4";
-	
+	public static final String VERSION = "2.3.6";
+
+	public static final Logger LOGGER = LogManager.getLogger();
+
 	public static Config config;
 	
 	private static File animationsPath = new File("config/fancymenu/animations");

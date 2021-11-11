@@ -2,13 +2,9 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
 import java.awt.Color;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
-import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
 
