@@ -880,7 +880,8 @@ fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.btn.desc = Sl
 fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear = Clear
 fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear.btn.desc = Removes the currently%n%active background image.
 
-
-
+fancymenu.helper.editor.items.orientation.element.setidentifier = Set Element ID
+fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound = §c§lError!%n%%n%No element found with this element ID!%n%%n%%n%%n%
+fancymenu.helper.editor.items.orientation.element.btn.desc = Set the position of another element as%n%orientation origin point, so this element%n%will always move with its parent element.%n%%n%§cYou need the element ID%n%§cof the parent element here.%n%§cYou can get the element ID%n%§cwhen you right-click an element.
 
 

@@ -11,6 +11,7 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 
 public abstract class CustomizationItemBase extends DrawableHelper {
@@ -30,6 +31,8 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 	 */
 	public int posY = 0;
 	public String orientation = "top-left";
+	public String orientationElementIdentifier = null;
+	public CustomizationItemBase orientationElement = null;
 	public int width = -1;
 	public int height = -1;
 	
@@ -106,6 +109,11 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 			this.orientation = o;
 		}
 
+		String oe = item.getEntryValue("orientation_element");
+		if (oe != null) {
+			this.orientationElementIdentifier = oe;
+		}
+
 		String w = item.getEntryValue("width");
 		if (w != null) {
 			w = DynamicValueHelper.convertFromRaw(w);
@@ -161,6 +169,10 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 		if (orientation.equalsIgnoreCase("bottom-right")) {
 			x += w;
 		}
+
+		if (orientation.equalsIgnoreCase("element") && (this.orientationElement != null)) {
+			x += this.getOrientationElementPosX(menu);
+		}
 		
 		return x;
 	}
@@ -195,8 +207,40 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 		if (orientation.equalsIgnoreCase("bottom-right")) {
 			y += h;
 		}
+
+		if (orientation.equalsIgnoreCase("element") && (this.orientationElement != null)) {
+			y += this.getOrientationElementPosY(menu);
+		}
 		
 		return y;
+	}
+
+	public int getOrientationElementPosX(Screen menu) {
+		if (this.orientationElement != null) {
+			if (this.orientationElement instanceof VanillaButtonCustomizationItem) {
+				AbstractButtonWidget w = ((VanillaButtonCustomizationItem)this.orientationElement).parent.getButton();
+				if (w != null) {
+					return w.x;
+				}
+			} else {
+				return this.orientationElement.getPosX(menu);
+			}
+		}
+		return 0;
+	}
+
+	public int getOrientationElementPosY(Screen menu) {
+		if (this.orientationElement != null) {
+			if (this.orientationElement instanceof VanillaButtonCustomizationItem) {
+				AbstractButtonWidget w = ((VanillaButtonCustomizationItem)this.orientationElement).parent.getButton();
+				if (w != null) {
+					return w.y;
+				}
+			} else {
+				return this.orientationElement.getPosY(menu);
+			}
+		}
+		return 0;
 	}
 
 	public boolean shouldRender() {
@@ -256,6 +300,13 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 			this.key = key;
 		}
 		
+	}
+
+	public static String fixBackslashPath(String path) {
+		if (path != null) {
+			return path.replace("\\", "/");
+		}
+		return null;
 	}
 
 }

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.net.UrlEscapers;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
@@ -413,6 +414,13 @@ public class LayoutEditorScreen extends Screen {
 			}
 
 		}
+
+		for (LayoutElement e: this.vanillaButtonContent) {
+			for (LayoutElement e2 : this.content) {
+				e2.onUpdateVanillaButton((LayoutVanillaButton) e);
+			}
+		}
+
 	}
 
 	protected boolean containsVanillaButton(List<LayoutElement> l, ButtonData b) {
@@ -1388,6 +1396,22 @@ public class LayoutEditorScreen extends Screen {
 
 	public LayoutElement getTopHoverObject() {
 		return this.topObject;
+	}
+
+	public LayoutElement getElementByActionId(String actionId) {
+		for (LayoutElement e : this.content) {
+			if (e instanceof LayoutVanillaButton) {
+				String id = "vanillabtn:" + ((LayoutVanillaButton) e).button.getId();
+				if (id.equals(actionId)) {
+					return e;
+				}
+			} else {
+				if (e.object.getActionId().equals(actionId)) {
+					return e;
+				}
+			}
+		}
+		return null;
 	}
 
 	public void saveLayout() {

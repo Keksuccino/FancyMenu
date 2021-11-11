@@ -212,6 +212,9 @@ public class LayoutSplashText extends LayoutElement {
 		p1.addEntry("x", "" + this.object.posX);
 		p1.addEntry("y", "" + this.object.posY);
 		p1.addEntry("orientation", this.object.orientation);
+		if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+			p1.addEntry("orientation_element", this.object.orientationElementIdentifier);
+		}
 		p1.addEntry("scale", "" + this.getObject().scale);
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("rotation", "" + this.getObject().rotation);

@@ -11,7 +11,6 @@ import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 
 public class TextureCustomizationItem extends CustomizationItemBase {
@@ -23,7 +22,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 		super(item);
 		
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtexture")) {
-			this.value = item.getEntryValue("path");
+			this.value = fixBackslashPath(item.getEntryValue("path"));
 			if (this.value != null) {
 				this.value = this.value.replace("\\", "/");
 				

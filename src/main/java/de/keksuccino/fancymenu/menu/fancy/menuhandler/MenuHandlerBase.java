@@ -12,6 +12,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.api.item.CustomizationItem;
+import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
+import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
@@ -522,13 +525,20 @@ public class MenuHandlerBase extends DrawableHelper {
 			d.getButton().visible = false;
 		}
 
-		if (MenuCustomization.isNewMenu()) {
-			for (CustomizationItemBase i : this.frontRenderItems) {
+		for (CustomizationItemBase i : this.frontRenderItems) {
+			if (MenuCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
-
-			for (CustomizationItemBase i : this.backgroundRenderItems) {
+			if (i.orientation.equals("element") && (i.orientationElementIdentifier != null)) {
+				i.orientationElement = this.getItemByActionId(i.orientationElementIdentifier);
+			}
+		}
+		for (CustomizationItemBase i : this.backgroundRenderItems) {
+			if (MenuCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
+			}
+			if (i.orientation.equals("element") && (i.orientationElementIdentifier != null)) {
+				i.orientationElement = this.getItemByActionId(i.orientationElementIdentifier);
 			}
 		}
 
@@ -622,7 +632,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 
 			if (action.equalsIgnoreCase("texturizebackground")) {
-				String value = sec.getEntryValue("path");
+				String value = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 				String pano = sec.getEntryValue("wideformat");
 				if (pano == null) {
 					pano = sec.getEntryValue("panorama");
@@ -763,72 +773,8 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 
 			if (action.equalsIgnoreCase("movebutton")) {
-				String posX = sec.getEntryValue("x");
-				String posY = sec.getEntryValue("y");
-				if (posX != null) {
-					posX = DynamicValueHelper.convertFromRaw(posX);
-				}
-				if (posY != null) {
-					posY = DynamicValueHelper.convertFromRaw(posY);
-				}
-				String orientation = sec.getEntryValue("orientation");
-				if ((orientation != null) && (posX != null) && (posY != null) && (b != null)) {
-					if (MathUtils.isInteger(posX) && MathUtils.isInteger(posY)) {
-						int x = Integer.parseInt(posX);
-						int y = Integer.parseInt(posY);
-						int w = e.getGui().width;
-						int h = e.getGui().height;
-
-						if (orientation.equalsIgnoreCase("original")) {
-							b.x = b.x + x;
-							b.y = b.y + y;
-						}
-
-						if (orientation.equalsIgnoreCase("top-left")) {
-							b.x = x;
-							b.y = y;
-						}
-
-						if (orientation.equalsIgnoreCase("mid-left")) {
-							b.x = x;
-							b.y = (h / 2) + y;
-						}
-
-						if (orientation.equalsIgnoreCase("bottom-left")) {
-							b.x = x;
-							b.y = h + y;
-						}
-
-						if (orientation.equalsIgnoreCase("top-centered")) {
-							b.x = (w / 2) + x;
-							b.y = y;
-						}
-
-						if (orientation.equalsIgnoreCase("mid-centered")) {
-							b.x = (w / 2) + x;
-							b.y = (h / 2) + y;
-						}
-
-						if (orientation.equalsIgnoreCase("bottom-centered")) {
-							b.x = (w / 2) + x;
-							b.y = h + y;
-						}
-
-						if (orientation.equalsIgnoreCase("top-right")) {
-							b.x = w + x;
-							b.y = y;
-						}
-
-						if (orientation.equalsIgnoreCase("mid-right")) {
-							b.x = w + x;
-							b.y = (h / 2) + y;
-						}
-
-						if (orientation.equalsIgnoreCase("bottom-right")) {
-							b.x = w + x;
-							b.y = h + y;
-						}
-					}
+				if (b != null) {
+					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 
@@ -842,8 +788,8 @@ public class MenuHandlerBase extends DrawableHelper {
 					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
 						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
 					}
-					String backNormal = sec.getEntryValue("backgroundnormal");
-					String backHover = sec.getEntryValue("backgroundhovered");
+					String backNormal = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("backgroundnormal"));
+					String backHover = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("backgroundhovered"));
 					if (backNormal != null) {
 						this.getContainerForVanillaButton(b).normalBackground = backNormal;
 					} else {
@@ -865,7 +811,7 @@ public class MenuHandlerBase extends DrawableHelper {
 
 			if (action.equalsIgnoreCase("setbuttonclicksound")) {
 				if (b != null) {
-					String path = sec.getEntryValue("path");
+					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 					if (path != null) {
 						this.getContainerForVanillaButton(b).clickSound = path;
 					}
@@ -988,7 +934,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			if (action.equalsIgnoreCase("addaudio")) {
 				if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
 					if ((MinecraftClient.getInstance().world == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
-						String path = sec.getEntryValue("path");
+						String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 						String loopString = sec.getEntryValue("loop");
 
 						boolean loop = false;
@@ -1012,7 +958,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 
 			if (action.equalsIgnoreCase("setcloseaudio")) {
-				String path = sec.getEntryValue("path");
+				String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 
 				if (path != null) {
 					File f = new File(path);
@@ -1030,7 +976,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 
 			if (action.equalsIgnoreCase("setopenaudio")) {
-				String path = sec.getEntryValue("path");
+				String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 
 				if (path != null) {
 					File f = new File(path);
@@ -1059,7 +1005,7 @@ public class MenuHandlerBase extends DrawableHelper {
 			}
 
 			if (action.equalsIgnoreCase("addsplash")) {
-				String file = sec.getEntryValue("splashfilepath");
+				String file = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("splashfilepath"));
 				String text = sec.getEntryValue("text");
 				if ((file != null) || (text != null)) {
 
@@ -1071,6 +1017,20 @@ public class MenuHandlerBase extends DrawableHelper {
 						frontRenderItems.add(i);
 					}
 
+				}
+			}
+
+			/** CUSTOM ITEMS (API) **/
+			if (action.startsWith("custom_layout_element:")) {
+				String cusId = action.split("[:]", 2)[1];
+				CustomizationItemContainer cusItem = CustomizationItemRegistry.getItem(cusId);
+				if (cusItem != null) {
+					CustomizationItem cusItemInstance = cusItem.constructCustomizedItemInstance(sec);
+					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+						backgroundRenderItems.add(cusItemInstance);
+					} else {
+						frontRenderItems.add(cusItemInstance);
+					}
 				}
 			}
 
@@ -1616,6 +1576,49 @@ public class MenuHandlerBase extends DrawableHelper {
 			return c;
 		}
 		return this.vanillaButtonCustomizations.get(w);
+	}
+
+	protected CustomizationItemBase getItemByActionId(String actionId) {
+		for (CustomizationItemBase c : this.backgroundRenderItems) {
+			if (c instanceof VanillaButtonCustomizationItem) {
+				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).parent.getId();
+				if (id.equals(actionId)) {
+					return c;
+				}
+			} else {
+				if (c.getActionId().equals(actionId)) {
+					return c;
+				}
+			}
+		}
+		for (CustomizationItemBase c : this.frontRenderItems) {
+			if (c instanceof VanillaButtonCustomizationItem) {
+				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).parent.getId();
+				if (id.equals(actionId)) {
+					return c;
+				}
+			} else {
+				if (c.getActionId().equals(actionId)) {
+					return c;
+				}
+			}
+		}
+		if (actionId.startsWith("vanillabtn:")) {
+			String idRaw = actionId.split("[:]", 2)[1];
+			if (MathUtils.isLong(idRaw)) {
+				ButtonData d = ButtonCache.getButtonForId(Long.parseLong(idRaw));
+				if ((d != null) && (d.getButton() != null)) {
+					VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
+					vb.orientation = "top-left";
+					vb.posX = d.getButton().x;
+					vb.posY = d.getButton().y;
+					vb.width = d.getButton().getWidth();
+					vb.height = d.getButton().getHeight();
+					return vb;
+				}
+			}
+		}
+		return null;
 	}
 
 	protected boolean visibilityRequirementsMet(AbstractButtonWidget b) {

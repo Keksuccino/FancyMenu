@@ -37,6 +37,9 @@ public class LayoutWebTexture extends LayoutElement {
 		}
 		p1.addEntry("url", ((WebTextureCustomizationItem)this.object).rawURL);
 		p1.addEntry("orientation", this.object.orientation);
+		if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+			p1.addEntry("orientation_element", this.object.orientationElementIdentifier);
+		}
 		if (this.stretchX) {
 			p1.addEntry("x", "0");
 			p1.addEntry("width", "%guiwidth%");
@@ -57,6 +60,13 @@ public class LayoutWebTexture extends LayoutElement {
 		l.add(p1);
 
 		return l;
+	}
+
+	@Override
+	protected void handleResize(int mouseX, int mouseY) {
+		if (((WebTextureCustomizationItem)this.object).ready) {
+			super.handleResize(mouseX, mouseY);
+		}
 	}
 
 }
