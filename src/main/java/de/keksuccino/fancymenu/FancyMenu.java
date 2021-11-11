@@ -29,12 +29,15 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.network.FMLNetworkConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
-	public static final String VERSION = "2.3.4";
+	public static final String VERSION = "2.3.6";
+
+	public static final Logger LOGGER = LogManager.getLogger();
 	
 	public static Config config;
 	
@@ -76,7 +79,6 @@ public class FancyMenu {
 	    		
 	    		GameIntroHandler.init();
 
-	    		//TODO übernehmen
 				VisibilityRequirementHandler.init();
 	    		
 	        	MenuCustomization.init();
@@ -107,14 +109,12 @@ public class FancyMenu {
 
 			initLocals();
 
-			//TODO übernehmen
 			CustomLocalsHandler.loadLocalizations();
 			
 	    	GameMusicHandler.init();
 
         	GuiConstructor.init();
 
-        	//TODO übernehmen
 			ServerCache.init();
 
         	try {
@@ -139,7 +139,6 @@ public class FancyMenu {
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
-		//TODO übernehmen
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
 		
 		Locals.getLocalsFromDir(f.getPath());
@@ -190,10 +189,8 @@ public class FancyMenu {
 			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			config.registerValue("editordeleteconfirmation", true, "layouteditor");
-			//TODO übernehmen
 			config.registerValue("showgrid", false, "layouteditor");
 			config.registerValue("gridsize", 10, "layouteditor");
-			//--------------------
 
 			config.registerValue("uiscale", 1.0F, "ui");
 			

@@ -248,16 +248,6 @@ public class LayoutButton extends LayoutElement {
 		});
 		this.rightclickMenu.addContent(b10);
 
-		//TODO übernehmen
-//		AdvancedButton b11 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), (press) -> {
-//			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//
-//			this.clicksound = null;
-//			this.rightclickMenu.closeMenu();
-//		});
-//		this.rightclickMenu.addContent(b11);
-
-		//TODO übernehmen
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			FMTextInputPopup in = new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
 				if (call != null) {
@@ -343,19 +333,6 @@ public class LayoutButton extends LayoutElement {
 		});
 		this.rightclickMenu.addContent(b10);
 	}
-
-	//TODO übernehmen
-//	private void editLabelCallback(String text) {
-//		if (text == null) {
-//			return;
-//		} else {
-//			if ((this.object.value == null) || !this.object.value.equals(StringUtils.convertFormatCodes(text, "&", "§"))) {
-//				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//			}
-//
-//			this.object.value = StringUtils.convertFormatCodes(text, "&", "§");
-//		}
-//	}
 	
 	private void setActionContentCallback(String content) {
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -403,6 +380,9 @@ public class LayoutButton extends LayoutElement {
 				s.addEntry("height", "" + this.object.getHeight());
 			}
 			s.addEntry("orientation", this.object.orientation);
+			if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
+				s.addEntry("orientation_element", this.object.orientationElementIdentifier);
+			}
 			s.addEntry("buttonaction", this.actionType);
 			s.addEntry("value", this.actionContent);
 			//TODO übernehmen

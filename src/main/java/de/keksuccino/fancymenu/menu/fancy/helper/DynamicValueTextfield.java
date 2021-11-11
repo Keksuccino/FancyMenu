@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -13,6 +15,11 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.ResourceLocation;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DynamicValueTextfield extends AdvancedTextField {
 
@@ -242,6 +249,59 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		localizedText.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc"), "%n%"));
 		UIBase.colorizeButton(localizedText);
 		otherMenu.addContent(localizedText);
+
+		otherMenu.addSeparator();
+
+		//Custom placeholders (API) without category will be added to the Other category
+		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
+			if (p.getCategory() == null) {
+				AdvancedButton customPlaceholder = new AdvancedButton(0, 0, 0, 0, p.getDisplayName(), true, (press) -> {
+					this.writeText(p.getPlaceholder());
+				});
+				String[] desc = p.getDescription();
+				if (desc != null) {
+					customPlaceholder.setDescription(desc);
+				}
+				otherMenu.addContent(customPlaceholder);
+			}
+		}
+
+		variableMenu.addSeparator();
+
+		/** CUSTOM PLACEHOLDERS WITH CATEGORY (API) **/
+		Map<String, List<PlaceholderTextContainer>> categories = new HashMap<>();
+		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
+			if (p.getCategory() != null) {
+				List<PlaceholderTextContainer> l = categories.get(p.getCategory());
+				if (l == null) {
+					l = new ArrayList<>();
+					categories.put(p.getCategory(), l);
+				}
+				l.add(p);
+			}
+		}
+		for (Map.Entry<String, List<PlaceholderTextContainer>> m : categories.entrySet()) {
+			FMContextMenu customCategoryMenu = new FMContextMenu();
+			customCategoryMenu.setAutoclose(true);
+			variableMenu.addChild(customCategoryMenu);
+
+			AdvancedButton customCategoryButton = new AdvancedButton(0, 0, 0, 0, m.getKey(), true, (press) -> {
+				customCategoryMenu.setParentButton((AdvancedButton) press);
+				customCategoryMenu.openMenuAt(0, press.y);
+			});
+			variableMenu.addContent(customCategoryButton);
+
+			for (PlaceholderTextContainer p : m.getValue()) {
+				AdvancedButton customPlaceholder = new AdvancedButton(0, 0, 0, 0, p.getDisplayName(), true, (press) -> {
+					this.writeText(p.getPlaceholder());
+				});
+				String[] desc = p.getDescription();
+				if (desc != null) {
+					customPlaceholder.setDescription(desc);
+				}
+				customCategoryMenu.addContent(customPlaceholder);
+			}
+		}
 		
 	}
 	

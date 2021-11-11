@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import org.lwjgl.glfw.GLFW;
 
@@ -68,7 +69,8 @@ public abstract class LayoutElement extends AbstractGui {
 
 	protected AdvancedButton stretchXButton;
 	protected AdvancedButton stretchYButton;
-	
+
+	protected AdvancedButton oElement;
 	protected AdvancedButton o1;
 	protected AdvancedButton o2;
 	protected AdvancedButton o3;
@@ -153,6 +155,34 @@ public abstract class LayoutElement extends AbstractGui {
 		FMContextMenu orientationMenu = new FMContextMenu();
 		orientationMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(orientationMenu);
+
+		oElement = new AdvancedButton(0, 0, 0, 16, "element", (press) -> {
+			this.handler.setObjectFocused(this, false, true);
+			FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
+				if (call != null) {
+					LayoutElement l = this.handler.getElementByActionId(call);
+					if (l != null) {
+						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						this.object.orientationElementIdentifier = call;
+						this.object.orientationElement = l.object;
+						this.handler.history.setPreventSnapshotSaving(true);
+						this.setOrientation("element");
+						this.handler.history.setPreventSnapshotSaving(false);
+					} else {
+						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+					}
+				}
+			});
+			if (this.object.orientationElementIdentifier != null) {
+				pop.setText(this.object.orientationElementIdentifier);
+			}
+			PopupHandler.displayPopup(pop);
+			orientationMenu.closeMenu();
+		});
+		oElement.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
+		orientationMenu.addContent(oElement);
+
+		orientationMenu.addSeparator();
 		
 		o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
 			this.handler.setObjectFocused(this, false, true);
@@ -508,6 +538,10 @@ public abstract class LayoutElement extends AbstractGui {
 			this.object.orientation = pos;
 			this.object.posX = -this.object.getWidth();
 			this.object.posY = -this.object.getHeight();
+		} else if (pos.equals("element") && (this.object.orientationElement != null)) {
+			this.object.orientation = pos;
+			this.object.posX = 10;
+			this.object.posY = 10;
 		} else {
 			this.object.orientation = pos;
 			this.object.posX = 0;
@@ -606,6 +640,9 @@ public abstract class LayoutElement extends AbstractGui {
 				//TODO übernehmen
 				this.object.setHeight(Minecraft.getInstance().currentScreen.height);
 			}
+			if (this.stretchX || this.stretchY) {
+				this.oElement.active = false;
+			}
 			if (this.stretchX && !this.stretchY) {
 				this.o1.active = true;
 				this.o2.active = true;
@@ -649,6 +686,7 @@ public abstract class LayoutElement extends AbstractGui {
 				this.o7.active = true;
 				this.o8.active = true;
 				this.o9.active = true;
+				this.oElement.active = true;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -933,7 +971,7 @@ public abstract class LayoutElement extends AbstractGui {
 		//TODO übernehmen (bis runter)
 		if (!this.stretchX) {
 			if (g == 0) { //left
-				int w = this.startWidth + this.getOpponentInt(diffX);
+				int w = this.startWidth + this.getOppositeInt(diffX);
 				if (w >= 5) {
 					this.object.posX = this.startX + diffX;
 					this.object.setWidth(w);
@@ -961,7 +999,7 @@ public abstract class LayoutElement extends AbstractGui {
 
 		if (!this.stretchY) {
 			if (g == 2) { //top
-				int h = this.startHeight + this.getOpponentInt(diffY);
+				int h = this.startHeight + this.getOppositeInt(diffY);
 				if (h >= 5) {
 					this.object.posY = this.startY + diffY;
 					this.object.setHeight(h);
@@ -988,8 +1026,8 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 		//-------------------------
 	}
-	
-	private int getOpponentInt(int i) {
+
+	private int getOppositeInt(int i) {
 		if (Math.abs(i) == i) {
 			return Math.negateExact(i);
 		} else {
@@ -1107,6 +1145,16 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 		this.handler.setFocusChangeBlocked(objectId, false);
 		this.handler.setObjectFocused(this, false, true);
+	}
+
+	/** Called when a vanilla button object was updated in the editor. **/
+	public void onUpdateVanillaButton(LayoutVanillaButton btn) {
+		if (this.object.orientationElementIdentifier != null) {
+			String id = "vanillabtn:" + btn.button.getId();
+			if (this.object.orientationElementIdentifier.equals(id)) {
+				this.object.orientationElement = this.handler.getElementByActionId(id).object;
+			}
+		}
 	}
 
 	public abstract List<PropertiesSection> getProperties();

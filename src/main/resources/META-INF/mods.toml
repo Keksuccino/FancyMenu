@@ -9,7 +9,7 @@ license="KML (Keksuccino Mod License)"
 # The modid of the mod
 modId="fancymenu" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="2.3.4" #mandatory
+version="2.3.6" #mandatory
  # A display name for the mod
 displayName="FancyMenu" #mandatory
 # A text field displayed in the mod UI
@@ -29,9 +29,24 @@ mandatory=true
 ordering="NONE"
 versionRange="[1.3.0,)"
 side="BOTH"
+
 [[dependencies.fancymenu]]
 modId="findme"
 mandatory=false
 ordering="AFTER"
 versionRange="[1.0.0,)"
 side="BOTH"
+
+[[dependencies.fancymenu]]
+modId="forge"
+mandatory=true
+versionRange="[33,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.fancymenu]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.16,)"
+ordering="NONE"
+side="CLIENT"

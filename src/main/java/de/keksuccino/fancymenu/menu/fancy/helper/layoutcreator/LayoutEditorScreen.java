@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.net.UrlEscapers;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -89,24 +90,11 @@ public class LayoutEditorScreen extends Screen {
 	protected List<LayoutElement> newContentPaste = new ArrayList<LayoutElement>();
 	public List<LayoutElement> deleteContentQueue = new ArrayList<LayoutElement>();
 	protected List<LayoutElement> vanillaButtonContent = new ArrayList<LayoutElement>();
-	//TODO übernehmen
-//	protected List<LayoutVanillaButton> hidden = new ArrayList<LayoutVanillaButton>();
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	//TODO übernehmen
-//	public Map<Long, String> vanillaButtonNames = new HashMap<Long, String>();
-//	public Map<Long, List<String>> vanillaButtonTextures = new HashMap<Long, List<String>>();
-//	public Map<Long, Integer> vanillaButtonClicks = new HashMap<Long, Integer>();
-//	public Map<Long, String> vanillaHoverLabels = new HashMap<Long, String>();
-//	public Map<Long, String> vanillaClickSounds = new HashMap<Long, String>();
-//	public Map<Long, String> vanillaHoverSounds = new HashMap<Long, String>();
-	//TODO übernehmen
 	public Map<Long, MenuHandlerBase.ButtonCustomizationContainer> vanillaButtonCustomizationContainers = new HashMap<Long, MenuHandlerBase.ButtonCustomizationContainer>();
-	//------------------------
 	public Map<Long, Float> vanillaDelayAppearance = new HashMap<Long, Float>();
 	public Map<Long, Boolean> vanillaDelayAppearanceFirstTime = new HashMap<Long, Boolean>();
 	public Map<Long, Float> vanillaFadeIn = new HashMap<Long, Float>();
-	//TODO übernehmen
-//	public Map<Long, String> vanillaDescriptions = new HashMap<Long, String>();
 	protected List<LayoutElement> focusedObjects = new ArrayList<LayoutElement>();
 	protected List<LayoutElement> focusedObjectsCache = new ArrayList<LayoutElement>();
 	
@@ -460,6 +448,13 @@ public class LayoutEditorScreen extends Screen {
 			}
 			
 		}
+
+		for (LayoutElement e: this.vanillaButtonContent) {
+			for (LayoutElement e2 : this.content) {
+				e2.onUpdateVanillaButton((LayoutVanillaButton) e);
+			}
+		}
+
 	}
 	
 	protected boolean containsVanillaButton(List<LayoutElement> l, ButtonData b) {
@@ -1198,7 +1193,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 		if (WebUtils.isValidUrl(finalUrl)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
-			
+
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtexture");
 			s.addEntry("url", url);
@@ -1350,7 +1345,7 @@ public class LayoutEditorScreen extends Screen {
 		b.object.posY = (int)(this.ui.bar.getHeight() * UIBase.getUIScale());
 		this.addContent(b);
 	}
-	
+
 	protected void addWebText(String url) {
 		String finalUrl = null;
 		if (url != null) {
@@ -1359,7 +1354,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 		if (WebUtils.isValidUrl(finalUrl)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
-			
+
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addwebtext");
 			s.addEntry("url", url);
@@ -1531,6 +1526,22 @@ public class LayoutEditorScreen extends Screen {
 	
 	public LayoutElement getTopHoverObject() {
 		return this.topObject;
+	}
+
+	public LayoutElement getElementByActionId(String actionId) {
+		for (LayoutElement e : this.content) {
+			if (e instanceof LayoutVanillaButton) {
+				String id = "vanillabtn:" + ((LayoutVanillaButton) e).button.getId();
+				if (id.equals(actionId)) {
+					return e;
+				}
+			} else {
+				if (e.object.getActionId().equals(actionId)) {
+					return e;
+				}
+			}
+		}
+		return null;
 	}
 
 	public void saveLayout() {

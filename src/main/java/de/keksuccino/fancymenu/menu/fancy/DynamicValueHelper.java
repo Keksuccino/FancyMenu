@@ -6,6 +6,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
+import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -17,7 +19,6 @@ import net.minecraftforge.versions.mcp.MCPVersion;
 
 public class DynamicValueHelper {
 
-	//TODO übernehmen
 	private static final File MOD_DIRECTORY = new File("mods");
 	
 	public static String convertFromRaw(String in) {
@@ -59,25 +60,18 @@ public class DynamicValueHelper {
 		}
 		in = in.replace("%totalmods%", "" + total);
 
-		//TODO übernehmen
 		in = replaceLocalsPlaceolder(in);
 
-		//TODO übernehmen
 		in = replaceServerMOTD(in);
 
-		//TODO übernehmen
 		in = replaceServerPing(in);
 
-		//TODO übernehmen
 		in = replaceServerVersion(in);
 
-		//TODO übernehmen
 		in = replaceServerPlayerCount(in);
 
-		//TODO übernehmen
 		in = replaceServerStatus(in);
 
-		//TODO übernehmen
 		if (in.contains("ram%")) {
 			long i = Runtime.getRuntime().maxMemory();
 			long j = Runtime.getRuntime().totalMemory();
@@ -91,7 +85,6 @@ public class DynamicValueHelper {
 			in = in.replace("%maxram%", "" + bytesToMb(i));
 		}
 
-		//TODO übernehmen
 		if (in.contains("%realtime")) {
 
 			Calendar c = Calendar.getInstance();
@@ -109,6 +102,11 @@ public class DynamicValueHelper {
 			in = in.replace("%realtimesecond%", formatToFancyDateTime(c.get(Calendar.SECOND)));
 
 		}
+
+		//Handle all custom placeholders added via the API
+		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
+			in = p.replacePlaceholders(in);
+		}
 		
 		return in;
 	}
@@ -118,7 +116,6 @@ public class DynamicValueHelper {
 		return !s.equals(in);
 	}
 
-	//TODO übernehmen
 	private static String replaceLocalsPlaceolder(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%local:")) {
@@ -134,7 +131,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerVersion(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%serverversion:")) {
@@ -157,7 +153,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerStatus(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%serverstatus:")) {
@@ -180,7 +175,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerPlayerCount(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%serverplayercount:")) {
@@ -203,7 +197,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerPing(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%serverping:")) {
@@ -222,7 +215,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerMOTD(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%servermotd:")) {
@@ -245,7 +237,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceModVersionPlaceolder(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%version:")) {
@@ -268,7 +259,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	protected static List<String> getReplaceablesWithValue(String in, String placeholderBase) {
 		List<String> l = new ArrayList<String>();
 		try {
@@ -297,7 +287,6 @@ public class DynamicValueHelper {
 		return l;
 	}
 
-	//TODO übernehmen
 	private static int getTotalMods() {
 		if (MOD_DIRECTORY.exists()) {
 			int i = 0;
@@ -320,7 +309,6 @@ public class DynamicValueHelper {
 		return -1;
 	}
 
-	//TODO übernehmen
 	private static String formatToFancyDateTime(int in) {
 		String s = "" + in;
 		if (s.length() < 2) {
@@ -329,7 +317,6 @@ public class DynamicValueHelper {
 		return s;
 	}
 
-	//TODO übernehmen
 	private static long bytesToMb(long bytes) {
 		return bytes / 1024L / 1024L;
 	}
