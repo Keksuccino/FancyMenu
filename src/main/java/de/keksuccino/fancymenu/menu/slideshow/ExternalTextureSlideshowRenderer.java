@@ -21,7 +21,7 @@ public class ExternalTextureSlideshowRenderer extends Gui {
 	protected List<ExternalTextureResourceLocation> images = new ArrayList<ExternalTextureResourceLocation>();
 	protected ExternalTextureResourceLocation overlay_texture;
 	protected String name = null;
-	protected String dir;
+	public String dir;
 	protected boolean prepared = false;
 	protected double imageDuration = 10.0D;
 	protected float fadeSpeed = 1.0F;

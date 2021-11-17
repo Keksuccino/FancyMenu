@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
@@ -29,8 +30,9 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
-	
-	public static final String VERSION = "2.3.6";
+
+	public static final String VERSION = "2.3.7";
+	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
 	
@@ -100,6 +102,8 @@ public class FancyMenu {
 			if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
 
 				initLocals();
+
+				SetupSharingEngine.init();
 
 				CustomLocalsHandler.loadLocalizations();
 				

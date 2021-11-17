@@ -19,6 +19,8 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	private boolean muted = false;
 	private boolean replayIntro = false;
 
+	public String propertiesPath = null;
+
 	protected boolean prepared = false;
 	
 	/**
