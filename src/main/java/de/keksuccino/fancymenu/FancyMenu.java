@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
@@ -29,7 +30,8 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.3.6";
+	public static final String VERSION = "2.3.7";
+	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger();
 
@@ -102,6 +104,8 @@ public class FancyMenu implements ModInitializer {
 		try {
 
 			initLocals();
+
+			SetupSharingEngine.init();
 
 			CustomLocalsHandler.loadLocalizations();
 			

@@ -29,7 +29,7 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 	private ExternalTextureResourceLocation overlay_texture;
 	private float time;
 	private String name = null;
-	private String dir;
+	public String dir;
 	private boolean prepared = false;
 	private List<ExternalTextureResourceLocation> pano = new ArrayList<ExternalTextureResourceLocation>();
 	private float speed = 1.0F;

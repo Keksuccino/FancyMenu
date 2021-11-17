@@ -13,7 +13,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -24,7 +23,7 @@ public class ExternalTextureSlideshowRenderer extends DrawableHelper {
 	protected List<ExternalTextureResourceLocation> images = new ArrayList<ExternalTextureResourceLocation>();
 	protected ExternalTextureResourceLocation overlay_texture;
 	protected String name = null;
-	protected String dir;
+	public String dir;
 	protected boolean prepared = false;
 	protected double imageDuration = 10.0D;
 	protected float fadeSpeed = 1.0F;
