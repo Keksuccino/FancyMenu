@@ -21,7 +21,7 @@ Thank you so much for giving more people the opportunity to use the mod in their
 
 ## Download
 
-FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu)!
+FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fancymenu-forge)!
 
 ## Licensing
 
