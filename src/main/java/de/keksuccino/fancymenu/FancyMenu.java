@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
+import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,7 +36,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.3.6";
+	public static final String VERSION = "2.3.7";
+	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
 	
@@ -91,7 +93,7 @@ public class FancyMenu {
 
 	        	VanillaButtonDescriptionHandler.init();
 
-	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
+	        	Konkrete.addPostLoadingEvent("assets/fancymenu", this::onClientSetup);
 
 //				MinecraftForge.EVENT_BUS.register(new Test());
 	        	
@@ -108,6 +110,8 @@ public class FancyMenu {
 		try {
 
 			initLocals();
+
+			SetupSharingEngine.init();
 
 			CustomLocalsHandler.loadLocalizations();
 			

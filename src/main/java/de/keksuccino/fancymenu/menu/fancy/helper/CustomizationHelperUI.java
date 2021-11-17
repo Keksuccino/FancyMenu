@@ -2,8 +2,14 @@ package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import java.awt.Color;
 import java.io.File;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.common.io.Files;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -267,6 +273,148 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			bar.addElement(currentTab, "fm.ui.tab.current", ElementAlignment.LEFT, false);
 			/** CURRENT MENU TAB END **/
+
+			/** SETUP TAB START **/
+			FMContextMenu setupMenu = new FMContextMenu();
+			setupMenu.setAutoclose(true);
+			bar.addChild(setupMenu, "fm.ui.tab.setup_import_export", ElementAlignment.LEFT);
+
+			CustomizationButton setupTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup"), true, (press) -> {
+				setupMenu.setParentButton((AdvancedButton) press);
+				setupMenu.openMenuAt(press.x, press.y + press.getHeight());
+			});
+			bar.addElement(setupTab, "fm.ui.tab.setup_import_export", ElementAlignment.LEFT, false);
+
+			//Export Button
+			CustomizationButton exportSetupButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup.export"), true, (press) -> {
+				SetupSharingEngine.exportSetup();
+			});
+			exportSetupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.export.btn.desc"), "%n%"));
+			setupMenu.addContent(exportSetupButton);
+
+			//Import Menu
+			FMContextMenu importMenu = new FMContextMenu();
+			importMenu.setAutoclose(true);
+			setupMenu.addChild(importMenu);
+
+			//Import Button
+			CustomizationButton importSetupButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup.import"), true, (press) -> {
+				importMenu.setParentButton((AdvancedButton) press);
+				importMenu.openMenuAt(0, press.y);
+			});
+			importSetupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.import.btn.desc"), "%n%"));
+			setupMenu.addContent(importSetupButton);
+
+			//Import -> Choose From Saved Setups
+			CustomizationButton chooseFromSavedButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), true, (press) -> {
+				SetupSharingEngine.importSetupFromSavedSetups();
+			});
+			chooseFromSavedButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.btn.desc"), "%n%"));
+			importMenu.addContent(chooseFromSavedButton);
+
+			//Import -> Enter Path
+			CustomizationButton enterPathButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.setupsharing.import.choosefrompath"), true, (press) -> {
+				SetupSharingEngine.importSetup();
+			});
+			enterPathButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.choosefrompath.btn.desc"), "%n%"));
+			importMenu.addContent(enterPathButton);
+
+			//Restore Menu
+			FMContextMenu restoreMenu = new FMContextMenu();
+			restoreMenu.setAutoclose(true);
+			setupMenu.addChild(restoreMenu);
+
+			//Restore Button
+			CustomizationButton restoreButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup.restore"), true, (press) -> {
+				restoreMenu.setParentButton((AdvancedButton) press);
+				restoreMenu.openMenuAt(0, press.y);
+			});
+			restoreButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.restore.btn.desc"), "%n%"));
+			setupMenu.addContent(restoreButton);
+
+			//Add entries to restore menu
+			try {
+				File backups = SetupSharingEngine.SETUP_BACKUP_DIR;
+				backups.mkdirs();
+				boolean hasContent = false;
+				File[] backupsSorted = SetupSharingEngine.sortByDateModified(backups.listFiles());
+				for (File f : backupsSorted) {
+					if (SetupSharingEngine.isValidSetup(f.getPath())) {
+						String btnName = "Backup";
+						try {
+							LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochMilli(f.lastModified()), ZoneId.systemDefault());
+							DateTimeFormatter dtf = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
+							dtf.withZone(ZoneId.systemDefault());
+							dtf.withLocale(Locale.getDefault());
+							btnName = dt.format(dtf);
+						} catch (Exception e3) {
+							e3.printStackTrace();
+						}
+						CustomizationButton backupEntryButton = new CustomizationButton(0, 0, 0, 0, btnName, true, (press) -> {
+							FMYesNoPopup backupConfirmPop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
+								if (call) {
+									new Thread(() -> {
+										SetupSharingEngine.StatusPopup restoreBlockerPopup = new SetupSharingEngine.StatusPopup(Locals.localize("fancymenu.helper.setupsharing.restore.restoring"));
+										PopupHandler.displayPopup(restoreBlockerPopup);
+										try {
+											try {
+												File fmFolder = new File("config/fancymenu");
+												if (fmFolder.isDirectory()) {
+													org.apache.commons.io.FileUtils.deleteDirectory(fmFolder);
+												}
+											} catch (Exception e2) {
+												e2.printStackTrace();
+											}
+
+											File homeRaw = new File("");
+											File home = new File(homeRaw.getAbsolutePath());
+											if (home.isDirectory()) {
+												//Check that we're really in the correct dir, because I'm paranoid
+												File config = new File(home.getPath() + "/config");
+												if (config.isDirectory()) {
+													File backupInstance = new File(f.getPath() + "/setup");
+													if (backupInstance.isDirectory()) {
+														org.apache.commons.io.FileUtils.copyDirectory(backupInstance, home);
+														FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, () -> {
+															CustomizationHelper.reloadSystemAndMenu();
+														}, Locals.localize("fancymenu.helper.setupsharing.restore.success"));
+														PopupHandler.displayPopup(pop);
+													}
+												}
+											}
+										} catch (Exception e) {
+											e.printStackTrace();
+											FMYesNoPopup pop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call2) -> {
+												if (call2) {
+													try {
+														CustomizationHelper.openFile(SetupSharingEngine.SETUP_BACKUP_DIR);
+													} catch (Exception e3) {
+														e3.printStackTrace();
+													}
+												}
+												CustomizationHelper.reloadSystemAndMenu();
+											}, Locals.localize("fancymenu.helper.setupsharing.restore.error"));
+											PopupHandler.displayPopup(pop);
+										}
+										restoreBlockerPopup.setDisplayed(false);
+									}).start();
+								}
+							}, Locals.localize("fancymenu.helper.setupsharing.restore.confirm"));
+							PopupHandler.displayPopup(backupConfirmPop);
+						});
+						backupEntryButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.restore.entry.btn.desc"), "%n%"));
+						restoreMenu.addContent(backupEntryButton);
+						hasContent = true;
+					}
+				}
+				if (!hasContent) {
+					CustomizationButton emptyButton = new CustomizationButton(0, 0, 0, 0, "----------", true, (press) -> {});
+					restoreMenu.addContent(emptyButton);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			/** SETUP TAB END **/
 			
 			/** CUSTOM GUI TAB START **/
 			FMContextMenu customGuiMenu = new FMContextMenu();

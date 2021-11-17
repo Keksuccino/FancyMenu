@@ -9,8 +9,6 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.ResourceLocation;
 
 public class AdvancedAnimation implements IAnimationRenderer {
 	
@@ -21,6 +19,8 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	private String introAudioPath;
 	private boolean muted = false;
 	private boolean replayIntro;
+
+	public String propertiesPath = null;
 
 	protected boolean prepared = false;
 	
