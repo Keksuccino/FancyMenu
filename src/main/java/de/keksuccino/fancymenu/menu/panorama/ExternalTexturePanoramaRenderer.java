@@ -15,11 +15,8 @@ import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
 
@@ -28,7 +25,7 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 	private ExternalTextureResourceLocation overlay_texture;
 	private float time;
 	private String name = null;
-	private String dir;
+	public String dir;
 	private boolean prepared = false;
 	private List<ExternalTextureResourceLocation> pano = new ArrayList<ExternalTextureResourceLocation>();
 	private float speed = 1.0F;
