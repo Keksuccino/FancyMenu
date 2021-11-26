@@ -72,12 +72,6 @@ public class ServerCache {
                 serversUpdated.get(ip).playerCountLabel = servers.get(ip).playerCountLabel;
                 serversUpdated.get(ip).playerListSummary = servers.get(ip).playerListSummary;
             }
-            else
-            {
-                //Just here so you can see for yourself that this mod sometimes is stuck ages in the "multiplayer.status.pinging" state
-                //for whatever reason this only happens here and not in minecraft's own server screen.
-                //System.out.println("GOTCHA");
-            }
         }
 
         return serversUpdated.get(ip);
