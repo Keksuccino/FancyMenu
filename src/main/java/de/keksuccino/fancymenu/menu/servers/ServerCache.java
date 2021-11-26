@@ -22,7 +22,6 @@ public class ServerCache {
     protected static Map<String, ServerInfo> servers = new HashMap<String, ServerInfo>();
     protected static Map<String, ServerInfo> serversUpdated = new HashMap<String, ServerInfo>();
 
-
     public static void init() {
         new Thread(() -> {
             while (true) {
