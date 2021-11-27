@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import java.awt.Color;
+import java.io.File;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
+import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
@@ -74,11 +77,27 @@ public class BackgroundOptionsPopup extends FMPopup {
 		}
 		this.slideshowSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);
 		this.slideshowSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
-		
+
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
-				PopupHandler.displayPopup(this);
+				File f = new File(call);
+				if (f.isFile()) {
+					String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
+					if (filename.equals(f.getName())) {
+						BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
+						PopupHandler.displayPopup(this);
+					} else {
+						FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+							PopupHandler.displayPopup(this);
+						}, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+						PopupHandler.displayPopup(pop);
+					}
+				} else {
+					FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+						PopupHandler.displayPopup(this);
+					}, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+					PopupHandler.displayPopup(pop);
+				}
 			}, "jpg", "jpeg", "png");
 			if ((this.handler.backgroundTexture != null)) {
 				cf.setText(this.handler.backgroundTexturePath);

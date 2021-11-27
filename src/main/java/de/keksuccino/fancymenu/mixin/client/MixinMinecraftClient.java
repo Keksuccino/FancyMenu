@@ -31,6 +31,11 @@ public class MixinMinecraftClient {
 
 	private static boolean animationsLoaded = false;
 
+	@Inject(at = @At("TAIL"), method = "<init>")
+	private void onConstruction(CallbackInfo info) {
+		MainWindowHandler.handleForceFullscreen();
+	}
+
 	@Inject(at = @At(value = "HEAD"), method = "getWindowTitle", cancellable = true)
 	public void onGetWindowTitle(CallbackInfoReturnable<String> info) {
 		

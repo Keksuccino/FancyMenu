@@ -21,6 +21,24 @@ public class MainWindowHandler {
 			icondir.mkdirs();
 		}
 	}
+
+	public static void handleForceFullscreen() {
+		try {
+			if ((MinecraftClient.getInstance() != null) && (MinecraftClient.getInstance().getWindow() != null)) {
+				if (FancyMenu.config.getOrDefault("forcefullscreen", false)) {
+					if (!MinecraftClient.getInstance().getWindow().isFullscreen()) {
+						MinecraftClient.getInstance().getWindow().toggleFullscreen();
+						FancyMenu.LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
+					}
+				}
+			} else {
+				//This should basically never happen, but just in case, you know
+				FancyMenu.LOGGER.error("[FANCYMENU] Force fullscreen failed! Instance or window was NULL!");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public static void updateWindowIcon() {
 		if (FancyMenu.config.getOrDefault("customwindowicon", false)) {

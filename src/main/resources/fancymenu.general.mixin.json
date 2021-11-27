@@ -9,7 +9,8 @@
     "MixinMinecraftClient",
     "MixinTexturedButtonWidget",
     "MixinSplashScreen",
-    "MixinDrawableHelper"
+    "MixinDrawableHelper",
+    "MixinAdvancementCommand"
   ],
   "server": [],
   "injectors": {
