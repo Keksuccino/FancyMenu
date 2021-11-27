@@ -27,7 +27,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     protected int height;
     protected int x;
     protected int y;
-    protected List<ResourceLocation> resources = new ArrayList<ResourceLocation>();
+    public List<ResourceLocation> resources = new ArrayList<ResourceLocation>();
     protected boolean stretch = false;
     protected boolean hide = false;
     protected volatile boolean done = false;

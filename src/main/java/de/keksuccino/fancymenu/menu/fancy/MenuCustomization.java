@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
+import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.DummyCoreMainHandler;
@@ -66,7 +67,7 @@ public class MenuCustomization {
 		}
 	}
 
-	private static void updateCustomizeableMenuCache() {
+	public static void updateCustomizeableMenuCache() {
 		try {
 			if (!CUSTOMIZABLE_MENUS_FILE.exists()) {
 				CUSTOMIZABLE_MENUS_FILE.createNewFile();
@@ -77,7 +78,19 @@ public class MenuCustomization {
 				PropertiesSerializer.writeProperties(new PropertiesSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
 				s = PropertiesSerializer.getProperties(CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
-			customizableMenus = s;
+			PropertiesSet s2 = new PropertiesSet("customizablemenus");
+			for (PropertiesSection sec : s.getProperties()) {
+				String identifier = null;
+				try {
+					Class.forName(sec.getSectionType());
+					identifier = sec.getSectionType();
+				} catch (Exception e) {}
+				if (identifier == null) {
+					identifier = getValidMenuIdentifierFor(sec.getSectionType());
+				}
+				s2.addProperties(new PropertiesSection(identifier));
+			}
+			customizableMenus = s2;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -135,6 +148,21 @@ public class MenuCustomization {
 			}
 		}
 		return false;
+	}
+
+	public static String getValidMenuIdentifierFor(String identifier) {
+		SetupSharingEngine.MenuIdentifierDatabase db = SetupSharingEngine.getIdentifierDatabase();
+		try {
+			Class.forName(identifier);
+			return identifier;
+		} catch (Exception e) {}
+		if (db != null) {
+			String s = db.findValidIdentifierFor(identifier);
+			if (s != null) {
+				return s;
+			}
+		}
+		return identifier;
 	}
 	
 	public static void reload() {

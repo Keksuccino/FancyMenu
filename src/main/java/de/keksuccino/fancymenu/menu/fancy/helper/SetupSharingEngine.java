@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.animation.ResourcePackAnimationRenderer;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
@@ -56,6 +57,9 @@ public class SetupSharingEngine {
             if (MENU_IDENTIFIERS_DATABASE_FILE.isFile()) {
                 menuIdentifierDatabase = new MenuIdentifierDatabase(MENU_IDENTIFIERS_DATABASE_FILE);
             }
+
+            MenuCustomizationProperties.loadProperties();
+            MenuCustomization.updateCustomizeableMenuCache();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -393,12 +397,28 @@ public class SetupSharingEngine {
                             if (m.type == AnimationType.PACK) {
                                 File propsPath = new File(m.propertiesPath);
                                 File resPath = new File(m.resourcesPath);
+                                File packMetaPath = null;
+                                try {
+                                    packMetaPath = resPath.getAbsoluteFile().getParentFile();
+                                    if (packMetaPath != null) {
+                                        packMetaPath = packMetaPath.getParentFile();
+                                    }
+                                    if (packMetaPath != null) {
+                                        packMetaPath = new File(packMetaPath.getPath() + "/pack.mcmeta");
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                                 if (propsPath.isDirectory()) {
                                     if (resPath.isDirectory()) {
                                         File resTarget = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(resPath.getPath()));
                                         resTarget.mkdirs();
                                         FileUtils.copyDirectory(resPath, resTarget);
-                                        exportedAnimations.add(m.name);
+                                        if ((packMetaPath != null) && packMetaPath.isFile()) {
+                                            File packMetaTarget = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(packMetaPath.getPath()));
+                                            FileUtils.copyFile(packMetaPath, packMetaTarget);
+                                            exportedAnimations.add(m.name);
+                                        }
                                     }
                                 }
                             }
@@ -747,6 +767,10 @@ public class SetupSharingEngine {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static MenuIdentifierDatabase getIdentifierDatabase() {
+        return menuIdentifierDatabase;
     }
 
     public static class AdvancedAnimationMeta {

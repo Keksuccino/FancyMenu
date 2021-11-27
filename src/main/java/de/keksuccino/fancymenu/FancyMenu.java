@@ -2,10 +2,15 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import de.keksuccino.fancymenu.keybinding.Keybinding;
@@ -36,7 +41,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.3.7";
+	public static final String VERSION = "2.4.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -82,6 +87,8 @@ public class FancyMenu {
 	    		GameIntroHandler.init();
 
 				VisibilityRequirementHandler.init();
+
+				MainWindowHandler.handleForceFullscreen();
 	    		
 	        	MenuCustomization.init();
 
@@ -95,6 +102,8 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("assets/fancymenu", this::onClientSetup);
 
+				MinecraftForge.EVENT_BUS.register(this);
+
 //				MinecraftForge.EVENT_BUS.register(new Test());
 	        	
 	    	} else {
@@ -104,6 +113,13 @@ public class FancyMenu {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@SubscribeEvent
+	public void onRegisterCommands(RegisterCommandsEvent e) {
+
+		OpenGuiScreenCommand.register(e.getDispatcher());
+
 	}
 	
 	private void onClientSetup() {
@@ -159,6 +175,7 @@ public class FancyMenu {
     		config.registerValue("stopworldmusicwhencustomizable", false, "general", "Stop vanilla world music when in a customizable menu.");
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
+			config.registerValue("forcefullscreen", false, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");

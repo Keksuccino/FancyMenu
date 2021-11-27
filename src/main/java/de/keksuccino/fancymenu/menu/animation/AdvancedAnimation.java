@@ -1,14 +1,21 @@
 package de.keksuccino.fancymenu.menu.animation;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
+import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.sound.SoundHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.IResource;
+import net.minecraft.util.ResourceLocation;
 
 public class AdvancedAnimation implements IAnimationRenderer {
 	
@@ -127,12 +134,18 @@ public class AdvancedAnimation implements IAnimationRenderer {
 				this.introRenderer.setPosY(this.animationRenderer.getPosY());
 				this.introRenderer.setLooped(false);
 				if (!this.introRenderer.isFinished()) {
-					this.introRenderer.render(matrix);
+					if (canRenderFrameOf(this.introRenderer, this.introRenderer.currentFrame())) {
+						this.introRenderer.render(matrix);
+					}
 				} else {
-					this.animationRenderer.render(matrix);
+					if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
+						this.animationRenderer.render(matrix);
+					}
 				}
 			} else {
-				this.animationRenderer.render(matrix);
+				if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
+					this.animationRenderer.render(matrix);
+				}
 			}
 		}
 		
@@ -349,6 +362,37 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		if (this.introRenderer != null) {
 			this.introRenderer.setOpacity(opacity);
 		}
+	}
+
+	public static boolean canRenderFrameOf(IAnimationRenderer renderer, int frame) {
+		try {
+			if (renderer.isReady()) {
+				if (renderer instanceof ResourcePackAnimationRenderer) {
+					List<ResourceLocation> l = ((ResourcePackAnimationRenderer) renderer).resources;
+					if (!l.isEmpty()) {
+						if (l.size()-1 >= frame) {
+							ResourceLocation r = l.get(frame);
+							IResource res = Minecraft.getInstance().getResourceManager().getResource(r);
+							return (res != null);
+						}
+					}
+				} else if (renderer instanceof ExternalTextureAnimationRenderer) {
+					Field f = ExternalTextureAnimationRenderer.class.getDeclaredField("resources");
+					f.setAccessible(true);
+					List<ExternalTextureResourceLocation> l = (List<ExternalTextureResourceLocation>) f.get(renderer);
+					if ((l != null) && (l.size()-1 >= frame)) {
+						ResourceLocation r = l.get(frame).getResourceLocation();
+						if (r != null) {
+							IResource res = Minecraft.getInstance().getResourceManager().getResource(r);
+							return (res != null);
+						}
+					}
+				} else {
+					return true;
+				}
+			}
+		} catch (Exception e) {}
+		return false;
 	}
 
 }

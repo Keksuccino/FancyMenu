@@ -1,11 +1,14 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueTextfield;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
@@ -16,7 +19,6 @@ import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.StringTextComponent;
 
@@ -37,29 +39,39 @@ public class ButtonActionPopup extends FMPopup {
 		this.textField.setCanLoseFocus(true);
 		this.textField.setFocused2(false);
 		this.textField.setMaxStringLength(1000);
-		
-		this.actionSwitcher = new HorizontalSwitcher(120, true,
-				"openlink",
-				"sendmessage",
-				"quitgame",
-				"joinserver",
-				"loadworld",
-				"prevbackground",
-				"nextbackground",
-				"opencustomgui",
-				"opengui",
-				"openfile",
-				"movefile",
-				"copyfile",
-				"deletefile",
-				"renamefile",
-				"downloadfile",
-				"unpackzip",
-				"reloadmenu",
-				"mutebackgroundsounds",
-				"runscript",
-				"runcmd",
-				"closegui");
+
+		List<String> actions = new ArrayList<>();
+		actions.add("openlink");
+		actions.add("sendmessage");
+		actions.add("quitgame");
+		actions.add("joinserver");
+		actions.add("loadworld");
+		actions.add("opencustomgui");
+		actions.add("opengui");
+		actions.add("openfile");
+		actions.add("movefile");
+		actions.add("copyfile");
+		actions.add("deletefile");
+		actions.add("renamefile");
+		actions.add("downloadfile");
+		actions.add("unpackzip");
+		actions.add("reloadmenu");
+		actions.add("mutebackgroundsounds");
+		actions.add("runscript");
+		actions.add("runcmd");
+		actions.add("closegui");
+		actions.add("copytoclipboard");
+
+		/** CUSTOM ACTIONS **/
+		for (ButtonActionContainer c : ButtonActionRegistry.getActions()) {
+			actions.add(c.getAction());
+		}
+
+		if (!actions.contains(selectedType)) {
+			selectedType = null;
+		}
+
+		this.actionSwitcher = new HorizontalSwitcher(120, true, actions.toArray(new String[0]));
 		this.actionSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);
 		this.actionSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
 		
@@ -88,41 +100,58 @@ public class ButtonActionPopup extends FMPopup {
 	@Override
 	public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
-		
+
 		if (this.isDisplayed()) {
-			int height = 100;
-			
-			RenderSystem.enableBlend();
-			Screen.fill(matrix, (renderIn.width / 2) - (this.width / 2), (renderIn.height / 2) - (height / 2), (renderIn.width / 2) + (this.width / 2), (renderIn.height / 2) + (height / 2), new Color(0, 0, 0, 0).getRGB());
-			RenderSystem.disableBlend();
-			
-			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent("§l" + Locals.localize("helper.creator.custombutton.config")), renderIn.width / 2, (renderIn.height / 2) - (height / 2) - 40, Color.WHITE.getRGB());
-			
-			
-			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype")), renderIn.width / 2, (renderIn.height / 2) - 60, Color.WHITE.getRGB());
-			
+			String action = this.actionSwitcher.getSelectedValue();
+			ButtonActionContainer customAction = ButtonActionRegistry.getActionByName(action);
+
+			//Draw popup title
+			drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent("§l" + Locals.localize("helper.creator.custombutton.config")), renderIn.width / 2, (renderIn.height / 2) - 50 - 40, -1);
+
+			//Draw action type name
+			drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype")), renderIn.width / 2, (renderIn.height / 2) - 60, -1);
+
 			this.actionSwitcher.render(matrix, (renderIn.width / 2) - (this.actionSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 45);
-			
-			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc")), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
-			
-			
-			String s = this.actionSwitcher.getSelectedValue();
-			if (s.equals("sendmessage") || s.equals("openlink") || (s.equals("joinserver") || (s.equals("loadworld") || s.equals("openfile") || s.equals("opencustomgui") || s.equals("opengui") || s.equals("movefile") || s.equals("copyfile") || s.equals("deletefile") || s.equals("renamefile") || s.equals("runscript") || s.equals("downloadfile") || s.equals("unpackzip") || s.equals("mutebackgroundsounds") || s.equals("runcmd")))) {
-				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value"))), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
-				
+
+			//Set and draw action description
+			String actionDesc;
+			if (customAction != null) {
+				actionDesc = customAction.getActionDescription();
+			} else {
+				actionDesc = Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc");
+			}
+			drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(actionDesc), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
+
+			if (action.equals("sendmessage") || action.equals("openlink") || (action.equals("joinserver") || (action.equals("loadworld") || action.equals("openfile") || action.equals("opencustomgui") || action.equals("opengui") || action.equals("movefile") || action.equals("copyfile") || action.equals("deletefile") || action.equals("renamefile") || action.equals("runscript") || action.equals("downloadfile") || action.equals("unpackzip") || action.equals("mutebackgroundsounds") || action.equals("runcmd") || action.equals("copytoclipboard") || ((customAction != null) && customAction.hasValue())))) {
+				//Set and draw value description
+				String valueDesc;
+				if (customAction != null) {
+					valueDesc = customAction.getValueDescription();
+				} else {
+					valueDesc = Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value");
+				}
+				drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue", valueDesc)), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
+
 				this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
 				this.textField.setY((renderIn.height / 2) + 30);
 				this.textField.renderWidget(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
 
-				AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue.example", Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value.example"))), renderIn.width / 2, (renderIn.height / 2) + 56, Color.WHITE.getRGB());
+				//Set and draw value example
+				String valueExample;
+				if (customAction != null) {
+					valueExample = customAction.getValueExample();
+				} else {
+					valueExample = Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value.example");
+				}
+				drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue.example", valueExample)), renderIn.width / 2, (renderIn.height / 2) + 56, Color.WHITE.getRGB());
 			}
-			
-			
+
 			this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
-			this.doneButton.setY(((renderIn.height / 2) + (height / 2)) + 30);
-			
+			this.doneButton.setY(((renderIn.height / 2) + 50) + 30);
+
 			this.renderButtons(matrix, mouseX, mouseY);
 		}
+
 	}
 	
 	public void setText(String text) {
