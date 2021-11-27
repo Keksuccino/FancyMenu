@@ -61,6 +61,9 @@ public class MenuCustomizationProperties {
 						if (!allRequiredModsLoaded(s3)) {
 							continue;
 						}
+
+						l.get(0).removeEntry("identifier");
+						l.get(0).addEntry("identifier", MenuCustomization.getValidMenuIdentifierFor(s2));
 						
 						l.get(0).addEntry("path", f2.getPath());
 						props.add(s);

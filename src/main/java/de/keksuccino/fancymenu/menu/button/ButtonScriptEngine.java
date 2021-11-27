@@ -15,6 +15,8 @@ import java.util.Map;
 import com.google.common.io.Files;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
@@ -237,6 +239,19 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("closegui")) {
 				Minecraft.getMinecraft().displayGuiScreen(null);
+			}
+			if (action.equalsIgnoreCase("copytoclipboard")) {
+				GuiScreen.setClipboardString(value);
+			}
+
+			/** CUSTOM ACTIONS **/
+			ButtonActionContainer c = ButtonActionRegistry.getActionByName(action);
+			if (c != null) {
+				if (c.hasValue()) {
+					c.execute(value);
+				} else {
+					c.execute(null);
+				}
 			}
 			
 		} catch (Exception e) {

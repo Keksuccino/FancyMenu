@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
+import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
@@ -24,14 +26,16 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.Sys;
 
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.3.7";
+	public static final String VERSION = "2.4.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -97,6 +101,13 @@ public class FancyMenu {
 		}
 	}
 
+	@Mod.EventHandler
+	public void onRegisterCommands(FMLServerStartingEvent e) {
+
+		e.registerServerCommand(new OpenGuiScreenCommand());
+
+	}
+
 	public void onClientSetup() {
 		try {
 			if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
@@ -153,6 +164,7 @@ public class FancyMenu {
     		config.registerValue("stopworldmusicwhencustomizable", false, "general", "Stop vanilla world music when in a customizable menu.");
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
+			config.registerValue("forcefullscreen", false, "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");

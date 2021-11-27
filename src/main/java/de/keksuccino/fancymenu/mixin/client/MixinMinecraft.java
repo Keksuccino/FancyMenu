@@ -14,7 +14,15 @@ import net.minecraft.client.Minecraft;
 public class MixinMinecraft {
 
 	private static boolean customWindowInit = false;
-	
+
+	@Inject(at = @At("HEAD"), method = "setInitialDisplayMode", cancellable = true)
+	private void onSetInitialDisplayMode(CallbackInfo info) {
+		FancyMenu.updateConfig();
+		if (MainWindowHandler.handleForceFullscreen()) {
+			info.cancel();
+		}
+	}
+
 	@Inject(at = @At(value = "HEAD"), method = "displayGuiScreen", cancellable = true)
 	public void onGetWindowTitle(CallbackInfo info) {
 		if (!FancyMenu.isKonkreteLoaded()) {

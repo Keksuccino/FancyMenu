@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
+import org.lwjgl.opengl.DisplayMode;
 
 public class MainWindowHandler {
 
@@ -26,6 +27,22 @@ public class MainWindowHandler {
 			icondir.mkdirs();
 		}
 
+	}
+
+	public static boolean handleForceFullscreen() {
+		try {
+			if (FancyMenu.config.getOrDefault("forcefullscreen", false)) {
+				Display.setFullscreen(true);
+				DisplayMode displaymode = Display.getDisplayMode();
+				Minecraft.getMinecraft().displayWidth = Math.max(1, displaymode.getWidth());
+				Minecraft.getMinecraft().displayHeight = Math.max(1, displaymode.getHeight());
+				FancyMenu.LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 	public static void updateWindowIcon() {
