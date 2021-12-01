@@ -371,22 +371,26 @@ public class AdvancedAnimation implements IAnimationRenderer {
 				if (renderer instanceof ResourcePackAnimationRenderer) {
 					List<Identifier> l = ((ResourcePackAnimationRenderer) renderer).resources;
 					if (!l.isEmpty()) {
-						if (l.size()-1 >= frame) {
+						if (l.size() > frame) {
 							Identifier r = l.get(frame);
 							Resource res = MinecraftClient.getInstance().getResourceManager().getResource(r);
 							return (res != null);
+						} else {
+							return true;
 						}
 					}
 				} else if (renderer instanceof ExternalTextureAnimationRenderer) {
 					Field f = ExternalTextureAnimationRenderer.class.getDeclaredField("resources");
 					f.setAccessible(true);
 					List<ExternalTextureResourceLocation> l = (List<ExternalTextureResourceLocation>) f.get(renderer);
-					if ((l != null) && (l.size()-1 >= frame)) {
+					if ((l != null) && (l.size() > frame)) {
 						Identifier r = l.get(frame).getResourceLocation();
 						if (r != null) {
 							Resource res = MinecraftClient.getInstance().getResourceManager().getResource(r);
 							return (res != null);
 						}
+					} else {
+						return true;
 					}
 				} else {
 					return true;

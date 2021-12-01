@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "id": "fancymenu",
-  "version": "2.4.0",
+  "version": "2.4.2",
   "name": "FancyMenu",
-  "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2021 Keksuccino. FancyMenu is licensed under KML. See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more infos about this license.",
+  "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2021 Keksuccino. FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.",
   "environment": "client",
   "authors": [
     "Keksuccino"
   ],
   "contributors": [],
   "contact": {},
-  "license": "KML (Keksuccino Mod License)",
+  "license": "DSMSL (DON'T SNATCH MA STUFF LICENSE)",
   "icon": "assets/fancymenu/icon.png",
   "entrypoints": {
     "main": [
