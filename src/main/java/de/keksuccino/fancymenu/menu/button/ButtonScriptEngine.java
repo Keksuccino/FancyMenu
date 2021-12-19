@@ -36,6 +36,7 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConnectScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ServerAddress;
 import net.minecraft.client.network.ServerInfo;
 
@@ -101,7 +102,11 @@ public class ButtonScriptEngine {
 							port = Integer.parseInt(portString);
 						}
 					}
-					ConnectScreen.connect(MinecraftClient.getInstance().currentScreen, MinecraftClient.getInstance(), new ServerAddress(ip, port), new ServerInfo("", value.replace(" ", ""), false));
+					Screen s = MinecraftClient.getInstance().currentScreen;
+					if (s == null) {
+						s = new TitleScreen();
+					}
+					ConnectScreen.connect(s, MinecraftClient.getInstance(), new ServerAddress(ip, port), new ServerInfo("", value.replace(" ", ""), false));
 				}
 			}
 			if (action.equalsIgnoreCase("loadworld")) {

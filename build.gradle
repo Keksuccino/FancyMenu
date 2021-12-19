@@ -52,7 +52,7 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
-	rename 'konkrete-refmap.json', 'konkrete.mixins.events.client-refmap.json'
+	rename 'fancymenu-refmap.json', 'fancymenu.general.mixin-refmap.json'
 }
 
 // configure the maven publication
