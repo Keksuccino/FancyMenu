@@ -30,10 +30,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.2,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.4.2";
+	public static final String VERSION = "2.4.3";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -46,8 +46,6 @@ public class FancyMenu {
 	private static final File buttonscriptPath = new File("config/fancymenu/buttonscripts");
 	private static final File panoramaPath = new File("config/fancymenu/panoramas");
 	private static final File slideshowPath = new File("config/fancymenu/slideshows");
-	
-	private static boolean optifineLoaded = false;
 	
 	public FancyMenu() {
 		try {
@@ -89,9 +87,13 @@ public class FancyMenu {
 	        	VanillaButtonDescriptionHandler.init();
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
+
+				if (isOptifineCompatibilityMode()) {
+					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
+				}
 	        	
 	    	} else {
-	    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
+	    		LOGGER.info("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
 	    	}
 			
 		} catch (Exception e) {
@@ -121,12 +123,6 @@ public class FancyMenu {
 	        	GuiConstructor.init();
 
 				ServerCache.init();
-	        	
-	        	try {
-	                Class.forName("optifine.Installer");
-	                optifineLoaded = true;
-	            }
-	            catch (ClassNotFoundException e) {}
 	        	
 			}
 		} catch (Exception ex) {
@@ -249,9 +245,14 @@ public class FancyMenu {
 		}
 		return slideshowPath;
 	}
-	
+
+	@Deprecated
 	public static boolean isOptifineLoaded() {
-		return optifineLoaded;
+		return isOptifineCompatibilityMode();
+	}
+
+	public static boolean isOptifineCompatibilityMode() {
+		return Konkrete.isOptifineLoaded;
 	}
 
 	public static boolean isDrippyLoadingScreenLoaded() {

@@ -25,10 +25,18 @@ public class OpenGuiScreenCommand extends CommandBase {
     }
 
     @Override
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+        return true;
+    }
+
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 0;
+    }
+
+    @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         if (args.length >= 1) {
-            //TODO remove debug
-            System.out.println("MENU IDENTIFIER: " + args[0]);
             openGui(sender, args[0]);
         }
     }

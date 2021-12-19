@@ -42,13 +42,14 @@ dependencies {
 
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2855'
 
-	compile('org.spongepowered:mixin:0.8.2') {
+	compile('org.spongepowered:mixin:0.8.4') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
 	
-	annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+	annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
+    testAnnotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 	
 	compile fileTree(dir: 'libs', include: ['*.jar'])
 
