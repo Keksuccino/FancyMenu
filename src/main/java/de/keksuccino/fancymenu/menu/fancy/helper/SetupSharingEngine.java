@@ -58,10 +58,8 @@ public class SetupSharingEngine {
                 menuIdentifierDatabase = new MenuIdentifierDatabase(MENU_IDENTIFIERS_DATABASE_FILE);
             }
 
-            //TODO übernehmen
             MenuCustomizationProperties.loadProperties();
             MenuCustomization.updateCustomizeableMenuCache();
-            //----------------
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -397,7 +395,6 @@ public class SetupSharingEngine {
                                     exportedAnimations.add(m.name);
                                 }
                             }
-                            //TODO übernehmen (ganzen block)
                             if (m.type == AnimationType.PACK) {
                                 File propsPath = new File(m.propertiesPath);
                                 File resPath = new File(m.resourcesPath);
@@ -773,7 +770,6 @@ public class SetupSharingEngine {
         return null;
     }
 
-    //TODO übernehmen
     public static MenuIdentifierDatabase getIdentifierDatabase() {
         return menuIdentifierDatabase;
     }

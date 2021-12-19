@@ -68,7 +68,6 @@ public class MenuCustomization {
 		}
 	}
 
-	//TODO übernehmen
 	public static void updateCustomizeableMenuCache() {
 		try {
 			if (!CUSTOMIZABLE_MENUS_FILE.exists()) {
@@ -152,7 +151,6 @@ public class MenuCustomization {
 		return false;
 	}
 
-	//TODO übernehmen
 	public static String getValidMenuIdentifierFor(String identifier) {
 		if (CustomGuiLoader.guiExists(identifier)) {
 			return identifier;

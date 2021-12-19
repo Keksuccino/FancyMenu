@@ -39,7 +39,6 @@ public class ButtonActionPopup extends FMPopup {
 		this.textField.setFocus(false);
 		this.textField.setMaxLength(1000);
 
-		//TODO übernehmen
 		List<String> actions = new ArrayList<>();
 		actions.add("openlink");
 		actions.add("sendmessage");
@@ -62,18 +61,15 @@ public class ButtonActionPopup extends FMPopup {
 		actions.add("closegui");
 		actions.add("copytoclipboard");
 
-		//TODO übernehmen
 		/** CUSTOM ACTIONS **/
 		for (ButtonActionContainer c : ButtonActionRegistry.getActions()) {
 			actions.add(c.getAction());
 		}
 
-		//TODO übernehmen
 		if (!actions.contains(selectedType)) {
 			selectedType = null;
 		}
 
-		//TODO übernehmen
 		this.actionSwitcher = new HorizontalSwitcher(120, true, actions.toArray(new String[0]));
 		this.actionSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);
 		this.actionSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
@@ -100,7 +96,6 @@ public class ButtonActionPopup extends FMPopup {
 		KeyboardHandler.addKeyPressedListener(this::onEscapePressed);
 	}
 
-	//TODO übernehmen
 	@Override
 	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);

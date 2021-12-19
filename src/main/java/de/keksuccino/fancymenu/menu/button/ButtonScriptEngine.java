@@ -250,12 +250,10 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("closegui")) {
 				Minecraft.getInstance().setScreen(null);
 			}
-			//TODO übernehmen
 			if (action.equalsIgnoreCase("copytoclipboard")) {
 				Minecraft.getInstance().keyboardHandler.setClipboard(value);
 			}
 
-			//TODO übernehmen
 			/** CUSTOM ACTIONS **/
 			ButtonActionContainer c = ButtonActionRegistry.getActionByName(action);
 			if (c != null) {

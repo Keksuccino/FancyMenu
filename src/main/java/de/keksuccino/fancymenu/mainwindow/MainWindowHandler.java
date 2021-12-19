@@ -22,7 +22,6 @@ public class MainWindowHandler {
 		}
 	}
 
-	//TODO übernehmen
 	public static void handleForceFullscreen() {
 		try {
 			if ((Minecraft.getInstance() != null) && (Minecraft.getInstance().getWindow() != null)) {

@@ -16,10 +16,12 @@ import java.util.Map;
 
 public class ServerCache {
 
-    static final Component CANT_CONNECT_TEXT = (new TranslatableComponent("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
+    protected static final Component CANT_CONNECT_TEXT = (new TranslatableComponent("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
 
     protected static ServerStatusPinger pinger = new ServerStatusPinger();
     protected static Map<String, ServerData> servers = new HashMap<String, ServerData>();
+    //TODO übernehmen
+    protected static Map<String, ServerData> serversUpdated = new HashMap<String, ServerData>();
 
     public static void init() {
         new Thread(() -> {
@@ -40,11 +42,14 @@ public class ServerCache {
         }).start();
     }
 
-    public static void cacheServer(ServerData server) {
+    //TODO übernehmen
+    public static void cacheServer(ServerData server, ServerData serverUpdated) {
         if (server.ip != null) {
             try {
                 server.ping = -1L;
+                serverUpdated.ping = -1L;
                 servers.put(server.ip, server);
+                serversUpdated.put(server.ip, serverUpdated);
                 pingServers();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -52,19 +57,37 @@ public class ServerCache {
         }
     }
 
+    //TODO übernehmen
     public static ServerData getServer(String ip) {
         if (!servers.containsKey(ip)) {
-            cacheServer(new ServerData(ip, ip, false));
+            cacheServer(new ServerData(ip, ip, false), new ServerData(ip, ip, false));
         }
-        return servers.get(ip);
+
+        //Copy server data from old to new array only when server is done pinging
+        if (servers.get(ip).motd != null) {
+            if (!servers.get(ip).motd.equals(new TranslatableComponent("multiplayer.status.pinging"))) {
+                serversUpdated.get(ip).ping = servers.get(ip).ping;
+                serversUpdated.get(ip).protocol = servers.get(ip).protocol;
+                serversUpdated.get(ip).motd = servers.get(ip).motd;
+                serversUpdated.get(ip).version = servers.get(ip).version;
+                serversUpdated.get(ip).status = servers.get(ip).status;
+                serversUpdated.get(ip).playerList = servers.get(ip).playerList;
+            }
+        }
+
+        return serversUpdated.get(ip);
     }
 
+    //TODO übernehmen
     public static void removeServer(String ip) {
         servers.remove(ip);
+        serversUpdated.remove(ip);
     }
 
+    //TODO übernehmen
     public static void clear() {
         servers.clear();
+        serversUpdated.clear();
     }
 
     public static void pingServers() {

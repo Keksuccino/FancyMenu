@@ -79,7 +79,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 		this.slideshowSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);
 		this.slideshowSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
 
-		//TODO übernehmen
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				File f = new File(call);

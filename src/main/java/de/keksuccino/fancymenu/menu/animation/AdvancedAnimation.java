@@ -134,18 +134,15 @@ public class AdvancedAnimation implements IAnimationRenderer {
 				this.introRenderer.setPosY(this.animationRenderer.getPosY());
 				this.introRenderer.setLooped(false);
 				if (!this.introRenderer.isFinished()) {
-					//TODO übernehmen
 					if (canRenderFrameOf(this.introRenderer, this.introRenderer.currentFrame())) {
 						this.introRenderer.render(matrix);
 					}
 				} else {
-					//TODO übernehmen
 					if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
 						this.animationRenderer.render(matrix);
 					}
 				}
 			} else {
-				//TODO übernehmen
 				if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
 					this.animationRenderer.render(matrix);
 				}
@@ -368,7 +365,6 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		}
 	}
 
-	//TODO übernehmen
 	public static boolean canRenderFrameOf(IAnimationRenderer renderer, int frame) {
 		try {
 			if (renderer.isReady()) {
