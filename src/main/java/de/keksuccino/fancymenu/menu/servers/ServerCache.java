@@ -20,6 +20,7 @@ public class ServerCache {
 
     protected static MultiplayerServerListPinger pinger = new MultiplayerServerListPinger();
     protected static Map<String, ServerInfo> servers = new HashMap<String, ServerInfo>();
+    protected static Map<String, ServerInfo> serversUpdated = new HashMap<String, ServerInfo>();
 
     public static void init() {
         new Thread(() -> {
@@ -40,11 +41,13 @@ public class ServerCache {
         }).start();
     }
 
-    public static void cacheServer(ServerInfo server) {
+    public static void cacheServer(ServerInfo server, ServerInfo serverUpdated) {
         if (server.address != null) {
             try {
                 server.ping = -1L;
+                serverUpdated.ping = -1L;
                 servers.put(server.address, server);
+                serversUpdated.put(server.address, serverUpdated);
                 pingServers();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -54,17 +57,32 @@ public class ServerCache {
 
     public static ServerInfo getServer(String ip) {
         if (!servers.containsKey(ip)) {
-            cacheServer(new ServerInfo(ip, ip, false));
+            cacheServer(new ServerInfo(ip, ip, false), new ServerInfo(ip, ip, false));
         }
-        return servers.get(ip);
+
+        //Copy server data from old to new array only when server is done pinging
+        if (servers.get(ip).label != null) {
+            if (!servers.get(ip).label.equals(new TranslatableText("multiplayer.status.pinging"))) {
+                serversUpdated.get(ip).ping = servers.get(ip).ping;
+                serversUpdated.get(ip).protocolVersion = servers.get(ip).protocolVersion;
+                serversUpdated.get(ip).label = servers.get(ip).label;
+                serversUpdated.get(ip).version = servers.get(ip).version;
+                serversUpdated.get(ip).playerCountLabel = servers.get(ip).playerCountLabel;
+                serversUpdated.get(ip).playerListSummary = servers.get(ip).playerListSummary;
+            }
+        }
+
+        return serversUpdated.get(ip);
     }
 
     public static void removeServer(String ip) {
         servers.remove(ip);
+        serversUpdated.remove(ip);
     }
 
     public static void clear() {
         servers.clear();
+        serversUpdated.clear();
     }
 
     public static void pingServers() {

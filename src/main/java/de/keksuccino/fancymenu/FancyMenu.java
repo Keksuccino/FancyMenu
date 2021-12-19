@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.4.2";
+	public static final String VERSION = "2.4.3";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -46,8 +46,6 @@ public class FancyMenu implements ModInitializer {
 	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
 	private static File panoramaPath = new File("config/fancymenu/panoramas");
 	private static File slideshowPath = new File("config/fancymenu/slideshows");
-	
-	private static boolean optifineLoaded = false;
 	
     @Override
     public void onInitialize() {
@@ -94,6 +92,10 @@ public class FancyMenu implements ModInitializer {
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
 				Konkrete.getEventHandler().registerEventsFrom(this);
+
+				if (isOptifineCompatibilityMode()) {
+					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
+				}
 	        	
 	    	} else {
 	    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
@@ -126,12 +128,6 @@ public class FancyMenu implements ModInitializer {
         	GuiConstructor.init();
 
 			ServerCache.init();
-        	
-        	try {
-                Class.forName("optifine.Installer");
-                optifineLoaded = true;
-            }
-            catch (ClassNotFoundException e) {}
 	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -255,9 +251,14 @@ public class FancyMenu implements ModInitializer {
 		}
 		return slideshowPath;
 	}
-	
+
+	@Deprecated
 	public static boolean isOptifineLoaded() {
-		return optifineLoaded;
+		return isOptifineCompatibilityMode();
+	}
+
+	public static boolean isOptifineCompatibilityMode() {
+		return Konkrete.isOptifineLoaded;
 	}
 
 	public static boolean isDrippyLoadingScreenLoaded() {
