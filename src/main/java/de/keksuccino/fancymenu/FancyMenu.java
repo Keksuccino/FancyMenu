@@ -41,7 +41,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.4.2";
+	public static final String VERSION = "2.4.3";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -54,8 +54,6 @@ public class FancyMenu {
 	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
 	private static File panoramaPath = new File("config/fancymenu/panoramas");
 	private static File slideshowPath = new File("config/fancymenu/slideshows");
-
-	private static boolean optifineLoaded = false;
 	
 	public FancyMenu() {
 		try {
@@ -105,6 +103,10 @@ public class FancyMenu {
 				MinecraftForge.EVENT_BUS.register(this);
 
 //				MinecraftForge.EVENT_BUS.register(new Test());
+
+				if (isOptifineCompatibilityMode()) {
+					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
+				}
 	        	
 	    	} else {
 	    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
@@ -136,12 +138,6 @@ public class FancyMenu {
         	GuiConstructor.init();
 
 			ServerCache.init();
-
-        	try {
-                Class.forName("optifine.Installer");
-                optifineLoaded = true;
-            }
-            catch (ClassNotFoundException e) {}
 	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -266,8 +262,13 @@ public class FancyMenu {
 		return slideshowPath;
 	}
 
+	@Deprecated
 	public static boolean isOptifineLoaded() {
-		return optifineLoaded;
+		return isOptifineCompatibilityMode();
+	}
+
+	public static boolean isOptifineCompatibilityMode() {
+		return Konkrete.isOptifineLoaded;
 	}
 
 	public static boolean isDrippyLoadingScreenLoaded() {

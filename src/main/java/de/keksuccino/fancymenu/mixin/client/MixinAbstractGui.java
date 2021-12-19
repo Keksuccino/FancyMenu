@@ -6,15 +6,12 @@ import de.keksuccino.fancymenu.mixin.cache.MixinCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.ColorHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(AbstractGui.class)
 public abstract class MixinAbstractGui {
-
-    private static final int SPLASH_BACKGROUND_COLOR = ColorHelper.PackedColor.packColor(255, 239, 50, 61);
 
     @ModifyVariable(at = @At("HEAD"), method = "fill(Lcom/mojang/blaze3d/matrix/MatrixStack;IIIII)V", argsOnly = true, index = 5)
     private static int modifyColor(int color) {
@@ -24,8 +21,8 @@ public abstract class MixinAbstractGui {
         if (Minecraft.getInstance().loadingGui == null) {
             MixinCache.isSplashScreenRendering = false;
         }
-        if (MixinCache.isSplashScreenRendering) {
-            int backColor = SPLASH_BACKGROUND_COLOR;
+        if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().loadingGui != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
+            int backColor = color;
             int alpha = MixinCache.currentSplashAlpha;
 
             Screen current = Minecraft.getInstance().currentScreen;
