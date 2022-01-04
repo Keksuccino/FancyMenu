@@ -15,7 +15,7 @@ import net.minecraft.client.util.math.MatrixStack;
 @Mixin(value = EntryListWidget.class)
 public abstract class MixinEntryListWidget {
 
-	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 0, shift = Shift.BEFORE), method = "render", cancellable = false)
+	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 0, shift = Shift.BEFORE), method = "render")
 	private void onRenderListBackgroundPre(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		
 		RenderGuiListBackgroundEvent.Pre e = new RenderGuiListBackgroundEvent.Pre(matrix, (EntryListWidget)((Object)this));
@@ -23,7 +23,7 @@ public abstract class MixinEntryListWidget {
 		
 	}
 	
-	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Tessellator;draw()V", ordinal = 0, shift = Shift.AFTER), method = "render", cancellable = false)
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Tessellator;draw()V", ordinal = 0, shift = Shift.AFTER), method = "render")
 	private void onRenderListBackgroundPost(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		
 		RenderGuiListBackgroundEvent.Post e = new RenderGuiListBackgroundEvent.Post(matrix, (EntryListWidget)((Object)this));

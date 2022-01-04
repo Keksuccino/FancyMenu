@@ -15,15 +15,15 @@ public class AnimationHandlerEvents {
 	
 	private boolean idle = false;
 	private Screen lastScreen;
-	
-	@SubscribeEvent
-	public void onGuiOpen(GuiOpenEvent e) {
-		if (e.getGui() instanceof TitleScreen) {
-			if (!AnimationHandler.isReady()) {
-				AnimationHandler.setupAnimations(e);
-			}
-		}
-	}
+
+//	@SubscribeEvent
+//	public void onGuiOpen(GuiOpenEvent e) {
+//		if (e.getGui() instanceof TitleScreen) {
+//			if (!AnimationHandler.isReady()) {
+//				AnimationHandler.setupAnimations(e);
+//			}
+//		}
+//	}
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -47,7 +47,7 @@ public class AnimationHandlerEvents {
 	
 	@SuppressWarnings("resource")
 	@SubscribeEvent
-	public void onTick(ClientTickEvent e) {
+	public void onTick(ClientTickEvent.Pre e) {
 		//Stopping audio for all advanced animations if no screen is being displayed
 		if ((MinecraftClient.getInstance().currentScreen == null) && AnimationHandler.isReady() && !this.idle) {
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {

@@ -8,7 +8,10 @@ import java.util.Optional;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
+import de.keksuccino.fancymenu.menu.button.ButtonData;
+import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.loader.api.FabricLoader;
@@ -101,11 +104,31 @@ public class DynamicValueHelper {
 
 		}
 
+		in = replaceVanillaButtonLabelPlaceolder(in);
+
 		//Handle all custom placeholders added via the API
 		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
 			in = p.replacePlaceholders(in);
 		}
 		
+		return in;
+	}
+
+	private static String replaceVanillaButtonLabelPlaceolder(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%vanillabuttonlabel:")) {
+				String blank = s.substring(1, s.length()-1);
+				String buttonLocator = blank.split(":", 2)[1];
+				ButtonData d = ButtonMimeHandler.getButton(buttonLocator);
+				if (d != null) {
+					in = in.replace(s, d.getButton().getMessage().getString());
+				} else {
+					in = in.replace(s, "§c[unable to get button label]");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return in;
 	}
 	
@@ -292,7 +315,11 @@ public class DynamicValueHelper {
 
 	private static int getLoadedMods() {
 		try {
-			return FabricLoader.getInstance().getAllMods().size();
+			int i = 0;
+			if (Konkrete.isOptifineLoaded) {
+				i++;
+			}
+			return FabricLoader.getInstance().getAllMods().size() + i;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

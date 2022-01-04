@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
+import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.events.EventPriority;
@@ -47,16 +48,19 @@ public class MenuCustomizationEvents {
 				this.lastScreen = current;
 			}
 		}
+		ButtonMimeHandler.clearCache();
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onMenuReloaded(MenuReloadedEvent e) {
+		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
 
 	@SubscribeEvent(priority =  EventPriority.HIGH)
 	public void onSoftReload(SoftMenuReloadEvent e) {
+		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
@@ -88,7 +92,7 @@ public class MenuCustomizationEvents {
 	}
 
 	@SubscribeEvent
-	public void onTick(ClientTickEvent e) {
+	public void onTick(ClientTickEvent.Pre e) {
 		//Stopping audio for all menu handlers if no screen is being displayed
 		if ((MinecraftClient.getInstance().currentScreen == null) && !this.idle) {
 			MenuCustomization.stopSounds();
