@@ -23,16 +23,10 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	
 	private String normalLabel = "";
 	private boolean hovered = false;
-	//TODO übernehmen
-//	private boolean originalVisibility = true;
-//	private boolean originalVisibilitySet = false;
-	//------------
 
-	//TODO übernehmen
 	public String hoverLabelRaw;
 	public String labelRaw;
 	protected boolean normalLabelCached = false;
-	//----------
 
 	public MenuHandlerBase handler;
 	public VisibilityRequirementContainer visibilityRequirements = null;
@@ -136,6 +130,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			//TODO übernehmen
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
+					this.parent.hasHoverLabel = true;
 					if (this.parent.getButton().isHovered()) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;
@@ -153,7 +148,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 				if (this.value != null) {
-					if (!this.parent.getButton().isHovered()) {
+					if (!this.parent.getButton().isHovered() || !this.parent.hasHoverLabel) {
 						this.parent.getButton().setMessage(new StringTextComponent(this.value));
 					}
 				}

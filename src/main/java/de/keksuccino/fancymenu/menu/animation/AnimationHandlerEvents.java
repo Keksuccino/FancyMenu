@@ -4,9 +4,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,15 +13,6 @@ public class AnimationHandlerEvents {
 	
 	private boolean idle = false;
 	private Screen lastScreen;
-	
-	@SubscribeEvent
-	public void onGuiOpen(GuiOpenEvent e) {
-		if (e.getGui() instanceof MainMenuScreen) {
-			if (!AnimationHandler.isReady()) {
-				AnimationHandler.setupAnimations(e);
-			}
-		}
-	}
 	
 	@SubscribeEvent
 	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {

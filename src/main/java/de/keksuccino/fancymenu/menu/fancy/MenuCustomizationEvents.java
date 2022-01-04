@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
+import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
@@ -49,16 +50,19 @@ public class MenuCustomizationEvents {
 				this.lastScreen = current;
 			}
 		}
+		ButtonMimeHandler.clearCache();
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onMenuReloaded(MenuReloadedEvent e) {
+		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
 
 	@SubscribeEvent(priority =  EventPriority.HIGH)
 	public void onSoftReload(SoftMenuReloadEvent e) {
+		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}

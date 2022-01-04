@@ -128,7 +128,7 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 
 	protected void renderRaw(float panoramaAlpha) {
 		if (this.prepared) {
-			this.time += Minecraft.getInstance().getRenderPartialTicks() * this.speed;
+			this.time += Minecraft.getInstance().getTickLength() * this.speed;
 
 			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;

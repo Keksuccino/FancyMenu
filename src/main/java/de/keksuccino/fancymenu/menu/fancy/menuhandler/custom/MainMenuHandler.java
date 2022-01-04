@@ -121,7 +121,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
-				this.panorama.render(Minecraft.getInstance().getRenderPartialTicks(), 1.0F);
+				this.panorama.render(Minecraft.getInstance().getTickLength(), 1.0F);
 				Minecraft.getInstance().getTextureManager().bindTexture(new ResourceLocation("textures/gui/title/background/panorama_overlay.png"));
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
