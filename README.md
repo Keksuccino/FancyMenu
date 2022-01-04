@@ -30,4 +30,4 @@ See `LICENSE.md` for more information.
 
 ## Copyright
 
-- FancyMenu Copyright © 2020-2021 Keksuccino.<br>
+- FancyMenu Copyright © 2020-2022 Keksuccino.<br>
