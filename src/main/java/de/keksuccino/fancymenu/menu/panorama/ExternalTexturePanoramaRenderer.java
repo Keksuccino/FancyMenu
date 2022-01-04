@@ -130,7 +130,7 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 
 	public void renderRaw(float panoramaAlpha) {
 		if (this.prepared) {
-			this.time += MinecraftClient.getInstance().getTickDelta() * this.speed;
+			this.time += MinecraftClient.getInstance().getLastFrameDuration() * this.speed;
 
 			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;

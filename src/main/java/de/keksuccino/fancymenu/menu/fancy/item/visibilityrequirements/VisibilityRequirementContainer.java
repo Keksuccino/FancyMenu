@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.fabricmc.loader.api.FabricLoader;
@@ -617,14 +618,26 @@ public class VisibilityRequirementContainer {
             if (this.vrModLoaded != null) {
                 if (this.vrShowIfModLoaded) {
                     for (String s : this.vrModLoaded) {
-                        if (!FabricLoader.getInstance().isModLoaded(s)) {
-                            return false;
+                        if (s.equalsIgnoreCase("optifine")) {
+                            if (!Konkrete.isOptifineLoaded) {
+                                return false;
+                            }
+                        } else {
+                            if (!FabricLoader.getInstance().isModLoaded(s)) {
+                                return false;
+                            }
                         }
                     }
                 } else {
                     for (String s : this.vrModLoaded) {
-                        if (FabricLoader.getInstance().isModLoaded(s)) {
-                            return false;
+                        if (s.equalsIgnoreCase("optifine")) {
+                            if (Konkrete.isOptifineLoaded) {
+                                return false;
+                            }
+                        } else {
+                            if (FabricLoader.getInstance().isModLoaded(s)) {
+                                return false;
+                            }
                         }
                     }
                 }

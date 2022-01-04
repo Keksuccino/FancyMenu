@@ -29,7 +29,7 @@ public class MenuHandlerEvents {
 	}
 
 	@SubscribeEvent
-	public void onTick(ClientTickEvent e) {
+	public void onTick(ClientTickEvent.Pre e) {
 		
 		//Resetting scale to the normal value when no GUI is active
 		if ((MenuHandlerBase.scaleChangedIn != null) && (MinecraftClient.getInstance().currentScreen == null)) {

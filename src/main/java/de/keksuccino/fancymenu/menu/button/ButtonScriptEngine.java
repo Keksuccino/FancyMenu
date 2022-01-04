@@ -240,6 +240,15 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("copytoclipboard")) {
 				MinecraftClient.getInstance().keyboard.setClipboard(value);
 			}
+			if (action.equalsIgnoreCase("mimicbutton")) {
+				if ((value != null) && value.contains(":")) {
+					if (!ButtonMimeHandler.executeButtonAction(value)) {
+						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
+					}
+				} else {
+					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
+				}
+			}
 
 			/** CUSTOM ACTIONS **/
 			ButtonActionContainer c = ButtonActionRegistry.getActionByName(action);
