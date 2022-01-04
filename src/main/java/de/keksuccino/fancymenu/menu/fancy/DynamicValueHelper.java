@@ -6,7 +6,10 @@ import java.util.List;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
+import de.keksuccino.fancymenu.menu.button.ButtonData;
+import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
@@ -14,7 +17,6 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
-import org.lwjgl.Sys;
 
 public class DynamicValueHelper {
 	
@@ -100,6 +102,8 @@ public class DynamicValueHelper {
 
 		}
 
+		in = replaceVanillaButtonLabelPlaceolder(in);
+
 		//Handle all custom placeholders added via the API
 		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
 			in = p.replacePlaceholders(in);
@@ -111,6 +115,24 @@ public class DynamicValueHelper {
 	public static boolean containsDynamicValues(String in) {
 		String s = convertFromRaw(in);
 		return !s.equals(in);
+	}
+
+	private static String replaceVanillaButtonLabelPlaceolder(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%vanillabuttonlabel:")) {
+				String blank = s.substring(1, s.length()-1);
+				String buttonLocator = blank.split(":", 2)[1];
+				ButtonData d = ButtonMimeHandler.getButton(buttonLocator);
+				if (d != null) {
+					in = in.replace(s, d.getButton().displayString);
+				} else {
+					in = in.replace(s, "§c[unable to get button label]");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
 	}
 
 	private static String replaceLocalsPlaceolder(String in) {
@@ -298,7 +320,11 @@ public class DynamicValueHelper {
 
 	private static int getTotalMods() {
 		try {
-			return Loader.instance().getModList().size();
+			int i = 0;
+			if (Konkrete.isOptifineLoaded) {
+				i++;
+			}
+			return Loader.instance().getModList().size() + i;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -307,7 +333,11 @@ public class DynamicValueHelper {
 
 	private static int getLoadedMods() {
 		try {
-			return Loader.instance().getActiveModList().size();
+			int i = 0;
+			if (Konkrete.isOptifineLoaded) {
+				i++;
+			}
+			return Loader.instance().getActiveModList().size() + 1;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

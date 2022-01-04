@@ -125,6 +125,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
+					this.parent.hasHoverLabel = true;
 					if (this.parent.getButton().isMouseOver()) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;
@@ -142,7 +143,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 				if (this.value != null) {
-					if (!this.parent.getButton().isMouseOver()) {
+					if (!this.parent.getButton().isMouseOver() || !this.parent.hasHoverLabel) {
 						this.parent.getButton().displayString = this.value;
 					}
 				}

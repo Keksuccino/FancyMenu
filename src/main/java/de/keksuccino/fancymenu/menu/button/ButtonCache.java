@@ -149,14 +149,12 @@ public class ButtonCache {
 		}
 	}
 
-	//TODO reflection
-	private static List<ButtonData> cacheButtons(GuiScreen s, int screenWidth, int screenHeight) {
+	public static List<ButtonData> cacheButtons(GuiScreen s, int screenWidth, int screenHeight) {
 		caching = true;
-		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
-		List<Long> ids = new ArrayList<Long>();
+		List<ButtonData> buttonList = new ArrayList<>();
+		List<Long> ids = new ArrayList<>();
 		try {
 			//Resetting the button list
-			//Field f0 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
 			Field f0 = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 			((List<GuiButton>)f0.get(s)).clear();
 
@@ -164,12 +162,10 @@ public class ButtonCache {
 			s.mc = Minecraft.getMinecraft();
 			s.width = screenWidth;
 			s.height = screenHeight;
-			//itemRender field
-			//Field f1 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "itemRender", "field_146296_j");
+
 			Field f1 = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146296_j"); //itemRenderer
 			f1.set(s, Minecraft.getMinecraft().getRenderItem());
-			//fontRenderer field
-			//Field f2 = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "fontRenderer", "field_146289_q");
+
 			Field f2 = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146289_q"); //fontRenderer
 			f2.set(s, Minecraft.getMinecraft().fontRenderer);
 
@@ -180,7 +176,6 @@ public class ButtonCache {
 			MinecraftForge.EVENT_BUS.post(new GuiScreenEvent.InitGuiEvent.Post(s, (List<GuiButton>) f0.get(s)));
 
 			//Reflecting the buttons list field to cache all buttons of the menu
-			//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
 			Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 
 			for (GuiButton w : (List<GuiButton>) f.get(s)) {
@@ -190,14 +185,14 @@ public class ButtonCache {
 					id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
 				}
 				ids.add(id);
-				buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.displayString), s));
+				buttonList.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.displayString), s));
 			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		caching = false;
-		return buttonlist;
+		return buttonList;
 	}
 
 	protected static Long getAvailableIdFromBaseId(long baseId, List<Long> ids) {
@@ -209,44 +204,6 @@ public class ButtonCache {
 		}
 		return baseId;
 	}
-	
-//	public static void replaceButton(long id, GuiButton w) {
-//		ButtonData d = getButtonForId(id);
-//		GuiButton ori = null;
-//		if ((d != null) && (current != null)) {
-//			try {
-//				//TODO reflection
-//				//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "buttonList", "field_146292_n");
-//				Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
-//				List<GuiButton> l = (List<GuiButton>) f.get(current);
-//				List<GuiButton> l2 = new ArrayList<GuiButton>();
-//
-//				for (GuiButton b : l) {
-//					if (b == d.getButton()) {
-//						l2.add(w);
-//						ori = b;
-//					} else {
-//						l2.add(b);
-//					}
-//				}
-//
-//				f.set(current, l2);
-//				if (ori != null) {
-//					replaced.put(d.getId(), ori);
-//				}
-//				d.replaceButton(w);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
-//
-//	public static void replaceButton(String key, GuiButton w) {
-//		ButtonData d = getButtonForKey(key);
-//		if (d != null) {
-//			replaceButton(d.getId(), w);
-//		}
-//	}
 	
 	public static void cacheFrom(GuiScreen s, int screenWidth, int screenHeight) {
 		updateButtons(s);

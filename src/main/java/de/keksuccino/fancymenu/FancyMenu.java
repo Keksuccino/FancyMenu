@@ -24,16 +24,17 @@ import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.2,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.3,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.4.3";
+	public static final String VERSION = "2.5.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -51,7 +52,7 @@ public class FancyMenu {
 		try {
 			
 			//Useless now bc of clientSideOnly, but will keep this here to keep the code in sync with MC 1.15+ :)
-			if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
+			if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
 
 	    		//Create all important directories
 	    		animationsPath.mkdirs();

@@ -599,8 +599,8 @@ helper.ui.dynamicvariabletextfield.variables.playeruuid = Player UUID
 helper.ui.dynamicvariabletextfield.variables.playeruuid.desc = Gets the player UUID.
 helper.ui.dynamicvariabletextfield.variables.mcversion = Minecraft Version
 helper.ui.dynamicvariabletextfield.variables.mcversion.desc = Gets the Minecraft version.
-helper.ui.dynamicvariabletextfield.variables.forgeversion = Forge Version
-helper.ui.dynamicvariabletextfield.variables.forgeversion.desc = Gets the Forge version.
+helper.ui.dynamicvariabletextfield.variables.forgeversion = Mod Loader Version
+helper.ui.dynamicvariabletextfield.variables.forgeversion.desc = Gets the mod loader version.
 helper.ui.dynamicvariabletextfield.variables.modversion = Mod Version
 helper.ui.dynamicvariabletextfield.variables.modversion.desc = Gets the version of a mod my its mod ID.%n%%n%Just replace '<modid>' in the placeholder%n%with an existing mod ID.
 helper.ui.dynamicvariabletextfield.variables.totalmods = Total Mods Count
@@ -935,10 +935,18 @@ helper.creator.custombutton.config.actiontype.copytoclipboard.desc.value.example
 fancymenu.config.forcefullscreen = Force Fullscreen
 fancymenu.config.forcefullscreen.desc = Forces the window to fullscreen on start.%n%Users will still be able to%n%go out of fullscreen later.
 
+helper.creator.custombutton.config.actiontype.mimicbutton.desc = Execute the button action of a vanilla button.
+helper.creator.custombutton.config.actiontype.mimicbutton.desc.value = menu_identifier:button_id
+helper.creator.custombutton.config.actiontype.mimicbutton.desc.value.example = some.menu.identifier:505280
 
+fancymenu.custombutton.action.mimicbutton.unabletoexecute = §c§lError!%n%%n%Unable to execute button action!%n%%n%Invalid button locator or unable to%n%open parent screen of button.%n% %n% %n% %n%
 
+fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel = Vanilla Button Label
+fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Get the label of a vanilla button.%n%%n%§cReplace "<button_locator>" with%n%§cthe correct button locator%n%§cof the target button.%n%%n%The button locator is a combination%n%of the menu identifier of the menu%n%the button is in and the %n%ID of the button, separated%n%by a colon.%n%%n%Example Button Locator:%n%some.menu.identifier:505280
 
-
+fancymenu.helper.editor.windowsizerestrictions.reset = Reset Window Size Restrictions
+fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc = Reset/remove all window size restrictions.
+fancymenu.helper.editor.windowsizerestrictions.btn.desc = Set the layout to only load%n%at specific window sizes.%n%%n%§cIt's recommended to only use%n%§cwidth OR height, not both at%n%§cthe same time!
 
 
 

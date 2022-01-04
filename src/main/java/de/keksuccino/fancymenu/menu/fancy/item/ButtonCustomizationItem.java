@@ -191,6 +191,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		if (this.button.isMouseOver()) {
 			if (this.hoverLabel != null) {
 				this.button.displayString = this.hoverLabel;
+			} else {
+				this.button.displayString = this.value;
 			}
 			if ((this.hoverSound != null) && !this.hover) {
 				this.hover = true;
