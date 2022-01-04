@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
@@ -126,6 +128,9 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
+					//TODO übernehmen
+					this.parent.hasHoverLabel = true;
+					//-------------
 					if (this.parent.getButton().isHoveredOrFocused()) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;
@@ -143,7 +148,8 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 				if (this.value != null) {
-					if (!this.parent.getButton().isHoveredOrFocused()) {
+					//TODO übernehmen (IF)
+					if (!this.parent.getButton().isHoveredOrFocused() || !this.parent.hasHoverLabel) {
 						this.parent.getButton().setMessage(new TextComponent(this.value));
 					}
 				}

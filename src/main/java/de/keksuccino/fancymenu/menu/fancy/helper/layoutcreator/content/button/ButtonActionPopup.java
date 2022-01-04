@@ -60,6 +60,8 @@ public class ButtonActionPopup extends FMPopup {
 		actions.add("runcmd");
 		actions.add("closegui");
 		actions.add("copytoclipboard");
+		//TODO übernehmen
+		actions.add("mimicbutton");
 
 		/** CUSTOM ACTIONS **/
 		for (ButtonActionContainer c : ButtonActionRegistry.getActions()) {
@@ -121,7 +123,8 @@ public class ButtonActionPopup extends FMPopup {
 			}
 			drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent(actionDesc), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
 
-			if (action.equals("sendmessage") || action.equals("openlink") || (action.equals("joinserver") || (action.equals("loadworld") || action.equals("openfile") || action.equals("opencustomgui") || action.equals("opengui") || action.equals("movefile") || action.equals("copyfile") || action.equals("deletefile") || action.equals("renamefile") || action.equals("runscript") || action.equals("downloadfile") || action.equals("unpackzip") || action.equals("mutebackgroundsounds") || action.equals("runcmd") || action.equals("copytoclipboard") || ((customAction != null) && customAction.hasValue())))) {
+			//TODO übernehmen (IF: mimicbutton)
+			if (action.equals("sendmessage") || action.equals("openlink") || (action.equals("joinserver") || (action.equals("loadworld") || action.equals("openfile") || action.equals("opencustomgui") || action.equals("opengui") || action.equals("movefile") || action.equals("copyfile") || action.equals("deletefile") || action.equals("renamefile") || action.equals("runscript") || action.equals("downloadfile") || action.equals("unpackzip") || action.equals("mutebackgroundsounds") || action.equals("runcmd") || action.equals("copytoclipboard") || action.equals("mimicbutton") || ((customAction != null) && customAction.hasValue())))) {
 				//Set and draw value description
 				String valueDesc;
 				if (customAction != null) {

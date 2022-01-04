@@ -37,8 +37,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ min konkrete auf 1.3.2 liften)
-	public static final String VERSION = "2.4.3";
+	//TODO übernehmen
+	public static final String VERSION = "2.5.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -51,9 +51,6 @@ public class FancyMenu {
 	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
 	private static File panoramaPath = new File("config/fancymenu/panoramas");
 	private static File slideshowPath = new File("config/fancymenu/slideshows");
-
-	//TODO übernehmen
-//	private static boolean optifineLoaded = false;
 
 	public FancyMenu() {
 		try {
@@ -105,7 +102,6 @@ public class FancyMenu {
 //				ButtonActionRegistry.registerButtonAction(new ExampleButtonActionContainerWithoutValue());
 //				ButtonActionRegistry.registerButtonAction(new ExampleButtonActionContainerWithValue());
 
-				//TODO übernehmen
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
 				}
@@ -140,13 +136,6 @@ public class FancyMenu {
         	GuiConstructor.init();
 
 			ServerCache.init();
-
-			//TODO übernehmen
-			//---->
-//        try {
-//			  Class.forName("optifine.Installer");
-//			  optifineLoaded = true;
-//		  } catch (ClassNotFoundException e) {}
 	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -271,14 +260,11 @@ public class FancyMenu {
 		return slideshowPath;
 	}
 
-	//TODO übernehmen
 	@Deprecated
 	public static boolean isOptifineLoaded() {
 		return isOptifineCompatibilityMode();
 	}
-	//-----------------
 
-	//TODO übernehmen
 	public static boolean isOptifineCompatibilityMode() {
 		return Konkrete.isOptifineLoaded;
 	}

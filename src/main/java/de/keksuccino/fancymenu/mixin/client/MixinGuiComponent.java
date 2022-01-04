@@ -14,10 +14,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(GuiComponent.class)
 public abstract class MixinGuiComponent {
 
-    //TODO übernehmen
-//    private static final int LOGO_BACKGROUND_COLOR = FastColor.ARGB32.color(255, 239, 50, 61);
-
-    //TODO übernehmen
     @OptifineFix
     @ModifyVariable(at = @At("HEAD"), method = "fill(Lcom/mojang/blaze3d/vertex/PoseStack;IIIII)V", argsOnly = true, index = 5)
     private static int modifyColor(int color) {
@@ -27,9 +23,7 @@ public abstract class MixinGuiComponent {
         if (Minecraft.getInstance().getOverlay() == null) {
             MixinCache.isSplashScreenRendering = false;
         }
-        //TODO übernehmen
         if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().getOverlay() != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
-            //TODO übernehmen
             int backColor = color;
             int alpha = MixinCache.currentSplashAlpha;
 
@@ -39,7 +33,6 @@ public abstract class MixinGuiComponent {
             }
             return withAlpha(backColor, alpha);
         }
-
         return color;
     }
 

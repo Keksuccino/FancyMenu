@@ -95,9 +95,6 @@ public class ButtonCache {
 		}
 	}
 
-	/**
-	 * The widget list (buttonlist) is only used by the old button id system.
-	 */
 	private static void updateButtons(Screen s) {
 		replaced.clear();
 		buttons.clear();
@@ -148,7 +145,8 @@ public class ButtonCache {
 		}
 	}
 
-	private static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
+	//TODO übernehmen (public)
+	public static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
 		caching = true;
 		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
 		List<Long> ids = new ArrayList<Long>();

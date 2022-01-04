@@ -8,7 +8,10 @@ import java.util.Optional;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
+import de.keksuccino.fancymenu.menu.button.ButtonData;
+import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
@@ -20,7 +23,10 @@ import net.minecraftforge.versions.mcp.MCPVersion;
 public class DynamicValueHelper {
 
 	private static final File MOD_DIRECTORY = new File("mods");
-	
+
+	//TODO übernehmen
+	private static int cachedTotalMods = -10;
+
 	public static String convertFromRaw(String in) {
 		int width = 0;
 		int height = 0;
@@ -31,18 +37,18 @@ public class DynamicValueHelper {
 			width = Minecraft.getInstance().screen.width;
 			height = Minecraft.getInstance().screen.height;
 		}
-		
+
 		//Convert &-formatcodes to real ones
 		in = StringUtils.convertFormatCodes(in, "&", "§");
-		
+
 		//Replace height and width placeholders
 		in = in.replace("%guiwidth%", "" + width);
 		in = in.replace("%guiheight%", "" + height);
-		
+
 		//Replace player name and uuid placeholders
 		in = in.replace("%playername%", playername);
 		in = in.replace("%playeruuid%", playeruuid);
-		
+
 		//Replace mc version placeholder
 		in = in.replace("%mcversion%", mcversion);
 
@@ -103,17 +109,39 @@ public class DynamicValueHelper {
 
 		}
 
+		//TODO übernehmen
+		in = replaceVanillaButtonLabelPlaceolder(in);
+
 		//Handle all custom placeholders added via the API
 		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
 			in = p.replacePlaceholders(in);
 		}
-		
+
 		return in;
 	}
 	
 	public static boolean containsDynamicValues(String in) {
 		String s = convertFromRaw(in);
 		return !s.equals(in);
+	}
+
+	//TODO übernehmen
+	private static String replaceVanillaButtonLabelPlaceolder(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%vanillabuttonlabel:")) {
+				String blank = s.substring(1, s.length()-1);
+				String buttonLocator = blank.split(":", 2)[1];
+				ButtonData d = ButtonMimeHandler.getButton(buttonLocator);
+				if (d != null) {
+					in = in.replace(s, d.getButton().getMessage().getString());
+				} else {
+					in = in.replace(s, "§c[unable to get button label]");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
 	}
 
 	private static String replaceLocalsPlaceolder(String in) {
@@ -287,22 +315,32 @@ public class DynamicValueHelper {
 		return l;
 	}
 
+	//TODO übernehmen
 	private static int getTotalMods() {
-		if (MOD_DIRECTORY.exists()) {
-			int i = 0;
-			for (File f : MOD_DIRECTORY.listFiles()) {
-				if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
-					i++;
+		if (cachedTotalMods == -10) {
+			if (MOD_DIRECTORY.exists()) {
+				int i = 0;
+				for (File f : MOD_DIRECTORY.listFiles()) {
+					if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
+						i++;
+					}
 				}
+				cachedTotalMods = i+2;
+			} else {
+				cachedTotalMods = -1;
 			}
-			return i+2;
 		}
-		return -1;
+		return cachedTotalMods;
 	}
 
+	//TODO übernehmen
 	private static int getLoadedMods() {
 		try {
-			return ModList.get().getMods().size();
+			int i = 0;
+			if (Konkrete.isOptifineLoaded) {
+				i++;
+			}
+			return ModList.get().getMods().size() + i;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

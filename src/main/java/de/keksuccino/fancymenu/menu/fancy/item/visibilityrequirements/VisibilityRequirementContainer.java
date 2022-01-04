@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
@@ -613,18 +614,31 @@ public class VisibilityRequirementContainer {
         }
 
         //VR: Is Mod Loaded
+        //TODO übernehmen
         if (this.vrCheckForModLoaded) {
             if (this.vrModLoaded != null) {
                 if (this.vrShowIfModLoaded) {
                     for (String s : this.vrModLoaded) {
-                        if (!ModList.get().isLoaded(s)) {
-                            return false;
+                        if (s.equalsIgnoreCase("optifine")) {
+                            if (!Konkrete.isOptifineLoaded) {
+                                return false;
+                            }
+                        } else {
+                            if (!ModList.get().isLoaded(s)) {
+                                return false;
+                            }
                         }
                     }
                 } else {
                     for (String s : this.vrModLoaded) {
-                        if (ModList.get().isLoaded(s)) {
-                            return false;
+                        if (s.equalsIgnoreCase("optifine")) {
+                            if (Konkrete.isOptifineLoaded) {
+                                return false;
+                            }
+                        } else {
+                            if (ModList.get().isLoaded(s)) {
+                                return false;
+                            }
                         }
                     }
                 }

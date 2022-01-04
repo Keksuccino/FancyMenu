@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
@@ -87,7 +88,9 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		clientMenu.addContent(mcVersion);
 		
 		AdvancedButton forgeVersion = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.ui.dynamicvariabletextfield.variables.forgeversion"), true, (press) -> {
-			this.insertText("%version:forge%");
+			//TODO übernehmen
+			this.insertText("%version:" + FancyMenu.MOD_LOADER + "%");
+			//-------------------
 		});
 		forgeVersion.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.dynamicvariabletextfield.variables.forgeversion.desc"), "%n%"));
 		UIBase.colorizeButton(forgeVersion);
@@ -247,6 +250,15 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		localizedText.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc"), "%n%"));
 		UIBase.colorizeButton(localizedText);
 		otherMenu.addContent(localizedText);
+
+		//TODO übernehmen
+		AdvancedButton vanillaButtonLabel = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel"), true, (press) -> {
+			this.insertText("%vanillabuttonlabel:<button_locator>%");
+		});
+		vanillaButtonLabel.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel.desc"), "%n%"));
+		UIBase.colorizeButton(vanillaButtonLabel);
+		otherMenu.addContent(vanillaButtonLabel);
+		//----------------
 
 		otherMenu.addSeparator();
 

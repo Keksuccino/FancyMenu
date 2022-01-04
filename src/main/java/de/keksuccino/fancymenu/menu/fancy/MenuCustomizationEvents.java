@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
+import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,7 @@ public class MenuCustomizationEvents {
 
 	protected Screen lastScreen = null;
 
+	//I don't fucking know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onInitPrePre(ScreenEvent.InitScreenEvent.Pre e) {
 		if (!ButtonCache.isCaching()) {
@@ -47,16 +49,22 @@ public class MenuCustomizationEvents {
 				this.lastScreen = current;
 			}
 		}
+		//TODO übernehmen
+		ButtonMimeHandler.clearCache();
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onMenuReloaded(MenuReloadedEvent e) {
+		//TODO übernehmen
+		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
 
 	@SubscribeEvent(priority =  EventPriority.HIGH)
 	public void onSoftReload(SoftMenuReloadEvent e) {
+		//TODO übernehmen
+		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}

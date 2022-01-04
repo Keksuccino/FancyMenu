@@ -20,7 +20,6 @@ public class ServerCache {
 
     protected static ServerStatusPinger pinger = new ServerStatusPinger();
     protected static Map<String, ServerData> servers = new HashMap<String, ServerData>();
-    //TODO übernehmen
     protected static Map<String, ServerData> serversUpdated = new HashMap<String, ServerData>();
 
     public static void init() {
@@ -42,7 +41,6 @@ public class ServerCache {
         }).start();
     }
 
-    //TODO übernehmen
     public static void cacheServer(ServerData server, ServerData serverUpdated) {
         if (server.ip != null) {
             try {
@@ -57,7 +55,6 @@ public class ServerCache {
         }
     }
 
-    //TODO übernehmen
     public static ServerData getServer(String ip) {
         if (!servers.containsKey(ip)) {
             cacheServer(new ServerData(ip, ip, false), new ServerData(ip, ip, false));
@@ -78,13 +75,11 @@ public class ServerCache {
         return serversUpdated.get(ip);
     }
 
-    //TODO übernehmen
     public static void removeServer(String ip) {
         servers.remove(ip);
         serversUpdated.remove(ip);
     }
 
-    //TODO übernehmen
     public static void clear() {
         servers.clear();
         serversUpdated.clear();

@@ -7,7 +7,9 @@ import java.net.URL;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -22,7 +24,10 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 	public volatile WebTextureResourceLocation texture;
 	public String rawURL = "";
 	public volatile boolean ready = false;
-	
+
+	//TODO übernehmen (annotation)
+	@OptifineFix
+	//FIX: Web textures need to be loaded in the main thread if OF is installed
 	public WebTextureCustomizationItem(PropertiesSection item) {
 		super(item);
 
@@ -40,7 +45,43 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 					try {
 
 						if (isValidUrl(this.value)) {
-							this.texture = TextureHandler.getWebResource(this.value);
+
+							//TODO übernehmen
+							this.texture = TextureHandler.getWebResource(this.value, false);
+							Minecraft.getInstance().execute(() -> {
+								try {
+									texture.loadTexture();
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							});
+							//----------------------
+
+							//TODO übernehmen
+							//Wait for the texture to load
+							long startTime = System.currentTimeMillis();
+							while (true) {
+								long currentTime = System.currentTimeMillis();
+								if ((startTime+15000) < currentTime) {
+									break;
+								}
+								if (texture.isReady()) {
+									if (texture.getResourceLocation() != null) {
+										break;
+									}
+								}
+								try {
+									Thread.sleep(100);
+								} catch (Exception e) {}
+							}
+							//----------------
+
+							//TODO übernehmen
+							if ((this.texture != null) && (texture.getResourceLocation() == null)) {
+								this.texture = null;
+								FancyMenu.LOGGER.error("[FANCYMENU] Web texture loaded but resource location was still null! Unable to use web texture!");
+							}
+							//------------------
 
 							if ((this.texture == null) || !this.texture.isReady()) {
 								if (this.width <= 0) {
@@ -85,13 +126,15 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			int x = this.getPosX(menu);
 			int y = this.getPosY(menu);
 
-			if (this.texture != null) {
+			//TODO übernehmen (erstes IF)
+			if (this.isTextureReady()) {
 				RenderUtils.bindTexture(this.texture.getResourceLocation());
 			} else if (isEditorActive()) {
 				RenderUtils.bindTexture(TextureManager.INTENTIONAL_MISSING_TEXTURE);
 			}
 
-			if ((this.texture != null) || isEditorActive()) {
+			//TODO übernehmen (IF)
+			if (this.isTextureReady() || isEditorActive()) {
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 				GuiComponent.blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
@@ -103,6 +146,11 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			}
 
 		}
+	}
+
+	//TODO übernehmen
+	public boolean isTextureReady() {
+		return ((this.texture != null) && (this.texture.isReady()) && (this.texture.getResourceLocation() != null) && this.ready);
 	}
 
 	@Override

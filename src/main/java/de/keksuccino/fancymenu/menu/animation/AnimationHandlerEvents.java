@@ -5,8 +5,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,15 +13,16 @@ public class AnimationHandlerEvents {
 	
 	private boolean idle = false;
 	private Screen lastScreen;
-	
-	@SubscribeEvent
-	public void onGuiOpen(ScreenOpenEvent e) {
-		if (e.getScreen() instanceof TitleScreen) {
-			if (!AnimationHandler.isReady()) {
-				AnimationHandler.setupAnimations(e);
-			}
-		}
-	}
+
+	//TODO übernehmen
+//	@SubscribeEvent
+//	public void onGuiOpen(ScreenOpenEvent e) {
+//		if (e.getScreen() instanceof TitleScreen) {
+//			if (!AnimationHandler.isReady()) {
+//				AnimationHandler.setupAnimations(e);
+//			}
+//		}
+//	}
 	
 	@SubscribeEvent
 	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {

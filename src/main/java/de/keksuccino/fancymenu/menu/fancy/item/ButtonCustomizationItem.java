@@ -189,9 +189,13 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		this.button.setY(y);
 
 		if (this.button.isHoveredOrFocused()) {
+			//TODO übernehmen
 			if (this.hoverLabel != null) {
 				this.button.setMessage(this.hoverLabel);
+			} else {
+				this.button.setMessage(this.value);
 			}
+			//-----------------
 			if ((this.hoverSound != null) && !this.hover) {
 				this.hover = true;
 				SoundHandler.resetSound(this.hoverSound);

@@ -18,6 +18,8 @@ public class ButtonData {
 	public int y;
 	public int width;
 	public int height;
+	//TODO übernehmen
+	public boolean hasHoverLabel = false;
 
 	public ButtonData(AbstractWidget button, long id, @Nullable String key, Screen fromScreen) {
 		this.id = id;
