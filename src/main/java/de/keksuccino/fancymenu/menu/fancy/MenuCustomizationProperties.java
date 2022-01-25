@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -132,11 +133,19 @@ public class MenuCustomizationProperties {
 		} else {
 			mods.add(requiredMods.replace(" ", ""));
 		}
+		//TODO übernehmen
 		for (String s : mods) {
-			if (!ModList.get().isLoaded(s)) {
-				return false;
+			if (s.equals("optifine")) {
+				if (!Konkrete.isOptifineLoaded) {
+					return false;
+				}
+			} else {
+				if (!ModList.get().isLoaded(s)) {
+					return false;
+				}
 			}
 		}
+		//--------------------
 		return true;
 	}
 	

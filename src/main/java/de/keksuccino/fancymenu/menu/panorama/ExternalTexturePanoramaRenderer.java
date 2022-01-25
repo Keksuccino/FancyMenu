@@ -132,9 +132,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	public void renderRaw(float panoramaAlpha) {
 		if (this.prepared) {
 
-			//TODO übernehmen
 			this.time += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
-			//-------------
 
 			float pitch = Mth.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;

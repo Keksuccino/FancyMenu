@@ -725,11 +725,9 @@ public class LayoutEditorUI extends UIBase {
 				windowSizeMenu.setParentButton((AdvancedButton) press);
 				windowSizeMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
-			//TODO übernehmen
 			windowSizeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.windowsizerestrictions.btn.desc"), "%n%"));
 			this.addContent(windowSizeButton);
 
-			//TODO übernehmen
 			AdvancedButton resetWindowSizeRestrictionsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.windowsizerestrictions.reset"), true, (press) -> {
 				this.parent.biggerThanWidth = 0;
 				this.parent.biggerThanHeight = 0;
@@ -738,9 +736,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			resetWindowSizeRestrictionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc"), "%n%"));
 			this.addContent(resetWindowSizeRestrictionsButton);
-			//------------------
 
-			//TODO übernehmen
 			this.addSeparator();
 			
 			/** REQUIRED MODS **/

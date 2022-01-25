@@ -13,16 +13,6 @@ public class AnimationHandlerEvents {
 	
 	private boolean idle = false;
 	private Screen lastScreen;
-
-	//TODO übernehmen
-//	@SubscribeEvent
-//	public void onGuiOpen(ScreenOpenEvent e) {
-//		if (e.getScreen() instanceof TitleScreen) {
-//			if (!AnimationHandler.isReady()) {
-//				AnimationHandler.setupAnimations(e);
-//			}
-//		}
-//	}
 	
 	@SubscribeEvent
 	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {

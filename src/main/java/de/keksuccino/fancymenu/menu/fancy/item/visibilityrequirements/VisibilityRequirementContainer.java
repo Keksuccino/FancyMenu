@@ -88,6 +88,12 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfServerOnline = false;
     public String vrServerOnline = null;
     //---------
+    //TODO übernehmen
+    public boolean vrCheckForGuiScale = false;
+    public boolean vrShowIfGuiScale = false;
+    public List<String> vrGuiScale = new ArrayList<>();
+    //---------
+    //--------------------------
 
     public CustomizationItemBase item;
 
@@ -375,6 +381,50 @@ public class VisibilityRequirementContainer {
             }
         }
 
+        //TODO übernehmen
+        //VR: Is Gui Scale
+        String vrStringShowIfGuiScale = properties.getEntryValue("vr:showif:guiscale");
+        if (vrStringShowIfGuiScale != null) {
+            if (vrStringShowIfGuiScale.equalsIgnoreCase("true")) {
+                this.vrShowIfGuiScale = true;
+            }
+            String guiScale = properties.getEntryValue("vr:value:guiscale");
+            if (guiScale != null) {
+                this.vrGuiScale.clear();
+                if (guiScale.contains(",")) {
+                    for (String s : guiScale.replace(" ", "").split("[,]")) {
+                        this.vrGuiScale.add(s);
+                    }
+                } else {
+                    if (guiScale.length() > 0) {
+                        this.vrGuiScale.add(guiScale.replace(" ", ""));
+                    }
+                }
+                List<String> l = new ArrayList<>();
+                for (String s : this.vrGuiScale) {
+                    if (MathUtils.isDouble(s)) {
+                        l.add("double:" + s);
+                    } else {
+                        if (s.startsWith(">")) {
+                            String value = s.split("[>]", 2)[1];
+                            if (MathUtils.isDouble(value)) {
+                                l.add("biggerthan:" + value);
+                            }
+                        } else if (s.startsWith("<")) {
+                            String value = s.split("[<]", 2)[1];
+                            if (MathUtils.isDouble(value)) {
+                                l.add("smallerthan:" + value);
+                            }
+                        }
+                    }
+                }
+                this.vrGuiScale = l;
+                if (!this.vrGuiScale.isEmpty()) {
+                    this.vrCheckForGuiScale = true;
+                }
+            }
+        }
+
     }
 
     public boolean isVisible() {
@@ -614,7 +664,6 @@ public class VisibilityRequirementContainer {
         }
 
         //VR: Is Mod Loaded
-        //TODO übernehmen
         if (this.vrCheckForModLoaded) {
             if (this.vrModLoaded != null) {
                 if (this.vrShowIfModLoaded) {
@@ -659,8 +708,45 @@ public class VisibilityRequirementContainer {
             }
         }
 
+        //TODO übernehmen
+        //VR: Is Gui Scale
+        if (this.vrCheckForGuiScale) {
+            if (this.vrShowIfGuiScale) {
+                for (String condition : this.vrGuiScale) {
+                    if (!checkForGuiScale(condition)) {
+                        return false;
+                    }
+                }
+            } else {
+                for (String condition : this.vrGuiScale) {
+                    if (checkForGuiScale(condition)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
         return true;
 
+    }
+
+    //TODO übernehmen
+    protected static boolean checkForGuiScale(String condition) {
+        double windowScale = Minecraft.getInstance().getWindow().getGuiScale();
+        if (condition.startsWith("double:")) {
+            String value = condition.replace("double:", "");
+            double valueScale = Double.parseDouble(value);
+            return (windowScale == valueScale);
+        } else if (condition.startsWith("biggerthan:")) {
+            String value = condition.replace("biggerthan:", "");
+            double valueScale = Double.parseDouble(value);
+            return (windowScale > valueScale);
+        } else if (condition.startsWith("smallerthan:")) {
+            String value = condition.replace("smallerthan:", "");
+            double valueScale = Double.parseDouble(value);
+            return (windowScale < valueScale);
+        }
+        return false;
     }
 
 }

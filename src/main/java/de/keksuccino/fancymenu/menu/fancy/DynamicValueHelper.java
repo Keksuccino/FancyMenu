@@ -1,10 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
@@ -24,7 +21,6 @@ public class DynamicValueHelper {
 
 	private static final File MOD_DIRECTORY = new File("mods");
 
-	//TODO übernehmen
 	private static int cachedTotalMods = -10;
 
 	public static String convertFromRaw(String in) {
@@ -69,6 +65,10 @@ public class DynamicValueHelper {
 		in = replaceLocalsPlaceolder(in);
 
 		in = replaceServerMOTD(in);
+		//TODO übernehmen
+		in = replaceServerMotdFirstLine(in);
+		in = replaceServerMotdSecondLine(in);
+		//------------------
 
 		in = replaceServerPing(in);
 
@@ -109,7 +109,6 @@ public class DynamicValueHelper {
 
 		}
 
-		//TODO übernehmen
 		in = replaceVanillaButtonLabelPlaceolder(in);
 
 		//Handle all custom placeholders added via the API
@@ -125,7 +124,6 @@ public class DynamicValueHelper {
 		return !s.equals(in);
 	}
 
-	//TODO übernehmen
 	private static String replaceVanillaButtonLabelPlaceolder(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%vanillabuttonlabel:")) {
@@ -243,6 +241,7 @@ public class DynamicValueHelper {
 		return in;
 	}
 
+	//TODO übernehmen
 	private static String replaceServerMOTD(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%servermotd:")) {
@@ -254,7 +253,7 @@ public class DynamicValueHelper {
 						if (sd.motd != null) {
 							in = in.replace(s, sd.motd.getString());
 						} else {
-							in = in.replace(s, "---");
+							in = in.replace(s, "");
 						}
 					}
 				}
@@ -263,6 +262,77 @@ public class DynamicValueHelper {
 			e.printStackTrace();
 		}
 		return in;
+	}
+
+	//TODO übernehmen
+	private static String replaceServerMotdFirstLine(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%servermotd_line1:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerData sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.motd != null) {
+							List<String> lines = splitMotdLines(sd.motd.getString());
+							if (!lines.isEmpty()) {
+								in = in.replace(s, lines.get(0));
+							} else {
+								in = in.replace(s, "");
+							}
+						} else {
+							in = in.replace(s, "");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	//TODO übernehmen
+	private static String replaceServerMotdSecondLine(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%servermotd_line2:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerData sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.motd != null) {
+							List<String> lines = splitMotdLines(sd.motd.getString());
+							if (lines.size() >= 2) {
+								in = in.replace(s, lines.get(1));
+							} else {
+								in = in.replace(s, "");
+							}
+						} else {
+							in = in.replace(s, "");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	//TODO übernehmen
+	protected static List<String> splitMotdLines(String motd) {
+		List<String> l = new ArrayList<>();
+		try {
+			if (motd.contains("\n")) {
+				l.addAll(Arrays.asList(motd.split("\n")));
+			} else {
+				l.add(motd);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return l;
 	}
 
 	private static String replaceModVersionPlaceolder(String in) {
@@ -315,7 +385,6 @@ public class DynamicValueHelper {
 		return l;
 	}
 
-	//TODO übernehmen
 	private static int getTotalMods() {
 		if (cachedTotalMods == -10) {
 			if (MOD_DIRECTORY.exists()) {
@@ -333,7 +402,6 @@ public class DynamicValueHelper {
 		return cachedTotalMods;
 	}
 
-	//TODO übernehmen
 	private static int getLoadedMods() {
 		try {
 			int i = 0;

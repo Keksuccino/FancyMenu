@@ -24,8 +24,6 @@ public class AnimationHandler {
 	private static Map<String, AnimationData> animations = new HashMap<String, AnimationData>();
 	private static List<String> custom = new ArrayList<String>();
 	protected static boolean ready = false;
-	//TODO übernehmen
-//	protected static boolean containsAnimationsWithOldFormat = false;
 
 	public static void init() {
 		MinecraftForge.EVENT_BUS.register(new AnimationHandlerEvents());
@@ -38,7 +36,6 @@ public class AnimationHandler {
 				custom.add(name);
 			}
 		} else {
-			//TODO übernehmen
 			FancyMenu.LOGGER.error("[FANCYMENU] AnimationHandler: ERROR: Duplicate animation name: " + name);
 		}
 	}
@@ -65,7 +62,6 @@ public class AnimationHandler {
 		}
 	}
 
-	//TODO übernehmen
 	public static void loadCustomAnimations() {
 		File f = FancyMenu.getAnimationPath();
 		if (!f.exists() || !f.isDirectory()) {
@@ -295,28 +291,6 @@ public class AnimationHandler {
 		}
 		return m;
 	}
-
-	//TODO übernehmen
-//	public static void setupAnimations(ScreenOpenEvent e) {
-//		if (!animations.isEmpty() && containsAnimationsWithOldFormat) {
-//			Screen s = null;
-//			if (e.getScreen() != null) {
-//				s = e.getScreen();
-//			} else {
-//				s = new TitleScreen();
-//			}
-//			AnimationLoadingScreen l = new AnimationLoadingScreen(s, getAnimations().toArray(new IAnimationRenderer[0])) {
-//				@Override
-//				public void onFinished() {
-//					ready = true;
-//					super.onFinished();
-//				}
-//			};
-//			e.setScreen(l);
-//		} else {
-//			ready = true;
-//		}
-//	}
 	
 	public static boolean animationExists(String name) {
 		return animations.containsKey(name);
@@ -380,7 +354,6 @@ public class AnimationHandler {
 		}
 	}
 
-	//TODO übernehmen
 	public static void preloadAnimations() {
 
 		FancyMenu.LOGGER.info("[FANCYMENU] Updating animation sizes..");

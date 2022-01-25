@@ -47,15 +47,18 @@ public class MenuCustomizationEvents {
 					MenuCustomization.isNewMenu = true;
 				}
 				this.lastScreen = current;
+				//TODO übernehmen
+				if (MenuCustomization.isNewMenu) {
+					ButtonMimeHandler.clearCache();
+				}
 			}
 		}
 		//TODO übernehmen
-		ButtonMimeHandler.clearCache();
+//		ButtonMimeHandler.clearCache();
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onMenuReloaded(MenuReloadedEvent e) {
-		//TODO übernehmen
 		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
@@ -63,7 +66,6 @@ public class MenuCustomizationEvents {
 
 	@SubscribeEvent(priority =  EventPriority.HIGH)
 	public void onSoftReload(SoftMenuReloadEvent e) {
-		//TODO übernehmen
 		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;

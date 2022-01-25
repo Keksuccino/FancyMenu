@@ -25,7 +25,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 	public String rawURL = "";
 	public volatile boolean ready = false;
 
-	//TODO übernehmen (annotation)
 	@OptifineFix
 	//FIX: Web textures need to be loaded in the main thread if OF is installed
 	public WebTextureCustomizationItem(PropertiesSection item) {
@@ -46,7 +45,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 						if (isValidUrl(this.value)) {
 
-							//TODO übernehmen
 							this.texture = TextureHandler.getWebResource(this.value, false);
 							Minecraft.getInstance().execute(() -> {
 								try {
@@ -55,9 +53,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 									e.printStackTrace();
 								}
 							});
-							//----------------------
 
-							//TODO übernehmen
 							//Wait for the texture to load
 							long startTime = System.currentTimeMillis();
 							while (true) {
@@ -74,14 +70,11 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 									Thread.sleep(100);
 								} catch (Exception e) {}
 							}
-							//----------------
 
-							//TODO übernehmen
 							if ((this.texture != null) && (texture.getResourceLocation() == null)) {
 								this.texture = null;
 								FancyMenu.LOGGER.error("[FANCYMENU] Web texture loaded but resource location was still null! Unable to use web texture!");
 							}
-							//------------------
 
 							if ((this.texture == null) || !this.texture.isReady()) {
 								if (this.width <= 0) {
@@ -126,14 +119,12 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			int x = this.getPosX(menu);
 			int y = this.getPosY(menu);
 
-			//TODO übernehmen (erstes IF)
 			if (this.isTextureReady()) {
 				RenderUtils.bindTexture(this.texture.getResourceLocation());
 			} else if (isEditorActive()) {
 				RenderUtils.bindTexture(TextureManager.INTENTIONAL_MISSING_TEXTURE);
 			}
 
-			//TODO übernehmen (IF)
 			if (this.isTextureReady() || isEditorActive()) {
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
@@ -148,7 +139,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//TODO übernehmen
 	public boolean isTextureReady() {
 		return ((this.texture != null) && (this.texture.isReady()) && (this.texture.getResourceLocation() != null) && this.ready);
 	}

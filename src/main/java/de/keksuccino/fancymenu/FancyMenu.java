@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.5.0";
+	public static final String VERSION = "2.6.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -201,6 +201,12 @@ public class FancyMenu {
 
 			config.registerValue("showloadingscreenanimation", true, "world_loading_screen");
 			config.registerValue("showloadingscreenpercent", true, "world_loading_screen");
+
+			//TODO übernehmen
+			config.registerValue("show_server_icons", true, "multiplayer_screen");
+
+			//TODO übernehmen
+			config.registerValue("show_world_icons", true, "singleplayer_screen");
 			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			config.registerValue("editordeleteconfirmation", true, "layouteditor");
@@ -272,6 +278,15 @@ public class FancyMenu {
 	public static boolean isDrippyLoadingScreenLoaded() {
 		try {
 			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
+
+	//TODO übernehmen
+	public static boolean isKonkreteLoaded() {
+		try {
+			Class.forName("de.keksuccino.konkrete.Konkrete");
 			return true;
 		} catch (Exception e) {}
 		return false;

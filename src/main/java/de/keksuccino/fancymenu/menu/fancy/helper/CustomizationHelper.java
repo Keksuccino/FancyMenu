@@ -39,7 +39,7 @@ public class CustomizationHelper {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(ScreenEvent.DrawScreenEvent.Post e) {
 
-		if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.fancyhud.")) {
+		if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 
 				CustomizationHelperUI.render(e.getPoseStack(), e.getScreen());

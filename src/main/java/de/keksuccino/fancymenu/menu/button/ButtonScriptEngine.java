@@ -253,7 +253,6 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("copytoclipboard")) {
 				Minecraft.getInstance().keyboardHandler.setClipboard(value);
 			}
-			//TODO übernehmen
 			if (action.equalsIgnoreCase("mimicbutton")) {
 				if ((value != null) && value.contains(":")) {
 					if (!ButtonMimeHandler.executeButtonAction(value)) {

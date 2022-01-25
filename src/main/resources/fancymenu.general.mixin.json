@@ -9,11 +9,14 @@
     "MixinScreen",
     "MixinMinecraft",
     "MixinLoadingOverlay",
-    "MixinGuiComponent"
+    "MixinGuiComponent",
+    "MixinOnlineServerEntry",
+    "MixinWorldListEntry"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "refmap": "fancymenu.general.mixin-refmap.json",
+  "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
   "minVersion": "0.8"
 }

@@ -1,10 +1,10 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.button;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.math.MathUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -32,7 +32,28 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: Failed to cache buttons of screen!");
+        //TODO übernehmen
+        FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: tryCache: Failed to cache buttons of screen!");
+        return false;
+    }
+
+    //TODO übernehmen
+    public static boolean cacheFromInstance(Screen screen, boolean overrideCache) {
+        String menuIdentifier = screen.getClass().getName();
+        if (!cachedButtons.containsKey(menuIdentifier) || overrideCache) {
+            try {
+                ButtonPackage p = new ButtonPackage();
+                if (p.init(screen)) {
+                    cachedButtons.put(menuIdentifier, p);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (cachedButtons.containsKey(menuIdentifier)) {
+            return true;
+        }
+        FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: cacheFromInstance: Failed to cache buttons of screen!");
         return false;
     }
 
@@ -42,9 +63,26 @@ public class ButtonMimeHandler {
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
             String buttonId = buttonLocator.split("[:]", 2)[1];
             if (MathUtils.isLong(buttonId)) {
-                if (!cachedButtons.containsKey(menuIdentifier)) {
+                //TODO übernehmen
+                Screen current = Minecraft.getInstance().screen;
+                if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
+                    if (cachedButtons.containsKey(menuIdentifier)) {
+                        ButtonPackage pack = cachedButtons.get(menuIdentifier);
+                        ButtonData d = pack.getButton(Long.parseLong(buttonId));
+                        if (d != null) {
+                            if (d.getScreen() != current) {
+                                cacheFromInstance(current, true);
+                                Minecraft.getInstance().setScreen(current);
+                            }
+                        }
+                    } else {
+                        cacheFromInstance(current, true);
+                        Minecraft.getInstance().setScreen(current);
+                    }
+                } else if (!cachedButtons.containsKey(menuIdentifier)) {
                     tryCache(menuIdentifier, false);
                 }
+                //----------------------
                 ButtonPackage p = cachedButtons.get(menuIdentifier);
                 if (p != null) {
                     return p.getButton(Long.parseLong(buttonId));

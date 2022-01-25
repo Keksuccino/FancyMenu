@@ -189,13 +189,11 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		this.button.setY(y);
 
 		if (this.button.isHoveredOrFocused()) {
-			//TODO übernehmen
 			if (this.hoverLabel != null) {
 				this.button.setMessage(this.hoverLabel);
 			} else {
 				this.button.setMessage(this.value);
 			}
-			//-----------------
 			if ((this.hoverSound != null) && !this.hover) {
 				this.hover = true;
 				SoundHandler.resetSound(this.hoverSound);
@@ -239,38 +237,5 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	public AdvancedButton getButton() {
 		return this.button;
 	}
-
-//	public Long getId() {
-//		int ori = 0;
-//		if (this.orientation.equalsIgnoreCase("original")) {
-//			ori = 1;
-//		} else if (this.orientation.equalsIgnoreCase("top-left")) {
-//			ori = 2;
-//		} else if (this.orientation.equalsIgnoreCase("mid-left")) {
-//			ori = 3;
-//		} else if (this.orientation.equalsIgnoreCase("bottom-left")) {
-//			ori = 4;
-//		} else if (this.orientation.equalsIgnoreCase("top-centered")) {
-//			ori = 5;
-//		} else if (this.orientation.equalsIgnoreCase("mid-centered")) {
-//			ori = 6;
-//		} else if (this.orientation.equalsIgnoreCase("bottom-centered")) {
-//			ori = 7;
-//		} else if (this.orientation.equalsIgnoreCase("top-right")) {
-//			ori = 8;
-//		} else if (this.orientation.equalsIgnoreCase("mid-right")) {
-//			ori = 9;
-//		} else if (this.orientation.equalsIgnoreCase("bottom-right")) {
-//			ori = 10;
-//		}
-//
-//		String idRaw = "00" + ori + "" + Math.abs(this.posX) + "" + Math.abs(this.posY) + "" + Math.abs(this.getWidth());
-//		long id = 0;
-//		if (MathUtils.isLong(idRaw)) {
-//			id = Long.parseLong(idRaw);
-//		}
-//
-//		return id;
-//	}
 
 }

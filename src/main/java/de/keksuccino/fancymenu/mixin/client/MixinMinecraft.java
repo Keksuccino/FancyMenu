@@ -18,9 +18,6 @@ import net.minecraft.client.Minecraft;
 public class MixinMinecraft {
 
 	private static boolean customWindowInit = false;
-
-	//TODO übernehmen
-//	private static boolean animationsLoaded = false;
 	
 	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	private void onGetWindowTitle(CallbackInfoReturnable<String> info) {
@@ -47,9 +44,7 @@ public class MixinMinecraft {
 			return;
 		}
 		if (loadingGuiIn == null) {
-			//TODO übernehmen
 			AnimationHandler.preloadAnimations();
-			//----------
 			MixinCache.isSplashScreenRendering = false;
 			MenuCustomization.isLoadingScreen = false;
 			MenuCustomization.reloadCurrentMenu();
@@ -57,53 +52,5 @@ public class MixinMinecraft {
 			MenuCustomization.isLoadingScreen = true;
 		}
 	}
-
-	//TODO übernehmen
-//	private static void preloadAnimations() {
-//
-//		System.out.println("[FANCYMENU] Updating animation sizes..");
-//		AnimationHandler.setupAnimationSizes();
-//
-//		//Pre-load animation frames to prevent them from lagging when rendered for the first time
-//		if (FancyMenu.config.getOrDefault("preloadanimations", true)) {
-//			if (!animationsLoaded) {
-//				System.out.println("[FANCYMENU] LOADING ANIMATION TEXTURES! THIS CAUSES THE LOADING SCREEN TO FREEZE FOR A WHILE!");
-//				try {
-//					List<ResourcePackAnimationRenderer> l = new ArrayList<ResourcePackAnimationRenderer>();
-//					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-//						if (r instanceof AdvancedAnimation) {
-//							IAnimationRenderer main = ((AdvancedAnimation) r).getMainAnimationRenderer();
-//							IAnimationRenderer intro = ((AdvancedAnimation) r).getIntroAnimationRenderer();
-//							if ((main != null) && (main instanceof ResourcePackAnimationRenderer)) {
-//								l.add((ResourcePackAnimationRenderer) main);
-//							}
-//							if ((intro != null) && (intro instanceof  ResourcePackAnimationRenderer)) {
-//								l.add((ResourcePackAnimationRenderer) intro);
-//							}
-//						} else if (r instanceof ResourcePackAnimationRenderer) {
-//							l.add((ResourcePackAnimationRenderer) r);
-//						}
-//					}
-//					for (ResourcePackAnimationRenderer r : l) {
-//						for (ResourceLocation rl : r.getAnimationFrames()) {
-//							TextureManager t = Minecraft.getInstance().getTextureManager();
-//							AbstractTexture to = t.getTexture(rl);
-//							if (to == null) {
-//								to = new SimpleTexture(rl);
-//								t.register(rl, to);
-//							}
-//						}
-//					}
-//				} catch (Exception ex) {
-//					ex.printStackTrace();
-//				}
-//				System.out.println("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES!");
-//				animationsLoaded = true;
-//			}
-//		} else {
-//			animationsLoaded = true;
-//		}
-//
-//	}
 	
 }

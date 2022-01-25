@@ -128,9 +128,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
-					//TODO übernehmen
 					this.parent.hasHoverLabel = true;
-					//-------------
 					if (this.parent.getButton().isHoveredOrFocused()) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;
@@ -148,7 +146,6 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 				if (this.value != null) {
-					//TODO übernehmen (IF)
 					if (!this.parent.getButton().isHoveredOrFocused() || !this.parent.hasHoverLabel) {
 						this.parent.getButton().setMessage(new TextComponent(this.value));
 					}
