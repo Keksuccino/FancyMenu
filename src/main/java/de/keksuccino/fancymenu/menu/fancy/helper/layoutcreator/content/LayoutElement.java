@@ -1255,6 +1255,28 @@ public abstract class LayoutElement extends DrawableHelper {
 			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
 			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
 		}
+		if (c.vrCheckForGuiScale) {
+			String val = "";
+			for (String condition : c.vrGuiScale) {
+				if (condition.startsWith("double:")) {
+					String value = condition.replace("double:", "");
+					val += value + ",";
+				} else if (condition.startsWith("biggerthan:")) {
+					String value = condition.replace("biggerthan:", "");
+					val += ">" + value + ",";
+				} else if (condition.startsWith("smallerthan:")) {
+					String value = condition.replace("smallerthan:", "");
+					val += "<" + value + ",";
+				}
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
+				sec.addEntry("vr:value:guiscale", val);
+			}
+		}
 
 	}
 
