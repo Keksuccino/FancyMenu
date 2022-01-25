@@ -448,6 +448,68 @@ public class VisibilityRequirementPopup extends FMPopup {
         }, null, serverOnlineValuePreset);
         this.requirements.add(serverOnline);
 
+        /** Is Gui Scale **/
+        String guiScaleValuePreset = "";
+        for (String condition : c.vrGuiScale) {
+            if (condition.startsWith("double:")) {
+                String value = condition.replace("double:", "");
+                guiScaleValuePreset += value + ",";
+            } else if (condition.startsWith("biggerthan:")) {
+                String value = condition.replace("biggerthan:", "");
+                guiScaleValuePreset += ">" + value + ",";
+            } else if (condition.startsWith("smallerthan:")) {
+                String value = condition.replace("smallerthan:", "");
+                guiScaleValuePreset += "<" + value + ",";
+            }
+        }
+        if (guiScaleValuePreset.length() > 0) {
+            guiScaleValuePreset = guiScaleValuePreset.substring(0, guiScaleValuePreset.length() -1);
+        } else {
+            guiScaleValuePreset = ">1.20,<3.0";
+        }
+        String guiScaleName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.guiscale");
+        String guiScaleDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc");
+        String guiScaleValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename");
+        Requirement guiScale = new Requirement(this, guiScaleName, guiScaleDesc, guiScaleValueName, c.vrCheckForGuiScale, c.vrShowIfGuiScale,
+                (enabledCallback) -> {
+                    c.vrCheckForGuiScale = enabledCallback;
+                }, (showIfCallback) -> {
+            c.vrShowIfGuiScale = showIfCallback;
+        }, (valueCallback) -> {
+            if (valueCallback != null) {
+                c.vrGuiScale.clear();
+                if (valueCallback.contains(",")) {
+                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
+                        c.vrGuiScale.add(s);
+                    }
+                } else {
+                    if (valueCallback.length() > 0) {
+                        c.vrGuiScale.add(valueCallback.replace(" ", ""));
+                    }
+                }
+                List<String> l = new ArrayList<>();
+                for (String s : c.vrGuiScale) {
+                    if (MathUtils.isDouble(s)) {
+                        l.add("double:" + s);
+                    } else {
+                        if (s.startsWith(">")) {
+                            String value = s.split("[>]", 2)[1];
+                            if (MathUtils.isDouble(value)) {
+                                l.add("biggerthan:" + value);
+                            }
+                        } else if (s.startsWith("<")) {
+                            String value = s.split("[<]", 2)[1];
+                            if (MathUtils.isDouble(value)) {
+                                l.add("smallerthan:" + value);
+                            }
+                        }
+                    }
+                }
+                c.vrGuiScale = l;
+            }
+        }, null, guiScaleValuePreset);
+        this.requirements.add(guiScale);
+
     }
 
     @Override

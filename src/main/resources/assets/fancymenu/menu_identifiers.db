@@ -276,6 +276,22 @@ identifier-group {
   fabric = net.minecraft.class_5289
 }
 
+identifier-group {
+  forge_1.16 = net.minecraft.client.gui.screen.LoomScreen
+  forge_1.18 = net.minecraft.client.gui.screens.inventory.LoomScreen
+  fabric = net.minecraft.class_494
+}
+
+identifier-group {
+  forge_1.18 = net.minecraft.client.gui.screens.controls.KeyBindsScreen
+  fabric = net.minecraft.class_6599
+}
+
+identifier-group {
+  forge_1.18 = net.minecraft.client.gui.screens.MouseSettingsScreen
+  fabric = net.minecraft.class_4288
+}
+
 
 
 

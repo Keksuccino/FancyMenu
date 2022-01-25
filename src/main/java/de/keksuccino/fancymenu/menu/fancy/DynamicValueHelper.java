@@ -1,10 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
@@ -64,6 +61,8 @@ public class DynamicValueHelper {
 		in = replaceLocalsPlaceolder(in);
 
 		in = replaceServerMOTD(in);
+		in = replaceServerMotdFirstLine(in);
+		in = replaceServerMotdSecondLine(in);
 
 		in = replaceServerPing(in);
 
@@ -247,7 +246,7 @@ public class DynamicValueHelper {
 						if (sd.label != null) {
 							in = in.replace(s, sd.label.getString());
 						} else {
-							in = in.replace(s, "---");
+							in = in.replace(s, "");
 						}
 					}
 				}
@@ -256,6 +255,74 @@ public class DynamicValueHelper {
 			e.printStackTrace();
 		}
 		return in;
+	}
+
+	private static String replaceServerMotdFirstLine(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%servermotd_line1:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.label != null) {
+							List<String> lines = splitMotdLines(sd.label.getString());
+							if (!lines.isEmpty()) {
+								in = in.replace(s, lines.get(0));
+							} else {
+								in = in.replace(s, "");
+							}
+						} else {
+							in = in.replace(s, "");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	private static String replaceServerMotdSecondLine(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%servermotd_line2:")) {
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String ip = blank.split(":", 2)[1];
+					ServerInfo sd = ServerCache.getServer(ip);
+					if (sd != null) {
+						if (sd.label != null) {
+							List<String> lines = splitMotdLines(sd.label.getString());
+							if (lines.size() >= 2) {
+								in = in.replace(s, lines.get(1));
+							} else {
+								in = in.replace(s, "");
+							}
+						} else {
+							in = in.replace(s, "");
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
+	}
+
+	protected static List<String> splitMotdLines(String motd) {
+		List<String> l = new ArrayList<>();
+		try {
+			if (motd.contains("\n")) {
+				l.addAll(Arrays.asList(motd.split("\n")));
+			} else {
+				l.add(motd);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return l;
 	}
 
 	private static String replaceModVersionPlaceolder(String in) {
