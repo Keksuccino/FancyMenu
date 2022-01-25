@@ -48,9 +48,11 @@ public class MenuCustomizationEvents {
 					MenuCustomization.isNewMenu = true;
 				}
 				this.lastScreen = current;
+				if (MenuCustomization.isNewMenu) {
+					ButtonMimeHandler.clearCache();
+				}
 			}
 		}
-		ButtonMimeHandler.clearCache();
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)

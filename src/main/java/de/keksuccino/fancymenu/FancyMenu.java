@@ -41,28 +41,28 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.5.0";
+	public static final String VERSION = "2.6.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
-	
+
 	public static Config config;
-	
+
 	private static File animationsPath = new File("config/fancymenu/animations");
 	private static File customizationPath = new File("config/fancymenu/customization");
 	private static File customGuiPath = new File("config/fancymenu/customguis");
 	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
 	private static File panoramaPath = new File("config/fancymenu/panoramas");
 	private static File slideshowPath = new File("config/fancymenu/slideshows");
-	
+
 	public FancyMenu() {
 		try {
 
 			ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
-			
+
 			//Check if FancyMenu was loaded client- or serverside
 	    	if (FMLEnvironment.dist == Dist.CLIENT) {
-	    		
+
 	    		//Create all important directories
 	    		animationsPath.mkdirs();
 	    		customizationPath.mkdirs();
@@ -79,15 +79,15 @@ public class FancyMenu {
 	    		PanoramaHandler.init();
 
 	    		SlideshowHandler.init();
-	    		
+
 	    		CustomGuiLoader.loadCustomGuis();
-	    		
+
 	    		GameIntroHandler.init();
 
 				VisibilityRequirementHandler.init();
 
 				MainWindowHandler.handleForceFullscreen();
-	    		
+
 	        	MenuCustomization.init();
 
 	        	if (config.getOrDefault("enablehotkeys", true)) {
@@ -102,16 +102,17 @@ public class FancyMenu {
 
 				MinecraftForge.EVENT_BUS.register(this);
 
-//				MinecraftForge.EVENT_BUS.register(new Test());
+				//TODO remove debug
+				MinecraftForge.EVENT_BUS.register(new Test());
 
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
 				}
-	        	
+
 	    	} else {
 	    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
 	    	}
-	    	
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -203,6 +204,10 @@ public class FancyMenu {
 
 			config.registerValue("showloadingscreenanimation", true, "world_loading_screen");
 			config.registerValue("showloadingscreenpercent", true, "world_loading_screen");
+
+			config.registerValue("show_server_icons", true, "multiplayer_screen");
+
+			config.registerValue("show_world_icons", true, "singleplayer_screen");
 			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			config.registerValue("editordeleteconfirmation", true, "layouteditor");
@@ -274,6 +279,14 @@ public class FancyMenu {
 	public static boolean isDrippyLoadingScreenLoaded() {
 		try {
 			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
+
+	public static boolean isKonkreteLoaded() {
+		try {
+			Class.forName("de.keksuccino.konkrete.Konkrete");
 			return true;
 		} catch (Exception e) {}
 		return false;
