@@ -465,7 +465,7 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			menuInfoButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.menuinfo.desc"), "%n%"));
 			toolsMenu.addContent(menuInfoButton);
-			
+
 			CustomizationButton buttonInfoButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools.buttoninfo.off"), true, (press) -> {
 				if (showButtonInfo) {
 					showButtonInfo = false;
@@ -474,11 +474,23 @@ public class CustomizationHelperUI extends UIBase {
 					showButtonInfo = true;
 					((AdvancedButton)press).displayString = Locals.localize("helper.ui.tools.buttoninfo.on");
 				}
-			});
+			}) {
+				@Override
+				public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+					GuiScreen current = Minecraft.getMinecraft().currentScreen;
+					if ((current != null) && MenuCustomization.isMenuCustomizable(current)) {
+						this.enabled = true;
+						this.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.buttoninfo.desc"), "%n%"));
+					} else {
+						this.enabled = false;
+						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations"), "%n%"));
+					}
+					super.drawButton(mc, mouseX, mouseY, partialTicks);
+				}
+			};
 			if (showButtonInfo) {
 				buttonInfoButton.displayString = Locals.localize("helper.ui.tools.buttoninfo.on");
 			}
-			buttonInfoButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.buttoninfo.desc"), "%n%"));
 			toolsMenu.addContent(buttonInfoButton);
 			
 			CustomizationButton toolsTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools"), true, (press) -> {
@@ -585,6 +597,8 @@ public class CustomizationHelperUI extends UIBase {
 							renderUnicodeWarning(screen);
 							
 							renderButtonInfo(screen);
+
+							renderButtonInfoWarning(screen);
 							
 							RenderUtils.setZLevelPost();
 							
@@ -614,7 +628,7 @@ public class CustomizationHelperUI extends UIBase {
 						key = Locals.localize("helper.buttoninfo.keynotfound");
 					}
 					
-					List<String> info = new ArrayList<String>();
+					List<String> info = new ArrayList<>();
 					int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(Locals.localize("helper.button.buttoninfo")) + 10;
 					
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
@@ -665,6 +679,56 @@ public class CustomizationHelperUI extends UIBase {
 					break;
 				}
 			}
+		}
+	}
+
+	protected static void renderButtonInfoWarning(GuiScreen screen) {
+		if (showButtonInfo && !MenuCustomization.isMenuCustomizable(screen)) {
+			List<String> info = new ArrayList<>();
+			int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
+
+			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2"));
+			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3"));
+
+			for (String s : info) {
+				int i = Minecraft.getMinecraft().fontRenderer.getStringWidth(s) + 10;
+				if (i > width) {
+					width = i;
+				}
+			}
+
+			GlStateManager.pushMatrix();
+
+			GlStateManager.scale(getUIScale(), getUIScale(), getUIScale());
+
+			MouseInput.setRenderScale(getUIScale());
+
+			int x = MouseInput.getMouseX();
+			if ((screen.width / getUIScale()) < x + width + 10) {
+				x -= width + 10;
+			}
+
+			int y = MouseInput.getMouseY();
+			if ((screen.height / getUIScale()) < y + 80) {
+				y -= 90;
+			}
+
+			drawRect(x, y, x + width + 10, y + 60, new Color(230, 15, 0, 240).getRGB());
+
+			GlStateManager.enableBlend();
+			screen.drawString(Minecraft.getMinecraft().fontRenderer, "§f§l" + Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
+
+			int i2 = 20;
+			for (String s : info) {
+				screen.drawString(Minecraft.getMinecraft().fontRenderer, s, x + 10, y + 10 + i2, -1);
+				i2 += 10;
+			}
+
+			MouseInput.resetRenderScale();
+
+			GlStateManager.popMatrix();
+
+			GlStateManager.disableBlend();
 		}
 	}
 	

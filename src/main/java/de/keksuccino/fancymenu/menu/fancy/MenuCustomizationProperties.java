@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -133,9 +134,14 @@ public class MenuCustomizationProperties {
 			mods.add(requiredMods.replace(" ", ""));
 		}
 		for (String s : mods) {
-			Loader.instance();
-			if (!Loader.isModLoaded(s)) {
-				return false;
+			if (s.equals("optifine")) {
+				if (!Konkrete.isOptifineLoaded) {
+					return false;
+				}
+			} else {
+				if (!Loader.isModLoaded(s)) {
+					return false;
+				}
 			}
 		}
 		return true;

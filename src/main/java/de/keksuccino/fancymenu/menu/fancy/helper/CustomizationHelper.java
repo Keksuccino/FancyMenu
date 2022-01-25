@@ -41,7 +41,7 @@ public class CustomizationHelper {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
 
-		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fancyhud.")) {
+		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 
 				CustomizationHelperUI.render(e.getGui());

@@ -11,7 +11,9 @@
     "MixinGuiButtonLanguage",
     "MixinMinecraft",
     "MixinScaledResolution",
-    "MixinGuiScreenResourcePacks"
+    "MixinGuiScreenResourcePacks",
+    "MixinOnlineServerEntry",
+    "MixinWorldListEntry"
   ],
   "injectors": {
     "defaultRequire": 1

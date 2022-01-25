@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -21,8 +22,11 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        System.out.println("[FANCYMENU] APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
-        return true;
+        if (FancyMenu.isKonkreteLoaded()) {
+            FancyMenu.LOGGER.info("[FANCYMENU] APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
+            return true;
+        }
+        return false;
     }
 
     @Override

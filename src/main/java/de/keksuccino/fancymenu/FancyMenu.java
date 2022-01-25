@@ -34,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.3,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.5.0";
+	public static final String VERSION = "2.6.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -188,7 +188,11 @@ public class FancyMenu {
 			
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
 			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
-			
+
+			config.registerValue("show_server_icons", true, "multiplayer_screen");
+
+			config.registerValue("show_world_icons", true, "singleplayer_screen");
+
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
 			config.registerValue("editordeleteconfirmation", true, "layouteditor");
 			config.registerValue("showgrid", false, "layouteditor");

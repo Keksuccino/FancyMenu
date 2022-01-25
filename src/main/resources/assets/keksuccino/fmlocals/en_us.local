@@ -948,9 +948,26 @@ fancymenu.helper.editor.windowsizerestrictions.reset = Reset Window Size Restric
 fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc = Reset/remove all window size restrictions.
 fancymenu.helper.editor.windowsizerestrictions.btn.desc = Set the layout to only load%n%at specific window sizes.%n%%n%§cIt's recommended to only use%n%§cwidth OR height, not both at%n%§cthe same time!
 
+fancymenu.config.categories.multiplayer_screen = MULTIPLAYER MENU
+fancymenu.config.categories.singleplayer_screen = SINGLEPLAYER MENU
 
+fancymenu.config.show_server_icons = Show Server Icons
+fancymenu.config.show_server_icons.desc = If the server icons should be visible.
+fancymenu.config.show_world_icons = Show World Icons
+fancymenu.config.show_world_icons.desc = If the world icons should be visible.
 
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line1 = Server MOTD Line 1
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line1.desc = Gets the first line of the MOTD of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%servermotd_line1:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line2 = Server MOTD Line 2
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line2.desc = Gets the second line of the MOTD of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%servermotd_line2:gommehd.net%
 
+fancymenu.helper.ui.tools.buttoninfo.enablecustomizations = §cYou need to enable customizations%n%§cfor the current menu, to use this tool!
+fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1 = §lWarning!
+fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = You need to enable customizations for
+fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = the current menu before using the §lButton Info §rtool!
 
+fancymenu.helper.editor.items.visibilityrequirements.guiscale = Is GUI Scale
+fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').%n%%n%You can separate multiple values by comma,%n%to check for more than one scale%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Scale Condition(s) (Separate Values By Comma)
 
 
