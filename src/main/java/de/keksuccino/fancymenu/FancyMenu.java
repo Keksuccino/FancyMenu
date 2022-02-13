@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.events.CommandsRegisterEvent;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
@@ -33,7 +34,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.6.0";
+	public static final String VERSION = "2.6.2";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -86,6 +87,8 @@ public class FancyMenu implements ModInitializer {
 	        	ButtonScriptEngine.init();
 	        	
 	        	VanillaButtonDescriptionHandler.init();
+
+				MenuBackgroundTypeRegistry.init();
 
 //	        	Konkrete.getEventHandler().registerEventsFrom(new Test());
 
