@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.mixin.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;

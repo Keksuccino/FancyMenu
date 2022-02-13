@@ -147,18 +147,8 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		UIBase.colorizeButton(serverCategoryButton);
 		variableMenu.addContent(serverCategoryButton);
 
-		//TODO übernehmen
-//		AdvancedButton serverMOTD = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd"), true, (press) -> {
-//			this.insertText("%servermotd:<serverIP>%");
-//		});
-//		serverMOTD.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd.desc"), "%n%"));
-//		UIBase.colorizeButton(serverMOTD);
-//		serverMenu.addContent(serverMOTD);
-
-		//TODO übernehmen
 		serverMenu.addSeparator();
 
-		//TODO übernehmen
 		AdvancedButton serverMotdFirstLine = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line1"), true, (press) -> {
 			this.insertText("%servermotd_line1:<serverIP>%");
 		});
@@ -166,7 +156,6 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		UIBase.colorizeButton(serverMotdFirstLine);
 		serverMenu.addContent(serverMotdFirstLine);
 
-		//TODO übernehmen
 		AdvancedButton serverMotdSecondLine = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line2"), true, (press) -> {
 			this.insertText("%servermotd_line2:<serverIP>%");
 		});
@@ -174,7 +163,6 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		UIBase.colorizeButton(serverMotdSecondLine);
 		serverMenu.addContent(serverMotdSecondLine);
 
-		//TODO übernehmen
 		serverMenu.addSeparator();
 
 		AdvancedButton serverPing = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping"), true, (press) -> {

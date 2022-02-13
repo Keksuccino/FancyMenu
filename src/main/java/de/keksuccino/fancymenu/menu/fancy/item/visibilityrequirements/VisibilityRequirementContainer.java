@@ -88,12 +88,10 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfServerOnline = false;
     public String vrServerOnline = null;
     //---------
-    //TODO übernehmen
     public boolean vrCheckForGuiScale = false;
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
-    //--------------------------
 
     public CustomizationItemBase item;
 
@@ -381,7 +379,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //VR: Is Gui Scale
         String vrStringShowIfGuiScale = properties.getEntryValue("vr:showif:guiscale");
         if (vrStringShowIfGuiScale != null) {
@@ -708,7 +705,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //VR: Is Gui Scale
         if (this.vrCheckForGuiScale) {
             if (this.vrShowIfGuiScale) {
@@ -730,7 +726,6 @@ public class VisibilityRequirementContainer {
 
     }
 
-    //TODO übernehmen
     protected static boolean checkForGuiScale(String condition) {
         double windowScale = Minecraft.getInstance().getWindow().getGuiScale();
         if (condition.startsWith("double:")) {

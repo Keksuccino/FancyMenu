@@ -1,12 +1,13 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
+import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
@@ -216,6 +217,35 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.backgroundTexturePath = value;
 								if ((pano != null) && pano.equalsIgnoreCase("true")) {
 									this.panorama = true;
+								}
+							}
+						}
+					}
+
+					//TODO übernehmen
+					//Custom background handling (API)
+					if (action.equalsIgnoreCase("api:custombackground")) {
+						String typeId = sec.getEntryValue("type_identifier");
+						String backId = sec.getEntryValue("background_identifier");
+						String inputString = sec.getEntryValue("input_string");
+						if (typeId != null) {
+							MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
+							if (type != null) {
+								if (type.needsInputString() && (inputString != null)) {
+									try {
+										this.customMenuBackground = type.createInstanceFromInputString(inputString);
+										this.customMenuBackgroundInputString = inputString;
+									} catch (Exception ex) {
+										ex.printStackTrace();
+									}
+									if (this.customMenuBackground != null) {
+										this.customMenuBackground.onOpenMenu();
+									}
+								} else if (backId != null) {
+									this.customMenuBackground = type.getBackgroundByIdentifier(backId);
+									if (this.customMenuBackground != null) {
+										this.customMenuBackground.onOpenMenu();
+									}
 								}
 							}
 						}
@@ -697,7 +727,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							LayoutVanillaButton van = this.getVanillaButton(b);
 							if (van != null) {
 								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
-									@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+									@Override public void render(PoseStack matrix, Screen menu) {}
 								};
 								van.object.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
 								van.customizationContainer.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;

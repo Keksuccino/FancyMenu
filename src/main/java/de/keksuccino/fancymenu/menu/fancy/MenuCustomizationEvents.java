@@ -47,14 +47,11 @@ public class MenuCustomizationEvents {
 					MenuCustomization.isNewMenu = true;
 				}
 				this.lastScreen = current;
-				//TODO übernehmen
 				if (MenuCustomization.isNewMenu) {
 					ButtonMimeHandler.clearCache();
 				}
 			}
 		}
-		//TODO übernehmen
-//		ButtonMimeHandler.clearCache();
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)

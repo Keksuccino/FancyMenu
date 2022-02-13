@@ -32,12 +32,10 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        //TODO übernehmen
         FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: tryCache: Failed to cache buttons of screen!");
         return false;
     }
 
-    //TODO übernehmen
     public static boolean cacheFromInstance(Screen screen, boolean overrideCache) {
         String menuIdentifier = screen.getClass().getName();
         if (!cachedButtons.containsKey(menuIdentifier) || overrideCache) {
@@ -63,7 +61,6 @@ public class ButtonMimeHandler {
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
             String buttonId = buttonLocator.split("[:]", 2)[1];
             if (MathUtils.isLong(buttonId)) {
-                //TODO übernehmen
                 Screen current = Minecraft.getInstance().screen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
                     if (cachedButtons.containsKey(menuIdentifier)) {
@@ -82,7 +79,6 @@ public class ButtonMimeHandler {
                 } else if (!cachedButtons.containsKey(menuIdentifier)) {
                     tryCache(menuIdentifier, false);
                 }
-                //----------------------
                 ButtonPackage p = cachedButtons.get(menuIdentifier);
                 if (p != null) {
                     return p.getButton(Long.parseLong(buttonId));

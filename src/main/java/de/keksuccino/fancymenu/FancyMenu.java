@@ -2,6 +2,9 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.api.background.example.no_input_string.ExampleMenuBackgroundType;
+import de.keksuccino.fancymenu.api.background.example.with_input_string.ExampleMenuBackgroundTypeWithInputString;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
@@ -38,7 +41,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.6.0";
+	public static final String VERSION = "2.6.2";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -93,6 +96,9 @@ public class FancyMenu {
 
 				MainWindowHandler.handleForceFullscreen();
 
+				//TODO übernehmen
+				MenuBackgroundTypeRegistry.init();
+
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
 				MinecraftForge.EVENT_BUS.register(this);
@@ -101,6 +107,9 @@ public class FancyMenu {
 
 //				ButtonActionRegistry.registerButtonAction(new ExampleButtonActionContainerWithoutValue());
 //				ButtonActionRegistry.registerButtonAction(new ExampleButtonActionContainerWithValue());
+
+//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundType());
+//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundTypeWithInputString());
 
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
@@ -202,10 +211,8 @@ public class FancyMenu {
 			config.registerValue("showloadingscreenanimation", true, "world_loading_screen");
 			config.registerValue("showloadingscreenpercent", true, "world_loading_screen");
 
-			//TODO übernehmen
 			config.registerValue("show_server_icons", true, "multiplayer_screen");
 
-			//TODO übernehmen
 			config.registerValue("show_world_icons", true, "singleplayer_screen");
 			
 			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
@@ -283,7 +290,6 @@ public class FancyMenu {
 		return false;
 	}
 
-	//TODO übernehmen
 	public static boolean isKonkreteLoaded() {
 		try {
 			Class.forName("de.keksuccino.konkrete.Konkrete");

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
+import java.awt.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -9,15 +10,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.texture.TextureManager;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
 
@@ -46,7 +46,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 						if (isValidUrl(this.value)) {
 
 							this.texture = TextureHandler.getWebResource(this.value, false);
-							Minecraft.getInstance().execute(() -> {
+							CustomizationHelper.runTaskInMainThread(() -> {
 								try {
 									texture.loadTexture();
 								} catch (Exception e) {
@@ -113,6 +113,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	}
 
+	@Override
 	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (this.shouldRender()) {
 
@@ -121,15 +122,15 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 			if (this.isTextureReady()) {
 				RenderUtils.bindTexture(this.texture.getResourceLocation());
-			} else if (isEditorActive()) {
-				RenderUtils.bindTexture(TextureManager.INTENTIONAL_MISSING_TEXTURE);
-			}
-
-			if (this.isTextureReady() || isEditorActive()) {
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-				GuiComponent.blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+				blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				RenderSystem.disableBlend();
+			} else if (isEditorActive()) {
+				fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
+				if (this.ready) {
+					drawCenteredString(matrix, Minecraft.getInstance().font, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+				}
 			}
 
 			if (!this.ready && isEditorActive()) {

@@ -133,7 +133,6 @@ public class MenuCustomizationProperties {
 		} else {
 			mods.add(requiredMods.replace(" ", ""));
 		}
-		//TODO übernehmen
 		for (String s : mods) {
 			if (s.equals("optifine")) {
 				if (!Konkrete.isOptifineLoaded) {
@@ -145,7 +144,6 @@ public class MenuCustomizationProperties {
 				}
 			}
 		}
-		//--------------------
 		return true;
 	}
 	

@@ -448,7 +448,6 @@ public class VisibilityRequirementsPopup extends FMPopup {
         }, null, serverOnlineValuePreset);
         this.requirements.add(serverOnline);
 
-        //TODO übernehmen
         /** Is Gui Scale **/
         String guiScaleValuePreset = "";
         for (String condition : c.vrGuiScale) {

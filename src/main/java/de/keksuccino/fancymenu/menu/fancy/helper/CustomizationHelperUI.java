@@ -473,7 +473,6 @@ public class CustomizationHelperUI extends UIBase {
 			menuInfoButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.menuinfo.desc"), "%n%"));
 			toolsMenu.addContent(menuInfoButton);
 
-			//TODO übernehmen
 			CustomizationButton buttonInfoButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools.buttoninfo.off"), true, (press) -> {
 				if (showButtonInfo) {
 					showButtonInfo = false;
@@ -500,7 +499,6 @@ public class CustomizationHelperUI extends UIBase {
 				buttonInfoButton.setMessage(Locals.localize("helper.ui.tools.buttoninfo.on"));
 			}
 			toolsMenu.addContent(buttonInfoButton);
-			//----------------------------
 			
 			CustomizationButton toolsTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools"), true, (press) -> {
 				toolsMenu.setParentButton((AdvancedButton) press);
@@ -607,7 +605,6 @@ public class CustomizationHelperUI extends UIBase {
 							
 							renderButtonInfo(matrix, screen);
 
-							//TODO übernehmen
 							renderButtonInfoWarning(matrix, screen);
 							
 							RenderUtils.setZLevelPost(matrix);
@@ -692,7 +689,6 @@ public class CustomizationHelperUI extends UIBase {
 		}
 	}
 
-	//TODO übernehmen
 	protected static void renderButtonInfoWarning(PoseStack matrix, Screen screen) {
 		if (showButtonInfo && !MenuCustomization.isMenuCustomizable(screen)) {
 			List<String> info = new ArrayList<String>();

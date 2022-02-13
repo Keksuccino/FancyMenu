@@ -27,6 +27,8 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CustomizationHelper {
+
+	public static List<Runnable> mainThreadTasks = new ArrayList<>();
 	
 	public static void init() {
 		
@@ -38,6 +40,17 @@ public class CustomizationHelper {
 
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(ScreenEvent.DrawScreenEvent.Post e) {
+
+		List<Runnable> runs = new ArrayList<>();
+		runs.addAll(CustomizationHelper.mainThreadTasks);
+		for (Runnable r : runs) {
+			try {
+				r.run();
+				CustomizationHelper.mainThreadTasks.remove(r);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
 
 		if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
@@ -191,6 +204,10 @@ public class CustomizationHelper {
 			return true;
 		}
 		return false;
+	}
+
+	public static void runTaskInMainThread(Runnable task) {
+		mainThreadTasks.add(task);
 	}
 
 }

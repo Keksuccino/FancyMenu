@@ -65,10 +65,8 @@ public class DynamicValueHelper {
 		in = replaceLocalsPlaceolder(in);
 
 		in = replaceServerMOTD(in);
-		//TODO übernehmen
 		in = replaceServerMotdFirstLine(in);
 		in = replaceServerMotdSecondLine(in);
-		//------------------
 
 		in = replaceServerPing(in);
 
@@ -241,7 +239,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerMOTD(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%servermotd:")) {
@@ -264,7 +261,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerMotdFirstLine(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%servermotd_line1:")) {
@@ -292,7 +288,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceServerMotdSecondLine(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%servermotd_line2:")) {
@@ -320,7 +315,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	protected static List<String> splitMotdLines(String motd) {
 		List<String> l = new ArrayList<>();
 		try {

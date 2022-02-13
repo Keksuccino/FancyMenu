@@ -1257,7 +1257,6 @@ public abstract class LayoutElement extends GuiComponent {
 			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
 			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
 		}
-		//TODO übernehmen
 		if (c.vrCheckForGuiScale) {
 			String val = "";
 			for (String condition : c.vrGuiScale) {

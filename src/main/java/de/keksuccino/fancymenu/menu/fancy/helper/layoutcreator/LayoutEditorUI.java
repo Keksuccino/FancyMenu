@@ -407,6 +407,10 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.backgroundSlideshow = null;
 				this.parent.backgroundAnimation = null;
 				this.parent.backgroundTexture = null;
+				//TODO übernehmen
+				this.parent.customMenuBackground = null;
+				this.parent.customMenuBackgroundInputString = null;
+				//-------------------------
 			});
 			this.addContent(resetBackgroundButton);
 
