@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
@@ -41,7 +42,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.6.0";
+	public static final String VERSION = "2.6.2";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -90,6 +91,8 @@ public class FancyMenu {
 
 	        	MenuCustomization.init();
 
+				MenuBackgroundTypeRegistry.init();
+
 	        	if (config.getOrDefault("enablehotkeys", true)) {
 	        		Keybinding.init();
 	        	}
@@ -102,8 +105,7 @@ public class FancyMenu {
 
 				MinecraftForge.EVENT_BUS.register(this);
 
-				//TODO remove debug
-				MinecraftForge.EVENT_BUS.register(new Test());
+//				MinecraftForge.EVENT_BUS.register(new Test());
 
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
