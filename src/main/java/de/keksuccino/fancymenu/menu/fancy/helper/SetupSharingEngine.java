@@ -899,7 +899,11 @@ public class SetupSharingEngine {
                                                         FileUtils.forceDelete(customizableMenusFile);
                                                     }
                                                     if (fmFolder.isDirectory()) {
-                                                        FileUtils.deleteDirectory(fmFolder);
+                                                        try {
+                                                            FileUtils.deleteDirectory(fmFolder);
+                                                        } catch (Exception e3) {
+                                                            e3.printStackTrace();
+                                                        }
                                                     }
                                                 } catch (Exception e2) {
                                                     e2.printStackTrace();

@@ -970,4 +970,16 @@ fancymenu.helper.editor.items.visibilityrequirements.guiscale = Is GUI Scale
 fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').%n%%n%You can separate multiple values by comma,%n%to check for more than one scale%n%at once.
 fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Scale Condition(s) (Separate Values By Comma)
 
+fancymenu.helper.editor.backgrounds.choose = Choose Background
+
+fancymenu.helper.editor.backgrounds.image.desc = A static image.%n%%n%Only JPG/JPEG and PNG are supported.
+fancymenu.helper.editor.backgrounds.animation.desc = An animation. Like a video, but not, you know?%n%%n%Please visit the wiki (fm.keksuccino.de)%n%for how to make your own animations.
+fancymenu.helper.editor.backgrounds.panorama.desc = A spinning cubic panorama like%n%the one in the vanilla main menu.%n%%n%Please visit the wiki (fm.keksuccino.de)%n%for how to make your own panoramas.
+fancymenu.helper.editor.backgrounds.slideshow.desc = A slideshow that shows a set of images.%n%%n%Please visit the wiki (fm.keksuccino.de)%n%for how to make your own slideshows.
+
+fancymenu.helper.editor.backgrounds.custom.choosefile = Choose File
+fancymenu.helper.editor.backgrounds.custom.setbackground = Set Background
+fancymenu.helper.editor.backgrounds.custom.clearbackground = Clear
+fancymenu.helper.editor.backgrounds.custom.clearbackground.desc = Clear the currently active background of this type.
+
 

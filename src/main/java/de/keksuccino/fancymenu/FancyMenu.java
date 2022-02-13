@@ -2,6 +2,9 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.api.background.example.no_input_string.ExampleMenuBackgroundType;
+import de.keksuccino.fancymenu.api.background.example.with_input_string.ExampleMenuBackgroundTypeWithInputString;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -34,7 +37,7 @@ import org.apache.logging.log4j.Logger;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.3,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.6.0";
+	public static final String VERSION = "2.6.2";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -79,6 +82,8 @@ public class FancyMenu {
 	    		
 	        	MenuCustomization.init();
 
+				MenuBackgroundTypeRegistry.init();
+
 	        	if (config.getOrDefault("enablehotkeys", true)) {
 	        		Keybinding.init();
 	        	}
@@ -86,6 +91,9 @@ public class FancyMenu {
 	        	ButtonScriptEngine.init();
 	        	
 	        	VanillaButtonDescriptionHandler.init();
+
+//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundType());
+//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundTypeWithInputString());
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 

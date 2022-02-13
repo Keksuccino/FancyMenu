@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,6 +86,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	}
 
+	@Override
 	public void render(GuiScreen menu) throws IOException {
 		if (this.shouldRender()) {
 
@@ -95,17 +97,17 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 				this.texture = this.webTexture.getLocation();
 			}
 
-			if (this.texture != null) {
+			if (this.isTextureReady()) {
 				RenderUtils.bindTexture(this.texture);
-			} else if (isEditorActive()) {
-				RenderUtils.bindTexture(TextureManager.RESOURCE_LOCATION_EMPTY);
-			}
-
-			if ((this.texture != null) || isEditorActive()) {
 				GlStateManager.enableBlend();
 				GlStateManager.color(1.0F, 1.0F, 1.0F, this.opacity);
 				drawModalRectWithCustomSizedTexture(x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				GlStateManager.disableBlend();
+			} else if (isEditorActive()) {
+				drawRect(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
+				if (this.ready) {
+					drawCenteredString(Minecraft.getMinecraft().fontRenderer, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT / 2), -1);
+				}
 			}
 
 			if (!this.ready && isEditorActive()) {
@@ -113,6 +115,10 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			}
 
 		}
+	}
+
+	public boolean isTextureReady() {
+		return ((this.texture != null) && this.ready);
 	}
 
 	@Override

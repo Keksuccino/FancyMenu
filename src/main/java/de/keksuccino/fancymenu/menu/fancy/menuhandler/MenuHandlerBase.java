@@ -14,6 +14,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.api.background.MenuBackground;
+import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
+import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
@@ -107,6 +110,8 @@ public class MenuHandlerBase {
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
+
+	protected MenuBackground customMenuBackground = null;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<GuiButton, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<GuiButton, ButtonCustomizationContainer>();
@@ -466,6 +471,7 @@ public class MenuHandlerBase {
 		backgroundRenderItems.clear();
 		this.panoramacube = null;
 		this.slideshow = null;
+		this.customMenuBackground = null;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -719,6 +725,37 @@ public class MenuHandlerBase {
 								this.backgroundAnimation = this.backgroundAnimations.get(0);
 							}
 							this.lastBackgroundAnimation = this.backgroundAnimation;
+						}
+					}
+				}
+			}
+
+			//Custom background handling (API)
+			if (action.equalsIgnoreCase("api:custombackground")) {
+				String typeId = sec.getEntryValue("type_identifier");
+				String backId = sec.getEntryValue("background_identifier");
+				String inputString = sec.getEntryValue("input_string");
+				if (typeId != null) {
+					MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
+					if (type != null) {
+						if (type.needsInputString() && (inputString != null)) {
+							try {
+								this.customMenuBackground = type.createInstanceFromInputString(inputString);
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
+							if (this.customMenuBackground != null) {
+								if (MenuCustomization.isNewMenu()) {
+									this.customMenuBackground.onOpenMenu();
+								}
+							}
+						} else if (backId != null) {
+							this.customMenuBackground = type.getBackgroundByIdentifier(backId);
+							if (this.customMenuBackground != null) {
+								if (MenuCustomization.isNewMenu()) {
+									this.customMenuBackground.onOpenMenu();
+								}
+							}
 						}
 					}
 				}
@@ -1390,8 +1427,13 @@ public class MenuHandlerBase {
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
-					
+
+				} else if (this.customMenuBackground != null) {
+
+					this.customMenuBackground.render(s, this.keepBackgroundAspectRatio);
+
 				}
+
 			}
 
 			if (PopupHandler.isPopupActive()) {
@@ -1717,7 +1759,7 @@ public class MenuHandlerBase {
 	}
 
 	public boolean canRenderBackground() {
-		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null) || (this.slideshow != null));
+		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null) || (this.slideshow != null) || (this.customMenuBackground != null));
 	}
 
 	public boolean setBackgroundAnimation(int id) {
