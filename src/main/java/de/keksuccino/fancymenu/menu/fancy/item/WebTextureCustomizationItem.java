@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -45,7 +46,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 						if (isValidUrl(this.value)) {
 
 							this.texture = TextureHandler.getWebResource(this.value, false);
-							MinecraftClient.getInstance().execute(() -> {
+							CustomizationHelper.runTaskInMainThread(() -> {
 								try {
 									texture.loadTexture();
 								} catch (Exception e) {

@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.net.UrlEscapers;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
@@ -107,6 +107,8 @@ public class LayoutEditorScreen extends Screen {
 	public String backgroundTexturePath;
 	public ExternalTexturePanoramaRenderer backgroundPanorama;
 	public ExternalTextureSlideshowRenderer backgroundSlideshow;
+	public MenuBackground customMenuBackground;
+	public String customMenuBackgroundInputString;
 	public List<String> backgroundAnimationNames = new ArrayList<String>();
 	public boolean randomBackgroundAnimation = false;
 	public boolean panorama = false;
@@ -301,6 +303,18 @@ public class LayoutEditorScreen extends Screen {
 			ps.addEntry("path", this.backgroundTexturePath);
 			if (this.panorama) {
 				ps.addEntry("wideformat", "true");
+			}
+			l.add(ps);
+		}
+
+		if (this.customMenuBackground != null) {
+			PropertiesSection ps = new PropertiesSection("customization");
+			ps.addEntry("action", "api:custombackground");
+			ps.addEntry("type_identifier", this.customMenuBackground.getType().getIdentifier());
+			if (this.customMenuBackground.getType().needsInputString()) {
+				ps.addEntry("input_string", this.customMenuBackgroundInputString);
+			} else {
+				ps.addEntry("background_identifier", this.customMenuBackground.getIdentifier());
 			}
 			l.add(ps);
 		}
@@ -857,6 +871,11 @@ public class LayoutEditorScreen extends Screen {
 			this.backgroundSlideshow.x = sx;
 			this.backgroundSlideshow.y = sy;
 		}
+
+		if (this.customMenuBackground != null) {
+			this.customMenuBackground.render(matrix, this, this.keepBackgroundAspectRatio);
+		}
+
 	}
 
 	public boolean isFocused(LayoutElement object) {
@@ -1313,6 +1332,7 @@ public class LayoutEditorScreen extends Screen {
 				this.backgroundPanorama = null;
 				this.backgroundSlideshow = null;
 				this.backgroundTexture = null;
+				this.customMenuBackground = null;
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
 				}
@@ -1357,6 +1377,7 @@ public class LayoutEditorScreen extends Screen {
 
 					this.backgroundPanorama = null;
 					this.backgroundSlideshow = null;
+					this.customMenuBackground = null;
 
 				} else {
 					displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
