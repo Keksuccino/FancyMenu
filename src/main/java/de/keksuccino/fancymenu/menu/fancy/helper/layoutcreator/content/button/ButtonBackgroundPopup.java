@@ -104,20 +104,20 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.hoverBackgroundAnimationSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
 
         this.normalBackgroundImageTextField = new AdvancedTextField(font, 0, 0, 200, 20, true, null);
+        this.normalBackgroundImageTextField.setMaxStringLength(10000);
         if (this.customizationContainer.normalBackground != null) {
             if (!this.customizationContainer.normalBackground.startsWith("animation:")) {
                 this.normalBackgroundImageTextField.setText(this.customizationContainer.normalBackground);
             }
         }
-        this.normalBackgroundImageTextField.setMaxStringLength(10000);
 
         this.hoverBackgroundImageTextField = new AdvancedTextField(font, 0, 0, 200, 20, true, null);
+        this.hoverBackgroundImageTextField.setMaxStringLength(10000);
         if (this.customizationContainer.hoverBackground != null) {
             if (!this.customizationContainer.hoverBackground.startsWith("animation:")) {
                 this.hoverBackgroundImageTextField.setText(this.customizationContainer.hoverBackground);
             }
         }
-        this.hoverBackgroundImageTextField.setMaxStringLength(10000);
 
         this.chooseNormalBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {

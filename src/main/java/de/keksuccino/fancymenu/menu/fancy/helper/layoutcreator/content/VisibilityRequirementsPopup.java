@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
@@ -508,6 +509,49 @@ public class VisibilityRequirementsPopup extends FMPopup {
             }
         }, null, guiScaleValuePreset);
         this.requirements.add(guiScale);
+
+        //CUSTOM VISIBILITY REQUIREMENTS (API)
+        for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
+
+            final VisibilityRequirement v = p.requirement;
+
+            String valuePreset = null;
+            if (v.hasValue()) {
+                valuePreset = v.getValuePreset();
+                if (valuePreset == null) {
+                    valuePreset = "";
+                }
+                if (p.value != null) {
+                    valuePreset = p.value;
+                }
+            }
+            Consumer<String> valueCallback = null;
+            if (v.hasValue()) {
+                valueCallback = (call) -> {
+                    p.value = call;
+                };
+            }
+            CharacterFilter charFilter = v.getValueInputFieldFilter();
+            String desc = "";
+            for (String s : v.getDescription()) {
+                if (s.equalsIgnoreCase("")) {
+                    s = " ";
+                }
+                if (desc.equalsIgnoreCase("")) {
+                    desc += s;
+                } else {
+                    desc += "%n%" + s;
+                }
+            }
+            Requirement req = new Requirement(this, v.getDisplayName(), desc, v.getValueDisplayName(), p.checkFor, p.showIf,
+                    (enabledCallback) -> {
+                        p.checkFor = enabledCallback;
+                    }, (showIfCallback) -> {
+                p.showIf = showIfCallback;
+            }, valueCallback, charFilter, valuePreset);
+            this.requirements.add(req);
+
+        }
 
     }
 

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements;
 
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
@@ -10,12 +12,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.fml.common.Loader;
-import org.lwjgl.opengl.Display;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class VisibilityRequirementContainer {
 
@@ -95,6 +97,8 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
+
+    public Map<String, RequirementPackage> customRequirements = new HashMap<>();
 
     public CustomizationItemBase item;
 
@@ -425,6 +429,27 @@ public class VisibilityRequirementContainer {
             }
         }
 
+        //CUSTOM VISIBILITY REQUIREMENTS (API)
+        this.customRequirements.clear();
+        for (VisibilityRequirement v : VisibilityRequirementRegistry.getRequirements()) {
+            RequirementPackage p = new RequirementPackage();
+            p.requirement = v;
+            this.customRequirements.put(v.getIdentifier(), p);
+        }
+        for (RequirementPackage p : this.customRequirements.values()) {
+            VisibilityRequirement v = p.requirement;
+            String stringShowIf = properties.getEntryValue("vr_custom:showif:" + v.getIdentifier());
+            if (stringShowIf != null) {
+                if (p != null) {
+                    if (stringShowIf.equalsIgnoreCase("true")) {
+                        p.showIf = true;
+                    }
+                    p.value = properties.getEntryValue("vr_custom:value:" + v.getIdentifier());
+                    p.checkFor = true;
+                }
+            }
+        }
+
     }
 
     public boolean isVisible() {
@@ -725,6 +750,23 @@ public class VisibilityRequirementContainer {
             }
         }
 
+        //CUSTOM VISIBILITY REQUIREMENTS (API)
+        for (RequirementPackage p : this.customRequirements.values()) {
+
+            if (p.checkFor) {
+                if (p.showIf) {
+                    if (!p.requirement.isRequirementMet(p.value)) {
+                        return false;
+                    }
+                } else {
+                    if (p.requirement.isRequirementMet(p.value)) {
+                        return false;
+                    }
+                }
+            }
+
+        }
+
         return true;
 
     }
@@ -732,7 +774,6 @@ public class VisibilityRequirementContainer {
     protected static boolean checkForGuiScale(String condition) {
         ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
         double windowScale = res.getScaleFactor();
-//        double windowScale = Display.getPixelScaleFactor();
         if (condition.startsWith("double:")) {
             String value = condition.replace("double:", "");
             double valueScale = Double.parseDouble(value);
@@ -747,6 +788,15 @@ public class VisibilityRequirementContainer {
             return (windowScale < valueScale);
         }
         return false;
+    }
+
+    public static class RequirementPackage {
+
+        public VisibilityRequirement requirement;
+        public boolean showIf = false;
+        public String value = null;
+        public boolean checkFor = false;
+
     }
 
 }
