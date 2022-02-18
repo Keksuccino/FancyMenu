@@ -29,9 +29,10 @@ public class DynamicValueTextfield extends AdvancedTextField {
 	
 	private static final ResourceLocation VARIABLES_BUTTON_RESOURCE = new ResourceLocation("keksuccino", "add_btn.png");
 
-	//TODO übernehmen
 	public DynamicValueTextfield(FontRenderer fontrenderer, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(fontrenderer, x, y, width, height, handleTextField, filter);
+
+		this.setMaxStringLength(10000);
 		
 		variableMenu = new FMContextMenu();
 		variableMenu.setAutoclose(true);
