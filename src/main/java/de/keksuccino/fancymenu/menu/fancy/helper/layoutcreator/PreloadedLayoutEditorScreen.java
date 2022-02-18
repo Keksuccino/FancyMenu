@@ -222,7 +222,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
 					//Custom background handling (API)
 					if (action.equalsIgnoreCase("api:custombackground")) {
 						String typeId = sec.getEntryValue("type_identifier");

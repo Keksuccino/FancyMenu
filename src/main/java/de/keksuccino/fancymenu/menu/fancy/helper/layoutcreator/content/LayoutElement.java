@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import net.minecraft.client.gui.GuiComponent;
@@ -1279,7 +1281,21 @@ public abstract class LayoutElement extends GuiComponent {
 				sec.addEntry("vr:value:guiscale", val);
 			}
 		}
-		//-------------
+
+		//TODO übernehmen
+		//CUSTOM VISIBILITY REQUIREMENTS (API)
+		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
+
+			VisibilityRequirement v = p.requirement;
+
+			if (p.checkFor) {
+				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
+				if (v.hasValue() && (p.value != null)) {
+					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
+				}
+			}
+
+		}
 
 	}
 

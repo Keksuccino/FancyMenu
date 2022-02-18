@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.api.background;
 
 import de.keksuccino.fancymenu.FancyMenu;

@@ -29,8 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//TODO übernehmen : alle public + protected auf public changen
-
 public class BackgroundOptionsPopup extends FMPopup {
 	
 	public LayoutEditorScreen handler;
@@ -46,31 +44,24 @@ public class BackgroundOptionsPopup extends FMPopup {
 	public AdvancedButton setAnimationButton;
 	public AdvancedButton clearAnimationButton;
 	public AdvancedButton clearImageButton;
-	//TODO übernehmen
 	public AdvancedButton setCustomBackgroundButton;
 	public AdvancedButton clearCustomBackgroundButton;
 	public AdvancedButton chooseCustomBackgroundButton;
-	//-------------------
 
-	//TODO übernehmen
 	public BackgroundOptionsSwitcher typeSwitcher;
 	public HorizontalSwitcher animationSwitcher;
 	public HorizontalSwitcher panoramaSwitcher;
 	public HorizontalSwitcher slideshowSwitcher;
-	//TODO übernehmen
 	public HorizontalSwitcher customBackgroundSwitcher;
 
-	//TODO übernehmen
 	public Map<Integer, MenuBackgroundType> customBackgroundTypes = new HashMap<>();
 	public int lastSelectedTypeIndex = -10;
-	//-----------------
 	
 	public BackgroundOptionsPopup(LayoutEditorScreen handler) {
 		super(240);
 		
 		this.handler = handler;
 
-		//TODO übernehmen
 		this.typeSwitcher = new BackgroundOptionsSwitcher(120, true);
 		this.typeSwitcher.addValue(Locals.localize("helper.creator.backgroundoptions.backgroundanimation"));
 		this.typeSwitcher.addValue(Locals.localize("helper.creator.backgroundoptions.backgroundimage"));
@@ -82,7 +73,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			this.customBackgroundTypes.put(index, t);
 			index++;
 		}
-		//-----------------------
 		this.typeSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);
 		this.typeSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
 		
@@ -139,7 +129,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			if (this.panoramaSwitcher.getSelectedValue() != null) {
 				if (PanoramaHandler.panoramaExists(this.panoramaSwitcher.getSelectedValue())) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-					//TODO übernehmen 2
 					this.resetBackgrounds();
 					this.handler.backgroundPanorama = PanoramaHandler.getPanorama(this.panoramaSwitcher.getSelectedValue());
 				}
@@ -167,7 +156,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			if (this.slideshowSwitcher.getSelectedValue() != null) {
 				if (SlideshowHandler.slideshowExists(this.slideshowSwitcher.getSelectedValue())) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-					//TODO übernehmen 2
 					this.resetBackgrounds();
 					this.handler.backgroundSlideshow = SlideshowHandler.getSlideshow(this.slideshowSwitcher.getSelectedValue());
 				}
@@ -216,7 +204,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 			this.clearAnimationButton.active = false;
 		}
 
-		//TODO übernehmen
 		this.chooseCustomBackgroundButton = new AdvancedButton(0, 0, 100, 20, "", true, (press) -> {
 			if (isCustomType(this.typeSwitcher.getSelectedValueIndex())) {
 				MenuBackgroundType t = this.customBackgroundTypes.get(this.typeSwitcher.getSelectedValueIndex());
@@ -248,9 +235,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 			}
 		};
 		this.addButton(chooseCustomBackgroundButton);
-		//-------------------------
 
-		//TODO übernehmen
 		this.setCustomBackgroundButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.backgrounds.custom.setbackground"), true, (press) -> {
 			if (isCustomType(this.typeSwitcher.getSelectedValueIndex())) {
 				MenuBackgroundType t = this.customBackgroundTypes.get(this.typeSwitcher.getSelectedValueIndex());
@@ -262,7 +247,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 								if ((handler.customMenuBackground == null) || (handler.customMenuBackground != b)) {
 									handler.history.saveSnapshot(handler.history.createSnapshot());
 								}
-								//TODO übernehmen 2
 								this.resetBackgrounds();
 								b.onOpenMenu();
 								handler.customMenuBackground = b;
@@ -275,9 +259,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 		});
 		this.setCustomBackgroundButton.active = false;
 		this.addButton(setCustomBackgroundButton);
-		//--------------------
 
-		//TODO übernehmen
 		this.clearCustomBackgroundButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.backgrounds.custom.clearbackground"), true, (press) -> {
 			if (this.handler.customMenuBackground != null) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -288,7 +270,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 		this.clearCustomBackgroundButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.custom.clearbackground.desc"), "%n%"));
 		this.clearCustomBackgroundButton.active = false;
 		this.addButton(clearCustomBackgroundButton);
-		//-----------------------
 
 		this.clearImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear"), true, (press) -> {
 			if (this.handler.backgroundTexture != null) {
@@ -309,7 +290,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 		KeyboardHandler.addKeyPressedListener(this::onEscapePressed);
 	}
 
-	//TODO übernehmen
 	@Override
 	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
@@ -498,7 +478,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 		}
 	}
 
-	//TODO übernehmen 2
 	public void resetBackgrounds() {
 		this.handler.setBackgroundAnimations((String[])null);
 		this.handler.backgroundAnimationNames.clear();
@@ -510,12 +489,10 @@ public class BackgroundOptionsPopup extends FMPopup {
 		this.handler.customMenuBackgroundInputString = null;
 	}
 
-	//TODO übernehmen
 	public boolean isCustomType(int index) {
 		return this.customBackgroundTypes.containsKey(index);
 	}
 
-	//TODO übernehmen
 	public static class BackgroundOptionsSwitcher extends HorizontalSwitcher {
 
 		public BackgroundOptionsSwitcher(int displayWidth, boolean ignoreBlockedInput, String... values) {
@@ -535,12 +512,10 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 	}
 
-	//TODO übernehmen
 	public static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
 		GuiComponent.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
 	}
 
-	//TODO übernehmen
 	public static void renderDescription(PoseStack matrix, int mouseX, int mouseY, List<String> desc) {
 		if (desc != null) {
 			int width = 10;

@@ -105,7 +105,6 @@ public class MenuHandlerBase extends GuiComponent {
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
-	//TODO übernehmen
 	protected MenuBackground customMenuBackground = null;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
@@ -459,7 +458,6 @@ public class MenuHandlerBase extends GuiComponent {
 		this.backgroundRenderItems.clear();
 		this.panoramacube = null;
 		this.slideshow = null;
-		//TODO übernehmen
 		this.customMenuBackground = null;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
@@ -721,7 +719,6 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 
-			//TODO übernehmen
 			//Custom background handling (API)
 			if (action.equalsIgnoreCase("api:custombackground")) {
 				String typeId = sec.getEntryValue("type_identifier");
@@ -1411,13 +1408,11 @@ public class MenuHandlerBase extends GuiComponent {
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
-				//TODO übernehmen
 				} else if (this.customMenuBackground != null) {
 
 					this.customMenuBackground.render(matrix, s, this.keepBackgroundAspectRatio);
 
 				}
-				//------------------
 			}
 
 			if (PopupHandler.isPopupActive()) {
@@ -1734,7 +1729,6 @@ public class MenuHandlerBase extends GuiComponent {
 		return true;
 	}
 
-	//TODO übernehmen
 	public boolean canRenderBackground() {
 		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null) || (this.slideshow != null) || (this.customMenuBackground != null));
 	}

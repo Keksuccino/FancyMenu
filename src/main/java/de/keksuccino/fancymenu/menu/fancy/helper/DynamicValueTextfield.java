@@ -30,7 +30,10 @@ public class DynamicValueTextfield extends AdvancedTextField {
 
 	public DynamicValueTextfield(Font fontrenderer, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(fontrenderer, x, y, width, height, handleTextField, filter);
-		
+
+		//TODO übernehmen
+		this.setMaxLength(10000);
+
 		variableMenu = new FMContextMenu();
 		variableMenu.setAutoclose(true);
 

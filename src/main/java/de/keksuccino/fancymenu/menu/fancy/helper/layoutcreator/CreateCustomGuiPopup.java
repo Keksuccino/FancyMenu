@@ -49,8 +49,10 @@ public class CreateCustomGuiPopup extends FMPopup {
 		this.addButton(doneButton);
 		
 		this.identifierText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, null);
+		this.identifierText.setMaxLength(10000);
 		
 		this.titleText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, null);
+		this.titleText.setMaxLength(10000);
 		
 		this.allowEscButton = new AdvancedButton(0, 0, 120, 20, "§a" + Locals.localize("helper.buttons.tools.creategui.allowesc"), true, (press) -> {
 			press.setMessage(new TextComponent("§a" + Locals.localize("helper.buttons.tools.creategui.allowesc")));

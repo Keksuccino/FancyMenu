@@ -3,8 +3,9 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.api.background.example.no_input_string.ExampleMenuBackgroundType;
-import de.keksuccino.fancymenu.api.background.example.with_input_string.ExampleMenuBackgroundTypeWithInputString;
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
+import de.keksuccino.fancymenu.api.visibilityrequirements.example.ExampleVisibilityRequirement;
+import de.keksuccino.fancymenu.api.visibilityrequirements.example.ExampleVisibilityRequirementWithValue;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
@@ -41,7 +42,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.6.2";
+	public static final String VERSION = "2.6.3";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -96,7 +97,6 @@ public class FancyMenu {
 
 				MainWindowHandler.handleForceFullscreen();
 
-				//TODO übernehmen
 				MenuBackgroundTypeRegistry.init();
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
@@ -110,6 +110,9 @@ public class FancyMenu {
 
 //				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundType());
 //				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundTypeWithInputString());
+
+//				VisibilityRequirementRegistry.registerRequirement(new ExampleVisibilityRequirement());
+//				VisibilityRequirementRegistry.registerRequirement(new ExampleVisibilityRequirementWithValue());
 
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");

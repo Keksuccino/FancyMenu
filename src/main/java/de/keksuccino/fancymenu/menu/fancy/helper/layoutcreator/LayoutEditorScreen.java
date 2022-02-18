@@ -105,10 +105,8 @@ public class LayoutEditorScreen extends Screen {
 	public String backgroundTexturePath;
 	public ExternalTexturePanoramaRenderer backgroundPanorama;
 	public ExternalTextureSlideshowRenderer backgroundSlideshow;
-	//TODO übernehmen
 	public MenuBackground customMenuBackground;
 	public String customMenuBackgroundInputString;
-	//-------------------
 	public List<String> backgroundAnimationNames = new ArrayList<String>();
 	public boolean randomBackgroundAnimation = false;
 	public boolean panorama = false;
@@ -307,7 +305,6 @@ public class LayoutEditorScreen extends Screen {
 			l.add(ps);
 		}
 
-		//TODO übernehmen
 		if (this.customMenuBackground != null) {
 			PropertiesSection ps = new PropertiesSection("customization");
 			ps.addEntry("action", "api:custombackground");
@@ -872,7 +869,6 @@ public class LayoutEditorScreen extends Screen {
 			this.backgroundSlideshow.y = sy;
 		}
 
-		//TODO übernehmen
 		if (this.customMenuBackground != null) {
 			this.customMenuBackground.render(matrix, this, this.keepBackgroundAspectRatio);
 		}
@@ -1333,7 +1329,6 @@ public class LayoutEditorScreen extends Screen {
 				this.backgroundPanorama = null;
 				this.backgroundSlideshow = null;
 				this.backgroundTexture = null;
-				//TODO übernehmen
 				this.customMenuBackground = null;
 				if (this.backgroundAnimation != null) {
 					((AdvancedAnimation)this.backgroundAnimation).stopAudio();
@@ -1379,7 +1374,6 @@ public class LayoutEditorScreen extends Screen {
 
 					this.backgroundPanorama = null;
 					this.backgroundSlideshow = null;
-					//TODO übernehmen
 					this.customMenuBackground = null;
 
 				} else {
