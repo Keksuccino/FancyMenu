@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import net.minecraft.client.MinecraftClient;
@@ -1276,6 +1277,20 @@ public abstract class LayoutElement extends DrawableHelper {
 				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
 				sec.addEntry("vr:value:guiscale", val);
 			}
+		}
+
+		//CUSTOM VISIBILITY REQUIREMENTS (API)
+		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
+
+			VisibilityRequirement v = p.requirement;
+
+			if (p.checkFor) {
+				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
+				if (v.hasValue() && (p.value != null)) {
+					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
+				}
+			}
+
 		}
 
 	}

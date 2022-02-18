@@ -31,6 +31,8 @@ public class DynamicValueTextfield extends AdvancedTextField {
 	public DynamicValueTextfield(TextRenderer fontrenderer, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(fontrenderer, x, y, width, height, handleTextField, filter);
 
+		this.setMaxLength(10000);
+
 		variableMenu = new FMContextMenu();
 		variableMenu.setAutoclose(true);
 
@@ -146,13 +148,6 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		});
 		UIBase.colorizeButton(serverCategoryButton);
 		variableMenu.addContent(serverCategoryButton);
-
-//		AdvancedButton serverMOTD = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd"), true, (press) -> {
-//			this.write("%servermotd:<serverIP>%");
-//		});
-//		serverMOTD.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd.desc"), "%n%"));
-//		UIBase.colorizeButton(serverMOTD);
-//		serverMenu.addContent(serverMOTD);
 
 		serverMenu.addSeparator();
 
