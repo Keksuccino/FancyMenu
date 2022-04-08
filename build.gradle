@@ -16,6 +16,12 @@ repositories {
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
+
+	/*  CurseForge maven that allow download any mod from CurseForge site as library  */
+	maven {
+		name = "CurseForge"
+		setUrl("https://www.cursemaven.com")
+	}
 }
 
 dependencies {
@@ -24,7 +30,11 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
+
+	modCompileOnly("curse.maven:konkrete-fabric-416797:3732395")			//	Access to library without download it directly
+//	modImplementation include("curse.maven:konkrete-fabric-416797:3732395")	// 	Inject library for test automatically. Useful for forkers
+
+
 	implementation fileTree('libs') { include '*.jar' }
 }
 
