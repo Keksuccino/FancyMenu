@@ -511,7 +511,6 @@ public class VisibilityRequirementsPopup extends FMPopup {
         }, null, guiScaleValuePreset);
         this.requirements.add(guiScale);
 
-        //TODO übernehmen
         //CUSTOM VISIBILITY REQUIREMENTS (API)
         for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
 

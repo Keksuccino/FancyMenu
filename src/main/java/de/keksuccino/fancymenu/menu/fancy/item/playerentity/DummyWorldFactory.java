@@ -1,15 +1,18 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.RegistryAccess;
+import com.mojang.datafixers.util.Either;
+import net.minecraft.core.*;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.TagContainer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -37,7 +40,7 @@ public class DummyWorldFactory {
 	public static class DummyWorld extends Level {
 
 		protected DummyWorld() {
-			super(null, null, getDummyDimensionType(), null, false, false, 239239L);
+			super(null, null, getDummyDimensionTypeHolder(), null, false, false, 239239L);
 		}
 
 		@Override
@@ -82,10 +85,6 @@ public class DummyWorldFactory {
 			return null;
 		}
 		@Override
-		public TagContainer getTagManager() {
-			return null;
-		}
-		@Override
 		protected LevelEntityGetter<Entity> getEntities() {
 			return null;
 		}
@@ -120,13 +119,64 @@ public class DummyWorldFactory {
 			return null;
 		}
 		@Override
-		public Biome getUncachedNoiseBiome(int p_46809_, int p_46810_, int p_46811_) {
+		public Holder<Biome> getUncachedNoiseBiome(int p_46809_, int p_46810_, int p_46811_) {
 			return null;
 		}
 
 	}
 
+	public static Holder<DimensionType> getDummyDimensionTypeHolder() {
+		return new Holder<DimensionType>() {
+			@Override
+			public DimensionType value() {
+				return getDummyDimensionType();
+			}
+			@Override
+			public boolean isBound() {
+				return false;
+			}
+			@Override
+			public boolean is(ResourceLocation p_205713_) {
+				return false;
+			}
+			@Override
+			public boolean is(ResourceKey<DimensionType> p_205712_) {
+				return false;
+			}
+			@Override
+			public boolean is(Predicate<ResourceKey<DimensionType>> p_205711_) {
+				return false;
+			}
+			@Override
+			public boolean is(TagKey<DimensionType> p_205705_) {
+				return false;
+			}
+			@Override
+			public Stream<TagKey<DimensionType>> tags() {
+				return null;
+			}
+			@Override
+			public Either<ResourceKey<DimensionType>, DimensionType> unwrap() {
+				return null;
+			}
+			@Override
+			public Optional<ResourceKey<DimensionType>> unwrapKey() {
+				return Optional.empty();
+			}
+			@Override
+			public Kind kind() {
+				return Kind.REFERENCE;
+			}
+			@Override
+			public boolean isValidInRegistry(Registry<DimensionType> p_205708_) {
+				return false;
+			}
+		};
+	}
+
 	public static DimensionType getDummyDimensionType() {
+		ResourceKey<Registry<Block>> rk = ResourceKey.createRegistryKey(new ResourceLocation(""));
+		TagKey<Block> tk = TagKey.create(rk, new ResourceLocation(""));
 		return DimensionType.create(
 				OptionalLong.of(1),
 				false,
@@ -142,7 +192,7 @@ public class DummyWorldFactory {
 				16,
 				16,
 				16,
-				new ResourceLocation(""),
+				tk,
 				new ResourceLocation(""),
 				1.0F);
 	}

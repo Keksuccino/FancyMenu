@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import net.minecraft.SharedConstants;
 import net.minecraft.resources.ResourceLocation;
 
 import de.keksuccino.fancymenu.keybinding.Keybinding;
@@ -35,14 +36,14 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.versions.mcp.MCPVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
-	public static final String VERSION = "2.6.3";
+	public static final String VERSION = "2.6.4";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -178,7 +179,6 @@ public class FancyMenu {
     		config.registerValue("playmenumusic", true, "general");
     		config.registerValue("playbackgroundsounds", true, "general", "If menu background sounds added by FancyMenu should be played or not.");
     		config.registerValue("playbackgroundsoundsinworld", false, "general", "If menu background sounds added by FancyMenu should be played when a world is loaded.");
-    		config.registerValue("stopworldmusicwhencustomizable", false, "general", "Stop vanilla world music when in a customizable menu.");
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
 			config.registerValue("forcefullscreen", false, "general");
@@ -189,9 +189,13 @@ public class FancyMenu {
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
 			config.registerValue("hiderealmsnotifications", false, "mainmenu");
-			config.registerValue("copyrightposition", "bottom-right", "mainmenu");
+			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+				config.registerValue("copyrightposition", "bottom-right", "mainmenu");
+			}
 			config.registerValue("hideforgenotifications", false, "mainmenu");
-			config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
+			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+				config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
+			}
 
 			config.registerValue("hidesplashtext", false, "mainmenu_splash");
 			config.registerValue("splashx", 0, "mainmenu_splash");
@@ -296,6 +300,18 @@ public class FancyMenu {
 	public static boolean isKonkreteLoaded() {
 		try {
 			Class.forName("de.keksuccino.konkrete.Konkrete");
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
+
+	public static String getMinecraftVersion() {
+		return MCPVersion.getMCVersion();
+	}
+
+	public static boolean isAudioExtensionLoaded() {
+		try {
+			Class.forName("de.keksuccino.fmaudio.FmAudio");
 			return true;
 		} catch (Exception e) {}
 		return false;

@@ -1282,7 +1282,6 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		}
 
-		//TODO übernehmen
 		//CUSTOM VISIBILITY REQUIREMENTS (API)
 		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
 

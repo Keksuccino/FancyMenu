@@ -86,11 +86,6 @@ public class MenuCustomizationEvents {
 			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
 				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
-		} else {
-			if (MenuCustomization.isMenuCustomizable(e.getScreen()) && FancyMenu.config.getOrDefault("stopworldmusicwhencustomizable", false)) {
-				Minecraft.getInstance().getSoundManager().pause();
-				this.resumeWorldMusic = true;
-			}
 		}
 	}
 

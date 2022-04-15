@@ -27,7 +27,7 @@ println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getPro
 
 minecraft {
 
-    mappings channel: 'official', version: '1.18'
+    mappings channel: 'official', version: '1.18.2'
 
     runs {
         client {
@@ -56,7 +56,7 @@ repositories {
 
 dependencies {
 
-    minecraft 'net.minecraftforge:forge:1.18-38.0.6'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.0.2'
 	
 	implementation fileTree('libs') { include '*.jar' }
 

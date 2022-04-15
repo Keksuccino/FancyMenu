@@ -97,7 +97,6 @@ public class VisibilityRequirementContainer {
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
 
-    //TODO übernehmen
     public Map<String, RequirementPackage> customRequirements = new HashMap<>();
 
     public CustomizationItemBase item;
@@ -429,7 +428,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //CUSTOM VISIBILITY REQUIREMENTS (API)
         this.customRequirements.clear();
         for (VisibilityRequirement v : VisibilityRequirementRegistry.getRequirements()) {
@@ -752,7 +750,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //CUSTOM VISIBILITY REQUIREMENTS (API)
         for (RequirementPackage p : this.customRequirements.values()) {
 
@@ -769,7 +766,6 @@ public class VisibilityRequirementContainer {
             }
 
         }
-        //------------------
 
         return true;
 
@@ -793,7 +789,6 @@ public class VisibilityRequirementContainer {
         return false;
     }
 
-    //TODO übernehmen
     public static class RequirementPackage {
 
         public VisibilityRequirement requirement;

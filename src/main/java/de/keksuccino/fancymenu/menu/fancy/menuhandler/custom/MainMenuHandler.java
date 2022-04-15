@@ -87,7 +87,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 					this.splash = getRandomSplashText();
 				}
 
-				this.setWidthCopyrightRest(Integer.MAX_VALUE);
+				if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+					this.setWidthCopyrightRest(Integer.MAX_VALUE);
+				}
 
 				super.onButtonsCached(e);
 			}
@@ -165,47 +167,51 @@ public class MainMenuHandler extends MenuHandlerBase {
 				);
 			}
 
-			//Draw and handle copyright
-			String c = "Copyright Mojang AB. Do not distribute!";
-			String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
-			int cX = 0;
-			int cY = 0;
-			int cW = Minecraft.getInstance().font.width(c);
-			int cH = 10;
+			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
 
-			if (cPos.equalsIgnoreCase("top-left")) {
-				cX = 2;
-				cY = 2;
-			} else if (cPos.equalsIgnoreCase("top-centered")) {
-				cX = (width / 2) - (cW / 2);
-				cY = 2;
-			} else if (cPos.equalsIgnoreCase("top-right")) {
-				cX = width - cW - 2;
-				cY = 2;
-			} else if (cPos.equalsIgnoreCase("bottom-left")) {
-				cX = 2;
-				cY = height - cH - 2;
-			} else if (cPos.equalsIgnoreCase("bottom-centered")) {
-				cX = (width / 2) - (cW / 2);
-				cY = height - cH - 2;
-			} else {
-				cX = width - cW - 2;
-				cY = height - cH - 2;
-			}
+				//Draw and handle copyright
+				String c = "Copyright Mojang AB. Do not distribute!";
+				String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
+				int cX = 0;
+				int cY = 0;
+				int cW = Minecraft.getInstance().font.width(c);
+				int cH = 10;
 
-			Color copyrightcolor = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("copyrightcolor", "#ffffff"));
-			if (copyrightcolor == null) {
-				copyrightcolor = new Color(255, 255, 255);
-			}
-
-			GuiComponent.drawString(matrix, font, c, cX, cY, copyrightcolor.getRGB() | 255 << 24);
-
-			if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
-				GuiComponent.fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
-
-				if (MouseInput.isLeftMouseDown()) {
-					Minecraft.getInstance().setScreen(new WinScreen(false, Runnables.doNothing()));
+				if (cPos.equalsIgnoreCase("top-left")) {
+					cX = 2;
+					cY = 2;
+				} else if (cPos.equalsIgnoreCase("top-centered")) {
+					cX = (width / 2) - (cW / 2);
+					cY = 2;
+				} else if (cPos.equalsIgnoreCase("top-right")) {
+					cX = width - cW - 2;
+					cY = 2;
+				} else if (cPos.equalsIgnoreCase("bottom-left")) {
+					cX = 2;
+					cY = height - cH - 2;
+				} else if (cPos.equalsIgnoreCase("bottom-centered")) {
+					cX = (width / 2) - (cW / 2);
+					cY = height - cH - 2;
+				} else {
+					cX = width - cW - 2;
+					cY = height - cH - 2;
 				}
+
+				Color copyrightcolor = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("copyrightcolor", "#ffffff"));
+				if (copyrightcolor == null) {
+					copyrightcolor = new Color(255, 255, 255);
+				}
+
+				GuiComponent.drawString(matrix, font, c, cX, cY, copyrightcolor.getRGB() | 255 << 24);
+
+				if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
+					GuiComponent.fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
+
+					if (MouseInput.isLeftMouseDown()) {
+						Minecraft.getInstance().setScreen(new WinScreen(false, Runnables.doNothing()));
+					}
+				}
+
 			}
 
 			if (!PopupHandler.isPopupActive()) {

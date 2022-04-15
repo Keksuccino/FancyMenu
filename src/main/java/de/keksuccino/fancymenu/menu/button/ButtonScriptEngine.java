@@ -283,7 +283,7 @@ public class ButtonScriptEngine {
 		}
 	}
 
-	private static void openWebLink(String url) {
+	public static void openWebLink(String url) {
 		try {
 			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
 			URL u = new URL(url);
@@ -304,7 +304,7 @@ public class ButtonScriptEngine {
 		}
 	}
 
-	private static void openFile(File f) {
+	public static void openFile(File f) {
 		try {
 			openWebLink(f.toURI().toURL().toString());
 		} catch (Exception e) {

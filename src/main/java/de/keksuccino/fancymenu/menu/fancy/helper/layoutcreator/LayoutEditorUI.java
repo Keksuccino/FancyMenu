@@ -10,10 +10,12 @@ import java.util.function.Consumer;
 import com.google.common.io.Files;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
@@ -193,11 +195,12 @@ public class LayoutEditorUI extends UIBase {
 			ManageAudioContextMenu manageAudioMenu = new ManageAudioContextMenu(this.parent);
 			manageAudioMenu.setAutoclose(true);
 			elementMenu.addChild(manageAudioMenu);
-			
-			AdvancedButton manageAudioButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element.manageaudio"), true, (press) -> {
+
+			AdvancedButton manageAudioButton = new AdvancedButton(0, 0, 0, 0, "§m" + Locals.localize("helper.editor.ui.element.manageaudio"), true, (press) -> {
 				manageAudioMenu.setParentButton((AdvancedButton) press);
 				manageAudioMenu.openMenuAt(0, press.y);
 			});
+			manageAudioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc"), "%n%"));
 			elementMenu.addContent(manageAudioButton);
 			
 			HiddenVanillaButtonContextMenu hiddenVanillaMenu = new HiddenVanillaButtonContextMenu(this.parent);
@@ -407,6 +410,9 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.backgroundSlideshow = null;
 				this.parent.backgroundAnimation = null;
 				this.parent.backgroundTexture = null;
+				if (this.parent.customMenuBackground != null) {
+					this.parent.customMenuBackground.onResetBackground();
+				}
 				this.parent.customMenuBackground = null;
 				this.parent.customMenuBackgroundInputString = null;
 			});
@@ -946,11 +952,11 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(buttonButton);
 			
-			/** AUDIO **/
-			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
-				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addAudio, "wav"));
-			});
-			this.addContent(audioButton);
+//			/** AUDIO **/
+//			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
+//				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addAudio, "wav"));
+//			});
+//			this.addContent(audioButton);
 
 			/** PLAYER ENTITY **/
 			AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
@@ -1032,6 +1038,15 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(shapesButton);
 
 			this.addSeparator();
+
+			/** DUMMY BUTTON: INSTALL AUDIO EXTENSION **/
+			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
+				ButtonScriptEngine.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
+			});
+			audioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.btn.desc"), "%n%"));
+			if (!FancyMenu.isAudioExtensionLoaded()) {
+				this.addContent(audioButton);
+			}
 
 			/** CUSTOM ITEMS (API) **/
 			for (CustomizationItemContainer c : CustomizationItemRegistry.getItems()) {
