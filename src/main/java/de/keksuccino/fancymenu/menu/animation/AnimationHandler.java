@@ -2,7 +2,11 @@ package de.keksuccino.fancymenu.menu.animation;
 
 import java.io.File;
 import java.util.*;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
@@ -16,13 +20,6 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.texture.AbstractTexture;
-import net.minecraft.client.texture.ResourceTexture;
-import net.minecraft.client.texture.TextureManager;
-import net.minecraft.util.Identifier;
 
 public class AnimationHandler {
 	
@@ -387,12 +384,12 @@ public class AnimationHandler {
 						}
 					}
 					for (ResourcePackAnimationRenderer r : l) {
-						for (Identifier rl : r.getAnimationFrames()) {
-							TextureManager t = MinecraftClient.getInstance().getTextureManager();
+						for (ResourceLocation rl : r.getAnimationFrames()) {
+							TextureManager t = Minecraft.getInstance().getTextureManager();
 							AbstractTexture to = t.getTexture(rl);
 							if (to == null) {
-								to = new ResourceTexture(rl);
-								t.registerTexture(rl, to);
+								to = new SimpleTexture(rl);
+								t.register(rl, to);
 							}
 						}
 					}

@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.util.Identifier;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 
 public class SkinExternalTextureResourceLocation extends ExternalTextureResourceLocation {
 
@@ -17,7 +16,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
     protected InputStream in;
     protected int width = 0;
     protected int height = 0;
-    protected Identifier location;
+    protected ResourceLocation location;
 
     public SkinExternalTextureResourceLocation(String path) {
         super(path);
@@ -28,7 +27,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
     public void loadTexture() {
         if (!this.loaded) {
             try {
-                if (MinecraftClient.getInstance().getTextureManager() == null) {
+                if (Minecraft.getInstance().getTextureManager() == null) {
                     System.out.println("################################ WARNING ################################");
                     System.out.println("Can't load texture '" + this.path + "'! Minecraft TextureManager instance not ready yet!");
                     return;
@@ -79,7 +78,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
 
                     i = skinNew;
                 }
-                this.location = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("externaltexture", new SelfcleaningDynamicTexture(i));
+                this.location = Minecraft.getInstance().getTextureManager().register("externaltexture", new SelfcleaningDynamicTexture(i));
                 this.in.close();
                 this.loaded = true;
             } catch (Exception var2) {
@@ -100,7 +99,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
     }
 
     @Override
-    public Identifier getResourceLocation() {
+    public ResourceLocation getResourceLocation() {
         return this.location;
     }
 
@@ -125,8 +124,8 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
             }
             int horizontal = xTo;
             while(horizontal < xTo + width) {
-                int pixel = in.getColor(xFrom + horiOffset, yFrom + vertOffset);
-                in.setColor(horizontal, vertical, pixel);
+                int pixel = in.getPixelRGBA(xFrom + horiOffset, yFrom + vertOffset);
+                in.setPixelRGBA(horizontal, vertical, pixel);
                 horizontal++;
                 if (mirrorX) {
                     horiOffset--;

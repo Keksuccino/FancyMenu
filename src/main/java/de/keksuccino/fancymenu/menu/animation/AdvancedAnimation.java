@@ -3,18 +3,16 @@ package de.keksuccino.fancymenu.menu.animation;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class AdvancedAnimation implements IAnimationRenderer {
 	
@@ -104,7 +102,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 	
 	@Override
-	public void render(MatrixStack matrix) {
+	public void render(PoseStack matrix) {
 		if (this.isReady()) {
 			this.started = true;
 
@@ -369,11 +367,11 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		try {
 			if (renderer.isReady()) {
 				if (renderer instanceof ResourcePackAnimationRenderer) {
-					List<Identifier> l = ((ResourcePackAnimationRenderer) renderer).resources;
+					List<ResourceLocation> l = ((ResourcePackAnimationRenderer) renderer).resources;
 					if (!l.isEmpty()) {
 						if (l.size() > frame) {
-							Identifier r = l.get(frame);
-							Resource res = MinecraftClient.getInstance().getResourceManager().getResource(r);
+							ResourceLocation r = l.get(frame);
+							Resource res = Minecraft.getInstance().getResourceManager().getResource(r);
 							return (res != null);
 						} else {
 							return true;
@@ -384,9 +382,9 @@ public class AdvancedAnimation implements IAnimationRenderer {
 					f.setAccessible(true);
 					List<ExternalTextureResourceLocation> l = (List<ExternalTextureResourceLocation>) f.get(renderer);
 					if ((l != null) && (l.size() > frame)) {
-						Identifier r = l.get(frame).getResourceLocation();
+						ResourceLocation r = l.get(frame).getResourceLocation();
 						if (r != null) {
-							Resource res = MinecraftClient.getInstance().getResourceManager().getResource(r);
+							Resource res = Minecraft.getInstance().getResourceManager().getResource(r);
 							return (res != null);
 						}
 					} else {

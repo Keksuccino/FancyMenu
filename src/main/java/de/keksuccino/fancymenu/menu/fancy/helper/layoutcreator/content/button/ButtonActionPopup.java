@@ -4,9 +4,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.konkrete.localization.Locals;
@@ -18,10 +20,6 @@ import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 
 public class ButtonActionPopup extends FMPopup {
 	
@@ -36,8 +34,8 @@ public class ButtonActionPopup extends FMPopup {
 	public ButtonActionPopup(Consumer<String> contentCallback, Consumer<String> typeCallback, String selectedType) {
 		super(240);
 		
-		this.textField = new DynamicValueTextfield(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, true, null);
-		this.textField.setFocusUnlocked(true);
+		this.textField = new DynamicValueTextfield(Minecraft.getInstance().font, 0, 0, 200, 20, true, null);
+		this.textField.setCanLoseFocus(true);
 		this.textField.setFocused(false);
 		this.textField.setMaxLength(1000);
 
@@ -84,7 +82,7 @@ public class ButtonActionPopup extends FMPopup {
 		this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.done"), true, (press) -> {
 			this.setDisplayed(false);
 			if (this.contentCallback != null) {
-				this.contentCallback.accept(this.textField.getText());
+				this.contentCallback.accept(this.textField.getValue());
 			}
 			if (this.typeCallback != null) {
 				this.typeCallback.accept(this.actionSwitcher.getSelectedValue());
@@ -100,7 +98,7 @@ public class ButtonActionPopup extends FMPopup {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
 
 		if (this.isDisplayed()) {
@@ -108,10 +106,10 @@ public class ButtonActionPopup extends FMPopup {
 			ButtonActionContainer customAction = ButtonActionRegistry.getActionByName(action);
 
 			//Draw popup title
-			drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText("§l" + Locals.localize("helper.creator.custombutton.config")), renderIn.width / 2, (renderIn.height / 2) - 50 - 40, -1);
+			drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent("§l" + Locals.localize("helper.creator.custombutton.config")), renderIn.width / 2, (renderIn.height / 2) - 50 - 40, -1);
 
 			//Draw action type name
-			drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText(Locals.localize("helper.creator.custombutton.config.actiontype")), renderIn.width / 2, (renderIn.height / 2) - 60, -1);
+			drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent(Locals.localize("helper.creator.custombutton.config.actiontype")), renderIn.width / 2, (renderIn.height / 2) - 60, -1);
 
 			this.actionSwitcher.render(matrix, (renderIn.width / 2) - (this.actionSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 45);
 
@@ -122,7 +120,7 @@ public class ButtonActionPopup extends FMPopup {
 			} else {
 				actionDesc = Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc");
 			}
-			drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText(actionDesc), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
+			drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent(actionDesc), renderIn.width / 2, (renderIn.height / 2) - 20, Color.WHITE.getRGB());
 
 			if (action.equals("sendmessage") || action.equals("openlink") || (action.equals("joinserver") || (action.equals("loadworld") || action.equals("openfile") || action.equals("opencustomgui") || action.equals("opengui") || action.equals("movefile") || action.equals("copyfile") || action.equals("deletefile") || action.equals("renamefile") || action.equals("runscript") || action.equals("downloadfile") || action.equals("unpackzip") || action.equals("mutebackgroundsounds") || action.equals("runcmd") || action.equals("copytoclipboard") || action.equals("mimicbutton") || ((customAction != null) && customAction.hasValue())))) {
 				//Set and draw value description
@@ -132,11 +130,11 @@ public class ButtonActionPopup extends FMPopup {
 				} else {
 					valueDesc = Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value");
 				}
-				drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText(Locals.localize("helper.creator.custombutton.config.actionvalue", valueDesc)), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
+				drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue", valueDesc)), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
 
 				this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
 				this.textField.setY((renderIn.height / 2) + 30);
-				this.textField.renderButton(matrix, mouseX, mouseY, MinecraftClient.getInstance().getTickDelta());
+				this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getFrameTime());
 
 				//Set and draw value example
 				String valueExample;
@@ -145,7 +143,7 @@ public class ButtonActionPopup extends FMPopup {
 				} else {
 					valueExample = Locals.localize("helper.creator.custombutton.config.actiontype." + this.actionSwitcher.getSelectedValue() + ".desc.value.example");
 				}
-				drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText(Locals.localize("helper.creator.custombutton.config.actionvalue.example", valueExample)), renderIn.width / 2, (renderIn.height / 2) + 56, Color.WHITE.getRGB());
+				drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent(Locals.localize("helper.creator.custombutton.config.actionvalue.example", valueExample)), renderIn.width / 2, (renderIn.height / 2) + 56, Color.WHITE.getRGB());
 			}
 
 			this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
@@ -157,19 +155,19 @@ public class ButtonActionPopup extends FMPopup {
 	}
 	
 	public void setText(String text) {
-		this.textField.setText("");
-		this.textField.write(text);
+		this.textField.setValue("");
+		this.textField.insertText(text);
 	}
 	
 	public String getInput() {
-		return this.textField.getText();
+		return this.textField.getValue();
 	}
 	
 	public void onEnterPressed(KeyboardData d) {
 		if ((d.keycode == 257) && this.isDisplayed()) {
 			this.setDisplayed(false);
 			if (this.contentCallback != null) {
-				this.contentCallback.accept(this.textField.getText());
+				this.contentCallback.accept(this.textField.getValue());
 			}
 			if (this.typeCallback != null) {
 				this.typeCallback.accept(this.actionSwitcher.getSelectedValue());

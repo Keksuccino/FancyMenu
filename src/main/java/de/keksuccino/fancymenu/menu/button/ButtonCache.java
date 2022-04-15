@@ -1,11 +1,16 @@
 package de.keksuccino.fancymenu.menu.button;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
@@ -16,21 +21,15 @@ import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.reflection.ReflectionHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.option.VideoOptionsScreen;
-import net.minecraft.client.gui.widget.ClickableWidget;
 
 public class ButtonCache {
 
 	private static Map<Long, ButtonData> buttons = new HashMap<Long, ButtonData>();
-	private static Map<Long, ClickableWidget> replaced = new HashMap<Long, ClickableWidget>();
+	private static Map<Long, AbstractWidget> replaced = new HashMap<Long, AbstractWidget>();
 	private static Screen current = null;
 	private static boolean cached = false;
 	private static boolean caching = false;
-	private static Map<String, ClickableWidget> customButtons = new HashMap<String, ClickableWidget>();
+	private static Map<String, AbstractWidget> customButtons = new HashMap<String, AbstractWidget>();
 	
 	@SubscribeEvent
 	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
@@ -64,7 +63,7 @@ public class ButtonCache {
 			}
 			
 			//Don't cache video settings if Optifine is active
-			if ((s != null) && (s instanceof VideoOptionsScreen) && FancyMenu.isOptifineLoaded()) {
+			if ((s != null) && (s instanceof VideoSettingsScreen) && FancyMenu.isOptifineLoaded()) {
 				replaced.clear();
 				buttons.clear();
 				Konkrete.getEventHandler().callEventsFor(new ButtonCachedEvent(s, new ArrayList<ButtonData>(), false));
@@ -87,7 +86,7 @@ public class ButtonCache {
 				return;
 			}
 			
-			if ((s == MinecraftClient.getInstance().currentScreen)) {
+			if ((s == Minecraft.getInstance().screen)) {
 				updateButtons(s);
 			}
 
@@ -107,7 +106,7 @@ public class ButtonCache {
 		}
 		
 		//Don't update video settings buttons if Optifine is active
-		if ((s != null) && (s instanceof VideoOptionsScreen) && FancyMenu.isOptifineLoaded()) {
+		if ((s != null) && (s instanceof VideoSettingsScreen) && FancyMenu.isOptifineLoaded()) {
 			return;
 		}
 
@@ -122,7 +121,7 @@ public class ButtonCache {
 		}
 
 		List<ButtonData> ids = cacheButtons(s, 1000, 1000);
-		List<ButtonData> btns = cacheButtons(s, MinecraftClient.getInstance().getWindow().getScaledWidth(), MinecraftClient.getInstance().getWindow().getScaledHeight());
+		List<ButtonData> btns = cacheButtons(s, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 
 		if (btns.size() == ids.size()) {
 			int i = 0;
@@ -154,24 +153,18 @@ public class ButtonCache {
 		List<Long> ids = new ArrayList<Long>();
 		try {
 			//Resetting the button list
-			Field f0 = ReflectionHelper.findField(Screen.class, "drawables", "field_33816");
-			f0.set(s, new ArrayList<Drawable>());
+			((IMixinScreen)s).getRenderablesFancyMenu().clear();
 			
 			//Setting all important values for the GuiScreen to be able to initialize itself
-			Field f1 = ReflectionHelper.findField(Screen.class, "itemRenderer", "field_22788");
-			f1.set(s, MinecraftClient.getInstance().getItemRenderer());
-			
-			Field f2 = ReflectionHelper.findField(Screen.class, "textRenderer", "field_22793");
-			f2.set(s, MinecraftClient.getInstance().textRenderer);
+			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
 
-			s.init(MinecraftClient.getInstance(), screenWidth, screenHeight);
-			
-			//Reflecting the buttons list field to cache all buttons of the menu
-			Field f = ReflectionHelper.findField(Screen.class, "drawables", "field_33816");
+			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
-			for (Drawable d : (List<Drawable>) f.get(s)) {
-				if (d instanceof ClickableWidget) {
-					ClickableWidget w = (ClickableWidget) d;
+			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+
+			for (Widget d : ((IMixinScreen)s).getRenderablesFancyMenu()) {
+				if (d instanceof AbstractWidget) {
+					AbstractWidget w = (AbstractWidget) d;
 					String idRaw = w.x + "" + w.y;
 					long id = 0;
 					if (MathUtils.isLong(idRaw)) {
@@ -205,7 +198,7 @@ public class ButtonCache {
 	/**
 	 * Returns the button id or -1 if the button has no cached id.
 	 */
-	public static long getIdForButton(ClickableWidget w) {
+	public static long getIdForButton(AbstractWidget w) {
 		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
 				return m.getValue().getId();
@@ -217,7 +210,7 @@ public class ButtonCache {
 	/**
 	 * Returns the button name or null if the button has no cached name.
 	 */
-	public static String getNameForButton(ClickableWidget w) {
+	public static String getNameForButton(AbstractWidget w) {
 		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
 				return m.getValue().label;
@@ -229,7 +222,7 @@ public class ButtonCache {
 	/**
 	 * Returns the button key or null if the button has no cached key.
 	 */
-	public static String getKeyForButton(ClickableWidget w) {
+	public static String getKeyForButton(AbstractWidget w) {
 		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
 			if (m.getValue().getButton() == w) {
 				return m.getValue().getKey();
@@ -286,11 +279,11 @@ public class ButtonCache {
 		customButtons.clear();
 	}
 
-	public static void cacheCustomButton(String id, ClickableWidget w) {
+	public static void cacheCustomButton(String id, AbstractWidget w) {
 		customButtons.put(id, w);
 	}
 
-	public static ClickableWidget getCustomButton(String id) {
+	public static AbstractWidget getCustomButton(String id) {
 		return customButtons.get(id);
 	}
 

@@ -1,16 +1,16 @@
 package de.keksuccino.fancymenu.events;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.widget.PressableWidget;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.components.AbstractButton;
 
 public class RenderWidgetBackgroundEvent extends EventBase {
 	
-	protected PressableWidget widget;
+	protected AbstractButton widget;
 	protected float alpha;
-	protected MatrixStack matrix;
+	protected PoseStack matrix;
 	
-	public RenderWidgetBackgroundEvent(MatrixStack matrix, PressableWidget widget, float alpha) {
+	public RenderWidgetBackgroundEvent(PoseStack matrix, AbstractButton widget, float alpha) {
 		this.widget = widget;
 		this.alpha = alpha;
 		this.matrix = matrix;
@@ -21,7 +21,7 @@ public class RenderWidgetBackgroundEvent extends EventBase {
 		return true;
 	}
 	
-	public PressableWidget getWidget() {
+	public AbstractButton getWidget() {
 		return this.widget;
 	}
 	
@@ -29,13 +29,13 @@ public class RenderWidgetBackgroundEvent extends EventBase {
 		return this.alpha;
 	}
 	
-	public MatrixStack getMatrixStack() {
+	public PoseStack getMatrixStack() {
 		return this.matrix;
 	}
 	
 	public static class Pre extends RenderWidgetBackgroundEvent {
 
-		public Pre(MatrixStack matrix, PressableWidget widget, float alpha) {
+		public Pre(PoseStack matrix, AbstractButton widget, float alpha) {
 			super(matrix, widget, alpha);
 		}
 		
@@ -47,7 +47,7 @@ public class RenderWidgetBackgroundEvent extends EventBase {
 	
 	public static class Post extends RenderWidgetBackgroundEvent {
 
-		public Post(MatrixStack matrix, PressableWidget widget, float alpha) {
+		public Post(PoseStack matrix, AbstractButton widget, float alpha) {
 			super(matrix, widget, alpha);
 		}
 		

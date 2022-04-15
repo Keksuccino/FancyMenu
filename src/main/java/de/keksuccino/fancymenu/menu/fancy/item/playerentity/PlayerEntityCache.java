@@ -6,24 +6,23 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
-
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class PlayerEntityCache {
 	
-	private static volatile Map<String, Identifier> skins = new HashMap<String, Identifier>();
-	private static volatile Map<String, Identifier> capes = new HashMap<String, Identifier>();
+	private static volatile Map<String, ResourceLocation> skins = new HashMap<String, ResourceLocation>();
+	private static volatile Map<String, ResourceLocation> capes = new HashMap<String, ResourceLocation>();
 	private static volatile Map<String, Boolean> slimskin = new HashMap<String, Boolean>();
 	
 	public static boolean isSkinCached(String playerName) {
 		return skins.containsKey(playerName);
 	}
 	
-	public static void cacheSkin(String playerName, Identifier skin) {
+	public static void cacheSkin(String playerName, ResourceLocation skin) {
 		skins.put(playerName, skin);
 	}
 	
-	public static Identifier getSkin(String playerName) {
+	public static ResourceLocation getSkin(String playerName) {
 		return skins.get(playerName);
 	}
 	
@@ -31,11 +30,11 @@ public class PlayerEntityCache {
 		return capes.containsKey(playerName);
 	}
 	
-	public static void cacheCape(String playerName, Identifier cape) {
+	public static void cacheCape(String playerName, ResourceLocation cape) {
 		capes.put(playerName, cape);
 	}
 	
-	public static Identifier getCape(String playerName) {
+	public static ResourceLocation getCape(String playerName) {
 		return capes.get(playerName);
 	}
 	

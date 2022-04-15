@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.awt.Color;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.konkrete.localization.Locals;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -10,10 +13,6 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class WindowSizePopup extends FMPopup {
 
@@ -42,18 +41,18 @@ public class WindowSizePopup extends FMPopup {
 		});
 		this.addButton(doneButton);
 		
-		this.widthText = new AdvancedTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
+		this.widthText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
 		if (type == ActionType.BIGGERTHAN) {
-			this.widthText.setText("" + parent.biggerThanWidth);
+			this.widthText.setValue("" + parent.biggerThanWidth);
 		} else {
-			this.widthText.setText("" + parent.smallerThanWidth);
+			this.widthText.setValue("" + parent.smallerThanWidth);
 		}
 		
-		this.heightText = new AdvancedTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
+		this.heightText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
 		if (type == ActionType.BIGGERTHAN) {
-			this.heightText.setText("" + parent.biggerThanHeight);
+			this.heightText.setValue("" + parent.biggerThanHeight);
 		} else {
-			this.heightText.setText("" + parent.smallerThanHeight);
+			this.heightText.setValue("" + parent.smallerThanHeight);
 		}
 		
 		KeyboardHandler.addKeyPressedListener(this::onEnterPressed);
@@ -61,30 +60,30 @@ public class WindowSizePopup extends FMPopup {
 	}
 	
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
 		
-		float partial = MinecraftClient.getInstance().getTickDelta();
-		TextRenderer font = MinecraftClient.getInstance().textRenderer;	
+		float partial = Minecraft.getInstance().getFrameTime();
+		Font font = Minecraft.getInstance().font;	
 		
 		if (this.type == ActionType.BIGGERTHAN) {
-			drawCenteredText(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.biggerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
+			drawCenteredString(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.biggerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 		} else {
-			drawCenteredText(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.smallerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
+			drawCenteredString(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.smallerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 		}
 		
-		drawCenteredText(matrix, font, Locals.localize("general.width"), renderIn.width / 2, (renderIn.height / 2) - 80, Color.WHITE.getRGB());
+		drawCenteredString(matrix, font, Locals.localize("general.width"), renderIn.width / 2, (renderIn.height / 2) - 80, Color.WHITE.getRGB());
 		this.widthText.x = (renderIn.width / 2) - (this.widthText.getWidth() / 2);
 		this.widthText.y = (renderIn.height / 2) - 65;
 		this.widthText.render(matrix, mouseX, mouseY, partial);
 		
-		drawCenteredText(matrix, font, Locals.localize("general.height"), renderIn.width / 2, (renderIn.height / 2) - 37, Color.WHITE.getRGB());
+		drawCenteredString(matrix, font, Locals.localize("general.height"), renderIn.width / 2, (renderIn.height / 2) - 37, Color.WHITE.getRGB());
 		this.heightText.x = (renderIn.width / 2) - (this.heightText.getWidth() / 2);
 		this.heightText.y = (renderIn.height / 2) - 22;
 		this.heightText.render(matrix, mouseX, mouseY, partial);
 
-		drawCenteredText(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + MinecraftClient.getInstance().getWindow().getWidth(), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
-		drawCenteredText(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + MinecraftClient.getInstance().getWindow().getHeight(), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
+		drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
+		drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
 		
 		this.doneButton.x = (renderIn.width / 2) - this.doneButton.getWidth() - 5;
 		this.doneButton.y = (renderIn.height / 2) + 80;
@@ -98,9 +97,9 @@ public class WindowSizePopup extends FMPopup {
 	
 	private void onDoneButtonPressed() {
 		try {
-			if (MathUtils.isInteger(this.widthText.getText()) && MathUtils.isInteger(this.heightText.getText())) {
-				int w = Integer.parseInt(this.widthText.getText());
-				int h = Integer.parseInt(this.heightText.getText());
+			if (MathUtils.isInteger(this.widthText.getValue()) && MathUtils.isInteger(this.heightText.getValue())) {
+				int w = Integer.parseInt(this.widthText.getValue());
+				int h = Integer.parseInt(this.heightText.getValue());
 				if (type == ActionType.BIGGERTHAN) {
 					if ((this.parent.biggerThanWidth != w) || (this.parent.biggerThanHeight != h)) {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());

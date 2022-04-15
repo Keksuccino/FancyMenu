@@ -11,7 +11,7 @@ import java.util.Set;
 
 public class FMMixinPlugin implements IMixinConfigPlugin {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger("fancymenu/FMMixinPlugin");
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -25,7 +25,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (isKonkreteLoaded()) {
-            LOGGER.info("[FANCYMENU] APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
+            LOGGER.info("APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
             return true;
         }
         return false;

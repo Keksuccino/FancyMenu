@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.api.buttonaction.example;
 
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.SaveLevelScreen;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.network.chat.TextComponent;
 
 public class ExampleButtonActionContainerWithValue extends ButtonActionContainer {
 
@@ -31,7 +31,7 @@ public class ExampleButtonActionContainerWithValue extends ButtonActionContainer
         //This will open a new instance of the dirt message screen, when a button with this custom action is getting clicked
         //and will show the action value as message
         if (value != null) {
-            MinecraftClient.getInstance().setScreen(new SaveLevelScreen(new LiteralText(value)));
+            Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(new TextComponent(value)));
         }
 
     }

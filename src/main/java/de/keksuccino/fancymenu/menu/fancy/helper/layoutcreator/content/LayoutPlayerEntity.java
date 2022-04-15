@@ -4,8 +4,11 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.TextComponent;
 import com.google.common.net.UrlEscapers;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
@@ -22,10 +25,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.web.WebUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 
 public class LayoutPlayerEntity extends LayoutElement {
 	
@@ -385,10 +384,10 @@ public class LayoutPlayerEntity extends LayoutElement {
 			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			if (this.getEntity().isSlimSkin()) {
 				this.getEntity().setSlimSkin(false);
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.slim.off")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.slim.off")));
 			} else {
 				this.getEntity().setSlimSkin(true);
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.slim.on")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.slim.on")));
 			}
 		});
 		slimB.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.playerentity.slim.btndesc"), "%n%"));
@@ -402,10 +401,10 @@ public class LayoutPlayerEntity extends LayoutElement {
 			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			if (this.getEntity().crouching) {
 				this.getEntity().crouching = false;
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.crouching.off")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.crouching.off")));
 			} else {
 				this.getEntity().crouching = true;
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.crouching.on")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.crouching.on")));
 			}
 		});
 		crouchingB.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.playerentity.crouching.btndesc"), "%n%"));
@@ -419,10 +418,10 @@ public class LayoutPlayerEntity extends LayoutElement {
 			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			if (this.getEntity().showName) {
 				this.getEntity().showName = false;
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.showname.off")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.showname.off")));
 			} else {
 				this.getEntity().showName = true;
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.showname.on")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.showname.on")));
 			}
 		});
 		showNameB.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.playerentity.showname.btndesc"), "%n%"));
@@ -436,10 +435,10 @@ public class LayoutPlayerEntity extends LayoutElement {
 			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			if (this.getEntity().hasParrot) {
 				this.getEntity().hasParrot = false;
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.parrot.off")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.parrot.off")));
 			} else {
 				this.getEntity().hasParrot = true;
-				press.setMessage(new LiteralText(Locals.localize("helper.creator.items.playerentity.parrot.on")));
+				press.setMessage(new TextComponent(Locals.localize("helper.creator.items.playerentity.parrot.on")));
 			}
 		});
 		parrotB.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.playerentity.parrot.btndesc"), "%n%"));
@@ -448,7 +447,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 	}
 
 	@Override
-	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
+	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
 		fill(matrix, this.getEntityPosX(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY() + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
@@ -459,7 +458,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		fill(matrix, this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth() + 1, this.getEntityPosY() + this.object.getHeight(), Color.BLUE.getRGB());
 
 		//Render pos and size values
-		TextRenderer font = MinecraftClient.getInstance().textRenderer;
+		Font font = Minecraft.getInstance().font;
 		RenderUtils.setScale(matrix, 0.5F);
 		font.draw(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 35, Color.WHITE.getRGB());
 		font.draw(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getObject().scale, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 26, Color.WHITE.getRGB());
@@ -472,7 +471,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 	}
 
 	@Override
-	protected void renderHighlightBorder(MatrixStack matrix) {
+	protected void renderHighlightBorder(PoseStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
 
 		//horizontal line top
@@ -495,11 +494,11 @@ public class LayoutPlayerEntity extends LayoutElement {
 	}
 	
 	private int getEntityPosX() {
-		return (int) (this.getObject().getPosX(this.handler) - ((this.getObject().entity.getWidth()*this.getObject().scale) / 2));
+		return (int) (this.getObject().getPosX(this.handler) - ((this.getObject().entity.getBbWidth()*this.getObject().scale) / 2));
 	}
 	
 	private int getEntityPosY() {
-		return (int) (this.getObject().getPosY(this.handler) - (this.getObject().entity.getHeight()*this.getObject().scale));
+		return (int) (this.getObject().getPosY(this.handler) - (this.getObject().entity.getBbHeight()*this.getObject().scale));
 	}
 	
 	public PlayerEntityCustomizationItem getObject() {
@@ -542,8 +541,8 @@ public class LayoutPlayerEntity extends LayoutElement {
 		}
 		
 		this.getObject().scale = scale;
-		this.setWidth((int)(this.getObject().entity.getWidth()*scale));
-		this.setHeight((int)(this.getObject().entity.getHeight()*scale));
+		this.setWidth((int)(this.getObject().entity.getBbWidth()*scale));
+		this.setHeight((int)(this.getObject().entity.getBbHeight()*scale));
 	}
 
 	@Override

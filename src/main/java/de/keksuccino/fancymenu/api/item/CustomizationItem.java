@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.api.item;
 
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;

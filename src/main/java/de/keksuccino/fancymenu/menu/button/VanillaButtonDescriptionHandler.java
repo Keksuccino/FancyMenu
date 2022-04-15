@@ -3,9 +3,11 @@ package de.keksuccino.fancymenu.menu.button;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
@@ -13,14 +15,10 @@ import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class VanillaButtonDescriptionHandler {
 	
-	private static Map<ClickableWidget, String> descriptions = new HashMap<ClickableWidget, String>();
+	private static Map<AbstractWidget, String> descriptions = new HashMap<AbstractWidget, String>();
 	
 	public static void init() {
 		Konkrete.getEventHandler().registerEventsFrom(new VanillaButtonDescriptionHandler());
@@ -33,23 +31,23 @@ public class VanillaButtonDescriptionHandler {
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void onDrawScreen(DrawScreenEvent.Post e) {
-		for (Map.Entry<ClickableWidget, String> m : descriptions.entrySet()) {
-			if (m.getKey().isHovered()) {
+		for (Map.Entry<AbstractWidget, String> m : descriptions.entrySet()) {
+			if (m.getKey().isHoveredOrFocused()) {
 				renderDescription(e.getMatrixStack(), e.getMouseX(), e.getMouseY(), m.getValue());
 				break;
 			}
 		}
 	}
 	
-	public static void setDescriptionFor(ClickableWidget w, String desc) {
+	public static void setDescriptionFor(AbstractWidget w, String desc) {
 		descriptions.put(w, desc);
 	}
 	
-	private static void renderDescriptionBackground(MatrixStack matrix, int x, int y, int width, int height) {
-		DrawableHelper.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
+	private static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
+		GuiComponent.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
 	}
 	
-	private static void renderDescription(MatrixStack matrix, int mouseX, int mouseY, String desc) {
+	private static void renderDescription(PoseStack matrix, int mouseX, int mouseY, String desc) {
 		if (desc != null) {
 			int width = 10;
 			int height = 10;
@@ -58,7 +56,7 @@ public class VanillaButtonDescriptionHandler {
 			
 			//Getting the longest string from the list to render the background with the correct width
 			for (String s : descArray) {
-				int i = MinecraftClient.getInstance().textRenderer.getWidth(s) + 10;
+				int i = Minecraft.getInstance().font.width(s) + 10;
 				if (i > width) {
 					width = i;
 				}
@@ -68,11 +66,11 @@ public class VanillaButtonDescriptionHandler {
 			mouseX += 5;
 			mouseY += 5;
 			
-			if (MinecraftClient.getInstance().currentScreen.width < mouseX + width) {
+			if (Minecraft.getInstance().screen.width < mouseX + width) {
 				mouseX -= width + 10;
 			}
 			
-			if (MinecraftClient.getInstance().currentScreen.height < mouseY + height) {
+			if (Minecraft.getInstance().screen.height < mouseY + height) {
 				mouseY -= height + 10;
 			}
 			
@@ -84,7 +82,7 @@ public class VanillaButtonDescriptionHandler {
 
 			int i2 = 5;
 			for (String s : descArray) {
-				DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+				GuiComponent.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
 				i2 += 10;
 			}
 			

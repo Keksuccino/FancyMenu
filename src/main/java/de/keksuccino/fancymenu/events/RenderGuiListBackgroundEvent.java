@@ -1,16 +1,16 @@
 package de.keksuccino.fancymenu.events;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.widget.EntryListWidget;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 
 @SuppressWarnings("rawtypes")
 public class RenderGuiListBackgroundEvent extends EventBase {
 	
-	protected EntryListWidget list;
-	protected MatrixStack matrix;
+	protected AbstractSelectionList list;
+	protected PoseStack matrix;
 	
-	public RenderGuiListBackgroundEvent(MatrixStack matrix, EntryListWidget list) {
+	public RenderGuiListBackgroundEvent(PoseStack matrix, AbstractSelectionList list) {
 		this.list = list;
 		this.matrix = matrix;
 	}
@@ -20,17 +20,17 @@ public class RenderGuiListBackgroundEvent extends EventBase {
 		return false;
 	}
 	
-	public EntryListWidget getList() {
+	public AbstractSelectionList getList() {
 		return this.list;
 	}
 
-	public MatrixStack getMatrixStack() {
+	public PoseStack getMatrixStack() {
 		return this.matrix;
 	}
 	
 	public static class Pre extends RenderGuiListBackgroundEvent {
 
-		public Pre(MatrixStack matrix, EntryListWidget list) {
+		public Pre(PoseStack matrix, AbstractSelectionList list) {
 			super(matrix, list);
 		}
 
@@ -38,7 +38,7 @@ public class RenderGuiListBackgroundEvent extends EventBase {
 	
 	public static class Post extends RenderGuiListBackgroundEvent {
 
-		public Post(MatrixStack matrix, EntryListWidget list) {
+		public Post(PoseStack matrix, AbstractSelectionList list) {
 			super(matrix, list);
 		}
 		

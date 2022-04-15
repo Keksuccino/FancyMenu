@@ -6,13 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.gui.screen.Screen;
 
 public class CustomGuiLoader {
 	

@@ -4,10 +4,9 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import net.minecraft.client.MinecraftClient;
-
 import java.util.Calendar;
 import java.util.Locale;
+import net.minecraft.client.Minecraft;
 
 public class VisibilityRequirementHandler {
 
@@ -26,10 +25,10 @@ public class VisibilityRequirementHandler {
     public static void update() {
 
         //VR: World Loaded
-        worldLoaded = (MinecraftClient.getInstance().world != null);
+        worldLoaded = (Minecraft.getInstance().level != null);
 
         //VR: Is Singleplayer & Is Multiplayer
-        isSingleplayer = MinecraftClient.getInstance().isIntegratedServerRunning();
+        isSingleplayer = Minecraft.getInstance().hasSingleplayerServer();
         if (!worldLoaded) {
             isSingleplayer = false;
         }
@@ -43,13 +42,13 @@ public class VisibilityRequirementHandler {
         }
 
         //VR: Is Window Width/Height X
-        windowWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        windowHeight = MinecraftClient.getInstance().getWindow().getScaledHeight();
+        windowWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        windowHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 
     }
 
     public static boolean isMacOS() {
-        return MinecraftClient.IS_SYSTEM_MAC;
+        return Minecraft.ON_OSX;
     }
 
     public static boolean isWindows() {

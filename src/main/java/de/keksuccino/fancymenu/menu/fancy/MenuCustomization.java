@@ -4,7 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
@@ -22,8 +23,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 
 public class MenuCustomization {
 	
@@ -181,7 +180,7 @@ public class MenuCustomization {
 		if (screen == null) {
 			return false;
 		}
-		if (MinecraftClient.getInstance().currentScreen != screen) {
+		if (Minecraft.getInstance().screen != screen) {
 			return false;
 		}
 		return true;
@@ -241,13 +240,13 @@ public class MenuCustomization {
 	}
 
 	public static void reloadCurrentMenu() {
-		Screen s = MinecraftClient.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if (isMenuCustomizable(s)) {
 				setIsNewMenu(true);
 				SoftMenuReloadEvent e = new SoftMenuReloadEvent(s);
 				Konkrete.getEventHandler().callEventsFor(e);
-				MinecraftClient.getInstance().setScreen(s);
+				Minecraft.getInstance().setScreen(s);
 			}
 		}
 	}

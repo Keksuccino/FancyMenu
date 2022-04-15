@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.api.background;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.Nonnull;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.screens.Screen;
 
 public abstract class MenuBackground {
 
@@ -39,7 +39,13 @@ public abstract class MenuBackground {
      * @param screen The screen this background is getting rendered in.
      * @param keepAspectRatio If the background should keep its aspect ratio or if it should get stretched to the screen size.
      */
-    public abstract void render(MatrixStack matrix, Screen screen, boolean keepAspectRatio);
+    public abstract void render(PoseStack matrix, Screen screen, boolean keepAspectRatio);
+
+    /**
+     * Called when the Clear/Reset Background button of the editor is pressed to remove this background.
+     */
+    public void onResetBackground() {
+    }
 
     /**
      * The background identifier of this menu background.

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -11,12 +12,6 @@ import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-
 import java.awt.*;
 import java.io.File;
 import java.time.Instant;
@@ -26,6 +21,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.function.Consumer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
 
 public class ChooseSavedSetupPopup extends FMPopup {
 
@@ -68,7 +67,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
     }
 
-    public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+    public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 
         super.render(matrix, mouseX, mouseY, renderIn);
 
@@ -87,7 +86,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
         fill(matrix, 0, 0, renderIn.width, 40, this.overlayColor.getRGB());
         fill(matrix, 0, renderIn.height - 60, renderIn.width, renderIn.height, this.overlayColor.getRGB());
 
-        drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, "§l" + Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), renderIn.width / 2, 17, Color.WHITE.getRGB());
+        drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), renderIn.width / 2, 17, Color.WHITE.getRGB());
 
         this.chooseButton.x = renderIn.width / 2 - this.chooseButton.getWidth() - 5;
         this.chooseButton.y = renderIn.height - 40;
@@ -178,14 +177,14 @@ public class ChooseSavedSetupPopup extends FMPopup {
         }
     }
 
-    private static void renderDescription(MatrixStack matrix, int mouseX, int mouseY, String... desc) {
+    private static void renderDescription(PoseStack matrix, int mouseX, int mouseY, String... desc) {
         if (desc != null) {
             int width = 10;
             int height = 10;
 
             //Getting the longest string from the list to render the background with the correct width
             for (String s : desc) {
-                int i = MinecraftClient.getInstance().textRenderer.getWidth(s) + 10;
+                int i = Minecraft.getInstance().font.width(s) + 10;
                 if (i > width) {
                     width = i;
                 }
@@ -195,11 +194,11 @@ public class ChooseSavedSetupPopup extends FMPopup {
             mouseX += 5;
             mouseY += 5;
 
-            if (MinecraftClient.getInstance().currentScreen.width < mouseX + width) {
+            if (Minecraft.getInstance().screen.width < mouseX + width) {
                 mouseX -= width + 10;
             }
 
-            if (MinecraftClient.getInstance().currentScreen.height < mouseY + height) {
+            if (Minecraft.getInstance().screen.height < mouseY + height) {
                 mouseY -= height + 10;
             }
 
@@ -209,14 +208,14 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
             int i2 = 5;
             for (String s : desc) {
-                drawTextWithShadow(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText(s), mouseX + 5, mouseY + i2, -1);
+                drawString(matrix, Minecraft.getInstance().font, new TextComponent(s), mouseX + 5, mouseY + i2, -1);
                 i2 += 10;
             }
 
         }
     }
 
-    private static void renderDescriptionBackground(MatrixStack matrix, int x, int y, int width, int height) {
+    private static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
         Color borderColor = Color.WHITE;
         Color backColor = new Color(26, 26, 26, 250);
         //background
@@ -248,7 +247,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
         }
 
         @Override
-        public void render(MatrixStack matrix) {
+        public void render(PoseStack matrix) {
             if (this.isHovered() && this.isVisible() && MouseInput.isLeftMouseDown()) {
                 this.focused = true;
                 this.chooser.focused = this;
@@ -266,22 +265,22 @@ public class ChooseSavedSetupPopup extends FMPopup {
         }
 
         @Override
-        public void renderEntry(MatrixStack matrix) {
+        public void renderEntry(PoseStack matrix) {
 
             //Render FM logo icon
             RenderSystem.enableBlend();
             RenderUtils.bindTexture(MenuBar.FM_LOGO_TEXTURE);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            drawTexture(matrix, this.x, this.y, 0.0F, 0.0F, 20, 20, 20, 20);
+            blit(matrix, this.x, this.y, 0.0F, 0.0F, 20, 20, 20, 20);
 
             //Render setup name
-            TextRenderer font = MinecraftClient.getInstance().textRenderer;
+            Font font = Minecraft.getInstance().font;
             String name = this.setupFolder.getName();
             int maxNameWidth = this.getWidth() - 30 - 8;
-            if (font.getWidth(name) > maxNameWidth) {
-                name = font.trimToWidth(name, maxNameWidth) + "..";
+            if (font.width(name) > maxNameWidth) {
+                name = font.plainSubstrByWidth(name, maxNameWidth) + "..";
             }
-            font.drawWithShadow(matrix, name, this.x + 30, this.y + 7, -1);
+            font.drawShadow(matrix, name, this.x + 30, this.y + 7, -1);
 
             if (!MouseInput.isLeftMouseDown() && this.clickPre) {
                 this.click = true;
@@ -310,7 +309,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
         }
 
-        private void renderBorder(MatrixStack matrix) {
+        private void renderBorder(PoseStack matrix) {
             fill(matrix, this.x, this.y, this.x + 1, this.y + this.getHeight(), Color.WHITE.getRGB());
             fill(matrix, this.x + this.getWidth() - 1, this.y, this.x + this.getWidth(), this.y + this.getHeight(), Color.WHITE.getRGB());
             fill(matrix, this.x, this.y, this.x + this.getWidth(), this.y + 1, Color.WHITE.getRGB());

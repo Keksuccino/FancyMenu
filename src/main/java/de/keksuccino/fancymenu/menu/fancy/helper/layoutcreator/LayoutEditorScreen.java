@@ -7,9 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
@@ -66,11 +69,6 @@ import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import de.keksuccino.konkrete.web.WebUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.Window;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 
 public class LayoutEditorScreen extends Screen {
 
@@ -152,7 +150,7 @@ public class LayoutEditorScreen extends Screen {
 	protected LayoutEditorUI ui = new LayoutEditorUI(this);
 
 	public LayoutEditorScreen(Screen screenToCustomize) {
-		super(new LiteralText(""));
+		super(new TextComponent(""));
 		this.screen = screenToCustomize;
 
 		if (!initDone) {
@@ -183,28 +181,28 @@ public class LayoutEditorScreen extends Screen {
 		this.propertiesRightclickMenu.setAlwaysOnTop(true);
 
 		if (this.scale > 0) {
-			MinecraftClient.getInstance().getWindow().setScaleFactor(this.scale);
+			Minecraft.getInstance().getWindow().setGuiScale(this.scale);
 		} else {
-			MinecraftClient.getInstance().getWindow().setScaleFactor(MinecraftClient.getInstance().getWindow().calculateScaleFactor(MinecraftClient.getInstance().options.guiScale, MinecraftClient.getInstance().forcesUnicodeFont()));
+			Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
 		}
-		this.height = MinecraftClient.getInstance().getWindow().getScaledHeight();
-		this.width = MinecraftClient.getInstance().getWindow().getScaledWidth();
+		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
 		if ((this.autoScalingWidth != 0) && (this.autoScalingHeight != 0)) {
-			Window m = MinecraftClient.getInstance().getWindow();
-			double guiWidth = this.width * m.getScaleFactor();
-			double guiHeight = this.height * m.getScaleFactor();
+			Window m = Minecraft.getInstance().getWindow();
+			double guiWidth = this.width * m.getGuiScale();
+			double guiHeight = this.height * m.getGuiScale();
 			double percentX = (guiWidth / (double)this.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getScaleFactor();
-			double newScaleY = (percentY / 100.0D) * m.getScaleFactor();
+			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
 
-			m.setScaleFactor(newScale);
-			this.width = m.getScaledWidth();
-			this.height = m.getScaledHeight();
+			m.setGuiScale(newScale);
+			this.width = m.getGuiScaledWidth();
+			this.height = m.getGuiScaledHeight();
 		} else if (this.scale <= 0) {
-			MinecraftClient.getInstance().getWindow().setScaleFactor(MinecraftClient.getInstance().getWindow().calculateScaleFactor(MinecraftClient.getInstance().options.guiScale, MinecraftClient.getInstance().forcesUnicodeFont()));
+			Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
 		}
 
 		this.focusedObjects.clear();
@@ -395,7 +393,7 @@ public class LayoutEditorScreen extends Screen {
 					MenuHandlerBase.ButtonCustomizationContainer cc = new MenuHandlerBase.ButtonCustomizationContainer();
 					PropertiesSection dummySec = new PropertiesSection("customization");
 					cc.visibilityRequirementContainer = new VisibilityRequirementContainer(dummySec, new CustomizationItemBase(dummySec) {
-						@Override public void render(MatrixStack matrix, Screen menu) throws IOException {}
+						@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 					});
 					this.vanillaButtonCustomizationContainers.put(b.getId(), cc);
 				}
@@ -514,7 +512,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
 
 		//Handle object focus and update the top hovered object
 		if (!MouseInput.isVanillaInputBlocked()) {
@@ -659,7 +657,7 @@ public class LayoutEditorScreen extends Screen {
 
 	}
 
-	protected void drawGrid(MatrixStack matrix) {
+	protected void drawGrid(PoseStack matrix) {
 		if (FancyMenu.config.getOrDefault("showgrid", false)) {
 
 			Color cNormal = new Color(255, 255, 255, 100);
@@ -716,7 +714,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
-	protected void renderVanillaButtons(MatrixStack matrix, int mouseX, int mouseY) {
+	protected void renderVanillaButtons(PoseStack matrix, int mouseX, int mouseY) {
 		for (LayoutElement l : this.vanillaButtonContent) {
 			if (!this.isHidden(l)) {
 				if (!this.isFocused(l)) {
@@ -726,7 +724,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
-	protected void renderCreatorBackground(MatrixStack matrix) {
+	protected void renderCreatorBackground(PoseStack matrix) {
 		RenderSystem.enableBlend();
 		fill(matrix, 0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
 
@@ -735,7 +733,7 @@ public class LayoutEditorScreen extends Screen {
 
 			if (!this.panorama) {
 				if (!this.keepBackgroundAspectRatio) {
-					drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					int w = this.backgroundTexture.getWidth();
 					int h = this.backgroundTexture.getHeight();
@@ -743,9 +741,9 @@ public class LayoutEditorScreen extends Screen {
 					int wfinal = (int)(this.height * ratio);
 					int screenCenterX = this.width / 2;
 					if (wfinal < this.width) {
-						drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+						blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 					} else {
-						drawTexture(CurrentScreenHandler.getMatrixStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, this.height + 1, wfinal + 1, this.height + 1);
+						blit(CurrentScreenHandler.getMatrixStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, this.height + 1, wfinal + 1, this.height + 1);
 					}
 				}
 			} else {
@@ -797,7 +795,7 @@ public class LayoutEditorScreen extends Screen {
 					}
 				}
 				if (wfinal <= this.width) {
-					drawTexture(matrix, 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					blit(matrix, 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height + 1);
 				}
@@ -1246,8 +1244,8 @@ public class LayoutEditorScreen extends Screen {
 		this.history.saveSnapshot(this.history.createSnapshot());
 
 		int w = 100;
-		if (MinecraftClient.getInstance().textRenderer.getWidth(label) + 10 > w) {
-			w = MinecraftClient.getInstance().textRenderer.getWidth(label) + 10;
+		if (Minecraft.getInstance().font.width(label) + 10 > w) {
+			w = Minecraft.getInstance().font.width(label) + 10;
 		}
 		LayoutButton b = new LayoutButton(new MenuHandlerBase.ButtonCustomizationContainer(), w, 20, label, null, this);
 		b.object.posY = (int)(this.ui.bar.getHeight() * UIBase.getUIScale());
@@ -1471,7 +1469,7 @@ public class LayoutEditorScreen extends Screen {
 				this.history.editor = neweditor;
 				neweditor.single = ((PreloadedLayoutEditorScreen)this).single;
 
-				MinecraftClient.getInstance().setScreen(neweditor);
+				Minecraft.getInstance().setScreen(neweditor);
 			}
 
 		} else {
@@ -1503,7 +1501,7 @@ public class LayoutEditorScreen extends Screen {
 							this.history.editor = neweditor;
 							neweditor.single = file;
 
-							MinecraftClient.getInstance().setScreen(neweditor);
+							Minecraft.getInstance().setScreen(neweditor);
 						}
 					} else {
 						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
@@ -1569,7 +1567,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected static void onShortcutPressed(KeyboardData d) {
-		Screen c = MinecraftClient.getInstance().currentScreen;
+		Screen c = Minecraft.getInstance().screen;
 		if (c instanceof LayoutEditorScreen) {
 
 			//CTRL + C
@@ -1639,7 +1637,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected static void onArrowKeysPressed(KeyboardData d) {
-		Screen c = MinecraftClient.getInstance().currentScreen;
+		Screen c = Minecraft.getInstance().screen;
 		if (c instanceof LayoutEditorScreen) {
 			if (((LayoutEditorScreen) c).isObjectFocused() && !PopupHandler.isPopupActive()) {
 

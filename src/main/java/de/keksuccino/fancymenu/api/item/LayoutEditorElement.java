@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.api.item;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.util.math.MatrixStack;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,12 +60,12 @@ public abstract class LayoutEditorElement extends LayoutElement {
      *
      * You don't need to touch this method in most cases.
      *
-     * @param matrix The {@link MatrixStack} used to render {@link LayoutEditorElement}s.
+     * @param matrix The {@link PoseStack} used to render {@link LayoutEditorElement}s.
      * @param mouseX X position of the mouse.
      * @param mouseY Y position of the mouse.
      */
     @Override
-    public void render(MatrixStack matrix, int mouseX, int mouseY) {
+    public void render(PoseStack matrix, int mouseX, int mouseY) {
         super.render(matrix, mouseX, mouseY);
     }
 

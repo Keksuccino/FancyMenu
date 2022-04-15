@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.api.visibilityrequirements.example;
 
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import net.minecraft.client.MinecraftClient;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.Minecraft;
 
 public class ExampleVisibilityRequirement extends VisibilityRequirement {
 
@@ -27,7 +27,7 @@ public class ExampleVisibilityRequirement extends VisibilityRequirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         //In this example, we just check if the window is in fullscreen mode and if it is, then we return true.
-        return MinecraftClient.getInstance().options.fullscreen;
+        return Minecraft.getInstance().options.fullscreen;
 
     }
 

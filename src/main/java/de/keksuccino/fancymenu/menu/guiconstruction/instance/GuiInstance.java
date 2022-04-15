@@ -2,9 +2,8 @@ package de.keksuccino.fancymenu.menu.guiconstruction.instance;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
-
+import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
-import net.minecraft.client.gui.screen.Screen;
 
 public class GuiInstance {
 

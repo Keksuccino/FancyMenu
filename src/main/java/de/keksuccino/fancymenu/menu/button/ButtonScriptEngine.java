@@ -11,7 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import com.google.common.io.Files;
 
 import de.keksuccino.fancymenu.FancyMenu;
@@ -33,12 +38,6 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConnectScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.network.ServerAddress;
-import net.minecraft.client.network.ServerInfo;
 
 public class ButtonScriptEngine {
 
@@ -84,12 +83,12 @@ public class ButtonScriptEngine {
 				openWebLink(value);
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
-				if (MinecraftClient.getInstance().world != null) {
-					MinecraftClient.getInstance().player.sendChatMessage(value);
+				if (Minecraft.getInstance().level != null) {
+					Minecraft.getInstance().player.chat(value);
 				}
 			}
 			if (action.equalsIgnoreCase("quitgame")) {
-				MinecraftClient.getInstance().scheduleStop();
+				Minecraft.getInstance().stop();
 			}
 			if (action.equalsIgnoreCase("joinserver")) {
 				if (value != null) {
@@ -102,17 +101,17 @@ public class ButtonScriptEngine {
 							port = Integer.parseInt(portString);
 						}
 					}
-					Screen s = MinecraftClient.getInstance().currentScreen;
+					Screen s = Minecraft.getInstance().screen;
 					if (s == null) {
 						s = new TitleScreen();
 					}
-					ConnectScreen.connect(s, MinecraftClient.getInstance(), new ServerAddress(ip, port), new ServerInfo("", value.replace(" ", ""), false));
+					ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), new ServerData("", value.replace(" ", ""), false));
 				}
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
-				if (MinecraftClient.getInstance().getLevelStorage().levelExists(value)) {
+				if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
 					//launchIntegratedServer
-					MinecraftClient.getInstance().startIntegratedServer(value);
+					Minecraft.getInstance().loadLevel(value);
 				}
 			}
 			if (action.equalsIgnoreCase("openfile")) { //for files and folders
@@ -151,13 +150,13 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("opencustomgui")) {
 				if (CustomGuiLoader.guiExists(value)) {
-					MinecraftClient.getInstance().setScreen(CustomGuiLoader.getGui(value, MinecraftClient.getInstance().currentScreen, null));
+					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
 				Screen s = GuiConstructor.tryToConstruct(value);
 				if (s != null) {
-					MinecraftClient.getInstance().setScreen(s);
+					Minecraft.getInstance().setScreen(s);
 				} else {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
 				}
@@ -252,10 +251,10 @@ public class ButtonScriptEngine {
 				runCMD(value);
 			}
 			if (action.equalsIgnoreCase("closegui")) {
-				MinecraftClient.getInstance().setScreen(null);
+				Minecraft.getInstance().setScreen(null);
 			}
 			if (action.equalsIgnoreCase("copytoclipboard")) {
-				MinecraftClient.getInstance().keyboard.setClipboard(value);
+				Minecraft.getInstance().keyboardHandler.setClipboard(value);
 			}
 			if (action.equalsIgnoreCase("mimicbutton")) {
 				if ((value != null) && value.contains(":")) {
@@ -287,11 +286,11 @@ public class ButtonScriptEngine {
 		}
 	}
 
-	private static void openWebLink(String url) {
+	public static void openWebLink(String url) {
 		try {
 			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
 			URL u = new URL(url);
-			if (!MinecraftClient.IS_SYSTEM_MAC) {
+			if (!Minecraft.ON_OSX) {
 				if (s.contains("win")) {
 					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
 				} else {
@@ -308,7 +307,7 @@ public class ButtonScriptEngine {
 		}
 	}
 
-	private static void openFile(File f) {
+	public static void openFile(File f) {
 		try {
 			openWebLink(f.toURI().toURL().toString());
 		} catch (Exception e) {
@@ -317,7 +316,7 @@ public class ButtonScriptEngine {
 	}
 	
 	private  static boolean isMacOS() {
-		return MinecraftClient.IS_SYSTEM_MAC;
+		return Minecraft.ON_OSX;
 	}
 
 	private static boolean isWindows() {

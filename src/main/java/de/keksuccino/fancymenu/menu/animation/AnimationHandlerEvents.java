@@ -7,9 +7,8 @@ import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.events.client.GuiOpenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 public class AnimationHandlerEvents {
 	
@@ -49,7 +48,7 @@ public class AnimationHandlerEvents {
 	@SubscribeEvent
 	public void onTick(ClientTickEvent.Pre e) {
 		//Stopping audio for all advanced animations if no screen is being displayed
-		if ((MinecraftClient.getInstance().currentScreen == null) && AnimationHandler.isReady() && !this.idle) {
+		if ((Minecraft.getInstance().screen == null) && AnimationHandler.isReady() && !this.idle) {
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 				if (r instanceof AdvancedAnimation) {
 					((AdvancedAnimation)r).stopAudio();

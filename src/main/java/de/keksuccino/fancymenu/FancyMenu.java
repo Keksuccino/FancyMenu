@@ -3,8 +3,6 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.api.background.example.no_input_string.ExampleMenuBackgroundType;
-import de.keksuccino.fancymenu.api.background.example.with_input_string.ExampleMenuBackgroundTypeWithInputString;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.events.CommandsRegisterEvent;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
@@ -17,7 +15,6 @@ import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
-import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
@@ -30,13 +27,14 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.Identifier;
+import net.minecraft.SharedConstants;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.6.3";
+	public static final String VERSION = "2.6.4";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -131,8 +129,6 @@ public class FancyMenu implements ModInitializer {
 			SetupSharingEngine.init();
 
 			CustomLocalsHandler.loadLocalizations();
-			
-	    	GameMusicHandler.init();
 
         	GuiConstructor.init();
 
@@ -150,11 +146,11 @@ public class FancyMenu implements ModInitializer {
 			f.mkdirs();
 		}
 		
-		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "en_us.local"), "en_us", f.getPath());
-		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
-		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
-		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
-		Locals.copyLocalsFileToDir(new Identifier("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "en_us.local"), "en_us", f.getPath());
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
 		
 		Locals.getLocalsFromDir(f.getPath());
 	}
@@ -168,7 +164,6 @@ public class FancyMenu implements ModInitializer {
     		config.registerValue("playmenumusic", true, "general");
     		config.registerValue("playbackgroundsounds", true, "general", "If menu background sounds added by FancyMenu should be played or not.");
     		config.registerValue("playbackgroundsoundsinworld", false, "general", "If menu background sounds added by FancyMenu should be played when a world is loaded.");
-    		config.registerValue("stopworldmusicwhencustomizable", false, "general", "Stop vanilla world music when in a customizable menu.");
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
 			config.registerValue("forcefullscreen", false, "general");
@@ -179,8 +174,12 @@ public class FancyMenu implements ModInitializer {
 			config.registerValue("hidebranding", true, "mainmenu");
 			config.registerValue("hidelogo", false, "mainmenu");
 			config.registerValue("hiderealmsnotifications", false, "mainmenu");
-			config.registerValue("copyrightposition", "bottom-right", "mainmenu");
-			config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
+			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+				config.registerValue("copyrightposition", "bottom-right", "mainmenu");
+			}
+			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+				config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
+			}
 
 			config.registerValue("hidesplashtext", false, "mainmenu_splash");
 			config.registerValue("splashx", 0, "mainmenu_splash");
@@ -288,6 +287,18 @@ public class FancyMenu implements ModInitializer {
 			return true;
 		} catch (Exception e) {}
 		return false;
+	}
+
+	public static boolean isAudioExtensionLoaded() {
+		try {
+			Class.forName("de.keksuccino.fmaudio.FmAudio");
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
+
+	public static String getMinecraftVersion() {
+		return SharedConstants.getCurrentVersion().getReleaseTarget();
 	}
 
 }

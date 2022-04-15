@@ -3,28 +3,26 @@ package de.keksuccino.fancymenu.menu.panorama;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3f;
 
-public class ExternalTexturePanoramaRenderer extends DrawableHelper {
+public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 	private ExternalTextureResourceLocation overlay_texture;
 	private float time;
@@ -35,7 +33,7 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 	private float speed = 1.0F;
 	private double fov = 85.0D;
 	private float angle = 25.0F;
-	private MinecraftClient mc = MinecraftClient.getInstance();
+	private Minecraft mc = Minecraft.getInstance();
 
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -136,21 +134,21 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 	public void renderRaw(float panoramaAlpha) {
 		if (this.prepared) {
 
-			this.time += MinecraftClient.getInstance().getLastFrameDuration() * this.speed;
+			this.time += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
 
-			float pitch = MathHelper.sin(this.time * 0.001F) * 5.0F + this.angle;
+			float pitch = Mth.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;
 
-			Tessellator tessellator = Tessellator.getInstance();
-			BufferBuilder bufferBuilder = tessellator.getBuffer();
-			Matrix4f matrix4f = Matrix4f.viewboxMatrix(this.fov, (float)mc.getWindow().getFramebufferWidth() / (float)mc.getWindow().getFramebufferHeight(), 0.05F, 10.0F);
+			Tesselator tessellator = Tesselator.getInstance();
+			BufferBuilder bufferBuilder = tessellator.getBuilder();
+			Matrix4f matrix4f = Matrix4f.perspective(this.fov, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
 			RenderSystem.setProjectionMatrix(matrix4f);
-			MatrixStack matrix = RenderSystem.getModelViewStack();
+			PoseStack matrix = RenderSystem.getModelViewStack();
 //			MatrixStack matrix = new MatrixStack();
-			matrix.push();
-			matrix.loadIdentity();
-			matrix.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180.0F));
+			matrix.pushPose();
+			matrix.setIdentity();
+			matrix.mulPose(Vector3f.XP.rotationDegrees(180.0F));
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -160,12 +158,12 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 			RenderSystem.defaultBlendFunc();
 
 			for(int j = 0; j < 4; ++j) {
-				matrix.push();
+				matrix.pushPose();
 				float f = ((float)(j % 2) / 2.0F - 0.5F) / 256.0F;
 				float g = ((float)(j / 2) / 2.0F - 0.5F) / 256.0F;
 				matrix.translate((double)f, (double)g, 0.0D);
-				matrix.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(pitch));
-				matrix.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(yaw));
+				matrix.mulPose(Vector3f.XP.rotationDegrees(pitch));
+				matrix.mulPose(Vector3f.YP.rotationDegrees(yaw));
 				RenderSystem.applyModelViewMatrix();
 
 				for(int k = 0; k < 6; ++k) {
@@ -175,62 +173,62 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 							r.loadTexture();
 						}
 						RenderSystem.setShaderTexture(0, r.getResourceLocation());
-						bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+						bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 						int l = Math.round(255.0F * panoramaAlpha) / (j + 1);
 						if (k == 0) {
-							bufferBuilder.vertex(-1.0D, -1.0D, 1.0D).texture(0.0F, 0.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, 1.0D, 1.0D).texture(0.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).texture(1.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, -1.0D, 1.0D).texture(1.0F, 0.0F).color(255, 255, 255, l).next();
+							bufferBuilder.vertex(-1.0D, -1.0D, 1.0D).uv(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, 1.0D, 1.0D).uv(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).uv(1.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, -1.0D, 1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
 						if (k == 1) {
-							bufferBuilder.vertex(1.0D, -1.0D, 1.0D).texture(0.0F, 0.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).texture(0.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, 1.0D, -1.0D).texture(1.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, -1.0D, -1.0D).texture(1.0F, 0.0F).color(255, 255, 255, l).next();
+							bufferBuilder.vertex(1.0D, -1.0D, 1.0D).uv(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).uv(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, 1.0D, -1.0D).uv(1.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, -1.0D, -1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
 						if (k == 2) {
-							bufferBuilder.vertex(1.0D, -1.0D, -1.0D).texture(0.0F, 0.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, 1.0D, -1.0D).texture(0.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, 1.0D, -1.0D).texture(1.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, -1.0D, -1.0D).texture(1.0F, 0.0F).color(255, 255, 255, l).next();
+							bufferBuilder.vertex(1.0D, -1.0D, -1.0D).uv(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, 1.0D, -1.0D).uv(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, 1.0D, -1.0D).uv(1.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, -1.0D, -1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
 						if (k == 3) {
-							bufferBuilder.vertex(-1.0D, -1.0D, -1.0D).texture(0.0F, 0.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, 1.0D, -1.0D).texture(0.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, 1.0D, 1.0D).texture(1.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, -1.0D, 1.0D).texture(1.0F, 0.0F).color(255, 255, 255, l).next();
+							bufferBuilder.vertex(-1.0D, -1.0D, -1.0D).uv(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, 1.0D, -1.0D).uv(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, 1.0D, 1.0D).uv(1.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, -1.0D, 1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
 						if (k == 4) {
-							bufferBuilder.vertex(-1.0D, -1.0D, -1.0D).texture(0.0F, 0.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, -1.0D, 1.0D).texture(0.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, -1.0D, 1.0D).texture(1.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, -1.0D, -1.0D).texture(1.0F, 0.0F).color(255, 255, 255, l).next();
+							bufferBuilder.vertex(-1.0D, -1.0D, -1.0D).uv(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, -1.0D, 1.0D).uv(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, -1.0D, 1.0D).uv(1.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, -1.0D, -1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
 						if (k == 5) {
-							bufferBuilder.vertex(-1.0D, 1.0D, 1.0D).texture(0.0F, 0.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(-1.0D, 1.0D, -1.0D).texture(0.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, 1.0D, -1.0D).texture(1.0F, 1.0F).color(255, 255, 255, l).next();
-							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).texture(1.0F, 0.0F).color(255, 255, 255, l).next();
+							bufferBuilder.vertex(-1.0D, 1.0D, 1.0D).uv(0.0F, 0.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(-1.0D, 1.0D, -1.0D).uv(0.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, 1.0D, -1.0D).uv(1.0F, 1.0F).color(255, 255, 255, l).endVertex();
+							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
-						tessellator.draw();
+						tessellator.end();
 					}
 				}
 				
-				matrix.pop();
+				matrix.popPose();
 				RenderSystem.applyModelViewMatrix();
 				RenderSystem.colorMask(true, true, true, false);
 			}
 
 			RenderSystem.colorMask(true, true, true, true);
 			RenderSystem.restoreProjectionMatrix();
-			matrix.pop();
+			matrix.popPose();
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.depthMask(true);
 			RenderSystem.enableCull();
@@ -244,7 +242,7 @@ public class ExternalTexturePanoramaRenderer extends DrawableHelper {
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
-				drawTexture(CurrentScreenHandler.getMatrixStack(), 0, 0, 0.0F, 0.0F, MinecraftClient.getInstance().currentScreen.width, MinecraftClient.getInstance().currentScreen.height, MinecraftClient.getInstance().currentScreen.width, MinecraftClient.getInstance().currentScreen.height);
+				blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}

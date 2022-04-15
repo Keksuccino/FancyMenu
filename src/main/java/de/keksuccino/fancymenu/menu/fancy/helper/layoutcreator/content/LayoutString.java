@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import de.keksuccino.konkrete.localization.Locals;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
@@ -18,9 +20,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class LayoutString extends LayoutElement {
 	
@@ -118,7 +117,7 @@ public class LayoutString extends LayoutElement {
 	}
 
 	@Override
-	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
+	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
 		fill(matrix, this.getStringPosX(), this.getStringPosY(), this.getStringPosX() + this.object.getWidth(), this.getStringPosY() + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
@@ -129,7 +128,7 @@ public class LayoutString extends LayoutElement {
 		fill(matrix, this.getStringPosX() + this.object.getWidth(), this.getStringPosY(), this.getStringPosX() + this.object.getWidth() + 1, this.getStringPosY() + this.object.getHeight(), Color.BLUE.getRGB());
 
 		//Render pos and size values
-		TextRenderer font = MinecraftClient.getInstance().textRenderer;
+		Font font = Minecraft.getInstance().font;
 		RenderUtils.setScale(matrix, 0.5F);
 		font.draw(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 44, Color.WHITE.getRGB());
 		font.draw(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getStringScale(), this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
@@ -141,9 +140,8 @@ public class LayoutString extends LayoutElement {
 		RenderUtils.postScale(matrix);
 	}
 
-	//TODO übernehmen
 	@Override
-	protected void renderHighlightBorder(MatrixStack matrix) {
+	protected void renderHighlightBorder(PoseStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
 
 		//horizontal line top
@@ -215,7 +213,7 @@ public class LayoutString extends LayoutElement {
 		}
 		
 		((StringCustomizationItem)this.object).scale = scale;
-		this.setWidth((int)(MinecraftClient.getInstance().textRenderer.getWidth(this.object.value)*scale));
+		this.setWidth((int)(Minecraft.getInstance().font.width(this.object.value)*scale));
 		this.setHeight((int)(7*scale));
 	}
 

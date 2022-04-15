@@ -1,21 +1,19 @@
 package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
 import java.awt.Color;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.TextComponent;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 
 public class GameIntroScreen extends Screen {
 
@@ -28,18 +26,18 @@ public class GameIntroScreen extends Screen {
 	private int keypress;
 
 	public GameIntroScreen(IAnimationRenderer intro, TitleScreen main) {
-		super(new LiteralText(""));
+		super(new TextComponent(""));
 		this.renderer = intro;
 		this.main = main;
 		
 		this.keypress = KeyboardHandler.addKeyPressedListener((c) -> {
-			if ((MinecraftClient.getInstance().currentScreen == this) && this.skipable) {
+			if ((Minecraft.getInstance().screen == this) && this.skipable) {
 				if (c.keycode == 32) {
 					this.renderer.setLooped(this.loop);
 					this.renderer.setStretchImageToScreensize(this.stretched);
 					this.renderer.resetAnimation();
 					GameIntroHandler.introDisplayed = true;
-					MinecraftClient.getInstance().setScreen(this.main);
+					Minecraft.getInstance().setScreen(this.main);
 					MenuCustomization.reloadCurrentMenu();
 					KeyboardHandler.removeKeyPressedListener(this.keypress);
 				}
@@ -56,7 +54,7 @@ public class GameIntroScreen extends Screen {
 	}
 	
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
 		super.render(matrix, mouseX, mouseY, partialTicks);
 		
 		if (this.renderer != null) {
@@ -82,22 +80,22 @@ public class GameIntroScreen extends Screen {
 				this.renderer.setStretchImageToScreensize(this.stretched);
 				this.renderer.resetAnimation();
 				GameIntroHandler.introDisplayed = true;
-				MinecraftClient.getInstance().setScreen(this.main);
+				Minecraft.getInstance().setScreen(this.main);
 				MenuCustomization.reloadCurrentMenu();
 			}
 		}
 		
 		if (this.skipable) {
 			RenderSystem.enableBlend();
-			matrix.push();
+			matrix.pushPose();
 			matrix.scale(1.05F, 1.05F, 1.05F);
 			String text = Locals.localize("gameintro.skip");
 			String customtext = StringUtils.convertFormatCodes(FancyMenu.config.getOrDefault("customgameintroskiptext", ""), "&", "§");
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;
 			}
-			DrawableHelper.drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
-			matrix.pop();
+			GuiComponent.drawCenteredString(matrix, Minecraft.getInstance().font, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
+			matrix.popPose();
 		}
 	}
 

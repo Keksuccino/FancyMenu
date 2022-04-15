@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.network.chat.TextComponent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +20,6 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.text.LiteralText;
 
 public class LayoutButton extends LayoutElement {
 
@@ -243,9 +242,9 @@ public class LayoutButton extends LayoutElement {
 		}
 		onlyOutgameBtn = new AdvancedButton(0, 0, 0, 0, outgame, (press) -> {
 			this.onlydisplayin = "outgame";
-			press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
-			this.onlySingleplayerBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
-			this.onlyMultiplayerBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
+			press.setMessage(new TextComponent("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
+			this.onlySingleplayerBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
+			this.onlyMultiplayerBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
 		});
 		onlyDisplayInMenu.addContent(onlyOutgameBtn);
 		
@@ -255,9 +254,9 @@ public class LayoutButton extends LayoutElement {
 		}
 		onlySingleplayerBtn = new AdvancedButton(0, 0, 0, 0, sp, (press) -> {
 			this.onlydisplayin = "singleplayer";
-			press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
-			this.onlyOutgameBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
-			this.onlyMultiplayerBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
+			press.setMessage(new TextComponent("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
+			this.onlyOutgameBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
+			this.onlyMultiplayerBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
 		});
 		onlyDisplayInMenu.addContent(onlySingleplayerBtn);
 		
@@ -267,17 +266,17 @@ public class LayoutButton extends LayoutElement {
 		}
 		onlyMultiplayerBtn = new AdvancedButton(0, 0, 0, 0, mp, (press) -> {
 			this.onlydisplayin = "multiplayer";
-			press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
-			this.onlySingleplayerBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
-			this.onlyOutgameBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
+			press.setMessage(new TextComponent("§a" + Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
+			this.onlySingleplayerBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
+			this.onlyOutgameBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
 		});
 		onlyDisplayInMenu.addContent(onlyMultiplayerBtn);
 		
 		AdvancedButton odiResetBtn = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.custombutton.onlydisplayin.reset"), (press) -> {
 			this.onlydisplayin = null;
-			this.onlyMultiplayerBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
-			this.onlySingleplayerBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
-			this.onlyOutgameBtn.setMessage(new LiteralText(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
+			this.onlyMultiplayerBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.multiplayer")));
+			this.onlySingleplayerBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.singleplayer")));
+			this.onlyOutgameBtn.setMessage(new TextComponent(Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame")));
 		});
 		onlyDisplayInMenu.addContent(odiResetBtn);
 

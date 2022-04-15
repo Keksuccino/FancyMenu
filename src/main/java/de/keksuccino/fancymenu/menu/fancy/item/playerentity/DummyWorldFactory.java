@@ -1,96 +1,102 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalLong;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.item.map.MapState;
-import net.minecraft.recipe.RecipeManager;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.tag.TagManager;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.registry.DynamicRegistryManager;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.ChunkManager;
-import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.entity.EntityLookup;
-import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.tick.QueryableTickScheduler;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.crafting.RecipeManager;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkSource;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.entity.LevelEntityGetter;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.ticks.LevelTickAccess;
+import com.mojang.datafixers.util.Either;
 
 public class DummyWorldFactory {
 	
-	public static World getDummyWorld() {
+	public static Level getDummyWorld() {
 		return new DummyWorld();
 	}
 	
-	public static class DummyWorld extends World {
+	public static class DummyWorld extends Level {
 
 		protected DummyWorld() {
-			super(null, null, getDummyDimensionType(), null, false, false, 239239L);
+			super(null, null, getDummyDimensionTypeHolder(), null, false, false, 239239L);
 		}
 		@Override
-		public QueryableTickScheduler<Block> getBlockTickScheduler() {
+		public LevelTickAccess<Block> getBlockTicks() {
 			return null;
 		}
 		@Override
-		public QueryableTickScheduler<Fluid> getFluidTickScheduler() {
+		public LevelTickAccess<Fluid> getFluidTicks() {
 			return null;
 		}
 		@Override
-		public ChunkManager getChunkManager() {
+		public ChunkSource getChunkSource() {
 			return null;
 		}
 		@Override
-		public void syncWorldEvent(PlayerEntity player, int eventId, BlockPos pos, int data) {
+		public void levelEvent(Player player, int eventId, BlockPos pos, int data) {
 		}
 		@Override
-		public DynamicRegistryManager getRegistryManager() {
+		public RegistryAccess registryAccess() {
 			return null;
 		}
 		@Override
-		public List<? extends PlayerEntity> getPlayers() {
+		public List<? extends Player> players() {
 			return null;
 		}
 		@Override
-		public Biome getGeneratorStoredBiome(int biomeX, int biomeY, int biomeZ) {
+		public Holder<Biome> getUncachedNoiseBiome(int biomeX, int biomeY, int biomeZ) {
 			return null;
 		}
 		@Override
-		public float getBrightness(Direction direction, boolean shaded) {
+		public float getShade(Direction direction, boolean shaded) {
 			return 0;
 		}
 		@Override
-		public void updateListeners(BlockPos pos, BlockState oldState, BlockState newState, int flags) {
+		public void sendBlockUpdated(BlockPos pos, BlockState oldState, BlockState newState, int flags) {
 		}
 		@Override
-		public void playSound(PlayerEntity player, double x, double y, double z, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+		public void playSound(Player player, double x, double y, double z, SoundEvent sound, SoundSource category, float volume, float pitch) {
 		}
 		@Override
-		public void playSoundFromEntity(PlayerEntity player, Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+		public void playSound(Player player, Entity entity, SoundEvent sound, SoundSource category, float volume, float pitch) {
 		}
 		@Override
-		public Entity getEntityById(int id) {
+		public Entity getEntity(int id) {
 			return null;
 		}
 		@Override
-		public MapState getMapState(String id) {
+		public MapItemSavedData getMapData(String id) {
 			return null;
 		}
 		@Override
-		public int getNextMapId() {
+		public int getFreeMapId() {
 			return 0;
 		}
 		@Override
-		public void setBlockBreakingInfo(int entityId, BlockPos pos, int progress) {
+		public void destroyBlockProgress(int entityId, BlockPos pos, int progress) {
 		}
 		@Override
 		public Scoreboard getScoreboard() {
@@ -100,28 +106,79 @@ public class DummyWorldFactory {
 		public RecipeManager getRecipeManager() {
 			return null;
 		}
+//		@Override
+//		public TagManager getTagManager() {
+//			return null;
+//		}
 		@Override
-		public TagManager getTagManager() {
-			return null;
+		public void gameEvent(Entity entity, GameEvent event, BlockPos pos) {
 		}
 		@Override
-		public void emitGameEvent(Entity entity, GameEvent event, BlockPos pos) {
-		}
-		@Override
-		public String asString() {
+		public String gatherChunkSourceStats() {
 			return "";
 		}
 		@Override
-		public void putMapState(String id, MapState state) {
+		public void setMapData(String id, MapItemSavedData state) {
 		}
 		@Override
-		protected EntityLookup<Entity> getEntityLookup() {
+		protected LevelEntityGetter<Entity> getEntities() {
 			return null;
 		}
 		
 	}
+
+	public static Holder<DimensionType> getDummyDimensionTypeHolder() {
+		return new Holder<DimensionType>() {
+			@Override
+			public DimensionType value() {
+				return getDummyDimensionType();
+			}
+			@Override
+			public boolean isBound() {
+				return false;
+			}
+			@Override
+			public boolean is(ResourceLocation id) {
+				return false;
+			}
+			@Override
+			public boolean is(ResourceKey<DimensionType> key) {
+				return false;
+			}
+			@Override
+			public boolean is(Predicate<ResourceKey<DimensionType>> predicate) {
+				return false;
+			}
+			@Override
+			public boolean is(TagKey<DimensionType> tag) {
+				return false;
+			}
+			@Override
+			public Stream<TagKey<DimensionType>> tags() {
+				return null;
+			}
+			@Override
+			public Either<ResourceKey<DimensionType>, DimensionType> unwrap() {
+				return null;
+			}
+			@Override
+			public Optional<ResourceKey<DimensionType>> unwrapKey() {
+				return Optional.empty();
+			}
+			@Override
+			public Kind kind() {
+				return Kind.REFERENCE;
+			}
+			@Override
+			public boolean isValidInRegistry(Registry<DimensionType> registry) {
+				return false;
+			}
+		};
+	}
 	
 	public static DimensionType getDummyDimensionType() {
+		ResourceKey<Registry<Block>> rk = ResourceKey.createRegistryKey(new ResourceLocation(""));
+		TagKey<Block> tk = TagKey.create(rk, new ResourceLocation(""));
 		return DimensionType.create(
 				OptionalLong.of(1),
 				false,
@@ -137,8 +194,8 @@ public class DummyWorldFactory {
 				16,
 				16,
 				16,
-				new Identifier(""),
-				new Identifier(""),
+				tk,
+				new ResourceLocation(""),
 				1.0F);
 	}
 	

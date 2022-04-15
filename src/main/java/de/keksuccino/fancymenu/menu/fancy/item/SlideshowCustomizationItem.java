@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
-
+import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class SlideshowCustomizationItem extends CustomizationItemBase {
 
@@ -30,7 +29,7 @@ public class SlideshowCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}

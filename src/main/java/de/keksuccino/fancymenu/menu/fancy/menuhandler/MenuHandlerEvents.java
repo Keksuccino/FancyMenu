@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
+import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.konkrete.events.EventPriority;
@@ -8,9 +9,8 @@ import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.events.client.GuiOpenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 @SuppressWarnings("resource")
 public class MenuHandlerEvents {
@@ -32,15 +32,15 @@ public class MenuHandlerEvents {
 	public void onTick(ClientTickEvent.Pre e) {
 		
 		//Resetting scale to the normal value when no GUI is active
-		if ((MenuHandlerBase.scaleChangedIn != null) && (MinecraftClient.getInstance().currentScreen == null)) {
+		if ((MenuHandlerBase.scaleChangedIn != null) && (Minecraft.getInstance().screen == null)) {
 			MenuHandlerBase.scaleChangedIn = null;
-			int mcscale = MinecraftClient.getInstance().getWindow().calculateScaleFactor(MinecraftClient.getInstance().options.guiScale, MinecraftClient.getInstance().forcesUnicodeFont());
-			Window m = MinecraftClient.getInstance().getWindow();
-			m.setScaleFactor((double)mcscale);
+			int mcscale = Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode());
+			Window m = Minecraft.getInstance().getWindow();
+			m.setGuiScale((double)mcscale);
 		}
 
 		//Resetting last active menu handler when no GUI is displayed
-		if (MinecraftClient.getInstance().currentScreen == null) {
+		if (Minecraft.getInstance().screen == null) {
 			MenuHandlerRegistry.setActiveHandler(null);
 		}
 
@@ -63,14 +63,12 @@ public class MenuHandlerEvents {
 			if (s instanceof CustomGuiBase) {
 				if (!MenuHandlerRegistry.isHandlerRegistered(((CustomGuiBase)s).getIdentifier())) {
 					MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(((CustomGuiBase)s).getIdentifier()));
-					//TODO neu in 1.17 (vllt nur in Fabric wichtig)
 					MenuCustomization.reloadCurrentMenu();
 				}
 			} else {
 				if (!MenuHandlerRegistry.isHandlerRegistered(s.getClass().getName())) {
 					if (MenuCustomization.isValidScreen(s)) {
 						MenuHandlerRegistry.registerHandler(new MenuHandlerBase(s.getClass().getName()));
-						//TODO neu in 1.17 (vllt nur in Fabric wichtig)
 						MenuCustomization.reloadCurrentMenu();
 					}
 				}

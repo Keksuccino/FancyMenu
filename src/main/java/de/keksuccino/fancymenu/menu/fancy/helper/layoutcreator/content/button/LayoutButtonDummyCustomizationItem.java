@@ -3,9 +3,12 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
@@ -15,11 +18,6 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Identifier;
 
 /**
  * Dummy item class to use its orientation handling for LayoutButtons
@@ -40,11 +38,11 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		RenderSystem.enableBlend();
 
 		IAnimationRenderer animation = null;
-		Identifier texture = null;
+		ResourceLocation texture = null;
 		if (this.button.normalBackground != null) {
 			if (this.button.normalBackground.startsWith("animation:")) {
 				String aniName = this.button.normalBackground.split("[:]", 2)[1];
@@ -75,7 +73,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 		if (texture != null) {
 			RenderUtils.bindTexture(texture);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			drawTexture(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+			blit(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 		} else if (animation != null) {
 			int aniX = animation.getPosX();
 			int aniY = animation.getPosY();
@@ -88,7 +86,6 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setWidth(this.getWidth());
 			animation.setHeight(this.getHeight());
 			animation.setLooped(this.button.loopAnimation);
-			//TODO übernehmen 2.3.2
 			if (animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation) animation).setMuteAudio(true);
 			}
@@ -100,14 +97,13 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setWidth(aniWidth);
 			animation.setHeight(aniHeight);
 			animation.setLooped(aniLoop);
-			//TODO übernehmen 2.3.2
 			if (animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation) animation).setMuteAudio(false);
 			}
 		} else {
 			fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());
 		}
-		drawCenteredText(matrix, MinecraftClient.getInstance().textRenderer, new LiteralText(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, -1);
+		drawCenteredString(matrix, Minecraft.getInstance().font, new TextComponent(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, -1);
 		RenderSystem.disableBlend();
 	}
 

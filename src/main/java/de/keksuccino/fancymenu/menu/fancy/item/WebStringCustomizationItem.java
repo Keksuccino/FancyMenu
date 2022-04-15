@@ -8,19 +8,17 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
@@ -33,7 +31,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 	public String rawURL = "";
 	protected volatile int unscaledHeight = 1;
 	protected volatile int unscaledWidth = 1;
-	protected TextRenderer font = MinecraftClient.getInstance().textRenderer;
+	protected Font font = Minecraft.getInstance().font;
 	
 	public WebStringCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -77,7 +75,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		
 		if (!this.shouldRender()) {
 			return;
@@ -96,7 +94,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				float sc = (this.scale * m.getValue());
 				int x = (int) (this.getPosX(menu) / sc);
 				int y = (int) (this.getPosY(menu) / sc);
-				int stringwidth = (int) (font.getWidth(m.getKey()) * sc);
+				int stringwidth = (int) (font.width(m.getKey()) * sc);
 
 				if (this.alignment == Alignment.RIGHT) {
 					x = (int) (x + ((this.getWidth() - stringwidth) / sc));
@@ -105,14 +103,14 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 					x = (int) (x + (((this.getWidth() - stringwidth) / sc) / 2));
 				}
 				
-				matrix.push();
+				matrix.pushPose();
 				matrix.scale(sc, sc, sc);
 				if (this.shadow) {
-					font.drawWithShadow(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+					font.drawShadow(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | Mth.ceil(this.opacity * 255.0F) << 24);
 				} else {
-					font.draw(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+					font.draw(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | Mth.ceil(this.opacity * 255.0F) << 24);
 				}
-				matrix.pop();
+				matrix.popPose();
 				
 				i += (10 * sc);
 				
@@ -186,7 +184,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 							}
 							float sc = getScaleMultiplicator(s);
 							s = getWithoutHeadlineCodes(s);
-							int i = (int) (font.getWidth(s) * sc);
+							int i = (int) (font.width(s) * sc);
 							if (i > w) {
 								w = i;
 							}
@@ -206,7 +204,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 						lines.clear();
 						String s = Locals.localize("customization.items.webstring.unabletoload");
 						lines.put(s, 1.0F);
-						unscaledWidth = font.getWidth(s);
+						unscaledWidth = font.width(s);
 						unscaledHeight = 10;
 						e.printStackTrace();
 					}
@@ -215,7 +213,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 					lines.clear();
 					String s = Locals.localize("customization.items.webstring.unabletoload");
 					lines.put(s, 1.0F);
-					unscaledWidth = font.getWidth(s);
+					unscaledWidth = font.width(s);
 					unscaledHeight = 10;
 					
 					System.out.println("########################## ERROR ##########################");

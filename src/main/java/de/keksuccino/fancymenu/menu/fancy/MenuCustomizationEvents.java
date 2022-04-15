@@ -2,7 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
 import java.io.IOException;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
@@ -15,8 +16,6 @@ import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 
 public class MenuCustomizationEvents {
 	
@@ -31,7 +30,7 @@ public class MenuCustomizationEvents {
 	public void onInitPrePre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		if (!ButtonCache.isCaching()) {
 			if (MenuCustomization.isValidScreen(e.getGui())) {
-				Screen current = MinecraftClient.getInstance().currentScreen;
+				Screen current = Minecraft.getInstance().screen;
 				if (current != null) {
 					if (this.lastScreen != null) {
 						if (!this.lastScreen.getClass().getName().equals(current.getClass().getName())) {
@@ -81,14 +80,9 @@ public class MenuCustomizationEvents {
 		}
 		
 		//Stopping menu music when deactivated in config
-		if ((MinecraftClient.getInstance().world == null)) {
+		if ((Minecraft.getInstance().level == null)) {
 			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
-				MinecraftClient.getInstance().getMusicTracker().stop();
-			}
-		} else {
-			if (MenuCustomization.isMenuCustomizable(e.getGui()) && FancyMenu.config.getOrDefault("stopworldmusicwhencustomizable", false)) {
-				MinecraftClient.getInstance().getSoundManager().pauseAll();
-				this.resumeWorldMusic = true;
+				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
 		}
 	}
@@ -96,18 +90,18 @@ public class MenuCustomizationEvents {
 	@SubscribeEvent
 	public void onTick(ClientTickEvent.Pre e) {
 		//Stopping audio for all menu handlers if no screen is being displayed
-		if ((MinecraftClient.getInstance().currentScreen == null) && !this.idle) {
+		if ((Minecraft.getInstance().screen == null) && !this.idle) {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 			this.idle = true;
 		}
 		
-		if ((MinecraftClient.getInstance().world != null) && (MinecraftClient.getInstance().currentScreen == null) && this.resumeWorldMusic) {
-			MinecraftClient.getInstance().getSoundManager().resumeAll();
+		if ((Minecraft.getInstance().level != null) && (Minecraft.getInstance().screen == null) && this.resumeWorldMusic) {
+			Minecraft.getInstance().getSoundManager().resume();
 			this.resumeWorldMusic = false;
 		}
 		
-		if (MinecraftClient.getInstance().getWindow().isFullscreen()) {
+		if (Minecraft.getInstance().getWindow().isFullscreen()) {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
@@ -116,7 +110,7 @@ public class MenuCustomizationEvents {
 			}
 		}
 		
-		if (!scaleChecked && (MinecraftClient.getInstance().options != null)) {
+		if (!scaleChecked && (Minecraft.getInstance().options != null)) {
 			scaleChecked = true;
 			
 			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
@@ -134,14 +128,14 @@ public class MenuCustomizationEvents {
 						e1.printStackTrace();
 					}
 					
-					MinecraftClient.getInstance().options.guiScale = scale;
-					MinecraftClient.getInstance().options.write();
-					MinecraftClient.getInstance().onResolutionChanged();
+					Minecraft.getInstance().options.guiScale = scale;
+					Minecraft.getInstance().options.save();
+					Minecraft.getInstance().resizeDisplay();
 				}
 			}
 		}
 		
-		if (MinecraftClient.getInstance().currentScreen == null) {
+		if (Minecraft.getInstance().screen == null) {
 			MenuCustomization.isCurrentScrollable = false;
 		}
 		

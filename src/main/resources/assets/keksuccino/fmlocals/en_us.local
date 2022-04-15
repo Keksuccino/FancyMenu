@@ -982,4 +982,5 @@ fancymenu.helper.editor.backgrounds.custom.setbackground = Set Background
 fancymenu.helper.editor.backgrounds.custom.clearbackground = Clear
 fancymenu.helper.editor.backgrounds.custom.clearbackground.desc = Clear the currently active background of this type.
 
-
+fancymenu.helper.editor.extension.dummy.audio.btn.desc = §6You need to install the%n%§6§lAudio Extension §r§6to use this%n%§6element.%n%%n%§cClick on the button to%n%§copen the download page.
+fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc = §c§lDEPRECATED!%n%%n%§cThis is part of the old%n%§caudio system and gets removed%n%§cvery soon!%n%%n%§cFor more information, read%n%§cthe tooltip of the button%n%§cto add a new audio element.

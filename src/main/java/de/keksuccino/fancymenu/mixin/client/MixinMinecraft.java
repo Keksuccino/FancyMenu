@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.mixin.cache.MixinCache;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Overlay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -11,11 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Overlay;
 
-@Mixin(value = MinecraftClient.class)
-public class MixinMinecraftClient {
+@Mixin(Minecraft.class)
+public class MixinMinecraft {
 	
 	private static boolean customWindowInit = false;
 
@@ -24,10 +24,10 @@ public class MixinMinecraftClient {
 		MainWindowHandler.handleForceFullscreen();
 	}
 
-	@Inject(at = @At(value = "HEAD"), method = "getWindowTitle", cancellable = true)
+	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	public void onGetWindowTitle(CallbackInfoReturnable<String> info) {
 		
-		if ((FancyMenu.config != null) && (MinecraftClient.getInstance().getWindow() != null)) {
+		if ((FancyMenu.config != null) && (Minecraft.getInstance().getWindow() != null)) {
 			if (!customWindowInit) {
 				MainWindowHandler.init();
 				MainWindowHandler.updateWindowIcon();

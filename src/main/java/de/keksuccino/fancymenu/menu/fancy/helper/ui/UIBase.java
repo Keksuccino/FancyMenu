@@ -1,16 +1,15 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
 import java.awt.Color;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
-public class UIBase extends DrawableHelper {
+public class UIBase extends GuiComponent {
 
 	protected static Color idleButtonColor;
 	protected static Color hoveredButtonColor;
@@ -60,14 +59,14 @@ public class UIBase extends DrawableHelper {
 	public static float getUIScale() {
 
 		float uiScale = FancyMenu.config.getOrDefault("uiscale", 1.0F);
-		double mcScale = MinecraftClient.getInstance().getWindow().getScaleFactor();
+		double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
 
 		return (float) ((((double)baseUIScale) * (((double)baseUIScale) / mcScale)) * uiScale);
 		
 	}
 	
 	public static void openScaledContextMenuAt(FMContextMenu menu, int x, int y) {
-		Screen s = MinecraftClient.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			menu.openMenuAt((int) (x / UIBase.getUIScale()), (int) (y / UIBase.getUIScale()), (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
 		}
@@ -77,11 +76,11 @@ public class UIBase extends DrawableHelper {
 		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 	
-	public static void renderScaledContextMenu(MatrixStack matrix, FMContextMenu menu) {
-		Screen s = MinecraftClient.getInstance().currentScreen;
+	public static void renderScaledContextMenu(PoseStack matrix, FMContextMenu menu) {
+		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {
 			
-			matrix.push();
+			matrix.pushPose();
 			
 			matrix.scale(UIBase.getUIScale(), UIBase.getUIScale(), UIBase.getUIScale());
 			
@@ -92,7 +91,7 @@ public class UIBase extends DrawableHelper {
 			
 			menu.render(matrix, mouseX, mouseY, (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
 			
-			matrix.pop();
+			matrix.popPose();
 			
 		}
 	}

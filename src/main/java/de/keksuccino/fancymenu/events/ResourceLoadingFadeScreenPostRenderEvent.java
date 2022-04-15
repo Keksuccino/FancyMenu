@@ -1,15 +1,15 @@
 package de.keksuccino.fancymenu.events;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.screens.Screen;
 
 public class ResourceLoadingFadeScreenPostRenderEvent extends EventBase {
 	
 	public Screen screen;
-	public MatrixStack matrix;
+	public PoseStack matrix;
 	
-	public ResourceLoadingFadeScreenPostRenderEvent(Screen currentScreen, MatrixStack matrix) {
+	public ResourceLoadingFadeScreenPostRenderEvent(Screen currentScreen, PoseStack matrix) {
 		this.matrix = matrix;
 		this.screen = currentScreen;
 	}

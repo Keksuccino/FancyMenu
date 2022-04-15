@@ -1,20 +1,19 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.math.MatrixStack;
 
-public abstract class CustomizationItemBase extends DrawableHelper {
+public abstract class CustomizationItemBase extends GuiComponent {
 	
 	/**
 	 * This value CANNOT BE NULL!<br>
@@ -140,7 +139,7 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 		
 	}
 
-	public abstract void render(MatrixStack matrix, Screen menu) throws IOException;
+	public abstract void render(PoseStack matrix, Screen menu) throws IOException;
 	
 	/**
 	 * Should be used to get the REAL and final X-position of this item.<br>
@@ -218,7 +217,7 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 	public int getOrientationElementPosX(Screen menu) {
 		if (this.orientationElement != null) {
 			if (this.orientationElement instanceof VanillaButtonCustomizationItem) {
-				ClickableWidget w = ((VanillaButtonCustomizationItem)this.orientationElement).parent.getButton();
+				AbstractWidget w = ((VanillaButtonCustomizationItem)this.orientationElement).parent.getButton();
 				if (w != null) {
 					return w.x;
 				}
@@ -232,7 +231,7 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 	public int getOrientationElementPosY(Screen menu) {
 		if (this.orientationElement != null) {
 			if (this.orientationElement instanceof VanillaButtonCustomizationItem) {
-				ClickableWidget w = ((VanillaButtonCustomizationItem)this.orientationElement).parent.getButton();
+				AbstractWidget w = ((VanillaButtonCustomizationItem)this.orientationElement).parent.getButton();
 				if (w != null) {
 					return w.y;
 				}
@@ -262,7 +261,7 @@ public abstract class CustomizationItemBase extends DrawableHelper {
 	}
 
 	protected static boolean isEditorActive() {
-		return (MinecraftClient.getInstance().currentScreen instanceof LayoutEditorScreen);
+		return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
 	}
 
 	protected boolean visibilityRequirementsMet() {

@@ -3,15 +3,13 @@ package de.keksuccino.fancymenu.menu.guiconstruction.instance;
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.function.Consumer;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackRepository;
 import com.google.common.collect.ImmutableList;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.resource.ResourcePackManager;
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.text.TranslatableText;
 
 public class ResourcePacksScreenInstance extends GuiInstance {
 
@@ -22,34 +20,34 @@ public class ResourcePacksScreenInstance extends GuiInstance {
 	protected void createInstance() {
 		try {
 
-			MinecraftClient mc = MinecraftClient.getInstance();
+			Minecraft mc = Minecraft.getInstance();
 
-			Consumer<ResourcePackManager> updateList = new Consumer<ResourcePackManager>() {
+			Consumer<PackRepository> updateList = new Consumer<PackRepository>() {
 				@Override
-				public void accept(ResourcePackManager repo) {
-					GameOptions options = MinecraftClient.getInstance().options;
+				public void accept(PackRepository repo) {
+					Options options = Minecraft.getInstance().options;
 					List<String> list = ImmutableList.copyOf(options.resourcePacks);
 					options.resourcePacks.clear();
 					options.incompatibleResourcePacks.clear();
 
-					for(ResourcePackProfile pack : repo.getEnabledProfiles()) {
-						if (!pack.isPinned()) {
-							options.resourcePacks.add(pack.getName());
+					for(Pack pack : repo.getSelectedPacks()) {
+						if (!pack.isFixedPosition()) {
+							options.resourcePacks.add(pack.getId());
 							if (!pack.getCompatibility().isCompatible()) {
-								options.incompatibleResourcePacks.add(pack.getName());
+								options.incompatibleResourcePacks.add(pack.getId());
 							}
 						}
 					}
 
-					options.write();
+					options.save();
 					List<String> list1 = ImmutableList.copyOf(options.resourcePacks);
 					if (!list1.equals(list)) {
-						MinecraftClient.getInstance().reloadResources();
+						Minecraft.getInstance().reloadResourcePacks();
 					}
 				}
 			};
 
-			this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackManager(), updateList, mc.getResourcePackDir(), new TranslatableText("resourcePack.title"));
+			this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackRepository(), updateList, mc.getResourcePackDirectory(), new TranslatableComponent("resourcePack.title"));
 
 		} catch (Exception e) {
 			e.printStackTrace();

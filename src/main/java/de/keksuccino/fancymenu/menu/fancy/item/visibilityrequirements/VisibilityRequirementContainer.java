@@ -9,10 +9,9 @@ import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.network.ServerInfo;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.multiplayer.ServerData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -583,7 +582,7 @@ public class VisibilityRequirementContainer {
         //VR: Is Button Hovered
         if (this.vrCheckForButtonHovered) {
             if (this.vrButtonHovered != null) {
-                ClickableWidget w = null;
+                AbstractWidget w = null;
                 if (this.vrButtonHovered.startsWith("vanillabtn:")) {
                     String idRaw = this.vrButtonHovered.split("[:]", 2)[1];
                     if (MathUtils.isLong(idRaw)) {
@@ -594,11 +593,11 @@ public class VisibilityRequirementContainer {
                 }
                 if (w != null) {
                     if (this.vrShowIfButtonHovered) {
-                        if (!w.isHovered()) {
+                        if (!w.isHoveredOrFocused()) {
                             return false;
                         }
                     } else {
-                        if (w.isHovered()) {
+                        if (w.isHoveredOrFocused()) {
                             return false;
                         }
                     }
@@ -621,13 +620,13 @@ public class VisibilityRequirementContainer {
 
         //VR: Is Language
         if (this.vrCheckForLanguage) {
-            if ((this.vrLanguage != null) && (MinecraftClient.getInstance().options.language != null)) {
+            if ((this.vrLanguage != null) && (Minecraft.getInstance().options.languageCode != null)) {
                 if (this.vrShowIfLanguage) {
-                    if (!(MinecraftClient.getInstance().options.language.equals(this.vrLanguage))) {
+                    if (!(Minecraft.getInstance().options.languageCode.equals(this.vrLanguage))) {
                         return false;
                     }
                 } else {
-                    if (MinecraftClient.getInstance().options.language.equals(this.vrLanguage)) {
+                    if (Minecraft.getInstance().options.languageCode.equals(this.vrLanguage)) {
                         return false;
                     }
                 }
@@ -637,11 +636,11 @@ public class VisibilityRequirementContainer {
         //VR: Is Fullscreen
         if (this.vrCheckForFullscreen) {
             if (this.vrShowIfFullscreen) {
-                if (!MinecraftClient.getInstance().getWindow().isFullscreen()) {
+                if (!Minecraft.getInstance().getWindow().isFullscreen()) {
                     return false;
                 }
             } else {
-                if (MinecraftClient.getInstance().getWindow().isFullscreen()) {
+                if (Minecraft.getInstance().getWindow().isFullscreen()) {
                     return false;
                 }
             }
@@ -720,7 +719,7 @@ public class VisibilityRequirementContainer {
 
         //VR: Is Server Online
         if (this.vrCheckForServerOnline) {
-            ServerInfo sd = ServerCache.getServer(this.vrServerOnline);
+            ServerData sd = ServerCache.getServer(this.vrServerOnline);
             if (this.vrShowIfServerOnline) {
                 if ((sd != null) && (sd.ping == -1)) {
                     return false;
@@ -771,7 +770,7 @@ public class VisibilityRequirementContainer {
     }
 
     protected static boolean checkForGuiScale(String condition) {
-        double windowScale = MinecraftClient.getInstance().getWindow().getScaleFactor();
+        double windowScale = Minecraft.getInstance().getWindow().getGuiScale();
         if (condition.startsWith("double:")) {
             String value = condition.replace("double:", "");
             double valueScale = Double.parseDouble(value);

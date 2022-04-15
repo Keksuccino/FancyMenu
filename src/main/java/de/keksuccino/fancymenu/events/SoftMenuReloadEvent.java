@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.events;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * Fired to soft-reload the <b>current</b> menu.<br>
