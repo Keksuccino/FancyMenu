@@ -56,9 +56,11 @@ public class CustomizationHelper {
 
 		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
+				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
 
-				CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+					CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
 
+				}
 			}
 		}
 

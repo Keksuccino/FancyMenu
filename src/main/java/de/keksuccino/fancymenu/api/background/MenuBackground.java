@@ -43,6 +43,12 @@ public abstract class MenuBackground {
     public abstract void render(MatrixStack matrix, Screen screen, boolean keepAspectRatio);
 
     /**
+     * Called when the Clear/Reset Background button of the editor is pressed to remove this background.
+     */
+    public void onResetBackground() {
+    }
+
+    /**
      * The background identifier of this menu background.
      */
     public String getIdentifier() {

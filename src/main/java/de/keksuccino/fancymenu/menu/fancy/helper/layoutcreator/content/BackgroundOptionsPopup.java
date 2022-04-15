@@ -264,6 +264,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 			if (this.handler.customMenuBackground != null) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			}
+			if (this.handler.customMenuBackground != null) {
+				this.handler.customMenuBackground.onResetBackground();
+			}
 			this.handler.customMenuBackground = null;
 			this.handler.customMenuBackgroundInputString = null;
 		});

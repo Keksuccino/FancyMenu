@@ -42,7 +42,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.6.3";
+	public static final String VERSION = "2.6.4";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger();
@@ -171,7 +171,6 @@ public class FancyMenu {
     		config.registerValue("playmenumusic", true, "general");
     		config.registerValue("playbackgroundsounds", true, "general", "If menu background sounds added by FancyMenu should be played or not.");
     		config.registerValue("playbackgroundsoundsinworld", false, "general", "If menu background sounds added by FancyMenu should be played when a world is loaded.");
-    		config.registerValue("stopworldmusicwhencustomizable", false, "general", "Stop vanilla world music when in a customizable menu.");
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
 			config.registerValue("forcefullscreen", false, "general");
@@ -289,6 +288,14 @@ public class FancyMenu {
 	public static boolean isKonkreteLoaded() {
 		try {
 			Class.forName("de.keksuccino.konkrete.Konkrete");
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
+
+	public static boolean isAudioExtensionLoaded() {
+		try {
+			Class.forName("de.keksuccino.fmaudio.FmAudio");
 			return true;
 		} catch (Exception e) {}
 		return false;
