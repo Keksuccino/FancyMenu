@@ -8,13 +8,13 @@ import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.guiconstruction.instance.GuiInstance;
 import de.keksuccino.fancymenu.menu.guiconstruction.instance.ResourcePacksScreenInstance;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.pack.PackScreen;
-import net.minecraft.client.network.ClientAdvancementManager;
-import net.minecraft.client.options.GameOptions;
-import net.minecraft.client.resource.language.LanguageManager;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
+import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.client.resources.language.LanguageManager;
+import net.minecraft.world.entity.player.Player;
 
 @SuppressWarnings("resource")
 public class GuiConstructor {
@@ -23,25 +23,25 @@ public class GuiConstructor {
 	
 	public static void init() {
 		
-		parameters.put(MinecraftClient.class, MinecraftClient.getInstance());
+		parameters.put(Minecraft.class, Minecraft.getInstance());
 		parameters.put(Screen.class, null);
-		parameters.put(GameOptions.class, MinecraftClient.getInstance().options);
-		parameters.put(LanguageManager.class, MinecraftClient.getInstance().getLanguageManager());
+		parameters.put(Options.class, Minecraft.getInstance().options);
+		parameters.put(LanguageManager.class, Minecraft.getInstance().getLanguageManager());
 		parameters.put(boolean.class, true);
-		parameters.put(PlayerEntity.class, null);
+		parameters.put(Player.class, null);
 		parameters.put(String.class, "");
-		parameters.put(ClientAdvancementManager.class, null);
+		parameters.put(ClientAdvancements.class, null);
 		
 	}
 	
 	public static Screen tryToConstruct(String identifier) {
 		try {
 			//Update last screen
-			parameters.put(Screen.class, MinecraftClient.getInstance().currentScreen);
+			parameters.put(Screen.class, Minecraft.getInstance().screen);
 			//Update player
-			parameters.put(PlayerEntity.class, MinecraftClient.getInstance().player);
-			if ((MinecraftClient.getInstance().player != null) && (MinecraftClient.getInstance().player.networkHandler.getAdvancementHandler() != null)) {
-				parameters.put(ClientAdvancementManager.class, MinecraftClient.getInstance().player.networkHandler.getAdvancementHandler());
+			parameters.put(Player.class, Minecraft.getInstance().player);
+			if ((Minecraft.getInstance().player != null) && (Minecraft.getInstance().player.connection.getAdvancements() != null)) {
+				parameters.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
 			
 			Class<?> gui = Class.forName(identifier);
@@ -73,7 +73,7 @@ public class GuiConstructor {
 		try {
 
 			//Custom loader: ResourcePacksScreen
-			if (PackScreen.class.isAssignableFrom(gui)) {
+			if (PackSelectionScreen.class.isAssignableFrom(gui)) {
 				return new ResourcePacksScreenInstance(con, paras, gui).getInstance();
 			}
 			

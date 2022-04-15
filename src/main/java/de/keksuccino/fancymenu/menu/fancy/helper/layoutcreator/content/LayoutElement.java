@@ -6,18 +6,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
@@ -37,7 +36,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 
-public abstract class LayoutElement extends DrawableHelper {
+public abstract class LayoutElement extends GuiComponent {
 
 	public CustomizationItemBase object;
 	public LayoutEditorScreen handler;
@@ -137,9 +136,9 @@ public abstract class LayoutElement extends DrawableHelper {
 		/** COPY ELEMENT ID **/
 		AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
 			if (!(this instanceof LayoutVanillaButton)) {
-				MinecraftClient.getInstance().keyboard.setClipboard(this.object.getActionId());
+				Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
 			} else {
-				MinecraftClient.getInstance().keyboard.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).button.getId());
+				Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).button.getId());
 			}
 		});
 		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
@@ -262,8 +261,8 @@ public abstract class LayoutElement extends DrawableHelper {
 				if (label == null) {
 					label = "Object";
 				} else {
-					if (MinecraftClient.getInstance().textRenderer.getWidth(label) > 200) {
-						label = MinecraftClient.getInstance().textRenderer.trimToWidth(label, 200) + "..";
+					if (Minecraft.getInstance().font.width(label) > 200) {
+						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
 					}
 				}
 				AdvancedButton btn = new AdvancedButton(0, 0, 0, 0, label, (press2) -> {
@@ -410,7 +409,7 @@ public abstract class LayoutElement extends DrawableHelper {
 			PopupHandler.displayPopup(p);
 		}) {
 			@Override
-			public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 				if (!LayoutElement.this.object.delayAppearance) {
 					this.active = false;
 				} else {
@@ -438,7 +437,7 @@ public abstract class LayoutElement extends DrawableHelper {
 			}
 		}) {
 			@Override
-			public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 				if (!LayoutElement.this.object.delayAppearance) {
 					this.active = false;
 				} else {
@@ -469,7 +468,7 @@ public abstract class LayoutElement extends DrawableHelper {
 			PopupHandler.displayPopup(p);
 		}) {
 			@Override
-			public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 				if (!LayoutElement.this.object.delayAppearance) {
 					this.active = false;
 				} else {
@@ -624,11 +623,11 @@ public abstract class LayoutElement extends DrawableHelper {
 		try {
 			if (this.stretchX) {
 				this.object.posX = 0;
-				this.object.setWidth(MinecraftClient.getInstance().currentScreen.width);
+				this.object.setWidth(Minecraft.getInstance().screen.width);
 			}
 			if (this.stretchY) {
 				this.object.posY = 0;
-				this.object.setHeight(MinecraftClient.getInstance().currentScreen.height);
+				this.object.setHeight(Minecraft.getInstance().screen.height);
 			}
 			if (this.stretchX || this.stretchY) {
 				this.oElement.active = false;
@@ -683,7 +682,7 @@ public abstract class LayoutElement extends DrawableHelper {
 		}
 	}
 
-	public void render(MatrixStack matrix, int mouseX, int mouseY) {
+	public void render(PoseStack matrix, int mouseX, int mouseY) {
 		this.updateHovered(mouseX, mouseY);
 
 		//Render the customization item
@@ -707,7 +706,7 @@ public abstract class LayoutElement extends DrawableHelper {
 
 		//Reset cursor to default
 		if ((this.activeGrabber == -1) && (!MouseInput.isLeftMouseDown() || PopupHandler.isPopupActive())) {
-			GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), normalCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 		}
 
 		//Update dragging state
@@ -811,15 +810,15 @@ public abstract class LayoutElement extends DrawableHelper {
 		}
 	}
 
-	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
+	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
-		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line left
-		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line right
-		DrawableHelper.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//--------------------------------
 
 		int w = 4;
@@ -835,42 +834,42 @@ public abstract class LayoutElement extends DrawableHelper {
 
 		if (!this.stretchX) {
 			//grabber left
-			DrawableHelper.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
+			GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 			//grabber right
-			DrawableHelper.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
+			GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 		}
 		if (!this.stretchY) {
 			//grabber top
-			DrawableHelper.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
+			GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
 			//grabber bottom
-			DrawableHelper.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+			GuiComponent.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
 		}
 
 		//Update cursor and active grabber when grabber is hovered
 		if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 			if (!this.stretchX) {
-				GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), hResizeCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 				this.activeGrabber = 0;
 			} else {
 				this.activeGrabber = -1;
 			}
 		} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 			if (!this.stretchX) {
-				GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), hResizeCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 				this.activeGrabber = 1;
 			} else {
 				this.activeGrabber = -1;
 			}
 		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
 			if (!this.stretchY) {
-				GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), vResizeCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 				this.activeGrabber = 2;
 			} else {
 				this.activeGrabber = -1;
 			}
 		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
 			if (!this.stretchY) {
-				GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), vResizeCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 				this.activeGrabber = 3;
 			} else {
 				this.activeGrabber = -1;
@@ -881,26 +880,26 @@ public abstract class LayoutElement extends DrawableHelper {
 
 		//Render pos and size values
 		RenderUtils.setScale(matrix, 0.5F);
-		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 
-		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
-		DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
+		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
 	}
 
-	protected void renderHighlightBorder(MatrixStack matrix) {
+	protected void renderHighlightBorder(PoseStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
 
 		//horizontal line top
-		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
 		//horizontal line bottom
-		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line left
-		DrawableHelper.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line right
-		DrawableHelper.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
+		GuiComponent.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 	}
 
 	/**

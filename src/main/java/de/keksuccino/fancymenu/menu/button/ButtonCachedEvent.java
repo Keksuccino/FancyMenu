@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
 
 public class ButtonCachedEvent extends EventBase {
 	
@@ -27,8 +27,8 @@ public class ButtonCachedEvent extends EventBase {
 		return this.buttonlist;
 	}
 	
-	public List<AbstractButtonWidget> getWidgetList() {
-		List<AbstractButtonWidget> l = new ArrayList<AbstractButtonWidget>();
+	public List<AbstractWidget> getWidgetList() {
+		List<AbstractWidget> l = new ArrayList<AbstractWidget>();
 		for (ButtonData d : this.buttonlist) {
 			l.add(d.getButton());
 		}

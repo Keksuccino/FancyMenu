@@ -5,7 +5,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import com.google.common.io.Files;
 
 import de.keksuccino.fancymenu.FancyMenu;
@@ -25,8 +26,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 
 public class CustomizationHelper {
 
@@ -56,9 +55,11 @@ public class CustomizationHelper {
 
 		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
+				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
 
-				CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+					CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
 
+				}
 			}
 		}
 
@@ -85,10 +86,10 @@ public class CustomizationHelper {
 			CustomizationHelperUI.showMenuInfo = false;
 		}
 
-		Konkrete.getEventHandler().callEventsFor(new MenuReloadedEvent(MinecraftClient.getInstance().currentScreen));
+		Konkrete.getEventHandler().callEventsFor(new MenuReloadedEvent(Minecraft.getInstance().screen));
 		
 		try {
-			MinecraftClient.getInstance().openScreen(MinecraftClient.getInstance().currentScreen);
+			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -100,7 +101,7 @@ public class CustomizationHelper {
 			String url = f.toURI().toURL().toString();
 			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
 			URL u = new URL(url);
-			if (!MinecraftClient.IS_SYSTEM_MAC) {
+			if (!Minecraft.ON_OSX) {
 				if (s.contains("win")) {
 					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
 				} else {
@@ -138,7 +139,7 @@ public class CustomizationHelper {
 					meta.get(0).addEntry("path", layout.getPath());
 					
 					LayoutEditorScreen.isActive = true;
-					MinecraftClient.getInstance().openScreen(new PreloadedLayoutEditorScreen(current, l));
+					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
 					MenuCustomization.stopSounds();
 					MenuCustomization.resetSounds();
 					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {

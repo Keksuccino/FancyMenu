@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
@@ -16,11 +17,6 @@ import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.HorizontalSwitcher;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-
 import java.awt.*;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -28,6 +24,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
 
 public class BackgroundOptionsPopup extends FMPopup {
 
@@ -215,7 +214,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 			}
 		}) {
 			@Override
-			public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 
 				//Set correct button label for selected custom background type
 				if (isCustomType(typeSwitcher.getSelectedValueIndex())) {
@@ -264,6 +263,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 			if (this.handler.customMenuBackground != null) {
 				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			}
+			if (this.handler.customMenuBackground != null) {
+				this.handler.customMenuBackground.onResetBackground();
+			}
 			this.handler.customMenuBackground = null;
 			this.handler.customMenuBackgroundInputString = null;
 		});
@@ -291,14 +293,14 @@ public class BackgroundOptionsPopup extends FMPopup {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
 
 		if (this.isDisplayed()) {
 
 			List<String> typeDescription = null;
 
-			drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, "§l" + Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), renderIn.width / 2, (renderIn.height / 2) - 110, -1);
+			drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), renderIn.width / 2, (renderIn.height / 2) - 110, -1);
 
 			this.typeSwitcher.render(matrix, (renderIn.width / 2) - (this.typeSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 85);
 
@@ -320,7 +322,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.desc"), "%n%"));
 
-				drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.animationSwitcher.render(matrix, (renderIn.width / 2) - (this.animationSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -349,7 +351,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.panorama.desc"), "%n%"));
 
-				drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.panoramaSwitcher.render(matrix, (renderIn.width / 2) - (this.panoramaSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -366,7 +368,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.slideshow.desc"), "%n%"));
 
-				drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.slideshowSwitcher.render(matrix, (renderIn.width / 2) - (this.slideshowSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -428,7 +430,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 							this.clearCustomBackgroundButton.active = true;
 						}
 
-						drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+						drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 						this.customBackgroundSwitcher.render(matrix, (renderIn.width / 2) - (this.customBackgroundSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -512,17 +514,17 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 	}
 
-	public static void renderDescriptionBackground(MatrixStack matrix, int x, int y, int width, int height) {
-		DrawableHelper.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
+	public static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
+		GuiComponent.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
 	}
 
-	public static void renderDescription(MatrixStack matrix, int mouseX, int mouseY, List<String> desc) {
+	public static void renderDescription(PoseStack matrix, int mouseX, int mouseY, List<String> desc) {
 		if (desc != null) {
 			int width = 10;
 			int height = 10;
 
 			for (String s : desc) {
-				int i = MinecraftClient.getInstance().textRenderer.getWidth(s) + 10;
+				int i = Minecraft.getInstance().font.width(s) + 10;
 				if (i > width) {
 					width = i;
 				}
@@ -532,11 +534,11 @@ public class BackgroundOptionsPopup extends FMPopup {
 			mouseX += 5;
 			mouseY += 5;
 
-			if (MinecraftClient.getInstance().currentScreen.width < mouseX + width) {
+			if (Minecraft.getInstance().screen.width < mouseX + width) {
 				mouseX -= width + 10;
 			}
 
-			if (MinecraftClient.getInstance().currentScreen.height < mouseY + height) {
+			if (Minecraft.getInstance().screen.height < mouseY + height) {
 				mouseY -= height + 10;
 			}
 
@@ -546,7 +548,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 			int i2 = 5;
 			for (String s : desc) {
-				DrawableHelper.drawStringWithShadow(matrix, MinecraftClient.getInstance().textRenderer, s, mouseX + 5, mouseY + i2, -1);
+				GuiComponent.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, -1);
 				i2 += 10;
 			}
 

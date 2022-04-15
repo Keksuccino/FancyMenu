@@ -7,8 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import com.google.common.io.Files;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -44,11 +50,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Identifier;
 
 public class LayoutEditorUI extends UIBase {
 
@@ -57,7 +58,7 @@ public class LayoutEditorUI extends UIBase {
 
 	protected int tick = 0;
 
-	protected static final Identifier CLOSE_BUTTON_TEXTURE = new Identifier("keksuccino", "close_btn.png");
+	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
 
 	public LayoutEditorUI(LayoutEditorScreen parent) {
 		this.parent = parent;
@@ -85,7 +86,7 @@ public class LayoutEditorUI extends UIBase {
 					if (call) {
 						MenuCustomization.stopSounds();
 						MenuCustomization.resetSounds();
-						MinecraftClient.getInstance().openScreen(new LayoutEditorScreen(this.parent.screen));
+						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.parent.screen));
 					}
 				});
 			});
@@ -140,7 +141,7 @@ public class LayoutEditorUI extends UIBase {
 			AdvancedButton undoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.undo"), true, (press) -> {
 				this.parent.history.stepBack();
 				try {
-					((LayoutEditorScreen)MinecraftClient.getInstance().currentScreen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
+					((LayoutEditorScreen)Minecraft.getInstance().screen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -150,7 +151,7 @@ public class LayoutEditorUI extends UIBase {
 			AdvancedButton redoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.redo"), true, (press) -> {
 				this.parent.history.stepForward();
 				try {
-					((LayoutEditorScreen)MinecraftClient.getInstance().currentScreen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
+					((LayoutEditorScreen)Minecraft.getInstance().screen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -194,10 +195,11 @@ public class LayoutEditorUI extends UIBase {
 			manageAudioMenu.setAutoclose(true);
 			elementMenu.addChild(manageAudioMenu);
 
-			AdvancedButton manageAudioButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element.manageaudio"), true, (press) -> {
+			AdvancedButton manageAudioButton = new AdvancedButton(0, 0, 0, 0, "§m" + Locals.localize("helper.editor.ui.element.manageaudio"), true, (press) -> {
 				manageAudioMenu.setParentButton((AdvancedButton) press);
 				manageAudioMenu.openMenuAt(0, press.y);
 			});
+			manageAudioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc"), "%n%"));
 			elementMenu.addContent(manageAudioButton);
 
 			HiddenVanillaButtonContextMenu hiddenVanillaMenu = new HiddenVanillaButtonContextMenu(this.parent);
@@ -221,7 +223,7 @@ public class LayoutEditorUI extends UIBase {
 				this.closeEditor();
 			}) {
 				@Override
-				public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+				public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
 					this.width = this.height;
 					super.render(matrix, mouseX, mouseY, partialTicks);
 				}
@@ -237,7 +239,7 @@ public class LayoutEditorUI extends UIBase {
 		}
 	}
 
-	public void render(MatrixStack matrix, Screen screen) {
+	public void render(PoseStack matrix, Screen screen) {
 		try {
 
 			if (bar != null) {
@@ -275,11 +277,11 @@ public class LayoutEditorUI extends UIBase {
 				MenuCustomization.resetSounds();
 				MenuCustomizationProperties.loadProperties();
 
-				MinecraftClient.getInstance().getWindow().setScaleFactor(MinecraftClient.getInstance().getWindow().calculateScaleFactor(MinecraftClient.getInstance().options.guiScale, MinecraftClient.getInstance().forcesUnicodeFont()));
-				this.parent.height = MinecraftClient.getInstance().getWindow().getScaledHeight();
-				this.parent.width = MinecraftClient.getInstance().getWindow().getScaledWidth();
+				Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
+				this.parent.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+				this.parent.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
-				MinecraftClient.getInstance().openScreen(this.parent.screen);
+				Minecraft.getInstance().setScreen(this.parent.screen);
 			}
 		});
 	}
@@ -407,6 +409,9 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.backgroundSlideshow = null;
 				this.parent.backgroundAnimation = null;
 				this.parent.backgroundTexture = null;
+				if (this.parent.customMenuBackground != null) {
+					this.parent.customMenuBackground.onResetBackground();
+				}
 				this.parent.customMenuBackground = null;
 				this.parent.customMenuBackgroundInputString = null;
 			});
@@ -482,7 +487,7 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(pop);
 			}) {
 				@Override
-				public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+				public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 					if (parent.randomMode) {
 						this.active = true;
 					} else {
@@ -508,7 +513,7 @@ public class LayoutEditorUI extends UIBase {
 				}
 			}) {
 				@Override
-				public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+				public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 					if (parent.randomMode) {
 						this.active = true;
 					} else {
@@ -570,12 +575,12 @@ public class LayoutEditorUI extends UIBase {
 					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.properties.autoscale.off"));
 					this.parent.autoScalingWidth = 0;
 					this.parent.autoScalingHeight = 0;
-					this.parent.init(MinecraftClient.getInstance(), MinecraftClient.getInstance().getWindow().getScaledWidth(), MinecraftClient.getInstance().getWindow().getScaledHeight());
+					this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 				} else {
 					PopupHandler.displayPopup(new AutoScalingPopup(this.parent, (call) -> {
 						if (call) {
 							((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.properties.autoscale.on"));
-							this.parent.init(MinecraftClient.getInstance(), MinecraftClient.getInstance().getWindow().getScaledWidth(), MinecraftClient.getInstance().getWindow().getScaledHeight());
+							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 						}
 					}));
 				}
@@ -597,7 +602,7 @@ public class LayoutEditorUI extends UIBase {
 							}
 
 							this.parent.scale = s;
-							this.parent.init(MinecraftClient.getInstance(), MinecraftClient.getInstance().getWindow().getScaledWidth(), MinecraftClient.getInstance().getWindow().getScaledHeight());
+							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 
 						}
 					}
@@ -946,11 +951,11 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(buttonButton);
 
-			/** AUDIO **/
-			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
-				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addAudio, "wav"));
-			});
-			this.addContent(audioButton);
+//			/** AUDIO **/
+//			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
+//				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addAudio, "wav"));
+//			});
+//			this.addContent(audioButton);
 
 			/** PLAYER ENTITY **/
 			AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
@@ -997,8 +1002,8 @@ public class LayoutEditorUI extends UIBase {
 
 			for (String s : SlideshowHandler.getSlideshowNames()) {
 				String name = s;
-				if (MinecraftClient.getInstance().textRenderer.getWidth(name) > 90) {
-					name = MinecraftClient.getInstance().textRenderer.trimToWidth(name, 90) + "..";
+				if (Minecraft.getInstance().font.width(name) > 90) {
+					name = Minecraft.getInstance().font.plainSubstrByWidth(name, 90) + "..";
 				}
 
 				AdvancedButton slideshowB = new AdvancedButton(0, 0, 0, 20, name, true, (press) -> {
@@ -1032,6 +1037,15 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(shapesButton);
 
 			this.addSeparator();
+
+			/** DUMMY BUTTON: INSTALL AUDIO EXTENSION **/
+			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
+				ButtonScriptEngine.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
+			});
+			audioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.btn.desc"), "%n%"));
+			if (!FancyMenu.isAudioExtensionLoaded()) {
+				this.addContent(audioButton);
+			}
 
 			/** CUSTOM ITEMS (API) **/
 			for (CustomizationItemContainer c : CustomizationItemRegistry.getItems()) {
@@ -1075,8 +1089,8 @@ public class LayoutEditorUI extends UIBase {
 				for (Map.Entry<String, Boolean> m : this.parent.audio.entrySet()) {
 
 					String label = new File(m.getKey()).getName();
-					if (MinecraftClient.getInstance().textRenderer.getWidth(label) > 200) {
-						label = MinecraftClient.getInstance().textRenderer.trimToWidth(label, 200) + "..";
+					if (Minecraft.getInstance().font.width(label) > 200) {
+						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
 					}
 
 					FMContextMenu actionsMenu = new FMContextMenu();
@@ -1171,9 +1185,9 @@ public class LayoutEditorUI extends UIBase {
 					this.parent.multiselectStretchedX = !this.parent.multiselectStretchedX;
 
 					if (!this.parent.multiselectStretchedX) {
-						press.setMessage(new LiteralText(Locals.localize("helper.creator.object.stretch.x")));
+						press.setMessage(new TextComponent(Locals.localize("helper.creator.object.stretch.x")));
 					} else {
-						press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.object.stretch.x")));
+						press.setMessage(new TextComponent("§a" + Locals.localize("helper.creator.object.stretch.x")));
 					}
 
 				});
@@ -1191,9 +1205,9 @@ public class LayoutEditorUI extends UIBase {
 					this.parent.multiselectStretchedY = !this.parent.multiselectStretchedY;
 
 					if (!this.parent.multiselectStretchedY) {
-						press.setMessage(new LiteralText(Locals.localize("helper.creator.object.stretch.y")));
+						press.setMessage(new TextComponent(Locals.localize("helper.creator.object.stretch.y")));
 					} else {
-						press.setMessage(new LiteralText("§a" + Locals.localize("helper.creator.object.stretch.y")));
+						press.setMessage(new TextComponent("§a" + Locals.localize("helper.creator.object.stretch.y")));
 					}
 
 				});
@@ -1250,7 +1264,7 @@ public class LayoutEditorUI extends UIBase {
 							}
 						}
 						this.closeMenu();
-						MinecraftClient.getInstance().openScreen(this.parent);
+						Minecraft.getInstance().setScreen(this.parent);
 					});
 					resetOriBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation.btndesc"), "%n%"));
 					this.addContent(resetOriBtn);

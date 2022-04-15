@@ -3,29 +3,29 @@ package de.keksuccino.fancymenu.mixin.client;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.mixin.cache.MixinCache;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-@Mixin(DrawableHelper.class)
-public class MixinDrawableHelper {
+@Mixin(GuiComponent.class)
+public class MixinGuiComponent {
 
-    @ModifyVariable(at = @At("HEAD"), method = "fill(Lnet/minecraft/client/util/math/MatrixStack;IIIII)V", argsOnly = true, index = 5)
+    @ModifyVariable(at = @At("HEAD"), method = "fill", argsOnly = true, index = 5)
     private static int modifyColor(int color) {
         if (FancyMenu.config == null) {
             return color;
         }
-        if (MinecraftClient.getInstance().getOverlay() == null) {
+        if (Minecraft.getInstance().getOverlay() == null) {
             MixinCache.isSplashScreenRendering = false;
         }
-        if (MixinCache.isSplashScreenRendering || ((MinecraftClient.getInstance().getOverlay() != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
+        if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().getOverlay() != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
             int backColor = color;
             int alpha = MixinCache.currentSplashAlpha;
 
-            Screen current = MinecraftClient.getInstance().currentScreen;
+            Screen current = Minecraft.getInstance().screen;
             if ((current != null) && (MenuCustomization.isMenuCustomizable(current) || FancyMenu.config.getOrDefault("preloadanimations", true))) {
                 alpha = 255;
             }

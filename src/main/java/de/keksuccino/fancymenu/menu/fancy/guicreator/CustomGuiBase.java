@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.guicreator;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
 
 public class CustomGuiBase extends Screen {
 
@@ -18,7 +17,7 @@ public class CustomGuiBase extends Screen {
 	private Screen parent;
 	
 	public CustomGuiBase(String title, String identifier, boolean closeOnEsc, @Nullable Screen parent, @Nullable Screen overrides) {
-		super(new LiteralText(""));
+		super(new TextComponent(""));
 		this.menutitle = title;
 		this.identifier = identifier;
 		this.closeOnEsc = closeOnEsc;
@@ -28,7 +27,7 @@ public class CustomGuiBase extends Screen {
 	
 	@Override
 	public void onClose() {
-		MinecraftClient.getInstance().openScreen(this.parent);
+		Minecraft.getInstance().setScreen(this.parent);
 	}
 	
 	@Override
@@ -37,8 +36,8 @@ public class CustomGuiBase extends Screen {
 	}
 	
 	@Override
-	public Text getTitle() {
-		return new LiteralText(this.menutitle);
+	public Component getTitle() {
+		return new TextComponent(this.menutitle);
 	}
 	
 	public String getTitleString() {
@@ -46,10 +45,10 @@ public class CustomGuiBase extends Screen {
 	}
 	
 	@Override
-	public void render(MatrixStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
+	public void render(PoseStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
 		this.renderBackground(matrix);
 		if (title != null) {
-			DrawableHelper.drawCenteredString(matrix, this.textRenderer, this.menutitle, this.width / 2, 8, 16777215);
+			GuiComponent.drawCenteredString(matrix, this.font, this.menutitle, this.width / 2, 8, 16777215);
 		}
 		super.render(matrix, p_render_1_, p_render_2_, p_render_3_);
 	}

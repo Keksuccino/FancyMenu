@@ -2,12 +2,11 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import net.minecraft.client.MinecraftClient;
 
 public class EditHistory {
 
@@ -81,7 +80,7 @@ public class EditHistory {
 				neweditor.single = single;
 				this.editor = neweditor;
 
-				MinecraftClient.getInstance().openScreen(neweditor);
+				Minecraft.getInstance().setScreen(neweditor);
 
 			}
 			
@@ -110,7 +109,7 @@ public class EditHistory {
 					neweditor.single = single;
 					this.editor = neweditor;
 
-					MinecraftClient.getInstance().openScreen(neweditor);
+					Minecraft.getInstance().setScreen(neweditor);
 				}
 
 			}

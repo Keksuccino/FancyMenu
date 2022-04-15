@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
-
-import com.sun.javafx.geom.Vec3f;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.Konkrete;
@@ -20,13 +22,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3d;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 
 public class SplashTextCustomizationItem extends CustomizationItemBase {
 
@@ -113,7 +108,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		
 		if (this.isNewMenuThis) {
 			isNewMenu = false;
@@ -125,13 +120,13 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		
 		if (this.shouldRender()) {
 			
-			this.renderSplash(matrix, MinecraftClient.getInstance().textRenderer, menu);
+			this.renderSplash(matrix, Minecraft.getInstance().font, menu);
 			
 		}
 		
 	}
 	
-	protected void renderSplash(MatrixStack matrix, TextRenderer font, Screen s) {
+	protected void renderSplash(PoseStack matrix, Font font, Screen s) {
 
 		String splash = null;
 		
@@ -173,9 +168,9 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			float f = basescale;
 			if (this.bounce) {
-				f = f - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+				f = f - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
 			}
-			f = f * 100.0F / (float) (font.getWidth(splash) + 32);
+			f = f * 100.0F / (float) (font.width(splash) + 32);
 			
 			RenderSystem.enableBlend();
 
@@ -188,16 +183,16 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			RenderSystem.scalef(f, f, f);
 
 			int alpha = this.basecolor.getAlpha();
-			int i = MathHelper.ceil(this.opacity * 255.0F);
+			int i = Mth.ceil(this.opacity * 255.0F);
 			if (i < alpha) {
 				alpha = i;
 			}
 			Color c = new Color(this.basecolor.getRed(), this.basecolor.getGreen(), this.basecolor.getBlue(), alpha);
 
 			if (this.shadow) {
-				font.drawWithShadow(matrix, splash, -(font.getWidth(splash) / 2), 0, c.getRGB());
+				font.drawShadow(matrix, splash, -(font.width(splash) / 2), 0, c.getRGB());
 			} else {
-				font.draw(matrix, splash, -(font.getWidth(splash) / 2), 0, c.getRGB());
+				font.draw(matrix, splash, -(font.width(splash) / 2), 0, c.getRGB());
 			}
 
 			RenderSystem.popMatrix();
@@ -209,7 +204,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	
 	@SubscribeEvent
 	public static void onInitScreenPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		Screen s = MinecraftClient.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if ((lastScreen == null) || !lastScreen.getClass().getName().equals(s.getClass().getName())) {
 				isNewMenu = true;

@@ -9,7 +9,11 @@ import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -18,36 +22,31 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.client.render.entity.ParrotEntityRenderer;
-import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
-import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.render.entity.feature.FeatureRendererContext;
-import net.minecraft.client.render.entity.feature.HeadFeatureRenderer;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.ParrotEntityModel;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.util.DefaultSkinHelper;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Quaternion;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.ParrotModel;
+import net.minecraft.client.model.PlayerModel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.client.renderer.entity.ParrotRenderer;
+import net.minecraft.client.renderer.entity.RenderLayerParent;
+import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 @SuppressWarnings("resource")
 public class PlayerEntityCustomizationItem extends CustomizationItemBase {
@@ -62,7 +61,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	public float headRotationX = 0;
 	public float headRotationY = 0;
 	
-	private static final World DUMMY_WORLD = DummyWorldFactory.getDummyWorld();
+	private static final Level DUMMY_WORLD = DummyWorldFactory.getDummyWorld();
 	private static final BlockPos BLOCK_POS = new BlockPos(0, 0, 0);
 
 	private static final MenuPlayerRenderer PLAYER_RENDERER = new MenuPlayerRenderer(false);
@@ -209,13 +208,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			this.value = "Player Entity";
 		}
 
-		this.setWidth((int)(this.entity.getWidth()*this.scale));
-		this.setHeight((int)(this.entity.getHeight()*this.scale));
+		this.setWidth((int)(this.entity.getBbWidth()*this.scale));
+		this.setHeight((int)(this.entity.getBbHeight()*this.scale));
 		
 	}
 
 	@Override
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		try {
 			if (this.shouldRender()) {
 				if (this.entity != null) {
@@ -228,8 +227,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 					}
 					
 					//Update object width and height for layout editor
-					this.setWidth((int)(this.entity.getWidth()*this.scale));
-					this.setHeight((int)(this.entity.getHeight()*this.scale));
+					this.setWidth((int)(this.entity.getBbWidth()*this.scale));
+					this.setHeight((int)(this.entity.getBbHeight()*this.scale));
 					
 					int mX = MouseInput.getMouseX();
 					int mY = MouseInput.getMouseY();
@@ -243,72 +242,72 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	}
 
 	private static void renderPlayerEntity(int posX, int posY, int scale, float mouseX, float mouseY, PlayerEntityCustomizationItem item) {
-		float entityHeight = item.entity.getHeight() * item.scale;
-		float rotationX = (float)Math.atan((double)((mouseX - item.getPosX(MinecraftClient.getInstance().currentScreen)) / 40.0F));
-		float rotationY = (float)Math.atan((double)((mouseY - (item.getPosY(MinecraftClient.getInstance().currentScreen) - (entityHeight / 2))) / 40.0F));
+		float entityHeight = item.entity.getBbHeight() * item.scale;
+		float rotationX = (float)Math.atan((double)((mouseX - item.getPosX(Minecraft.getInstance().screen)) / 40.0F));
+		float rotationY = (float)Math.atan((double)((mouseY - (item.getPosY(Minecraft.getInstance().screen) - (entityHeight / 2))) / 40.0F));
 		RenderSystem.pushMatrix();
 		RenderSystem.translatef((float)posX, (float)posY, 1050.0F);
 		RenderSystem.scalef(1.0F, 1.0F, -1.0F);
-		MatrixStack matrix = new MatrixStack();
+		PoseStack matrix = new PoseStack();
 		matrix.translate(0.0D, 0.0D, 1000.0D);
 		matrix.scale((float)scale, (float)scale, (float)scale);
 
 		if (!item.autoRotation) {
 
 			//vertical rotation body
-			Quaternion q = Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-			Quaternion q2 = Vector3f.POSITIVE_X.getDegreesQuaternion(item.bodyRotationY);
-			q.hamiltonProduct(q2);
-			matrix.multiply(q);
+			Quaternion q = Vector3f.ZP.rotationDegrees(180.0F);
+			Quaternion q2 = Vector3f.XP.rotationDegrees(item.bodyRotationY);
+			q.mul(q2);
+			matrix.mulPose(q);
 			//-----------
 
 			//horizontal rotation body
-			item.entity.bodyYaw = item.bodyRotationX;
+			item.entity.yBodyRot = item.bodyRotationX;
 
 			//vertical rotation head
-			item.entity.pitch = item.headRotationY;
+			item.entity.xRot = item.headRotationY;
 
 			//horizontal rotation head
-			item.entity.headYaw = item.headRotationX;
+			item.entity.yHeadRot = item.headRotationX;
 
 		} else {
 
-			Quaternion q = Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-			Quaternion q2 = Vector3f.POSITIVE_X.getDegreesQuaternion(Math.negateExact((long) (rotationY * 20.0F)));
-			q.hamiltonProduct(q2);
-			matrix.multiply(q);
+			Quaternion q = Vector3f.ZP.rotationDegrees(180.0F);
+			Quaternion q2 = Vector3f.XP.rotationDegrees(Math.negateExact((long) (rotationY * 20.0F)));
+			q.mul(q2);
+			matrix.mulPose(q);
 
-			item.entity.bodyYaw = Math.negateExact((long)(180.0F + rotationX * 20.0F));
+			item.entity.yBodyRot = Math.negateExact((long)(180.0F + rotationX * 20.0F));
 
-			item.entity.pitch = Math.negateExact((long)(-rotationY * 20.0F));
+			item.entity.xRot = Math.negateExact((long)(-rotationY * 20.0F));
 
-			item.entity.headYaw = Math.negateExact((long)(180.0F + rotationX * 40.0F));
+			item.entity.yHeadRot = Math.negateExact((long)(180.0F + rotationX * 40.0F));
 
 		}
 
-		VertexConsumerProvider.Immediate rb = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+		MultiBufferSource.BufferSource rb = Minecraft.getInstance().renderBuffers().bufferSource();
 		RenderSystem.runAsFancy(() -> {
 			item.renderEntityStatic(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, matrix, rb, 15728880);
 		});
-		rb.draw();
+		rb.endBatch();
 
 		RenderSystem.popMatrix();
 	}
 	
-	public void renderEntityStatic(double xIn, double yIn, double zIn, float rotationYawIn, float partialTicks, MatrixStack matrixStackIn, VertexConsumerProvider bufferIn, int packedLightIn) {
+	public void renderEntityStatic(double xIn, double yIn, double zIn, float rotationYawIn, float partialTicks, PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn) {
 		try {
 			
-			Vec3d vector3d;
+			Vec3 vector3d;
 			if (this.entity.isSlimSkin()) {
-				vector3d = SLIM_PLAYER_RENDERER.getPositionOffset(this.entity, partialTicks);
+				vector3d = SLIM_PLAYER_RENDERER.getRenderOffset(this.entity, partialTicks);
 			} else {
-				vector3d = PLAYER_RENDERER.getPositionOffset(this.entity, partialTicks);
+				vector3d = PLAYER_RENDERER.getRenderOffset(this.entity, partialTicks);
 			}
 			
-			double d2 = xIn + vector3d.getX();
-			double d3 = yIn + vector3d.getY();
-			double d0 = zIn + vector3d.getZ();
-			matrixStackIn.push();
+			double d2 = xIn + vector3d.x();
+			double d3 = yIn + vector3d.y();
+			double d0 = zIn + vector3d.z();
+			matrixStackIn.pushPose();
 			matrixStackIn.translate(d2, d3, d0);
 			
 			if (this.entity.isSlimSkin()) {
@@ -317,9 +316,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 				PLAYER_RENDERER.render(this.entity, rotationYawIn, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 			}
 			
-			matrixStackIn.translate(-vector3d.getX(), -vector3d.getY(), -vector3d.getZ());
+			matrixStackIn.translate(-vector3d.x(), -vector3d.y(), -vector3d.z());
 
-			matrixStackIn.pop();
+			matrixStackIn.popPose();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -434,51 +433,51 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		return slim;
 	}
 
-	public static class MenuPlayerRenderer extends LivingEntityRenderer<MenuPlayerEntity, PlayerEntityModel<MenuPlayerEntity>> {
+	public static class MenuPlayerRenderer extends LivingEntityRenderer<MenuPlayerEntity, PlayerModel<MenuPlayerEntity>> {
 
 		@SuppressWarnings("rawtypes")
 		public MenuPlayerRenderer(boolean useSmallArms) {
-			super(MinecraftClient.getInstance().getEntityRenderDispatcher(), new PlayerEntityModel<>(0.0F, useSmallArms), 0.5F);
-			this.addFeature(new ArmorFeatureRenderer(this, new BipedEntityModel(0.5F), new BipedEntityModel(1.0F)));
-			this.addFeature(new MenuPlayerCapeLayer(this));
-			this.addFeature(new HeadFeatureRenderer(this));
-			this.addFeature(new MenuPlayerParrotLayer(this));
+			super(Minecraft.getInstance().getEntityRenderDispatcher(), new PlayerModel<>(0.0F, useSmallArms), 0.5F);
+			this.addLayer(new HumanoidArmorLayer(this, new HumanoidModel(0.5F), new HumanoidModel(1.0F)));
+			this.addLayer(new MenuPlayerCapeLayer(this));
+			this.addLayer(new CustomHeadLayer(this));
+			this.addLayer(new MenuPlayerParrotLayer(this));
 		}
 
 		@Override
-		public void render(MenuPlayerEntity entityIn, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
+		public void render(MenuPlayerEntity entityIn, float f, float g, PoseStack matrixStack, MultiBufferSource vertexConsumerProvider, int i) {
 			this.setModelVisibilities(entityIn);
 			super.render(entityIn, f, g, matrixStack, vertexConsumerProvider, i);
 		}
 
 		@Override
-		public Vec3d getPositionOffset(MenuPlayerEntity playerEntity, float f) {
-			return playerEntity.isInSneakingPose() ? new Vec3d(0.0D, -0.125D, 0.0D) : super.getPositionOffset(playerEntity, f);
+		public Vec3 getRenderOffset(MenuPlayerEntity playerEntity, float f) {
+			return playerEntity.isCrouching() ? new Vec3(0.0D, -0.125D, 0.0D) : super.getRenderOffset(playerEntity, f);
 		}
 
 		private void setModelVisibilities(MenuPlayerEntity clientPlayer) {
-			PlayerEntityModel<MenuPlayerEntity> playermodel = this.getModel();
-			playermodel.setVisible(true);
+			PlayerModel<MenuPlayerEntity> playermodel = this.getModel();
+			playermodel.setAllVisible(true);
 			playermodel.head.visible = true;
-			playermodel.torso.visible = true;
+			playermodel.body.visible = true;
 			playermodel.leftLeg.visible = true;
 			playermodel.rightLeg.visible = true;
 			playermodel.leftArm.visible = true;
 			playermodel.rightArm.visible = true;
-			playermodel.sneaking = clientPlayer.isSneaking();
+			playermodel.crouching = clientPlayer.isShiftKeyDown();
 		}
 
 		@Override
-		public Identifier getTexture(MenuPlayerEntity entity) {
-			Identifier l = entity.getSkin();
+		public ResourceLocation getTextureLocation(MenuPlayerEntity entity) {
+			ResourceLocation l = entity.getSkin();
 			if (l != null) {
 				return l;
 			}
-			return DefaultSkinHelper.getTexture();
+			return DefaultPlayerSkin.getDefaultSkin();
 		}
 
 		@Override
-		protected boolean hasLabel(MenuPlayerEntity entity) {
+		protected boolean shouldShowName(MenuPlayerEntity entity) {
 			if (entity.showName) {
 				if (entity.getDisplayName() != null) {
 					return true;
@@ -488,72 +487,72 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		}
 
 		@Override
-		protected void renderLabelIfPresent(MenuPlayerEntity playerEntity, Text displayNameIn, MatrixStack matrix, VertexConsumerProvider bufferIn, int packedLightIn) {
+		protected void renderNameTag(MenuPlayerEntity playerEntity, Component displayNameIn, PoseStack matrix, MultiBufferSource bufferIn, int packedLightIn) {
 			if (playerEntity.showName) {
-				boolean flag = !playerEntity.isSneaky();
-				float f = playerEntity.getHeight() + 0.5F;
-				matrix.push();
+				boolean flag = !playerEntity.isDiscrete();
+				float f = playerEntity.getBbHeight() + 0.5F;
+				matrix.pushPose();
 				matrix.translate(0.0D, (double)f, 0.0D);
-				matrix.multiply(new Quaternion(0, 0, 0, 0));
+				matrix.mulPose(new Quaternion(0, 0, 0, 0));
 				matrix.scale(-0.025F, -0.025F, 0.025F);
-				Matrix4f matrix4f = matrix.peek().getModel();
-				float f1 = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+				Matrix4f matrix4f = matrix.last().pose();
+				float f1 = Minecraft.getInstance().options.getBackgroundOpacity(0.25F);
 				int j = (int)(f1 * 255.0F) << 24;
-				TextRenderer fontrenderer = this.getFontRenderer();
-				float f2 = (float)(-fontrenderer.getWidth(displayNameIn) / 2);
-				fontrenderer.draw(displayNameIn, f2, 0, 553648127, false, matrix4f, bufferIn, flag, j, packedLightIn);
+				Font fontrenderer = this.getFont();
+				float f2 = (float)(-fontrenderer.width(displayNameIn) / 2);
+				fontrenderer.drawInBatch(displayNameIn, f2, 0, 553648127, false, matrix4f, bufferIn, flag, j, packedLightIn);
 				if (flag) {
-					fontrenderer.draw(displayNameIn, f2, 0, -1, false, matrix4f, bufferIn, false, 0, packedLightIn);
+					fontrenderer.drawInBatch(displayNameIn, f2, 0, -1, false, matrix4f, bufferIn, false, 0, packedLightIn);
 				}
 
-				matrix.pop();
+				matrix.popPose();
 			}
 		}
 		
 		@Override
-		protected void scale(MenuPlayerEntity entitylivingbaseIn, MatrixStack matrixStackIn, float partialTickTime) {
+		protected void scale(MenuPlayerEntity entitylivingbaseIn, PoseStack matrixStackIn, float partialTickTime) {
 			matrixStackIn.scale(0.9375F, 0.9375F, 0.9375F);
 		}
 
 		@Override
-		protected void setupTransforms(MenuPlayerEntity entityLiving, MatrixStack matrixStackIn, float ageInTicks, float rotationYaw, float partialTicks) {
-			float f = entityLiving.getLeaningPitch(partialTicks);
+		protected void setupRotations(MenuPlayerEntity entityLiving, PoseStack matrixStackIn, float ageInTicks, float rotationYaw, float partialTicks) {
+			float f = entityLiving.getSwimAmount(partialTicks);
 			if (entityLiving.isFallFlying()) {
-				super.setupTransforms(entityLiving, matrixStackIn, ageInTicks, rotationYaw, partialTicks);
-				float f1 = (float)entityLiving.getRoll() + partialTicks;
-				float f2 = MathHelper.clamp(f1 * f1 / 100.0F, 0.0F, 1.0F);
-				if (!entityLiving.isUsingRiptide()) {
-					matrixStackIn.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(f2 * (-90.0F - entityLiving.pitch)));
+				super.setupRotations(entityLiving, matrixStackIn, ageInTicks, rotationYaw, partialTicks);
+				float f1 = (float)entityLiving.getFallFlyingTicks() + partialTicks;
+				float f2 = Mth.clamp(f1 * f1 / 100.0F, 0.0F, 1.0F);
+				if (!entityLiving.isAutoSpinAttack()) {
+					matrixStackIn.mulPose(Vector3f.XP.rotationDegrees(f2 * (-90.0F - entityLiving.xRot)));
 				}
 
-				Vec3d vector3d = entityLiving.getRotationVec(partialTicks);
-				Vec3d vector3d1 = entityLiving.getVelocity();
-				double d0 = Entity.squaredHorizontalLength(vector3d1);
-				double d1 = Entity.squaredHorizontalLength(vector3d);
+				Vec3 vector3d = entityLiving.getViewVector(partialTicks);
+				Vec3 vector3d1 = entityLiving.getDeltaMovement();
+				double d0 = Entity.getHorizontalDistanceSqr(vector3d1);
+				double d1 = Entity.getHorizontalDistanceSqr(vector3d);
 				if (d0 > 0.0D && d1 > 0.0D) {
 					double d2 = (vector3d1.x * vector3d.x + vector3d1.z * vector3d.z) / Math.sqrt(d0 * d1);
 					double d3 = vector3d1.x * vector3d.z - vector3d1.z * vector3d.x;
-					matrixStackIn.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion((float)(Math.signum(d3) * Math.acos(d2))));
+					matrixStackIn.mulPose(Vector3f.YP.rotationDegrees((float)(Math.signum(d3) * Math.acos(d2))));
 				}
 			} else if (f > 0.0F) {
-				super.setupTransforms(entityLiving, matrixStackIn, ageInTicks, rotationYaw, partialTicks);
-				float f3 = entityLiving.isTouchingWater() ? -90.0F - entityLiving.pitch : -90.0F;
-				float f4 = MathHelper.lerp(f, 0.0F, f3);
-				matrixStackIn.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(f4));
-				if (entityLiving.isInSwimmingPose()) {
+				super.setupRotations(entityLiving, matrixStackIn, ageInTicks, rotationYaw, partialTicks);
+				float f3 = entityLiving.isInWater() ? -90.0F - entityLiving.xRot : -90.0F;
+				float f4 = Mth.lerp(f, 0.0F, f3);
+				matrixStackIn.mulPose(Vector3f.XP.rotationDegrees(f4));
+				if (entityLiving.isVisuallySwimming()) {
 					matrixStackIn.translate(0.0D, -1.0D, (double)0.3F);
 				}
 			} else {
-				super.setupTransforms(entityLiving, matrixStackIn, ageInTicks, rotationYaw, partialTicks);
+				super.setupRotations(entityLiving, matrixStackIn, ageInTicks, rotationYaw, partialTicks);
 			}
 		}
 
 	}
 	
-	public static class MenuPlayerEntity extends PlayerEntity {
+	public static class MenuPlayerEntity extends Player {
 
-		public volatile Identifier skinLocation;
-		public volatile Identifier capeLocation;
+		public volatile ResourceLocation skinLocation;
+		public volatile ResourceLocation capeLocation;
 		private volatile boolean capeChecked = false;
 		private volatile boolean capeGettingChecked = false;
 		private volatile boolean skinChecked = false;
@@ -594,14 +593,14 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		}
 		
 		@Override
-		public boolean isSneaking() {
+		public boolean isShiftKeyDown() {
 			return this.crouching;
 		}
 		
 		@Override
-		public Text getDisplayName() {
+		public Component getDisplayName() {
 			if (this.playerName != null) {
-				return new LiteralText(this.playerName);
+				return new TextComponent(this.playerName);
 			}
 			return null;
 		}
@@ -645,14 +644,14 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		}
 		
 		public boolean hasNonDefaultSkin() {
-			return (this.skinLocation != DefaultSkinHelper.getTexture());
+			return (this.skinLocation != DefaultPlayerSkin.getDefaultSkin());
 		}
 		
 		public boolean hasCape() {
 			return (this.getCape() != null);
 		}
 		
-		public Identifier getSkin() {
+		public ResourceLocation getSkin() {
 			
 			if (this.getSkinCallback != null) {
 				this.getSkinCallback.run();
@@ -672,7 +671,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 											String skinUrl = getSkinURL(playerName);
 											if (skinLocation == null) {
 												if (skinUrl == null) {
-													skinLocation = DefaultSkinHelper.getTexture();
+													skinLocation = DefaultPlayerSkin.getDefaultSkin();
 													slimSkin = false;
 													slimSkinChecked = true;
 												} else {
@@ -690,7 +689,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 																		skinLocation = wt.getResourceLocation();
 																		PlayerEntityCache.cacheSkin(playerName, wt.getResourceLocation());
 																	} else {
-																		skinLocation = DefaultSkinHelper.getTexture();
+																		skinLocation = DefaultPlayerSkin.getDefaultSkin();
 																		slimSkin = false;
 																		slimSkinChecked = true;
 																	}
@@ -708,20 +707,20 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 									}
 								}).start();
 							} else {
-								return DefaultSkinHelper.getTexture();
+								return DefaultPlayerSkin.getDefaultSkin();
 							}
 						} else {
 							skinLocation = PlayerEntityCache.getSkin(playerName);
 							skinChecked = true;
 						}
 					} else {
-						this.skinLocation = DefaultSkinHelper.getTexture();
+						this.skinLocation = DefaultPlayerSkin.getDefaultSkin();
 						this.slimSkin = false;
 						this.slimSkinChecked = true;
 					}
 				}
 			} else if (this.skinLocation == null) {
-				this.skinLocation = DefaultSkinHelper.getTexture();
+				this.skinLocation = DefaultPlayerSkin.getDefaultSkin();
 				this.slimSkin = false;
 				this.slimSkinChecked = true;
 			}
@@ -729,7 +728,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			return this.skinLocation;
 		}
 		
-		public Identifier getCape() {
+		public ResourceLocation getCape() {
 			
 			if (this.getCapeCallback != null) {
 				this.getCapeCallback.run();
@@ -783,69 +782,69 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		
 	}
 
-	public static class MenuPlayerCapeLayer extends FeatureRenderer<MenuPlayerEntity, PlayerEntityModel<MenuPlayerEntity>> {
+	public static class MenuPlayerCapeLayer extends RenderLayer<MenuPlayerEntity, PlayerModel<MenuPlayerEntity>> {
 
-		public MenuPlayerCapeLayer(FeatureRendererContext<MenuPlayerEntity, PlayerEntityModel<MenuPlayerEntity>> entityRendererIn) {
+		public MenuPlayerCapeLayer(RenderLayerParent<MenuPlayerEntity, PlayerModel<MenuPlayerEntity>> entityRendererIn) {
 			super(entityRendererIn);
 		}
 
 		@Override
-		public void render(MatrixStack matrixStackIn, VertexConsumerProvider bufferIn, int packedLightIn, MenuPlayerEntity playerEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+		public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, MenuPlayerEntity playerEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
 			if (playerEntity.hasCape()) {
-				matrixStackIn.push();
+				matrixStackIn.pushPose();
 				matrixStackIn.translate(0.0D, 0.0D, 0.125D);
-				double d0 = MathHelper.lerp((double)partialTicks, playerEntity.prevCapeX, playerEntity.capeX) - MathHelper.lerp((double)partialTicks, playerEntity.prevX, playerEntity.getX());
-				double d1 = MathHelper.lerp((double)partialTicks, playerEntity.prevCapeY, playerEntity.capeY) - MathHelper.lerp((double)partialTicks, playerEntity.prevY, playerEntity.getY());
-				double d2 = MathHelper.lerp((double)partialTicks, playerEntity.prevCapeZ, playerEntity.capeZ) - MathHelper.lerp((double)partialTicks, playerEntity.prevZ, playerEntity.getZ());
-				float f = playerEntity.prevBodyYaw + (playerEntity.bodyYaw - playerEntity.prevBodyYaw);
-				double d3 = (double)MathHelper.sin(f * ((float)Math.PI / 180F));
-				double d4 = (double)(-MathHelper.cos(f * ((float)Math.PI / 180F)));
+				double d0 = Mth.lerp((double)partialTicks, playerEntity.xCloakO, playerEntity.xCloak) - Mth.lerp((double)partialTicks, playerEntity.xo, playerEntity.getX());
+				double d1 = Mth.lerp((double)partialTicks, playerEntity.yCloakO, playerEntity.yCloak) - Mth.lerp((double)partialTicks, playerEntity.yo, playerEntity.getY());
+				double d2 = Mth.lerp((double)partialTicks, playerEntity.zCloakO, playerEntity.zCloak) - Mth.lerp((double)partialTicks, playerEntity.zo, playerEntity.getZ());
+				float f = playerEntity.yBodyRotO + (playerEntity.yBodyRot - playerEntity.yBodyRotO);
+				double d3 = (double)Mth.sin(f * ((float)Math.PI / 180F));
+				double d4 = (double)(-Mth.cos(f * ((float)Math.PI / 180F)));
 				float f1 = (float)d1 * 10.0F;
-				f1 = MathHelper.clamp(f1, -6.0F, 32.0F);
+				f1 = Mth.clamp(f1, -6.0F, 32.0F);
 				float f2 = (float)(d0 * d3 + d2 * d4) * 100.0F;
-				f2 = MathHelper.clamp(f2, 0.0F, 150.0F);
+				f2 = Mth.clamp(f2, 0.0F, 150.0F);
 
-				float f4 = MathHelper.lerp(partialTicks, playerEntity.prevStrideDistance, playerEntity.strideDistance);
-				f1 = f1 + MathHelper.sin(MathHelper.lerp(partialTicks, playerEntity.prevHorizontalSpeed, playerEntity.horizontalSpeed) * 6.0F) * 32.0F * f4;
-				if (playerEntity.isSneaking()) {
+				float f4 = Mth.lerp(partialTicks, playerEntity.oBob, playerEntity.bob);
+				f1 = f1 + Mth.sin(Mth.lerp(partialTicks, playerEntity.walkDistO, playerEntity.walkDist) * 6.0F) * 32.0F * f4;
+				if (playerEntity.isShiftKeyDown()) {
 					f1 += 25.0F;
 				}
 
 				//vertikale neigung
-				matrixStackIn.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(6.0F + f2 / 2.0F + f1));
+				matrixStackIn.mulPose(Vector3f.XP.rotationDegrees(6.0F + f2 / 2.0F + f1));
 
-				matrixStackIn.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(0.0F));
+				matrixStackIn.mulPose(Vector3f.ZP.rotationDegrees(0.0F));
 
-				matrixStackIn.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
+				matrixStackIn.mulPose(Vector3f.YP.rotationDegrees(180.0F));
 
-				VertexConsumer ivertexbuilder = bufferIn.getBuffer(RenderLayer.getEntitySolid(playerEntity.getCape()));
-				this.getContextModel().renderCape(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.DEFAULT_UV);
-				matrixStackIn.pop();
+				VertexConsumer ivertexbuilder = bufferIn.getBuffer(RenderType.entitySolid(playerEntity.getCape()));
+				this.getParentModel().renderCloak(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY);
+				matrixStackIn.popPose();
 			}
 		}
 	}
 
-	public static class MenuPlayerParrotLayer extends FeatureRenderer<MenuPlayerEntity, PlayerEntityModel<MenuPlayerEntity>> {
+	public static class MenuPlayerParrotLayer extends RenderLayer<MenuPlayerEntity, PlayerModel<MenuPlayerEntity>> {
 
-		private final ParrotEntityModel parrotModel = new ParrotEntityModel();
+		private final ParrotModel parrotModel = new ParrotModel();
 
-		public MenuPlayerParrotLayer(FeatureRendererContext<MenuPlayerEntity, PlayerEntityModel<MenuPlayerEntity>> entityRendererIn) {
+		public MenuPlayerParrotLayer(RenderLayerParent<MenuPlayerEntity, PlayerModel<MenuPlayerEntity>> entityRendererIn) {
 			super(entityRendererIn);
 		}
 
 		@Override
-		public void render(MatrixStack matrixStackIn, VertexConsumerProvider bufferIn, int packedLightIn, MenuPlayerEntity playerEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
+		public void render(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, MenuPlayerEntity playerEntity, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch) {
 			if (playerEntity.hasParrot) {
 				this.renderParrot(matrixStackIn, bufferIn, packedLightIn, playerEntity, limbSwing, limbSwingAmount, netHeadYaw, headPitch, 0);
 			}
 		}
 
-		private void renderParrot(MatrixStack matrixStackIn, VertexConsumerProvider bufferIn, int packedLightIn, MenuPlayerEntity playerEntity, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, int parrotVariant) {
-			matrixStackIn.push();
-			matrixStackIn.translate((double)-0.4F, playerEntity.isSneaking() ? (double)-1.3F : -1.5D, 0.0D);
-			VertexConsumer ivertexbuilder = bufferIn.getBuffer(this.parrotModel.getLayer(ParrotEntityRenderer.TEXTURES[parrotVariant]));
-			this.parrotModel.poseOnShoulder(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.DEFAULT_UV, limbSwing, limbSwingAmount, netHeadYaw, headPitch, playerEntity.age);
-			matrixStackIn.pop();
+		private void renderParrot(PoseStack matrixStackIn, MultiBufferSource bufferIn, int packedLightIn, MenuPlayerEntity playerEntity, float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, int parrotVariant) {
+			matrixStackIn.pushPose();
+			matrixStackIn.translate((double)-0.4F, playerEntity.isShiftKeyDown() ? (double)-1.3F : -1.5D, 0.0D);
+			VertexConsumer ivertexbuilder = bufferIn.getBuffer(this.parrotModel.renderType(ParrotRenderer.PARROT_LOCATIONS[parrotVariant]));
+			this.parrotModel.renderOnShoulder(matrixStackIn, ivertexbuilder, packedLightIn, OverlayTexture.NO_OVERLAY, limbSwing, limbSwingAmount, netHeadYaw, headPitch, playerEntity.tickCount);
+			matrixStackIn.popPose();
 		}
 	}
 

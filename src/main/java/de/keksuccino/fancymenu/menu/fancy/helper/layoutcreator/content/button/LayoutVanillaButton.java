@@ -4,13 +4,12 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
 import de.keksuccino.konkrete.localization.Locals;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
@@ -61,7 +60,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			this.handler.postRenderTasks.add(new Runnable() {
 				@Override
 				public void run() {
-					MinecraftClient.getInstance().openScreen(LayoutVanillaButton.this.handler);
+					Minecraft.getInstance().setScreen(LayoutVanillaButton.this.handler);
 				}
 			});
 		});
@@ -282,7 +281,7 @@ public class LayoutVanillaButton extends LayoutElement {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY) {
+	public void render(PoseStack matrix, int mouseX, int mouseY) {
 
 		if (this.customizationContainer.customButtonLabel != null) {
 			this.object.value = StringUtils.convertFormatCodes(this.customizationContainer.customButtonLabel, "&", "§");
@@ -299,7 +298,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				this.object.posY = this.button.y;
 				this.object.setWidth(this.button.width);
 				this.object.setHeight(this.button.height);
-				GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), normalCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 				this.displaySetOrientationNotification();
 				return;
 			}
@@ -312,7 +311,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				this.object.setWidth(this.button.width);
 				this.object.setHeight(this.button.height);
 				this.handler.setObjectFocused(this, false, true);
-				GLFW.glfwSetCursor(MinecraftClient.getInstance().getWindow().getHandle(), normalCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 				this.displaySetOrientationNotification();
 				return;
 			}

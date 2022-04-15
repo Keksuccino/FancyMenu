@@ -1,18 +1,16 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.MathHelper;
 
 public class StringCustomizationItem extends CustomizationItemBase {
 	
@@ -64,12 +62,12 @@ public class StringCustomizationItem extends CustomizationItemBase {
 			}
 		}
 
-		this.width = (int) (MinecraftClient.getInstance().textRenderer.getWidth(this.value) * this.scale);
-		this.height = (int) (MinecraftClient.getInstance().textRenderer.fontHeight * this.scale);
+		this.width = (int) (Minecraft.getInstance().font.width(this.value) * this.scale);
+		this.height = (int) (Minecraft.getInstance().font.lineHeight * this.scale);
 
 	}
 
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}
@@ -78,17 +76,17 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		
 		int x = this.getPosX(menu);
 		int y = this.getPosY(menu);
-		TextRenderer font = MinecraftClient.getInstance().textRenderer;
+		Font font = Minecraft.getInstance().font;
 
 		RenderSystem.enableBlend();
-		matrix.push();
+		matrix.pushPose();
 		matrix.scale(this.scale, this.scale, this.scale);
 		if (this.shadow) {
-			font.drawWithShadow(matrix, "§f" + this.value, x, y, 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+			font.drawShadow(matrix, "§f" + this.value, x, y, 0 | Mth.ceil(this.opacity * 255.0F) << 24);
 		} else {
-			font.draw(matrix, "§f" + this.value, x, y, 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+			font.draw(matrix, "§f" + this.value, x, y, 0 | Mth.ceil(this.opacity * 255.0F) << 24);
 		}
-		matrix.pop();
+		matrix.popPose();
 		RenderSystem.disableBlend();
 	}
 
@@ -97,9 +95,9 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		int x = super.getPosX(menu);
 		if (this.value != null) {
 			if (this.alignment == Alignment.CENTERED) {
-				x -= (int) ((MinecraftClient.getInstance().textRenderer.getWidth(this.value) / 2) * this.scale);
+				x -= (int) ((Minecraft.getInstance().font.width(this.value) / 2) * this.scale);
 			} else if (this.alignment == Alignment.RIGHT) {
-				x -= (int) (MinecraftClient.getInstance().textRenderer.getWidth(this.value) * this.scale);
+				x -= (int) (Minecraft.getInstance().font.width(this.value) * this.scale);
 			}
 		}
 		x = (int)(x / this.scale);

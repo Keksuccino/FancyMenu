@@ -3,12 +3,11 @@ package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class FMContextMenu extends ContextMenu {
 
@@ -56,7 +55,7 @@ public class FMContextMenu extends ContextMenu {
 		
 		int i = 20;
 		for (AdvancedButton b : this.content) {
-			int sw = MinecraftClient.getInstance().textRenderer.getWidth(b.getMessageString()) + 12;
+			int sw = Minecraft.getInstance().font.width(b.getMessageString()) + 12;
 			if (b.getWidth() > sw) {
 				sw = b.getWidth();
 			}
@@ -71,7 +70,7 @@ public class FMContextMenu extends ContextMenu {
 	}
 	
 	@Override
-	public void render(MatrixStack matrix, int mouseX, int mouseY, int screenWidth, int screenHeight) {
+	public void render(PoseStack matrix, int mouseX, int mouseY, int screenWidth, int screenHeight) {
 		
 		if (this.parent != null) {
 			if (this.parent instanceof FMContextMenu) {
@@ -104,7 +103,7 @@ public class FMContextMenu extends ContextMenu {
 		}
 	}
 	
-	protected void renderSeparators(MatrixStack matrix) {
+	protected void renderSeparators(PoseStack matrix) {
 		if (!this.content.isEmpty()) {
 			for (Integer i : this.separators) {
 				if (this.content.size() >= i+1) {
@@ -116,7 +115,7 @@ public class FMContextMenu extends ContextMenu {
 		}
 	}
 	
-	protected void renderBorder(MatrixStack matrix) {
+	protected void renderBorder(PoseStack matrix) {
 		if (!this.content.isEmpty()) {
 			AdvancedButton b = this.content.get(0);
 			//TOP

@@ -11,7 +11,7 @@ import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.InitGuiEvent.Pre;
-import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screens.Screen;
 
 public class CustomGuiMenuHandlerBase  extends MenuHandlerBase {
 

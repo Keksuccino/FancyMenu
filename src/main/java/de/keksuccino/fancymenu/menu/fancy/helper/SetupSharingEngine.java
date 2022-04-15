@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import com.google.common.io.Files;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -22,17 +23,16 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
 import java.io.File;
 import java.io.InputStream;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class SetupSharingEngine {
@@ -49,8 +49,8 @@ public class SetupSharingEngine {
             FM_SETUPS_DIR.mkdirs();
             SETUP_BACKUP_DIR.mkdirs();
 
-            Identifier rl = new Identifier("fancymenu", "menu_identifiers.db");
-            InputStream in = MinecraftClient.getInstance().getResourceManager().getResource(rl).getInputStream();
+            ResourceLocation rl = new ResourceLocation("fancymenu", "menu_identifiers.db");
+            InputStream in = Minecraft.getInstance().getResourceManager().getResource(rl).getInputStream();
             if (in != null) {
                 FileUtils.copyInputStreamToFile(in, MENU_IDENTIFIERS_DATABASE_FILE);
             }
@@ -550,7 +550,7 @@ public class SetupSharingEngine {
 
             PropertiesSection meta = new PropertiesSection("setup-meta");
             meta.addEntry("modloader", FancyMenu.MOD_LOADER);
-            meta.addEntry("mcversion", SharedConstants.getGameVersion().getName());
+            meta.addEntry("mcversion", SharedConstants.getCurrentVersion().getName());
             meta.addEntry("fmversion", FancyMenu.VERSION);
             set.addProperties(meta);
 
@@ -852,7 +852,7 @@ public class SetupSharingEngine {
                                 /** STEP 2 : CHECK MC VERSION **/
                                 if (step == 2) {
                                     if (setupProperties.mcVersion != null) {
-                                        if (!setupProperties.mcVersion.equals(SharedConstants.getGameVersion().getName())) {
+                                        if (!setupProperties.mcVersion.equals(SharedConstants.getCurrentVersion().getName())) {
                                             doStep = false;
                                             FMYesNoPopup pop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
                                                 if (call) {
@@ -861,7 +861,7 @@ public class SetupSharingEngine {
                                                 } else {
                                                     finish(true);
                                                 }
-                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentmcversion", setupProperties.mcVersion, SharedConstants.getGameVersion().getName()), "%n%"));
+                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentmcversion", setupProperties.mcVersion, SharedConstants.getCurrentVersion().getName()), "%n%"));
                                             PopupHandler.displayPopup(pop);
                                         } else {
                                             step = 3;
@@ -1205,11 +1205,11 @@ public class SetupSharingEngine {
         }
 
         @Override
-        public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+        public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
             super.render(matrix, mouseX, mouseY, renderIn);
             int centerX = renderIn.width / 2;
             int centerY = renderIn.height / 2;
-            drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, this.status, centerX, centerY, -1);
+            drawCenteredString(matrix, Minecraft.getInstance().font, this.status, centerX, centerY, -1);
         }
 
     }

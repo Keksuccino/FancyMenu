@@ -2,6 +2,18 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.lang.reflect.Field;
 
+import de.keksuccino.fancymenu.mixin.client.IMixinLevelLoadingScreen;
+import net.minecraft.Util;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.chat.NarratorChatListener;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.progress.StoringChunkProgressListener;
+import net.minecraft.util.Mth;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
@@ -17,17 +29,6 @@ import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.InitGuiEvent.Pre;
 import de.keksuccino.konkrete.reflection.ReflectionHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.WorldGenerationProgressTracker;
-import net.minecraft.client.gui.screen.LevelLoadingScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.NarratorManager;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
 
 public class WorldLoadingScreenHandler extends MenuHandlerBase {
 
@@ -104,41 +105,35 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 		super.onRenderListBackground(e);
 	}
 	
-	private void renderMenu(MatrixStack matrix, Screen screen) {
+	private void renderMenu(PoseStack matrix, Screen screen) {
 		
-		WorldGenerationProgressTracker tracker = getTracker(screen);
-		TextRenderer font = MinecraftClient.getInstance().textRenderer;
+		StoringChunkProgressListener tracker = getTracker(screen);
+		Font font = Minecraft.getInstance().font;
 		int j = screen.width / 2;
 		int k = screen.height / 2;
 		String s = "";
 		
 		if (tracker != null) {
-			s = MathHelper.clamp(tracker.getProgressPercentage(), 0, 100) + "%";
-			long i = Util.getMeasuringTimeMs();
+			s = Mth.clamp(tracker.getProgress(), 0, 100) + "%";
+			long i = Util.getMillis();
 			if (i - this.lastNarratorUpdateTime > 2000L) {
 				this.lastNarratorUpdateTime = i;
-				NarratorManager.INSTANCE.narrate((new TranslatableText("narrator.loading", s)).getString());
+				NarratorChatListener.INSTANCE.sayNow((new TranslatableComponent("narrator.loading", s)).getString());
 			}
 			
 			if (FancyMenu.config.getOrDefault("showloadingscreenanimation", true)) {
-				LevelLoadingScreen.drawChunkMap(matrix, getTracker(screen), j, k + 30, 2, 0);
+				LevelLoadingScreen.renderChunks(matrix, getTracker(screen), j, k + 30, 2, 0);
 			}
 		}
 		
 		if (FancyMenu.config.getOrDefault("showloadingscreenpercent", true)) {
-			DrawableHelper.drawCenteredString(matrix, font, s, j, k - 9 / 2 - 30, 16777215);
+			GuiComponent.drawCenteredString(matrix, font, s, j, k - 9 / 2 - 30, 16777215);
 		}
 		
 	}
-	
-	private static WorldGenerationProgressTracker getTracker(Screen screen) {
-		try {
-			Field f = ReflectionHelper.findField(LevelLoadingScreen.class, "progressProvider", "field_17406");
-			return (WorldGenerationProgressTracker) f.get(screen);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
+
+	private static StoringChunkProgressListener getTracker(Screen screen) {
+		return ((IMixinLevelLoadingScreen)screen).getProgressListenerFancyMenu();
 	}
 
 }

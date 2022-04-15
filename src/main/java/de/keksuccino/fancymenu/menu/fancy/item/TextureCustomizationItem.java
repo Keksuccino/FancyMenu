@@ -2,16 +2,14 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
-
+import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class TextureCustomizationItem extends CustomizationItemBase {
 	
@@ -66,7 +64,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (this.shouldRender()) {
 			
 			int x = this.getPosX(menu);
@@ -104,7 +102,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				RenderUtils.bindTexture(this.texture.getResourceLocation());
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
 			    RenderSystem.defaultBlendFunc();
-				drawTexture(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+				blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				
 			}
 			

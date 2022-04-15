@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
@@ -11,17 +12,16 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.resources.ResourceLocation;
 
 public class VisibilityRequirementPopup extends FMPopup {
 
@@ -42,7 +42,7 @@ public class VisibilityRequirementPopup extends FMPopup {
         });
         this.addButton(this.doneButton);
 
-        this.leftButton = new AdvancedImageButton(0, 0, 20, 20, new Identifier("keksuccino", "arrow_left.png"), true, (press) -> {
+        this.leftButton = new AdvancedImageButton(0, 0, 20, 20, new ResourceLocation("keksuccino", "arrow_left.png"), true, (press) -> {
             int i = this.currentRequirement - 1;
             if (i >= 0) {
                 this.currentRequirement = i;
@@ -50,7 +50,7 @@ public class VisibilityRequirementPopup extends FMPopup {
         });
         this.addButton(this.leftButton);
 
-        this.rightButton = new AdvancedImageButton(0, 0, 20, 20, new Identifier("keksuccino", "arrow_right.png"), true, (press) -> {
+        this.rightButton = new AdvancedImageButton(0, 0, 20, 20, new ResourceLocation("keksuccino", "arrow_right.png"), true, (press) -> {
             int i = this.currentRequirement + 1;
             if (i <= this.requirements.size() - 1) {
                 this.currentRequirement = i;
@@ -337,7 +337,7 @@ public class VisibilityRequirementPopup extends FMPopup {
         String languageName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.language");
         String languageDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.language.desc");
         String languageValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.language.valuename");
-        String languageValuePreset = MinecraftClient.getInstance().options.language;
+        String languageValuePreset = Minecraft.getInstance().options.languageCode;
         if (c.vrLanguage != null) {
             languageValuePreset = c.vrLanguage;
         }
@@ -557,7 +557,7 @@ public class VisibilityRequirementPopup extends FMPopup {
     }
 
     @Override
-    public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+    public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
         super.render(matrix, mouseX, mouseY, renderIn);
 
         int centerX = renderIn.width / 2;
@@ -580,7 +580,7 @@ public class VisibilityRequirementPopup extends FMPopup {
         this.renderButtons(matrix, mouseX, mouseY);
     }
 
-    public static class Requirement extends DrawableHelper {
+    public static class Requirement extends GuiComponent {
 
         protected VisibilityRequirementPopup parent;
         protected String name;
@@ -640,7 +640,7 @@ public class VisibilityRequirementPopup extends FMPopup {
             descLines.add("");
             descLines.add(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.toggle.btn.desc"));
             this.enableRequirementButton.setDescription(descLines.toArray(new String[0]));
-            this.preRenderTasks.add(() -> enableRequirementButton.setWidth(MinecraftClient.getInstance().textRenderer.getWidth(enableRequirementButton.getMessage()) + 10));
+            this.preRenderTasks.add(() -> enableRequirementButton.setWidth(Minecraft.getInstance().font.width(enableRequirementButton.getMessage()) + 10));
             this.addButton(this.enableRequirementButton);
 
             /** Show If Button **/
@@ -672,28 +672,28 @@ public class VisibilityRequirementPopup extends FMPopup {
             this.addButton(this.showIfNotButton);
 
             if ((this.valueCallback != null) && (this.valueName != null)) {
-                this.valueTextField = new AdvancedTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 150, 20, true, this.valueFilter);
+                this.valueTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
                 this.valueTextField.changeFocus(true);
                 this.valueTextField.setFocused(false);
                 this.valueTextField.setMaxLength(1000);
                 if (this.valueString != null) {
-                    this.valueTextField.setText(this.valueString);
+                    this.valueTextField.setValue(this.valueString);
                 }
             }
 
         }
 
-        public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+        public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 
             for (Runnable r : this.preRenderTasks) {
                 r.run();
             }
 
-            float partial = MinecraftClient.getInstance().getTickDelta();
+            float partial = Minecraft.getInstance().getFrameTime();
             int centerX = renderIn.width / 2;
             int centerY = renderIn.height / 2;
 
-            drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.requirement") + ":", centerX, centerY - 83, -1);
+            drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.requirement") + ":", centerX, centerY - 83, -1);
             this.enableRequirementButton.x = centerX - (this.enableRequirementButton.getWidth() / 2);
             this.enableRequirementButton.y = centerY - 70;
 
@@ -706,22 +706,22 @@ public class VisibilityRequirementPopup extends FMPopup {
             this.showIfButton.active = this.enabled;
 
             if (this.valueTextField != null) {
-                drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, this.valueName + ":", centerX, centerY - 10, -1);
+                drawCenteredString(matrix, Minecraft.getInstance().font, this.valueName + ":", centerX, centerY - 10, -1);
 
                 this.valueTextField.x = centerX - (this.valueTextField.getWidth() / 2);
                 this.valueTextField.y = centerY + 3;
                 this.valueTextField.render(matrix, mouseX, mouseY, partial);
                 this.valueTextField.active = this.enabled;
                 this.valueTextField.setEditable(this.enabled);
-                this.valueCallback.accept(this.valueTextField.getText());
-                this.valueString = this.valueTextField.getText();
+                this.valueCallback.accept(this.valueTextField.getValue());
+                this.valueString = this.valueTextField.getValue();
             }
 
             this.renderButtons(matrix, mouseX, mouseY, partial);
 
         }
 
-        protected void renderButtons(MatrixStack matrix, int mouseX, int mouseY, float partial) {
+        protected void renderButtons(PoseStack matrix, int mouseX, int mouseY, float partial) {
             for (AdvancedButton b : this.buttonList) {
                 b.render(matrix, mouseX, mouseY, partial);
             }

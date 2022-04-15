@@ -4,15 +4,20 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
   "client": [
-    "MixinAbstractButtonWidget",
+    "MixinAbstractWidget",
     "MixinEntryListWidget",
-    "MixinMinecraftClient",
+    "MixinMinecraft",
     "MixinTexturedButtonWidget",
     "MixinSplashScreen",
-    "MixinDrawableHelper",
+    "MixinGuiComponent",
     "MixinAdvancementCommand",
     "MixinWorldListEntry",
-    "MixinOnlineServerEntry"
+    "MixinOnlineServerEntry",
+    "MixinMusicManager",
+    "IMixinScreen",
+    "IMixinTitleScreen",
+    "IMixinLevelLoadingScreen",
+    "IMixinAbstractWidget"
   ],
   "server": [],
   "injectors": {

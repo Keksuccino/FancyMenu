@@ -5,20 +5,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.resources.ResourceLocation;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
 
-public class ExternalTextureSlideshowRenderer extends DrawableHelper {
+public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	
 	protected List<ExternalTextureResourceLocation> images = new ArrayList<ExternalTextureResourceLocation>();
 	protected ExternalTextureResourceLocation overlay_texture;
@@ -150,7 +148,7 @@ public class ExternalTextureSlideshowRenderer extends DrawableHelper {
 		}
 	}
 
-	public void render(MatrixStack matrix) {
+	public void render(PoseStack matrix) {
 		
 		try {
 			
@@ -214,51 +212,51 @@ public class ExternalTextureSlideshowRenderer extends DrawableHelper {
 		
 	}
 
-	protected void renderPrevious(MatrixStack matrix) {
+	protected void renderPrevious(PoseStack matrix) {
 		if ((this.previous != null) && (this.current != this.previous)) {
 			if (!this.previous.isReady()) {
 				this.previous.loadTexture();
 			}
-			matrix.push();
+			matrix.pushPose();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
 				o = this.slideshowOpacity;
 			}
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, o);
-			Identifier r = this.previous.getResourceLocation();
+			ResourceLocation r = this.previous.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
-				drawTexture(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			matrix.pop();
+			matrix.popPose();
 		}
 	}
 
-	protected void renderCurrent(MatrixStack matrix) {
+	protected void renderCurrent(PoseStack matrix) {
 		if (this.current != null) {
 			if (!this.current.isReady()) {
 				this.current.loadTexture();
 			}
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
-			Identifier r = this.current.getResourceLocation();
+			ResourceLocation r = this.current.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
-				drawTexture(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
 
-	protected void renderOverlay(MatrixStack matrix) {
+	protected void renderOverlay(PoseStack matrix) {
 		if (this.overlay_texture != null) {
 			if (!this.overlay_texture.isReady()) {
 				this.overlay_texture.loadTexture();
 			}
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			Identifier r = this.overlay_texture.getResourceLocation();
+			ResourceLocation r = this.overlay_texture.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
-				drawTexture(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}

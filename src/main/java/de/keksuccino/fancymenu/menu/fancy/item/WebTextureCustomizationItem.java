@@ -4,9 +4,10 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -15,9 +16,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
 
@@ -113,7 +111,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	}
 
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (this.shouldRender()) {
 
 			int x = this.getPosX(menu);
@@ -123,17 +121,17 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 				RenderUtils.bindTexture(this.texture.getResourceLocation());
 				RenderSystem.enableBlend();
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
-				drawTexture(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+				blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				RenderSystem.disableBlend();
 			} else if (isEditorActive()) {
 				fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
 				if (this.ready) {
-					drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (MinecraftClient.getInstance().textRenderer.fontHeight / 2), -1);
+					drawCenteredString(matrix, Minecraft.getInstance().font, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
 				}
 			}
 
 			if (!this.ready && isEditorActive()) {
-				drawCenteredString(matrix, MinecraftClient.getInstance().textRenderer, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (MinecraftClient.getInstance().textRenderer.fontHeight / 2), -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
 			}
 
 		}

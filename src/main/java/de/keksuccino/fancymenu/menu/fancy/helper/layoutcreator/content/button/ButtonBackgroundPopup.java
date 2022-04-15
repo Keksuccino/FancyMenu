@@ -3,7 +3,10 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
@@ -18,10 +21,6 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class ButtonBackgroundPopup extends FMPopup {
 
@@ -51,7 +50,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.handler = handler;
         this.customizationContainer = customizationContainer;
 
-        TextRenderer font = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
 
         this.normalBackgroundTypeSwitcher = new HorizontalSwitcher(100, true,
                 Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
@@ -108,7 +107,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.normalBackgroundImageTextField.setMaxLength(10000);
         if (this.customizationContainer.normalBackground != null) {
             if (!this.customizationContainer.normalBackground.startsWith("animation:")) {
-                this.normalBackgroundImageTextField.setText(this.customizationContainer.normalBackground);
+                this.normalBackgroundImageTextField.setValue(this.customizationContainer.normalBackground);
             }
         }
 
@@ -116,7 +115,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.hoverBackgroundImageTextField.setMaxLength(10000);
         if (this.customizationContainer.hoverBackground != null) {
             if (!this.customizationContainer.hoverBackground.startsWith("animation:")) {
-                this.hoverBackgroundImageTextField.setText(this.customizationContainer.hoverBackground);
+                this.hoverBackgroundImageTextField.setValue(this.customizationContainer.hoverBackground);
             }
         }
 
@@ -136,7 +135,7 @@ public class ButtonBackgroundPopup extends FMPopup {
                                         call = call.substring(1);
                                     }
                                 }
-                                this.normalBackgroundImageTextField.setText(call);
+                                this.normalBackgroundImageTextField.setValue(call);
                             }
                         }
                     }
@@ -164,7 +163,7 @@ public class ButtonBackgroundPopup extends FMPopup {
                                         call = call.substring(1);
                                     }
                                 }
-                                this.hoverBackgroundImageTextField.setText(call);
+                                this.hoverBackgroundImageTextField.setValue(call);
                             }
                         }
                     }
@@ -206,13 +205,13 @@ public class ButtonBackgroundPopup extends FMPopup {
     }
 
     @Override
-    public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+    public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
         super.render(matrix, mouseX, mouseY, renderIn);
 
-        TextRenderer font = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
         int midX = renderIn.width / 2;
         int midY = renderIn.height / 2;
-        float partial = MinecraftClient.getInstance().getTickDelta();
+        float partial = Minecraft.getInstance().getFrameTime();
 
         //Normal Background
         drawCenteredString(matrix, font, "§l" + Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground"), midX, midY - 113, -1);
@@ -278,8 +277,8 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.customizationContainer.hoverBackground = null;
 
         if (this.normalBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
-            if ((this.normalBackgroundImageTextField.getText() != null) && !this.normalBackgroundImageTextField.getText().replace(" ", "").equals("")) {
-                File f = new File(this.normalBackgroundImageTextField.getText());
+            if ((this.normalBackgroundImageTextField.getValue() != null) && !this.normalBackgroundImageTextField.getValue().replace(" ", "").equals("")) {
+                File f = new File(this.normalBackgroundImageTextField.getValue());
                 if (f.isFile()) {
                     if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png") || f.getPath().toLowerCase().endsWith(".gif")) {
                         this.customizationContainer.normalBackground = f.getPath();
@@ -295,8 +294,8 @@ public class ButtonBackgroundPopup extends FMPopup {
         }
 
         if (this.hoverBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
-            if ((this.hoverBackgroundImageTextField.getText() != null) && !this.hoverBackgroundImageTextField.getText().replace(" ", "").equals("")) {
-                File f = new File(this.hoverBackgroundImageTextField.getText());
+            if ((this.hoverBackgroundImageTextField.getValue() != null) && !this.hoverBackgroundImageTextField.getValue().replace(" ", "").equals("")) {
+                File f = new File(this.hoverBackgroundImageTextField.getValue());
                 if (f.isFile()) {
                     if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png") || f.getPath().toLowerCase().endsWith(".gif")) {
                         this.customizationContainer.hoverBackground = f.getPath();

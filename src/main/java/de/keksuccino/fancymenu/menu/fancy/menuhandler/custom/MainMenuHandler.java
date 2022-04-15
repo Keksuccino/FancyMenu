@@ -3,14 +3,13 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 import java.awt.Color;
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import com.google.common.util.concurrent.Runnables;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
@@ -20,6 +19,8 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
+import de.keksuccino.fancymenu.mixin.client.IMixinTitleScreen;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
@@ -32,30 +33,30 @@ import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.CubeMapRenderer;
-import net.minecraft.client.gui.RotatingCubeMapRenderer;
-import net.minecraft.client.gui.screen.CreditsScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
-import net.minecraft.client.resource.language.I18n;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.MouseHandler;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.WinScreen;
+import net.minecraft.client.renderer.CubeMap;
+import net.minecraft.client.renderer.PanoramaRenderer;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 
 @SuppressWarnings("resource")
 public class MainMenuHandler extends MenuHandlerBase {
 	
-	private static final CubeMapRenderer PANORAMA_CUBE_MAP = new CubeMapRenderer(new Identifier("textures/gui/title/background/panorama"));
-	private static final Identifier PANORAMA_OVERLAY = new Identifier("textures/gui/title/background/panorama_overlay.png");
-	private static final Identifier MINECRAFT_TITLE_TEXTURE = new Identifier("textures/gui/title/minecraft.png");
-	private static final Identifier EDITION_TITLE_TEXTURE = new Identifier("textures/gui/title/edition.png");
+	private static final CubeMap PANORAMA_CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
+	private static final ResourceLocation PANORAMA_OVERLAY = new ResourceLocation("textures/gui/title/background/panorama_overlay.png");
+	private static final ResourceLocation MINECRAFT_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/minecraft.png");
+	private static final ResourceLocation EDITION_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/edition.png");
 	private static final Random RANDOM = new Random();
 	
-	private RotatingCubeMapRenderer panorama = new RotatingCubeMapRenderer(PANORAMA_CUBE_MAP);
+	private PanoramaRenderer panorama = new PanoramaRenderer(PANORAMA_CUBE_MAP);
 
 	private String splash;
 	
@@ -132,24 +133,24 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		if (this.shouldCustomize(e.getGui())) {
 			
-			TextRenderer font = MinecraftClient.getInstance().textRenderer;
+			Font font = Minecraft.getInstance().font;
 			int width = e.getGui().width;
 			int height = e.getGui().height;
 			int j = width / 2 - 137;
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
-			MatrixStack matrix = CurrentScreenHandler.getMatrixStack();
+			PoseStack matrix = CurrentScreenHandler.getMatrixStack();
 			
 			RenderSystem.enableBlend();
 			
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
-				this.panorama.render(MinecraftClient.getInstance().getLastFrameDuration(), 1.0F);
+				this.panorama.render(Minecraft.getInstance().getDeltaFrameTime(), 1.0F);
 				RenderUtils.bindTexture(PANORAMA_OVERLAY);
-				RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
+				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-				drawTexture(matrix, 0, 0, e.getGui().width, e.getGui().height, 0.0F, 0.0F, 16, 128, 16, 128);
+				blit(matrix, 0, 0, e.getGui().width, e.getGui().height, 0.0F, 0.0F, 16, 128, 16, 128);
 			}
 			
 			super.drawToBackground(e);
@@ -159,34 +160,34 @@ public class MainMenuHandler extends MenuHandlerBase {
 				RenderUtils.bindTexture(MINECRAFT_TITLE_TEXTURE);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				if ((double) minecraftLogoSpelling < 1.0E-4D) {
-					e.getGui().drawTexture(matrix, j + 0, 30, 0, 0, 99, 44);
-					e.getGui().drawTexture(matrix, j + 99, 30, 129, 0, 27, 44);
-					e.getGui().drawTexture(matrix, j + 99 + 26, 30, 126, 0, 3, 44);
-					e.getGui().drawTexture(matrix, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
-					e.getGui().drawTexture(matrix, j + 155, 30, 0, 45, 155, 44);
+					e.getGui().blit(matrix, j + 0, 30, 0, 0, 99, 44);
+					e.getGui().blit(matrix, j + 99, 30, 129, 0, 27, 44);
+					e.getGui().blit(matrix, j + 99 + 26, 30, 126, 0, 3, 44);
+					e.getGui().blit(matrix, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
+					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
 				} else {
-					e.getGui().drawTexture(matrix, j + 0, 30, 0, 0, 155, 44);
-					e.getGui().drawTexture(matrix, j + 155, 30, 0, 45, 155, 44);
+					e.getGui().blit(matrix, j + 0, 30, 0, 0, 155, 44);
+					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
 				}
 
 				RenderUtils.bindTexture(EDITION_TITLE_TEXTURE);
-				drawTexture(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+				blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 			}
 
 			//Draw branding strings to the main menu if not disabled in the config
 			if (!FancyMenu.config.getOrDefault("hidebranding", false)) {
-				String string = "Minecraft " + SharedConstants.getGameVersion().getName();
-				if (MinecraftClient.getInstance().isDemo()) {
+				String string = "Minecraft " + SharedConstants.getCurrentVersion().getName();
+				if (Minecraft.getInstance().isDemo()) {
 					string = string + " Demo";
 				} else {
-					string = string + ("release".equalsIgnoreCase(MinecraftClient.getInstance().getVersionType()) ? "" : "/" + MinecraftClient.getInstance().getVersionType());
+					string = string + ("release".equalsIgnoreCase(Minecraft.getInstance().getVersionType()) ? "" : "/" + Minecraft.getInstance().getVersionType());
 				}
 
-				if (MinecraftClient.getInstance().isModded()) {
-					string = string + I18n.translate("menu.modded");
+				if (Minecraft.getInstance().isProbablyModded()) {
+					string = string + I18n.get("menu.modded");
 				}
 				
-				drawStringWithShadow(e.getMatrixStack(), font, string, 2, e.getGui().height - 10, -1);
+				drawString(e.getMatrixStack(), font, string, 2, e.getGui().height - 10, -1);
 			}
 
 			//Draw and handle copyright
@@ -194,7 +195,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
 			int cX = 0;
 			int cY = 0;
-			int cW = MinecraftClient.getInstance().textRenderer.getWidth(c);
+			int cW = Minecraft.getInstance().font.width(c);
 			int cH = 10;
 			
 			if (cPos.equalsIgnoreCase("top-left")) {
@@ -222,13 +223,13 @@ public class MainMenuHandler extends MenuHandlerBase {
 				copyrightcolor = new Color(255, 255, 255);
 			}
 
-			drawStringWithShadow(matrix, font, c, cX, cY, copyrightcolor.getRGB() | 255 << 24);
+			drawString(matrix, font, c, cX, cY, copyrightcolor.getRGB() | 255 << 24);
 			
 			if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
 				fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
 				
 				if (MouseInput.isLeftMouseDown()) {
-					MinecraftClient.getInstance().openScreen(new CreditsScreen(false, Runnables.doNothing()));
+					Minecraft.getInstance().setScreen(new WinScreen(false, Runnables.doNothing()));
 				}
 			}
 
@@ -264,7 +265,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		super.onRenderListBackground(e);
 	}
 
-	protected void renderSplash(MatrixStack matrix, TextRenderer font, Screen s) {
+	protected void renderSplash(PoseStack matrix, Font font, Screen s) {
 		
 		if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
 			
@@ -323,8 +324,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 			RenderSystem.pushMatrix();
 			RenderSystem.translatef(finalPosX, finalPosY, 0.0F);
 			RenderSystem.rotatef((float)rotation, 0.0F, 0.0F, 1.0F);
-			float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-			f = f * 100.0F / (float) (font.getWidth(this.splash) + 32);
+			float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+			f = f * 100.0F / (float) (font.width(this.splash) + 32);
 			RenderSystem.scalef(f, f, f);
 
 			Color c = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("splashcolor", "#ffff00"));
@@ -332,7 +333,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 				c = new Color(255, 255, 0);
 			}
 
-			drawCenteredText(matrix, font, new LiteralText(this.splash), 0, -8, c.getRGB());
+			drawCenteredString(matrix, font, new TextComponent(this.splash), 0, -8, c.getRGB());
 
 			RenderSystem.popMatrix();
 			
@@ -341,8 +342,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	private void renderButtons(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
-		List<AbstractButtonWidget> buttons = this.getButtonList(e.getGui());
-		float partial = MinecraftClient.getInstance().getTickDelta();
+		List<AbstractWidget> buttons = this.getButtonList(e.getGui());
+		float partial = Minecraft.getInstance().getFrameTime();
 		
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
@@ -350,20 +351,14 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 		}
 	}
-	
-	private void drawRealmsNotification(MatrixStack matrix, Screen gui) {
+
+	private void drawRealmsNotification(PoseStack matrix, Screen gui) {
 		try {
-			if (MinecraftClient.getInstance().options.realmsNotifications) {
-				Field f = ReflectionHelper.findField(TitleScreen.class, "realmsNotificationGui", "field_2592"); //"realmsNotification" field from GuiMainMenu
-				Screen realms = null;
-				try {
-					realms = (Screen) f.get(gui);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			if (Minecraft.getInstance().options.realmsNotifications) {
+				Screen realms = ((IMixinTitleScreen)gui).getRealmsNotificationScreenFancyMenu();
 				if (realms != null) {
-					//render
-					realms.render(matrix, (int)MinecraftClient.getInstance().mouse.getX(), (int)MinecraftClient.getInstance().mouse.getY(), MinecraftClient.getInstance().getTickDelta());
+					MouseHandler mh = Minecraft.getInstance().mouseHandler;
+					realms.render(matrix, (int)mh.xpos(), (int)mh.ypos(), Minecraft.getInstance().getFrameTime());
 				}
 			}
 		} catch (Exception e) {
@@ -371,26 +366,14 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 
-	private List<AbstractButtonWidget> getButtonList(Screen gui) {
-		List<AbstractButtonWidget> buttons = new ArrayList<AbstractButtonWidget>();
-		try {
-			Field f = ReflectionHelper.findField(Screen.class, "buttons", "field_22791");
-			try {
-				buttons = (List<AbstractButtonWidget>) f.get(gui);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return buttons;
+	private List<AbstractWidget> getButtonList(Screen gui) {
+		return ((IMixinScreen)gui).getButtonsFancyMenu();
 	}
 
 	private void setWidthCopyrightRest(int i) {
 		try {
-			if (MinecraftClient.getInstance().currentScreen instanceof TitleScreen) {
-				Field f = ReflectionHelper.findField(TitleScreen.class, "copyrightTextX", "field_2606");
-				f.set(MinecraftClient.getInstance().currentScreen, i);
+			if (Minecraft.getInstance().screen instanceof TitleScreen) {
+				((IMixinTitleScreen)Minecraft.getInstance().screen).setCopyrightXFancyMenu(i);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -399,8 +382,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
 		try {
-			Field f = ReflectionHelper.findField(TitleScreen.class, "doBackgroundFade", "field_18222");
-			f.setBoolean(s, showFadeIn);
+			Field f = ReflectionHelper.findField(TitleScreen.class, "fading", "field_18222");
+			f.set(s, showFadeIn);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -419,6 +402,6 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 		}
 		
-		return MinecraftClient.getInstance().getSplashTextLoader().get();
+		return Minecraft.getInstance().getSplashManager().getSplash();
 	}
 }

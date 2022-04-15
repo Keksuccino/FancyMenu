@@ -2,17 +2,17 @@ package de.keksuccino.fancymenu.events;
 
 import com.mojang.brigadier.CommandDispatcher;
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
 
 public class CommandsRegisterEvent extends EventBase {
 
-    private CommandDispatcher<ServerCommandSource> dispatcher;
+    private CommandDispatcher<CommandSourceStack> dispatcher;
 
-    public CommandsRegisterEvent(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public CommandsRegisterEvent(CommandDispatcher<CommandSourceStack> dispatcher) {
         this.dispatcher = dispatcher;
     }
 
-    public CommandDispatcher<ServerCommandSource> getDispatcher() {
+    public CommandDispatcher<CommandSourceStack> getDispatcher() {
         return this.dispatcher;
     }
 

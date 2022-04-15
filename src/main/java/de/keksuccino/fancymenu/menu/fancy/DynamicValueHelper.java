@@ -14,8 +14,8 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
 
 public class DynamicValueHelper {
 
@@ -24,12 +24,12 @@ public class DynamicValueHelper {
 	public static String convertFromRaw(String in) {
 		int width = 0;
 		int height = 0;
-		String playername = MinecraftClient.getInstance().getSession().getUsername();
-		String playeruuid = MinecraftClient.getInstance().getSession().getUuid();
-		String mcversion = SharedConstants.getGameVersion().getReleaseTarget();
-		if (MinecraftClient.getInstance().currentScreen != null) {
-			width = MinecraftClient.getInstance().currentScreen.width;
-			height = MinecraftClient.getInstance().currentScreen.height;
+		String playername = Minecraft.getInstance().getUser().getName();
+		String playeruuid = Minecraft.getInstance().getUser().getUuid();
+		String mcversion = SharedConstants.getCurrentVersion().getReleaseTarget();
+		if (Minecraft.getInstance().screen != null) {
+			width = Minecraft.getInstance().screen.width;
+			height = Minecraft.getInstance().screen.height;
 		}
 		
 		//Convert &-formatcodes to real ones
@@ -159,7 +159,7 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
 						if (sd.version != null) {
 							in = in.replace(s, sd.version.getString());
@@ -181,7 +181,7 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
 						if (sd.ping != -1L) {
 							in = in.replace(s, "§aOnline");
@@ -203,10 +203,10 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.playerCountLabel != null) {
-							in = in.replace(s, "" + sd.playerCountLabel.getString());
+						if (sd.status != null) {
+							in = in.replace(s, "" + sd.status.getString());
 						} else {
 							in = in.replace(s, "0/0");
 						}
@@ -225,7 +225,7 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
 						in = in.replace(s, "" + sd.ping);
 					}
@@ -243,10 +243,10 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.label != null) {
-							in = in.replace(s, sd.label.getString());
+						if (sd.motd != null) {
+							in = in.replace(s, sd.motd.getString());
 						} else {
 							in = in.replace(s, "");
 						}
@@ -265,10 +265,10 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.label != null) {
-							List<String> lines = splitMotdLines(sd.label.getString());
+						if (sd.motd != null) {
+							List<String> lines = splitMotdLines(sd.motd.getString());
 							if (!lines.isEmpty()) {
 								in = in.replace(s, lines.get(0));
 							} else {
@@ -292,10 +292,10 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String ip = blank.split(":", 2)[1];
-					ServerInfo sd = ServerCache.getServer(ip);
+					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.label != null) {
-							List<String> lines = splitMotdLines(sd.label.getString());
+						if (sd.motd != null) {
+							List<String> lines = splitMotdLines(sd.motd.getString());
 							if (lines.size() >= 2) {
 								in = in.replace(s, lines.get(1));
 							} else {

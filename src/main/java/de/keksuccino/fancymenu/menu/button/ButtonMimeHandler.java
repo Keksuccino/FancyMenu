@@ -4,9 +4,9 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -61,7 +61,7 @@ public class ButtonMimeHandler {
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
             String buttonId = buttonLocator.split("[:]", 2)[1];
             if (MathUtils.isLong(buttonId)) {
-                Screen current = MinecraftClient.getInstance().currentScreen;
+                Screen current = Minecraft.getInstance().screen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
                     if (cachedButtons.containsKey(menuIdentifier)) {
                         ButtonPackage pack = cachedButtons.get(menuIdentifier);
@@ -69,12 +69,12 @@ public class ButtonMimeHandler {
                         if (d != null) {
                             if (d.getScreen() != current) {
                                 cacheFromInstance(current, true);
-                                MinecraftClient.getInstance().openScreen(current);
+                                Minecraft.getInstance().setScreen(current);
                             }
                         }
                     } else {
                         cacheFromInstance(current, true);
-                        MinecraftClient.getInstance().openScreen(current);
+                        Minecraft.getInstance().setScreen(current);
                     }
                 } else if (!cachedButtons.containsKey(menuIdentifier)) {
                     tryCache(menuIdentifier, false);
@@ -92,7 +92,7 @@ public class ButtonMimeHandler {
         try {
             ButtonData d = getButton(buttonLocator);
             if (d != null) {
-                AbstractButtonWidget b = d.getButton();
+                AbstractWidget b = d.getButton();
                 if (b != null) {
                     b.onClick(b.x+1, b.y+1);
                     return true;

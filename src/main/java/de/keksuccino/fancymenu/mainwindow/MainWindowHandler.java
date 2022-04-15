@@ -6,10 +6,9 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 
 import javax.imageio.ImageIO;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.FancyMenu;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
 
 public class MainWindowHandler {
 
@@ -24,10 +23,10 @@ public class MainWindowHandler {
 
 	public static void handleForceFullscreen() {
 		try {
-			if ((MinecraftClient.getInstance() != null) && (MinecraftClient.getInstance().getWindow() != null)) {
+			if ((Minecraft.getInstance() != null) && (Minecraft.getInstance().getWindow() != null)) {
 				if (FancyMenu.config.getOrDefault("forcefullscreen", false)) {
-					if (!MinecraftClient.getInstance().getWindow().isFullscreen()) {
-						MinecraftClient.getInstance().getWindow().toggleFullscreen();
+					if (!Minecraft.getInstance().getWindow().isFullscreen()) {
+						Minecraft.getInstance().getWindow().toggleFullScreen();
 						FancyMenu.LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
 					}
 				}
@@ -63,7 +62,7 @@ public class MainWindowHandler {
 				InputStream icon16 = new FileInputStream(i16);
 				InputStream icon32 = new FileInputStream(i32);
 				
-				MinecraftClient.getInstance().getWindow().setIcon(icon16, icon32);
+				Minecraft.getInstance().getWindow().setIcon(icon16, icon32);
 				System.out.println("[FANCYMENU] Custom minecraft icon successfully loaded!");
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -78,13 +77,13 @@ public class MainWindowHandler {
 			setWindowTitle();
 		} else {
 			windowtitle = null;
-//			MinecraftClient.getInstance().updateWindowTitle();
+//			Minecraft.getInstance().updateWindowTitle();
 		}
 	}
 
 	private static void setWindowTitle() {
 		if (windowtitle != null) {
-			MinecraftClient.getInstance().getWindow().setTitle(windowtitle);
+			Minecraft.getInstance().getWindow().setTitle(windowtitle);
 		}
 	}
 	
@@ -97,9 +96,9 @@ public class MainWindowHandler {
 	 * <b>Returns 0 if no GUI is active!</b>
 	 */
 	public static int getWindowGuiWidth() {
-		Screen s = MinecraftClient.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
-			double mcScale = MinecraftClient.getInstance().getWindow().calculateScaleFactor((int) MinecraftClient.getInstance().getWindow().getScaleFactor(), MinecraftClient.getInstance().options.forceUnicodeFont);
+			double mcScale = Minecraft.getInstance().getWindow().calculateScale((int) Minecraft.getInstance().getWindow().getGuiScale(), Minecraft.getInstance().options.forceUnicodeFont);
 			float baseUIScale = 1.0F;
 			float sc = (float) (((double)baseUIScale) * (((double)baseUIScale) / mcScale));
 			
@@ -113,9 +112,9 @@ public class MainWindowHandler {
 	 * <b>Returns 0 if no GUI is active!</b>
 	 */
 	public static int getWindowGuiHeight() {
-		Screen s = MinecraftClient.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
-			double mcScale = MinecraftClient.getInstance().getWindow().calculateScaleFactor((int) MinecraftClient.getInstance().getWindow().getScaleFactor(), MinecraftClient.getInstance().options.forceUnicodeFont);
+			double mcScale = Minecraft.getInstance().getWindow().calculateScale((int) Minecraft.getInstance().getWindow().getGuiScale(), Minecraft.getInstance().options.forceUnicodeFont);
 			float baseUIScale = 1.0F;
 			float sc = (float) (((double)baseUIScale) * (((double)baseUIScale) / mcScale));
 			

@@ -1,17 +1,16 @@
 package de.keksuccino.fancymenu.api.background.example.with_input_string;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.Nonnull;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-
 import java.io.File;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
 
 //This is an example menu background that renders an external image.
 //It gets created by a background type that uses an input string to get the image file.
@@ -44,7 +43,7 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
     //Here you will render the background instance.
     //You should always render backgrounds over the full size of the screen, otherwise it will look ugly.
     @Override
-    public void render(MatrixStack matrix, Screen screen, boolean keepAspectRatio) {
+    public void render(PoseStack matrix, Screen screen, boolean keepAspectRatio) {
 
         try {
 
@@ -58,7 +57,7 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
                 //If the keep-aspect-ratio toggle is disabled, just stretch the image background to the full size of the screen it is rendered in
                 if (!keepAspectRatio) {
 
-                    DrawableHelper.drawTexture(matrix, 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
+                    GuiComponent.blit(matrix, 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
 
                 //If the background image should keep its aspect ratio, try to keep the aspect ratio as long as possible.
                 //As soon as it's not possible to keep the aspect ratio anymore, just stretch it.
@@ -70,9 +69,9 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
                     int wfinal = (int)(screen.height * ratio);
                     int screenCenterX = screen.width / 2;
                     if (wfinal < screen.width) {
-                        DrawableHelper.drawTexture(matrix, 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
+                        GuiComponent.blit(matrix, 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
                     } else {
-                        DrawableHelper.drawTexture(matrix, screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal, screen.height, wfinal, screen.height);
+                        GuiComponent.blit(matrix, screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal, screen.height, wfinal, screen.height);
                     }
 
                 }

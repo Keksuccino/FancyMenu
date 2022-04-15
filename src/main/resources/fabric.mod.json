@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "fancymenu",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "name": "FancyMenu",
   "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2022 Keksuccino. FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.",
   "environment": "client",

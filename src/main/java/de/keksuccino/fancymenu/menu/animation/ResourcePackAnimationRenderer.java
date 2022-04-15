@@ -3,18 +3,16 @@ package de.keksuccino.fancymenu.menu.animation;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.resource.Resource;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.jetbrains.annotations.Nullable;
 
 public class ResourcePackAnimationRenderer implements IAnimationRenderer {
@@ -27,7 +25,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     protected int height;
     protected int x;
     protected int y;
-    public List<Identifier> resources = new ArrayList<Identifier>();
+    public List<ResourceLocation> resources = new ArrayList<ResourceLocation>();
     protected boolean stretch = false;
     protected boolean hide = false;
     protected volatile boolean done = false;
@@ -56,11 +54,11 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     private void loadAnimationFrames() {
         try {
             for (String s : this.frameNames) {
-                Identifier r;
+                ResourceLocation r;
                 if (this.resourceNamespace == null) {
-                    r = new Identifier(s);
+                    r = new ResourceLocation(s);
                 } else {
-                    r = new Identifier(this.resourceNamespace, s);
+                    r = new ResourceLocation(this.resourceNamespace, s);
                 }
                 this.resources.add(r);
             }
@@ -71,7 +69,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     }
 
     @Override
-    public void render(MatrixStack matrix) {
+    public void render(PoseStack matrix) {
         if ((this.resources == null) || (this.resources.isEmpty())) {
             return;
         }
@@ -108,22 +106,22 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         }
     }
 
-    protected void renderFrame(MatrixStack matrix) {
+    protected void renderFrame(PoseStack matrix) {
         ExternalTextureAnimationRenderer d;
         int h = this.height;
         int w = this.width;
         int x2 = this.x;
         int y2 = this.y;
         if (this.stretch) {
-            h = MinecraftClient.getInstance().currentScreen.height;
-            w = MinecraftClient.getInstance().currentScreen.width;
+            h = Minecraft.getInstance().screen.height;
+            w = Minecraft.getInstance().screen.width;
             x2 = 0;
             y2 = 0;
         }
 
         RenderUtils.bindTexture(this.resources.get(this.frame));
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
-        DrawableHelper.drawTexture(matrix, x2, y2, 0.0F, 0.0F, w, h, w, h);
+        GuiComponent.blit(matrix, x2, y2, 0.0F, 0.0F, w, h, w, h);
         RenderSystem.disableBlend();
     }
 
@@ -193,7 +191,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         return this.resources.size();
     }
 
-    public List<Identifier> getAnimationFrames() {
+    public List<ResourceLocation> getAnimationFrames() {
         return this.resources;
     }
 
@@ -256,10 +254,10 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
             return true;
         }
         try {
-            List<Identifier> l = this.getAnimationFrames();
+            List<ResourceLocation> l = this.getAnimationFrames();
             if (!l.isEmpty()) {
-                Identifier r = l.get(0);
-                Resource res = MinecraftClient.getInstance().getResourceManager().getResource(r);
+                ResourceLocation r = l.get(0);
+                Resource res = Minecraft.getInstance().getResourceManager().getResource(r);
                 if (res != null) {
                     InputStream in = res.getInputStream();
                     if (in != null) {

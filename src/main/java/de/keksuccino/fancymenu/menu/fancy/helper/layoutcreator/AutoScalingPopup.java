@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -9,13 +10,12 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Screen;
 
 public class AutoScalingPopup extends FMPopup {
 
@@ -45,22 +45,22 @@ public class AutoScalingPopup extends FMPopup {
         });
         this.addButton(doneButton);
 
-        this.widthTextField = new AdvancedTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
-        this.widthTextField.setText("" + MinecraftClient.getInstance().getWindow().getWidth());
+        this.widthTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
+        this.widthTextField.setValue("" + Minecraft.getInstance().getWindow().getScreenWidth());
 
-        this.heightTextField = new AdvancedTextField(MinecraftClient.getInstance().textRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
-        this.heightTextField.setText("" + MinecraftClient.getInstance().getWindow().getHeight());
+        this.heightTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
+        this.heightTextField.setValue("" + Minecraft.getInstance().getWindow().getScreenHeight());
 
         KeyboardHandler.addKeyPressedListener(this::onEnterPressed);
         KeyboardHandler.addKeyPressedListener(this::onEscapePressed);
     }
 
     @Override
-    public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
+    public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
         super.render(matrix, mouseX, mouseY, renderIn);
 
-        float partial = MinecraftClient.getInstance().getTickDelta();
-        TextRenderer font = MinecraftClient.getInstance().textRenderer;
+        float partial = Minecraft.getInstance().getFrameTime();
+        Font font = Minecraft.getInstance().font;
         int screenCenterX = renderIn.width / 2;
         int screenCenterY = renderIn.height / 2;
         
@@ -78,8 +78,8 @@ public class AutoScalingPopup extends FMPopup {
         this.heightTextField.y = screenCenterY + 10;
         this.heightTextField.render(matrix, mouseX, mouseY, partial);
 
-        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + MinecraftClient.getInstance().getWindow().getWidth(), screenCenterX, screenCenterY + 45, -1);
-        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + MinecraftClient.getInstance().getWindow().getHeight(), screenCenterX, screenCenterY + 55, -1);
+        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), screenCenterX, screenCenterY + 45, -1);
+        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), screenCenterX, screenCenterY + 55, -1);
 
         this.doneButton.x = screenCenterX - this.doneButton.getWidth() - 5;
         this.doneButton.y = screenCenterY + 80;
@@ -92,9 +92,9 @@ public class AutoScalingPopup extends FMPopup {
 
     protected void onDoneButtonPressed() {
         try {
-            if (MathUtils.isInteger(this.widthTextField.getText()) && MathUtils.isInteger(this.heightTextField.getText())) {
-                int w = Integer.parseInt(this.widthTextField.getText());
-                int h = Integer.parseInt(this.heightTextField.getText());
+            if (MathUtils.isInteger(this.widthTextField.getValue()) && MathUtils.isInteger(this.heightTextField.getValue())) {
+                int w = Integer.parseInt(this.widthTextField.getValue());
+                int h = Integer.parseInt(this.heightTextField.getValue());
                 if ((w > 0) && (h > 0)) {
                     this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
                     this.parent.autoScalingWidth = w;

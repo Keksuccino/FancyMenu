@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
@@ -15,9 +17,6 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
 
 public class ButtonCustomizationItem extends CustomizationItemBase {
 
@@ -162,22 +161,22 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}
 
 		this.updateValues();
 
-		if (this.onlyOutgame && (MinecraftClient.getInstance().world != null)) {
+		if (this.onlyOutgame && (Minecraft.getInstance().level != null)) {
 			return;
 		}
 
-		if (this.onlyMultiplayer && ((MinecraftClient.getInstance().world == null) || MinecraftClient.getInstance().isIntegratedServerRunning())) {
+		if (this.onlyMultiplayer && ((Minecraft.getInstance().level == null) || Minecraft.getInstance().hasSingleplayerServer())) {
 			return;
 		}
 
-		if (this.onlySingleplayer && ((MinecraftClient.getInstance().world == null) || !MinecraftClient.getInstance().isIntegratedServerRunning())) {
+		if (this.onlySingleplayer && ((Minecraft.getInstance().level == null) || !Minecraft.getInstance().hasSingleplayerServer())) {
 			return;
 		}
 
@@ -205,7 +204,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			this.hover = false;
 		}
 
-		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), MinecraftClient.getInstance().getTickDelta());
+		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
 	}
 
 	protected void updateValues() {

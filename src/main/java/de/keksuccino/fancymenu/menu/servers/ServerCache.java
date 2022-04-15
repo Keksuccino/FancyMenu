@@ -1,32 +1,31 @@
 package de.keksuccino.fancymenu.menu.servers;
 
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.MultiplayerServerListPinger;
-import net.minecraft.client.network.ServerInfo;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerStatusPinger;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 
 public class ServerCache {
 
-    static final Text CANT_CONNECT_TEXT = (new TranslatableText("multiplayer.status.cannot_connect")).formatted(Formatting.DARK_RED);
+    static final Component CANT_CONNECT_TEXT = (new TranslatableComponent("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
 
-    protected static MultiplayerServerListPinger pinger = new MultiplayerServerListPinger();
-    protected static Map<String, ServerInfo> servers = new HashMap<String, ServerInfo>();
-    protected static Map<String, ServerInfo> serversUpdated = new HashMap<String, ServerInfo>();
+    protected static ServerStatusPinger pinger = new ServerStatusPinger();
+    protected static Map<String, ServerData> servers = new HashMap<String, ServerData>();
+    protected static Map<String, ServerData> serversUpdated = new HashMap<String, ServerData>();
 
     public static void init() {
         new Thread(() -> {
             while (true) {
                 try {
-                    if ((MinecraftClient.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(MinecraftClient.getInstance().currentScreen)) {
+                    if ((Minecraft.getInstance().screen != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
                         pingServers();
                     }
                 } catch (Exception e) {
@@ -41,13 +40,13 @@ public class ServerCache {
         }).start();
     }
 
-    public static void cacheServer(ServerInfo server, ServerInfo serverUpdated) {
-        if (server.address != null) {
+    public static void cacheServer(ServerData server, ServerData serverUpdated) {
+        if (server.ip != null) {
             try {
                 server.ping = -1L;
                 serverUpdated.ping = -1L;
-                servers.put(server.address, server);
-                serversUpdated.put(server.address, serverUpdated);
+                servers.put(server.ip, server);
+                serversUpdated.put(server.ip, serverUpdated);
                 pingServers();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -55,20 +54,20 @@ public class ServerCache {
         }
     }
 
-    public static ServerInfo getServer(String ip) {
+    public static ServerData getServer(String ip) {
         if (!servers.containsKey(ip)) {
-            cacheServer(new ServerInfo(ip, ip, false), new ServerInfo(ip, ip, false));
+            cacheServer(new ServerData(ip, ip, false), new ServerData(ip, ip, false));
         }
 
         //Copy server data from old to new array only when server is done pinging
-        if (servers.get(ip).label != null) {
-            if (!servers.get(ip).label.equals(new TranslatableText("multiplayer.status.pinging"))) {
+        if (servers.get(ip).motd != null) {
+            if (!servers.get(ip).motd.equals(new TranslatableComponent("multiplayer.status.pinging"))) {
                 serversUpdated.get(ip).ping = servers.get(ip).ping;
-                serversUpdated.get(ip).protocolVersion = servers.get(ip).protocolVersion;
-                serversUpdated.get(ip).label = servers.get(ip).label;
+                serversUpdated.get(ip).protocol = servers.get(ip).protocol;
+                serversUpdated.get(ip).motd = servers.get(ip).motd;
                 serversUpdated.get(ip).version = servers.get(ip).version;
-                serversUpdated.get(ip).playerCountLabel = servers.get(ip).playerCountLabel;
-                serversUpdated.get(ip).playerListSummary = servers.get(ip).playerListSummary;
+                serversUpdated.get(ip).status = servers.get(ip).status;
+                serversUpdated.get(ip).playerList = servers.get(ip).playerList;
             }
         }
 
@@ -86,20 +85,20 @@ public class ServerCache {
     }
 
     public static void pingServers() {
-        List<ServerInfo> l = new ArrayList<ServerInfo>();
+        List<ServerData> l = new ArrayList<ServerData>();
         l.addAll(servers.values());
-        for (ServerInfo d : l) {
+        for (ServerData d : l) {
             try {
                 new Thread(() -> {
                     try {
-                        pinger.add(d, () -> {});
-                        if (d.playerCountLabel == LiteralText.EMPTY) {
+                        pinger.pingServer(d, () -> {});
+                        if (d.status == TextComponent.EMPTY) {
                             d.ping = -1L;
-                            d.label = CANT_CONNECT_TEXT;
+                            d.motd = CANT_CONNECT_TEXT;
                         }
                     } catch (Exception ex) {
                         d.ping = -1L;
-                        d.label = CANT_CONNECT_TEXT;
+                        d.motd = CANT_CONNECT_TEXT;
                     }
                 }).start();
             } catch (Exception e) {

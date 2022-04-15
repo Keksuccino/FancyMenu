@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
-
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.TextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -12,9 +14,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 
 public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
@@ -100,7 +99,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(MatrixStack matrix, Screen menu) throws IOException {
+	public void render(PoseStack matrix, Screen menu) throws IOException {
 		if (this.parent != null) {
 
 			this.updateValues();
@@ -133,11 +132,11 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 							this.normalLabelCached = true;
 							this.normalLabel = this.parent.getButton().getMessage().getString();
 						}
-						this.parent.getButton().setMessage(new LiteralText(this.value));
+						this.parent.getButton().setMessage(new TextComponent(this.value));
 					} else {
 						if (this.normalLabelCached) {
 							this.normalLabelCached = false;
-							this.parent.getButton().setMessage(new LiteralText(this.normalLabel));
+							this.parent.getButton().setMessage(new TextComponent(this.normalLabel));
 						}
 					}
 				}
@@ -146,7 +145,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 				if (this.value != null) {
 					if (!this.parent.getButton().isHovered() || !this.parent.hasHoverLabel) {
-						this.parent.getButton().setMessage(new LiteralText(this.value));
+						this.parent.getButton().setMessage(new TextComponent(this.value));
 					}
 				}
 			}
