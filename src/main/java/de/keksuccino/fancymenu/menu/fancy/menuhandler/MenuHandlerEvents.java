@@ -10,6 +10,8 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MenuHandlerEvents {
 
@@ -66,6 +68,7 @@ public class MenuHandlerEvents {
 				}
 			} else {
 				if (!MenuHandlerRegistry.isHandlerRegistered(s.getClass().getName())) {
+//					LOGGER.info("############# HANDLER REGISTERED: " + s.getClass().getName());
 					MenuHandlerRegistry.registerHandler(new MenuHandlerBase(s.getClass().getName()));
 				}
 			}

@@ -87,10 +87,12 @@ public class MenuCustomizationEvents {
 				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
 		}
+
 	}
 
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
+
 		//Stopping audio for all menu handlers if no screen is being displayed
 		if ((Minecraft.getInstance().screen == null) && !this.idle) {
 			MenuCustomization.stopSounds();

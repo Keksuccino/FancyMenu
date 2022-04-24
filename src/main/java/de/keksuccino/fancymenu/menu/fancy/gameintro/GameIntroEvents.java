@@ -1,16 +1,28 @@
 package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class GameIntroEvents {
+
+	//TODO übernehmen
+	private static boolean titleScreenDisplayed = false;
 	
 	@SubscribeEvent
 	public void onScreenInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+		//TODO übernehmen
+		if (e.getScreen() instanceof TitleScreen) {
+			titleScreenDisplayed = true;
+		} else if (titleScreenDisplayed && MenuCustomization.isValidScreen(e.getScreen())) {
+			GameIntroHandler.introDisplayed = true;
+		}
+		//--------------------
 		if ((e.getScreen() instanceof TitleScreen) && AnimationHandler.isReady() && !GameIntroHandler.introDisplayed) {
 			IAnimationRenderer intro = GameIntroHandler.getGameIntroAnimation();
 			if (intro != null) {
@@ -18,6 +30,14 @@ public class GameIntroEvents {
 			} else {
 				GameIntroHandler.introDisplayed = true;
 			}
+		}
+	}
+
+	//TODO übernehmen
+	@SubscribeEvent
+	public void onClientTick(TickEvent.ClientTickEvent e) {
+		if (!GameIntroHandler.introDisplayed && (Minecraft.getInstance().level != null)) {
+			GameIntroHandler.introDisplayed = true;
 		}
 	}
 
