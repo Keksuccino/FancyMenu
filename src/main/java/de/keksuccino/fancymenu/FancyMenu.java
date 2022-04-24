@@ -34,10 +34,10 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.6.4";
+	public static final String VERSION = "2.6.5";
 	public static final String MOD_LOADER = "fabric";
 
-	public static final Logger LOGGER = LogManager.getLogger();
+	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
 	
@@ -100,11 +100,11 @@ public class FancyMenu implements ModInitializer {
 //				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundTypeWithInputString());
 
 				if (isOptifineCompatibilityMode()) {
-					LOGGER.info("[FANCYMENU] Optifine compatibility mode!");
+					LOGGER.info("Optifine compatibility mode!");
 				}
 	        	
 	    	} else {
-	    		System.out.println("## WARNING ## 'FancyMenu' is a client mod and has no effect when loaded on a server!");
+	    		LOGGER.warn("WARNING: FancyMenu is a client mod and has no effect when loaded on a server!");
 	    	}
 	    	
 		} catch (Exception e) {
