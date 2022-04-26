@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -35,25 +36,35 @@ import org.apache.logging.log4j.Logger;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.3,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.6.5";
+	public static final String VERSION = "2.6.6";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 	
 	public static Config config;
-	
-	private static final File animationsPath = new File("config/fancymenu/animations");
-	private static final File customizationPath = new File("config/fancymenu/customization");
-	private static final File customGuiPath = new File("config/fancymenu/customguis");
-	private static final File buttonscriptPath = new File("config/fancymenu/buttonscripts");
-	private static final File panoramaPath = new File("config/fancymenu/panoramas");
-	private static final File slideshowPath = new File("config/fancymenu/slideshows");
+
+	public static final File MOD_DIR = new File("config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File("fancymenu_data");
+
+	private static File animationsPath = new File(MOD_DIR.getPath() + "/animations");
+	private static File customizationPath = new File(MOD_DIR.getPath() + "/customization");
+	private static File customGuiPath = new File(MOD_DIR.getPath() + "/customguis");
+	private static File buttonscriptPath = new File(MOD_DIR.getPath() + "/buttonscripts");
+	private static File panoramaPath = new File(MOD_DIR.getPath() + "/panoramas");
+	private static File slideshowPath = new File(MOD_DIR.getPath() + "/slideshows");
 	
 	public FancyMenu() {
 		try {
 			
 			//Useless now bc of clientSideOnly, but will keep this here to keep the code in sync with MC 1.15+ :)
 			if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+
+				if (!MOD_DIR.isDirectory()) {
+					MOD_DIR.mkdirs();
+				}
+				if (!INSTANCE_DATA_DIR.isDirectory()) {
+					INSTANCE_DATA_DIR.mkdirs();
+				}
 
 	    		//Create all important directories
 	    		animationsPath.mkdirs();
@@ -87,11 +98,10 @@ public class FancyMenu {
 	        	}
 	        	
 	        	ButtonScriptEngine.init();
+
+				LastWorldHandler.init();
 	        	
 	        	VanillaButtonDescriptionHandler.init();
-
-//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundType());
-//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundTypeWithInputString());
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
@@ -139,7 +149,7 @@ public class FancyMenu {
 	
 	private static void initLocals() {
 		String baseresdir = "fmlocals/";
-		File f = new File("config/fancymenu/locals");
+		File f = new File(MOD_DIR.getPath() + "/locals");
 		if (!f.exists()) {
 			f.mkdirs();
 		}
@@ -156,7 +166,7 @@ public class FancyMenu {
 	public static void updateConfig() {
     	try {
 
-    		config = new Config("config/fancymenu/config.txt");
+			config = new Config(MOD_DIR.getPath() + "/config.txt");
     		
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");

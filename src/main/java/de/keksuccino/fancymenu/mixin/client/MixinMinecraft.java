@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.client;
 
+import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import net.minecraft.world.WorldSettings;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,7 +26,7 @@ public class MixinMinecraft {
 	}
 
 	@Inject(at = @At(value = "HEAD"), method = "displayGuiScreen", cancellable = true)
-	public void onGetWindowTitle(CallbackInfo info) {
+	private void onGetWindowTitle(CallbackInfo info) {
 		if (!FancyMenu.isKonkreteLoaded()) {
 			return;
 		}
@@ -42,6 +44,12 @@ public class MixinMinecraft {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	//TODO experimental
+	@Inject(at = @At("HEAD"), method = "launchIntegratedServer")
+	private void onLaunchIntegratedServer(String folderName, String worldName, WorldSettings settings, CallbackInfo info) {
+		LastWorldHandler.setLastWorld(folderName, false);
 	}
 	
 }

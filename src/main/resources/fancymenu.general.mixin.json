@@ -13,7 +13,8 @@
     "MixinScaledResolution",
     "MixinGuiScreenResourcePacks",
     "MixinOnlineServerEntry",
-    "MixinWorldListEntry"
+    "MixinWorldListEntry",
+    "MixinConnectScreen"
   ],
   "injectors": {
     "defaultRequire": 1

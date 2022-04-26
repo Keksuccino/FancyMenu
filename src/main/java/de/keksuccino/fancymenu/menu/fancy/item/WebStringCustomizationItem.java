@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.common.collect.LinkedListMultimap;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -22,7 +22,7 @@ import net.minecraft.util.math.MathHelper;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
-	public volatile Map<String, Float> lines = new LinkedHashMap<String, Float>();
+	public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
 	private volatile boolean updating = false;
 	public boolean multiline = false;
 	public boolean shadow = false;
@@ -89,18 +89,18 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			this.setHeight((int)(this.unscaledHeight * this.scale));
 			
 			int i = 0;
-			for (Map.Entry<String, Float> m : this.lines.entrySet()) {
+			for (Map.Entry<String, Float> m : this.lines.entries()) {
 				
 				float sc = (this.scale * m.getValue());
 				int x = (int) (this.getPosX(menu) / sc);
 				int y = (int) (this.getPosY(menu) / sc);
-				int stringwidth = (int) (font.getStringWidth(m.getKey()) * sc);
+				int lineWidth = (int) (font.getStringWidth(m.getKey()) * sc);
 
 				if (this.alignment == Alignment.RIGHT) {
-					x = (int) (x + ((this.getWidth() - stringwidth) / sc));
+					x = (int) (x + ((this.getWidth() - lineWidth) / sc));
 				}
 				if (this.alignment == Alignment.CENTERED) {
-					x = (int) (x + (((this.getWidth() - stringwidth) / sc) / 2));
+					x = (int) (x + (((this.getWidth() - lineWidth) / sc) / 2));
 				}
 				
 				GlStateManager.pushMatrix();

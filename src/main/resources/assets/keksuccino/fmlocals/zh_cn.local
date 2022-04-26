@@ -590,7 +590,7 @@ fancymenu.config.loadinganimationcolor.desc = 设置动画加载界面指针的�
 fancymenu.config.preloadanimations.desc = 在游戏加载时预加载动画材质。%n%这将导致加载界面在最后冻结。%n%但可有效防止动画在第一次播放时卡顿。
 
 fancymenu.config.customwindowtitle.desc = 设置自定义 Minecraft 窗口标题。
-fancymenu.config.customwindowicon.desc = 启用自定义 Miencraft 窗口图标。%n%详情请查询 Wiki:%n%§lfm.keksuccino.de
+fancymenu.config.customwindowicon.desc = 启用自定义 Miencraft 窗口图标。%n%详情请查询 Wiki:%n%§lfm.keksuccino.com
 
 fancymenu.config.showvanillamovewarning.desc = 启用试图在布局编辑器中移动未设置坐标原点的原版按钮时的警告。
 fancymenu.config.editordeleteconfirmation.desc = 启用删除元素时的二次确认弹出窗口。

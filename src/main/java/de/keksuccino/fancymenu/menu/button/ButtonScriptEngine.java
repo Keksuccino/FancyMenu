@@ -26,10 +26,12 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -250,6 +252,19 @@ public class ButtonScriptEngine {
 					}
 				} else {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
+				}
+			}
+			if (action.equalsIgnoreCase("join_last_world")) {
+				if (!LastWorldHandler.getLastWorld().equals("")) {
+					if (!LastWorldHandler.isLastWorldServer()) {
+						File f = new File(LastWorldHandler.getLastWorld());
+						if (Minecraft.getMinecraft().getSaveLoader().canLoadWorld(f.getName())) {
+							Minecraft.getMinecraft().launchIntegratedServer(f.getName(), f.getName(), null);
+						}
+					} else {
+						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
+						Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), new ServerData("", ipRaw, false)));
+					}
 				}
 			}
 
