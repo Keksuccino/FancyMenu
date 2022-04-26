@@ -61,6 +61,7 @@ public class ButtonActionPopup extends FMPopup {
 		actions.add("closegui");
 		actions.add("copytoclipboard");
 		actions.add("mimicbutton");
+		actions.add("join_last_world");
 
 		/** CUSTOM ACTIONS **/
 		for (ButtonActionContainer c : ButtonActionRegistry.getActions()) {

@@ -8,6 +8,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.google.common.collect.LinkedListMultimap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -22,7 +24,7 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
-	public volatile Map<String, Float> lines = new LinkedHashMap<String, Float>();
+	public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
 	private volatile boolean updating = false;
 	public boolean multiline = false;
 	public boolean shadow = false;
@@ -89,7 +91,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			this.setHeight((int)(this.unscaledHeight * this.scale));
 			
 			int i = 0;
-			for (Map.Entry<String, Float> m : this.lines.entrySet()) {
+			for (Map.Entry<String, Float> m : this.lines.entries()) {
 				
 				float sc = (this.scale * m.getValue());
 				int x = (int) (this.getPosX(menu) / sc);

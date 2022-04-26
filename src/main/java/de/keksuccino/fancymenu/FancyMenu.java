@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -34,19 +35,22 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.6.5";
+	public static final String VERSION = "2.6.6";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
-	
-	private static File animationsPath = new File("config/fancymenu/animations");
-	private static File customizationPath = new File("config/fancymenu/customization");
-	private static File customGuiPath = new File("config/fancymenu/customguis");
-	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
-	private static File panoramaPath = new File("config/fancymenu/panoramas");
-	private static File slideshowPath = new File("config/fancymenu/slideshows");
+
+	public static final File MOD_DIR = new File("config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File("fancymenu_data");
+
+	private static File animationsPath = new File(MOD_DIR.getPath() + "/animations");
+	private static File customizationPath = new File(MOD_DIR.getPath() + "/customization");
+	private static File customGuiPath = new File(MOD_DIR.getPath() + "/customguis");
+	private static File buttonscriptPath = new File(MOD_DIR.getPath() + "/buttonscripts");
+	private static File panoramaPath = new File(MOD_DIR.getPath() + "/panoramas");
+	private static File slideshowPath = new File(MOD_DIR.getPath() + "/slideshows");
 	
     @Override
     public void onInitialize() {
@@ -54,7 +58,14 @@ public class FancyMenu implements ModInitializer {
     	try {
 			//Check if FancyMenu was loaded client- or serverside
     		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
-	    		
+
+				if (!MOD_DIR.isDirectory()) {
+					MOD_DIR.mkdirs();
+				}
+				if (!INSTANCE_DATA_DIR.isDirectory()) {
+					INSTANCE_DATA_DIR.mkdirs();
+				}
+
 	    		//Create all important directories
 	    		animationsPath.mkdirs();
 	    		customizationPath.mkdirs();
@@ -85,6 +96,8 @@ public class FancyMenu implements ModInitializer {
 	        	}
 	        	
 	        	ButtonScriptEngine.init();
+
+				LastWorldHandler.init();
 	        	
 	        	VanillaButtonDescriptionHandler.init();
 
@@ -141,7 +154,7 @@ public class FancyMenu implements ModInitializer {
     
     private static void initLocals() {
 		String baseresdir = "fmlocals/";
-		File f = new File("config/fancymenu/locals");
+		File f = new File(MOD_DIR.getPath() + "/locals");
 		if (!f.exists()) {
 			f.mkdirs();
 		}
@@ -158,7 +171,7 @@ public class FancyMenu implements ModInitializer {
     public static void updateConfig() {
     	try {
 
-    		config = new Config("config/fancymenu/config.txt");
+			config = new Config(MOD_DIR.getPath() + "/config.txt");
 
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");

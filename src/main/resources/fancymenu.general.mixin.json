@@ -17,7 +17,9 @@
     "IMixinScreen",
     "IMixinTitleScreen",
     "IMixinLevelLoadingScreen",
-    "IMixinAbstractWidget"
+    "IMixinAbstractWidget",
+    "MixinConnectScreen",
+    "MixinLevelStorageAccess"
   ],
   "server": [],
   "injectors": {

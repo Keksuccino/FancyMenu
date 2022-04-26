@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -263,6 +265,28 @@ public class ButtonScriptEngine {
 					}
 				} else {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
+				}
+			}
+			if (action.equalsIgnoreCase("join_last_world")) {
+				if (!LastWorldHandler.getLastWorld().equals("")) {
+					if (!LastWorldHandler.isLastWorldServer()) {
+						File f = new File(LastWorldHandler.getLastWorld());
+						if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
+							Minecraft.getInstance().loadLevel(f.getName());
+						}
+					} else {
+						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
+						String ip = ipRaw;
+						int port = 25565;
+						if (ip.contains(":")) {
+							String portString = ip.split("[:]", 2)[1];
+							ip = ip.split("[:]", 2)[0];
+							if (MathUtils.isInteger(portString)) {
+								port = Integer.parseInt(portString);
+							}
+						}
+						ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), new ServerData("", ipRaw, false));
+					}
 				}
 			}
 
