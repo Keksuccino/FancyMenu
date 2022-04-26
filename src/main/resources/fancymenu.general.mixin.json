@@ -11,7 +11,9 @@
     "MixinResourceLoadProgressGui",
     "MixinAbstractGui",
     "MixinOnlineServerEntry",
-    "MixinWorldListEntry"
+    "MixinWorldListEntry",
+    "MixinLevelStorageAccess",
+    "MixinConnectScreen"
   ],
   "injectors": {
     "defaultRequire": 1

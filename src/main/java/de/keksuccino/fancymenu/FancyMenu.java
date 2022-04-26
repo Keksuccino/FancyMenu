@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -42,19 +43,22 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.6.5";
+	public static final String VERSION = "2.6.6";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
 
-	private static File animationsPath = new File("config/fancymenu/animations");
-	private static File customizationPath = new File("config/fancymenu/customization");
-	private static File customGuiPath = new File("config/fancymenu/customguis");
-	private static File buttonscriptPath = new File("config/fancymenu/buttonscripts");
-	private static File panoramaPath = new File("config/fancymenu/panoramas");
-	private static File slideshowPath = new File("config/fancymenu/slideshows");
+	public static final File MOD_DIR = new File("config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File("fancymenu_data");
+
+	private static File animationsPath = new File(MOD_DIR.getPath() + "/animations");
+	private static File customizationPath = new File(MOD_DIR.getPath() + "/customization");
+	private static File customGuiPath = new File(MOD_DIR.getPath() + "/customguis");
+	private static File buttonscriptPath = new File(MOD_DIR.getPath() + "/buttonscripts");
+	private static File panoramaPath = new File(MOD_DIR.getPath() + "/panoramas");
+	private static File slideshowPath = new File(MOD_DIR.getPath() + "/slideshows");
 
 	public FancyMenu() {
 		try {
@@ -63,6 +67,13 @@ public class FancyMenu {
 
 			//Check if FancyMenu was loaded client- or serverside
 	    	if (FMLEnvironment.dist == Dist.CLIENT) {
+
+				if (!MOD_DIR.isDirectory()) {
+					MOD_DIR.mkdirs();
+				}
+				if (!INSTANCE_DATA_DIR.isDirectory()) {
+					INSTANCE_DATA_DIR.mkdirs();
+				}
 
 	    		//Create all important directories
 	    		animationsPath.mkdirs();
@@ -98,6 +109,8 @@ public class FancyMenu {
 	        	}
 
 	        	ButtonScriptEngine.init();
+
+				LastWorldHandler.init();
 
 	        	VanillaButtonDescriptionHandler.init();
 
@@ -149,7 +162,7 @@ public class FancyMenu {
 
 	private static void initLocals() {
 		String baseresdir = "fmlocals/";
-		File f = new File("config/fancymenu/locals");
+		File f = new File(MOD_DIR.getPath() + "/locals");
 		if (!f.exists()) {
 			f.mkdirs();
 		}
@@ -165,7 +178,7 @@ public class FancyMenu {
 
 	public static void updateConfig() {
     	try {
-    		config = new Config("config/fancymenu/config.txt");
+			config = new Config(MOD_DIR.getPath() + "/config.txt");
 
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");

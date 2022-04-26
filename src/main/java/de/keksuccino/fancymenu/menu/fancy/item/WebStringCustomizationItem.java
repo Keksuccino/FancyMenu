@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -24,7 +24,7 @@ import net.minecraft.util.math.MathHelper;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
-	public volatile Map<String, Float> lines = new LinkedHashMap<String, Float>();
+	public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
 	private volatile boolean updating = false;
 	public boolean multiline = false;
 	public boolean shadow = false;
@@ -87,27 +87,23 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 
 			RenderSystem.enableBlend();
 
-			//TODO übernehmen
 			this.setWidth((int)(this.unscaledWidth * this.scale));
 			this.setHeight((int)(this.unscaledHeight * this.scale));
-			//---------------
 			
 			int i = 0;
-			for (Map.Entry<String, Float> m : this.lines.entrySet()) {
+			for (Map.Entry<String, Float> m : this.lines.entries()) {
 				
 				float sc = (this.scale * m.getValue());
 				int x = (int) (this.getPosX(menu) / sc);
 				int y = (int) (this.getPosY(menu) / sc);
 				int stringwidth = (int) (font.getStringWidth(m.getKey()) * sc);
 
-				//TODO übernehmen
 				if (this.alignment == Alignment.RIGHT) {
 					x = (int) (x + ((this.getWidth() - stringwidth) / sc));
 				}
 				if (this.alignment == Alignment.CENTERED) {
 					x = (int) (x + (((this.getWidth() - stringwidth) / sc) / 2));
 				}
-				//----------------
 				
 				matrix.push();
 				matrix.scale(sc, sc, sc);
@@ -126,7 +122,6 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//TODO übernehmen
 	@Override
 	public int getPosX(Screen menu) {
 		int x = super.getPosX(menu);
