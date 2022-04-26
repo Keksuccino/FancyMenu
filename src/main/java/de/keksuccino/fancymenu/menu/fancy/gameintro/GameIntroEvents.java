@@ -11,18 +11,15 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class GameIntroEvents {
 
-	//TODO übernehmen
 	private static boolean titleScreenDisplayed = false;
 	
 	@SubscribeEvent
 	public void onScreenInitPre(ScreenEvent.InitScreenEvent.Pre e) {
-		//TODO übernehmen
 		if (e.getScreen() instanceof TitleScreen) {
 			titleScreenDisplayed = true;
 		} else if (titleScreenDisplayed && MenuCustomization.isValidScreen(e.getScreen())) {
 			GameIntroHandler.introDisplayed = true;
 		}
-		//--------------------
 		if ((e.getScreen() instanceof TitleScreen) && AnimationHandler.isReady() && !GameIntroHandler.introDisplayed) {
 			IAnimationRenderer intro = GameIntroHandler.getGameIntroAnimation();
 			if (intro != null) {
@@ -33,7 +30,6 @@ public class GameIntroEvents {
 		}
 	}
 
-	//TODO übernehmen
 	@SubscribeEvent
 	public void onClientTick(TickEvent.ClientTickEvent e) {
 		if (!GameIntroHandler.introDisplayed && (Minecraft.getInstance().level != null)) {

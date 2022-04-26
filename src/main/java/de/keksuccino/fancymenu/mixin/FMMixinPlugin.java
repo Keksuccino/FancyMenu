@@ -25,7 +25,6 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (isKonkreteLoaded()) {
-            //TODO übernehmen
 //            LOGGER.info("[FANCYMENU] APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
             return true;
         }

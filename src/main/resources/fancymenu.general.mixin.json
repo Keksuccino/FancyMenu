@@ -11,7 +11,9 @@
     "MixinLoadingOverlay",
     "MixinGuiComponent",
     "MixinOnlineServerEntry",
-    "MixinWorldListEntry"
+    "MixinWorldListEntry",
+    "MixinConnectScreen",
+    "MixinLevelStorageAccess"
   ],
   "injectors": {
     "defaultRequire": 1

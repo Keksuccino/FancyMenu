@@ -333,7 +333,7 @@ helper.creator.items.button.btndescription.desc = Tooltip to display%n%when the 
 
 helper.buttons.customization.onoff.btndesc = Toggle customizations%n%for the current menu.%n%%n%§cThis needs to be enabled for%n%§clayouts to work!
 helper.buttons.customization.menuinfo.btndesc = Displays the §cmenu identifier%n%of the currently displayed menu.%n%%n%You can leftclick the identifier%n%to copy it.
-helper.buttons.customization.buttoninfo.btndesc = Displays useful informations%n%about §cvanilla buttons%n%when hovering them.
+helper.buttons.customization.buttoninfo.btndesc = Displays useful information%n%about §cvanilla buttons%n%when hovering them.
 helper.buttons.customization.createlayout.btndesc = Customize the currently displayed%n%menu in a fancy GUI editor!%n%%n%§cIMPORTANT:%n%Should always be used when%n%you want to edit already%n%existing menus!
 helper.buttons.customization.editlayout.btndesc = Edit layouts for the currently%n%displayed menu.
 helper.buttons.customization.creategui.btndesc = Create a new empty GUI%n%and fill it with everything you want!%n%%n%§cIMPORTANT:%n%Should NEVER be used if you%n%just want to edit an existing menu%n%without overriding it completely!%n%%n%To edit a menu, use%n%§oCreate Layout §rinstead!
@@ -585,7 +585,7 @@ fancymenu.config.loadinganimationcolor.desc = Set the color of the%n%animation l
 fancymenu.config.preloadanimations.desc = Will pre-load animation textures%n%when the game starts.%n%This causes the loading screen%n%to freeze at the end, but%n%prevents animations from lagging%n%when rendered for the first time.
 
 fancymenu.config.customwindowtitle.desc = Specify a custom minecraft window title.
-fancymenu.config.customwindowicon.desc = Enable custom Minecraft window icons.%n%For more informations,%n%take a look at the Wiki:%n%§lfm.keksuccino.de
+fancymenu.config.customwindowicon.desc = Enable custom Minecraft window icons.%n%For more information,%n%take a look at the Wiki:%n%§lfm.keksuccino.com
 
 fancymenu.config.showvanillamovewarning.desc = Enable the warning notification%n%when trying to move an%n%orientation-less vanilla button%n%in the layout editor.
 fancymenu.config.editordeleteconfirmation.desc = If a confirmation popup should%n%be displayed when deleting an element.
@@ -647,7 +647,7 @@ helper.ui.tools.menuinfo.on = Menu Info: §aOn
 helper.ui.tools.menuinfo.desc = Show the menu identifier of this menu.%n%%n%You can left-click the identifier%n%to copy it.
 helper.ui.tools.buttoninfo.off = Button Info: §cOff
 helper.ui.tools.buttoninfo.on = Button Info: §aOn
-helper.ui.tools.buttoninfo.desc = Show informations about vanilla buttons%n%when hovering them.%n%%n%Has no effect on custom buttons.
+helper.ui.tools.buttoninfo.desc = Show information about vanilla buttons%n%when hovering them.%n%%n%Has no effect on custom buttons.
 
 helper.ui.misc = Miscellaneous
 helper.ui.misc.closegui = §cCLOSE MENU
@@ -825,7 +825,7 @@ fancymenu.helper.editor.items.copyid = Copy Element ID
 fancymenu.helper.editor.items.copyid.btn.desc = Copy the ID of this element, to use%n%it in visibility requirements, etc.
 
 fancymenu.helper.ui.dynamicvariabletextfield.variables.local = Localize Text
-fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace '<localization.key>' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.de%n%%n%§lExample:%n%%local:some.local.key%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace '<localization.key>' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.com%n%%n%§lExample:%n%%local:some.local.key%
 
 fancymenu.config.showgrid = Show Grid
 fancymenu.config.showgrid.desc = Add a grid to the editor for easier aligning.
@@ -973,9 +973,9 @@ fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Sc
 fancymenu.helper.editor.backgrounds.choose = Choose Background
 
 fancymenu.helper.editor.backgrounds.image.desc = A static image.%n%%n%Only JPG/JPEG and PNG are supported.
-fancymenu.helper.editor.backgrounds.animation.desc = An animation. Like a video, but not, you know?%n%%n%Please visit the wiki (fm.keksuccino.de)%n%for how to make your own animations.
-fancymenu.helper.editor.backgrounds.panorama.desc = A spinning cubic panorama like%n%the one in the vanilla main menu.%n%%n%Please visit the wiki (fm.keksuccino.de)%n%for how to make your own panoramas.
-fancymenu.helper.editor.backgrounds.slideshow.desc = A slideshow that shows a set of images.%n%%n%Please visit the wiki (fm.keksuccino.de)%n%for how to make your own slideshows.
+fancymenu.helper.editor.backgrounds.animation.desc = An animation. Like a video, but not, you know?%n%%n%Please visit the wiki (fm.keksuccino.com)%n%for how to make your own animations.
+fancymenu.helper.editor.backgrounds.panorama.desc = A spinning cubic panorama like%n%the one in the vanilla main menu.%n%%n%Please visit the wiki (fm.keksuccino.com)%n%for how to make your own panoramas.
+fancymenu.helper.editor.backgrounds.slideshow.desc = A slideshow that shows a set of images.%n%%n%Please visit the wiki (fm.keksuccino.com)%n%for how to make your own slideshows.
 
 fancymenu.helper.editor.backgrounds.custom.choosefile = Choose File
 fancymenu.helper.editor.backgrounds.custom.setbackground = Set Background
@@ -984,3 +984,5 @@ fancymenu.helper.editor.backgrounds.custom.clearbackground.desc = Clear the curr
 
 fancymenu.helper.editor.extension.dummy.audio.btn.desc = §6You need to install the%n%§6§lAudio Extension §r§6to use this%n%§6element.%n%%n%§cClick on the button to%n%§copen the download page.
 fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc = §c§lDEPRECATED!%n%%n%§cThis is part of the old%n%§caudio system and gets removed%n%§cvery soon!%n%%n%§cFor more information, read%n%§cthe tooltip of the button%n%§cto add a new audio element.
+
+helper.creator.custombutton.config.actiontype.join_last_world.desc = Join the last world/server.

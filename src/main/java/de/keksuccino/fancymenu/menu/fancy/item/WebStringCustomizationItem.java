@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -24,7 +24,8 @@ import net.minecraft.util.Mth;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
-	public volatile Map<String, Float> lines = new LinkedHashMap<String, Float>();
+	//TODO übernehmen
+	public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
 	private volatile boolean updating = false;
 	public boolean multiline = false;
 	public boolean shadow = false;
@@ -34,7 +35,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 	protected volatile int unscaledHeight = 1;
 	protected volatile int unscaledWidth = 1;
 	protected Font font = Minecraft.getInstance().font;
-	
+
 	public WebStringCustomizationItem(PropertiesSection item) {
 		super(item);
 		if ((this.action != null) && this.action.equalsIgnoreCase("addwebtext")) {
@@ -43,19 +44,19 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				this.rawURL = this.value;
 				this.value = DynamicValueHelper.convertFromRaw(this.value);
 			}
-			
+
 			String multi = item.getEntryValue("multiline");
 			if ((multi != null) && multi.equalsIgnoreCase("true")) {
 				this.multiline = true;
 			}
-			
+
 			String sh = item.getEntryValue("shadow");
 			if ((sh != null)) {
 				if (sh.equalsIgnoreCase("true")) {
 					this.shadow = true;
 				}
 			}
-			
+
 			String sc = item.getEntryValue("scale");
 			if ((sc != null) && MathUtils.isFloat(sc)) {
 				this.scale = Float.parseFloat(sc);
@@ -72,13 +73,13 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			}
 
 			this.updateContent(this.value);
-			
+
 		}
 	}
 
 	@Override
 	public void render(PoseStack matrix, Screen menu) throws IOException {
-		
+
 		if (!this.shouldRender()) {
 			return;
 		}
@@ -89,22 +90,23 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 
 			this.setWidth((int)(this.unscaledWidth * this.scale));
 			this.setHeight((int)(this.unscaledHeight * this.scale));
-			
+
 			int i = 0;
-			for (Map.Entry<String, Float> m : this.lines.entrySet()) {
-				
+			//TODO übernehmen
+			for (Map.Entry<String, Float> m : this.lines.entries()) {
+
 				float sc = (this.scale * m.getValue());
 				int x = (int) (this.getPosX(menu) / sc);
 				int y = (int) (this.getPosY(menu) / sc);
-				int stringwidth = (int) (font.width(m.getKey()) * sc);
+				int lineWidth = (int) (font.width(m.getKey()) * sc);
 
 				if (this.alignment == Alignment.RIGHT) {
-					x = (int) (x + ((this.getWidth() - stringwidth) / sc));
+					x = (int) (x + ((this.getWidth() - lineWidth) / sc));
 				}
 				if (this.alignment == Alignment.CENTERED) {
-					x = (int) (x + (((this.getWidth() - stringwidth) / sc) / 2));
+					x = (int) (x + (((this.getWidth() - lineWidth) / sc) / 2));
 				}
-				
+
 				matrix.pushPose();
 				matrix.scale(sc, sc, sc);
 				if (this.shadow) {
@@ -113,9 +115,9 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 					font.draw(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | Mth.ceil(this.opacity * 255.0F) << 24);
 				}
 				matrix.popPose();
-				
+
 				i += (10 * sc);
-				
+
 			}
 
 			RenderSystem.disableBlend();
@@ -170,11 +172,11 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 						String path = value.replace("//", "").split("/", 2)[1];
 						value = "https://pastebin.com/raw/" + path;
 					}
-					
+
 					try {
-						
+
 						lines.clear();
-						
+
 						URL u = new URL(value);
 						BufferedReader r = new BufferedReader(new InputStreamReader(u.openStream(), StandardCharsets.UTF_8));
 						String s = r.readLine();
@@ -201,7 +203,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 
 						unscaledWidth = w;
 						unscaledHeight = h;
-						
+
 					} catch (Exception e) {
 						lines.clear();
 						String s = Locals.localize("customization.items.webstring.unabletoload");
