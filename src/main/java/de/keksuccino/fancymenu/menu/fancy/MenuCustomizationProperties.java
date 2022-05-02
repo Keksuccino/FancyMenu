@@ -166,7 +166,8 @@ public class MenuCustomizationProperties {
 				continue;
 			}
 			String s2 = l2.get(0).getEntryValue("identifier");
-			if (s2.equalsIgnoreCase(identifier)) {
+			//TODO übernehmen
+			if ((s2 != null) && (s2.equalsIgnoreCase(identifier) || s2.equals("%fancymenu:universal_layout%"))) {
 				l.add(s);
 			}
 		}

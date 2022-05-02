@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
@@ -26,6 +25,14 @@ public class MixinConnectScreen {
             LastWorldHandler.setLastWorld(address.getHost() + ":" + address.getPort(), true);
         }
 
+    }
+
+    //TODO übernehmen
+    @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
+    private void onConnect(Minecraft mc, ServerAddress address, CallbackInfo info) {
+        if (address.getHost().equals("%fancymenu_dummy_address%")) {
+            info.cancel();
+        }
     }
 
 }

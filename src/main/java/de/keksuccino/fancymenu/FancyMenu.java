@@ -40,27 +40,23 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ update all locals files)
-	public static final String VERSION = "2.6.6";
+	//TODO übernehmen (+ locals)
+	public static final String VERSION = "2.7.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 	
 	public static Config config;
 
-	//TODO übernehmen
 	public static final File MOD_DIR = new File("config/fancymenu");
 	public static final File INSTANCE_DATA_DIR = new File("fancymenu_data");
-	//-----------------
 
-	//TODO übernehmen
 	private static File animationsPath = new File(MOD_DIR.getPath() + "/animations");
 	private static File customizationPath = new File(MOD_DIR.getPath() + "/customization");
 	private static File customGuiPath = new File(MOD_DIR.getPath() + "/customguis");
 	private static File buttonscriptPath = new File(MOD_DIR.getPath() + "/buttonscripts");
 	private static File panoramaPath = new File(MOD_DIR.getPath() + "/panoramas");
 	private static File slideshowPath = new File(MOD_DIR.getPath() + "/slideshows");
-	//---------------------------
 
 	public FancyMenu() {
 		try {
@@ -68,14 +64,12 @@ public class FancyMenu {
 			//Check if FancyMenu was loaded client- or serverside
 	    	if (FMLEnvironment.dist == Dist.CLIENT) {
 
-				//TODO übernehmen
 				if (!MOD_DIR.isDirectory()) {
 					MOD_DIR.mkdirs();
 				}
 				if (!INSTANCE_DATA_DIR.isDirectory()) {
 					INSTANCE_DATA_DIR.mkdirs();
 				}
-				//-----------------
 	    		
 	    		//Create all important directories
 	    		animationsPath.mkdirs();
@@ -108,7 +102,6 @@ public class FancyMenu {
 
 	        	ButtonScriptEngine.init();
 
-				//TODO übernehmen
 				LastWorldHandler.init();
 
 	        	VanillaButtonDescriptionHandler.init();
@@ -165,7 +158,6 @@ public class FancyMenu {
 
 	private static void initLocals() {
 		String baseresdir = "fmlocals/";
-		//TODO übernehmen
 		File f = new File(MOD_DIR.getPath() + "/locals");
 		if (!f.exists()) {
 			f.mkdirs();
@@ -182,7 +174,6 @@ public class FancyMenu {
 
 	public static void updateConfig() {
     	try {
-			//TODO übernehmen
     		config = new Config(MOD_DIR.getPath() + "/config.txt");
 
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");

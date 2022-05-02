@@ -282,7 +282,13 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 				this.parent.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
-				Minecraft.getInstance().setScreen(this.parent.screen);
+				//TODO übernehmen
+				Screen s = this.parent.screen;
+				if ((s instanceof CustomGuiBase) && ((CustomGuiBase)s).getIdentifier().equals("%fancymenu:universal_layout%")) {
+					s = ((CustomGuiBase)s).parent;
+				}
+				Minecraft.getInstance().setScreen(s);
+				//---------------------
 			}
 		});
 	}

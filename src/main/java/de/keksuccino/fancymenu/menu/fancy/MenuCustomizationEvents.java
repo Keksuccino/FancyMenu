@@ -17,8 +17,12 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MenuCustomizationEvents {
+
+	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuCustomizationEvents");
 	
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
@@ -48,6 +52,7 @@ public class MenuCustomizationEvents {
 				}
 				this.lastScreen = current;
 				if (MenuCustomization.isNewMenu) {
+//					LOGGER.info("################### NEW MENU: " + this.lastScreen.getClass().getName());
 					ButtonMimeHandler.clearCache();
 				}
 			}

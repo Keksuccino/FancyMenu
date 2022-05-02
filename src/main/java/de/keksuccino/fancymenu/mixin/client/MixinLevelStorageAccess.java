@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;

@@ -24,7 +24,6 @@ import net.minecraft.util.Mth;
 
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
-	//TODO übernehmen
 	public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
 	private volatile boolean updating = false;
 	public boolean multiline = false;
@@ -92,7 +91,6 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			this.setHeight((int)(this.unscaledHeight * this.scale));
 
 			int i = 0;
-			//TODO übernehmen
 			for (Map.Entry<String, Float> m : this.lines.entries()) {
 
 				float sc = (this.scale * m.getValue());

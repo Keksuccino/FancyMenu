@@ -53,9 +53,8 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
-import net.minecraft.client.gui.screens.LevelLoadingScreen;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.*;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
@@ -128,15 +127,16 @@ public class CustomizationHelperUI extends UIBase {
 					if (r instanceof AdvancedAnimation) {
 						((AdvancedAnimation)r).stopAudio();
 						if (((AdvancedAnimation)r).replayIntro()) {
-							((AdvancedAnimation)r).resetAnimation();
+							r.resetAnimation();
 						}
 					}
 				}
 			});
 			newLayoutButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.new.desc"), "%n%"));
 			layoutsMenu.addContent(newLayoutButton);
-			
-			ManageLayoutsContextMenu manageLayoutsMenu = new ManageLayoutsContextMenu();
+
+			//TODO übernehmen
+			ManageLayoutsContextMenu manageLayoutsMenu = new ManageLayoutsContextMenu(false);
 			manageLayoutsMenu.setAutoclose(true);
 			layoutsMenu.addChild(manageLayoutsMenu);
 			
@@ -275,6 +275,47 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			bar.addElement(currentTab, "fm.ui.tab.current", ElementAlignment.LEFT, false);
 			/** CURRENT MENU TAB END **/
+
+			//TODO übernehmen
+			/** UNIVERSAL LAYOUTS START **/
+			FMContextMenu universalLayoutsMenu = new FMContextMenu();
+			universalLayoutsMenu.setAutoclose(true);
+			bar.addChild(universalLayoutsMenu, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT);
+
+			CustomizationButton newUniversalLayoutButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts.new"), true, (press) -> {
+				LayoutEditorScreen.isActive = true;
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null)));
+				MenuCustomization.stopSounds();
+				MenuCustomization.resetSounds();
+				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+					if (r instanceof AdvancedAnimation) {
+						((AdvancedAnimation)r).stopAudio();
+						if (((AdvancedAnimation)r).replayIntro()) {
+							r.resetAnimation();
+						}
+					}
+				}
+			});
+			universalLayoutsMenu.addContent(newUniversalLayoutButton);
+
+			ManageLayoutsContextMenu manageUniversalLayoutsMenu = new ManageLayoutsContextMenu(true);
+			manageUniversalLayoutsMenu.setAutoclose(true);
+			universalLayoutsMenu.addChild(manageUniversalLayoutsMenu);
+
+			CustomizationButton manageUniversalLayoutsButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts.manage"), true, (press) -> {
+				manageUniversalLayoutsMenu.setParentButton((AdvancedButton) press);
+				manageUniversalLayoutsMenu.openMenuAt(press);
+			});
+			universalLayoutsMenu.addContent(manageUniversalLayoutsButton);
+
+			CustomizationButton universalLayoutsTabButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts"), true, (press) -> {
+				universalLayoutsMenu.setParentButton((AdvancedButton) press);
+				universalLayoutsMenu.openMenuAt(press.x, press.y + press.getHeight());
+			});
+			universalLayoutsTabButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.universal_layouts.btn.desc"), "%n%"));
+			bar.addElement(universalLayoutsTabButton, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT, false);
+			/** UNIVERSAL LAYOUTS END **/
+			//--------------------------
 
 			/** SETUP TAB START **/
 			FMContextMenu setupMenu = new FMContextMenu();
@@ -530,6 +571,54 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			openMessageScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openmessagescreen.desc"), "%n%"));
 			miscMenu.addContent(openMessageScreenButton);
+
+			//TODO übernehmen
+			CustomizationButton openProgressScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_progress_screen"), true, (press) -> {
+				ProgressScreen s = new ProgressScreen(false);
+				s.progressStage(new TextComponent("dummy stage name"));
+				s.progressStagePercentage(50);
+				Minecraft.getInstance().setScreen(s);
+			});
+			openProgressScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_progress_screen.btn.desc"), "%n%"));
+			miscMenu.addContent(openProgressScreenButton);
+			//--------------------
+
+			//TODO übernehmen
+			CustomizationButton openReceivingLevelScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen"), true, (press) -> {
+				ReceivingLevelScreen s = new ReceivingLevelScreen();
+				Minecraft.getInstance().setScreen(s);
+			}) {
+				@Override
+				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if (Minecraft.getInstance().level == null) {
+						this.active = true;
+					} else {
+						this.active = false;
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
+			openReceivingLevelScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen.btn.desc"), "%n%"));
+			miscMenu.addContent(openReceivingLevelScreenButton);
+			//--------------------
+
+			//TODO übernehmen
+			CustomizationButton openConnectScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_connect_screen"), true, (press) -> {
+				ConnectScreen.startConnecting(new TitleScreen(), Minecraft.getInstance(), new ServerAddress("%fancymenu_dummy_address%", 25565), null);
+			}) {
+				@Override
+				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if (Minecraft.getInstance().level == null) {
+						this.active = true;
+					} else {
+						this.active = false;
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
+			openConnectScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_connect_screen.btn.desc"), "%n%"));
+			miscMenu.addContent(openConnectScreenButton);
+			//--------------------
 
 			CustomizationButton miscTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc"), true, (press) -> {
 				miscMenu.setParentButton((AdvancedButton) press);
@@ -991,9 +1080,15 @@ public class CustomizationHelperUI extends UIBase {
 	private static class ManageLayoutsContextMenu extends FMContextMenu {
 
 		private ManageLayoutsSubContextMenu manageSubPopup;
-		
-		public ManageLayoutsContextMenu() {
-			
+		//TODO übernehmen
+		private boolean isUniversal;
+
+		//TODO übernehmen (boolean param)
+		public ManageLayoutsContextMenu(boolean isUniversal) {
+
+			//TODO übernehmen
+			this.isUniversal = isUniversal;
+
 			this.manageSubPopup = new ManageLayoutsSubContextMenu();
 			this.addChild(this.manageSubPopup);
 			
@@ -1006,8 +1101,28 @@ public class CustomizationHelperUI extends UIBase {
 			if (Minecraft.getInstance().screen instanceof CustomGuiBase) {
 				identifier = ((CustomGuiBase) Minecraft.getInstance().screen).getIdentifier();
 			}
+			//TODO übernehmen
+			if (this.isUniversal) {
+				identifier = "%fancymenu:universal_layout%";
+			}
 			
 			List<PropertiesSet> enabled = MenuCustomizationProperties.getPropertiesWithIdentifier(identifier);
+			//TODO übernehmen
+			if (!this.isUniversal) {
+				List<PropertiesSet> sets = new ArrayList<>();
+				for (PropertiesSet s : enabled) {
+					List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+					if (!metas.isEmpty()) {
+						PropertiesSection meta = metas.get(0);
+						String id = meta.getEntryValue("identifier");
+						if (!id.equals("%fancymenu:universal_layout%")) {
+							sets.add(s);
+						}
+					}
+				}
+				enabled = sets;
+			}
+			//----------------------
 			if (!enabled.isEmpty()) {
 				for (PropertiesSet s : enabled) {
 					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
@@ -1034,6 +1149,22 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			
 			List<PropertiesSet> disabled = MenuCustomizationProperties.getDisabledPropertiesWithIdentifier(identifier);
+			//TODO übernehmen
+			if (!this.isUniversal) {
+				List<PropertiesSet> sets = new ArrayList<>();
+				for (PropertiesSet s : disabled) {
+					List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+					if (!metas.isEmpty()) {
+						PropertiesSection meta = metas.get(0);
+						String id = meta.getEntryValue("identifier");
+						if (!id.equals("%fancymenu:universal_layout%")) {
+							sets.add(s);
+						}
+					}
+				}
+				disabled = sets;
+			}
+			//----------------------
 			if (!disabled.isEmpty()) {
 				for (PropertiesSet s : disabled) {
 					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
@@ -1123,7 +1254,15 @@ public class CustomizationHelperUI extends UIBase {
 			this.addContent(toggleLayoutBtn);
 
 			CustomizationButton editLayoutBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.manage.edit"), (press) -> {
-				CustomizationHelper.editLayout(Minecraft.getInstance().screen, layout);
+				//TODO übernehmen
+				Screen s = Minecraft.getInstance().screen;
+				if ((this.parent != null) && (this.parent instanceof ManageLayoutsContextMenu)) {
+					if (((ManageLayoutsContextMenu)this.parent).isUniversal) {
+						s = new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null);
+					}
+				}
+				CustomizationHelper.editLayout(s, layout);
+				//---------------------
 			});
 			editLayoutBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.edit.desc"), "%n%"));
 			this.addContent(editLayoutBtn);

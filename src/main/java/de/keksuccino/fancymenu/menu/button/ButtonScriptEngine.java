@@ -263,7 +263,6 @@ public class ButtonScriptEngine {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
 				}
 			}
-			//TODO übernehmen
 			if (action.equalsIgnoreCase("join_last_world")) {
 				if (!LastWorldHandler.getLastWorld().equals("")) {
 					if (!LastWorldHandler.isLastWorldServer()) {
