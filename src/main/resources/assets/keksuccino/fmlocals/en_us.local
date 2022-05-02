@@ -652,10 +652,10 @@ helper.ui.tools.buttoninfo.desc = Show information about vanilla buttons%n%when 
 helper.ui.misc = Miscellaneous
 helper.ui.misc.closegui = §cCLOSE MENU
 helper.ui.misc.closegui.desc = Close the current menu.
-helper.ui.misc.openworldloading = Open World Loading Screen
-helper.ui.misc.openworldloading.desc = Will open a dead instance of the%n%world loading screen, to%n%be able to customize it.
-helper.ui.misc.openmessagescreen = Open Message Screen
-helper.ui.misc.openmessagescreen.desc = Will open a dead instance of the%n%message screen, to%n%be able to customize it.%n%%n%This screen is used when%n%joining a server or a singleplayer world.
+helper.ui.misc.openworldloading = Open Level Loading Screen
+helper.ui.misc.openworldloading.desc = Will open a dummy instance of%n%the level loading screen, that%n%is used for loading into worlds.%n%%n%Allows you to customize this screen.
+helper.ui.misc.openmessagescreen = Open Dirt Message Screen
+helper.ui.misc.openmessagescreen.desc = Will open a dummy instance of%n%the dirt message screen, that%n%is used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.
 
 helper.ui.reload.desc = Reload FancyMenu.%n%%n%§lWill reload:%n%- Panoramas%n%- Slideshows%n%- Mod Config%n%- Layouts%n%%n%§c§lWill NOT reload:%n%- Animations
 
@@ -986,3 +986,23 @@ fancymenu.helper.editor.extension.dummy.audio.btn.desc = §6You need to install 
 fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc = §c§lDEPRECATED!%n%%n%§cThis is part of the old%n%§caudio system and gets removed%n%§cvery soon!%n%%n%§cFor more information, read%n%§cthe tooltip of the button%n%§cto add a new audio element.
 
 helper.creator.custombutton.config.actiontype.join_last_world.desc = Join the last world/server.
+
+fancymenu.helper.ui.universal_layouts = Universal Layouts
+fancymenu.helper.ui.universal_layouts.btn.desc = Universal layouts are layouts%n%that get applied to every%n%customizable menu instead of%n%just one menu.%n%%n%They can be used to apply%n%background images, sounds, etc.%n%to all menus at once.
+fancymenu.helper.ui.universal_layouts.new = New Layout
+fancymenu.helper.ui.universal_layouts.manage = Manage Layouts
+
+fancymenu.helper.ui.misc.open_progress_screen = Open Progress Screen
+fancymenu.helper.ui.misc.open_progress_screen.btn.desc = Will open a dummy instance of%n%the progress screen, that is%n%used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.
+fancymenu.helper.ui.misc.receiving_level_screen = Open Receiving Level Screen
+fancymenu.helper.ui.misc.receiving_level_screen.btn.desc = Will open a dummy instance of%n%the receiving level screen, that%n%is used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
+fancymenu.helper.ui.misc.open_connect_screen = Open Connect Screen
+fancymenu.helper.ui.misc.open_connect_screen.btn.desc = Will open a dummy instance of%n%the connect screen, that is%n%used for joining servers.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
+
+
+
+
+
+
+
+

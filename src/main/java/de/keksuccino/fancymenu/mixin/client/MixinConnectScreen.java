@@ -20,11 +20,16 @@ public class MixinConnectScreen {
 
     @Inject(at = @At("HEAD"), method = "startConnecting")
     private static void onStartConnecting(Screen screen, Minecraft mc, ServerAddress address, ServerData data, CallbackInfo info) {
-
         if (address != null) {
             LastWorldHandler.setLastWorld(address.getHost() + ":" + address.getPort(), true);
         }
+    }
 
+    @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
+    private void onConnect(Minecraft mc, ServerAddress address, CallbackInfo info) {
+        if (address.getHost().equals("%fancymenu_dummy_address%")) {
+            info.cancel();
+        }
     }
 
 }
