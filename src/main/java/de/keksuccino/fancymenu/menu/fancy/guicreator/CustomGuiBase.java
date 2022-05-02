@@ -16,7 +16,7 @@ public class CustomGuiBase extends Screen {
 	private String menutitle;
 	public boolean closeOnEsc;
 	private Screen overrides;
-	private Screen parent;
+	public Screen parent;
 
 	public CustomGuiBase(String title, String identifier, boolean closeOnEsc, @Nullable Screen parent, @Nullable Screen overrides) {
 		super(new StringTextComponent(""));

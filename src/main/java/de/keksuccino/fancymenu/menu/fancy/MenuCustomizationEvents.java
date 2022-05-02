@@ -17,8 +17,12 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MenuCustomizationEvents {
+
+	private static final Logger LOGGER = LogManager.getLogger("fanvymenu/MenuCustomizationEvents");
 	
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
@@ -47,6 +51,7 @@ public class MenuCustomizationEvents {
 				}
 				this.lastScreen = current;
 				if (MenuCustomization.isNewMenu) {
+//					LOGGER.info("###################### NEW SCREEN: " + this.lastScreen.getClass().getName());
 					ButtonMimeHandler.clearCache();
 				}
 			}
