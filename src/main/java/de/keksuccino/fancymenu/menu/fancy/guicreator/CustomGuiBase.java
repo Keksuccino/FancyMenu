@@ -16,7 +16,7 @@ public class CustomGuiBase extends GuiScreen {
 	public boolean closeOnEsc;
 	public String title;
 	private GuiScreen overrides;
-	private GuiScreen parent;
+	public GuiScreen parent;
 	
 	public CustomGuiBase(String title, String identifier, boolean closeOnEsc, @Nullable GuiScreen parent, @Nullable GuiScreen overrides) {
 		this.menutitle = title;
