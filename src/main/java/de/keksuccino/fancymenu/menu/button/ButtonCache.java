@@ -9,6 +9,7 @@ import java.util.Map;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.GuiInitCompletedEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
@@ -147,6 +148,11 @@ public class ButtonCache {
 				i++;
 			}
 		}
+
+		for (ButtonData d : buttons.values()) {
+			ButtonIdentificator.setCompatibilityIdentifierToData(d);
+		}
+
 	}
 
 	public static List<ButtonData> cacheButtons(GuiScreen s, int screenWidth, int screenHeight) {
@@ -210,30 +216,6 @@ public class ButtonCache {
 	}
 	
 	/**
-	 * Returns the button id or -1 if the button has no cached id.
-	 */
-	public static long getIdForButton(GuiButton w) {
-		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
-			if (m.getValue().getButton() == w) {
-				return m.getValue().getId();
-			}
-		}
-		return -1;
-	}
-	
-	/**
-	 * Returns the button name or null if the button has no cached name.
-	 */
-	public static String getNameForButton(GuiButton w) {
-		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
-			if (m.getValue().getButton() == w) {
-				return m.getValue().label;
-			}
-		}
-		return null;
-	}
-	
-	/**
 	 * Returns the button key or null if the button has no cached key.
 	 */
 	public static String getKeyForButton(GuiButton w) {
@@ -250,6 +232,20 @@ public class ButtonCache {
 	 */
 	public static ButtonData getButtonForId(long id) {
 		return buttons.get(id);
+	}
+
+	/**
+	 * Returns the button for this ID or null if no button with this ID was found.
+	 */
+	public static ButtonData getButtonForCompatibilityId(String id) {
+		for (ButtonData d : buttons.values()) {
+			if (d.getCompatibilityId() != null) {
+				if (d.getCompatibilityId().equals(id)) {
+					return d;
+				}
+			}
+		}
+		return null;
 	}
 	
 	/**

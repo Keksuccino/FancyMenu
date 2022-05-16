@@ -181,4 +181,11 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 	}
 
+	public String getButtonId() {
+		if (this.parent.getCompatibilityId() != null) {
+			return this.parent.getCompatibilityId();
+		}
+		return "" + this.parent.getId();
+	}
+
 }
