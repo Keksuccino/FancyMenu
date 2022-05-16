@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 public class ButtonData {
 
 	private long id;
+	protected String compatibilityId;
 	private String key;
 	private AbstractWidget button;
 	private Screen screen;
@@ -54,6 +55,14 @@ public class ButtonData {
 
 	public long getId() {
 		return id;
+	}
+
+	public String getCompatibilityId() {
+		return this.compatibilityId;
+	}
+
+	public void setCompatibilityId(String id) {
+		this.compatibilityId = id;
 	}
 
 }

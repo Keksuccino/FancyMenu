@@ -138,7 +138,7 @@ public abstract class LayoutElement extends GuiComponent {
 			if (!(this instanceof LayoutVanillaButton)) {
 				Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
 			} else {
-				Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).button.getId());
+				Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).getButtonId());
 			}
 		});
 		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
@@ -1123,7 +1123,7 @@ public abstract class LayoutElement extends GuiComponent {
 	/** Called when a vanilla button object was updated in the editor. **/
 	public void onUpdateVanillaButton(LayoutVanillaButton btn) {
 		if (this.object.orientationElementIdentifier != null) {
-			String id = "vanillabtn:" + btn.button.getId();
+			String id = "vanillabtn:" + btn.getButtonId();
 			if (this.object.orientationElementIdentifier.equals(id)) {
 				this.object.orientationElement = this.handler.getElementByActionId(id).object;
 			}
