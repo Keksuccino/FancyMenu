@@ -1647,7 +1647,7 @@ public class MenuHandlerBase {
 	protected CustomizationItemBase getItemByActionId(String actionId) {
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {
-				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).parent.getId();
+				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
 					return c;
 				}
@@ -1659,7 +1659,7 @@ public class MenuHandlerBase {
 		}
 		for (CustomizationItemBase c : this.frontRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {
-				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).parent.getId();
+				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
 					return c;
 				}
@@ -1671,17 +1671,20 @@ public class MenuHandlerBase {
 		}
 		if (actionId.startsWith("vanillabtn:")) {
 			String idRaw = actionId.split("[:]", 2)[1];
+			ButtonData d;
 			if (MathUtils.isLong(idRaw)) {
-				ButtonData d = ButtonCache.getButtonForId(Long.parseLong(idRaw));
-				if ((d != null) && (d.getButton() != null)) {
-					VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
-					vb.orientation = "top-left";
-					vb.posX = d.getButton().x;
-					vb.posY = d.getButton().y;
-					vb.width = d.getButton().getWidth();
-					vb.height = d.getButton().getHeight();
-					return vb;
-				}
+				d = ButtonCache.getButtonForId(Long.parseLong(idRaw));
+			} else {
+				d = ButtonCache.getButtonForCompatibilityId(idRaw);
+			}
+			if ((d != null) && (d.getButton() != null)) {
+				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
+				vb.orientation = "top-left";
+				vb.posX = d.getButton().x;
+				vb.posY = d.getButton().y;
+				vb.width = d.getButton().getWidth();
+				vb.height = d.getButton().getHeight();
+				return vb;
 			}
 		}
 		return null;
@@ -1717,27 +1720,21 @@ public class MenuHandlerBase {
 	}
 
 	private static ButtonData getButton(String identifier) {
-		if (identifier.startsWith("%id=")) { //%id=1%
+		if (identifier.startsWith("%id=")) {
 			String p = identifier.split("[=]")[1].replace("%", "");
-			if (!MathUtils.isLong(p)) {
-				return null;
-			}
-			long id = Long.parseLong(p);
-
-			ButtonData b = ButtonCache.getButtonForId(id);
-			if (b != null) {
-				return b;
+			if (MathUtils.isLong(p)) {
+				return ButtonCache.getButtonForId(Long.parseLong(p));
+			} else if (p.startsWith("button_compatibility_id:")) {
+				return ButtonCache.getButtonForCompatibilityId(p);
 			}
 		} else {
-			ButtonData b = null;
+			ButtonData b;
 			if (I18n.hasKey(identifier)) {
 				b = ButtonCache.getButtonForKey(identifier);
 			} else {
 				b = ButtonCache.getButtonForName(identifier);
 			}
-			if (b != null) {
-				return b;
-			}
+			return b;
 		}
 		return null;
 	}

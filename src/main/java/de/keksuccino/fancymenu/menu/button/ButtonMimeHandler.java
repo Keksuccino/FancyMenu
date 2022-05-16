@@ -1,17 +1,22 @@
 package de.keksuccino.fancymenu.menu.button;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.Widget;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ButtonMimeHandler {
+
+    private static Logger LOGGER = LogManager.getLogger("fancymenu/ButtonMimeHandler");
 
     protected static Map<String, ButtonPackage> cachedButtons = new HashMap<>();
 
@@ -32,7 +37,7 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: tryCache: Failed to cache buttons of screen!");
+        LOGGER.warn("tryCache: Failed to cache buttons of screen!");
         return false;
     }
 
@@ -51,7 +56,7 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: cacheFromInstance: Failed to cache buttons of screen!");
+        LOGGER.warn("cacheFromInstance: Failed to cache buttons of screen!");
         return false;
     }
 
@@ -60,12 +65,12 @@ public class ButtonMimeHandler {
             String menuIdentifier = buttonLocator.split("[:]", 2)[0];
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
             String buttonId = buttonLocator.split("[:]", 2)[1];
-            if (MathUtils.isLong(buttonId)) {
+            if (MathUtils.isLong(buttonId) || (buttonId.startsWith("button_compatibility_id:"))) {
                 Screen current = Minecraft.getInstance().currentScreen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
                     if (cachedButtons.containsKey(menuIdentifier)) {
                         ButtonPackage pack = cachedButtons.get(menuIdentifier);
-                        ButtonData d = pack.getButton(Long.parseLong(buttonId));
+                        ButtonData d = pack.getButton(buttonId);
                         if (d != null) {
                             if (d.getScreen() != current) {
                                 cacheFromInstance(current, true);
@@ -81,7 +86,7 @@ public class ButtonMimeHandler {
                 }
                 ButtonPackage p = cachedButtons.get(menuIdentifier);
                 if (p != null) {
-                    return p.getButton(Long.parseLong(buttonId));
+                    return p.getButton(buttonId);
                 }
             }
         }
@@ -101,7 +106,7 @@ public class ButtonMimeHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        FancyMenu.LOGGER.warn("[FANCYMENU] ButtonMimeHandler: Failed to execute button click action!");
+        LOGGER.warn("Failed to execute button click action!");
         return false;
     }
 
@@ -116,11 +121,12 @@ public class ButtonMimeHandler {
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
                 for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
+                    ButtonIdentificator.setCompatibilityIdentifierToData(d);
                     this.buttons.put(d.getId(), d);
                 }
                 return true;
             } else {
-                FancyMenu.LOGGER.error("[FANCYMENU] ButtonMimeHandler: Failed to set up ButtonPackage instance! Screen is null!");
+                LOGGER.error("Failed to set up ButtonPackage instance! Screen is null!");
             }
             return false;
         }
@@ -129,8 +135,17 @@ public class ButtonMimeHandler {
             return this.buttons;
         }
 
-        public ButtonData getButton(long id) {
-            return this.buttons.get(id);
+        public ButtonData getButton(String id) {
+            if (MathUtils.isLong(id)) {
+                return this.buttons.get(Long.parseLong(id));
+            } else if (id.startsWith("button_compatibility_id:")) {
+                for (ButtonData d : this.buttons.values()) {
+                    if ((d.getCompatibilityId() != null) && d.getCompatibilityId().equals(id)) {
+                        return d;
+                    }
+                }
+            }
+            return null;
         }
 
     }

@@ -187,6 +187,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							String id = identifier.split("[=]", 2)[1].replace("%", "").replace(" ", "");
 							if (MathUtils.isInteger(id)) {
 								b = ButtonCache.getButtonForId(Integer.parseInt(id));
+							} else if (id.startsWith("button_compatibility_id:")) {
+								b = ButtonCache.getButtonForCompatibilityId(id);
 							} else {
 								b = ButtonCache.getButtonForKey(identifier);
 							}

@@ -708,6 +708,9 @@ public class CustomizationHelperUI extends UIBase {
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
+					if (d.getCompatibilityId() != null) {
+						idString = d.getCompatibilityId();
+					}
 					String key = ButtonCache.getKeyForButton(d.getButton());
 					if (key == null) {
 						key = Locals.localize("helper.buttoninfo.keynotfound");

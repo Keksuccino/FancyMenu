@@ -8,6 +8,7 @@ import net.minecraft.client.gui.widget.Widget;
 public class ButtonData {
 
 	private long id;
+	protected String compatibilityId;
 	private String key;
 	private Widget button;
 	private Screen screen;
@@ -55,6 +56,14 @@ public class ButtonData {
 
 	public long getId() {
 		return id;
+	}
+
+	public String getCompatibilityId() {
+		return this.compatibilityId;
+	}
+
+	public void setCompatibilityId(String id) {
+		this.compatibilityId = id;
 	}
 
 }
