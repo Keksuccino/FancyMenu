@@ -346,6 +346,14 @@ public class LayoutVanillaButton extends LayoutElement {
 		return super.isGrabberPressed();
 	}
 
+	//TODO übernehmen
+	public String getButtonId() {
+		if (this.button.getCompatibilityId() != null) {
+			return this.button.getCompatibilityId();
+		}
+		return "" + this.button.getId();
+	}
+
 	@Override
 	public List<PropertiesSection> getProperties() {
 		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
@@ -354,14 +362,16 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.customizationContainer.isButtonHidden) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "hidebutton");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			l.add(s);
 		}
 		//movebutton
 		if (this.canBeModified()) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "movebutton");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("orientation", this.object.orientation);
 			if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
 				s.addEntry("orientation_element", this.object.orientationElementIdentifier);
@@ -374,7 +384,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height))) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "resizebutton");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("width", "" + this.object.getWidth());
 			s.addEntry("height", "" + this.object.getHeight());
 			l.add(s);
@@ -384,7 +395,8 @@ public class LayoutVanillaButton extends LayoutElement {
 			if (!this.customizationContainer.customButtonLabel.equals(this.button.label)) {
 				PropertiesSection s = new PropertiesSection("customization");
 				s.addEntry("action", "setbuttonlabel");
-				s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+				//TODO übernehmen
+				s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 				s.addEntry("value", this.customizationContainer.customButtonLabel);
 				l.add(s);
 			}
@@ -393,7 +405,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if ((this.customizationContainer.normalBackground != null) || (this.customizationContainer.hoverBackground != null)) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "setbuttontexture");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			if (this.customizationContainer.normalBackground != null) {
 				if (this.customizationContainer.normalBackground.startsWith("animation:")) {
 					String aniName = this.customizationContainer.normalBackground.split("[:]", 2)[1];
@@ -418,7 +431,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.customizationContainer.autoButtonClicks > 0) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "clickbutton");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("clicks", "" + this.customizationContainer.autoButtonClicks);
 			l.add(s);
 		}
@@ -426,7 +440,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.customizationContainer.hoverSound != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addhoversound");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("path", this.customizationContainer.hoverSound);
 			l.add(s);
 		}
@@ -434,7 +449,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.customizationContainer.hoverLabel != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "sethoverlabel");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("label", this.customizationContainer.hoverLabel);
 			l.add(s);
 		}
@@ -442,7 +458,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.object.delayAppearance) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "hidebuttonfor");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("seconds", "" + this.object.delayAppearanceSec);
 			s.addEntry("onlyfirsttime", "" + !this.object.delayAppearanceEverytime);
 			if (this.object.fadeIn) {
@@ -455,7 +472,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.customizationContainer.clickSound != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "setbuttonclicksound");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("path", this.customizationContainer.clickSound);
 			l.add(s);
 		}
@@ -463,7 +481,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		if (this.customizationContainer.buttonDescription != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "setbuttondescription");
-			s.addEntry("identifier", "%id=" + this.button.getId() + "%");
+			//TODO übernehmen
+			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("description", this.customizationContainer.buttonDescription);
 			l.add(s);
 		}
@@ -471,7 +490,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		//Visibility Requirements
 		PropertiesSection visReqs = new PropertiesSection("customization");
 		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
-		visReqs.addEntry("identifier", "%id=" + this.button.getId() + "%");
+		//TODO übernehmen
+		visReqs.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 		this.addVisibilityPropertiesTo(visReqs);
 		if (visReqs.getEntries().size() > 2) {
 			l.add(visReqs);

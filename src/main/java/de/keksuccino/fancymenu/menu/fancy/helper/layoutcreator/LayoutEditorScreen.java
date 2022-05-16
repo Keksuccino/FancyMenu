@@ -1438,10 +1438,16 @@ public class LayoutEditorScreen extends Screen {
 	public LayoutElement getElementByActionId(String actionId) {
 		for (LayoutElement e : this.content) {
 			if (e instanceof LayoutVanillaButton) {
-				String id = "vanillabtn:" + ((LayoutVanillaButton) e).button.getId();
-				if (id.equals(actionId)) {
+				//TODO übernehmen
+				String id = "vanillabtn:" + ((LayoutVanillaButton)e).button.getId();
+				String compId = null;
+				if (((LayoutVanillaButton)e).button.getCompatibilityId() != null) {
+					compId = "vanillabtn:" + ((LayoutVanillaButton)e).button.getCompatibilityId();
+				}
+				if (id.equals(actionId) || ((compId != null) && compId.equals(actionId))) {
 					return e;
 				}
+				//------------------------
 			} else {
 				if (e.object.getActionId().equals(actionId)) {
 					return e;

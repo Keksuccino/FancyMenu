@@ -27,7 +27,6 @@ public class MixinConnectScreen {
 
     }
 
-    //TODO übernehmen
     @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
     private void onConnect(Minecraft mc, ServerAddress address, CallbackInfo info) {
         if (address.getHost().equals("%fancymenu_dummy_address%")) {

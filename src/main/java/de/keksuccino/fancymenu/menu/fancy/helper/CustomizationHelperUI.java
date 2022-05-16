@@ -135,7 +135,6 @@ public class CustomizationHelperUI extends UIBase {
 			newLayoutButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.new.desc"), "%n%"));
 			layoutsMenu.addContent(newLayoutButton);
 
-			//TODO übernehmen
 			ManageLayoutsContextMenu manageLayoutsMenu = new ManageLayoutsContextMenu(false);
 			manageLayoutsMenu.setAutoclose(true);
 			layoutsMenu.addChild(manageLayoutsMenu);
@@ -276,7 +275,6 @@ public class CustomizationHelperUI extends UIBase {
 			bar.addElement(currentTab, "fm.ui.tab.current", ElementAlignment.LEFT, false);
 			/** CURRENT MENU TAB END **/
 
-			//TODO übernehmen
 			/** UNIVERSAL LAYOUTS START **/
 			FMContextMenu universalLayoutsMenu = new FMContextMenu();
 			universalLayoutsMenu.setAutoclose(true);
@@ -572,7 +570,6 @@ public class CustomizationHelperUI extends UIBase {
 			openMessageScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openmessagescreen.desc"), "%n%"));
 			miscMenu.addContent(openMessageScreenButton);
 
-			//TODO übernehmen
 			CustomizationButton openProgressScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_progress_screen"), true, (press) -> {
 				ProgressScreen s = new ProgressScreen(false);
 				s.progressStage(new TextComponent("dummy stage name"));
@@ -581,9 +578,7 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			openProgressScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_progress_screen.btn.desc"), "%n%"));
 			miscMenu.addContent(openProgressScreenButton);
-			//--------------------
 
-			//TODO übernehmen
 			CustomizationButton openReceivingLevelScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen"), true, (press) -> {
 				ReceivingLevelScreen s = new ReceivingLevelScreen();
 				Minecraft.getInstance().setScreen(s);
@@ -600,9 +595,7 @@ public class CustomizationHelperUI extends UIBase {
 			};
 			openReceivingLevelScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen.btn.desc"), "%n%"));
 			miscMenu.addContent(openReceivingLevelScreenButton);
-			//--------------------
 
-			//TODO übernehmen
 			CustomizationButton openConnectScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_connect_screen"), true, (press) -> {
 				ConnectScreen.startConnecting(new TitleScreen(), Minecraft.getInstance(), new ServerAddress("%fancymenu_dummy_address%", 25565), null);
 			}) {
@@ -618,7 +611,6 @@ public class CustomizationHelperUI extends UIBase {
 			};
 			openConnectScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_connect_screen.btn.desc"), "%n%"));
 			miscMenu.addContent(openConnectScreenButton);
-			//--------------------
 
 			CustomizationButton miscTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc"), true, (press) -> {
 				miscMenu.setParentButton((AdvancedButton) press);
@@ -719,6 +711,11 @@ public class CustomizationHelperUI extends UIBase {
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
+					//TODO übernehmen
+					if (d.getCompatibilityId() != null) {
+						idString = d.getCompatibilityId();
+					}
+					//-----------------
 					String key = ButtonCache.getKeyForButton(d.getButton());
 					if (key == null) {
 						key = Locals.localize("helper.buttoninfo.keynotfound");
@@ -1080,13 +1077,10 @@ public class CustomizationHelperUI extends UIBase {
 	private static class ManageLayoutsContextMenu extends FMContextMenu {
 
 		private ManageLayoutsSubContextMenu manageSubPopup;
-		//TODO übernehmen
 		private boolean isUniversal;
 
-		//TODO übernehmen (boolean param)
 		public ManageLayoutsContextMenu(boolean isUniversal) {
 
-			//TODO übernehmen
 			this.isUniversal = isUniversal;
 
 			this.manageSubPopup = new ManageLayoutsSubContextMenu();
@@ -1101,13 +1095,11 @@ public class CustomizationHelperUI extends UIBase {
 			if (Minecraft.getInstance().screen instanceof CustomGuiBase) {
 				identifier = ((CustomGuiBase) Minecraft.getInstance().screen).getIdentifier();
 			}
-			//TODO übernehmen
 			if (this.isUniversal) {
 				identifier = "%fancymenu:universal_layout%";
 			}
 			
 			List<PropertiesSet> enabled = MenuCustomizationProperties.getPropertiesWithIdentifier(identifier);
-			//TODO übernehmen
 			if (!this.isUniversal) {
 				List<PropertiesSet> sets = new ArrayList<>();
 				for (PropertiesSet s : enabled) {
@@ -1122,7 +1114,6 @@ public class CustomizationHelperUI extends UIBase {
 				}
 				enabled = sets;
 			}
-			//----------------------
 			if (!enabled.isEmpty()) {
 				for (PropertiesSet s : enabled) {
 					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
@@ -1149,7 +1140,6 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			
 			List<PropertiesSet> disabled = MenuCustomizationProperties.getDisabledPropertiesWithIdentifier(identifier);
-			//TODO übernehmen
 			if (!this.isUniversal) {
 				List<PropertiesSet> sets = new ArrayList<>();
 				for (PropertiesSet s : disabled) {
@@ -1164,7 +1154,6 @@ public class CustomizationHelperUI extends UIBase {
 				}
 				disabled = sets;
 			}
-			//----------------------
 			if (!disabled.isEmpty()) {
 				for (PropertiesSet s : disabled) {
 					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
@@ -1254,7 +1243,6 @@ public class CustomizationHelperUI extends UIBase {
 			this.addContent(toggleLayoutBtn);
 
 			CustomizationButton editLayoutBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.manage.edit"), (press) -> {
-				//TODO übernehmen
 				Screen s = Minecraft.getInstance().screen;
 				if ((this.parent != null) && (this.parent instanceof ManageLayoutsContextMenu)) {
 					if (((ManageLayoutsContextMenu)this.parent).isUniversal) {
@@ -1262,7 +1250,6 @@ public class CustomizationHelperUI extends UIBase {
 					}
 				}
 				CustomizationHelper.editLayout(s, layout);
-				//---------------------
 			});
 			editLayoutBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.edit.desc"), "%n%"));
 			this.addContent(editLayoutBtn);
