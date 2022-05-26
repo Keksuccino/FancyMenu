@@ -14,7 +14,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ButtonMimeHandler {
@@ -128,8 +130,14 @@ public class ButtonMimeHandler {
 
         public boolean init(GuiScreen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
+                List<String> compIds = new ArrayList<>();
                 for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
                     ButtonIdentificator.setCompatibilityIdentifierToData(d);
+                    if (compIds.contains(d.compatibilityId)) {
+                        d.compatibilityId = null;
+                    } else {
+                        compIds.add(d.compatibilityId);
+                    }
                     this.buttons.put(d.getId(), d);
                 }
                 return true;
