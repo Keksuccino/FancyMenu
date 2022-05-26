@@ -42,7 +42,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.7.1";
+	public static final String VERSION = "2.7.2";
 	public static final String MOD_LOADER = "forge";
 
 	//TODO make private + add loggers to classes that used this logger

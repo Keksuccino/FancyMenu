@@ -145,9 +145,14 @@ public class ButtonCache {
 			}
 		}
 
-		//TODO übernehmen
+		List<String> compIds = new ArrayList<>();
 		for (ButtonData d : buttons.values()) {
 			ButtonIdentificator.setCompatibilityIdentifierToData(d);
+			if (compIds.contains(d.compatibilityId)) {
+				d.compatibilityId = null;
+			} else {
+				compIds.add(d.compatibilityId);
+			}
 		}
 
 	}
