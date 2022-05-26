@@ -11,7 +11,11 @@ public abstract class MenuButtonsIdentificationContext {
     protected abstract String getRawCompatibilityIdentifierForButton(ButtonData data);
 
     public String getCompatibilityIdentifierForButton(ButtonData data) {
-        return "button_compatibility_id:" + this.getRawCompatibilityIdentifierForButton(data);
+        String s = this.getRawCompatibilityIdentifierForButton(data);
+        if (s != null) {
+            return "button_compatibility_id:" + s;
+        }
+        return null;
     }
 
 }

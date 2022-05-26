@@ -5,7 +5,10 @@ import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.math.MathUtils;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -119,8 +122,14 @@ public class ButtonMimeHandler {
 
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
+                List<String> compIds = new ArrayList<>();
                 for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
                     ButtonIdentificator.setCompatibilityIdentifierToData(d);
+                    if (compIds.contains(d.compatibilityId)) {
+                        d.compatibilityId = null;
+                    } else {
+                        compIds.add(d.compatibilityId);
+                    }
                     this.buttons.put(d.getId(), d);
                 }
                 return true;
