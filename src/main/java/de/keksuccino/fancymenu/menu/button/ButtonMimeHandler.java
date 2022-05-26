@@ -11,7 +11,9 @@ import net.minecraft.client.gui.widget.Widget;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ButtonMimeHandler {
@@ -120,10 +122,18 @@ public class ButtonMimeHandler {
 
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
+                //TODO übernehmen 2.7.2
+                List<String> compIds = new ArrayList<>();
                 for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
                     ButtonIdentificator.setCompatibilityIdentifierToData(d);
+                    if (compIds.contains(d.compatibilityId)) {
+                        d.compatibilityId = null;
+                    } else {
+                        compIds.add(d.compatibilityId);
+                    }
                     this.buttons.put(d.getId(), d);
                 }
+                //----------------
                 return true;
             } else {
                 LOGGER.error("Failed to set up ButtonPackage instance! Screen is null!");
