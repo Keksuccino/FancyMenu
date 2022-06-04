@@ -20,6 +20,8 @@ import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.AbstractClientPlayerEntity;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -36,6 +38,7 @@ import net.minecraft.client.renderer.entity.model.PlayerModel;
 import net.minecraft.client.renderer.texture.NativeImage;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.DefaultPlayerSkin;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -62,6 +65,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	public float headRotationY = 0;
 
 	private static final World DUMMY_WORLD = DummyWorldFactory.getDummyWorld();
+	private static final ClientWorld DUMMY_CLIENT_WORLD = DummyWorldFactory.getDummyClientWorld();
 	private static final BlockPos BLOCK_POS = new BlockPos(0, 0, 0);
 	
 	private static final MenuPlayerRenderer PLAYER_RENDERER = new MenuPlayerRenderer(false);
@@ -553,7 +557,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 	}
 	
-	public static class MenuPlayerEntity extends PlayerEntity {
+	public static class MenuPlayerEntity extends AbstractClientPlayerEntity {
 
 		public volatile ResourceLocation skinLocation;
 		public volatile ResourceLocation capeLocation;
@@ -573,7 +577,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		private volatile Runnable getCapeCallback;
 		
 		public MenuPlayerEntity(String playerName) {
-			super(DUMMY_WORLD, BLOCK_POS, 0, new GameProfile(PlayerEntity.getOfflineUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
+			super(DUMMY_CLIENT_WORLD, new GameProfile(PlayerEntity.getOfflineUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
 			if (playerName != null) {
 				this.playerName = playerName;
 			}
@@ -585,7 +589,17 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			}
 			return playerName;
 		}
-		
+
+		@Override
+		public Vector3d getPositionVec() {
+			return new Vector3d(-100000, -100000, -100000);
+		}
+
+		@Override
+		public double getDistanceSq(Entity entityIn) {
+			return 0;
+		}
+
 		@Override
 		public boolean isSpectator() {
 			return false;

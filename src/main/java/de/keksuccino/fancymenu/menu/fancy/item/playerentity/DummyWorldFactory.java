@@ -2,13 +2,21 @@ package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
 import java.util.List;
 import java.util.OptionalLong;
+import java.util.UUID;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screen.MainMenuScreen;
+import net.minecraft.client.network.play.ClientPlayNetHandler;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.item.crafting.RecipeManager;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.PacketDirection;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.tags.ITagCollectionSupplier;
 import net.minecraft.util.Direction;
@@ -17,6 +25,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.DynamicRegistries;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.ITickList;
 import net.minecraft.world.World;
@@ -28,6 +37,18 @@ public class DummyWorldFactory {
 	
 	public static World getDummyWorld() {
 		return new DummyWorld();
+	}
+
+	public static ClientWorld getDummyClientWorld() {
+		return new DummyClientWorld();
+	}
+
+	public static class DummyClientWorld extends ClientWorld {
+
+		public DummyClientWorld() {
+			super(new ClientPlayNetHandler(Minecraft.getInstance(), new MainMenuScreen(), new NetworkManager(PacketDirection.CLIENTBOUND), new GameProfile(UUID.randomUUID(), "steve")), new ClientWorldInfo(Difficulty.EASY, false, false), null, new DummyDimensionType(), 0, null, null, false, 239239L);
+		}
+
 	}
 	
 	public static class DummyWorld extends World {
