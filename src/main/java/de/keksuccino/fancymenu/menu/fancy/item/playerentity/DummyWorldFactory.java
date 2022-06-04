@@ -3,16 +3,29 @@ package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
+import net.minecraft.client.ClientTelemetryManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.*;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.RecipeManager;
@@ -33,8 +46,34 @@ import javax.annotation.Nullable;
 
 public class DummyWorldFactory {
 
+	//TODO übernehmen 2.7.3
+	private static ClientTelemetryManager telemetryManager = null;
+
 	public static Level getDummyWorld() {
 		return new DummyWorld();
+	}
+
+	//TODO übernehmen 2.7.3
+	public static ClientLevel getDummyClientWorld() {
+		return new DummyClientWorld();
+	}
+
+	//TODO übernehmen 2.7.3
+	public static class DummyClientWorld extends ClientLevel {
+
+		public DummyClientWorld() {
+//			super(new ClientPacketListener(Minecraft.getInstance(), new TitleScreen(), new Connection(PacketFlow.CLIENTBOUND), new GameProfile(UUID.randomUUID(), "steve"), getTelemetryManager()), new ClientLevelData(Difficulty.EASY, false, false), p_205507_, p_205508_, p_205509_, p_205510_, p_205511_, p_205512_, p_205513_, p_205514_);
+			super(new ClientPacketListener(Minecraft.getInstance(), new TitleScreen(), new Connection(PacketFlow.CLIENTBOUND), new GameProfile(UUID.randomUUID(), "steve"), getTelemetryManager()), new ClientLevelData(Difficulty.EASY, false, false), null, getDummyDimensionTypeHolder(), 0, 0, null, null, false, 239239L);
+		}
+
+	}
+
+	//TODO übernehmen 2.7.3
+	private static ClientTelemetryManager getTelemetryManager() {
+		if (telemetryManager == null) {
+			telemetryManager = Minecraft.getInstance().createTelemetryManager();
+		}
+		return telemetryManager;
 	}
 
 	public static class DummyWorld extends Level {

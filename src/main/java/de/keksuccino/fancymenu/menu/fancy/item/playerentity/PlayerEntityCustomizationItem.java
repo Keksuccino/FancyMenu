@@ -29,6 +29,8 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.ParrotModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -45,6 +47,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -62,6 +65,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	public float headRotationY = 0;
 
 	private static final Level DUMMY_WORLD = DummyWorldFactory.getDummyWorld();
+	//TODO übernehmen 2.7.3
+	private static final ClientLevel DUMMY_CLIENT_WORLD = DummyWorldFactory.getDummyClientWorld();
 	private static final BlockPos BLOCK_POS = new BlockPos(0, 0, 0);
 
 	private static final MenuPlayerRenderer PLAYER_RENDERER = new MenuPlayerRenderer(new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getResourceManager(), Minecraft.getInstance().getEntityModels(), Minecraft.getInstance().font), false);
@@ -550,8 +555,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		}
 
 	}
-	
-	public static class MenuPlayerEntity extends Player {
+
+	//TODO übernehmen 2.7.3 (extends)
+	public static class MenuPlayerEntity extends AbstractClientPlayer {
 
 		public volatile ResourceLocation skinLocation;
 		public volatile ResourceLocation capeLocation;
@@ -571,7 +577,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		private volatile Runnable getCapeCallback;
 		
 		public MenuPlayerEntity(String playerName) {
-			super(DUMMY_WORLD, BLOCK_POS, 0, new GameProfile(Player.createPlayerUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
+//			super(DUMMY_WORLD, BLOCK_POS, 0, new GameProfile(Player.createPlayerUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
+			//TODO übernehmen 2.7.3
+			super(DUMMY_CLIENT_WORLD, new GameProfile(Player.createPlayerUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
 			if (playerName != null) {
 				this.playerName = playerName;
 			}
@@ -583,7 +591,19 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			}
 			return playerName;
 		}
-		
+
+		//TODO übernehmen 2.7.3
+		@Override
+		public Vec3 position() {
+			return new Vec3(-100000, -100000, -100000);
+		}
+
+		//TODO übernehmen 2.7.3
+		@Override
+		public double distanceToSqr(Entity p_20281_) {
+			return 0;
+		}
+
 		@Override
 		public boolean isSpectator() {
 			return false;
