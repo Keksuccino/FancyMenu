@@ -1,0 +1,52 @@
+# The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
+modLoader="javafml" #mandatory
+# A version range to match for said mod loader - for regular FML @Mod it will be the forge version
+loaderVersion="[41,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+# The mod license
+license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
+# A list of mods - how many allowed here is determined by the individual mod loader
+[[mods]] #mandatory
+# The modid of the mod
+modId="fancymenu" #mandatory
+# The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
+version="2.7.2" #mandatory
+ # A display name for the mod
+displayName="FancyMenu" #mandatory
+# A text field displayed in the mod UI
+authors="Keksuccino" #optional
+# The description text for the mod (multi line!) (#mandatory)
+description='''Give your life a fancy touch. You deserve it.
+
+COPYRIGHT:
+
+> FancyMenu © Copyright 2020-2022 Keksuccino.
+  FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).
+  See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.'''
+
+[[dependencies.fancymenu]]
+modId="konkrete"
+mandatory=true
+ordering="NONE"
+versionRange="[1.3.3,)"
+side="BOTH"
+
+[[dependencies.fancymenu]]
+modId="findme"
+mandatory=false
+ordering="AFTER"
+versionRange="[1.0.0,)"
+side="BOTH"
+
+[[dependencies.fancymenu]]
+modId="forge"
+mandatory=true
+versionRange="[41.0.2,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.fancymenu]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.19,)"
+ordering="NONE"
+side="CLIENT"
