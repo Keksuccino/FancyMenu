@@ -1,0 +1,31 @@
+{
+  "required": true,
+  "package": "de.keksuccino.fancymenu.mixin.client",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [],
+  "client": [
+    "MixinAbstractWidget",
+    "MixinEntryListWidget",
+    "MixinMinecraft",
+    "MixinTexturedButtonWidget",
+    "MixinSplashScreen",
+    "MixinGuiComponent",
+    "MixinAdvancementCommand",
+    "MixinOnlineServerEntry",
+    "MixinWorldListEntry",
+    "MixinMusicManager",
+    "IMixinScreen",
+    "IMixinTitleScreen",
+    "IMixinLevelLoadingScreen",
+    "IMixinAbstractWidget",
+    "MixinConnectScreen",
+    "MixinLevelStorageAccess"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "fancymenu.general.mixin-refmap.json",
+  "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
+  "minVersion": "0.8"
+}
