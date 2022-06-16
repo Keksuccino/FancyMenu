@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
 import java.io.IOException;
+
+import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -16,8 +18,12 @@ import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MenuCustomizationEvents {
+
+	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuCustomizationEvents");
 	
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
@@ -109,25 +115,28 @@ public class MenuCustomizationEvents {
 				this.iconSetAfterFullscreen = true;
 			}
 		}
-		
+
 		if (!scaleChecked && (Minecraft.getInstance().options != null)) {
 			scaleChecked = true;
-			
+
 			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
-			if (scale != -1) {
-				File f = new File("mods/fancymenu");
+			if ((scale != -1) && (scale != 0)) {
+				File f = FancyMenu.INSTANCE_DATA_DIR;
 				if (!f.exists()) {
 					f.mkdirs();
 				}
-				
-				File f2 = new File(f.getPath() + "/defaultscaleset.fancymenu");
-				if (!f2.exists()) {
+
+				File f2 = new File(f.getPath() + "/default_scale_set.fm");
+				File f3 = new File("mods/fancymenu/defaultscaleset.fancymenu");
+				if (!f2.exists() && !f3.exists()) {
 					try {
 						f2.createNewFile();
+						FileUtils.writeTextToFile(f2, false, "you're not supposed to be here! shoo!");
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
-					
+
+					LOGGER.info("########################### FANCYMENU: SETTING DEFAULT GUI SCALE!");
 					Minecraft.getInstance().options.guiScale().set(scale);
 					Minecraft.getInstance().options.save();
 					Minecraft.getInstance().resizeDisplay();

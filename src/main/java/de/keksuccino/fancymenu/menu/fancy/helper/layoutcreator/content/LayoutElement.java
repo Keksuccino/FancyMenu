@@ -1181,6 +1181,47 @@ public abstract class LayoutElement extends GuiComponent {
 				sec.addEntry("vr:value:realtimesecond", val);
 			}
 		}
+		if (c.vrCheckForRealTimeDay) {
+			String val = "";
+			for (int i : c.vrRealTimeDay) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeday", "" + c.vrShowIfRealTimeDay);
+				sec.addEntry("vr:value:realtimeday", val);
+			}
+		}
+		//TODO übernehmen
+		if (c.vrCheckForRealTimeMonth) {
+			String val = "";
+			for (int i : c.vrRealTimeMonth) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimemonth", "" + c.vrShowIfRealTimeMonth);
+				sec.addEntry("vr:value:realtimemonth", val);
+			}
+		}
+		//TODO übernehmen
+		if (c.vrCheckForRealTimeYear) {
+			String val = "";
+			for (int i : c.vrRealTimeYear) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeyear", "" + c.vrShowIfRealTimeYear);
+				sec.addEntry("vr:value:realtimeyear", val);
+			}
+		}
 		if (c.vrCheckForWindowWidth) {
 			String val = "";
 			for (int i : c.vrWindowWidth) {

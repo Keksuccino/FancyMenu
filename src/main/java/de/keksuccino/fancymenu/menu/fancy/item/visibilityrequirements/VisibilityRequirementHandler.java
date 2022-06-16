@@ -14,6 +14,9 @@ public class VisibilityRequirementHandler {
     public static int realTimeHour = 12;
     public static int realTimeMinute = 0;
     public static int realTimeSecond = 0;
+    public static int realTimeDay = 0;
+    public static int realTimeMonth = 0;
+    public static int realTimeYear = 0;
     public static int windowWidth = 0;
     public static int windowHeight = 0;
     public static boolean worldLoaded = false;
@@ -39,6 +42,9 @@ public class VisibilityRequirementHandler {
             realTimeHour = c.get(Calendar.HOUR_OF_DAY);
             realTimeMinute = c.get(Calendar.MINUTE);
             realTimeSecond = c.get(Calendar.SECOND);
+            realTimeDay = c.get(Calendar.DAY_OF_MONTH);
+            realTimeMonth = c.get(Calendar.MONTH)+1;
+            realTimeYear = c.get(Calendar.YEAR);
         }
 
         //VR: Is Window Width/Height X
