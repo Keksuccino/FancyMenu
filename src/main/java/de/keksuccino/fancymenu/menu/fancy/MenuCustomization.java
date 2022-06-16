@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
@@ -14,10 +16,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.DummyCoreMainHandler;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MoreRefinedStorageMainHandler;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.WorldLoadingScreenHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -49,6 +47,7 @@ public class MenuCustomization {
 			MenuHandlerRegistry.registerHandler(new MoreRefinedStorageMainHandler());
 			MenuHandlerRegistry.registerHandler(new DummyCoreMainHandler());
 			MenuHandlerRegistry.registerHandler(new WorldLoadingScreenHandler());
+			MenuHandlerRegistry.registerHandler(new PauseScreenHandler());
 			
 			//Registering event to automatically register handlers for all menus (its necessary to do this AFTER registering custom handlers!)
 			Konkrete.getEventHandler().registerEventsFrom(new MenuHandlerEvents());
@@ -82,8 +81,12 @@ public class MenuCustomization {
 			for (PropertiesSection sec : s.getProperties()) {
 				String identifier = null;
 				try {
-					Class.forName(sec.getSectionType());
-					identifier = sec.getSectionType();
+					if (sec.getSectionType().equals("net.mehvahdjukaar.supplementaries.compat.configured.CustomConfigScreen")) {
+						identifier = sec.getSectionType();
+					} else if ((sec.getSectionType() != null) && (sec.getSectionType().length() > 5)) {
+						Class.forName(sec.getSectionType());
+						identifier = sec.getSectionType();
+					}
 				} catch (Exception e) {}
 				if (identifier == null) {
 					identifier = getValidMenuIdentifierFor(sec.getSectionType());

@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -136,12 +139,26 @@ public class ButtonBackgroundPopup extends FMPopup {
                                     }
                                 }
                                 this.normalBackgroundImageTextField.setValue(call);
+                                PopupHandler.displayPopup(this);
+                            } else {
+                                FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                                    PopupHandler.displayPopup(this);
+                                }, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+                                PopupHandler.displayPopup(pop);
                             }
+                        } else {
+                            PopupHandler.displayPopup(this);
                         }
+                    } else {
+                        FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                            PopupHandler.displayPopup(this);
+                        }, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+                        PopupHandler.displayPopup(pop);
                     }
+                } else {
+                    PopupHandler.displayPopup(this);
                 }
-                PopupHandler.displayPopup(this);
-            }, "jpg", "jpeg", "png", "gif");
+            }, "jpg", "jpeg", "png");
             PopupHandler.displayPopup(cf);
         });
         this.colorizePopupButton(chooseNormalBackgroundImageButton);
@@ -164,12 +181,26 @@ public class ButtonBackgroundPopup extends FMPopup {
                                     }
                                 }
                                 this.hoverBackgroundImageTextField.setValue(call);
+                                PopupHandler.displayPopup(this);
+                            } else {
+                                FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                                    PopupHandler.displayPopup(this);
+                                }, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+                                PopupHandler.displayPopup(pop);
                             }
+                        } else {
+                            PopupHandler.displayPopup(this);
                         }
+                    } else {
+                        FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                            PopupHandler.displayPopup(this);
+                        }, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+                        PopupHandler.displayPopup(pop);
                     }
+                } else {
+                    PopupHandler.displayPopup(this);
                 }
-                PopupHandler.displayPopup(this);
-            }, "jpg", "jpeg", "png", "gif");
+            }, "jpg", "jpeg", "png");
             PopupHandler.displayPopup(cf);
         });
         this.colorizePopupButton(chooseHoverBackgroundImageButton);

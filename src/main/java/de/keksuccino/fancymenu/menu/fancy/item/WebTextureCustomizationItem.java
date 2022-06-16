@@ -4,6 +4,9 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -18,6 +21,8 @@ import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
+
+	public static Map<String, WebTextureResourceLocation> cachedWebImages = new HashMap<>();
 
 	public volatile WebTextureResourceLocation texture;
 	public String rawURL = "";
@@ -38,77 +43,93 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 					this.setWidth(100);
 				}
 
-				new Thread(() -> {
-					try {
+				if (cachedWebImages.containsKey(this.actionId)) {
+					this.texture = cachedWebImages.get(this.actionId);
+					this.calculateAspectRatio();
+					if (this.texture.getResourceLocation() != null) {
+						this.ready = true;
+					} else {
+						this.texture = null;
+					}
+				}
 
-						if (isValidUrl(this.value)) {
+				if (this.texture == null) {
+					new Thread(() -> {
+						try {
 
-							this.texture = TextureHandler.getWebResource(this.value, false);
-							CustomizationHelper.runTaskInMainThread(() -> {
-								try {
-									texture.loadTexture();
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
-							});
+							if (isValidUrl(this.value)) {
 
-							//Wait for the texture to load
-							long startTime = System.currentTimeMillis();
-							while (true) {
-								long currentTime = System.currentTimeMillis();
-								if ((startTime+15000) < currentTime) {
-									break;
-								}
-								if (texture.isReady()) {
-									if (texture.getResourceLocation() != null) {
+								this.texture = TextureHandler.getWebResource(this.value, false);
+								CustomizationHelper.runTaskInMainThread(() -> {
+									try {
+										texture.loadTexture();
+										cachedWebImages.put(this.actionId, this.texture);
+									} catch (Exception e) {
+										e.printStackTrace();
+									}
+								});
+
+								//Wait for the texture to load
+								long startTime = System.currentTimeMillis();
+								while (true) {
+									long currentTime = System.currentTimeMillis();
+									if ((startTime + 15000) < currentTime) {
 										break;
 									}
+									if (texture.isReady()) {
+										if (texture.getResourceLocation() != null) {
+											break;
+										}
+									}
+									try {
+										Thread.sleep(100);
+									} catch (Exception e) {
+									}
 								}
-								try {
-									Thread.sleep(100);
-								} catch (Exception e) {}
-							}
 
-							if ((this.texture != null) && (texture.getResourceLocation() == null)) {
-								this.texture = null;
-								FancyMenu.LOGGER.error("[FANCYMENU] Web texture loaded but resource location was still null! Unable to use web texture!");
-							}
-
-							if ((this.texture == null) || !this.texture.isReady()) {
-								if (this.width <= 0) {
-									this.setWidth(100);
+								if ((this.texture != null) && (texture.getResourceLocation() == null)) {
+									this.texture = null;
+									FancyMenu.LOGGER.error("[FANCYMENU] Web texture loaded but resource location was still null! Unable to use web texture!");
 								}
-								if (this.height <= 0) {
-									this.setHeight(100);
-								}
-								this.ready = true;
-								return;
+
+								this.calculateAspectRatio();
 							}
 
-							int w = this.texture.getWidth();
-							int h = this.texture.getHeight();
-							double ratio = (double) w / (double) h;
+							this.ready = true;
 
-							//Calculate missing width
-							if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-								this.setWidth((int)(this.getHeight() * ratio));
-							}
-							//Calculate missing height
-							if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-								this.setHeight((int)(this.getWidth() / ratio));
-							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-
-						this.ready = true;
-
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}).start();
+					}).start();
+				}
 
 			}
 		}
 
+	}
+
+	protected void calculateAspectRatio() {
+		if ((this.texture == null) || !this.texture.isReady()) {
+			if (this.width <= 0) {
+				this.setWidth(100);
+			}
+			if (this.height <= 0) {
+				this.setHeight(100);
+			}
+			this.ready = true;
+			return;
+		}
+		int w = this.texture.getWidth();
+		int h = this.texture.getHeight();
+		double ratio = (double) w / (double) h;
+		//Calculate missing width
+		if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+			this.setWidth((int)(this.getHeight() * ratio));
+		}
+		//Calculate missing height
+		if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+			this.setHeight((int)(this.getWidth() / ratio));
+		}
 	}
 
 	public void render(PoseStack matrix, Screen menu) throws IOException {
