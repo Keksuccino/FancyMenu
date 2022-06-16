@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import de.keksuccino.fancymenu.FancyMenu;
@@ -166,9 +167,41 @@ public class MenuCustomizationProperties {
 				continue;
 			}
 			String s2 = l2.get(0).getEntryValue("identifier");
-			if ((s2 != null) && (s2.equalsIgnoreCase(identifier) || s2.equals("%fancymenu:universal_layout%"))) {
-				l.add(s);
+			//TODO übernehmen
+			if (s2 != null) {
+				if (s2.equalsIgnoreCase(identifier)) {
+					l.add(s);
+				} else if (s2.equals("%fancymenu:universal_layout%")) {
+					String whitelistRaw = l2.get(0).getEntryValue("universal_layout_whitelist");
+					String blacklistRaw = l2.get(0).getEntryValue("universal_layout_blacklist");
+					List<String> whitelist = new ArrayList<>();
+					List<String> blacklist = new ArrayList<>();
+					if ((whitelistRaw != null) && whitelistRaw.contains(";")) {
+						for (String s3 : whitelistRaw.split("[;]")) {
+							if (s3.length() > 0) {
+								whitelist.add(MenuCustomization.getValidMenuIdentifierFor(s3));
+							}
+						}
+					}
+					if ((blacklistRaw != null) && blacklistRaw.contains(";")) {
+						for (String s3 : blacklistRaw.split("[;]")) {
+							if (s3.length() > 0) {
+								blacklist.add(MenuCustomization.getValidMenuIdentifierFor(s3));
+							}
+						}
+					}
+					if (!whitelist.isEmpty() || !blacklist.isEmpty()) {
+						if (!whitelist.isEmpty() && whitelist.contains(identifier)) {
+							l.add(s);
+						} else if (!blacklist.isEmpty() && !blacklist.contains(identifier)) {
+							l.add(s);
+						}
+					} else {
+						l.add(s);
+					}
+				}
 			}
+			//--------------------
 		}
 		return l;
 	}

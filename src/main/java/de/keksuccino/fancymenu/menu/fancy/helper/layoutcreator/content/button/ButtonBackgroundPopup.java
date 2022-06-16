@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +10,7 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -121,8 +123,9 @@ public class ButtonBackgroundPopup extends FMPopup {
         }
 
         this.chooseNormalBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
+            //TODO übernehmen (komplett)
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				if (call != null) {
+                if (call != null) {
 					File home = new File("");
 					call = call.replace("\\", "/");
 					File f = new File(call);
@@ -137,18 +140,34 @@ public class ButtonBackgroundPopup extends FMPopup {
                                     }
                                 }
                                 this.normalBackgroundImageTextField.setValue(call);
+                                PopupHandler.displayPopup(this);
+                            } else {
+                                FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                                    PopupHandler.displayPopup(this);
+                                }, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+                                PopupHandler.displayPopup(pop);
                             }
+                        } else {
+                            PopupHandler.displayPopup(this);
                         }
+                    } else {
+                        FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                            PopupHandler.displayPopup(this);
+                        }, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+                        PopupHandler.displayPopup(pop);
                     }
-				}
-                PopupHandler.displayPopup(this);
-			}, "jpg", "jpeg", "png", "gif");
+				} else {
+                    PopupHandler.displayPopup(this);
+                }
+			}, "jpg", "jpeg", "png");
+            //----------------------------
             PopupHandler.displayPopup(cf);
         });
         this.colorizePopupButton(chooseNormalBackgroundImageButton);
         this.addButton(chooseNormalBackgroundImageButton);
 
         this.chooseHoverBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
+            //TODO übernehmen (komplett)
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
                     File home = new File("");
@@ -165,12 +184,27 @@ public class ButtonBackgroundPopup extends FMPopup {
                                     }
                                 }
                                 this.hoverBackgroundImageTextField.setValue(call);
+                                PopupHandler.displayPopup(this);
+                            } else {
+                                FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                                    PopupHandler.displayPopup(this);
+                                }, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+                                PopupHandler.displayPopup(pop);
                             }
+                        } else {
+                            PopupHandler.displayPopup(this);
                         }
+                    } else {
+                        FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+                            PopupHandler.displayPopup(this);
+                        }, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+                        PopupHandler.displayPopup(pop);
                     }
+                } else {
+                    PopupHandler.displayPopup(this);
                 }
-                PopupHandler.displayPopup(this);
-            }, "jpg", "jpeg", "png", "gif");
+            }, "jpg", "jpeg", "png");
+            //-------------------------
             PopupHandler.displayPopup(cf);
         });
         this.colorizePopupButton(chooseHoverBackgroundImageButton);

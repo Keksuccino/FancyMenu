@@ -99,24 +99,30 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				File f = new File(call);
-				if (f.isFile()) {
-					String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
-					if (filename.equals(f.getName())) {
-						BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
-						PopupHandler.displayPopup(this);
+				//TODO übernehmen
+				if (call != null) {
+					File f = new File(call);
+					if (f.isFile()) {
+						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
+						if (filename.equals(f.getName())) {
+							BackgroundOptionsPopup.this.handler.setBackgroundTexture(call);
+							PopupHandler.displayPopup(this);
+						} else {
+							FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
+								PopupHandler.displayPopup(this);
+							}, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+							PopupHandler.displayPopup(pop);
+						}
 					} else {
 						FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
 							PopupHandler.displayPopup(this);
-						}, Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+						}, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
 						PopupHandler.displayPopup(pop);
 					}
 				} else {
-					FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {
-						PopupHandler.displayPopup(this);
-					}, "§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
-					PopupHandler.displayPopup(pop);
+					PopupHandler.displayPopup(this);
 				}
+				//---------------------------
 			}, "jpg", "jpeg", "png");
 			if ((this.handler.backgroundTexture != null)) {
 				cf.setText(this.handler.backgroundTexturePath);

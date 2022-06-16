@@ -211,32 +211,6 @@ public class ButtonCache {
 		updateButtons(s);
 	}
 
-	//TODO übernehmen
-//	/**
-//	 * Returns the button id or -1 if the button has no cached id.
-//	 */
-//	public static long getIdForButton(AbstractWidget w) {
-//		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
-//			if (m.getValue().getButton() == w) {
-//				return m.getValue().getId();
-//			}
-//		}
-//		return -1;
-//	}
-
-	//TODO übernehmen
-//	/**
-//	 * Returns the button name or null if the button has no cached name.
-//	 */
-//	public static String getNameForButton(AbstractWidget w) {
-//		for (Map.Entry<Long, ButtonData> m : buttons.entrySet()) {
-//			if (m.getValue().getButton() == w) {
-//				return m.getValue().label;
-//			}
-//		}
-//		return null;
-//	}
-
 	/**
 	 * Returns the button key or null if the button has no cached key.
 	 */
@@ -256,7 +230,6 @@ public class ButtonCache {
 		return buttons.get(id);
 	}
 
-	//TODO übernehmen
 	/**
 	 * Returns the button for this ID or null if no button with this ID was found.
 	 */

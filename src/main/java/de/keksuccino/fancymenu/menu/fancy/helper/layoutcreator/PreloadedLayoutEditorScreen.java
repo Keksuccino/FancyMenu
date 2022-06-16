@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -78,6 +79,17 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.maximumFM = meta.getEntryValue("maximumfmversion");
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
+
+				//TODO übernehmen
+				String ulWhitelist = meta.getEntryValue("universal_layout_whitelist");
+				if ((ulWhitelist != null) && ulWhitelist.contains(";")) {
+					this.universalLayoutWhitelist.addAll(Arrays.asList(ulWhitelist.split("[;]")));
+				}
+				String ulBlacklist = meta.getEntryValue("universal_layout_blacklist");
+				if ((ulBlacklist != null) && ulBlacklist.contains(";")) {
+					this.universalLayoutBlacklist.addAll(Arrays.asList(ulBlacklist.split("[;]")));
+				}
+				//--------------------
 
 				String ranMode = meta.getEntryValue("randommode");
 				if ((ranMode != null) && ranMode.equalsIgnoreCase("true")) {
@@ -169,7 +181,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (identifier != null) {
 						if (identifier.contains("%") && identifier.contains("=")) {
 							String id = identifier.split("[=]", 2)[1].replace("%", "").replace(" ", "");
-							//TODO übernehmen
 							if (MathUtils.isInteger(id)) {
 								b = ButtonCache.getButtonForId(Integer.parseInt(id));
 							} else if (id.startsWith("button_compatibility_id:")) {
@@ -177,7 +188,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							} else {
 								b = ButtonCache.getButtonForKey(identifier);
 							}
-							//------------------
 						} else {
 							b = ButtonCache.getButtonForKey(identifier);
 						}

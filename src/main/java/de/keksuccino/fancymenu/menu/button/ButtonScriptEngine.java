@@ -36,6 +36,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
@@ -155,12 +156,18 @@ public class ButtonScriptEngine {
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
-				Screen s = GuiConstructor.tryToConstruct(value);
-				if (s != null) {
-					Minecraft.getInstance().setScreen(s);
+				//TODO übernehmen
+				if (value.equals(CreateWorldScreen.class.getName())) {
+					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
 				} else {
-					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+					Screen s = GuiConstructor.tryToConstruct(value);
+					if (s != null) {
+						Minecraft.getInstance().setScreen(s);
+					} else {
+						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+					}
 				}
+				//------------------
 			}
 			if (action.equalsIgnoreCase("movefile")) {
 				if (value.contains(";")) {

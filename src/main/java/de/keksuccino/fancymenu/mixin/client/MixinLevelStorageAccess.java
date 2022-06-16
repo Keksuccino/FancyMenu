@@ -20,7 +20,6 @@ public class MixinLevelStorageAccess {
 
     @Inject(at = @At("TAIL"), method = "<init>")
     private void onInit(LevelStorageSource this$0, String p_78276_, CallbackInfo info) {
-        //TODO FIX IN FABRIC 1.19: use levelDirectory.path() !!!!
         LastWorldHandler.setLastWorld(this.levelDirectory.path().toFile().getPath().replace("\\", "/"), false);
     }
 

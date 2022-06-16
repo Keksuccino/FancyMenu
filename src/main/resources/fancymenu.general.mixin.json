@@ -13,7 +13,8 @@
     "MixinOnlineServerEntry",
     "MixinWorldListEntry",
     "MixinConnectScreen",
-    "MixinLevelStorageAccess"
+    "MixinLevelStorageAccess",
+    "IMixinPauseScreen"
   ],
   "injectors": {
     "defaultRequire": 1

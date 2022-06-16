@@ -142,7 +142,6 @@ public abstract class LayoutElement extends GuiComponent {
 			if (!(this instanceof LayoutVanillaButton)) {
 				Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
 			} else {
-				//TODO übernehmen
 				Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).getButtonId());
 			}
 		});
@@ -1128,7 +1127,6 @@ public abstract class LayoutElement extends GuiComponent {
 	/** Called when a vanilla button object was updated in the editor. **/
 	public void onUpdateVanillaButton(LayoutVanillaButton btn) {
 		if (this.object.orientationElementIdentifier != null) {
-			//TODO übernehmen
 			String id = "vanillabtn:" + btn.getButtonId();
 			if (this.object.orientationElementIdentifier.equals(id)) {
 				this.object.orientationElement = this.handler.getElementByActionId(id).object;
@@ -1185,6 +1183,48 @@ public abstract class LayoutElement extends GuiComponent {
 			if (val.length() > 0) {
 				sec.addEntry("vr:showif:realtimesecond", "" + c.vrShowIfRealTimeSecond);
 				sec.addEntry("vr:value:realtimesecond", val);
+			}
+		}
+		//TODO übernehmen
+		if (c.vrCheckForRealTimeDay) {
+			String val = "";
+			for (int i : c.vrRealTimeDay) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeday", "" + c.vrShowIfRealTimeDay);
+				sec.addEntry("vr:value:realtimeday", val);
+			}
+		}
+		//TODO übernehmen
+		if (c.vrCheckForRealTimeMonth) {
+			String val = "";
+			for (int i : c.vrRealTimeMonth) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimemonth", "" + c.vrShowIfRealTimeMonth);
+				sec.addEntry("vr:value:realtimemonth", val);
+			}
+		}
+		//TODO übernehmen
+		if (c.vrCheckForRealTimeYear) {
+			String val = "";
+			for (int i : c.vrRealTimeYear) {
+				val += i + ",";
+			}
+			if (val.length() > 0) {
+				val = val.substring(0, val.length() -1);
+			}
+			if (val.length() > 0) {
+				sec.addEntry("vr:showif:realtimeyear", "" + c.vrShowIfRealTimeYear);
+				sec.addEntry("vr:value:realtimeyear", val);
 			}
 		}
 		if (c.vrCheckForWindowWidth) {

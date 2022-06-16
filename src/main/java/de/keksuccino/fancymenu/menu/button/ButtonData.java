@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 public class ButtonData {
 
 	private long id;
-	//TODO übernehmen
 	protected String compatibilityId;
 	private String key;
 	private AbstractWidget button;
@@ -59,12 +58,10 @@ public class ButtonData {
 		return id;
 	}
 
-	//TODO übernehmen
 	public String getCompatibilityId() {
 		return this.compatibilityId;
 	}
 
-	//TODO übernehmen
 	public void setCompatibilityId(String id) {
 		this.compatibilityId = id;
 	}

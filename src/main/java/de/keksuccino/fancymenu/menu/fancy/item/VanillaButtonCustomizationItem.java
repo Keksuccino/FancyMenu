@@ -184,7 +184,6 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 	}
 
-	//TODO übernehmen
 	public String getButtonId() {
 		if (this.parent.getCompatibilityId() != null) {
 			return this.parent.getCompatibilityId();
