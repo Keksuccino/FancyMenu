@@ -148,6 +148,9 @@ public class LayoutEditorScreen extends Screen {
 	
 	protected Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
 	protected LayoutElement topObject;
+
+	protected List<String> universalLayoutWhitelist = new ArrayList<>();
+	protected List<String> universalLayoutBlacklist = new ArrayList<>();
 	
 	protected LayoutEditorUI ui = new LayoutEditorUI(this);
 	
@@ -260,6 +263,20 @@ public class LayoutEditorScreen extends Screen {
 		}
 		if (this.smallerThanHeight != 0) {
 			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
+		}
+		if (this.isUniversalLayout() && !this.universalLayoutWhitelist.isEmpty()) {
+			String wl = "";
+			for (String s : this.universalLayoutWhitelist) {
+				wl += s + ";";
+			}
+			meta.addEntry("universal_layout_whitelist", wl);
+		}
+		if (this.isUniversalLayout() && !this.universalLayoutBlacklist.isEmpty()) {
+			String bl = "";
+			for (String s : this.universalLayoutBlacklist) {
+				bl += s + ";";
+			}
+			meta.addEntry("universal_layout_blacklist", bl);
 		}
 		l.add(meta);
 		
@@ -1570,6 +1587,13 @@ public class LayoutEditorScreen extends Screen {
 			});
 
 		}
+	}
+
+	public boolean isUniversalLayout() {
+		if (this.screen instanceof CustomGuiBase) {
+			return (((CustomGuiBase) this.screen).getIdentifier().equals("%fancymenu:universal_layout%"));
+		}
+		return false;
 	}
 
 	protected static void onShortcutPressed(KeyboardData d) {

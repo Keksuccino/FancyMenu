@@ -97,6 +97,18 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
+    public boolean vrCheckForRealTimeDay = false;
+    public boolean vrShowIfRealTimeDay = false;
+    public List<Integer> vrRealTimeDay = new ArrayList<Integer>();
+    //---------
+    public boolean vrCheckForRealTimeMonth = false;
+    public boolean vrShowIfRealTimeMonth = false;
+    public List<Integer> vrRealTimeMonth = new ArrayList<Integer>();
+    //---------
+    public boolean vrCheckForRealTimeYear = false;
+    public boolean vrShowIfRealTimeYear = false;
+    public List<Integer> vrRealTimeYear = new ArrayList<Integer>();
+    //---------
 
     public Map<String, RequirementPackage> customRequirements = new HashMap<>();
 
@@ -198,6 +210,86 @@ public class VisibilityRequirementContainer {
                 }
                 if (!this.vrRealTimeSecond.isEmpty()) {
                     this.vrCheckForRealTimeSecond = true;
+                }
+            }
+        }
+
+        //VR: Is Real Time Day
+        String vrStringShowIfRealTimeDay = properties.getEntryValue("vr:showif:realtimeday");
+        if (vrStringShowIfRealTimeDay != null) {
+            if (vrStringShowIfRealTimeDay.equalsIgnoreCase("true")) {
+                this.vrShowIfRealTimeDay = true;
+            }
+            String realTimeDay = properties.getEntryValue("vr:value:realtimeday");
+            if (realTimeDay != null) {
+                this.vrRealTimeDay.clear();
+                if (realTimeDay.contains(",")) {
+                    for (String s : realTimeDay.replace(" ", "").split("[,]")) {
+                        if (MathUtils.isInteger(s)) {
+                            this.vrRealTimeDay.add(Integer.parseInt(s));
+                        }
+                    }
+                } else {
+                    if (MathUtils.isInteger(realTimeDay.replace(" ", ""))) {
+                        this.vrRealTimeDay.add(Integer.parseInt(realTimeDay.replace(" ", "")));
+                    }
+                }
+                if (!this.vrRealTimeDay.isEmpty()) {
+                    this.vrCheckForRealTimeDay = true;
+                }
+            }
+        }
+
+        //TODO übernehmen
+        //VR: Is Real Time Month
+        String vrStringShowIfRealTimeMonth = properties.getEntryValue("vr:showif:realtimemonth");
+        if (vrStringShowIfRealTimeMonth != null) {
+            if (vrStringShowIfRealTimeMonth.equalsIgnoreCase("true")) {
+                this.vrShowIfRealTimeMonth = true;
+            }
+            String realTimeMonth = properties.getEntryValue("vr:value:realtimemonth");
+            if (realTimeMonth != null) {
+                this.vrRealTimeMonth.clear();
+                if (realTimeMonth.contains(",")) {
+                    for (String s : realTimeMonth.replace(" ", "").split("[,]")) {
+                        if (MathUtils.isInteger(s)) {
+                            this.vrRealTimeMonth.add(Integer.parseInt(s));
+                        }
+                    }
+                } else {
+                    if (MathUtils.isInteger(realTimeMonth.replace(" ", ""))) {
+                        this.vrRealTimeMonth.add(Integer.parseInt(realTimeMonth.replace(" ", "")));
+                    }
+                }
+                if (!this.vrRealTimeMonth.isEmpty()) {
+                    this.vrCheckForRealTimeMonth = true;
+                }
+            }
+        }
+
+        //TODO übernehmen
+        //VR: Is Real Time Year
+        String vrStringShowIfRealTimeYear = properties.getEntryValue("vr:showif:realtimeyear");
+        if (vrStringShowIfRealTimeYear != null) {
+            if (vrStringShowIfRealTimeYear.equalsIgnoreCase("true")) {
+                this.vrShowIfRealTimeYear = true;
+            }
+            String realTimeYear = properties.getEntryValue("vr:value:realtimeyear");
+            if (realTimeYear != null) {
+                this.vrRealTimeYear.clear();
+                if (realTimeYear.contains(",")) {
+                    for (String s : realTimeYear.replace(" ", "").split("[,]")) {
+                        if (MathUtils.isInteger(s)) {
+                            this.vrRealTimeYear.add(Integer.parseInt(s));
+                        }
+                    }
+                } else {
+                    if (MathUtils.isInteger(realTimeYear.replace(" ", ""))) {
+                        this.vrRealTimeYear.add(Integer.parseInt(realTimeYear.replace(" ", "")));
+                    }
+                }
+                if (!this.vrRealTimeYear.isEmpty()) {
+                    this.vrCheckForRealTimeYear = true;
                 }
             }
         }
@@ -461,310 +553,363 @@ public class VisibilityRequirementContainer {
             return false;
         }
 
-        //VR: Is Singleplayer
-        if (this.vrCheckForSingleplayer) {
-            if (this.vrShowIfSingleplayer) {
-                if (!VisibilityRequirementHandler.isSingleplayer) {
-                    return false;
-                }
-            } else {
-                if (VisibilityRequirementHandler.isSingleplayer) {
-                    return false;
-                }
-            }
-        }
+        try {
 
-        //VR: Is Multiplayer
-        if (this.vrCheckForMultiplayer) {
-            if (this.vrShowIfMultiplayer) {
-                if (!VisibilityRequirementHandler.worldLoaded) {
-                    return false;
-                }
-                if (VisibilityRequirementHandler.isSingleplayer) {
-                    return false;
-                }
-            } else {
-                if (!VisibilityRequirementHandler.isSingleplayer && VisibilityRequirementHandler.worldLoaded) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Real Time Hour
-        if (this.vrCheckForRealTimeHour) {
-            if (this.vrShowIfRealTimeHour) {
-                if (!this.vrRealTimeHour.contains(VisibilityRequirementHandler.realTimeHour)) {
-                    return false;
-                }
-            } else {
-                if (this.vrRealTimeHour.contains(VisibilityRequirementHandler.realTimeHour)) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Real Time Minute
-        if (this.vrCheckForRealTimeMinute) {
-            if (this.vrShowIfRealTimeMinute) {
-                if (!this.vrRealTimeMinute.contains(VisibilityRequirementHandler.realTimeMinute)) {
-                    return false;
-                }
-            } else {
-                if (this.vrRealTimeMinute.contains(VisibilityRequirementHandler.realTimeMinute)) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Real Time Second
-        if (this.vrCheckForRealTimeSecond) {
-            if (this.vrShowIfRealTimeSecond) {
-                if (!this.vrRealTimeSecond.contains(VisibilityRequirementHandler.realTimeSecond)) {
-                    return false;
-                }
-            } else {
-                if (this.vrRealTimeSecond.contains(VisibilityRequirementHandler.realTimeSecond)) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Window Width
-        if (this.vrCheckForWindowWidth) {
-            if (this.vrShowIfWindowWidth) {
-                if (!this.vrWindowWidth.contains(VisibilityRequirementHandler.windowWidth)) {
-                    return false;
-                }
-            } else {
-                if (this.vrWindowWidth.contains(VisibilityRequirementHandler.windowWidth)) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Window Height
-        if (this.vrCheckForWindowHeight) {
-            if (this.vrShowIfWindowHeight) {
-                if (!this.vrWindowHeight.contains(VisibilityRequirementHandler.windowHeight)) {
-                    return false;
-                }
-            } else {
-                if (this.vrWindowHeight.contains(VisibilityRequirementHandler.windowHeight)) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Window Width Bigger Than
-        if (this.vrCheckForWindowWidthBiggerThan) {
-            if (this.vrShowIfWindowWidthBiggerThan) {
-                if (VisibilityRequirementHandler.windowWidth <= this.vrWindowWidthBiggerThan) {
-                    return false;
-                }
-            } else {
-                if (VisibilityRequirementHandler.windowWidth >= this.vrWindowWidthBiggerThan) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Window Height Bigger Than
-        if (this.vrCheckForWindowHeightBiggerThan) {
-            if (this.vrShowIfWindowHeightBiggerThan) {
-                if (VisibilityRequirementHandler.windowHeight <= this.vrWindowHeightBiggerThan) {
-                    return false;
-                }
-            } else {
-                if (VisibilityRequirementHandler.windowHeight >= this.vrWindowHeightBiggerThan) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Button Hovered
-        if (this.vrCheckForButtonHovered) {
-            if (this.vrButtonHovered != null) {
-                Widget w = null;
-                if (this.vrButtonHovered.startsWith("vanillabtn:")) {
-                    String idRaw = this.vrButtonHovered.split("[:]", 2)[1];
-                    if (MathUtils.isLong(idRaw)) {
-                        w = ButtonCache.getButtonForId(Long.parseLong(idRaw)).getButton();
+            //VR: Is Singleplayer
+            if (this.vrCheckForSingleplayer) {
+                if (this.vrShowIfSingleplayer) {
+                    if (!VisibilityRequirementHandler.isSingleplayer) {
+                        return false;
                     }
                 } else {
-                    w = ButtonCache.getCustomButton(this.vrButtonHovered);
+                    if (VisibilityRequirementHandler.isSingleplayer) {
+                        return false;
+                    }
                 }
-                if (w != null) {
-                    if (this.vrShowIfButtonHovered) {
-                        if (!w.isHovered()) {
+            }
+
+            //VR: Is Multiplayer
+            if (this.vrCheckForMultiplayer) {
+                if (this.vrShowIfMultiplayer) {
+                    if (!VisibilityRequirementHandler.worldLoaded) {
+                        return false;
+                    }
+                    if (VisibilityRequirementHandler.isSingleplayer) {
+                        return false;
+                    }
+                } else {
+                    if (!VisibilityRequirementHandler.isSingleplayer && VisibilityRequirementHandler.worldLoaded) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Real Time Hour
+            if (this.vrCheckForRealTimeHour) {
+                if (this.vrShowIfRealTimeHour) {
+                    if (!this.vrRealTimeHour.contains(VisibilityRequirementHandler.realTimeHour)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrRealTimeHour.contains(VisibilityRequirementHandler.realTimeHour)) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Real Time Minute
+            if (this.vrCheckForRealTimeMinute) {
+                if (this.vrShowIfRealTimeMinute) {
+                    if (!this.vrRealTimeMinute.contains(VisibilityRequirementHandler.realTimeMinute)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrRealTimeMinute.contains(VisibilityRequirementHandler.realTimeMinute)) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Real Time Second
+            if (this.vrCheckForRealTimeSecond) {
+                if (this.vrShowIfRealTimeSecond) {
+                    if (!this.vrRealTimeSecond.contains(VisibilityRequirementHandler.realTimeSecond)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrRealTimeSecond.contains(VisibilityRequirementHandler.realTimeSecond)) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Real Time Day
+            if (this.vrCheckForRealTimeDay) {
+                if (this.vrShowIfRealTimeDay) {
+                    if (!this.vrRealTimeDay.contains(VisibilityRequirementHandler.realTimeDay)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrRealTimeDay.contains(VisibilityRequirementHandler.realTimeDay)) {
+                        return false;
+                    }
+                }
+            }
+
+            //TODO übernehmen
+            //VR: Is Real Time Month
+            if (this.vrCheckForRealTimeMonth) {
+                if (this.vrShowIfRealTimeMonth) {
+                    if (!this.vrRealTimeMonth.contains(VisibilityRequirementHandler.realTimeMonth)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrRealTimeMonth.contains(VisibilityRequirementHandler.realTimeMonth)) {
+                        return false;
+                    }
+                }
+            }
+
+            //TODO übernehmen
+            //VR: Is Real Time Year
+            if (this.vrCheckForRealTimeYear) {
+                if (this.vrShowIfRealTimeYear) {
+                    if (!this.vrRealTimeYear.contains(VisibilityRequirementHandler.realTimeYear)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrRealTimeYear.contains(VisibilityRequirementHandler.realTimeYear)) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Window Width
+            if (this.vrCheckForWindowWidth) {
+                if (this.vrShowIfWindowWidth) {
+                    if (!this.vrWindowWidth.contains(VisibilityRequirementHandler.windowWidth)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrWindowWidth.contains(VisibilityRequirementHandler.windowWidth)) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Window Height
+            if (this.vrCheckForWindowHeight) {
+                if (this.vrShowIfWindowHeight) {
+                    if (!this.vrWindowHeight.contains(VisibilityRequirementHandler.windowHeight)) {
+                        return false;
+                    }
+                } else {
+                    if (this.vrWindowHeight.contains(VisibilityRequirementHandler.windowHeight)) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Window Width Bigger Than
+            if (this.vrCheckForWindowWidthBiggerThan) {
+                if (this.vrShowIfWindowWidthBiggerThan) {
+                    if (VisibilityRequirementHandler.windowWidth <= this.vrWindowWidthBiggerThan) {
+                        return false;
+                    }
+                } else {
+                    if (VisibilityRequirementHandler.windowWidth >= this.vrWindowWidthBiggerThan) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Window Height Bigger Than
+            if (this.vrCheckForWindowHeightBiggerThan) {
+                if (this.vrShowIfWindowHeightBiggerThan) {
+                    if (VisibilityRequirementHandler.windowHeight <= this.vrWindowHeightBiggerThan) {
+                        return false;
+                    }
+                } else {
+                    if (VisibilityRequirementHandler.windowHeight >= this.vrWindowHeightBiggerThan) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Button Hovered
+            if (this.vrCheckForButtonHovered) {
+                if (this.vrButtonHovered != null) {
+                    Widget w = null;
+                    try {
+                        if (this.vrButtonHovered.startsWith("vanillabtn:")) {
+                            String idRaw = this.vrButtonHovered.split("[:]", 2)[1];
+                            if (MathUtils.isLong(idRaw)) {
+                                w = ButtonCache.getButtonForId(Long.parseLong(idRaw)).getButton();
+                            } else if (idRaw.startsWith("button_compatibility_id:")) {
+                                w = ButtonCache.getButtonForCompatibilityId(idRaw).getButton();
+                            }
+                        } else {
+                            w = ButtonCache.getCustomButton(this.vrButtonHovered);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (w != null) {
+                        if (this.vrShowIfButtonHovered) {
+                            if (!w.isHovered()) {
+                                return false;
+                            }
+                        } else {
+                            if (w.isHovered()) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //VR: Is World Loaded
+            if (this.vrCheckForWorldLoaded) {
+                if (this.vrShowIfWorldLoaded) {
+                    if (!VisibilityRequirementHandler.worldLoaded) {
+                        return false;
+                    }
+                } else {
+                    if (VisibilityRequirementHandler.worldLoaded) {
+                        return false;
+                    }
+                }
+            }
+
+            //VR: Is Language
+            if (this.vrCheckForLanguage) {
+                if ((this.vrLanguage != null) && (Minecraft.getInstance().gameSettings.language != null)) {
+                    if (this.vrShowIfLanguage) {
+                        if (!(Minecraft.getInstance().gameSettings.language.equals(this.vrLanguage))) {
                             return false;
                         }
                     } else {
-                        if (w.isHovered()) {
+                        if (Minecraft.getInstance().gameSettings.language.equals(this.vrLanguage)) {
                             return false;
                         }
                     }
                 }
             }
-        }
 
-        //VR: Is World Loaded
-        if (this.vrCheckForWorldLoaded) {
-            if (this.vrShowIfWorldLoaded) {
-                if (!VisibilityRequirementHandler.worldLoaded) {
-                    return false;
-                }
-            } else {
-                if (VisibilityRequirementHandler.worldLoaded) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Language
-        if (this.vrCheckForLanguage) {
-            if ((this.vrLanguage != null) && (Minecraft.getInstance().gameSettings.language != null)) {
-                if (this.vrShowIfLanguage) {
-                    if (!(Minecraft.getInstance().gameSettings.language.equals(this.vrLanguage))) {
+            //VR: Is Fullscreen
+            if (this.vrCheckForFullscreen) {
+                if (this.vrShowIfFullscreen) {
+                    if (!Minecraft.getInstance().getMainWindow().isFullscreen()) {
                         return false;
                     }
                 } else {
-                    if (Minecraft.getInstance().gameSettings.language.equals(this.vrLanguage)) {
+                    if (Minecraft.getInstance().getMainWindow().isFullscreen()) {
                         return false;
                     }
                 }
             }
-        }
 
-        //VR: Is Fullscreen
-        if (this.vrCheckForFullscreen) {
-            if (this.vrShowIfFullscreen) {
-                if (!Minecraft.getInstance().getMainWindow().isFullscreen()) {
-                    return false;
-                }
-            } else {
-                if (Minecraft.getInstance().getMainWindow().isFullscreen()) {
-                    return false;
+            //VR: Is OS Windows
+            if (this.vrCheckForOsWindows) {
+                if (this.vrShowIfOsWindows) {
+                    if (!VisibilityRequirementHandler.isWindows()) {
+                        return false;
+                    }
+                } else {
+                    if (VisibilityRequirementHandler.isWindows()) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        //VR: Is OS Windows
-        if (this.vrCheckForOsWindows) {
-            if (this.vrShowIfOsWindows) {
-                if (!VisibilityRequirementHandler.isWindows()) {
-                    return false;
-                }
-            } else {
-                if (VisibilityRequirementHandler.isWindows()) {
-                    return false;
+            //VR: Is OS Mac
+            if (this.vrCheckForOsMac) {
+                if (this.vrShowIfOsMac) {
+                    if (!VisibilityRequirementHandler.isMacOS()) {
+                        return false;
+                    }
+                } else {
+                    if (VisibilityRequirementHandler.isMacOS()) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        //VR: Is OS Mac
-        if (this.vrCheckForOsMac) {
-            if (this.vrShowIfOsMac) {
-                if (!VisibilityRequirementHandler.isMacOS()) {
-                    return false;
-                }
-            } else {
-                if (VisibilityRequirementHandler.isMacOS()) {
-                    return false;
+            //VR: Is OS Linux
+            if (this.vrCheckForOsLinux) {
+                boolean linux = (!VisibilityRequirementHandler.isWindows() && !VisibilityRequirementHandler.isMacOS());
+                if (this.vrShowIfOsLinux) {
+                    if (!linux) {
+                        return false;
+                    }
+                } else {
+                    if (linux) {
+                        return false;
+                    }
                 }
             }
-        }
 
-        //VR: Is OS Linux
-        if (this.vrCheckForOsLinux) {
-            boolean linux = (!VisibilityRequirementHandler.isWindows() && !VisibilityRequirementHandler.isMacOS());
-            if (this.vrShowIfOsLinux) {
-                if (!linux) {
-                    return false;
-                }
-            } else {
-                if (linux) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Mod Loaded
-        if (this.vrCheckForModLoaded) {
-            if (this.vrModLoaded != null) {
-                if (this.vrShowIfModLoaded) {
-                    for (String s : this.vrModLoaded) {
-                        if (s.equalsIgnoreCase("optifine")) {
-                            if (!Konkrete.isOptifineLoaded) {
-                                return false;
-                            }
-                        } else {
-                            if (!ModList.get().isLoaded(s)) {
-                                return false;
+            //VR: Is Mod Loaded
+            if (this.vrCheckForModLoaded) {
+                if (this.vrModLoaded != null) {
+                    if (this.vrShowIfModLoaded) {
+                        for (String s : this.vrModLoaded) {
+                            if (s.equalsIgnoreCase("optifine")) {
+                                if (!Konkrete.isOptifineLoaded) {
+                                    return false;
+                                }
+                            } else {
+                                if (!ModList.get().isLoaded(s)) {
+                                    return false;
+                                }
                             }
                         }
-                    }
-                } else {
-                    for (String s : this.vrModLoaded) {
-                        if (s.equalsIgnoreCase("optifine")) {
-                            if (Konkrete.isOptifineLoaded) {
-                                return false;
-                            }
-                        } else {
-                            if (ModList.get().isLoaded(s)) {
-                                return false;
+                    } else {
+                        for (String s : this.vrModLoaded) {
+                            if (s.equalsIgnoreCase("optifine")) {
+                                if (Konkrete.isOptifineLoaded) {
+                                    return false;
+                                }
+                            } else {
+                                if (ModList.get().isLoaded(s)) {
+                                    return false;
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        //VR: Is Server Online
-        if (this.vrCheckForServerOnline) {
-            ServerData sd = ServerCache.getServer(this.vrServerOnline);
-            if (this.vrShowIfServerOnline) {
-                if ((sd != null) && (sd.pingToServer == -1)) {
-                    return false;
-                }
-            } else {
-                if ((sd != null) && (sd.pingToServer != -1)) {
-                    return false;
-                }
-            }
-        }
-
-        //VR: Is Gui Scale
-        if (this.vrCheckForGuiScale) {
-            if (this.vrShowIfGuiScale) {
-                for (String condition : this.vrGuiScale) {
-                    if (!checkForGuiScale(condition)) {
-                        return false;
-                    }
-                }
-            } else {
-                for (String condition : this.vrGuiScale) {
-                    if (checkForGuiScale(condition)) {
-                        return false;
-                    }
-                }
-            }
-        }
-
-        //CUSTOM VISIBILITY REQUIREMENTS (API)
-        for (RequirementPackage p : this.customRequirements.values()) {
-
-            if (p.checkFor) {
-                if (p.showIf) {
-                    if (!p.requirement.isRequirementMet(p.value)) {
+            //VR: Is Server Online
+            if (this.vrCheckForServerOnline) {
+                ServerData sd = ServerCache.getServer(this.vrServerOnline);
+                if (this.vrShowIfServerOnline) {
+                    if ((sd != null) && (sd.pingToServer == -1)) {
                         return false;
                     }
                 } else {
-                    if (p.requirement.isRequirementMet(p.value)) {
+                    if ((sd != null) && (sd.pingToServer != -1)) {
                         return false;
                     }
                 }
             }
 
+            //VR: Is Gui Scale
+            if (this.vrCheckForGuiScale) {
+                if (this.vrShowIfGuiScale) {
+                    for (String condition : this.vrGuiScale) {
+                        if (!checkForGuiScale(condition)) {
+                            return false;
+                        }
+                    }
+                } else {
+                    for (String condition : this.vrGuiScale) {
+                        if (checkForGuiScale(condition)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            //CUSTOM VISIBILITY REQUIREMENTS (API)
+            for (RequirementPackage p : this.customRequirements.values()) {
+
+                if (p.checkFor) {
+                    if (p.showIf) {
+                        if (!p.requirement.isRequirementMet(p.value)) {
+                            return false;
+                        }
+                    } else {
+                        if (p.requirement.isRequirementMet(p.value)) {
+                            return false;
+                        }
+                    }
+                }
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return true;

@@ -30,10 +30,10 @@ import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ConnectingScreen;
+import net.minecraft.client.gui.screen.CreateWorldScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -140,11 +140,15 @@ public class ButtonScriptEngine {
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
-				Screen s = GuiConstructor.tryToConstruct(value);
-				if (s != null) {
-					Minecraft.getInstance().displayGuiScreen(s);
+				if (value.equals(CreateWorldScreen.class.getName())) {
+					CreateWorldScreen.func_243425_a(Minecraft.getInstance().currentScreen);
 				} else {
-					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+					Screen s = GuiConstructor.tryToConstruct(value);
+					if (s != null) {
+						Minecraft.getInstance().displayGuiScreen(s);
+					} else {
+						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+					}
 				}
 			}
 			if (action.equalsIgnoreCase("movefile")) {

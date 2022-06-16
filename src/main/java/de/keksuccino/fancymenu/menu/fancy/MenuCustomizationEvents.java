@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -118,22 +119,25 @@ public class MenuCustomizationEvents {
 
 		if (!scaleChecked && (Minecraft.getInstance().gameSettings != null)) {
 			scaleChecked = true;
-			
+
 			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
-			if (scale != -1) {
-				File f = new File("mods/fancymenu");
+			if ((scale != -1) && (scale != 0)) {
+				File f = FancyMenu.INSTANCE_DATA_DIR;
 				if (!f.exists()) {
 					f.mkdirs();
 				}
-				
-				File f2 = new File(f.getPath() + "/defaultscaleset.fancymenu");
-				if (!f2.exists()) {
+
+				File f2 = new File(f.getPath() + "/default_scale_set.fm");
+				File f3 = new File("mods/fancymenu/defaultscaleset.fancymenu");
+				if (!f2.exists() && !f3.exists()) {
 					try {
 						f2.createNewFile();
+						FileUtils.writeTextToFile(f2, false, "you're not supposed to be here! shoo!");
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
-					
+
+					LOGGER.info("########################### FANCYMENU: SETTING DEFAULT GUI SCALE!");
 					Minecraft.getInstance().gameSettings.guiScale = scale;
 					Minecraft.getInstance().gameSettings.saveOptions();
 					Minecraft.getInstance().updateWindowSize();

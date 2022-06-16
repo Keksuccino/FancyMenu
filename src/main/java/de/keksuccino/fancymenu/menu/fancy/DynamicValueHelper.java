@@ -9,10 +9,13 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.Konkrete;
+import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
@@ -22,6 +25,7 @@ public class DynamicValueHelper {
 	private static final File MOD_DIRECTORY = new File("mods");
 
 	private static int cachedTotalMods = -10;
+	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
 	
 	public static String convertFromRaw(String in) {
 		int width = 0;
@@ -109,6 +113,8 @@ public class DynamicValueHelper {
 
 		in = replaceVanillaButtonLabelPlaceolder(in);
 
+		in = replaceRandomTextValue(in);
+
 		//Handle all custom placeholders added via the API
 		for (PlaceholderTextContainer p : PlaceholderTextRegistry.getPlaceholders()) {
 			in = p.replacePlaceholders(in);
@@ -120,6 +126,55 @@ public class DynamicValueHelper {
 	public static boolean containsDynamicValues(String in) {
 		String s = convertFromRaw(in);
 		return !s.equals(in);
+	}
+
+	private static String replaceRandomTextValue(String in) {
+		try {
+			for (String s : getReplaceablesWithValue(in, "%randomtext:")) { // %randomtext:<filepath>:<change_interval_sec>%
+				if (s.contains(":")) {
+					String blank = s.substring(1, s.length()-1);
+					String value = blank.split(":", 2)[1];
+					if (value.contains(":")) {
+						String pathString = value.split(":", 2)[0];
+						File path = new File(pathString);
+						String intervalString = value.split(":", 2)[1];
+						if (MathUtils.isLong(intervalString) && path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {
+							long interval = Long.parseLong(intervalString) * 1000;
+							if (interval < 0L) {
+								interval = 0L;
+							}
+							long currentTime = System.currentTimeMillis();
+							RandomTextPackage p;
+							if (randomTextIntervals.containsKey(path.getPath())) {
+								p = randomTextIntervals.get(path.getPath());
+							} else {
+								p = new RandomTextPackage();
+								randomTextIntervals.put(path.getPath(), p);
+							}
+							if ((interval > 0) || (p.currentText == null)) {
+								if ((p.lastChange + interval) <= currentTime) {
+									p.lastChange = currentTime;
+									List<String> txtLines = FileUtils.getFileLines(path);
+									if (!txtLines.isEmpty()) {
+										p.currentText = txtLines.get(MathUtils.getRandomNumberInRange(0, txtLines.size()-1));
+									} else {
+										p.currentText = null;
+									}
+								}
+							}
+							if (p.currentText != null) {
+								in = in.replace(s, p.currentText);
+							} else {
+								in = in.replace(s, "");
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return in;
 	}
 
 	private static String replaceVanillaButtonLabelPlaceolder(String in) {
@@ -146,7 +201,14 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String localizationKey = blank.split(":", 2)[1];
-					in = in.replace(s, Locals.localize(localizationKey));
+					String localized = Locals.localize(localizationKey);
+					if (localized.equals(localizationKey)) {
+						localized = I18n.format(localizationKey);
+						if (localized == null) {
+							localized = localizationKey;
+						}
+					}
+					in = in.replace(s, localized);
 				}
 			}
 		} catch (Exception e) {
@@ -419,6 +481,11 @@ public class DynamicValueHelper {
 
 	private static long bytesToMb(long bytes) {
 		return bytes / 1024L / 1024L;
+	}
+
+	public static class RandomTextPackage {
+		public String currentText = null;
+		public long lastChange = 0L;
 	}
 
 }

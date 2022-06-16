@@ -14,7 +14,8 @@
     "MixinWorldListEntry",
     "MixinLevelStorageAccess",
     "MixinConnectScreen",
-    "MixinConnectingScreen"
+    "MixinConnectingScreen",
+    "IMixinPauseScreen"
   ],
   "injectors": {
     "defaultRequire": 1

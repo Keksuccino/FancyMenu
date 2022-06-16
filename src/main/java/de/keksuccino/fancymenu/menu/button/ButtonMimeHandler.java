@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.menu.button;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;

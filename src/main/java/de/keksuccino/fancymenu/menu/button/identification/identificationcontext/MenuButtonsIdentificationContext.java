@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.menu.button.identification.identificationcontext;
 
-import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 
 import javax.annotation.Nullable;
