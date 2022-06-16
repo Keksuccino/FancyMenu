@@ -1119,6 +1119,9 @@ public class SetupSharingEngine {
 
         protected boolean isValidMenuIdentifier(String identifier) {
             try {
+                if (identifier.equals("%fancymenu:universal_layout%")) {
+                    return true;
+                }
                 if (!isCustomGuiName(identifier)) {
                     Class.forName(identifier);
                 }

@@ -207,6 +207,114 @@ public class VisibilityRequirementsPopup extends FMPopup {
         }, integerCharFilter, realTimeSecondValuePreset);
         this.requirements.add(realTimeSecond);
 
+        /** Is Real Time Day **/
+        String realTimeDayValuePreset = "";
+        for (int i : c.vrRealTimeDay) {
+            realTimeDayValuePreset += i + ",";
+        }
+        if (realTimeDayValuePreset.length() > 0) {
+            realTimeDayValuePreset = realTimeDayValuePreset.substring(0, realTimeDayValuePreset.length() -1);
+        } else {
+            realTimeDayValuePreset = "1, 4";
+        }
+        String realTimeDayName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeday");
+        String realTimeDayDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeday.desc");
+        String realTimeDayValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeday.valuename");
+        Requirement realTimeDay = new Requirement(this, realTimeDayName, realTimeDayDesc, realTimeDayValueName, c.vrCheckForRealTimeDay, c.vrShowIfRealTimeDay,
+                (enabledCallback) -> {
+                    c.vrCheckForRealTimeDay = enabledCallback;
+                }, (showIfCallback) -> {
+            c.vrShowIfRealTimeDay = showIfCallback;
+        }, (valueCallback) -> {
+            if (valueCallback != null) {
+                c.vrRealTimeDay.clear();
+                if (valueCallback.contains(",")) {
+                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
+                        if (MathUtils.isInteger(s)) {
+                            c.vrRealTimeDay.add(Integer.parseInt(s));
+                        }
+                    }
+                } else {
+                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
+                        c.vrRealTimeDay.add(Integer.parseInt(valueCallback.replace(" ", "")));
+                    }
+                }
+            }
+        }, integerCharFilter, realTimeDayValuePreset);
+        this.requirements.add(realTimeDay);
+
+        /** Is Real Time Month **/
+        String realTimeMonthValuePreset = "";
+        for (int i : c.vrRealTimeMonth) {
+            realTimeMonthValuePreset += i + ",";
+        }
+        if (realTimeMonthValuePreset.length() > 0) {
+            realTimeMonthValuePreset = realTimeMonthValuePreset.substring(0, realTimeMonthValuePreset.length() -1);
+        } else {
+            realTimeMonthValuePreset = "1, 4";
+        }
+        String realTimeMonthName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth");
+        String realTimeMonthDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.desc");
+        String realTimeMonthValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.valuename");
+        Requirement realTimeMonth = new Requirement(this, realTimeMonthName, realTimeMonthDesc, realTimeMonthValueName, c.vrCheckForRealTimeMonth, c.vrShowIfRealTimeMonth,
+                (enabledCallback) -> {
+                    c.vrCheckForRealTimeMonth = enabledCallback;
+                }, (showIfCallback) -> {
+            c.vrShowIfRealTimeMonth = showIfCallback;
+        }, (valueCallback) -> {
+            if (valueCallback != null) {
+                c.vrRealTimeMonth.clear();
+                if (valueCallback.contains(",")) {
+                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
+                        if (MathUtils.isInteger(s)) {
+                            c.vrRealTimeMonth.add(Integer.parseInt(s));
+                        }
+                    }
+                } else {
+                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
+                        c.vrRealTimeMonth.add(Integer.parseInt(valueCallback.replace(" ", "")));
+                    }
+                }
+            }
+        }, integerCharFilter, realTimeMonthValuePreset);
+        this.requirements.add(realTimeMonth);
+
+        /** Is Real Time Year **/
+        String realTimeYearValuePreset = "";
+        for (int i : c.vrRealTimeYear) {
+            realTimeYearValuePreset += i + ",";
+        }
+        if (realTimeYearValuePreset.length() > 0) {
+            realTimeYearValuePreset = realTimeYearValuePreset.substring(0, realTimeYearValuePreset.length() -1);
+        } else {
+            realTimeYearValuePreset = "1, 4";
+        }
+        String realTimeYearName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeyear");
+        String realTimeYearDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.desc");
+        String realTimeYearValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.valuename");
+        Requirement realTimeYear = new Requirement(this, realTimeYearName, realTimeYearDesc, realTimeYearValueName, c.vrCheckForRealTimeYear, c.vrShowIfRealTimeYear,
+                (enabledCallback) -> {
+                    c.vrCheckForRealTimeYear = enabledCallback;
+                }, (showIfCallback) -> {
+            c.vrShowIfRealTimeYear = showIfCallback;
+        }, (valueCallback) -> {
+            if (valueCallback != null) {
+                c.vrRealTimeYear.clear();
+                if (valueCallback.contains(",")) {
+                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
+                        if (MathUtils.isInteger(s)) {
+                            c.vrRealTimeYear.add(Integer.parseInt(s));
+                        }
+                    }
+                } else {
+                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
+                        c.vrRealTimeYear.add(Integer.parseInt(valueCallback.replace(" ", "")));
+                    }
+                }
+            }
+        }, integerCharFilter, realTimeYearValuePreset);
+        this.requirements.add(realTimeYear);
+
         /** Is Window Width **/
         String windowWidthValuePreset = "";
         for (int i : c.vrWindowWidth) {
