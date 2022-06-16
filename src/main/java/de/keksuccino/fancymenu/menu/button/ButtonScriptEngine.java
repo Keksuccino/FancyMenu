@@ -31,7 +31,6 @@ import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -44,7 +43,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class ButtonScriptEngine {
 
-	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
+	private static Map<String, ButtonScript> scripts = new HashMap<>();
 	private static boolean init = false;
 	
 	public static void init() {

@@ -79,8 +79,12 @@ public class MenuCustomization {
 			for (PropertiesSection sec : s.getProperties()) {
 				String identifier = null;
 				try {
-					Class.forName(sec.getSectionType());
-					identifier = sec.getSectionType();
+					if (sec.getSectionType().equals("net.mehvahdjukaar.supplementaries.compat.configured.CustomConfigScreen")) {
+						identifier = sec.getSectionType();
+					} else if ((sec.getSectionType() != null) && (sec.getSectionType().length() > 5)) {
+						Class.forName(sec.getSectionType());
+						identifier = sec.getSectionType();
+					}
 				} catch (Exception e) {}
 				if (identifier == null) {
 					identifier = getValidMenuIdentifierFor(sec.getSectionType());

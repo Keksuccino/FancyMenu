@@ -550,7 +550,7 @@ fancymenu.config.playmenumusic.desc = Enable or disable the default minecraft me
 fancymenu.config.stopworldmusicwhencustomizable.desc = If the vanilla world music should%n%be stopped when opening a customizable menu.
 fancymenu.config.playbackgroundsounds.desc = Enable or disable the custom menu background%n%sounds added with FancyMenu.
 fancymenu.config.playbackgroundsoundsinworld.desc = If menu background sounds added with%n%FancyMenu should be played while%n%a world is loaded (ingame).
-fancymenu.config.defaultguiscale.desc = A default GUI scale that will be set on first launch.%n%Useful for modpacks.%n%Cache data is saved in /mods/fancymenu/.
+fancymenu.config.defaultguiscale.desc = A default GUI scale that will be set on first launch.%n%Useful for modpacks.%n%Cache data is saved in /fancymenu_data/.
 fancymenu.config.showdebugwarnings.desc = If FancyMenu should print warnings%n%to the game log.%n%Errors are not affected by this.
 
 fancymenu.config.showcustomizationbuttons.desc = Show FancyMenu's customization controls in menus.%n%This can be toggled by pressing §lCTRL + ALT + C%n%in a normal menu screen.
@@ -999,10 +999,33 @@ fancymenu.helper.ui.misc.receiving_level_screen.btn.desc = Will open a dummy ins
 fancymenu.helper.ui.misc.open_connect_screen = Open Connect Screen
 fancymenu.helper.ui.misc.open_connect_screen.btn.desc = Will open a dummy instance of%n%the connect screen, that is%n%used for joining servers.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
 
+fancymenu.helper.editor.layoutoptions.universal_layout.options = Universal Layout Options
+fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier = Input Menu Identifier:
+fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier = Choose Menu Identifier
+fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist = Add Menu To Blacklist
+fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc = Add a menu to the blacklist%n%by its §lmenu identifier§r.%n%%n%§cMenus on the blacklist will%n%§cbe ignored by the layout, so%n%§cthe customizations don't get%n%§capplied to this menu.%n%%n%§cYou can get the identifier%n%§cof a menu by clicking on%n%§c§lTools -> Menu Info §r§cwhile in the menu.
+fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist = Remove Menu From Blacklist
+fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthis identifier?
+fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist = Clear Blacklist
+fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm = §c§lAre you sure?%n%%n%Do you really want to §cclear §rthe blacklist?
+fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist = Add Menu To Whitelist
+fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc = Add a menu to the whitelist%n%by its §lmenu identifier§r.%n%%n%§cIf there are menus on the%n%§cwhitelist, only these menus%n%§cwill be customized by the layout.%n%§cAll other menus will be ignored!%n%%n%§cYou can get the identifier%n%§cof a menu by clicking on%n%§c§lTools -> Menu Info §r§cwhile in the menu.
+fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist = Remove Menu From Whitelist
+fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthis identifier?
+fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist = Clear Whitelist
+fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm = §c§lAre you sure?%n%%n%Do you really want to §cclear §rthe whitelist?
 
+fancymenu.guicomponents.back = Back
 
+fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext = Random Text From TXT File
+fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc = Picks a random text from a TXT file.%n%%n%Supports custom change intervals for texts.%n%%n%Just replace '<filepath>' (remove the < >)%n%with the path to your TXT file%n%and replace '<interval_sec>' (remove the < >)%n%with the change interval in seconds.%n%An interval of 0 will make it%n%pick a text only once per session.%n%%n%§lExample:%n%%randomtext:path/to/file.txt:10%
 
-
-
-
-
+fancymenu.helper.editor.items.visibilityrequirements.realtimeday = Is Real Time Day
+fancymenu.helper.editor.items.visibilityrequirements.realtimeday.desc = Check if the real time's current day is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one day%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.realtimeday.valuename = Real Time Day(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.realtimemonth = Is Real Time Month
+fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.desc = Check if the real time's current month is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one month%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.valuename = Real Time Month(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.realtimeyear = Is Real Time Year
+fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.desc = Check if the real time's current year is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one year%n%at once.
+fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.valuename = Real Time Year(s) (Separate Values By Comma)

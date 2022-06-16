@@ -16,12 +16,13 @@ import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
 
 import javax.imageio.ImageIO;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
+
+	public static Map<String, WebTexture> cachedWebImages = new HashMap<>();
 
 	public volatile ResourceLocation texture;
 	public volatile WebTexture webTexture;
@@ -43,47 +44,62 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 					this.setWidth(100);
 				}
 
-				new Thread(() -> {
-					try {
-
-						if (isValidUrl(this.value)) {
-							this.webTexture = getWebTexture(this.value);
-
-							if (this.webTexture == null) {
-								if (this.width <= 0) {
-									this.setWidth(100);
-								}
-								if (this.height <= 0) {
-									this.setHeight(100);
-								}
-								this.ready = true;
-								return;
-							}
-
-							int w = this.webTexture.width;
-							int h = this.webTexture.height;
-							double ratio = (double) w / (double) h;
-
-							//Calculate missing width
-							if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-								this.setWidth((int)(this.getHeight() * ratio));
-							}
-							//Calculate missing height
-							if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-								this.setHeight((int)(this.getWidth() / ratio));
-							}
-						}
-
+				if (cachedWebImages.containsKey(this.actionId)) {
+					this.webTexture = cachedWebImages.get(this.actionId);
+					if (this.webTexture.getLocation() != null) {
+						this.calculateAspectRatio();
 						this.ready = true;
-
-					} catch (Exception e) {
-						e.printStackTrace();
+					} else {
+						this.webTexture = null;
+						this.texture = null;
 					}
-				}).start();
+				}
+
+				if (this.webTexture == null) {
+					new Thread(() -> {
+						try {
+
+							if (isValidUrl(this.value)) {
+								this.webTexture = getWebTexture(this.value);
+								cachedWebImages.put(this.actionId, this.webTexture);
+								this.calculateAspectRatio();
+							}
+
+							this.ready = true;
+
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}).start();
+				}
 
 			}
 		}
 
+	}
+
+	protected void calculateAspectRatio() {
+		if (this.webTexture == null) {
+			if (this.width <= 0) {
+				this.setWidth(100);
+			}
+			if (this.height <= 0) {
+				this.setHeight(100);
+			}
+			this.ready = true;
+			return;
+		}
+		int w = this.webTexture.width;
+		int h = this.webTexture.height;
+		double ratio = (double) w / (double) h;
+		//Calculate missing width
+		if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+			this.setWidth((int)(this.getHeight() * ratio));
+		}
+		//Calculate missing height
+		if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+			this.setHeight((int)(this.getWidth() / ratio));
+		}
 	}
 
 	@Override

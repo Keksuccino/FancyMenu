@@ -270,6 +270,13 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		UIBase.colorizeButton(vanillaButtonLabel);
 		otherMenu.addContent(vanillaButtonLabel);
 
+		AdvancedButton randomText = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext"), true, (press) -> {
+			this.writeText("%randomtext:<filepath>:<interval_sec>%");
+		});
+		randomText.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc"), "%n%"));
+		UIBase.colorizeButton(randomText);
+		otherMenu.addContent(randomText);
+
 		otherMenu.addSeparator();
 
 		//Custom placeholders (API) without category will be added to the Other category

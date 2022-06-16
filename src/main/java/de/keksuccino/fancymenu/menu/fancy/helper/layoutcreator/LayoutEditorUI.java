@@ -28,6 +28,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutEle
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButtonDummyCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.ChooseFromStringListScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
@@ -391,6 +392,110 @@ public class LayoutEditorUI extends UIBase {
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
 			
 			this.content.clear();
+
+			if (this.parent.isUniversalLayout()) {
+
+				FMContextMenu universalLayoutMenu = new FMContextMenu();
+				universalLayoutMenu.setAutoclose(true);
+				this.addChild(universalLayoutMenu);
+
+				AdvancedButton universalLayoutButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options"), true, (press) -> {
+					universalLayoutMenu.setParentButton((AdvancedButton) press);
+					universalLayoutMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
+				});
+				this.addContent(universalLayoutButton);
+
+				//Add to Blacklist -----------------
+				AdvancedButton addBlacklistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist"), true, (press) -> {
+					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
+						if (call != null) {
+							if (!this.parent.universalLayoutBlacklist.contains(call)) {
+								this.parent.universalLayoutBlacklist.add(call);
+							}
+						}
+					});
+					PopupHandler.displayPopup(p);
+				});
+				addBlacklistButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc"), "%n%"));
+				universalLayoutMenu.addContent(addBlacklistButton);
+
+				//Remove From Blacklist -----------------
+				AdvancedButton removeBlacklistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), true, (press) -> {
+					ChooseFromStringListScreen s = new ChooseFromStringListScreen(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.parent, this.parent.universalLayoutBlacklist, (call) -> {
+						if (call != null) {
+							FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call2) -> {
+								if (call2) {
+									this.parent.universalLayoutBlacklist.remove(call);
+								}
+							}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), "%n%"));
+							PopupHandler.displayPopup(p);
+						}
+						Minecraft.getMinecraft().displayGuiScreen(this.parent);
+					});
+					Minecraft.getMinecraft().displayGuiScreen(s);
+				});
+				universalLayoutMenu.addContent(removeBlacklistButton);
+
+				//Clear Blacklist -----------------
+				AdvancedButton clearBlacklistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), true, (press) -> {
+					FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
+						if (call) {
+							this.parent.universalLayoutBlacklist.clear();
+						}
+					}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"), "%n%"));
+					PopupHandler.displayPopup(p);
+				});
+				universalLayoutMenu.addContent(clearBlacklistButton);
+
+				//----------------------------------------------------------
+				universalLayoutMenu.addSeparator();
+				//----------------------------------------------------------
+
+				//Add to Whitelist -----------------
+				AdvancedButton addWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), true, (press) -> {
+					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
+						if (call != null) {
+							if (!this.parent.universalLayoutWhitelist.contains(call)) {
+								this.parent.universalLayoutWhitelist.add(call);
+							}
+						}
+					});
+					PopupHandler.displayPopup(p);
+				});
+				addWhitelistButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc"), "%n%"));
+				universalLayoutMenu.addContent(addWhitelistButton);
+
+				//Remove From Whitelist -----------------
+				AdvancedButton removeWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), true, (press) -> {
+					ChooseFromStringListScreen s = new ChooseFromStringListScreen(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.parent, this.parent.universalLayoutWhitelist, (call) -> {
+						if (call != null) {
+							FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call2) -> {
+								if (call2) {
+									this.parent.universalLayoutWhitelist.remove(call);
+								}
+							}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), "%n%"));
+							PopupHandler.displayPopup(p);
+						}
+						Minecraft.getMinecraft().displayGuiScreen(this.parent);
+					});
+					Minecraft.getMinecraft().displayGuiScreen(s);
+				});
+				universalLayoutMenu.addContent(removeWhitelistButton);
+
+				//Clear Whitelist -----------------
+				AdvancedButton clearWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), true, (press) -> {
+					FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
+						if (call) {
+							this.parent.universalLayoutWhitelist.clear();
+						}
+					}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"), "%n%"));
+					PopupHandler.displayPopup(p);
+				});
+				universalLayoutMenu.addContent(clearWhitelistButton);
+
+				this.addSeparator();
+
+			}
 
 			/** SET BACKGROUND **/
 			AdvancedButton backgroundOptionsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), true, (press) -> {
