@@ -90,7 +90,11 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
 				if (Minecraft.getInstance().level != null) {
-					Minecraft.getInstance().player.chat(value);
+					if (value != "" && value.charAt(0) == '/' ) {
+						Minecraft.getInstance().player.command(value.substring(1));
+					} else {
+						Minecraft.getInstance().player.chat(value);
+					}
 				}
 			}
 			if (action.equalsIgnoreCase("quitgame")) {
