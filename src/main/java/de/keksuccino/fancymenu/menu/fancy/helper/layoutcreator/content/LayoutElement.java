@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import net.minecraft.client.gui.GuiComponent;
@@ -63,6 +64,11 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean copyable = true;
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
+	protected boolean resizeable = true;
+	protected boolean dragable = true;
+	protected boolean orientationCanBeChanged = true;
+	protected boolean enableElementIdCopyButton = true;
+	protected boolean allowOrientationByElement = true;
 
 	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 
@@ -138,119 +144,125 @@ public abstract class LayoutElement extends GuiComponent {
 		this.rightclickMenu.setAlwaysOnTop(true);
 
 		/** COPY ELEMENT ID **/
-		AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
-			if (!(this instanceof LayoutVanillaButton)) {
-				Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
-			} else {
-				//TODO übernehmen
-				Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).getButtonId());
-			}
-		});
-		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
-		this.rightclickMenu.addContent(copyIdButton);
-		
-		/** ORIENTATION **/
-		FMContextMenu orientationMenu = new FMContextMenu();
-		orientationMenu.setAutoclose(true);
-		this.rightclickMenu.addChild(orientationMenu);
-
-		oElement = new AdvancedButton(0, 0, 0, 16, "element", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
-				if (call != null) {
-					LayoutElement l = this.handler.getElementByActionId(call);
-					if (l != null) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-						this.object.orientationElementIdentifier = call;
-						this.object.orientationElement = l.object;
-						this.handler.history.setPreventSnapshotSaving(true);
-						this.setOrientation("element");
-						this.handler.history.setPreventSnapshotSaving(false);
-					} else {
-						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
-					}
+		if (this.enableElementIdCopyButton) {
+			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
+				if (!(this instanceof LayoutVanillaButton)) {
+					Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
+				} else {
+					//TODO übernehmen
+					Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton) this).getButtonId());
 				}
 			});
-			if (this.object.orientationElementIdentifier != null) {
-				pop.setText(this.object.orientationElementIdentifier);
+			copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
+			this.rightclickMenu.addContent(copyIdButton);
+		}
+		
+		/** ORIENTATION **/
+		if (this.orientationCanBeChanged) {
+			FMContextMenu orientationMenu = new FMContextMenu();
+			orientationMenu.setAutoclose(true);
+			this.rightclickMenu.addChild(orientationMenu);
+
+			oElement = new AdvancedButton(0, 0, 0, 16, "element", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
+					if (call != null) {
+						LayoutElement l = this.handler.getElementByActionId(call);
+						if (l != null) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.object.orientationElementIdentifier = call;
+							this.object.orientationElement = l.object;
+							this.handler.history.setPreventSnapshotSaving(true);
+							this.setOrientation("element");
+							this.handler.history.setPreventSnapshotSaving(false);
+						} else {
+							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+						}
+					}
+				});
+				if (this.object.orientationElementIdentifier != null) {
+					pop.setText(this.object.orientationElementIdentifier);
+				}
+				PopupHandler.displayPopup(pop);
+				orientationMenu.closeMenu();
+			});
+			oElement.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
+			if (this.allowOrientationByElement) {
+				orientationMenu.addContent(oElement);
 			}
-			PopupHandler.displayPopup(pop);
-			orientationMenu.closeMenu();
-		});
-		oElement.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
-		orientationMenu.addContent(oElement);
 
-		orientationMenu.addSeparator();
+			orientationMenu.addSeparator();
 
-		o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("top-left");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o1);
-		
-		o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("mid-left");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o2);
-		
-		o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("bottom-left");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o3);
-		
-		o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("top-centered");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o4);
-		
-		o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("mid-centered");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o5);
-		
-		o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("bottom-centered");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o6);
-		
-		o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("top-right");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o7);
-		
-		o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("mid-right");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o8);
-		
-		o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("bottom-right");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o9);
-		
-		AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
-			orientationMenu.setParentButton((AdvancedButton) press);
-			orientationMenu.openMenuAt(0, press.y);
-		});
-		orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
-		this.rightclickMenu.addContent(orientationButton);
+			o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("top-left");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o1);
+
+			o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("mid-left");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o2);
+
+			o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("bottom-left");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o3);
+
+			o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("top-centered");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o4);
+
+			o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("mid-centered");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o5);
+
+			o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("bottom-centered");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o6);
+
+			o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("top-right");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o7);
+
+			o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("mid-right");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o8);
+
+			o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("bottom-right");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o9);
+
+			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
+				orientationMenu.setParentButton((AdvancedButton) press);
+				orientationMenu.openMenuAt(0, press.y);
+			});
+			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
+			this.rightclickMenu.addContent(orientationButton);
+		}
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -344,7 +356,7 @@ public abstract class LayoutElement extends GuiComponent {
 
 		/** VISIBILITY REQUIREMENTS **/
 		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-			PopupHandler.displayPopup(new VisibilityRequirementsPopup(this.object));
+			Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.handler, this.object));
 		});
 		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
 		if (this.enableVisibilityRequirements) {
@@ -500,6 +512,9 @@ public abstract class LayoutElement extends GuiComponent {
 	}
 
 	protected void setOrientation(String pos) {
+		if (!this.orientationCanBeChanged) {
+			return;
+		}
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 
 		if (pos.equals("mid-left")) {
@@ -638,50 +653,52 @@ public abstract class LayoutElement extends GuiComponent {
 			if (this.stretchX || this.stretchY) {
 				this.oElement.active = false;
 			}
-			if (this.stretchX && !this.stretchY) {
-				this.o1.active = true;
-				this.o2.active = true;
-				this.o3.active = true;
-				this.o4.active = false;
-				this.o5.active = false;
-				this.o6.active = false;
-				this.o7.active = false;
-				this.o8.active = false;
-				this.o9.active = false;
-			}
-			if (this.stretchY && !this.stretchX) {
-				this.o1.active = true;
-				this.o2.active = false;
-				this.o3.active = false;
-				this.o4.active = true;
-				this.o5.active = false;
-				this.o6.active = false;
-				this.o7.active = true;
-				this.o8.active = false;
-				this.o9.active = false;
-			}
-			if (this.stretchX && this.stretchY) {
-				this.o1.active = true;
-				this.o2.active = false;
-				this.o3.active = false;
-				this.o4.active = false;
-				this.o5.active = false;
-				this.o6.active = false;
-				this.o7.active = false;
-				this.o8.active = false;
-				this.o9.active = false;
-			}
-			if (!this.stretchX && !this.stretchY) {
-				this.o1.active = true;
-				this.o2.active = true;
-				this.o3.active = true;
-				this.o4.active = true;
-				this.o5.active = true;
-				this.o6.active = true;
-				this.o7.active = true;
-				this.o8.active = true;
-				this.o9.active = true;
-				this.oElement.active = true;
+			if (this.orientationCanBeChanged) {
+				if (this.stretchX && !this.stretchY) {
+					this.o1.active = true;
+					this.o2.active = true;
+					this.o3.active = true;
+					this.o4.active = false;
+					this.o5.active = false;
+					this.o6.active = false;
+					this.o7.active = false;
+					this.o8.active = false;
+					this.o9.active = false;
+				}
+				if (this.stretchY && !this.stretchX) {
+					this.o1.active = true;
+					this.o2.active = false;
+					this.o3.active = false;
+					this.o4.active = true;
+					this.o5.active = false;
+					this.o6.active = false;
+					this.o7.active = true;
+					this.o8.active = false;
+					this.o9.active = false;
+				}
+				if (this.stretchX && this.stretchY) {
+					this.o1.active = true;
+					this.o2.active = false;
+					this.o3.active = false;
+					this.o4.active = false;
+					this.o5.active = false;
+					this.o6.active = false;
+					this.o7.active = false;
+					this.o8.active = false;
+					this.o9.active = false;
+				}
+				if (!this.stretchX && !this.stretchY) {
+					this.o1.active = true;
+					this.o2.active = true;
+					this.o3.active = true;
+					this.o4.active = true;
+					this.o5.active = true;
+					this.o6.active = true;
+					this.o7.active = true;
+					this.o8.active = true;
+					this.o9.active = true;
+					this.oElement.active = true;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -716,25 +733,33 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 				
 		//Update dragging state
-		if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
-			this.dragging = true;
-		} else {
-			if (!MouseInput.isLeftMouseDown()) {
-				this.dragging = false;
+		if (this.dragable) {
+			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
+				this.dragging = true;
+			} else {
+				if (!MouseInput.isLeftMouseDown()) {
+					this.dragging = false;
+				}
 			}
+		} else {
+			this.dragging = false;
 		}
 		
 		//Handles the resizing process
-		if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
-			if (this.handler.getFocusedObjects().size() == 1) {
-				if (!this.resizing) {
-					this.cachedSnapshot = this.handler.history.createSnapshot();
+		if (this.resizeable) {
+			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
+				if (this.handler.getFocusedObjects().size() == 1) {
+					if (!this.resizing) {
+						this.cachedSnapshot = this.handler.history.createSnapshot();
 
-					this.lastGrabber = this.getActiveResizeGrabber();
+						this.lastGrabber = this.getActiveResizeGrabber();
+					}
+					this.resizing = true;
+					this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 				}
-				this.resizing = true;
-				this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 			}
+		} else {
+			this.resizing = false;
 		}
 		
 		//Moves the object with the mouse motion if dragged
@@ -837,50 +862,54 @@ public abstract class LayoutElement extends GuiComponent {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		if (!this.stretchX) {
-			//grabber left
-			GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
-			//grabber right
-			GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
-		}
-		if (!this.stretchY) {
-			//grabber top
-			GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
-			//grabber bottom
-			GuiComponent.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+		if (this.dragable) {
+			if (!this.stretchX) {
+				//grabber left
+				GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
+				//grabber right
+				GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
+			}
+			if (!this.stretchY) {
+				//grabber top
+				GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
+				//grabber bottom
+				GuiComponent.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+			}
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-			if (!this.stretchX) {
-				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
-				this.activeGrabber = 0;
+		if (this.resizeable) {
+			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
+				if (!this.stretchX) {
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
+					this.activeGrabber = 0;
+				} else {
+					this.activeGrabber = -1;
+				}
+			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
+				if (!this.stretchX) {
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
+					this.activeGrabber = 1;
+				} else {
+					this.activeGrabber = -1;
+				}
+			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
+				if (!this.stretchY) {
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
+					this.activeGrabber = 2;
+				} else {
+					this.activeGrabber = -1;
+				}
+			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
+				if (!this.stretchY) {
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
+					this.activeGrabber = 3;
+				} else {
+					this.activeGrabber = -1;
+				}
 			} else {
 				this.activeGrabber = -1;
 			}
-		} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-			if (!this.stretchX) {
-				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
-				this.activeGrabber = 1;
-			} else {
-				this.activeGrabber = -1;
-			}
-		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-			if (!this.stretchY) {
-				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
-				this.activeGrabber = 2;
-			} else {
-				this.activeGrabber = -1;
-			}
-		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-			if (!this.stretchY) {
-				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
-				this.activeGrabber = 3;
-			} else {
-				this.activeGrabber = -1;
-			}
-		} else {
-			this.activeGrabber = -1;
 		}
 
 		//Render pos and size values

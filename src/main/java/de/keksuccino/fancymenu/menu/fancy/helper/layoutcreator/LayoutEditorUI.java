@@ -35,6 +35,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar.ElementAlignment;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -207,11 +208,12 @@ public class LayoutEditorUI extends UIBase {
 			HiddenVanillaButtonContextMenu hiddenVanillaMenu = new HiddenVanillaButtonContextMenu(this.parent);
 			hiddenVanillaMenu.setAutoclose(true);
 			elementMenu.addChild(hiddenVanillaMenu);
-			
-			AdvancedButton hiddenVanillaButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element.deletedvanillabuttons"), true, (press) -> {
+
+			AdvancedButton hiddenVanillaButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), true, (press) -> {
 				hiddenVanillaMenu.setParentButton((AdvancedButton) press);
 				hiddenVanillaMenu.openMenuAt(0, press.y);
 			});
+			hiddenVanillaButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc"), "%n%"));
 			elementMenu.addContent(hiddenVanillaButton);
 			
 			CustomizationButton elementTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element"), true, (press) -> {
@@ -1540,22 +1542,38 @@ public class LayoutEditorUI extends UIBase {
 			this.content.clear();
 			this.separators.clear();
 
-			if (this.parent.getHiddenButtons().isEmpty()) {
-				AdvancedButton emptyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
-				this.addContent(emptyButton);
-			} else {
+			boolean containsHiddenDeeps = false;
+			for (LayoutElement e : this.parent.content) {
+				if (e instanceof DeepCustomizationLayoutEditorElement) {
+					if (((DeepCustomizationLayoutEditorElement)e).getDeepCustomizationItem().hidden) {
+						String name = ((DeepCustomizationLayoutEditorElement) e).parentDeepCustomizationElement.getDisplayName();
+						AdvancedButton hiddenButton = new AdvancedButton(0, 0, 0, 0, name, true, (press) -> {
+							((DeepCustomizationLayoutEditorElement) e).getDeepCustomizationItem().hidden = false;
+							this.parent.updateContent();
+							this.closeMenu();
+						});
+						hiddenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.editor.ui.element.deletedvanillabuttons.entry.desc"), "%n%"));
+						this.addContent(hiddenButton);
+						containsHiddenDeeps = true;
+					}
+				}
+			}
+
+			if (!this.parent.getHiddenButtons().isEmpty()) {
 				for (LayoutVanillaButton b : this.parent.getHiddenButtons()) {
-					
+
 					String name = b.button.getButton().getMessage().getString();
-					
 					AdvancedButton hiddenButton = new AdvancedButton(0, 0, 0, 0, name, true, (press) -> {
 						this.parent.showVanillaButton(b);
 						this.closeMenu();
 					});
 					hiddenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.editor.ui.element.deletedvanillabuttons.entry.desc"), "%n%"));
 					this.addContent(hiddenButton);
-					
+
 				}
+			} else if (!containsHiddenDeeps) {
+				AdvancedButton emptyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
+				this.addContent(emptyButton);
 			}
 			
 			super.openMenuAt(x, y, screenWidth, screenHeight);

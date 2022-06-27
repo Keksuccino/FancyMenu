@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -20,6 +21,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TextComponent;
 
 public class LayoutButton extends LayoutElement {
@@ -48,9 +50,7 @@ public class LayoutButton extends LayoutElement {
 		super.init();
 
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config"), (press) -> {
-			ButtonActionPopup i = new ButtonActionPopup(this::setActionContentCallback, this::setActionTypeCallback, this.actionType);
-			i.setText(this.actionContent);
-			PopupHandler.displayPopup(i);
+			Minecraft.getInstance().setScreen(new ButtonActionScreen(this.handler, this));
 		});
 		this.rightclickMenu.addContent(b3);
 
@@ -286,18 +286,6 @@ public class LayoutButton extends LayoutElement {
 			onlyDisplayInMenu.openMenuAt(0, press.y);
 		});
 		this.rightclickMenu.addContent(b10);
-	}
-	
-	private void setActionContentCallback(String content) {
-		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-				
-		if (content != null) {
-			this.actionContent = content;
-		}
-	}
-	
-	private void setActionTypeCallback(String action) {
-		this.actionType = action;
 	}
 
 	@Override

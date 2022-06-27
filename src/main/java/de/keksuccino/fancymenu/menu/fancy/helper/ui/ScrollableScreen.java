@@ -289,4 +289,16 @@ public class ScrollableScreen extends Screen {
 
     }
 
+    public static class SeparatorEntry extends ScrollAreaEntryBase {
+
+        public SeparatorEntry(ScrollArea parent, int height, Color color) {
+            super(parent, null);
+            this.renderBody = (render) -> {
+                fill(render.matrix, render.entry.x, render.entry.y, render.entry.x + render.entry.getWidth(), render.entry.y + render.entry.getHeight(), color.getRGB());
+            };
+            this.setHeight(height);
+        }
+
+    }
+
 }

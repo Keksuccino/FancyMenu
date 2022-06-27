@@ -2,14 +2,11 @@ package de.keksuccino.fancymenu.api.buttonaction;
 
 import de.keksuccino.fancymenu.FancyMenu;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ButtonActionRegistry {
 
-    protected static Map<String, ButtonActionContainer> actions = new HashMap<>();
+    protected static Map<String, ButtonActionContainer> actions = new LinkedHashMap<>();
 
     /**
      * Register your custom button actions here.
@@ -36,7 +33,9 @@ public class ButtonActionRegistry {
 
     public static List<ButtonActionContainer> getActions() {
         List<ButtonActionContainer> l = new ArrayList<>();
-        l.addAll(actions.values());
+        actions.forEach((key, value) -> {
+            l.add(value);
+        });
         return l;
     }
 

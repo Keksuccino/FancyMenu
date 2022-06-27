@@ -14,7 +14,9 @@
     "MixinWorldListEntry",
     "MixinConnectScreen",
     "MixinLevelStorageAccess",
-    "IMixinPauseScreen"
+    "IMixinPauseScreen",
+    "IMixinChatScreen",
+    "IMixinMinecraft"
   ],
   "injectors": {
     "defaultRequire": 1
