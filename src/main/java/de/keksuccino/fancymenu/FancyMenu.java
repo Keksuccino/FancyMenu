@@ -9,17 +9,22 @@ import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
+import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.menu.button.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
@@ -36,7 +41,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.8.0";
+	public static final String VERSION = "2.9.0";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -76,6 +81,16 @@ public class FancyMenu implements ModInitializer {
 	    		slideshowPath.mkdirs();
 
 	    		updateConfig();
+
+				DeepCustomizationLayers.registerAll();
+
+				ButtonActions.registerAll();
+
+				VisibilityRequirements.registerAll();
+
+				Placeholders.registerAll();
+
+				VariableHandler.init();
 
 				ButtonIdentificator.init();
 
@@ -186,24 +201,6 @@ public class FancyMenu implements ModInitializer {
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");
-    		
-			config.registerValue("hidebranding", true, "mainmenu");
-			config.registerValue("hidelogo", false, "mainmenu");
-			config.registerValue("hiderealmsnotifications", false, "mainmenu");
-			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-				config.registerValue("copyrightposition", "bottom-right", "mainmenu");
-			}
-			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-				config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
-			}
-
-			config.registerValue("hidesplashtext", false, "mainmenu_splash");
-			config.registerValue("splashx", 0, "mainmenu_splash");
-			config.registerValue("splashy", 0, "mainmenu_splash");
-			config.registerValue("splashorientation", "original", "mainmenu_splash");
-			config.registerValue("splashcolor", "#ffff00", "mainmenu_splash");
-			config.registerValue("splashtextfile", "", "mainmenu_splash");
-			config.registerValue("splashrotation", -20, "mainmenu_splash");
 			
 			config.registerValue("gameintroanimation", "", "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");

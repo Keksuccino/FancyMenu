@@ -12,10 +12,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.multiplayer.ServerData;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 public class VisibilityRequirementContainer {
 
@@ -108,7 +106,7 @@ public class VisibilityRequirementContainer {
     public List<Integer> vrRealTimeYear = new ArrayList<Integer>();
     //---------
 
-    public Map<String, RequirementPackage> customRequirements = new HashMap<>();
+    public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
     public CustomizationItemBase item;
 

@@ -10,6 +10,8 @@ import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.screens.*;
@@ -533,6 +535,17 @@ public class CustomizationHelperUI extends UIBase {
 				buttonInfoButton.setMessage(Locals.localize("helper.ui.tools.buttoninfo.on"));
 			}
 			toolsMenu.addContent(buttonInfoButton);
+
+			CustomizationButton clearVariablesButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.tools.clear_variables"), true, (press) -> {
+				FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
+					if (call) {
+						VariableHandler.clearVariables();
+					}
+				}, StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.confirm"), "%n%"));
+				PopupHandler.displayPopup(p);
+			});
+			clearVariablesButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.desc"), "%n%"));
+			toolsMenu.addContent(clearVariablesButton);
 			
 			CustomizationButton toolsTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools"), true, (press) -> {
 				toolsMenu.setParentButton((AdvancedButton) press);
