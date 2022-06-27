@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import org.lwjgl.glfw.GLFW;
@@ -499,18 +501,10 @@ public class LayoutVanillaButton extends LayoutElement {
 	@Override
 	public void destroyObject() {
 		if (FancyMenu.config.getOrDefault("editordeleteconfirmation", true)) {
-			PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
-				if (call) {
-
-					this.handler.hideVanillaButton(this);
-
-				}
-			}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));
-		} else {
-
-			this.handler.hideVanillaButton(this);
-
+			FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
+			PopupHandler.displayPopup(pop);
 		}
+		this.handler.hideVanillaButton(this);
 	}
 
 }

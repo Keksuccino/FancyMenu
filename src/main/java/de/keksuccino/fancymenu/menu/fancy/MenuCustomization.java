@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.common.io.Files;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
+import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
@@ -251,6 +254,46 @@ public class MenuCustomization {
 				Konkrete.getEventHandler().callEventsFor(e);
 				Minecraft.getInstance().setScreen(s);
 			}
+		}
+	}
+
+	public static void enableLayout(String path) {
+		try {
+			File f = new File(path);
+			String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationPath().getPath(), Files.getNameWithoutExtension(path), "txt");
+			FileUtils.copyFile(f, new File(FancyMenu.getCustomizationPath().getPath() + "/" + name));
+			f.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		CustomizationHelper.reloadSystemAndMenu();
+	}
+
+	//TODO übernehmen
+	public static void enableLayout(MenuCustomizationProperties.LayoutProperties layout) {
+		if (layout.path != null) {
+			enableLayout(layout.path);
+		}
+	}
+
+	//TODO übernehmen
+	public static void disableLayout(String path) {
+		try {
+			File f = new File(path);
+			String disPath = FancyMenu.getCustomizationPath().getPath() + "/.disabled";
+			String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(path), "txt");
+			FileUtils.copyFile(f, new File(disPath + "/" + name));
+			f.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		CustomizationHelper.reloadSystemAndMenu();
+	}
+
+	//TODO übernehmen
+	public static void disableLayout(MenuCustomizationProperties.LayoutProperties layout) {
+		if (layout.path != null) {
+			disableLayout(layout.path);
 		}
 	}
 	

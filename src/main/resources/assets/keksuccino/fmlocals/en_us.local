@@ -284,20 +284,16 @@ helper.creator.custombutton.config.actiontype.loadworld.desc.value.example = myw
 helper.creator.custombutton.config.actiontype.opencustomgui.desc.value.example = coolcustomgui
 helper.creator.custombutton.config.actiontype.opengui.desc.value.example = some.menu.identifier
 helper.creator.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/changelog.txt
-helper.creator.custombutton.config.actiontype.movefile.desc.value.example = config/fancymenu/image.jpg;config/moveto/image.jpg
-helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = config/fancymenu/image.jpg;config/fancymenu/imagecopy.jpg
+helper.creator.custombutton.config.actiontype.movefile.desc.value.example = resources/image.jpg;folder/moveto/image.jpg
+helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = resources/image.jpg;some_folder/imagecopy.jpg
 helper.creator.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/rickroll.gif
 helper.creator.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/image.jpg;newimagename.jpg
-helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://myhoster.com/layout.zip;config/fancymenu/layout.zip
-helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = config/fancymenu/archive.zip;config/fancymenu/unpacked/
+helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://hoster.com/layout.zip;download/layout.zip
+helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = resources/archive.zip;resources/unpacked/
 helper.creator.custombutton.config.actiontype.runscript.desc.value.example = coolscript
 
 helper.creator.rightclick.scale = Force GUI Scale
 helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than 0!
-
-helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc = Mutes or unmutes the menu background sounds added by FancyMenu.
-helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc.value = true/false
-helper.creator.custombutton.config.actiontype.mutebackgroundsounds.desc.value.example = true
 
 helper.creator.items.button.resetlabel = Reset Label
 
@@ -616,9 +612,9 @@ helper.creator.items.string.alignment.centered = Centered
 
 helper.creator.items.string.border.alignment = alignment
 
-helper.creator.custombutton.config.actiontype.runcmd.desc = Runs a CMD/Terminal command. Supports per-OS commands, like in the example.
+helper.creator.custombutton.config.actiontype.runcmd.desc = Runs a CMD/Terminal command.%n%Supports per-OS commands,%n%like in the example.
 helper.creator.custombutton.config.actiontype.runcmd.desc.value = Command
-helper.creator.custombutton.config.actiontype.runcmd.desc.value.example = [windows:start.bat]; [macos:./Start]; [linux:./start.sh];
+helper.creator.custombutton.config.actiontype.runcmd.desc.value.example = [windows:run.bat]; [macos:./Run]; [linux:./run.sh];
 
 helper.creator.custombutton.config.actiontype.closegui.desc = Closes the displayed GUI.
 
@@ -935,7 +931,7 @@ helper.creator.custombutton.config.actiontype.copytoclipboard.desc.value.example
 fancymenu.config.forcefullscreen = Force Fullscreen
 fancymenu.config.forcefullscreen.desc = Forces the window to fullscreen on start.%n%Users will still be able to%n%go out of fullscreen later.
 
-helper.creator.custombutton.config.actiontype.mimicbutton.desc = Execute the button action of a vanilla button.
+helper.creator.custombutton.config.actiontype.mimicbutton.desc = Execute the button action%n%of a vanilla button.
 helper.creator.custombutton.config.actiontype.mimicbutton.desc.value = menu_identifier:button_id
 helper.creator.custombutton.config.actiontype.mimicbutton.desc.value.example = some.menu.identifier:505280
 
@@ -1029,3 +1025,75 @@ fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.valuename = R
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear = Is Real Time Year
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.desc = Check if the real time's current year is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one year%n%at once.
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.valuename = Real Time Year(s) (Separate Values By Comma)
+
+fancymenu.helper.editor.ui.element.deleted_vanilla_elements = Deleted Vanilla Elements
+fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc = Manage all deleted vanilla elements.
+
+fancymenu.helper.editor.element.vanilla.delete.confirm = §c§lImportant%n%%n%Deleting a vanilla element will completely hide it.%n%To make it visible again, click on §lElement -> Deleted Vanilla Elements§r.%n% %n% %n% %n%
+
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.realmsnotification = Realms Notification Icon
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.logo = Minecraft Logo
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.branding = Branding
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash = Vanilla Splash Text
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.orientation.reset = Reset Orientation
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.splash_file.set = Set Custom Splash File
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.splash_file.reset = Reset Custom Splash File
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.rotation.set = Set Rotation
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.rotation.reset = Reset Rotation
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.color.set = Set HEX Color
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.color.reset = Reset HEX Color
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright = Forge Copyright Notification
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright.example.line1 = < Forge Copyright Notification Text Example >
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top = Forge Top Notification
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line1 = §cForge Top Notification Example
+fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line2 = Used to display Beta build warnings and other things.
+
+fancymenu.helper.buttonaction.variables.set.desc = Store variables to use them%n%for placeholders and%n%visibility requirements.
+fancymenu.helper.buttonaction.variables.set.value.desc = Variable Name & Value; Separated by Colon
+fancymenu.helper.buttonaction.variables.clearall.desc = Clears ALL stored variables.
+
+fancymenu.helper.buttonaction.paste_to_chat.desc = Paste text to the%n%chat input field.
+fancymenu.helper.buttonaction.paste_to_chat.value.desc = Append True/False & Text; Separated by Colon
+
+fancymenu.helper.placeholder.get_variable = Get Stored Variable
+fancymenu.helper.placeholder.get_variable.desc = Get the value of a stored variable.
+
+fancymenu.helper.visibilityrequirement.is_variable_value = Is Variable Value
+fancymenu.helper.visibilityrequirement.is_variable_value.desc = Check if the value of a stored%n%variable is X.%n%%n%The requirement value is%n%a combination of the%n%variable name and the%n%value to check if it matches%n%the stored one.%n%%n%The example has variable name%n%and variable value wrapped%n%in <>, but you need to remove these!
+fancymenu.helper.visibilityrequirement.is_variable_value.value.desc = Variable Name & Value; Separated by Colon
+
+fancymenu.helper.visibilityrequirement.is_server_ip = Is Server IP
+fancymenu.helper.visibilityrequirement.is_server_ip.desc = Check if the current server IP is X.
+fancymenu.helper.visibilityrequirement.is_server_ip.value.desc = Server IP
+
+fancymenu.helper.visibilityrequirement.is_layout_enabled = Is Layout Enabled
+fancymenu.helper.visibilityrequirement.is_layout_enabled.desc = Check if a menu layout is enabled.
+fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc = Layout Name
+
+fancymenu.helper.ui.tools.clear_variables = Clear Stored Variables
+fancymenu.helper.ui.tools.clear_variables.desc = Will clear ALL stored values!%n%%n%§cThis cannot be undone!
+fancymenu.helper.ui.tools.clear_variables.confirm = §c§lAre you sure?%n%%n%Do you really want to §lclear/reset §rALL stored variables?%n%%n%§lThis action cannot be undone!%n% %n% %n% %n%
+
+fancymenu.helper.buttonaction.toggle_layout.desc = Toggle a menu layout (Enable/Disable)%n%by its name.
+fancymenu.helper.buttonaction.toggle_layout.value.desc = Layout Name
+
+fancymenu.helper.buttonaction.enable_layout.desc = Enable a menu layout%n%by its name.
+fancymenu.helper.buttonaction.enable_layout.value.desc = Layout Name
+
+fancymenu.helper.buttonaction.disable_layout.desc = Disable a menu layout%n%by its name.
+fancymenu.helper.buttonaction.disable_layout.value.desc = Layout Name
+
+fancymenu.helper.ui.visibility_requirements.manage = Manage Visibility Requirements
+
+fancymenu.helper.ui.button_action.set = Set Button Action
+
+fancymenu.guicomponents.done = Done
+
+fancymenu.helper.visibilityrequirement.gamemode.is_survival = Is Survival
+fancymenu.helper.visibilityrequirement.gamemode.is_survival.desc = Check if the player is%n%currently in survival mode.
+fancymenu.helper.visibilityrequirement.gamemode.is_creative = Is Creative
+fancymenu.helper.visibilityrequirement.gamemode.is_creative.desc = Check if the player is%n%currently in creative mode.
+fancymenu.helper.visibilityrequirement.gamemode.is_adventure = Is Adventure
+fancymenu.helper.visibilityrequirement.gamemode.is_adventure.desc = Check if the player is%n%currently in adventure mode.
+fancymenu.helper.visibilityrequirement.gamemode.is_spectator = Is Spectator
+fancymenu.helper.visibilityrequirement.gamemode.is_spectator.desc = Check if the player is%n%currently in spectator mode.
