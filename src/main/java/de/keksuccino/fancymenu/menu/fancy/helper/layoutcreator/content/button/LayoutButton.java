@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -20,28 +21,19 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.StringTextComponent;
 
 public class LayoutButton extends LayoutElement {
 
-	//TODO übernehmen
 	public MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
 	public String actionContent = "";
 	public String actionType = "openlink";
-	//TODO übernehmen
-//	public String backNormal = null;
-//	public String backHovered = null;
-//	public String hoverSound;
-//	public String hoverLabel;
 	public String onlydisplayin = null;
-	//TODO übernehmen
-//	public String clicksound = null;
-//	public String description;
 	private AdvancedButton onlyOutgameBtn;
 	private AdvancedButton onlySingleplayerBtn;
 	private AdvancedButton onlyMultiplayerBtn;
 
-	//TODO übernehmen
 	public LayoutButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, label, width, height, 0, 0), true, handler, false);
 		this.onlydisplayin = onlydisplayin;
@@ -57,39 +49,19 @@ public class LayoutButton extends LayoutElement {
 
 		super.init();
 
-		//TODO übernehmen (nach unten vor hover label verschieben)
-//		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-//			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, (call) -> {
-//				if (call != null) {
-//					if (!this.object.value.equals(call)) {
-//						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//					}
-//					this.object.value = call;
-//				}
-//			});
-//			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
-//			PopupHandler.displayPopup(i);
-//		});
-//		this.rightclickMenu.addContent(b2);
-
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config"), (press) -> {
-			ButtonActionPopup i = new ButtonActionPopup(this::setActionContentCallback, this::setActionTypeCallback, this.actionType);
-			i.setText(this.actionContent);
-			PopupHandler.displayPopup(i);
+			Minecraft.getInstance().displayGuiScreen(new ButtonActionScreen(this.handler, this));
 		});
 		this.rightclickMenu.addContent(b3);
 
-		//TODO übernehmen
 		this.rightclickMenu.addSeparator();
 
-		//TODO übernehmen (dafür alte button texture settings weg)
 		AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), (press) -> {
 			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.handler, this.customizationContainer);
 			PopupHandler.displayPopup(pop);
 		});
 		this.rightclickMenu.addContent(buttonBackgroundButton);
 
-		//TODO übernehmen
 		String loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on");
 		if (!this.customizationContainer.loopAnimation) {
 			loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off");
@@ -106,7 +78,6 @@ public class LayoutButton extends LayoutElement {
 		loopBackgroundAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc"), "%n%"));
 		this.rightclickMenu.addContent(loopBackgroundAnimationButton);
 
-		//TODO übernehmen
 		String restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on");
 		if (!this.customizationContainer.restartAnimationOnHover) {
 			restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off");
@@ -123,10 +94,8 @@ public class LayoutButton extends LayoutElement {
 		restartAnimationOnHoverButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc"), "%n%"));
 		this.rightclickMenu.addContent(restartAnimationOnHoverButton);
 
-		//TODO übernehmen
 		this.rightclickMenu.addSeparator();
 
-		//TODO übernehmen (von oben hierher verschieben + änderungen im code übernehmen)
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
 			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, (call) -> {
 				if (call != null) {
@@ -332,18 +301,6 @@ public class LayoutButton extends LayoutElement {
 			onlyDisplayInMenu.openMenuAt(0, press.y);
 		});
 		this.rightclickMenu.addContent(b10);
-	}
-	
-	private void setActionContentCallback(String content) {
-		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-				
-		if (content != null) {
-			this.actionContent = content;
-		}
-	}
-	
-	private void setActionTypeCallback(String action) {
-		this.actionType = action;
 	}
 
 	@Override
