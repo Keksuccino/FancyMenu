@@ -14,7 +14,8 @@
     "MixinGuiScreenResourcePacks",
     "MixinOnlineServerEntry",
     "MixinWorldListEntry",
-    "MixinConnectScreen"
+    "MixinConnectScreen",
+    "IMixinChatScreen"
   ],
   "injectors": {
     "defaultRequire": 1

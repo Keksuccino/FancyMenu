@@ -221,4 +221,31 @@ public class MenuCustomizationProperties {
 		return l;
 	}
 
+	public static List<LayoutProperties> getAsLayoutProperties(List<PropertiesSet> propsList) {
+		List<LayoutProperties> l = new ArrayList<>();
+		propsList.forEach((props) -> {
+			l.add(new LayoutProperties(props));
+		});
+		return l;
+	}
+
+	public static class LayoutProperties {
+
+		public PropertiesSet properties;
+		public String menuIdentifier;
+		public String path;
+
+		public LayoutProperties(PropertiesSet props) {
+
+			List<PropertiesSection> l = props.getPropertiesOfType("customization-meta");
+			if (!l.isEmpty()) {
+				PropertiesSection meta = l.get(0);
+				this.path = meta.getEntryValue("path");
+				this.menuIdentifier = meta.getEntryValue("identifier");
+			}
+
+		}
+
+	}
+
 }

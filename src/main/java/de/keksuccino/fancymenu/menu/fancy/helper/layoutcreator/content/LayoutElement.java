@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
@@ -61,6 +62,11 @@ public abstract class LayoutElement extends Gui {
 	protected boolean copyable = true;
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
+	protected boolean resizeable = true;
+	protected boolean dragable = true;
+	protected boolean orientationCanBeChanged = true;
+	protected boolean enableElementIdCopyButton = true;
+	protected boolean allowOrientationByElement = true;
 	
 	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 	
@@ -131,118 +137,124 @@ public abstract class LayoutElement extends Gui {
 		this.rightclickMenu.setAlwaysOnTop(true);
 
 		/** COPY ELEMENT ID **/
-		AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
-			if (!(this instanceof LayoutVanillaButton)) {
-				GuiScreen.setClipboardString(this.object.getActionId());
-			} else {
-				GuiScreen.setClipboardString("vanillabtn:" + ((LayoutVanillaButton)this).getButtonId());
-			}
-		});
-		copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
-		this.rightclickMenu.addContent(copyIdButton);
-
-		/** ORIENTATION **/
-		FMContextMenu orientationMenu = new FMContextMenu();
-		orientationMenu.setAutoclose(true);
-		this.rightclickMenu.addChild(orientationMenu);
-
-		oElement = new AdvancedButton(0, 0, 0, 16, "element", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
-				if (call != null) {
-					LayoutElement l = this.handler.getElementByActionId(call);
-					if (l != null) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-						this.object.orientationElementIdentifier = call;
-						this.object.orientationElement = l.object;
-						this.handler.history.setPreventSnapshotSaving(true);
-						this.setOrientation("element");
-						this.handler.history.setPreventSnapshotSaving(false);
-					} else {
-						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
-					}
+		if (this.enableElementIdCopyButton) {
+			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
+				if (!(this instanceof LayoutVanillaButton)) {
+					GuiScreen.setClipboardString(this.object.getActionId());
+				} else {
+					GuiScreen.setClipboardString("vanillabtn:" + ((LayoutVanillaButton) this).getButtonId());
 				}
 			});
-			if (this.object.orientationElementIdentifier != null) {
-				pop.setText(this.object.orientationElementIdentifier);
-			}
-			PopupHandler.displayPopup(pop);
-			orientationMenu.closeMenu();
-		});
-		oElement.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
-		orientationMenu.addContent(oElement);
+			copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
+			this.rightclickMenu.addContent(copyIdButton);
+		}
 
-		orientationMenu.addSeparator();
-		
-		o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("top-left");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o1);
-		
-		o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("mid-left");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o2);
-		
-		o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("bottom-left");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o3);
-		
-		o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("top-centered");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o4);
-		
-		o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("mid-centered");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o5);
-		
-		o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("bottom-centered");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o6);
-		
-		o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("top-right");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o7);
-		
-		o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("mid-right");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o8);
-		
-		o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
-			this.handler.setObjectFocused(this, false, true);
-			this.setOrientation("bottom-right");
-			orientationMenu.closeMenu();
-		});
-		orientationMenu.addContent(o9);
-		
-		AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
-			orientationMenu.setParentButton((AdvancedButton) press);
-			orientationMenu.openMenuAt(0, press.y);
-		});
-		orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
-		this.rightclickMenu.addContent(orientationButton);
+		/** ORIENTATION **/
+		if (this.orientationCanBeChanged) {
+			FMContextMenu orientationMenu = new FMContextMenu();
+			orientationMenu.setAutoclose(true);
+			this.rightclickMenu.addChild(orientationMenu);
+
+			oElement = new AdvancedButton(0, 0, 0, 16, "element", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
+					if (call != null) {
+						LayoutElement l = this.handler.getElementByActionId(call);
+						if (l != null) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.object.orientationElementIdentifier = call;
+							this.object.orientationElement = l.object;
+							this.handler.history.setPreventSnapshotSaving(true);
+							this.setOrientation("element");
+							this.handler.history.setPreventSnapshotSaving(false);
+						} else {
+							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+						}
+					}
+				});
+				if (this.object.orientationElementIdentifier != null) {
+					pop.setText(this.object.orientationElementIdentifier);
+				}
+				PopupHandler.displayPopup(pop);
+				orientationMenu.closeMenu();
+			});
+			oElement.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
+			if (this.allowOrientationByElement) {
+				orientationMenu.addContent(oElement);
+			}
+
+			orientationMenu.addSeparator();
+
+			o1 = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("top-left");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o1);
+
+			o2 = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("mid-left");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o2);
+
+			o3 = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("bottom-left");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o3);
+
+			o4 = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("top-centered");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o4);
+
+			o5 = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("mid-centered");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o5);
+
+			o6 = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("bottom-centered");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o6);
+
+			o7 = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("top-right");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o7);
+
+			o8 = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("mid-right");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o8);
+
+			o9 = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
+				this.handler.setObjectFocused(this, false, true);
+				this.setOrientation("bottom-right");
+				orientationMenu.closeMenu();
+			});
+			orientationMenu.addContent(o9);
+
+			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
+				orientationMenu.setParentButton((AdvancedButton) press);
+				orientationMenu.openMenuAt(0, press.y);
+			});
+			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
+			this.rightclickMenu.addContent(orientationButton);
+		}
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -336,7 +348,7 @@ public abstract class LayoutElement extends Gui {
 
 		/** VISIBILITY REQUIREMENTS **/
 		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-			PopupHandler.displayPopup(new VisibilityRequirementsPopup(this.object));
+			Minecraft.getMinecraft().displayGuiScreen(new VisibilityRequirementsScreen(this.handler, this.object));
 		});
 		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
 		if (this.enableVisibilityRequirements) {
@@ -492,6 +504,9 @@ public abstract class LayoutElement extends Gui {
 	}
 
 	protected void setOrientation(String pos) {
+		if (!this.orientationCanBeChanged) {
+			return;
+		}
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 
 		if (pos.equals("mid-left")) {
@@ -629,50 +644,52 @@ public abstract class LayoutElement extends Gui {
 			if (this.stretchX || this.stretchY) {
 				this.oElement.enabled = false;
 			}
-			if (this.stretchX && !this.stretchY) {
-				this.o1.enabled = true;
-				this.o2.enabled = true;
-				this.o3.enabled = true;
-				this.o4.enabled = false;
-				this.o5.enabled = false;
-				this.o6.enabled = false;
-				this.o7.enabled = false;
-				this.o8.enabled = false;
-				this.o9.enabled = false;
-			}
-			if (this.stretchY && !this.stretchX) {
-				this.o1.enabled = true;
-				this.o2.enabled = false;
-				this.o3.enabled = false;
-				this.o4.enabled = true;
-				this.o5.enabled = false;
-				this.o6.enabled = false;
-				this.o7.enabled = true;
-				this.o8.enabled = false;
-				this.o9.enabled = false;
-			}
-			if (this.stretchX && this.stretchY) {
-				this.o1.enabled = true;
-				this.o2.enabled = false;
-				this.o3.enabled = false;
-				this.o4.enabled = false;
-				this.o5.enabled = false;
-				this.o6.enabled = false;
-				this.o7.enabled = false;
-				this.o8.enabled = false;
-				this.o9.enabled = false;
-			}
-			if (!this.stretchX && !this.stretchY) {
-				this.o1.enabled = true;
-				this.o2.enabled = true;
-				this.o3.enabled = true;
-				this.o4.enabled = true;
-				this.o5.enabled = true;
-				this.o6.enabled = true;
-				this.o7.enabled = true;
-				this.o8.enabled = true;
-				this.o9.enabled = true;
-				this.oElement.enabled = true;
+			if (this.orientationCanBeChanged) {
+				if (this.stretchX && !this.stretchY) {
+					this.o1.enabled = true;
+					this.o2.enabled = true;
+					this.o3.enabled = true;
+					this.o4.enabled = false;
+					this.o5.enabled = false;
+					this.o6.enabled = false;
+					this.o7.enabled = false;
+					this.o8.enabled = false;
+					this.o9.enabled = false;
+				}
+				if (this.stretchY && !this.stretchX) {
+					this.o1.enabled = true;
+					this.o2.enabled = false;
+					this.o3.enabled = false;
+					this.o4.enabled = true;
+					this.o5.enabled = false;
+					this.o6.enabled = false;
+					this.o7.enabled = true;
+					this.o8.enabled = false;
+					this.o9.enabled = false;
+				}
+				if (this.stretchX && this.stretchY) {
+					this.o1.enabled = true;
+					this.o2.enabled = false;
+					this.o3.enabled = false;
+					this.o4.enabled = false;
+					this.o5.enabled = false;
+					this.o6.enabled = false;
+					this.o7.enabled = false;
+					this.o8.enabled = false;
+					this.o9.enabled = false;
+				}
+				if (!this.stretchX && !this.stretchY) {
+					this.o1.enabled = true;
+					this.o2.enabled = true;
+					this.o3.enabled = true;
+					this.o4.enabled = true;
+					this.o5.enabled = true;
+					this.o6.enabled = true;
+					this.o7.enabled = true;
+					this.o8.enabled = true;
+					this.o9.enabled = true;
+					this.oElement.enabled = true;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -708,25 +725,33 @@ public abstract class LayoutElement extends Gui {
 		}
 				
 		//Update dragging state
-		if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
-			this.dragging = true;
-		} else {
-			if (!MouseInput.isLeftMouseDown()) {
-				this.dragging = false;
+		if (this.dragable) {
+			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
+				this.dragging = true;
+			} else {
+				if (!MouseInput.isLeftMouseDown()) {
+					this.dragging = false;
+				}
 			}
+		} else {
+			this.dragging = false;
 		}
 		
 		//Handles the resizing process
-		if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
-			if (this.handler.getFocusedObjects().size() == 1) {
-				if (!this.resizing) {
-					this.cachedSnapshot = this.handler.history.createSnapshot();
+		if (this.resizeable) {
+			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
+				if (this.handler.getFocusedObjects().size() == 1) {
+					if (!this.resizing) {
+						this.cachedSnapshot = this.handler.history.createSnapshot();
 
-					this.lastGrabber = this.getActiveResizeGrabber();
+						this.lastGrabber = this.getActiveResizeGrabber();
+					}
+					this.resizing = true;
+					this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 				}
-				this.resizing = true;
-				this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
 			}
+		} else {
+			this.resizing = false;
 		}
 		
 		//Moves the object with the mouse motion if dragged
@@ -829,51 +854,55 @@ public abstract class LayoutElement extends Gui {
 		int xVertical = this.object.getPosX(handler) + (this.object.width / 2) - (w / 2);
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.height - (h / 2);
-		
-		if (!this.stretchX) {
-			//grabber left
-			GuiScreen.drawRect(xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
-			//grabber right
-			GuiScreen.drawRect(xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
-		}
-		if (!this.stretchY) {
-			//grabber top
-			GuiScreen.drawRect(xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
-			//grabber bottom
-			GuiScreen.drawRect(xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+
+		if (this.dragable) {
+			if (!this.stretchX) {
+				//grabber left
+				GuiScreen.drawRect(xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
+				//grabber right
+				GuiScreen.drawRect(xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
+			}
+			if (!this.stretchY) {
+				//grabber top
+				GuiScreen.drawRect(xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
+				//grabber bottom
+				GuiScreen.drawRect(xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+			}
 		}
 		
 		//Update cursor and active grabber when grabber is hovered
-		if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-			if (!this.stretchX) {
-				MouseInput.setCursor(CursorType.HRESIZE);
-				this.activeGrabber = 0;
+		if (this.resizeable) {
+			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
+				if (!this.stretchX) {
+					MouseInput.setCursor(CursorType.HRESIZE);
+					this.activeGrabber = 0;
+				} else {
+					this.activeGrabber = -1;
+				}
+			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
+				if (!this.stretchX) {
+					MouseInput.setCursor(CursorType.HRESIZE);
+					this.activeGrabber = 1;
+				} else {
+					this.activeGrabber = -1;
+				}
+			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
+				if (!this.stretchY) {
+					MouseInput.setCursor(CursorType.VRESIZE);
+					this.activeGrabber = 2;
+				} else {
+					this.activeGrabber = -1;
+				}
+			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
+				if (!this.stretchY) {
+					MouseInput.setCursor(CursorType.VRESIZE);
+					this.activeGrabber = 3;
+				} else {
+					this.activeGrabber = -1;
+				}
 			} else {
 				this.activeGrabber = -1;
 			}
-		} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-			if (!this.stretchX) {
-				MouseInput.setCursor(CursorType.HRESIZE);
-				this.activeGrabber = 1;
-			} else {
-				this.activeGrabber = -1;
-			}
-		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-			if (!this.stretchY) {
-				MouseInput.setCursor(CursorType.VRESIZE);
-				this.activeGrabber = 2;
-			} else {
-				this.activeGrabber = -1;
-			}
-		} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-			if (!this.stretchY) {
-				MouseInput.setCursor(CursorType.VRESIZE);
-				this.activeGrabber = 3;
-			} else {
-				this.activeGrabber = -1;
-			}
-		} else {
-			this.activeGrabber = -1;
 		}
 		
 		//Render pos and size values

@@ -14,6 +14,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayer;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashElement;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.util.glu.Project;
@@ -49,12 +58,14 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
 import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
+import static net.minecraftforge.common.ForgeVersion.Status.BETA;
+import static net.minecraftforge.common.ForgeVersion.Status.BETA_OUTDATED;
 
 public class MainMenuHandler extends MenuHandlerBase {
 	
@@ -65,10 +76,15 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private static final ResourceLocation MINECRAFT_TITLE_TEXTURES = new ResourceLocation("textures/gui/title/minecraft.png");
 	private static final ResourceLocation MINECRAFT_TITLE_EDITION = new ResourceLocation("textures/gui/title/edition.png");
-	private static final ResourceLocation SPLASH_TEXTS = new ResourceLocation("texts/splashes.txt");
+	//private static final ResourceLocation SPLASH_TEXTS = new ResourceLocation("texts/splashes.txt");
 	private static final Random RANDOM = new Random();
-	
-	private String splash;
+
+	protected boolean showLogo = true;
+	protected boolean showBranding = true;
+	protected boolean showForgeNotificationCopyright = true;
+	protected boolean showForgeNotificationTop = true;
+	protected boolean showRealmsNotification = true;
+	protected TitleScreenSplashItem splashItem = null;
 	
 	public MainMenuHandler() {
 		super(GuiMainMenu.class.getName());
@@ -77,28 +93,86 @@ public class MainMenuHandler extends MenuHandlerBase {
 	@Override
 	public void onMenuReloaded(MenuReloadedEvent e) {
 		super.onMenuReloaded(e);
-		
-		this.splash = getRandomSplashText();
+
+		TitleScreenSplashItem.cachedSplashText = null;
 	}
 	
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				
-				if (this.splash == null) {
-					this.splash = getRandomSplashText();
-				}
 
 				this.background = Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("background", this.viewport);
 				
 				this.setWidthCopyrightRest(Integer.MAX_VALUE);
+
+				showLogo = true;
+				showBranding = true;
+				showForgeNotificationCopyright = true;
+				showForgeNotificationTop = true;
+				showRealmsNotification = true;
+				DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getMenuIdentifier());
+				if (layer != null) {
+					TitleScreenSplashElement element = (TitleScreenSplashElement) layer.getElementByIdentifier("title_screen_splash");
+					if (element != null) {
+						splashItem = (TitleScreenSplashItem) element.constructDefaultItemInstance();
+					}
+				}
 				
 			}
 			
 		}
 		
 		super.onButtonsCached(e);
+	}
+
+	@Override
+	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
+
+		super.applyLayout(sec, renderOrder, e);
+
+		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getMenuIdentifier());
+		if (layer != null) {
+
+			String action = sec.getEntryValue("action");
+			if (action != null) {
+
+				if (action.startsWith("deep_customization_element:")) {
+					String elementId = action.split("[:]", 2)[1];
+					DeepCustomizationElement element = layer.getElementByIdentifier(elementId);
+					if (element != null) {
+						DeepCustomizationItem i = element.constructCustomizedItemInstance(sec);
+						if (i != null) {
+
+							if (elementId.equals("title_screen_branding")) {
+								this.showBranding = !(i.hidden);
+							}
+							if (elementId.equals("title_screen_logo")) {
+								this.showLogo = !(i.hidden);
+							}
+							if (elementId.equals("title_screen_splash")) {
+								this.splashItem = (TitleScreenSplashItem) i;
+							}
+							if (elementId.equals("title_screen_realms_notification")) {
+								this.showRealmsNotification = !(i.hidden);
+							}
+
+							//Forge -------------->
+							if (elementId.equals("title_screen_forge_copyright")) {
+								this.showForgeNotificationCopyright = !(i.hidden);
+							}
+							if (elementId.equals("title_screen_forge_top")) {
+								this.showForgeNotificationTop = !(i.hidden);
+							}
+
+						}
+					}
+				}
+
+			}
+
+		}
+
 	}
 	
 	@SubscribeEvent
@@ -134,7 +208,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			super.drawToBackground(e);
 			
 			//Draw minecraft logo and edition textures if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hidelogo", true)) {
+			if (this.showLogo) {
 				GlStateManager.enableBlend();
 				Minecraft.getMinecraft().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
 				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -158,7 +232,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 
 			//Draw branding strings to the main menu if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hidebranding", true)) {
+			if (this.showBranding) {
 				List<String> brandings = Lists.reverse(FMLCommonHandler.instance().getBrandings(true));
 		        for (int brdline = 0; brdline < brandings.size(); brdline++) {
 		            String brd = brandings.get(brdline);
@@ -168,9 +242,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		        }
 			}
 			
-			if (!FancyMenu.config.getOrDefault("hideforgenotifications", false)) {
-				ForgeHooksClient.renderMainMenu((GuiMainMenu) e.getGui(), font, e.getGui().width, e.getGui().height, "");
-			}
+			renderForgeNotifications((GuiMainMenu) e.getGui(), font, e.getGui().width, e.getGui().height);
 			
 			//Draw and handle copyright
 			String c = "Copyright Mojang AB. Do not distribute!";
@@ -220,82 +292,54 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 			
 			//Draw notification indicators to the "Realms" button if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {
+			if (this.showRealmsNotification) {
 				this.drawRealmsNotification(e.getGui());
 			}
-			
-			this.renderSplash(font, e.getGui());
+
+			this.renderSplash(e.getGui());
+
 		}
 	}
-	
-	protected void renderSplash(FontRenderer font, GuiScreen s) {
-		
-		if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
-			
-			float finalPosX = (s.width / 2 + 90);
-			float finalPosY = 70.0F;
 
-			int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
-			int posX = FancyMenu.config.getOrDefault("splashx", 0);
-			int posY = FancyMenu.config.getOrDefault("splashy", 0);
-			String orientation = FancyMenu.config.getOrDefault("splashorientation", "original");
+	public void renderForgeNotifications(GuiMainMenu gui, FontRenderer font, int width, int height) {
 
-			int originX = 0;
-			int originY = 0;
+		ForgeVersion.Status status = ForgeVersion.getStatus();
 
-			boolean setpos = true;
-			
-			if (orientation.equalsIgnoreCase("original")) {
-				originX = (int) finalPosX;
-				originY = (int) finalPosY;
-			} else if (orientation.equalsIgnoreCase("top-left")) {
-				; //do nuffin
-			} else if (orientation.equalsIgnoreCase("mid-left")) {
-				originY = s.height / 2;
-			} else if (orientation.equalsIgnoreCase("bottom-left")) {
-				originY = s.height;
-			} else if (orientation.equalsIgnoreCase("top-centered")) {
-				originX = s.width / 2;
-			} else if (orientation.equalsIgnoreCase("mid-centered")) {
-				originX = s.width / 2;
-				originY = s.height / 2;
-			} else if (orientation.equalsIgnoreCase("bottom-centered")) {
-				originX = s.width / 2;
-				originY = s.height;
-			} else if (orientation.equalsIgnoreCase("top-right")) {
-				originX = s.width;
-			} else if (orientation.equalsIgnoreCase("mid-right")) {
-				originX = s.width;
-				originY = s.height / 2;
-			} else if (orientation.equalsIgnoreCase("bottom-right")) {
-				originX = s.width;
-				originY = s.height;
-			} else {
-				setpos = false;
+		if (status == BETA || status == BETA_OUTDATED) {
+			// render a warning at the top of the screen
+			if (this.showForgeNotificationTop) {
+				String line = I18n.format("forge.update.beta.1", TextFormatting.RED, TextFormatting.RESET);
+				gui.drawString(font, line, (width - font.getStringWidth(line)) / 2, 4 + (0 * (font.FONT_HEIGHT + 1)), -1);
+				line = I18n.format("forge.update.beta.2");
+				gui.drawString(font, line, (width - font.getStringWidth(line)) / 2, 4 + (1 * (font.FONT_HEIGHT + 1)), -1);
 			}
-
-			//I'm doing this to signalize when an invalid orientation was used
-			if (setpos) {
-				finalPosX = originX + posX;
-				finalPosY = originY + posY;
-			}
-
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(finalPosX, finalPosY, 0.0F);
-			GlStateManager.rotate((float)rotation, 0.0F, 0.0F, 1.0F);
-			float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-			f = f * 100.0F / (float) (font.getStringWidth(this.splash) + 32);
-			GlStateManager.scale(f, f, f);
-
-			Color c = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("splashcolor", "#ffff00"));
-			if (c == null) {
-				c = new Color(255, 255, 0);
-			}
-			s.drawCenteredString(font, this.splash, 0, -8, c.getRGB());
-			GlStateManager.popMatrix();
-			
 		}
-		
+
+		String line = null;
+		switch(status) {
+			case OUTDATED:
+			case BETA_OUTDATED: line = I18n.format("forge.update.newversion", ForgeVersion.getTarget()); break;
+			default: break;
+		}
+		if (line != null) {
+			// if we have a line, render it in the bottom right, above Mojang's copyright line
+			if (this.showForgeNotificationCopyright) {
+				gui.drawString(font, line, width - font.getStringWidth(line) - 2, height - (2 * (font.FONT_HEIGHT + 1)), -1);
+			}
+		}
+
+	}
+
+	protected void renderSplash(GuiScreen s) {
+
+		try {
+			if (this.splashItem != null) {
+				this.splashItem.render(s);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 	
 	private void renderButtonsAndLabels(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
@@ -519,62 +563,5 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
     	return -1;
     }
-    
-    protected static String getRandomSplashText() {
-		String customSplashPath = FancyMenu.config.getOrDefault("splashtextfile", "");
-		if ((customSplashPath != null) && !customSplashPath.equals("")) {
-			File f = new File(customSplashPath);
-			if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
-				List<String> l = FileUtils.getFileLines(f);
-				if ((l != null) && !l.isEmpty()) {
-					int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
-					return l.get(random);
-				}
-			}
-		}
-		
-		String sp = "missingno";
-		IResource iresource = null;
-		try {
-			List<String> list = Lists.<String>newArrayList();
-			iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
-			BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
-			String s;
-			while ((s = bufferedreader.readLine()) != null) {
-				s = s.trim();
 
-				if (!s.isEmpty()) {
-					list.add(s);
-				}
-			}
-			if (!list.isEmpty()) {
-				while (true) {
-					sp = list.get(RANDOM.nextInt(list.size()));
-
-					if (sp.hashCode() != 125780783) {
-						break;
-					}
-				}
-			}
-
-			Calendar calendar = Calendar.getInstance();
-			calendar.setTime(new Date());
-
-			if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
-				sp = "Merry X-mas!";
-			}
-			else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
-				sp = "Happy new year!";
-			}
-			else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
-				sp = "OOoooOOOoooo! Spooky!";
-			}
-
-		} catch (IOException var8) {
-		} finally {
-			IOUtils.closeQuietly((Closeable)iresource);
-		}
-		
-		return sp;
-	}
 }

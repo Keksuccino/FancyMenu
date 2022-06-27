@@ -5,14 +5,11 @@ import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MenuBackgroundTypeRegistry {
 
-    protected static Map<String, MenuBackgroundType> backgroundTypes = new HashMap<>();
+    protected static Map<String, MenuBackgroundType> backgroundTypes = new LinkedHashMap<>();
 
     private static boolean initialized = false;
 
