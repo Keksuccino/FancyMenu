@@ -167,7 +167,6 @@ public class MenuCustomizationProperties {
 				continue;
 			}
 			String s2 = l2.get(0).getEntryValue("identifier");
-			//TODO übernehmen
 			if (s2 != null) {
 				if (s2.equalsIgnoreCase(identifier)) {
 					l.add(s);
@@ -222,6 +221,35 @@ public class MenuCustomizationProperties {
 			}
 		}
 		return l;
+	}
+
+	//TODO übernehmen
+	public static List<LayoutProperties> getAsLayoutProperties(List<PropertiesSet> propsList) {
+		List<LayoutProperties> l = new ArrayList<>();
+		propsList.forEach((props) -> {
+			l.add(new LayoutProperties(props));
+		});
+		return l;
+	}
+
+	//TODO übernehmen
+	public static class LayoutProperties {
+
+		public PropertiesSet properties;
+		public String menuIdentifier;
+		public String path;
+
+		public LayoutProperties(PropertiesSet props) {
+
+			List<PropertiesSection> l = props.getPropertiesOfType("customization-meta");
+			if (!l.isEmpty()) {
+				PropertiesSection meta = l.get(0);
+				this.path = meta.getEntryValue("path");
+				this.menuIdentifier = meta.getEntryValue("identifier");
+			}
+
+		}
+
 	}
 
 }

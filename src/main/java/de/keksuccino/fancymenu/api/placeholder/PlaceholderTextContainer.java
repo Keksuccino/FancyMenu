@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.api.placeholder;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A placeholder text container.<br><br>
@@ -74,6 +76,49 @@ public abstract class PlaceholderTextContainer {
      */
     public String getIdentifier() {
         return this.placeholderIdentifier;
+    }
+
+    //TODO übernehmen
+    /**
+     * Will find and return all placeholders with a value behind it's base prefix.<br><br>
+     *
+     * An example would be "%placeholder:value%". The prefix "%placeholder:" is always the same, but<br>
+     * the suffix with the value can change. The method returns this placeholder as "%placeholder:value%".
+     *
+     * @param in The raw string the method should search for the placeholder.
+     * @param placeholderBase The prefix of the placeholder. Example: "%placeholder:"
+     */
+    public static List<String> getPlaceholdersWithValue(String in, String placeholderBase) {
+        List<String> l = new ArrayList<String>();
+        try {
+            if (in.contains(placeholderBase)) {
+                int index = -1;
+                int i = 0;
+                while (i < in.length()) {
+                    String s = "" + in.charAt(i);
+                    if (s.equals("%")) {
+                        if (index == -1) {
+                            index = i;
+                        } else {
+                            String sub = in.substring(index, i+1);
+                            if (sub.startsWith(placeholderBase) && sub.endsWith("%")) {
+                                l.add(sub);
+                            }
+                            index = -1;
+                        }
+                    }
+                    i++;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return l;
+    }
+
+    //TODO übernehmen
+    public static String getPlaceholderWithoutPercentPrefixSuffix(String placeholderWithPrefixSuffix) {
+        return placeholderWithPrefixSuffix.substring(1, placeholderWithPrefixSuffix.length()-1);
     }
 
 }

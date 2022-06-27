@@ -36,6 +36,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
@@ -538,6 +539,19 @@ public class CustomizationHelperUI extends UIBase {
 				buttonInfoButton.setMessage(Locals.localize("helper.ui.tools.buttoninfo.on"));
 			}
 			toolsMenu.addContent(buttonInfoButton);
+
+			//TODO übernehmen
+			CustomizationButton clearVariablesButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.tools.clear_variables"), true, (press) -> {
+				FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
+					if (call) {
+						VariableHandler.clearVariables();
+					}
+				}, StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.confirm"), "%n%"));
+				PopupHandler.displayPopup(p);
+			});
+			clearVariablesButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.desc"), "%n%"));
+			toolsMenu.addContent(clearVariablesButton);
+			//------------------------
 			
 			CustomizationButton toolsTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools"), true, (press) -> {
 				toolsMenu.setParentButton((AdvancedButton) press);

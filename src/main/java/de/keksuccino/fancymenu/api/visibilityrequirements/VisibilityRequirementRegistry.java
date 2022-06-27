@@ -2,14 +2,12 @@ package de.keksuccino.fancymenu.api.visibilityrequirements;
 
 import de.keksuccino.fancymenu.FancyMenu;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class VisibilityRequirementRegistry {
 
-    protected static Map<String, VisibilityRequirement> requirements = new HashMap<>();
+    //TODO übernehmen (LinkedHashMap)
+    protected static LinkedHashMap<String, VisibilityRequirement> requirements = new LinkedHashMap<>();
 
     /**
      * Register your custom visibility requirements here.
@@ -34,9 +32,12 @@ public class VisibilityRequirementRegistry {
         requirements.remove(requirementIdentifier);
     }
 
+    //TODO übernehmen
     public static List<VisibilityRequirement> getRequirements() {
         List<VisibilityRequirement> l = new ArrayList<>();
-        l.addAll(requirements.values());
+        requirements.forEach((key, value) -> {
+            l.add(value);
+        });
         return l;
     }
 

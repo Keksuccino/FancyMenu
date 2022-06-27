@@ -2,14 +2,12 @@ package de.keksuccino.fancymenu.api.placeholder;
 
 import de.keksuccino.fancymenu.FancyMenu;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PlaceholderTextRegistry {
 
-    private static Map<String, PlaceholderTextContainer> placeholders = new HashMap<>();
+    //TODO übernehmen (LinkedHashMap)
+    private static Map<String, PlaceholderTextContainer> placeholders = new LinkedHashMap<>();
 
     public static void registerPlaceholder(PlaceholderTextContainer placeholder) {
         if (placeholder != null) {

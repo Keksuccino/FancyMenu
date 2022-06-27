@@ -23,7 +23,6 @@ import net.minecraft.client.gui.screens.Screen;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
 
-	//TODO übernehmen
 	public static Map<String, WebTextureResourceLocation> cachedWebImages = new HashMap<>();
 
 	public volatile WebTextureResourceLocation texture;
@@ -45,7 +44,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 					this.setWidth(100);
 				}
 
-				//TODO übernehmen
 				if (cachedWebImages.containsKey(this.actionId)) {
 					this.texture = cachedWebImages.get(this.actionId);
 					this.calculateAspectRatio();
@@ -56,7 +54,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 					}
 				}
 
-				//TODO übernehmen (wrap in if)
 				if (this.texture == null) {
 					new Thread(() -> {
 						try {
@@ -67,7 +64,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 								CustomizationHelper.runTaskInMainThread(() -> {
 									try {
 										texture.loadTexture();
-										//TODO übernehmen
 										cachedWebImages.put(this.actionId, this.texture);
 									} catch (Exception e) {
 										e.printStackTrace();
@@ -96,7 +92,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 									FancyMenu.LOGGER.error("[FANCYMENU] Web texture loaded but resource location was still null! Unable to use web texture!");
 								}
 
-								//TODO übernehmen (replace old aspect ratio calc)
 								this.calculateAspectRatio();
 							}
 
@@ -113,7 +108,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	}
 
-	//TODO übernehmen
 	protected void calculateAspectRatio() {
 		if ((this.texture == null) || !this.texture.isReady()) {
 			if (this.width <= 0) {

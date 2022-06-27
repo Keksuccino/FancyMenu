@@ -86,13 +86,20 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("openlink")) {
 				openWebLink(value);
 			}
+			//TODO übernehmen
 			if (action.equalsIgnoreCase("sendmessage")) {
 				if (Minecraft.getInstance().level != null) {
 					if (!MinecraftForge.EVENT_BUS.post(new ClientChatEvent(value))) {
-						Minecraft.getInstance().player.chat(value);
+						if ((value != null) && value.startsWith("/")) {
+							value = value.substring(1);
+							Minecraft.getInstance().player.command(value);
+						} else {
+							Minecraft.getInstance().player.chat(value);
+						}
 					}
 				}
 			}
+			//----------------
 			if (action.equalsIgnoreCase("quitgame")) {
 				Minecraft.getInstance().stop();
 			}
@@ -156,7 +163,6 @@ public class ButtonScriptEngine {
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
-				//TODO übernehmen
 				if (value.equals(CreateWorldScreen.class.getName())) {
 					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
 				} else {
@@ -167,7 +173,6 @@ public class ButtonScriptEngine {
 						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
 					}
 				}
-				//------------------
 			}
 			if (action.equalsIgnoreCase("movefile")) {
 				if (value.contains(";")) {

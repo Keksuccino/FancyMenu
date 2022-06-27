@@ -1,27 +1,28 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
-import java.awt.Color;
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import com.google.common.util.concurrent.Runnables;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
-import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayer;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashElement;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -31,12 +32,9 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.WinScreen;
 import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.PanoramaRenderer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ScreenEvent.BackgroundDrawnEvent;
@@ -53,7 +51,17 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	private PanoramaRenderer panorama = new PanoramaRenderer(PANORAMA_CUBE_MAP);
 
-	private String splash;
+	//TODO übernehmen
+//	private String splash;
+
+	//TODO übernehmen
+	protected boolean showLogo = true;
+	protected boolean showBranding = true;
+	protected boolean showForgeNotificationCopyright = true;
+	protected boolean showForgeNotificationTop = true;
+	protected boolean showRealmsNotification = true;
+	protected TitleScreenSplashItem splashItem = null;
+	//-------------------------
 
 	public MainMenuHandler() {
 		super(TitleScreen.class.getName());
@@ -63,7 +71,10 @@ public class MainMenuHandler extends MenuHandlerBase {
 	public void onMenuReloaded(MenuReloadedEvent e) {
 		super.onMenuReloaded(e);
 
-		this.splash = getRandomSplashText();
+		//TODO übernehmen
+//		this.splash = getRandomSplashText();
+		//TODO übernehmen
+		TitleScreenSplashItem.cachedSplashText = null;
 	}
 
 	@Override
@@ -83,17 +94,85 @@ public class MainMenuHandler extends MenuHandlerBase {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 
-				if (this.splash == null) {
-					this.splash = getRandomSplashText();
-				}
+				//TODO übernehmen
+//				if (this.splash == null) {
+//					this.splash = getRandomSplashText();
+//				}
 
-				if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-					this.setWidthCopyrightRest(Integer.MAX_VALUE);
+				//TODO übernehmen (1.18+)
+//				if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+//					this.setWidthCopyrightRest(Integer.MAX_VALUE);
+//				}
+
+				//TODO übernehmen
+				showLogo = true;
+				showBranding = true;
+				showForgeNotificationCopyright = true;
+				showForgeNotificationTop = true;
+				showRealmsNotification = true;
+				DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getMenuIdentifier());
+				if (layer != null) {
+					TitleScreenSplashElement element = (TitleScreenSplashElement) layer.getElementByIdentifier("title_screen_splash");
+					if (element != null) {
+						splashItem = (TitleScreenSplashItem) element.constructDefaultItemInstance();
+					}
 				}
+				//----------------------
 
 				super.onButtonsCached(e);
+
 			}
 		}
+	}
+
+	//TODO übernehmen
+	@Override
+	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
+
+		super.applyLayout(sec, renderOrder, e);
+
+		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getMenuIdentifier());
+		if (layer != null) {
+
+			String action = sec.getEntryValue("action");
+			if (action != null) {
+
+				if (action.startsWith("deep_customization_element:")) {
+					String elementId = action.split("[:]", 2)[1];
+					DeepCustomizationElement element = layer.getElementByIdentifier(elementId);
+					if (element != null) {
+						DeepCustomizationItem i = element.constructCustomizedItemInstance(sec);
+						if (i != null) {
+
+							if (elementId.equals("title_screen_branding")) {
+								this.showBranding = !(i.hidden);
+							}
+							if (elementId.equals("title_screen_logo")) {
+								this.showLogo = !(i.hidden);
+							}
+							if (elementId.equals("title_screen_splash")) {
+								this.splashItem = (TitleScreenSplashItem) i;
+							}
+							if (elementId.equals("title_screen_realms_notification")) {
+								this.showRealmsNotification = !(i.hidden);
+							}
+
+							//Forge -------------->
+							if (elementId.equals("title_screen_forge_copyright")) {
+								this.showForgeNotificationCopyright = !(i.hidden);
+							}
+							if (elementId.equals("title_screen_forge_top")) {
+								this.showForgeNotificationTop = !(i.hidden);
+							}
+
+						}
+					}
+				}
+
+			}
+
+		}
+
 	}
 
 	@SubscribeEvent
@@ -134,8 +213,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 			super.drawToBackground(e);
 
-			//Draw minecraft logo and edition textures if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hidelogo", true)) {
+			//TODO übernehmen
+			if (this.showLogo) {
 				RenderUtils.bindTexture(MINECRAFT_TITLE_TEXTURE);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 				if ((double) minecraftLogoSpelling < 1.0E-4D) {
@@ -153,153 +232,96 @@ public class MainMenuHandler extends MenuHandlerBase {
 				blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 			}
 
-			//Draw branding strings to the main menu if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hidebranding", true)) {
-				BrandingControl.forEachLine(true, true, (brdline, brd) ->
-						GuiComponent.drawString(matrix, font, brd, 2, e.getScreen().height - ( 10 + brdline * (font.lineHeight + 1)), 16777215)
-				);
+			//TODO übernehmen
+			if (this.showBranding) {
+				BrandingControl.forEachLine(true, true, (brdline, brd) -> {
+					GuiComponent.drawString(matrix, font, brd, 2, e.getScreen().height - (10 + brdline * (font.lineHeight + 1)), 16777215);
+				});
 			}
 
-			if (!FancyMenu.config.getOrDefault("hideforgenotifications", false)) {
+			//TODO übernehmen
+			if (this.showForgeNotificationTop) {
 				ForgeHooksClient.renderMainMenu((TitleScreen) e.getScreen(), matrix, Minecraft.getInstance().font, e.getScreen().width, e.getScreen().height, 255);
-				BrandingControl.forEachAboveCopyrightLine((brdline, brd) ->
-						GuiComponent.drawString(matrix, font, brd, e.getScreen().width - font.width(brd) - 1, e.getScreen().height - (11 + (brdline + 1) * ( font.lineHeight + 1)), 16777215)
-				);
 			}
-
-			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-
-				//Draw and handle copyright
-				String c = "Copyright Mojang AB. Do not distribute!";
-				String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
-				int cX = 0;
-				int cY = 0;
-				int cW = Minecraft.getInstance().font.width(c);
-				int cH = 10;
-
-				if (cPos.equalsIgnoreCase("top-left")) {
-					cX = 2;
-					cY = 2;
-				} else if (cPos.equalsIgnoreCase("top-centered")) {
-					cX = (width / 2) - (cW / 2);
-					cY = 2;
-				} else if (cPos.equalsIgnoreCase("top-right")) {
-					cX = width - cW - 2;
-					cY = 2;
-				} else if (cPos.equalsIgnoreCase("bottom-left")) {
-					cX = 2;
-					cY = height - cH - 2;
-				} else if (cPos.equalsIgnoreCase("bottom-centered")) {
-					cX = (width / 2) - (cW / 2);
-					cY = height - cH - 2;
-				} else {
-					cX = width - cW - 2;
-					cY = height - cH - 2;
-				}
-
-				Color copyrightcolor = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("copyrightcolor", "#ffffff"));
-				if (copyrightcolor == null) {
-					copyrightcolor = new Color(255, 255, 255);
-				}
-
-				GuiComponent.drawString(matrix, font, c, cX, cY, copyrightcolor.getRGB() | 255 << 24);
-
-				if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
-					GuiComponent.fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
-
-					if (MouseInput.isLeftMouseDown()) {
-						Minecraft.getInstance().setScreen(new WinScreen(false, Runnables.doNothing()));
-					}
-				}
-
+			if (this.showForgeNotificationCopyright) {
+				BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {
+					GuiComponent.drawString(matrix, font, brd, e.getScreen().width - font.width(brd) - 1, e.getScreen().height - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
+				});
 			}
+			//------------------
+
+			//TODO übernehmen (1.18+)
+//			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+//
+//				//Draw and handle copyright
+//				String c = "Copyright Mojang AB. Do not distribute!";
+//				String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
+//				int cX = 0;
+//				int cY = 0;
+//				int cW = Minecraft.getInstance().font.width(c);
+//				int cH = 10;
+//
+//				if (cPos.equalsIgnoreCase("top-left")) {
+//					cX = 2;
+//					cY = 2;
+//				} else if (cPos.equalsIgnoreCase("top-centered")) {
+//					cX = (width / 2) - (cW / 2);
+//					cY = 2;
+//				} else if (cPos.equalsIgnoreCase("top-right")) {
+//					cX = width - cW - 2;
+//					cY = 2;
+//				} else if (cPos.equalsIgnoreCase("bottom-left")) {
+//					cX = 2;
+//					cY = height - cH - 2;
+//				} else if (cPos.equalsIgnoreCase("bottom-centered")) {
+//					cX = (width / 2) - (cW / 2);
+//					cY = height - cH - 2;
+//				} else {
+//					cX = width - cW - 2;
+//					cY = height - cH - 2;
+//				}
+//
+//				Color copyrightcolor = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("copyrightcolor", "#ffffff"));
+//				if (copyrightcolor == null) {
+//					copyrightcolor = new Color(255, 255, 255);
+//				}
+//
+//				GuiComponent.drawString(matrix, font, c, cX, cY, copyrightcolor.getRGB() | 255 << 24);
+//
+//				if ((mouseX >= cX) && (mouseX <= cX + cW) && (mouseY >= cY) && (mouseY <= cY + cH)) {
+//					GuiComponent.fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
+//
+//					if (MouseInput.isLeftMouseDown()) {
+//						Minecraft.getInstance().setScreen(new WinScreen(false, Runnables.doNothing()));
+//					}
+//				}
+//
+//			}
 
 			if (!PopupHandler.isPopupActive()) {
 				this.renderButtons(e, mouseX, mouseY);
 			}
 
-			//Draw notification indicators to the "Realms" button if not disabled in the config
-			if (!FancyMenu.config.getOrDefault("hiderealmsnotifications", false)) {
+			//TODO übernehmen
+			if (this.showRealmsNotification) {
 				this.drawRealmsNotification(matrix, e.getScreen());
 			}
 
-			this.renderSplash(matrix, font, e.getScreen());
+			//TODO übernehmen
+			this.renderSplash(matrix, e.getScreen());
 
 		}
 	}
 
-	protected void renderSplash(PoseStack matrix, Font font, Screen s) {
+	//TODO übernehmen
+	protected void renderSplash(PoseStack matrix, Screen s) {
 
-		if (!FancyMenu.config.getOrDefault("hidesplashtext", true)) {
-
-			float finalPosX = (s.width / 2 + 90);
-			float finalPosY = 70.0F;
-
-			int rotation = FancyMenu.config.getOrDefault("splashrotation", -20);
-			int posX = FancyMenu.config.getOrDefault("splashx", 0);
-			int posY = FancyMenu.config.getOrDefault("splashy", 0);
-			String orientation = FancyMenu.config.getOrDefault("splashorientation", "original");
-
-			int originX = 0;
-			int originY = 0;
-
-			boolean setpos = true;
-
-			if (orientation.equalsIgnoreCase("original")) {
-				originX = (int) finalPosX;
-				originY = (int) finalPosY;
-			} else if (orientation.equalsIgnoreCase("top-left")) {
-				; //do nuffin
-			} else if (orientation.equalsIgnoreCase("mid-left")) {
-				originY = s.height / 2;
-			} else if (orientation.equalsIgnoreCase("bottom-left")) {
-				originY = s.height;
-			} else if (orientation.equalsIgnoreCase("top-centered")) {
-				originX = s.width / 2;
-			} else if (orientation.equalsIgnoreCase("mid-centered")) {
-				originX = s.width / 2;
-				originY = s.height / 2;
-			} else if (orientation.equalsIgnoreCase("bottom-centered")) {
-				originX = s.width / 2;
-				originY = s.height;
-			} else if (orientation.equalsIgnoreCase("top-right")) {
-				originX = s.width;
-			} else if (orientation.equalsIgnoreCase("mid-right")) {
-				originX = s.width;
-				originY = s.height / 2;
-			} else if (orientation.equalsIgnoreCase("bottom-right")) {
-				originX = s.width;
-				originY = s.height;
-			} else {
-				setpos = false;
+		try {
+			if (this.splashItem != null) {
+				this.splashItem.render(matrix, s);
 			}
-
-			//I'm doing this to signalize when an invalid orientation was used
-			if (setpos) {
-				finalPosX = originX + posX;
-				finalPosY = originY + posY;
-			}
-
-			if (this.splash == null) {
-				this.splash = "";
-			}
-
-			matrix.pushPose();
-			matrix.translate(finalPosX, finalPosY, 0.0F);
-			matrix.mulPose(Vector3f.ZP.rotationDegrees(rotation));
-			float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-			f = f * 100.0F / (float) (font.width(this.splash) + 32);
-			matrix.scale(f, f, f);
-
-			Color c = RenderUtils.getColorFromHexString(FancyMenu.config.getOrDefault("splashcolor", "#ffff00"));
-			if (c == null) {
-				c = new Color(255, 255, 0);
-			}
-
-			drawCenteredString(matrix, font, Component.literal(this.splash), 0, -8, c.getRGB());
-
-			matrix.popPose();
-
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 
 	}
@@ -346,16 +368,17 @@ public class MainMenuHandler extends MenuHandlerBase {
 		return buttons;
 	}
 
-	private void setWidthCopyrightRest(int i) {
-		try {
-			if (Minecraft.getInstance().screen instanceof TitleScreen) {
-				Field f = ReflectionHelper.findField(TitleScreen.class, "f_96728_"); //copyrightX
-				f.set(Minecraft.getInstance().screen, i);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+	//TODO übernehmen (1.18+)
+//	private void setWidthCopyrightRest(int i) {
+//		try {
+//			if (Minecraft.getInstance().screen instanceof TitleScreen) {
+//				Field f = ReflectionHelper.findField(TitleScreen.class, "f_96728_"); //copyrightX
+//				f.set(Minecraft.getInstance().screen, i);
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
 		try {
@@ -366,20 +389,21 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 
-	protected static String getRandomSplashText() {
-		String customSplashPath = FancyMenu.config.getOrDefault("splashtextfile", "");
-		if ((customSplashPath != null) && !customSplashPath.equals("")) {
-			File f = new File(customSplashPath);
-			if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
-				List<String> l = FileUtils.getFileLines(f);
-				if ((l != null) && !l.isEmpty()) {
-					int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
-					return l.get(random);
-				}
-			}
-		}
-
-		return Minecraft.getInstance().getSplashManager().getSplash();
-	}
+	//TODO übernehmen
+//	protected static String getRandomSplashText() {
+//		String customSplashPath = FancyMenu.config.getOrDefault("splashtextfile", "");
+//		if ((customSplashPath != null) && !customSplashPath.equals("")) {
+//			File f = new File(customSplashPath);
+//			if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
+//				List<String> l = FileUtils.getFileLines(f);
+//				if ((l != null) && !l.isEmpty()) {
+//					int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
+//					return l.get(random);
+//				}
+//			}
+//		}
+//
+//		return Minecraft.getInstance().getSplashManager().getSplash();
+//	}
 
 }

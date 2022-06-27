@@ -5,11 +5,16 @@ import java.io.File;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.menu.button.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import net.minecraft.resources.ResourceLocation;
 
@@ -42,7 +47,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen (+ locals)
-	public static final String VERSION = "2.8.0";
+	public static final String VERSION = "2.9.0";
 	public static final String MOD_LOADER = "forge";
 
 	//TODO make private + add loggers to classes that used this logger
@@ -82,6 +87,21 @@ public class FancyMenu {
 	    		slideshowPath.mkdirs();
 
 	    		updateConfig();
+
+				//TODO übernehmen
+				DeepCustomizationLayers.registerAll();
+
+				//TODO übernehmen
+				ButtonActions.registerAll();
+
+				//TODO übernehmen
+				VisibilityRequirements.registerAll();
+
+				//TODO übernehmen
+				Placeholders.registerAll();
+
+				//TODO übernehmen
+				VariableHandler.init();
 
 				ButtonIdentificator.init();
 
@@ -190,25 +210,32 @@ public class FancyMenu {
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");
-    		
-			config.registerValue("hidebranding", true, "mainmenu");
-			config.registerValue("hidelogo", false, "mainmenu");
-			config.registerValue("hiderealmsnotifications", false, "mainmenu");
-			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-				config.registerValue("copyrightposition", "bottom-right", "mainmenu");
-			}
-			config.registerValue("hideforgenotifications", false, "mainmenu");
-			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-				config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
-			}
 
-			config.registerValue("hidesplashtext", false, "mainmenu_splash");
-			config.registerValue("splashx", 0, "mainmenu_splash");
-			config.registerValue("splashy", 0, "mainmenu_splash");
-			config.registerValue("splashorientation", "original", "mainmenu_splash");
-			config.registerValue("splashcolor", "#ffff00", "mainmenu_splash");
-			config.registerValue("splashtextfile", "", "mainmenu_splash");
-			config.registerValue("splashrotation", -20, "mainmenu_splash");
+			//TODO übernehmen
+//			config.registerValue("hidebranding", true, "mainmenu");
+//			config.registerValue("hidelogo", false, "mainmenu");
+//			config.registerValue("hiderealmsnotifications", false, "mainmenu");
+			//------------------
+			//TODO übernehmen (1.18+)
+//			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+//				config.registerValue("copyrightposition", "bottom-right", "mainmenu");
+//			}
+			//TODO übernehmen
+//			config.registerValue("hideforgenotifications", false, "mainmenu");
+			//TODO übernehmen (1.18+)
+//			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
+//				config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
+//			}
+
+			//TODO übernehmen
+//			config.registerValue("hidesplashtext", false, "mainmenu_splash");
+//			config.registerValue("splashx", 0, "mainmenu_splash");
+//			config.registerValue("splashy", 0, "mainmenu_splash");
+//			config.registerValue("splashorientation", "original", "mainmenu_splash");
+//			config.registerValue("splashcolor", "#ffff00", "mainmenu_splash");
+//			config.registerValue("splashtextfile", "", "mainmenu_splash");
+//			config.registerValue("splashrotation", -20, "mainmenu_splash");
+			//--------------------
 			
 			config.registerValue("gameintroanimation", "", "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");

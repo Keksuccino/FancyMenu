@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.*;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -80,7 +81,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				//TODO übernehmen
 				String ulWhitelist = meta.getEntryValue("universal_layout_whitelist");
 				if ((ulWhitelist != null) && ulWhitelist.contains(";")) {
 					this.universalLayoutWhitelist.addAll(Arrays.asList(ulWhitelist.split("[;]")));
@@ -89,7 +89,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				if ((ulBlacklist != null) && ulBlacklist.contains(";")) {
 					this.universalLayoutBlacklist.addAll(Arrays.asList(ulBlacklist.split("[;]")));
 				}
-				//--------------------
 
 				String ranMode = meta.getEntryValue("randommode");
 				if ((ranMode != null) && ranMode.equalsIgnoreCase("true")) {
@@ -171,6 +170,9 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				}
 			}
 		}
+
+		//TODO übernehmen
+		List<PropertiesSection> deepCustomizationSecs = new ArrayList<>();
 
 		for (PropertiesSet s : this.cachedProperties) {
 			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
@@ -826,6 +828,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						con.add(new LayoutSplashText(new SplashTextCustomizationItem(sec), this));
 					}
 
+					//TODO übernehmen
+					if (action.startsWith("deep_customization_element:")) {
+						deepCustomizationSecs.add(sec);
+					}
+
 					/** CUSTOM ITEMS (API) **/
 					if (action.startsWith("custom_layout_element:")) {
 						String cusId = action.split("[:]", 2)[1];
@@ -839,6 +846,29 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				}
 			}
 		}
+
+		//TODO übernehmen
+		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.screen.getClass().getName());
+		if (layer != null) {
+			List<DeepCustomizationElement> addedDeeps = new ArrayList<>();
+			for (PropertiesSection sec : deepCustomizationSecs) {
+				String action = sec.getEntryValue("action");
+				String elementId = action.split(":", 2)[1];
+				DeepCustomizationElement e = layer.getElementByIdentifier(elementId);
+				if (e != null) {
+					DeepCustomizationItem i = e.constructCustomizedItemInstance(sec);
+					DeepCustomizationLayoutEditorElement le = e.constructEditorElementInstance(i, this);
+					this.content.add(le);
+					addedDeeps.add(e);
+				}
+			}
+			for (DeepCustomizationElement e : layer.getElementsList()) {
+				if (!addedDeeps.contains(e)) {
+					this.content.add(e.constructEditorElementInstance(e.constructDefaultItemInstance(), this));
+				}
+			}
+		}
+		//--------------------------------
 
 		this.content.addAll(con);
 

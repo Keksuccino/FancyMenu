@@ -2,14 +2,12 @@ package de.keksuccino.fancymenu.api.item;
 
 import de.keksuccino.fancymenu.FancyMenu;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CustomizationItemRegistry {
 
-    protected static Map<String, CustomizationItemContainer> customizationItems = new HashMap<String, CustomizationItemContainer>();
+    //TODO übernehmen (LinkedHashMap)
+    protected static Map<String, CustomizationItemContainer> customizationItems = new LinkedHashMap<>();
 
     /**
      * Register your own customization items here.

@@ -17,6 +17,10 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.Bu
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayer;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -71,8 +75,13 @@ import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LayoutEditorScreen extends Screen {
+
+	//TODO übernehmen
+	private static final Logger LOGGER = LogManager.getLogger("fancymenu/LayoutEditorScreen");
 	
 	public static boolean isActive = false;
 
@@ -147,10 +156,8 @@ public class LayoutEditorScreen extends Screen {
 	protected Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
 	protected LayoutElement topObject;
 
-	//TODO übernehmen
 	protected List<String> universalLayoutWhitelist = new ArrayList<>();
 	protected List<String> universalLayoutBlacklist = new ArrayList<>();
-	//---------------------
 	
 	protected LayoutEditorUI ui = new LayoutEditorUI(this);
 	
@@ -163,6 +170,17 @@ public class LayoutEditorScreen extends Screen {
 			KeyboardHandler.addKeyPressedListener(LayoutEditorScreen::onArrowKeysPressed);
 			initDone = true;
 		}
+
+		//TODO übernehmen
+		if (!(this instanceof PreloadedLayoutEditorScreen)) {
+			DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.screen.getClass().getName());
+			if (layer != null) {
+				for (DeepCustomizationElement e : layer.getElementsList()) {
+					this.content.add(e.constructEditorElementInstance(e.constructDefaultItemInstance(), this));
+				}
+			}
+		}
+		//---------------------
 
 	}
 
@@ -264,7 +282,6 @@ public class LayoutEditorScreen extends Screen {
 		if (this.smallerThanHeight != 0) {
 			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
 		}
-		//TODO übernehmen
 		if (this.isUniversalLayout() && !this.universalLayoutWhitelist.isEmpty()) {
 			String wl = "";
 			for (String s : this.universalLayoutWhitelist) {
@@ -272,7 +289,6 @@ public class LayoutEditorScreen extends Screen {
 			}
 			meta.addEntry("universal_layout_whitelist", wl);
 		}
-		//TODO übernehmen
 		if (this.isUniversalLayout() && !this.universalLayoutBlacklist.isEmpty()) {
 			String bl = "";
 			for (String s : this.universalLayoutBlacklist) {
@@ -521,7 +537,10 @@ public class LayoutEditorScreen extends Screen {
 			if ((this.isFocused(object))) {
 				this.focusedObjects.remove(object);
 			}
-			this.content.remove(object);
+			//TODO übernehmen (if)
+			if (!(object instanceof DeepCustomizationLayoutEditorElement)) {
+				this.content.remove(object);
+			}
 			this.updateContent();
 		}
 		this.focusChangeBlocker.clear();
@@ -567,10 +586,18 @@ public class LayoutEditorScreen extends Screen {
 
 		if (this.renderorder.equalsIgnoreCase("foreground")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
+			//TODO übernehmen
+			for (LayoutElement l : this.content) {
+				if (l instanceof DeepCustomizationLayoutEditorElement) {
+					l.render(matrix, mouseX, mouseY);
+				}
+			}
+			//------------------
 		}
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
 		for (LayoutElement l : this.content) {
-			if (!(l instanceof LayoutVanillaButton)) {
+			//TODO übernehmen (if)
+			if (!(l instanceof LayoutVanillaButton) && !(l instanceof DeepCustomizationLayoutEditorElement)) {
 				if (!this.isFocused(l)) {
 					l.render(matrix, mouseX, mouseY);
 				}
@@ -578,6 +605,13 @@ public class LayoutEditorScreen extends Screen {
 		}
 		if (this.renderorder.equalsIgnoreCase("background")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
+			//TODO übernehmen
+			for (LayoutElement l : this.content) {
+				if (l instanceof DeepCustomizationLayoutEditorElement) {
+					l.render(matrix, mouseX, mouseY);
+				}
+			}
+			//------------------
 		}
 		
 		for (LayoutElement o : this.getFocusedObjects()) {
@@ -1592,7 +1626,6 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
-	//TODO übernehmen
 	public boolean isUniversalLayout() {
 		if (this.screen instanceof CustomGuiBase) {
 			return (((CustomGuiBase) this.screen).getIdentifier().equals("%fancymenu:universal_layout%"));

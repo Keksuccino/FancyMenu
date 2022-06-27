@@ -269,14 +269,12 @@ public class DynamicValueTextfield extends AdvancedTextField {
 		UIBase.colorizeButton(vanillaButtonLabel);
 		otherMenu.addContent(vanillaButtonLabel);
 
-		//TODO übernehmen
 		AdvancedButton randomText = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext"), true, (press) -> {
 			this.insertText("%randomtext:<filepath>:<interval_sec>%");
 		});
 		randomText.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc"), "%n%"));
 		UIBase.colorizeButton(randomText);
 		otherMenu.addContent(randomText);
-		//-------------------
 
 		otherMenu.addSeparator();
 

@@ -99,7 +99,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 		this.chooseTextureButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.chooseimage"), true, (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-				//TODO übernehmen
 				if (call != null) {
 					File f = new File(call);
 					if (f.isFile()) {
@@ -122,7 +121,6 @@ public class BackgroundOptionsPopup extends FMPopup {
 				} else {
 					PopupHandler.displayPopup(this);
 				}
-				//---------------------------
 			}, "jpg", "jpeg", "png");
 			if ((this.handler.backgroundTexture != null)) {
 				cf.setText(this.handler.backgroundTexturePath);

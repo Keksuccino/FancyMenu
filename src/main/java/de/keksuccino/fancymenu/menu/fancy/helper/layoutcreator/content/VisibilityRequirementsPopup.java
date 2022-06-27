@@ -207,7 +207,6 @@ public class VisibilityRequirementsPopup extends FMPopup {
         }, integerCharFilter, realTimeSecondValuePreset);
         this.requirements.add(realTimeSecond);
 
-        //TODO übernehmen
         /** Is Real Time Day **/
         String realTimeDayValuePreset = "";
         for (int i : c.vrRealTimeDay) {
@@ -244,7 +243,6 @@ public class VisibilityRequirementsPopup extends FMPopup {
         }, integerCharFilter, realTimeDayValuePreset);
         this.requirements.add(realTimeDay);
 
-        //TODO übernehmen
         /** Is Real Time Month **/
         String realTimeMonthValuePreset = "";
         for (int i : c.vrRealTimeMonth) {
@@ -281,7 +279,6 @@ public class VisibilityRequirementsPopup extends FMPopup {
         }, integerCharFilter, realTimeMonthValuePreset);
         this.requirements.add(realTimeMonth);
 
-        //TODO übernehmen
         /** Is Real Time Year **/
         String realTimeYearValuePreset = "";
         for (int i : c.vrRealTimeYear) {

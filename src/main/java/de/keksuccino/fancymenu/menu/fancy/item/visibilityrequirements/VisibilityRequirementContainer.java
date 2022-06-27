@@ -13,10 +13,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraftforge.fml.ModList;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class VisibilityRequirementContainer {
 
@@ -96,7 +93,6 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
-    //TODO übernehmen
     public boolean vrCheckForRealTimeDay = false;
     public boolean vrShowIfRealTimeDay = false;
     public List<Integer> vrRealTimeDay = new ArrayList<Integer>();
@@ -109,9 +105,9 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfRealTimeYear = false;
     public List<Integer> vrRealTimeYear = new ArrayList<Integer>();
     //---------
-    //-------------------------
 
-    public Map<String, RequirementPackage> customRequirements = new HashMap<>();
+    //TODO übernehmen (LinkedHashMap)
+    public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
     public CustomizationItemBase item;
 
@@ -215,7 +211,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //VR: Is Real Time Day
         String vrStringShowIfRealTimeDay = properties.getEntryValue("vr:showif:realtimeday");
         if (vrStringShowIfRealTimeDay != null) {
@@ -242,7 +237,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //VR: Is Real Time Month
         String vrStringShowIfRealTimeMonth = properties.getEntryValue("vr:showif:realtimemonth");
         if (vrStringShowIfRealTimeMonth != null) {
@@ -269,7 +263,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //VR: Is Real Time Year
         String vrStringShowIfRealTimeYear = properties.getEntryValue("vr:showif:realtimeyear");
         if (vrStringShowIfRealTimeYear != null) {
@@ -556,7 +549,6 @@ public class VisibilityRequirementContainer {
             return false;
         }
 
-        //TODO übernehmen (wrap in try-catch)
         try {
 
             //VR: Is Singleplayer
@@ -627,7 +619,6 @@ public class VisibilityRequirementContainer {
                 }
             }
 
-            //TODO übernehmen
             //VR: Is Real Time Day
             if (this.vrCheckForRealTimeDay) {
                 if (this.vrShowIfRealTimeDay) {
@@ -641,7 +632,6 @@ public class VisibilityRequirementContainer {
                 }
             }
 
-            //TODO übernehmen
             //VR: Is Real Time Month
             if (this.vrCheckForRealTimeMonth) {
                 if (this.vrShowIfRealTimeMonth) {
@@ -655,7 +645,6 @@ public class VisibilityRequirementContainer {
                 }
             }
 
-            //TODO übernehmen
             //VR: Is Real Time Year
             if (this.vrCheckForRealTimeYear) {
                 if (this.vrShowIfRealTimeYear) {
@@ -725,7 +714,6 @@ public class VisibilityRequirementContainer {
             if (this.vrCheckForButtonHovered) {
                 if (this.vrButtonHovered != null) {
                     AbstractWidget w = null;
-                    //TODO übernehmen
                     try {
                         if (this.vrButtonHovered.startsWith("vanillabtn:")) {
                             String idRaw = this.vrButtonHovered.split("[:]", 2)[1];
@@ -740,7 +728,6 @@ public class VisibilityRequirementContainer {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    //---------------------------
                     if (w != null) {
                         if (this.vrShowIfButtonHovered) {
                             if (!w.isHoveredOrFocused()) {

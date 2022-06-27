@@ -25,7 +25,6 @@ public class DynamicValueHelper {
 	private static final File MOD_DIRECTORY = new File("mods");
 
 	private static int cachedTotalMods = -10;
-	//TODO übernehmen
 	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
 
 	public static String convertFromRaw(String in) {
@@ -114,7 +113,6 @@ public class DynamicValueHelper {
 
 		in = replaceVanillaButtonLabelPlaceolder(in);
 
-		//TODO übernehmen
 		in = replaceRandomTextValue(in);
 
 		//Handle all custom placeholders added via the API
@@ -130,7 +128,6 @@ public class DynamicValueHelper {
 		return !s.equals(in);
 	}
 
-	//TODO übernehmen
 	private static String replaceRandomTextValue(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%randomtext:")) { // %randomtext:<filepath>:<change_interval_sec>%
@@ -198,7 +195,6 @@ public class DynamicValueHelper {
 		return in;
 	}
 
-	//TODO übernehmen
 	private static String replaceLocalsPlaceolder(String in) {
 		try {
 			for (String s : getReplaceablesWithValue(in, "%local:")) {
@@ -220,7 +216,6 @@ public class DynamicValueHelper {
 		}
 		return in;
 	}
-	//----------------------------
 
 	private static String replaceServerVersion(String in) {
 		try {
@@ -488,7 +483,6 @@ public class DynamicValueHelper {
 		return bytes / 1024L / 1024L;
 	}
 
-	//TODO übernehmen
 	public static class RandomTextPackage {
 		public String currentText = null;
 		public long lastChange = 0L;

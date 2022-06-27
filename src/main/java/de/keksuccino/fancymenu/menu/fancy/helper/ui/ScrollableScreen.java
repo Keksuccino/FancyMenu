@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -283,6 +282,19 @@ public class ScrollableScreen extends Screen {
         public EmptySpaceEntry(ScrollArea parent, int height) {
             super(parent, null);
             this.renderBody = (render) -> {
+            };
+            this.setHeight(height);
+        }
+
+    }
+
+    //TODO übernehmen
+    public static class SeparatorEntry extends ScrollAreaEntryBase {
+
+        public SeparatorEntry(ScrollArea parent, int height, Color color) {
+            super(parent, null);
+            this.renderBody = (render) -> {
+                fill(render.matrix, render.entry.x, render.entry.y, render.entry.x + render.entry.getWidth(), render.entry.y + render.entry.getHeight(), color.getRGB());
             };
             this.setHeight(height);
         }

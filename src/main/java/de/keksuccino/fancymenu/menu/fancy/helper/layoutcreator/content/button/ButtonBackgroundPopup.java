@@ -123,7 +123,6 @@ public class ButtonBackgroundPopup extends FMPopup {
         }
 
         this.chooseNormalBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
-            //TODO übernehmen (komplett)
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
 					File home = new File("");
@@ -167,7 +166,6 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.addButton(chooseNormalBackgroundImageButton);
 
         this.chooseHoverBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
-            //TODO übernehmen (komplett)
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
                     File home = new File("");

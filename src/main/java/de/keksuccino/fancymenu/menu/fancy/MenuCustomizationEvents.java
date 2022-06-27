@@ -124,23 +124,17 @@ public class MenuCustomizationEvents {
 			scaleChecked = true;
 			
 			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
-			//TODO übernehmen (if)
 			if ((scale != -1) && (scale != 0)) {
-				//TODO übernehmen
 				File f = FancyMenu.INSTANCE_DATA_DIR;
 				if (!f.exists()) {
 					f.mkdirs();
 				}
 
-				//TODO übernehmen
 				File f2 = new File(f.getPath() + "/default_scale_set.fm");
 				File f3 = new File("mods/fancymenu/defaultscaleset.fancymenu");
-				//-----------------
-				//TODO übernehmen (if)
 				if (!f2.exists() && !f3.exists()) {
 					try {
 						f2.createNewFile();
-						//TODO übernehmen
 						FileUtils.writeTextToFile(f2, false, "you're not supposed to be here! shoo!");
 					} catch (IOException e1) {
 						e1.printStackTrace();
