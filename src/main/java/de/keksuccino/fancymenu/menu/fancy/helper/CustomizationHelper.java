@@ -5,6 +5,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import com.google.common.io.Files;
@@ -56,10 +59,12 @@ public class CustomizationHelper {
 		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
-					if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fancymenu.")) {
+					if (!(e.getGui() instanceof ButtonActionScreen)) {
+						if (!(e.getGui() instanceof VisibilityRequirementsScreen)) {
 
-						CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+							CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
 
+						}
 					}
 				}
 			}
