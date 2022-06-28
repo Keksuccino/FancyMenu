@@ -46,7 +46,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.9.0";
+	public static final String VERSION = "2.9.1";
 	public static final String MOD_LOADER = "forge";
 
 	//TODO make private + add loggers to classes that used this logger
