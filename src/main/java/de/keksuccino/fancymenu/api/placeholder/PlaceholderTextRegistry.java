@@ -6,7 +6,6 @@ import java.util.*;
 
 public class PlaceholderTextRegistry {
 
-    //TODO übernehmen (LinkedHashMap)
     private static Map<String, PlaceholderTextContainer> placeholders = new LinkedHashMap<>();
 
     public static void registerPlaceholder(PlaceholderTextContainer placeholder) {

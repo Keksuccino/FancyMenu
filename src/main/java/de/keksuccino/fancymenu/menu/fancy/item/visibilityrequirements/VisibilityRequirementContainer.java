@@ -106,7 +106,6 @@ public class VisibilityRequirementContainer {
     public List<Integer> vrRealTimeYear = new ArrayList<Integer>();
     //---------
 
-    //TODO übernehmen (LinkedHashMap)
     public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
     public CustomizationItemBase item;

@@ -9,7 +9,6 @@ import java.util.*;
 
 public class MenuBackgroundTypeRegistry {
 
-    //TODO übernehmen (LinkedHashMap)
     protected static Map<String, MenuBackgroundType> backgroundTypes = new LinkedHashMap<>();
 
     private static boolean initialized = false;

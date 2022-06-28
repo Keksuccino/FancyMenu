@@ -80,7 +80,6 @@ import org.apache.logging.log4j.Logger;
 
 public class LayoutEditorScreen extends Screen {
 
-	//TODO übernehmen
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/LayoutEditorScreen");
 	
 	public static boolean isActive = false;
@@ -171,7 +170,6 @@ public class LayoutEditorScreen extends Screen {
 			initDone = true;
 		}
 
-		//TODO übernehmen
 		if (!(this instanceof PreloadedLayoutEditorScreen)) {
 			DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.screen.getClass().getName());
 			if (layer != null) {
@@ -180,7 +178,6 @@ public class LayoutEditorScreen extends Screen {
 				}
 			}
 		}
-		//---------------------
 
 	}
 
@@ -537,7 +534,6 @@ public class LayoutEditorScreen extends Screen {
 			if ((this.isFocused(object))) {
 				this.focusedObjects.remove(object);
 			}
-			//TODO übernehmen (if)
 			if (!(object instanceof DeepCustomizationLayoutEditorElement)) {
 				this.content.remove(object);
 			}
@@ -586,17 +582,14 @@ public class LayoutEditorScreen extends Screen {
 
 		if (this.renderorder.equalsIgnoreCase("foreground")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
-			//TODO übernehmen
 			for (LayoutElement l : this.content) {
 				if (l instanceof DeepCustomizationLayoutEditorElement) {
 					l.render(matrix, mouseX, mouseY);
 				}
 			}
-			//------------------
 		}
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
 		for (LayoutElement l : this.content) {
-			//TODO übernehmen (if)
 			if (!(l instanceof LayoutVanillaButton) && !(l instanceof DeepCustomizationLayoutEditorElement)) {
 				if (!this.isFocused(l)) {
 					l.render(matrix, mouseX, mouseY);
@@ -605,13 +598,11 @@ public class LayoutEditorScreen extends Screen {
 		}
 		if (this.renderorder.equalsIgnoreCase("background")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
-			//TODO übernehmen
 			for (LayoutElement l : this.content) {
 				if (l instanceof DeepCustomizationLayoutEditorElement) {
 					l.render(matrix, mouseX, mouseY);
 				}
 			}
-			//------------------
 		}
 		
 		for (LayoutElement o : this.getFocusedObjects()) {

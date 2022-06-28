@@ -288,7 +288,6 @@ public class ScrollableScreen extends Screen {
 
     }
 
-    //TODO übernehmen
     public static class SeparatorEntry extends ScrollAreaEntryBase {
 
         public SeparatorEntry(ScrollArea parent, int height, Color color) {

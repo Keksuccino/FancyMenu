@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.VisibilityRequirementsPopup;

@@ -171,7 +171,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 			}
 		}
 
-		//TODO übernehmen
 		List<PropertiesSection> deepCustomizationSecs = new ArrayList<>();
 
 		for (PropertiesSet s : this.cachedProperties) {
@@ -828,7 +827,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						con.add(new LayoutSplashText(new SplashTextCustomizationItem(sec), this));
 					}
 
-					//TODO übernehmen
 					if (action.startsWith("deep_customization_element:")) {
 						deepCustomizationSecs.add(sec);
 					}
@@ -847,7 +845,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 			}
 		}
 
-		//TODO übernehmen
 		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.screen.getClass().getName());
 		if (layer != null) {
 			List<DeepCustomizationElement> addedDeeps = new ArrayList<>();

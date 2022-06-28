@@ -61,13 +61,11 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean copyable = true;
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
-	//TODO übernehmen
 	protected boolean resizeable = true;
 	protected boolean dragable = true;
 	protected boolean orientationCanBeChanged = true;
 	protected boolean enableElementIdCopyButton = true;
 	protected boolean allowOrientationByElement = true;
-	//---------------
 
 	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 
@@ -143,7 +141,6 @@ public abstract class LayoutElement extends GuiComponent {
 		this.rightclickMenu.setAlwaysOnTop(true);
 
 		/** COPY ELEMENT ID **/
-		//TODO übernehmen (if)
 		if (this.enableElementIdCopyButton) {
 			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
 				if (!(this instanceof LayoutVanillaButton)) {
@@ -157,7 +154,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		/** ORIENTATION **/
-		//TODO übernehmen (if)
 		if (this.orientationCanBeChanged) {
 			FMContextMenu orientationMenu = new FMContextMenu();
 			orientationMenu.setAutoclose(true);
@@ -187,7 +183,6 @@ public abstract class LayoutElement extends GuiComponent {
 				orientationMenu.closeMenu();
 			});
 			oElement.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
-			//TODO übernehmen (if)
 			if (this.allowOrientationByElement) {
 				orientationMenu.addContent(oElement);
 			}
@@ -357,8 +352,6 @@ public abstract class LayoutElement extends GuiComponent {
 
 		/** VISIBILITY REQUIREMENTS **/
 		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-//			PopupHandler.displayPopup(new VisibilityRequirementsPopup(this.object));
-			//TODO übernehmen
 			Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.handler, this.object));
 		});
 		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
@@ -515,11 +508,9 @@ public abstract class LayoutElement extends GuiComponent {
 	}
 
 	protected void setOrientation(String pos) {
-		//TODO übernehmen
 		if (!this.orientationCanBeChanged) {
 			return;
 		}
-		//--------------
 		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 
 		if (pos.equals("mid-left")) {
@@ -658,7 +649,6 @@ public abstract class LayoutElement extends GuiComponent {
 			if (this.stretchX || this.stretchY) {
 				this.oElement.active = false;
 			}
-			//TODO übernehmen (if)
 			if (this.orientationCanBeChanged) {
 				if (this.stretchX && !this.stretchY) {
 					this.o1.active = true;
@@ -739,7 +729,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 				
 		//Update dragging state
-		//TODO übernehmen
 		if (this.dragable) {
 			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 				this.dragging = true;
@@ -751,10 +740,8 @@ public abstract class LayoutElement extends GuiComponent {
 		} else {
 			this.dragging = false;
 		}
-		//--------------------
 		
 		//Handles the resizing process
-		//TODO übernehmen
 		if (this.resizeable) {
 			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
 				if (this.handler.getFocusedObjects().size() == 1) {
@@ -872,7 +859,6 @@ public abstract class LayoutElement extends GuiComponent {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		//TODO übernehnen (if)
 		if (this.dragable) {
 			if (!this.stretchX) {
 				//grabber left
@@ -889,7 +875,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		//TODO übernehmen (if)
 		if (this.resizeable) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 				if (!this.stretchX) {

@@ -6,7 +6,6 @@ import java.util.*;
 
 public class CustomizationItemRegistry {
 
-    //TODO übernehmen (LinkedHashMap)
     protected static Map<String, CustomizationItemContainer> customizationItems = new LinkedHashMap<>();
 
     /**

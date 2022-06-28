@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.variables;
 
 import de.keksuccino.fancymenu.FancyMenu;

@@ -498,7 +498,6 @@ public class LayoutVanillaButton extends LayoutElement {
 		return !this.object.orientation.equals("original");
 	}
 
-	//TODO übernehmen
 	@Override
 	public void destroyObject() {
 		if (FancyMenu.config.getOrDefault("editordeleteconfirmation", true)) {

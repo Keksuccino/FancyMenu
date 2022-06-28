@@ -6,7 +6,6 @@ import java.util.*;
 
 public class VisibilityRequirementRegistry {
 
-    //TODO übernehmen (LinkedHashMap)
     protected static LinkedHashMap<String, VisibilityRequirement> requirements = new LinkedHashMap<>();
 
     /**
@@ -32,7 +31,6 @@ public class VisibilityRequirementRegistry {
         requirements.remove(requirementIdentifier);
     }
 
-    //TODO übernehmen
     public static List<VisibilityRequirement> getRequirements() {
         List<VisibilityRequirement> l = new ArrayList<>();
         requirements.forEach((key, value) -> {

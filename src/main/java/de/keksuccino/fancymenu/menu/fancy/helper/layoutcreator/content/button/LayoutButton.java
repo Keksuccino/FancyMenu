@@ -50,10 +50,6 @@ public class LayoutButton extends LayoutElement {
 		super.init();
 
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config"), (press) -> {
-//			ButtonActionPopup i = new ButtonActionPopup(this::setActionContentCallback, this::setActionTypeCallback, this.actionType);
-//			i.setText(this.actionContent);
-//			PopupHandler.displayPopup(i);
-			//TODO übernehmen
 			Minecraft.getInstance().setScreen(new ButtonActionScreen(this.handler, this));
 		});
 		this.rightclickMenu.addContent(b3);
@@ -291,20 +287,6 @@ public class LayoutButton extends LayoutElement {
 		});
 		this.rightclickMenu.addContent(b10);
 	}
-
-	//TODO übernehmen
-//	private void setActionContentCallback(String content) {
-//		this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//
-//		if (content != null) {
-//			this.actionContent = content;
-//		}
-//	}
-
-	//TODO übernehmen
-//	private void setActionTypeCallback(String action) {
-//		this.actionType = action;
-//	}
 
 	@Override
 	public List<PropertiesSection> getProperties() {

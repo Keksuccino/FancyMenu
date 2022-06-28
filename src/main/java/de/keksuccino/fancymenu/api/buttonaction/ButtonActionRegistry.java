@@ -6,7 +6,6 @@ import java.util.*;
 
 public class ButtonActionRegistry {
 
-    //TODO übernehmen (LinkedHashMap)
     protected static Map<String, ButtonActionContainer> actions = new LinkedHashMap<>();
 
     /**
@@ -32,7 +31,6 @@ public class ButtonActionRegistry {
         actions.remove(actionIdentifier);
     }
 
-    //TODO übernehmen
     public static List<ButtonActionContainer> getActions() {
         List<ButtonActionContainer> l = new ArrayList<>();
         actions.forEach((key, value) -> {

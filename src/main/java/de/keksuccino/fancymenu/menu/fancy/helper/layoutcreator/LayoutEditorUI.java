@@ -209,12 +209,10 @@ public class LayoutEditorUI extends UIBase {
 			hiddenVanillaMenu.setAutoclose(true);
 			elementMenu.addChild(hiddenVanillaMenu);
 
-			//TODO übernehmen (button label)
 			AdvancedButton hiddenVanillaButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), true, (press) -> {
 				hiddenVanillaMenu.setParentButton((AdvancedButton) press);
 				hiddenVanillaMenu.openMenuAt(0, press.y);
 			});
-			//TODO übernehmen
 			hiddenVanillaButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc"), "%n%"));
 			elementMenu.addContent(hiddenVanillaButton);
 			
@@ -1544,7 +1542,6 @@ public class LayoutEditorUI extends UIBase {
 			this.content.clear();
 			this.separators.clear();
 
-			//TODO übernehmen
 			boolean containsHiddenDeeps = false;
 			for (LayoutElement e : this.parent.content) {
 				if (e instanceof DeepCustomizationLayoutEditorElement) {
@@ -1561,9 +1558,7 @@ public class LayoutEditorUI extends UIBase {
 					}
 				}
 			}
-			//----------------------
 
-			//TODO übernehmen
 			if (!this.parent.getHiddenButtons().isEmpty()) {
 				for (LayoutVanillaButton b : this.parent.getHiddenButtons()) {
 

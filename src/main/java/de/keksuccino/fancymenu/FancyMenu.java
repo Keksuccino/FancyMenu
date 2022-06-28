@@ -46,11 +46,10 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ locals)
-	public static final String VERSION = "2.9.0";
+	//TODO übernehmen
+	public static final String VERSION = "2.9.1";
 	public static final String MOD_LOADER = "forge";
 
-	//TODO make private + add loggers to classes that used this logger
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 	
 	public static Config config;
@@ -88,19 +87,14 @@ public class FancyMenu {
 
 	    		updateConfig();
 
-				//TODO übernehmen
 				DeepCustomizationLayers.registerAll();
 
-				//TODO übernehmen
 				ButtonActions.registerAll();
 
-				//TODO übernehmen
 				VisibilityRequirements.registerAll();
 
-				//TODO übernehmen
 				Placeholders.registerAll();
 
-				//TODO übernehmen
 				VariableHandler.init();
 
 				ButtonIdentificator.init();
@@ -210,32 +204,6 @@ public class FancyMenu {
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");
-
-			//TODO übernehmen
-//			config.registerValue("hidebranding", true, "mainmenu");
-//			config.registerValue("hidelogo", false, "mainmenu");
-//			config.registerValue("hiderealmsnotifications", false, "mainmenu");
-			//------------------
-			//TODO übernehmen (1.18+)
-//			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-//				config.registerValue("copyrightposition", "bottom-right", "mainmenu");
-//			}
-			//TODO übernehmen
-//			config.registerValue("hideforgenotifications", false, "mainmenu");
-			//TODO übernehmen (1.18+)
-//			if (FancyMenu.getMinecraftVersion().equals("1.18") || FancyMenu.getMinecraftVersion().equals("1.18.1")) {
-//				config.registerValue("copyrightcolor", "#ffffff", "mainmenu");
-//			}
-
-			//TODO übernehmen
-//			config.registerValue("hidesplashtext", false, "mainmenu_splash");
-//			config.registerValue("splashx", 0, "mainmenu_splash");
-//			config.registerValue("splashy", 0, "mainmenu_splash");
-//			config.registerValue("splashorientation", "original", "mainmenu_splash");
-//			config.registerValue("splashcolor", "#ffff00", "mainmenu_splash");
-//			config.registerValue("splashtextfile", "", "mainmenu_splash");
-//			config.registerValue("splashrotation", -20, "mainmenu_splash");
-			//--------------------
 			
 			config.registerValue("gameintroanimation", "", "loading");
 			config.registerValue("showanimationloadingstatus", true, "loading");

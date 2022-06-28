@@ -86,7 +86,6 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("openlink")) {
 				openWebLink(value);
 			}
-			//TODO übernehmen
 			if (action.equalsIgnoreCase("sendmessage")) {
 				if (Minecraft.getInstance().level != null) {
 					if (!MinecraftForge.EVENT_BUS.post(new ClientChatEvent(value))) {
@@ -99,7 +98,6 @@ public class ButtonScriptEngine {
 					}
 				}
 			}
-			//----------------
 			if (action.equalsIgnoreCase("quitgame")) {
 				Minecraft.getInstance().stop();
 			}
