@@ -1,12 +1,14 @@
 package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.awt.Color;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
+import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -18,12 +20,18 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.commons.io.IOUtils;
 
 public class SplashTextCustomizationItem extends CustomizationItemBase {
+
+	private static final Random RANDOM = new Random();
+	private static final ResourceLocation SPLASH_TEXTS = new ResourceLocation("texts/splashes.txt");
 
 	protected static Map<String, String> splashCache = new HashMap<String, String>();
 	protected static boolean init = false;
@@ -37,6 +45,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	public boolean refreshOnMenuReload = false;
 	public File splashfile;
 	public String text = null;
+	public boolean vanillaLike = false;
 	
 	protected float basescale = 1.8F;
 	
@@ -53,6 +62,11 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 		
 		if ((this.action != null) && this.action.equalsIgnoreCase("addsplash")) {
+
+			String vanillaLikeString = item.getEntryValue("vanilla-like");
+			if ((vanillaLikeString != null) && vanillaLikeString.equals("true")) {
+				this.vanillaLike = true;
+			}
 
 			String filepath = fixBackslashPath(item.getEntryValue("splashfilepath"));
 			if (filepath != null) {
@@ -129,6 +143,10 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	protected void renderSplash(FontRenderer font, GuiScreen s) {
 
 		String splash = null;
+
+		if (this.vanillaLike && (this.text == null)) {
+			this.text = getVanillaSplash();
+		}
 		
 		if ((this.splashfile != null) && (this.text == null)) {
 			
@@ -216,6 +234,52 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	@SubscribeEvent
 	public static void onMenuReloaded(MenuReloadedEvent e) {
 		splashCache.clear();
+	}
+
+	public static String getVanillaSplash() {
+		String sp = "missingno";
+		IResource iresource = null;
+		try {
+			List<String> list = Lists.<String>newArrayList();
+			iresource = Minecraft.getMinecraft().getResourceManager().getResource(SPLASH_TEXTS);
+			BufferedReader bufferedreader = new BufferedReader(new InputStreamReader(iresource.getInputStream(), StandardCharsets.UTF_8));
+			String s;
+			while ((s = bufferedreader.readLine()) != null) {
+				s = s.trim();
+
+				if (!s.isEmpty()) {
+					list.add(s);
+				}
+			}
+			if (!list.isEmpty()) {
+				while (true) {
+					sp = list.get(RANDOM.nextInt(list.size()));
+
+					if (sp.hashCode() != 125780783) {
+						break;
+					}
+				}
+			}
+
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(new Date());
+
+			if (calendar.get(2) + 1 == 12 && calendar.get(5) == 24) {
+				sp = "Merry X-mas!";
+			}
+			else if (calendar.get(2) + 1 == 1 && calendar.get(5) == 1) {
+				sp = "Happy new year!";
+			}
+			else if (calendar.get(2) + 1 == 10 && calendar.get(5) == 31) {
+				sp = "OOoooOOOoooo! Spooky!";
+			}
+
+		} catch (IOException var8) {
+		} finally {
+			IOUtils.closeQuietly(iresource);
+		}
+
+		return sp;
 	}
 
 }

@@ -46,7 +46,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 				if (cachedWebImages.containsKey(this.actionId)) {
 					this.webTexture = cachedWebImages.get(this.actionId);
-					if (this.webTexture.getLocation() != null) {
+					if ((this.webTexture.getLocation() != null) && this.webTexture.textureURL.equals(this.value)) {
 						this.calculateAspectRatio();
 						this.ready = true;
 					} else {
@@ -104,7 +104,8 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	@Override
 	public void render(GuiScreen menu) throws IOException {
-		if (this.shouldRender()) {
+
+		if (this.shouldRender() || isEditorActive()) {
 
 			int x = this.getPosX(menu);
 			int y = this.getPosY(menu);
@@ -182,7 +183,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 				InputStream s = httpcon.getInputStream();
 				if (s != null) {
 					BufferedImage i = ImageIO.read(s);
-					wt = new WebTexture(i);
+					wt = new WebTexture(i, url);
 					textureCache.put(url, wt);
 					s.close();
 				}
@@ -201,13 +202,15 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 		public int height;
 		public ResourceLocation location = null;
 		public BufferedImage image;
+		public String textureURL;
 
-		public WebTexture(BufferedImage image) {
+		public WebTexture(BufferedImage image, String url) {
 			this.image = image;
 			if (image != null) {
 				this.width = image.getWidth();
 				this.height = image.getHeight();
 			}
+			this.textureURL = url;
 		}
 
 		public ResourceLocation getLocation() {

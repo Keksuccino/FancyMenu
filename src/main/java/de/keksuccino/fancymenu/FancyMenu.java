@@ -3,7 +3,9 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.VariableCommand;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
@@ -16,6 +18,7 @@ import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
@@ -42,7 +45,7 @@ import org.apache.logging.log4j.Logger;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.3,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.9.1";
+	public static final String VERSION = "2.10.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -84,16 +87,14 @@ public class FancyMenu {
 
 				DeepCustomizationLayers.registerAll();
 
-				//TODO übernehmen
 				ButtonActions.registerAll();
 
-				//TODO übernehmen
 				VisibilityRequirements.registerAll();
 
-				//TODO übernehmen
 				Placeholders.registerAll();
 
-				//TODO übernehmen
+				CustomizationItems.registerAll();
+
 				VariableHandler.init();
 
 				ButtonIdentificator.init();
@@ -144,6 +145,8 @@ public class FancyMenu {
 	public void onRegisterCommands(FMLServerStartingEvent e) {
 
 		e.registerServerCommand(new OpenGuiScreenCommand());
+		e.registerServerCommand(new CloseGuiScreenCommand());
+		e.registerServerCommand(new VariableCommand());
 
 	}
 
