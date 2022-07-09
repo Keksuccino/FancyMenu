@@ -3,7 +3,9 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.VariableCommand;
 import de.keksuccino.fancymenu.events.CommandsRegisterEvent;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -17,6 +19,7 @@ import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
@@ -41,7 +44,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.9.1";
+	public static final String VERSION = "2.10.0";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -89,6 +92,8 @@ public class FancyMenu implements ModInitializer {
 				VisibilityRequirements.registerAll();
 
 				Placeholders.registerAll();
+
+				CustomizationItems.registerAll();
 
 				VariableHandler.init();
 
@@ -148,6 +153,8 @@ public class FancyMenu implements ModInitializer {
 	public void onRegisterCommands(CommandsRegisterEvent e) {
 
 		OpenGuiScreenCommand.register(e.getDispatcher());
+		CloseGuiScreenCommand.register(e.getDispatcher());
+		VariableCommand.register(e.getDispatcher());
 
 	}
 

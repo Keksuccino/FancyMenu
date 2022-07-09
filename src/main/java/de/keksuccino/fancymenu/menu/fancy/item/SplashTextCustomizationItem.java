@@ -38,6 +38,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	public boolean refreshOnMenuReload = false;
 	public File splashfile;
 	public String text = null;
+	public boolean vanillaLike = false;
 	
 	protected float basescale = 1.8F;
 	
@@ -54,6 +55,11 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 		
 		if ((this.action != null) && this.action.equalsIgnoreCase("addsplash")) {
+
+			String vanillaLikeString = item.getEntryValue("vanilla-like");
+			if ((vanillaLikeString != null) && vanillaLikeString.equals("true")) {
+				this.vanillaLike = true;
+			}
 
 			String filepath = fixBackslashPath(item.getEntryValue("splashfilepath"));
 			if (filepath != null) {
@@ -130,6 +136,10 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	protected void renderSplash(PoseStack matrix, Font font, Screen s) {
 
 		String splash = null;
+
+		if (this.vanillaLike && (this.text == null)) {
+			this.text = Minecraft.getInstance().getSplashManager().getSplash();
+		}
 		
 		if ((this.splashfile != null) && (this.text == null)) {
 			
