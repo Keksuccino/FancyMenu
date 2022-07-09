@@ -103,6 +103,7 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
         this.object.orientation = cachedOri;
     }
 
+    //TODO übernehmen
     @Override
     public void destroyObject() {
         if (this.isDestroyable()) {
@@ -110,7 +111,12 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
                 FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
                 PopupHandler.displayPopup(pop);
             }
+            if (!this.getDeepCustomizationItem().hidden) {
+                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+            }
             this.getDeepCustomizationItem().hidden = true;
+            this.handler.setObjectFocused(this, false, true);
+            this.resetObjectStates();
         }
     }
 

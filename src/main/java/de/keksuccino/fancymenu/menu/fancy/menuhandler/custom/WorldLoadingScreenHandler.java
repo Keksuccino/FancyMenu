@@ -29,7 +29,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	}
 	
 	@SubscribeEvent
-	public void onRender(ScreenEvent.DrawScreenEvent.Pre e) {
+	public void onRender(ScreenEvent.Render.Pre e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				e.setCanceled(true);

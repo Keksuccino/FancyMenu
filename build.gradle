@@ -56,7 +56,8 @@ repositories {
 
 dependencies {
 
-    minecraft 'net.minecraftforge:forge:1.19-41.0.2'
+//    minecraft 'net.minecraftforge:forge:1.19-41.0.2'
+    minecraft 'net.minecraftforge:forge:1.19-41.0.64'
 	
 	implementation fileTree('libs') { include '*.jar' }
 

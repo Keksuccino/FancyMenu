@@ -13,7 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.client.event.ScreenEvent.DrawScreenEvent;
+import net.minecraftforge.client.event.ScreenEvent.Render;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -27,12 +27,12 @@ public class VanillaButtonDescriptionHandler {
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitPre(ScreenEvent.Init.Pre e) {
 		descriptions.clear();
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onDrawScreen(DrawScreenEvent.Post e) {
+	public void onDrawScreen(Render.Post e) {
 		for (Map.Entry<AbstractWidget , String> m : descriptions.entrySet()) {
 			if (m.getKey().isHoveredOrFocused()) {
 				renderDescription(e.getPoseStack(), e.getMouseX(), e.getMouseY(), m.getValue());

@@ -34,7 +34,7 @@ public class MenuCustomizationEvents {
 
 	//I don't fucking know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onInitPrePre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitPrePre(ScreenEvent.Init.Pre e) {
 		if (!ButtonCache.isCaching()) {
 			if (MenuCustomization.isValidScreen(e.getScreen())) {
 				Screen current = Minecraft.getInstance().screen;
@@ -75,7 +75,7 @@ public class MenuCustomizationEvents {
 	}
 	
 	@SubscribeEvent
-	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitPre(ScreenEvent.Init.Pre e) {
 
 		MenuCustomization.isCurrentScrollable = false;
 		

@@ -937,7 +937,7 @@ public class CustomizationHelperUI extends UIBase {
 	}
 	
 	@SubscribeEvent
-	public void onInitScreen(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitScreen(ScreenEvent.Init.Pre e) {
 		try {
 			
 			if (e.getScreen() != null) {

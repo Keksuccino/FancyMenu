@@ -34,7 +34,7 @@ public class ButtonCache {
 	private static Map<String, AbstractWidget> customButtons = new HashMap<String, AbstractWidget>();
 
 	@SubscribeEvent
-	public void updateCache(ScreenEvent.InitScreenEvent.Post e) {
+	public void updateCache(ScreenEvent.Init.Post e) {
 		if (!caching) {
 			cached = false;
 			current = e.getScreen();

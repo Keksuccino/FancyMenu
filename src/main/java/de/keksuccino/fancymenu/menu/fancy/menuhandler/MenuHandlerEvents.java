@@ -5,25 +5,22 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.client.event.ScreenOpenEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class MenuHandlerEvents {
 
 	private MenuHandlerBase current;
 	
 	@SubscribeEvent
-	public void onOpenGui(ScreenOpenEvent e) {
+	public void onOpenGui(ScreenEvent.Opening e) {
 		this.initHandler(e.getScreen());
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onScreenInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onScreenInitPre(ScreenEvent.Init.Pre e) {
 		
 		//Second try to register the menu handler, if onOpenGui failed because of changing the menu by another mod
 		this.initHandler(e.getScreen());

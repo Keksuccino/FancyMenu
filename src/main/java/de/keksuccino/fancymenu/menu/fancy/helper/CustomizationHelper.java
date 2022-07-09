@@ -41,7 +41,7 @@ public class CustomizationHelper {
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOW)
-	public void onRenderPost(ScreenEvent.DrawScreenEvent.Post e) {
+	public void onRenderPost(ScreenEvent.Render.Post e) {
 
 		List<Runnable> runs = new ArrayList<>();
 		runs.addAll(CustomizationHelper.mainThreadTasks);
@@ -57,7 +57,6 @@ public class CustomizationHelper {
 		if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 			if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 				if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
-					//TODO übernehmen
 					if (!(e.getScreen() instanceof ButtonActionScreen)) {
 						if (!(e.getScreen() instanceof VisibilityRequirementsScreen)) {
 
@@ -65,7 +64,6 @@ public class CustomizationHelper {
 
 						}
 					}
-					//--------------------
 				}
 			}
 		}

@@ -14,7 +14,7 @@ public class GameIntroEvents {
 	private static boolean titleScreenDisplayed = false;
 	
 	@SubscribeEvent
-	public void onScreenInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onScreenInitPre(ScreenEvent.Init.Pre e) {
 		if (e.getScreen() instanceof TitleScreen) {
 			titleScreenDisplayed = true;
 		} else if (titleScreenDisplayed && MenuCustomization.isValidScreen(e.getScreen())) {

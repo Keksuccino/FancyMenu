@@ -15,7 +15,7 @@ public class AnimationHandlerEvents {
 	private Screen lastScreen;
 	
 	@SubscribeEvent
-	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitPre(ScreenEvent.Init.Pre e) {
 		//Stopping audio and resetting to intro (if enabled) for all advanced animations when changing the screen
 		if (MenuCustomization.isValidScreen(e.getScreen())) {
 			if (AnimationHandler.isReady() && (this.lastScreen != e.getScreen()) && !LayoutEditorScreen.isActive) {

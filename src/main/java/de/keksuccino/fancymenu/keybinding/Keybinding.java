@@ -5,21 +5,36 @@ import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class Keybinding {
 
 	public static KeyMapping KeyReloadMenu;
 	public static KeyMapping KeyToggleHelper;
 	
-	public static void init() {
-		KeyReloadMenu = new KeyMapping("Reload Menu | CTRL + ALT + ", 82, "FancyMenu");
-		ClientRegistry.registerKeyBinding(KeyReloadMenu);
+	public static boolean initialized = false;
 
-		KeyToggleHelper = new KeyMapping("Toggle Customization Overlay | CTRL + ALT + ", 67, "FancyMenu");
-		ClientRegistry.registerKeyBinding(KeyToggleHelper);
-		
-		initGuiClickActions();
+	public static void init() {
+
+		FMLJavaModLoadingContext.get().getModEventBus().register(Keybinding.class);
+
+	}
+
+	@SubscribeEvent
+	public static void registerKeyBinds(RegisterKeyMappingsEvent e) {
+
+		if (!initialized) {
+			KeyReloadMenu = new KeyMapping("Reload Menu | CTRL + ALT + ", 82, "FancyMenu");
+			KeyToggleHelper = new KeyMapping("Toggle Customization Overlay | CTRL + ALT + ", 67, "FancyMenu");
+			initGuiClickActions();
+			initialized = true;
+		}
+
+		e.register(KeyReloadMenu);
+		e.register(KeyToggleHelper);
+
 	}
 	
 	private static void initGuiClickActions() {
@@ -45,4 +60,5 @@ public class Keybinding {
 			}
 		});
 	}
+
 }

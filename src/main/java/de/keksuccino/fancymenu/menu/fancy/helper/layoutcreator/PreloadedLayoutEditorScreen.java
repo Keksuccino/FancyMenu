@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +31,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.La
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.*;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
@@ -80,6 +82,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.maximumFM = meta.getEntryValue("maximumfmversion");
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
+
+				//TODO übernehmen
+				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
+					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+				};
 
 				String ulWhitelist = meta.getEntryValue("universal_layout_whitelist");
 				if ((ulWhitelist != null) && ulWhitelist.contains(";")) {

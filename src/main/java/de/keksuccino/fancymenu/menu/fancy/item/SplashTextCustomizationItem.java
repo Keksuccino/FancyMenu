@@ -40,6 +40,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	public boolean refreshOnMenuReload = false;
 	public File splashfile;
 	public String text = null;
+	//TODO übernehmen
+	public boolean vanillaLike = false;
 	
 	protected float basescale = 1.8F;
 	
@@ -56,6 +58,13 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 		
 		if ((this.action != null) && this.action.equalsIgnoreCase("addsplash")) {
+
+			//TODO übernehmen
+			String vanillaLikeString = item.getEntryValue("vanilla-like");
+			if ((vanillaLikeString != null) && vanillaLikeString.equals("true")) {
+				this.vanillaLike = true;
+			}
+			//---------------
 
 			String filepath = fixBackslashPath(item.getEntryValue("splashfilepath"));
 			if (filepath != null) {
@@ -133,6 +142,12 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 
 		String splash = null;
 
+		//TODO übernehmen
+		if (this.vanillaLike && (this.text == null)) {
+			this.text = Minecraft.getInstance().getSplashManager().getSplash();
+		}
+		//-----------------
+
 		if ((this.splashfile != null) && (this.text == null)) {
 
 			if (isNewMenu && this.refreshOnMenuReload) {
@@ -206,7 +221,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	}
 	
 	@SubscribeEvent
-	public static void onInitScreenPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public static void onInitScreenPre(ScreenEvent.Init.Pre e) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if ((lastScreen == null) || !lastScreen.getClass().getName().equals(s.getClass().getName())) {

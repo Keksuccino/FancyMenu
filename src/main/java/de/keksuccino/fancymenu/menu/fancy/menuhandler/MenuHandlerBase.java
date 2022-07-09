@@ -174,7 +174,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@SubscribeEvent
-	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitPre(ScreenEvent.Init.Pre e) {
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
@@ -241,6 +241,15 @@ public class MenuHandlerBase extends GuiComponent {
 			if (metas.isEmpty()) {
 				continue;
 			}
+
+			//TODO übernehmen
+			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
+				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+			}.visibilityRequirementContainer;
+			if (!globalVisReqContainer.isVisible()) {
+				continue;
+			}
+			//------------------
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
 			if (biggerthanwidth != null) {
@@ -366,7 +375,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 	}
 
-	protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.InitScreenEvent.Pre e) {
+	protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.Init.Pre e) {
 		
 		String action = sec.getEntryValue("action");
 		if (action != null) {
@@ -1220,7 +1229,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@SubscribeEvent
-	public void onRenderPost(ScreenEvent.DrawScreenEvent.Post e) {
+	public void onRenderPost(ScreenEvent.Render.Post e) {
 		if (PopupHandler.isPopupActive()) {
 			return;
 		}
@@ -1257,7 +1266,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@SubscribeEvent
-	public void drawToBackground(ScreenEvent.BackgroundDrawnEvent e) {
+	public void drawToBackground(ScreenEvent.BackgroundRendered e) {
 		if (!MenuCustomization.isCurrentMenuScrollable()) {
 			this.renderBackground(e.getPoseStack(), e.getScreen());
 		}

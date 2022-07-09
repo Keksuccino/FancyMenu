@@ -37,7 +37,7 @@ import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.client.event.ScreenEvent.BackgroundDrawnEvent;
+import net.minecraftforge.client.event.ScreenEvent.BackgroundRendered;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.internal.BrandingControl;
 
@@ -70,7 +70,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 
 	@Override
-	public void onInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+	public void onInitPre(ScreenEvent.Init.Pre e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				if (e.getScreen() instanceof TitleScreen) {
@@ -155,7 +155,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 
 	@SubscribeEvent
-	public void onRender(ScreenEvent.DrawScreenEvent.Pre e) {
+	public void onRender(ScreenEvent.Render.Pre e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				e.setCanceled(true);
@@ -168,7 +168,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	 * Mimic the original main menu to be able to customize it easier
 	 */
 	@Override
-	public void drawToBackground(BackgroundDrawnEvent e) {
+	public void drawToBackground(BackgroundRendered e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			Font font = Minecraft.getInstance().font;
 			int width = e.getScreen().width;
@@ -250,7 +250,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	}
 
-	private void renderButtons(ScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
+	private void renderButtons(ScreenEvent.BackgroundRendered e, int mouseX, int mouseY) {
 		List<Widget> buttons = this.getButtonList(e.getScreen());
 		float partial = Minecraft.getInstance().getFrameTime();
 

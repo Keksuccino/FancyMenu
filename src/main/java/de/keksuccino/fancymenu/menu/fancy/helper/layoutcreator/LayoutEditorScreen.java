@@ -157,6 +157,11 @@ public class LayoutEditorScreen extends Screen {
 
 	protected List<String> universalLayoutWhitelist = new ArrayList<>();
 	protected List<String> universalLayoutBlacklist = new ArrayList<>();
+
+	//TODO übernehmen
+	protected CustomizationItemBase globalVisReqDummyItem = new CustomizationItemBase(new PropertiesSection("")) {
+		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+	};
 	
 	protected LayoutEditorUI ui = new LayoutEditorUI(this);
 	
@@ -293,6 +298,14 @@ public class LayoutEditorScreen extends Screen {
 			}
 			meta.addEntry("universal_layout_blacklist", bl);
 		}
+
+		//TODO übernehmen
+		LayoutElement globalVisReqDummyLayoutElement = new LayoutElement(this.globalVisReqDummyItem, false, this, true) {
+			@Override public List<PropertiesSection> getProperties() { return null; }
+		};
+		globalVisReqDummyLayoutElement.addVisibilityPropertiesTo(meta);
+		//-----------------------
+
 		l.add(meta);
 		
 		if (!this.backgroundAnimationNames.isEmpty()) {
@@ -1141,24 +1154,16 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
+	//TODO übernehmen
 	protected void addWebTexture(String url) {
-		String finalUrl = null;
-		if (url != null) {
-			url = WebUtils.filterURL(url);
-			finalUrl = DynamicValueHelper.convertFromRaw(url);
-		}
-		if (WebUtils.isValidUrl(finalUrl)) {
-			this.history.saveSnapshot(this.history.createSnapshot());
-
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addwebtexture");
-			s.addEntry("url", url);
-			s.addEntry("height", "100");
-			s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
-			this.addContent(new LayoutWebTexture(new WebTextureCustomizationItem(s), this));
-		} else {
-			displayNotification(Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
-		}
+		this.history.saveSnapshot(this.history.createSnapshot());
+		PropertiesSection s = new PropertiesSection("customization");
+		s.addEntry("action", "addwebtexture");
+		s.addEntry("url", url);
+		s.addEntry("height", "100");
+		s.addEntry("width", "100");
+		s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+		this.addContent(new LayoutWebTexture(new WebTextureCustomizationItem(s), this));
 	}
 
 	protected void addSlideshow(String name) {
@@ -1297,23 +1302,14 @@ public class LayoutEditorScreen extends Screen {
 		this.addContent(b);
 	}
 
+	//TODO übernehmen
 	protected void addWebText(String url) {
-		String finalUrl = null;
-		if (url != null) {
-			url = WebUtils.filterURL(url);
-			finalUrl = DynamicValueHelper.convertFromRaw(url);
-		}
-		if (WebUtils.isValidUrl(finalUrl)) {
-			this.history.saveSnapshot(this.history.createSnapshot());
-
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addwebtext");
-			s.addEntry("url", url);
-			s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
-			this.addContent(new LayoutWebString(new WebStringCustomizationItem(s), this));
-		} else {
-			displayNotification(Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
-		}
+		this.history.saveSnapshot(this.history.createSnapshot());
+		PropertiesSection s = new PropertiesSection("customization");
+		s.addEntry("action", "addwebtext");
+		s.addEntry("url", url);
+		s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+		this.addContent(new LayoutWebString(new WebStringCustomizationItem(s), this));
 	}
 	
 	protected void addText(String text) {

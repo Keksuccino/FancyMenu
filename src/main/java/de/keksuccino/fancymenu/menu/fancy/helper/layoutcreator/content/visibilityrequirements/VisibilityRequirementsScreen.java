@@ -111,7 +111,6 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
             this.scrollArea.addEntry(new RequirementScrollEntry(this.scrollArea, requirement, ENTRY_BACK_2));
             this.entryBackTick = 0;
         }
-//        this.scrollArea.addEntry(new RequirementScrollEntry(this.scrollArea, requirement, ENTRY_BACK_1));
         this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea, 1, new Color(255,255,255,100)));
     }
 
@@ -285,7 +284,6 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
                 originY += 45;
             }
 
-//            drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.requirement") + ":", centerX, centerY - 83, -1);
             this.enableRequirementButton.x = originX - (this.enableRequirementButton.getWidth() / 2);
             this.enableRequirementButton.y = originY - 70;
 

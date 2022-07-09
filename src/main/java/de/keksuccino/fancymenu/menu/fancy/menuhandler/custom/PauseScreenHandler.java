@@ -22,7 +22,7 @@ public class PauseScreenHandler extends MenuHandlerBase {
     }
 
     @Override
-    protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.InitScreenEvent.Pre e) {
+    protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.Init.Pre e) {
         if (this.customizePauseScreen(e.getScreen())) {
             super.applyLayoutPre(sec, e);
         }
