@@ -241,6 +241,13 @@ public class MenuHandlerBase extends GuiComponent {
 			if (metas.isEmpty()) {
 				continue;
 			}
+
+			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
+				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+			}.visibilityRequirementContainer;
+			if (!globalVisReqContainer.isVisible()) {
+				continue;
+			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
 			if (biggerthanwidth != null) {

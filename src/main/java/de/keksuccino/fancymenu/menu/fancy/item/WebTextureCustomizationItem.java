@@ -47,7 +47,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 				if (cachedWebImages.containsKey(this.actionId)) {
 					this.texture = cachedWebImages.get(this.actionId);
 					this.calculateAspectRatio();
-					if (this.texture.getResourceLocation() != null) {
+					if ((this.texture.getResourceLocation() != null) && this.texture.getURL().equals(this.value)) {
 						this.ready = true;
 					} else {
 						this.texture = null;
@@ -135,7 +135,8 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	@Override
 	public void render(PoseStack matrix, Screen menu) throws IOException {
-		if (this.shouldRender()) {
+
+		if (this.shouldRender() || isEditorActive()) {
 
 			int x = this.getPosX(menu);
 			int y = this.getPosY(menu);

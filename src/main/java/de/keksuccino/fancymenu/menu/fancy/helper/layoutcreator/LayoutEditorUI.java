@@ -26,8 +26,10 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.A
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ChooseFromStringListScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar;
@@ -35,6 +37,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.menu.fancy.item.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar.ElementAlignment;
@@ -824,6 +827,13 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(openCloseSoundButton);
 			
 			this.addSeparator();
+
+			/** VISIBILITY REQUIREMENTS [LAYOUT-WIDE] **/
+			AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.global_visibility_requirements"), (press) -> {
+				Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
+			});
+			visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.global_visibility_requirements.desc"), "%n%"));
+			this.addContent(visibilityRequirementsButton);
 			
 			/** WINDOW SIZE RESTRICTIONS **/
 			FMContextMenu windowSizeMenu = new FMContextMenu();
@@ -1050,6 +1060,18 @@ public class LayoutEditorUI extends UIBase {
 			});
 			multiSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.multi.desc"), "%n%"));
 			splashMenu.addContent(multiSplashButton);
+
+			AdvancedButton vanillaLikeSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like"), true, (press) -> {
+				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+				PropertiesSection sec = new PropertiesSection("customization");
+				sec.addEntry("action", "addsplash");
+				sec.addEntry("vanilla-like", "true");
+				sec.addEntry("y", "" + (int)(this.parent.ui.bar.getHeight() * UIBase.getUIScale()));
+				SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
+				this.parent.addContent(new LayoutSplashText(i, this.parent));
+			});
+			vanillaLikeSplashButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like.desc"), "%n%"));
+			splashMenu.addContent(vanillaLikeSplashButton);
 			
 			AdvancedButton splashButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.splash"), (press) -> {
 				splashMenu.setParentButton((AdvancedButton) press);
@@ -1147,8 +1169,6 @@ public class LayoutEditorUI extends UIBase {
 				shapesMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(shapesButton);
-
-			this.addSeparator();
 
 			/** DUMMY BUTTON: INSTALL AUDIO EXTENSION **/
 			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
