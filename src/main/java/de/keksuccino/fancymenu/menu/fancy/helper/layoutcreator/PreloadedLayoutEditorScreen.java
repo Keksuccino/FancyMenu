@@ -90,6 +90,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
+				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
+					@Override public void render(MatrixStack matrix, Screen menu) throws IOException {}
+				};
+
 				String ulWhitelist = meta.getEntryValue("universal_layout_whitelist");
 				if ((ulWhitelist != null) && ulWhitelist.contains(";")) {
 					this.universalLayoutWhitelist.addAll(Arrays.asList(ulWhitelist.split("[;]")));

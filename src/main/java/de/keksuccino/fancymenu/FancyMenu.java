@@ -3,13 +3,16 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.VariableCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.button.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
@@ -49,7 +52,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.9.1";
+	public static final String VERSION = "2.10.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -93,16 +96,14 @@ public class FancyMenu {
 
 				DeepCustomizationLayers.registerAll();
 
-				//TODO übernehmen
 				ButtonActions.registerAll();
 
-				//TODO übernehmen
 				VisibilityRequirements.registerAll();
 
-				//TODO übernehmen
 				Placeholders.registerAll();
 
-				//TODO übernehmen
+				CustomizationItems.registerAll();
+
 				VariableHandler.init();
 
 				ButtonIdentificator.init();
@@ -159,6 +160,8 @@ public class FancyMenu {
 	public void onRegisterCommands(RegisterCommandsEvent e) {
 
 		OpenGuiScreenCommand.register(e.getDispatcher());
+		CloseGuiScreenCommand.register(e.getDispatcher());
+		VariableCommand.register(e.getDispatcher());
 
 	}
 	

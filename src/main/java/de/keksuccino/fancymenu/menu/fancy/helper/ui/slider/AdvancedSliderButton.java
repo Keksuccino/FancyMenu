@@ -1,0 +1,142 @@
+//TODO übernehmen
+package de.keksuccino.fancymenu.menu.fancy.helper.ui.slider;
+
+import com.mojang.blaze3d.matrix.MatrixStack;
+import de.keksuccino.konkrete.input.MouseInput;
+import net.minecraft.client.gui.widget.AbstractSlider;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.StringTextComponent;
+
+import java.util.function.Consumer;
+
+public abstract class AdvancedSliderButton extends AbstractSlider {
+
+    protected static boolean leftDownGlobal = false;
+
+    public boolean handleClick;
+    public boolean enableRightClick = false;
+    public boolean ignoreBlockedInput = false;
+    public boolean ignoreGlobalLeftMouseDown = false;
+    protected String messagePrefix = null;
+    protected String messageSuffix = null;
+    protected Consumer<AdvancedSliderButton> applyValueCallback;
+
+    protected boolean leftDownNotHovered = false;
+    protected boolean leftDownThis = false;
+
+    public AdvancedSliderButton(int x, int y, int width, int height, boolean handleClick, double value, Consumer<AdvancedSliderButton> applyValueCallback) {
+        super(x, y, width, height, new StringTextComponent(""), value);
+        this.handleClick = handleClick;
+        this.applyValueCallback = applyValueCallback;
+    }
+
+    @Override
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+
+        if (this.visible) {
+
+            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+
+            if (!this.isHovered() && MouseInput.isLeftMouseDown()) {
+                this.leftDownNotHovered = true;
+            }
+            if (!MouseInput.isLeftMouseDown()) {
+                this.leftDownNotHovered = false;
+            }
+
+            if (this.handleClick) {
+                if (this.isHovered() && (MouseInput.isLeftMouseDown() || (this.enableRightClick && MouseInput.isRightMouseDown())) && (!leftDownGlobal || this.ignoreGlobalLeftMouseDown) && !leftDownNotHovered && !this.isInputBlocked() && this.active && this.visible) {
+                    if (!this.leftDownThis) {
+                        this.onClick(mouseX, mouseY);
+                        leftDownGlobal = true;
+                        this.leftDownThis = true;
+                    }
+                }
+                if (!MouseInput.isLeftMouseDown() && !(MouseInput.isRightMouseDown() && this.enableRightClick)) {
+                    leftDownGlobal = false;
+                    if (this.leftDownThis) {
+                        this.onRelease(mouseX, mouseY);
+                    }
+                    this.leftDownThis = false;
+                }
+                if (this.leftDownThis) {
+                    this.onDrag(mouseX, mouseY, 0, 0);
+                }
+            }
+
+        }
+
+        super.render(matrix, mouseX, mouseY, partialTicks);
+
+    }
+
+    @Override
+    protected void onDrag(double mouseX, double mouseY, double d1, double d2) {
+        super.onDrag(mouseX, mouseY, d1, d2);
+    }
+
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        super.onClick(mouseX, mouseY);
+    }
+
+    @Override
+    public void onRelease(double mouseX, double mouseY) {
+        super.onRelease(mouseX, mouseY);
+    }
+
+    //applyValue
+    @Override
+    protected void func_230972_a_() {
+        if (this.applyValueCallback != null) {
+            this.applyValueCallback.accept(this);
+        }
+    }
+
+    //updateMessage
+    @Override
+    public void func_230979_b_() {
+        String s = "";
+        if (this.messagePrefix != null) {
+            s += this.messagePrefix;
+        }
+        s += this.getSliderMessageWithoutPrefixSuffix();
+        if (this.messageSuffix != null) {
+            s += this.messageSuffix;
+        }
+        this.setMessage(new StringTextComponent(s));
+    }
+
+    public abstract String getSliderMessageWithoutPrefixSuffix();
+
+    public void setLabelPrefix(String prefix) {
+        this.messagePrefix = prefix;
+        this.func_230979_b_();
+    }
+
+    public void setLabelSuffix(String suffix) {
+        this.messageSuffix = suffix;
+        this.func_230979_b_();
+    }
+
+    public void setValue(double value) {
+        double d0 = this.sliderValue;
+        this.sliderValue = MathHelper.clamp(value, 0.0D, 1.0D);
+        if (d0 != this.sliderValue) {
+            this.func_230972_a_();
+        }
+        this.func_230979_b_();
+    }
+
+    public double getValue() {
+        return this.sliderValue;
+    }
+
+    protected boolean isInputBlocked() {
+        if (this.ignoreBlockedInput) {
+            return false;
+        }
+        return MouseInput.isVanillaInputBlocked();
+    }
+
+}
