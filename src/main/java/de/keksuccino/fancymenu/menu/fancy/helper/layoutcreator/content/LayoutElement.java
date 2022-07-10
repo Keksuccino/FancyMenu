@@ -1163,7 +1163,6 @@ public abstract class LayoutElement extends GuiComponent {
 
 	public abstract List<PropertiesSection> getProperties();
 
-	//TODO übernehmen (public)
 	public void addVisibilityPropertiesTo(PropertiesSection sec) {
 
 		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;

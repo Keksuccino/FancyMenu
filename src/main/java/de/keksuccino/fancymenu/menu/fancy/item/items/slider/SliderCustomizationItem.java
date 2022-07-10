@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.item.items.slider;
 
 import com.mojang.blaze3d.systems.RenderSystem;

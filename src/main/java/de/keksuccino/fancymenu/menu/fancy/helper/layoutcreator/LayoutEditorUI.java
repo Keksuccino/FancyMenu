@@ -828,14 +828,12 @@ public class LayoutEditorUI extends UIBase {
 			
 			this.addSeparator();
 
-			//TODO übernehmen
 			/** VISIBILITY REQUIREMENTS [LAYOUT-WIDE] **/
 			AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.global_visibility_requirements"), (press) -> {
 				Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
 			});
 			visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.global_visibility_requirements.desc"), "%n%"));
 			this.addContent(visibilityRequirementsButton);
-			//---------------------------------
 			
 			/** WINDOW SIZE RESTRICTIONS **/
 			FMContextMenu windowSizeMenu = new FMContextMenu();
@@ -1063,7 +1061,6 @@ public class LayoutEditorUI extends UIBase {
 			multiSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.multi.desc"), "%n%"));
 			splashMenu.addContent(multiSplashButton);
 
-			//TODO übernehmen
 			AdvancedButton vanillaLikeSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like"), true, (press) -> {
 				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 				PropertiesSection sec = new PropertiesSection("customization");
@@ -1075,7 +1072,6 @@ public class LayoutEditorUI extends UIBase {
 			});
 			vanillaLikeSplashButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like.desc"), "%n%"));
 			splashMenu.addContent(vanillaLikeSplashButton);
-			//------------------
 			
 			AdvancedButton splashButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.splash"), (press) -> {
 				splashMenu.setParentButton((AdvancedButton) press);
@@ -1167,9 +1163,6 @@ public class LayoutEditorUI extends UIBase {
 				shapesMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(shapesButton);
-
-			//TODO übernehmen
-//			this.addSeparator();
 
 			/** DUMMY BUTTON: INSTALL AUDIO EXTENSION **/
 			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {

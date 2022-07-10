@@ -49,8 +49,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ locals)
-	public static final String VERSION = "2.10.0";
+	//TODO übernehmen
+	public static final String VERSION = "2.10.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -98,7 +98,6 @@ public class FancyMenu {
 
 				Placeholders.registerAll();
 
-				//TODO übernehmen
 				CustomizationItems.registerAll();
 
 				VariableHandler.init();
@@ -138,7 +137,6 @@ public class FancyMenu {
 
 				MinecraftForge.EVENT_BUS.register(this);
 
-				//TODO remove debug
 //				MinecraftForge.EVENT_BUS.register(new Test());
 
 				if (isOptifineCompatibilityMode()) {
@@ -158,10 +156,8 @@ public class FancyMenu {
 	public void onRegisterCommands(RegisterCommandsEvent e) {
 
 		OpenGuiScreenCommand.register(e.getDispatcher());
-		//TODO übernehmen
 		CloseGuiScreenCommand.register(e.getDispatcher());
 		VariableCommand.register(e.getDispatcher());
-		//---------------------
 
 	}
 	

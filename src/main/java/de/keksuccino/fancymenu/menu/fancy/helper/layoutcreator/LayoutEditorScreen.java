@@ -158,7 +158,6 @@ public class LayoutEditorScreen extends Screen {
 	protected List<String> universalLayoutWhitelist = new ArrayList<>();
 	protected List<String> universalLayoutBlacklist = new ArrayList<>();
 
-	//TODO übernehmen
 	protected CustomizationItemBase globalVisReqDummyItem = new CustomizationItemBase(new PropertiesSection("")) {
 		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 	};
@@ -299,12 +298,10 @@ public class LayoutEditorScreen extends Screen {
 			meta.addEntry("universal_layout_blacklist", bl);
 		}
 
-		//TODO übernehmen
 		LayoutElement globalVisReqDummyLayoutElement = new LayoutElement(this.globalVisReqDummyItem, false, this, true) {
 			@Override public List<PropertiesSection> getProperties() { return null; }
 		};
 		globalVisReqDummyLayoutElement.addVisibilityPropertiesTo(meta);
-		//-----------------------
 
 		l.add(meta);
 		
@@ -1154,7 +1151,6 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
-	//TODO übernehmen
 	protected void addWebTexture(String url) {
 		this.history.saveSnapshot(this.history.createSnapshot());
 		PropertiesSection s = new PropertiesSection("customization");
@@ -1302,7 +1298,6 @@ public class LayoutEditorScreen extends Screen {
 		this.addContent(b);
 	}
 
-	//TODO übernehmen
 	protected void addWebText(String url) {
 		this.history.saveSnapshot(this.history.createSnapshot());
 		PropertiesSection s = new PropertiesSection("customization");

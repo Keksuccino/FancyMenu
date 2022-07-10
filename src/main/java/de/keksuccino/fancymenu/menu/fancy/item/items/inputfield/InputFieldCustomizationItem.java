@@ -1,7 +1,5 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.item.items.inputfield;
 
-import com.google.errorprone.annotations.Var;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;

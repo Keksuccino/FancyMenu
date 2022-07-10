@@ -16,6 +16,11 @@ public class LegacyVisibilityRequirements {
         List<VisibilityRequirementsScreen.Requirement> requirements = new ArrayList<>();
 
         CharacterFilter integerCharFilter = CharacterFilter.getIntegerCharacterFiler();
+        //TODO übernehmen
+        CharacterFilter multiIntegerFilter = CharacterFilter.getIntegerCharacterFiler();
+        multiIntegerFilter.addAllowedCharacters(" ");
+        multiIntegerFilter.addAllowedCharacters(",");
+        //---------------
 
         /** Singleplayer **/
         String singleplayerName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.singleplayer");
@@ -50,6 +55,7 @@ public class LegacyVisibilityRequirements {
         }, null, null, null);
         requirements.add(worldLoaded);
 
+        //TODO übernehmen CHANGE ALL FILTERS TO multiInteger FROM HERE ------------
         /** Is Real Time Hour **/
         String realTimeHourValuePreset = "";
         for (int i : container.vrRealTimeHour) {
@@ -83,7 +89,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, realTimeHourValuePreset);
+        }, multiIntegerFilter, realTimeHourValuePreset);
         requirements.add(realTimeHour);
 
         /** Is Real Time Minute **/
@@ -119,7 +125,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, realTimeMinuteValuePreset);
+        }, multiIntegerFilter, realTimeMinuteValuePreset);
         requirements.add(realTimeMinute);
 
         /** Is Real Time Second **/
@@ -155,7 +161,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, realTimeSecondValuePreset);
+        }, multiIntegerFilter, realTimeSecondValuePreset);
         requirements.add(realTimeSecond);
 
         /** Is Real Time Day **/
@@ -191,7 +197,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, realTimeDayValuePreset);
+        }, multiIntegerFilter, realTimeDayValuePreset);
         requirements.add(realTimeDay);
 
         /** Is Real Time Month **/
@@ -227,7 +233,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, realTimeMonthValuePreset);
+        }, multiIntegerFilter, realTimeMonthValuePreset);
         requirements.add(realTimeMonth);
 
         /** Is Real Time Year **/
@@ -263,7 +269,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, realTimeYearValuePreset);
+        }, multiIntegerFilter, realTimeYearValuePreset);
         requirements.add(realTimeYear);
 
         /** Is Window Width **/
@@ -299,7 +305,7 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, windowWidthValuePreset);
+        }, multiIntegerFilter, windowWidthValuePreset);
         requirements.add(windowWidth);
 
         /** Is Window Height **/
@@ -335,8 +341,10 @@ public class LegacyVisibilityRequirements {
                     }
                 }
             }
-        }, integerCharFilter, windowHeightValuePreset);
+        }, multiIntegerFilter, windowHeightValuePreset);
         requirements.add(windowHeight);
+
+        //TODO ----------------- TO HERE
 
         /** Window Width Bigger Than **/
         String windowWidthBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan");

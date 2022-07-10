@@ -103,7 +103,6 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
         this.object.orientation = cachedOri;
     }
 
-    //TODO übernehmen
     @Override
     public void destroyObject() {
         if (this.isDestroyable()) {

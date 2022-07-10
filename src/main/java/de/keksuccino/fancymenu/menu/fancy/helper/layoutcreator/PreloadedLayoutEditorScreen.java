@@ -83,7 +83,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				//TODO übernehmen
 				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
 					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 				};
