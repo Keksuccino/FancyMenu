@@ -202,7 +202,10 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 						
 					} catch (Exception e) {
 						lines.clear();
-						String s = Locals.localize("customization.items.webstring.unabletoload");
+						String s = "";
+						if (isEditorActive()) {
+							s = Locals.localize("customization.items.webstring.unabletoload");
+						}
 						lines.put(s, 1.0F);
 						unscaledWidth = font.getStringWidth(s);
 						unscaledHeight = 10;
@@ -211,7 +214,10 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 
 				} else {
 					lines.clear();
-					String s = Locals.localize("customization.items.webstring.unabletoload");
+					String s = "";
+					if (isEditorActive()) {
+						s = Locals.localize("customization.items.webstring.unabletoload");
+					}
 					lines.put(s, 1.0F);
 					unscaledWidth = font.getStringWidth(s);
 					unscaledHeight = 10;
