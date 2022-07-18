@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: Create a report to help me improve FancyMenu
+name: Bug Report
+about: Found a bug? Please tell me, so I can fix it!
 title: ''
 labels: bug
 assignees: ''
