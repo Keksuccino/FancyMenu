@@ -21,7 +21,7 @@ Steps to reproduce the behavior (e.g.):
 A clear and detailed description of what you expected to happen.
 
 **Game Log**
-Please always include your `.minecraft/logs/latest.log` file **right after the issue happened**.<br>
+Please always include your `.minecraft/logs/latest.log` file **right after the issue happened**.
 Please don't send the whole log as plain text here. Upload the file to https/gist.github.com and send the link.
 
 **Screenshots**
