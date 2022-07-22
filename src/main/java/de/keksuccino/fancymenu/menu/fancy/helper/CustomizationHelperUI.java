@@ -65,6 +65,7 @@ public class CustomizationHelperUI extends UIBase {
 	public static boolean showMenuInfo = false;
 	protected static List<ButtonData> buttons = new ArrayList<ButtonData>();
 	protected static int tick = 0;
+	protected static long lastButtonInfoRightClick = 0;
 	
 	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
 	protected static final ResourceLocation RELOAD_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "filechooser/back_icon.png");
@@ -654,8 +655,10 @@ public class CustomizationHelperUI extends UIBase {
 	
 	protected static void renderButtonInfo(GuiScreen screen) {
 		if (showButtonInfo) {
+			boolean isButtonHovered = false;
 			for (ButtonData d : buttons) {
 				if (d.getButton().isMouseOver()) {
+					isButtonHovered = true;
 					long id = d.getId();
 					String idString = Locals.localize("helper.buttoninfo.idnotfound");
 					if (id >= 0) {
@@ -671,12 +674,27 @@ public class CustomizationHelperUI extends UIBase {
 					
 					List<String> info = new ArrayList<>();
 					int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(Locals.localize("helper.button.buttoninfo")) + 10;
-					
+
+					long now = System.currentTimeMillis();
+
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().width);
 					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().height);
 					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getMinecraft().fontRenderer.getStringWidth(d.getButton().displayString));
-					
+					info.add("");
+					if (lastButtonInfoRightClick + 2000 < now) {
+						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator"));
+					} else {
+						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator.copied"));
+					}
+
+					if (MouseInput.isRightMouseDown()) {
+						GuiScreen current = Minecraft.getMinecraft().currentScreen;
+						String locator = current.getClass().getName() + ":" + idString;
+						GuiScreen.setClipboardString(locator);
+						lastButtonInfoRightClick = now;
+					}
+
 					for (String s : info) {
 						int i = Minecraft.getMinecraft().fontRenderer.getStringWidth(s) + 10;
 						if (i > width) {
@@ -700,14 +718,14 @@ public class CustomizationHelperUI extends UIBase {
 						y -= 90;
 					}
 					
-					drawRect(x, y, x + width + 10, y + 80, new Color(102, 0, 102, 200).getRGB());
+					drawRect(x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
 					
 					GlStateManager.enableBlend();
-					screen.drawString(Minecraft.getMinecraft().fontRenderer, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, 0);
+					screen.drawString(Minecraft.getMinecraft().fontRenderer, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
 					int i2 = 20;
 					for (String s : info) {
-						screen.drawString(Minecraft.getMinecraft().fontRenderer, s, x + 10, y + 10 + i2, 0);
+						screen.drawString(Minecraft.getMinecraft().fontRenderer, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
 					
@@ -719,6 +737,9 @@ public class CustomizationHelperUI extends UIBase {
 					
 					break;
 				}
+			}
+			if (!isButtonHovered) {
+				lastButtonInfoRightClick = 0;
 			}
 		}
 	}

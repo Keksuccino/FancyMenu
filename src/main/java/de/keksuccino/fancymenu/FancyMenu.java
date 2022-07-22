@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.commands.ClientExecutor;
 import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.VariableCommand;
@@ -34,18 +35,20 @@ import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.3.3,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.4.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.10.1";
+	public static final String VERSION = "2.11.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -84,6 +87,8 @@ public class FancyMenu {
 	    		slideshowPath.mkdirs();
 	    		
 	    		updateConfig();
+
+				ClientExecutor.init();
 
 				DeepCustomizationLayers.registerAll();
 
@@ -142,11 +147,11 @@ public class FancyMenu {
 	}
 
 	@Mod.EventHandler
-	public void onRegisterCommands(FMLServerStartingEvent e) {
+	public void onRegisterCommands(FMLPreInitializationEvent e) {
 
-		e.registerServerCommand(new OpenGuiScreenCommand());
-		e.registerServerCommand(new CloseGuiScreenCommand());
-		e.registerServerCommand(new VariableCommand());
+		ClientCommandHandler.instance.registerCommand(new OpenGuiScreenCommand());
+		ClientCommandHandler.instance.registerCommand(new CloseGuiScreenCommand());
+		ClientCommandHandler.instance.registerCommand(new VariableCommand());
 
 	}
 

@@ -13,6 +13,8 @@ import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 
 public class GuiConstructor {
 	
@@ -24,10 +26,16 @@ public class GuiConstructor {
 		parameters.put(GuiScreen.class, null);
 		parameters.put(GameSettings.class, Minecraft.getMinecraft().gameSettings);
 		parameters.put(LanguageManager.class, Minecraft.getMinecraft().getLanguageManager());
-		parameters.put(boolean.class, true);
+		parameters.put(Boolean.class, true);
 		parameters.put(EntityPlayer.class, null);
 		parameters.put(String.class, "");
 		parameters.put(ClientAdvancementManager.class, null);
+		parameters.put(ITextComponent.class, new TextComponentString(""));
+		parameters.put(boolean.class, true);
+		parameters.put(int.class, 1);
+		parameters.put(long.class, 1L);
+		parameters.put(double.class, 1D);
+		parameters.put(float.class, 1F);
 		
 	}
 	

@@ -142,11 +142,20 @@ public class ButtonScriptEngine {
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
-				GuiScreen s = GuiConstructor.tryToConstruct(value);
-				if (s != null) {
-					Minecraft.getMinecraft().displayGuiScreen(s);
-				} else {
+				try {
+					if (CustomGuiLoader.guiExists(value)) {
+						Minecraft.getMinecraft().displayGuiScreen(CustomGuiLoader.getGui(value, Minecraft.getMinecraft().currentScreen, null));
+					} else {
+						GuiScreen s = GuiConstructor.tryToConstruct(MenuCustomization.getValidMenuIdentifierFor(value));
+						if (s != null) {
+							Minecraft.getMinecraft().displayGuiScreen(s);
+						} else {
+							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+						}
+					}
+				} catch (Exception e) {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+					e.printStackTrace();
 				}
 			}
 			if (action.equalsIgnoreCase("movefile")) {

@@ -122,6 +122,7 @@ public class LayoutEditorScreen extends GuiScreen {
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
+	protected boolean restartAnimationBackgroundOnLoad = false;
 
 	protected String openAudio;
 	protected String closeAudio;
@@ -142,10 +143,8 @@ public class LayoutEditorScreen extends GuiScreen {
 	protected String randomGroup = "1";
 	protected boolean randomOnlyFirstTime = false;
 
-	//Unused
-	protected int autoScalingWidth = 0;
-	//Unused
-	protected int autoScalingHeight = 0;
+	protected int autoScalingWidth = 0; //Unused
+	protected int autoScalingHeight = 0; //Unused
 
 	protected int scale = 0;
 	public int oriscale = -1;
@@ -324,6 +323,7 @@ public class LayoutEditorScreen extends GuiScreen {
 			if (this.randomBackgroundAnimation) {
 				ps.addEntry("random", "true");
 			}
+			ps.addEntry("restart_on_load", "" + this.restartAnimationBackgroundOnLoad);
 			l.add(ps);
 		}
 

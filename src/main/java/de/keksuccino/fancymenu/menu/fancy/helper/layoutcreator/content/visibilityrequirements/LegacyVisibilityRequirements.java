@@ -54,222 +54,6 @@ public class LegacyVisibilityRequirements {
         }, null, null, null);
         requirements.add(worldLoaded);
 
-        /** Is Real Time Hour **/
-        String realTimeHourValuePreset = "";
-        for (int i : container.vrRealTimeHour) {
-            realTimeHourValuePreset += i + ",";
-        }
-        if (realTimeHourValuePreset.length() > 0) {
-            realTimeHourValuePreset = realTimeHourValuePreset.substring(0, realTimeHourValuePreset.length() -1);
-        } else {
-            realTimeHourValuePreset = "1, 4";
-        }
-        String realTimeHourName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimehour");
-        String realTimeHourDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimehour.desc");
-        String realTimeHourValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimehour.valuename");
-        VisibilityRequirementsScreen.Requirement realTimeHour = new VisibilityRequirementsScreen.Requirement(screen, realTimeHourName, realTimeHourDesc, realTimeHourValueName, container.vrCheckForRealTimeHour, container.vrShowIfRealTimeHour,
-                (enabledCallback) -> {
-                    container.vrCheckForRealTimeHour = enabledCallback;
-                }, (showIfCallback) -> {
-            container.vrShowIfRealTimeHour = showIfCallback;
-        }, (valueCallback) -> {
-            if (valueCallback != null) {
-                container.vrRealTimeHour.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrRealTimeHour.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrRealTimeHour.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
-            }
-        }, multiIntegerFilter, realTimeHourValuePreset);
-        requirements.add(realTimeHour);
-
-        /** Is Real Time Minute **/
-        String realTimeMinuteValuePreset = "";
-        for (int i : container.vrRealTimeMinute) {
-            realTimeMinuteValuePreset += i + ",";
-        }
-        if (realTimeMinuteValuePreset.length() > 0) {
-            realTimeMinuteValuePreset = realTimeMinuteValuePreset.substring(0, realTimeMinuteValuePreset.length() -1);
-        } else {
-            realTimeMinuteValuePreset = "1, 4";
-        }
-        String realTimeMinuteName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeminute");
-        String realTimeMinuteDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.desc");
-        String realTimeMinuteValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.valuename");
-        VisibilityRequirementsScreen.Requirement realTimeMinute = new VisibilityRequirementsScreen.Requirement(screen, realTimeMinuteName, realTimeMinuteDesc, realTimeMinuteValueName, container.vrCheckForRealTimeMinute, container.vrShowIfRealTimeMinute,
-                (enabledCallback) -> {
-                    container.vrCheckForRealTimeMinute = enabledCallback;
-                }, (showIfCallback) -> {
-            container.vrShowIfRealTimeMinute = showIfCallback;
-        }, (valueCallback) -> {
-            if (valueCallback != null) {
-                container.vrRealTimeMinute.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrRealTimeMinute.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrRealTimeMinute.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
-            }
-        }, multiIntegerFilter, realTimeMinuteValuePreset);
-        requirements.add(realTimeMinute);
-
-        /** Is Real Time Second **/
-        String realTimeSecondValuePreset = "";
-        for (int i : container.vrRealTimeSecond) {
-            realTimeSecondValuePreset += i + ",";
-        }
-        if (realTimeSecondValuePreset.length() > 0) {
-            realTimeSecondValuePreset = realTimeSecondValuePreset.substring(0, realTimeSecondValuePreset.length() -1);
-        } else {
-            realTimeSecondValuePreset = "1, 4";
-        }
-        String realTimeSecondName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimesecond");
-        String realTimeSecondDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.desc");
-        String realTimeSecondValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.valuename");
-        VisibilityRequirementsScreen.Requirement realTimeSecond = new VisibilityRequirementsScreen.Requirement(screen, realTimeSecondName, realTimeSecondDesc, realTimeSecondValueName, container.vrCheckForRealTimeSecond, container.vrShowIfRealTimeSecond,
-                (enabledCallback) -> {
-                    container.vrCheckForRealTimeSecond = enabledCallback;
-                }, (showIfCallback) -> {
-            container.vrShowIfRealTimeSecond = showIfCallback;
-        }, (valueCallback) -> {
-            if (valueCallback != null) {
-                container.vrRealTimeSecond.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrRealTimeSecond.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrRealTimeSecond.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
-            }
-        }, multiIntegerFilter, realTimeSecondValuePreset);
-        requirements.add(realTimeSecond);
-
-        /** Is Real Time Day **/
-        String realTimeDayValuePreset = "";
-        for (int i : container.vrRealTimeDay) {
-            realTimeDayValuePreset += i + ",";
-        }
-        if (realTimeDayValuePreset.length() > 0) {
-            realTimeDayValuePreset = realTimeDayValuePreset.substring(0, realTimeDayValuePreset.length() -1);
-        } else {
-            realTimeDayValuePreset = "1, 4";
-        }
-        String realTimeDayName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeday");
-        String realTimeDayDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeday.desc");
-        String realTimeDayValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeday.valuename");
-        VisibilityRequirementsScreen.Requirement realTimeDay = new VisibilityRequirementsScreen.Requirement(screen, realTimeDayName, realTimeDayDesc, realTimeDayValueName, container.vrCheckForRealTimeDay, container.vrShowIfRealTimeDay,
-                (enabledCallback) -> {
-                    container.vrCheckForRealTimeDay = enabledCallback;
-                }, (showIfCallback) -> {
-            container.vrShowIfRealTimeDay = showIfCallback;
-        }, (valueCallback) -> {
-            if (valueCallback != null) {
-                container.vrRealTimeDay.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrRealTimeDay.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrRealTimeDay.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
-            }
-        }, multiIntegerFilter, realTimeDayValuePreset);
-        requirements.add(realTimeDay);
-
-        /** Is Real Time Month **/
-        String realTimeMonthValuePreset = "";
-        for (int i : container.vrRealTimeMonth) {
-            realTimeMonthValuePreset += i + ",";
-        }
-        if (realTimeMonthValuePreset.length() > 0) {
-            realTimeMonthValuePreset = realTimeMonthValuePreset.substring(0, realTimeMonthValuePreset.length() -1);
-        } else {
-            realTimeMonthValuePreset = "1, 4";
-        }
-        String realTimeMonthName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth");
-        String realTimeMonthDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.desc");
-        String realTimeMonthValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimemonth.valuename");
-        VisibilityRequirementsScreen.Requirement realTimeMonth = new VisibilityRequirementsScreen.Requirement(screen, realTimeMonthName, realTimeMonthDesc, realTimeMonthValueName, container.vrCheckForRealTimeMonth, container.vrShowIfRealTimeMonth,
-                (enabledCallback) -> {
-                    container.vrCheckForRealTimeMonth = enabledCallback;
-                }, (showIfCallback) -> {
-            container.vrShowIfRealTimeMonth = showIfCallback;
-        }, (valueCallback) -> {
-            if (valueCallback != null) {
-                container.vrRealTimeMonth.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrRealTimeMonth.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrRealTimeMonth.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
-            }
-        }, multiIntegerFilter, realTimeMonthValuePreset);
-        requirements.add(realTimeMonth);
-
-        /** Is Real Time Year **/
-        String realTimeYearValuePreset = "";
-        for (int i : container.vrRealTimeYear) {
-            realTimeYearValuePreset += i + ",";
-        }
-        if (realTimeYearValuePreset.length() > 0) {
-            realTimeYearValuePreset = realTimeYearValuePreset.substring(0, realTimeYearValuePreset.length() -1);
-        } else {
-            realTimeYearValuePreset = "1, 4";
-        }
-        String realTimeYearName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeyear");
-        String realTimeYearDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.desc");
-        String realTimeYearValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.valuename");
-        VisibilityRequirementsScreen.Requirement realTimeYear = new VisibilityRequirementsScreen.Requirement(screen, realTimeYearName, realTimeYearDesc, realTimeYearValueName, container.vrCheckForRealTimeYear, container.vrShowIfRealTimeYear,
-                (enabledCallback) -> {
-                    container.vrCheckForRealTimeYear = enabledCallback;
-                }, (showIfCallback) -> {
-            container.vrShowIfRealTimeYear = showIfCallback;
-        }, (valueCallback) -> {
-            if (valueCallback != null) {
-                container.vrRealTimeYear.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrRealTimeYear.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrRealTimeYear.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
-            }
-        }, multiIntegerFilter, realTimeYearValuePreset);
-        requirements.add(realTimeYear);
-
         /** Is Window Width **/
         String windowWidthValuePreset = "";
         for (int i : container.vrWindowWidth) {
@@ -281,7 +65,7 @@ public class LegacyVisibilityRequirements {
             windowWidthValuePreset = "503, 918, 1920";
         }
         String windowWidthName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth");
-        String windowWidthDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc");
+        String windowWidthDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc", "" + Minecraft.getMinecraft().displayWidth, "" + Minecraft.getMinecraft().displayHeight);
         String windowWidthValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename");
         VisibilityRequirementsScreen.Requirement windowWidth = new VisibilityRequirementsScreen.Requirement(screen, windowWidthName, windowWidthDesc, windowWidthValueName, container.vrCheckForWindowWidth, container.vrShowIfWindowWidth,
                 (enabledCallback) -> {
@@ -317,7 +101,7 @@ public class LegacyVisibilityRequirements {
             windowHeightValuePreset = "410, 634, 1080";
         }
         String windowHeightName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight");
-        String windowHeightDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc");
+        String windowHeightDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc", "" + Minecraft.getMinecraft().displayWidth, "" + Minecraft.getMinecraft().displayHeight);
         String windowHeightValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename");
         VisibilityRequirementsScreen.Requirement windowHeight = new VisibilityRequirementsScreen.Requirement(screen, windowHeightName, windowHeightDesc, windowHeightValueName, container.vrCheckForWindowHeight, container.vrShowIfWindowHeight,
                 (enabledCallback) -> {
@@ -344,7 +128,7 @@ public class LegacyVisibilityRequirements {
 
         /** Window Width Bigger Than **/
         String windowWidthBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan");
-        String windowWidthBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc");
+        String windowWidthBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc", "" + Minecraft.getMinecraft().displayWidth, "" + Minecraft.getMinecraft().displayHeight);
         String windowWidthBiggerThanValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.valuename");
         VisibilityRequirementsScreen.Requirement windowWidthBiggerThan = new VisibilityRequirementsScreen.Requirement(screen, windowWidthBiggerThanName, windowWidthBiggerThanDesc, windowWidthBiggerThanValueName, container.vrCheckForWindowWidthBiggerThan, container.vrShowIfWindowWidthBiggerThan,
                 (enabledCallback) -> {
@@ -362,7 +146,7 @@ public class LegacyVisibilityRequirements {
 
         /** Window Height Bigger Than **/
         String windowHeightBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan");
-        String windowHeightBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.desc");
+        String windowHeightBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.desc", "" + Minecraft.getMinecraft().displayWidth, "" + Minecraft.getMinecraft().displayHeight);
         String windowHeightBiggerThanValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.valuename");
         VisibilityRequirementsScreen.Requirement windowHeightBiggerThan = new VisibilityRequirementsScreen.Requirement(screen, windowHeightBiggerThanName, windowHeightBiggerThanDesc, windowHeightBiggerThanValueName, container.vrCheckForWindowHeightBiggerThan, container.vrShowIfWindowHeightBiggerThan,
                 (enabledCallback) -> {

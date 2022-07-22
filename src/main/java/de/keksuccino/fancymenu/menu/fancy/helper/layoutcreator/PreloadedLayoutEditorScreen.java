@@ -273,6 +273,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						String value = sec.getEntryValue("name");
 						String random = sec.getEntryValue("random");
 
+						String restartOnLoadString = sec.getEntryValue("restart_on_load");
+						if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+							this.restartAnimationBackgroundOnLoad = true;
+						}
+
 						if ((random != null) && random.equalsIgnoreCase("true")) {
 							this.randomBackgroundAnimation = true;
 						}

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -21,6 +22,9 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
     private static final Logger LOGGER = LogManager.getLogger("fancymenu/DeepCustomizationLayoutEditorElement");
 
     public final DeepCustomizationElement parentDeepCustomizationElement;
+
+    protected int dragMouseX = -1000;
+    protected int dragMouseY = -1000;
 
     public DeepCustomizationLayoutEditorElement(@Nonnull DeepCustomizationElement parentDeepCustomizationElement, @Nonnull DeepCustomizationItem customizationItemInstance, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
         super(customizationItemInstance, destroyable, handler, doInit);
@@ -66,6 +70,37 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
             }
         }
 
+        this.handleMoveWarning();
+
+    }
+
+    protected void handleMoveWarning() {
+        if (!this.dragable) {
+            if (MouseInput.isLeftMouseDown() && this.handler.isFocused(this) && this.hovered) {
+                int mX = MouseInput.getMouseX();
+                int mY = MouseInput.getMouseY();
+                if ((this.dragMouseX == -1000) && (this.dragMouseY == -1000)) {
+                    this.dragMouseX = mX;
+                    this.dragMouseY = mY;
+                }
+                if ((mX != this.dragMouseX) || (mY != this.dragMouseY)) {
+                    if (FancyMenu.config.getOrDefault("showvanillamovewarning", true)) {
+                        FMNotificationPopup p;
+                        if (this.orientationCanBeChanged) {
+                            p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.orientation_needed"), "%n%"));
+                        } else {
+                            p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.moving_not_allowed"), "%n%"));
+                        }
+                        PopupHandler.displayPopup(p);
+                    }
+                }
+                this.dragMouseX = mX;
+                this.dragMouseY = mY;
+            } else {
+                this.dragMouseX = -1000;
+                this.dragMouseY = -1000;
+            }
+        }
     }
 
     @Override

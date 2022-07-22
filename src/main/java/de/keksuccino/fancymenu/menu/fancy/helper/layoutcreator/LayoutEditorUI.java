@@ -564,6 +564,32 @@ public class LayoutEditorUI extends UIBase {
 			});
 			slideBackgroundButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.btn.desc"), "%n%"));
 			this.addContent(slideBackgroundButton);
+
+			/** RESTART ANIMATION ON LOAD **/
+			AdvancedButton restartOnLoadButton = new AdvancedButton(0, 0, 0, 16, "", true, (press) -> {
+				if (this.parent.restartAnimationBackgroundOnLoad) {
+					this.parent.restartAnimationBackgroundOnLoad = false;
+				} else {
+					this.parent.restartAnimationBackgroundOnLoad = true;
+				}
+			}) {
+				@Override
+				public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+					if (parent.backgroundAnimation != null) {
+						this.enabled = true;
+					} else {
+						this.enabled = false;
+					}
+					if (parent.restartAnimationBackgroundOnLoad) {
+						this.displayString = Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.on");
+					} else {
+						this.displayString = Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.off");
+					}
+					super.drawButton(mc, mouseX, mouseY, partialTicks);
+				}
+			};
+			restartOnLoadButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.desc"), "%n%"));
+			this.addContent(restartOnLoadButton);
 			
 			this.addSeparator();
 			

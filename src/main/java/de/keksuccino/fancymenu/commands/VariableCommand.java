@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.commands;
 
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
+import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VariableCommand extends CommandBase {
+public class VariableCommand implements ICommand {
 
     @Override
     public String getName() {
@@ -26,13 +26,15 @@ public class VariableCommand extends CommandBase {
     }
 
     @Override
-    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
-        return true;
+    public List<String> getAliases() {
+        List<String> l = new ArrayList<>();
+        l.add("/fmvariable");
+        return l;
     }
 
     @Override
-    public int getRequiredPermissionLevel() {
-        return 0;
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+        return true;
     }
 
     @Override
@@ -83,6 +85,14 @@ public class VariableCommand extends CommandBase {
         return 1;
     }
 
+    private static List<String> getVariableNameSuggestions() {
+        List<String> l = VariableHandler.getVariableNames();
+        if (l.isEmpty()) {
+            l.add("<no_variables_found>");
+        }
+        return l;
+    }
+
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos) {
         List<String> l = new ArrayList<>();
@@ -90,7 +100,7 @@ public class VariableCommand extends CommandBase {
             l.add("get");
             l.add("set");
         } else if (args.length == 2) {
-            l.add("<variable_name>");
+            l.addAll(getVariableNameSuggestions());
         } else if (args.length == 3) {
             l.add("<set_to_value>");
         } else if (args.length == 4) {
@@ -99,6 +109,16 @@ public class VariableCommand extends CommandBase {
             l.add("false");
         }
         return l;
+    }
+
+    @Override
+    public boolean isUsernameIndex(String[] args, int index) {
+        return false;
+    }
+
+    @Override
+    public int compareTo(ICommand o) {
+        return 0;
     }
 
 }

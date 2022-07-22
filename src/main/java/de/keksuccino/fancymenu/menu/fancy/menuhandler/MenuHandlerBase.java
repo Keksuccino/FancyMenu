@@ -686,6 +686,11 @@ public class MenuHandlerBase {
 				if ((random != null) && random.equalsIgnoreCase("true")) {
 					ran = true;
 				}
+				boolean restartOnLoad = false;
+				String restartOnLoadString = sec.getEntryValue("restart_on_load");
+				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+					restartOnLoad = true;
+				}
 				if (value != null) {
 					if (value.contains(",")) {
 						for (String s2 : value.split("[,]")) {
@@ -719,6 +724,11 @@ public class MenuHandlerBase {
 					}
 
 					if (!this.backgroundAnimations.isEmpty()) {
+						if (restartOnLoad && MenuCustomization.isNewMenu()) {
+							for (IAnimationRenderer r : this.backgroundAnimations) {
+								r.resetAnimation();
+							}
+						}
 						if (ran) {
 							if (MenuCustomization.isNewMenu()) {
 								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
@@ -1501,22 +1511,17 @@ public class MenuHandlerBase {
 					String normalBack = c.normalBackground;
 					String hoverBack = c.hoverBackground;
 					boolean hasCustomBackground = false;
+					boolean restart = false;
 					if (c.lastHoverState != w.isMouseOver()) {
-						if (w.isMouseOver()) {
-							if (c.restartAnimationOnHover) {
-								for (IAnimationRenderer i : c.cachedAnimations) {
-									if (i != null) {
-										i.resetAnimation();
-									}
-								}
-							}
+						if (w.isMouseOver() && c.restartAnimationOnHover) {
+							restart = true;
 						}
 					}
 					c.lastHoverState = w.isMouseOver();
 
 					if (!w.isMouseOver()) {
 						if (normalBack != null) {
-							if (this.renderCustomButtomBackground(e, normalBack)) {
+							if (this.renderCustomButtomBackground(e, normalBack, restart)) {
 								hasCustomBackground = true;
 							}
 						}
@@ -1525,13 +1530,13 @@ public class MenuHandlerBase {
 					if (w.isMouseOver()) {
 						if (w.enabled) {
 							if (hoverBack != null) {
-								if (this.renderCustomButtomBackground(e, hoverBack)) {
+								if (this.renderCustomButtomBackground(e, hoverBack, restart)) {
 									hasCustomBackground = true;
 								}
 							}
 						} else {
 							if (normalBack != null) {
-								if (this.renderCustomButtomBackground(e, normalBack)) {
+								if (this.renderCustomButtomBackground(e, normalBack, restart)) {
 									hasCustomBackground = true;
 								}
 							}
@@ -1563,7 +1568,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background) {
+	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		GuiButton w = e.getWidget();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
 		if (c != null) {
@@ -1573,6 +1578,9 @@ public class MenuHandlerBase {
 						String aniName = background.split("[:]", 2)[1];
 						if (AnimationHandler.animationExists(aniName)) {
 							IAnimationRenderer a = AnimationHandler.getAnimation(aniName);
+							if (restartAnimationBackground) {
+								a.resetAnimation();
+							}
 							this.renderBackgroundAnimation(e, a);
 							if (!c.cachedAnimations.contains(a)) {
 								c.cachedAnimations.add(a);
@@ -1584,6 +1592,9 @@ public class MenuHandlerBase {
 						if (f.isFile()) {
 							if (f.getPath().toLowerCase().endsWith(".gif")) {
 								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+								if (restartAnimationBackground) {
+									a.resetAnimation();
+								}
 								this.renderBackgroundAnimation(e, a);
 								if (!c.cachedAnimations.contains(a)) {
 									c.cachedAnimations.add(a);
