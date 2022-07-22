@@ -124,6 +124,7 @@ public class LayoutEditorScreen extends Screen {
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
+	protected boolean restartAnimationBackgroundOnLoad = false;
 
 	protected String openAudio;
 	protected String closeAudio;
@@ -147,6 +148,8 @@ public class LayoutEditorScreen extends Screen {
 	protected int autoScalingWidth = 0;
 	protected int autoScalingHeight = 0;
 
+	protected String customMenuTitle = null;
+
 	protected int scale = 0;
 
 	protected boolean multiselectStretchedX = false;
@@ -169,6 +172,10 @@ public class LayoutEditorScreen extends Screen {
 
 		super(Component.literal(""));
 		this.screen = screenToCustomize;
+		Component cachedOriTitle = MenuHandlerBase.cachedOriginalMenuTitles.get(this.screen.getClass());
+		if (cachedOriTitle != null) {
+			this.screen.title = cachedOriTitle;
+		}
 
 		if (!initDone) {
 			KeyboardHandler.addKeyPressedListener(LayoutEditorScreen::onShortcutPressed);
@@ -299,6 +306,9 @@ public class LayoutEditorScreen extends Screen {
 			}
 			meta.addEntry("universal_layout_blacklist", bl);
 		}
+		if (this.customMenuTitle != null) {
+			meta.addEntry("custom_menu_title", this.customMenuTitle);
+		}
 
 		LayoutElement globalVisReqDummyLayoutElement = new LayoutElement(this.globalVisReqDummyItem, false, this, true) {
 			@Override public List<PropertiesSection> getProperties() { return null; }
@@ -324,6 +334,7 @@ public class LayoutEditorScreen extends Screen {
 			if (this.randomBackgroundAnimation) {
 				ps.addEntry("random", "true");
 			}
+			ps.addEntry("restart_on_load", "" + this.restartAnimationBackgroundOnLoad);
 			l.add(ps);
 		}
 

@@ -18,6 +18,7 @@ import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,6 +32,19 @@ public class MenuCustomizationEvents {
 	private boolean resumeWorldMusic = false;
 	
 	protected Screen lastScreen = null;
+
+	protected boolean fixedSelectWorldScreen = false;
+
+	@SubscribeEvent
+	public void onRenderScreenPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+
+		//Fix bugged Singleplayer menu in 1.19
+		if ((e.getGui() instanceof SelectWorldScreen) && !this.fixedSelectWorldScreen) {
+			this.fixedSelectWorldScreen = true;
+			Minecraft.getInstance().setScreen(e.getGui());
+		}
+
+	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onInitPrePre(GuiScreenEvent.InitGuiEvent.Pre e) {
@@ -95,6 +109,11 @@ public class MenuCustomizationEvents {
 
 	@SubscribeEvent
 	public void onTick(ClientTickEvent.Pre e) {
+
+		if (Minecraft.getInstance().screen == null) {
+			this.lastScreen = null;
+		}
+
 		//Stopping audio for all menu handlers if no screen is being displayed
 		if ((Minecraft.getInstance().screen == null) && !this.idle) {
 			MenuCustomization.stopSounds();

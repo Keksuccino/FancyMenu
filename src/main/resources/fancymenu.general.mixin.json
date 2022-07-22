@@ -22,7 +22,8 @@
     "MixinLevelStorageAccess",
     "IMixinPauseScreen",
     "IMixinChatScreen",
-    "IMixinMinecraft"
+    "IMixinMinecraft",
+    "MixinScreen"
   ],
   "server": [],
   "injectors": {

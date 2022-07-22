@@ -11,12 +11,6 @@ import net.minecraft.client.Minecraft;
 public class VisibilityRequirementHandler {
 
     public static boolean isSingleplayer = false;
-    public static int realTimeHour = 12;
-    public static int realTimeMinute = 0;
-    public static int realTimeSecond = 0;
-    public static int realTimeDay = 0;
-    public static int realTimeMonth = 0;
-    public static int realTimeYear = 0;
     public static int windowWidth = 0;
     public static int windowHeight = 0;
     public static boolean worldLoaded = false;
@@ -36,20 +30,9 @@ public class VisibilityRequirementHandler {
             isSingleplayer = false;
         }
 
-        //VR: Is Realtime Hour/Minute/Second
-        Calendar c = Calendar.getInstance();
-        if (c != null) {
-            realTimeHour = c.get(Calendar.HOUR_OF_DAY);
-            realTimeMinute = c.get(Calendar.MINUTE);
-            realTimeSecond = c.get(Calendar.SECOND);
-            realTimeDay = c.get(Calendar.DAY_OF_MONTH);
-            realTimeMonth = c.get(Calendar.MONTH)+1;
-            realTimeYear = c.get(Calendar.YEAR);
-        }
-
         //VR: Is Window Width/Height X
-        windowWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        windowHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        windowWidth = Minecraft.getInstance().getWindow().getScreenWidth();
+        windowHeight = Minecraft.getInstance().getWindow().getScreenHeight();
 
     }
 

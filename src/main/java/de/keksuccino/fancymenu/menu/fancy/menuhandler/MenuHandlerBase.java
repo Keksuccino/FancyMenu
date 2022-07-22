@@ -126,6 +126,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 	protected static Screen scaleChangedIn = null;
 
+	public static Map<Class, Component> cachedOriginalMenuTitles = new HashMap<>();
+
 	/**
 	 * @param identifier Has to be the valid and full class name of the GUI screen.
 	 */
@@ -243,6 +245,11 @@ public class MenuHandlerBase extends GuiComponent {
 			}.visibilityRequirementContainer;
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
+			}
+
+			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+			if (cusMenuTitle != null) {
+				e.getGui().title = Component.literal(cusMenuTitle);
 			}
 
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -671,6 +678,11 @@ public class MenuHandlerBase extends GuiComponent {
 				if ((random != null) && random.equalsIgnoreCase("true")) {
 					ran = true;
 				}
+				boolean restartOnLoad = false;
+				String restartOnLoadString = sec.getEntryValue("restart_on_load");
+				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+					restartOnLoad = true;
+				}
 				if (value != null) {
 					if (value.contains(",")) {
 						for (String s2 : value.split("[,]")) {
@@ -704,6 +716,11 @@ public class MenuHandlerBase extends GuiComponent {
 					}
 
 					if (!this.backgroundAnimations.isEmpty()) {
+						if (restartOnLoad && MenuCustomization.isNewMenu()) {
+							for (IAnimationRenderer r : this.backgroundAnimations) {
+								r.resetAnimation();
+							}
+						}
 						if (ran) {
 							if (MenuCustomization.isNewMenu()) {
 								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
@@ -1477,22 +1494,20 @@ public class MenuHandlerBase extends GuiComponent {
 					String normalBack = c.normalBackground;
 					String hoverBack = c.hoverBackground;
 					boolean hasCustomBackground = false;
+					//TODO übernehmen
+					boolean restart = false;
 					if (c.lastHoverState != w.isHoveredOrFocused()) {
-						if (w.isHoveredOrFocused()) {
-							if (c.restartAnimationOnHover) {
-								for (IAnimationRenderer i : c.cachedAnimations) {
-									if (i != null) {
-										i.resetAnimation();
-									}
-								}
-							}
+						if (w.isHoveredOrFocused() && c.restartAnimationOnHover) {
+							restart = true;
 						}
 					}
+					//--------------------
 					c.lastHoverState = w.isHoveredOrFocused();
 
 					if (!w.isHoveredOrFocused()) {
 						if (normalBack != null) {
-							if (this.renderCustomButtomBackground(e, normalBack)) {
+							//TODO übernehmen
+							if (this.renderCustomButtomBackground(e, normalBack, restart)) {
 								hasCustomBackground = true;
 							}
 						}
@@ -1501,13 +1516,15 @@ public class MenuHandlerBase extends GuiComponent {
 					if (w.isHoveredOrFocused()) {
 						if (w.active) {
 							if (hoverBack != null) {
-								if (this.renderCustomButtomBackground(e, hoverBack)) {
+								//TODO übernehmen
+								if (this.renderCustomButtomBackground(e, hoverBack, restart)) {
 									hasCustomBackground = true;
 								}
 							}
 						} else {
 							if (normalBack != null) {
-								if (this.renderCustomButtomBackground(e, normalBack)) {
+								//TODO übernehmen
+								if (this.renderCustomButtomBackground(e, normalBack, restart)) {
 									hasCustomBackground = true;
 								}
 							}
@@ -1531,7 +1548,7 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
-	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background) {
+	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		AbstractWidget w = e.getWidget();
 		PoseStack matrix = e.getMatrixStack();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
@@ -1542,6 +1559,9 @@ public class MenuHandlerBase extends GuiComponent {
 						String aniName = background.split("[:]", 2)[1];
 						if (AnimationHandler.animationExists(aniName)) {
 							IAnimationRenderer a = AnimationHandler.getAnimation(aniName);
+							if (restartAnimationBackground) {
+								a.resetAnimation();
+							}
 							this.renderBackgroundAnimation(e, a);
 							if (!c.cachedAnimations.contains(a)) {
 								c.cachedAnimations.add(a);
@@ -1552,7 +1572,10 @@ public class MenuHandlerBase extends GuiComponent {
 						File f = new File(background);
 						if (f.isFile()) {
 							if (f.getPath().toLowerCase().endsWith(".gif")) {
-								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+								IAnimationRenderer a = TextureHandler.getGifResource(f.getPath());
+								if (restartAnimationBackground) {
+									a.resetAnimation();
+								}
 								this.renderBackgroundAnimation(e, a);
 								if (!c.cachedAnimations.contains(a)) {
 									c.cachedAnimations.add(a);
