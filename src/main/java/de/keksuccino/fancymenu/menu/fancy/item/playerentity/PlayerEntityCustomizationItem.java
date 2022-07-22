@@ -64,8 +64,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	public float headRotationX = 0;
 	public float headRotationY = 0;
 
-	private static final Level DUMMY_WORLD = DummyWorldFactory.getDummyWorld();
-	//TODO übernehmen 2.7.3
 	private static final ClientLevel DUMMY_CLIENT_WORLD = DummyWorldFactory.getDummyClientWorld();
 	private static final BlockPos BLOCK_POS = new BlockPos(0, 0, 0);
 

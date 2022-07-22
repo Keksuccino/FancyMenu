@@ -71,6 +71,7 @@ public class CustomizationHelperUI extends UIBase {
 	public static boolean showMenuInfo = false;
 	protected static List<ButtonData> buttons = new ArrayList<ButtonData>();
 	protected static int tick = 0;
+	protected static long lastButtonInfoRightClick = 0;
 	
 	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
 	protected static final ResourceLocation RELOAD_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "/filechooser/back_icon.png");
@@ -713,77 +714,105 @@ public class CustomizationHelperUI extends UIBase {
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected static void renderButtonInfo(PoseStack matrix, Screen screen) {
 		if (showButtonInfo) {
+			//TODO übernehmen
+			boolean isButtonHovered = false;
 			for (ButtonData d : buttons) {
 				if (d.getButton().isHoveredOrFocused()) {
+					//TODO übernehmen
+					isButtonHovered = true;
 					long id = d.getId();
 					String idString = Locals.localize("helper.buttoninfo.idnotfound");
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
-					//TODO übernehmen
 					if (d.getCompatibilityId() != null) {
 						idString = d.getCompatibilityId();
 					}
-					//-----------------
 					String key = ButtonCache.getKeyForButton(d.getButton());
 					if (key == null) {
 						key = Locals.localize("helper.buttoninfo.keynotfound");
 					}
-					
+
 					List<String> info = new ArrayList<String>();
 					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
-					
+
+					//TODO übernehmen
+					long now = System.currentTimeMillis();
+
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().getWidth());
 					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().getHeight());
 					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
-					
+					//TODO übernehmen
+					info.add("");
+					if (lastButtonInfoRightClick + 2000 < now) {
+						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator"));
+					} else {
+						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator.copied"));
+					}
+					//--------------------
+
+					//TODO übernehmen
+					if (MouseInput.isRightMouseDown()) {
+						Screen current = Minecraft.getInstance().screen;
+						String locator = current.getClass().getName() + ":" + idString;
+						Minecraft.getInstance().keyboardHandler.setClipboard(locator);
+						lastButtonInfoRightClick = now;
+					}
+
 					for (String s : info) {
 						int i = Minecraft.getInstance().font.width(s) + 10;
 						if (i > width) {
 							width = i;
 						}
 					}
-					
+
 					matrix.pushPose();
-					
+
 					matrix.scale(getUIScale(), getUIScale(), getUIScale());
-					
+
 					MouseInput.setRenderScale(getUIScale());
-					
+
 					int x = MouseInput.getMouseX();
 					if ((screen.width / getUIScale()) < x + width + 10) {
 						x -= width + 10;
 					}
-					
+
 					int y = MouseInput.getMouseY();
 					if ((screen.height / getUIScale()) < y + 80) {
 						y -= 90;
 					}
-					
-					fill(matrix, x, y, x + width + 10, y + 80, new Color(102, 0, 102, 200).getRGB());
-					
+
+					//TODO übernehmen
+					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
+
 					RenderSystem.enableBlend();
-					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, 0);
+					//TODO übernehmen
+					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
 					int i2 = 20;
 					for (String s : info) {
-						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, 0);
+						//TODO übernehmen
+						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
-					
+
 					MouseInput.resetRenderScale();
-					
+
 					matrix.popPose();
-					
+
 					RenderSystem.disableBlend();
-					
+
 					break;
 				}
 			}
+			if (!isButtonHovered) {
+				lastButtonInfoRightClick = 0;
+			}
+			//---------------
 		}
 	}
 

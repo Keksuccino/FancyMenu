@@ -6,34 +6,56 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
+
+import java.util.List;
 
 public class VariableCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("fmvariable")
-                .then(Commands.argument("get_or_set", StringArgumentType.string())
-                .then(Commands.argument("variable_name", StringArgumentType.string())
-                        .executes((stack) -> {
-                            return getVariable(stack.getSource(), StringArgumentType.getString(stack, "get_or_set"), StringArgumentType.getString(stack, "variable_name"));
-                        })
-                        .then(Commands.argument("set_to_value", StringArgumentType.string())
-                        .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
+                .then(Commands.argument("action", StringArgumentType.string())
+                        .suggests(((context, builder) -> {
+                            return CommandUtils.getStringSuggestions(builder, "get", "set");
+                        }))
+                        .then(Commands.argument("variable_name", StringArgumentType.string())
                                 .executes((stack) -> {
-                                    return setVariable(stack.getSource(), StringArgumentType.getString(stack, "get_or_set"), StringArgumentType.getString(stack, "variable_name"), StringArgumentType.getString(stack, "set_to_value"), BoolArgumentType.getBool(stack, "send_chat_feedback"));
+                                    return getVariable(stack.getSource(), StringArgumentType.getString(stack, "action"), StringArgumentType.getString(stack, "variable_name"));
                                 })
+                                .suggests(((context, builder) -> {
+                                    return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
+                                }))
+                                .then(Commands.argument("set_to_value", StringArgumentType.string())
+                                        .suggests(((context, builder) -> {
+                                            if (StringArgumentType.getString(context, "action").equalsIgnoreCase("set")) {
+                                                return CommandUtils.getStringSuggestions(builder, "<set_to_value>");
+                                            } else {
+                                                return CommandUtils.getStringSuggestions(builder, new String[0]);
+                                            }
+                                        }))
+                                        .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
+                                                .executes((stack) -> {
+                                                    return setVariable(stack.getSource(), StringArgumentType.getString(stack, "action"), StringArgumentType.getString(stack, "variable_name"), StringArgumentType.getString(stack, "set_to_value"), BoolArgumentType.getBool(stack, "send_chat_feedback"));
+                                                })
+                                        )
+                                )
                         )
-                        )
-                )
                 )
         );
     }
 
+    private static String[] getVariableNameSuggestions() {
+        List<String> l = VariableHandler.getVariableNames();
+        if (l.isEmpty()) {
+            l.add("<no_variables_found>");
+        }
+        return l.toArray(new String[0]);
+    }
+
     private static int getVariable(CommandSourceStack stack, String getOrSet, String variableName) {
-        Minecraft.getInstance().execute(() -> {
+        ClientExecutor.execute(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("get")) {
                     String s = VariableHandler.getVariable(variableName);
@@ -52,7 +74,7 @@ public class VariableCommand {
     }
 
     private static int setVariable(CommandSourceStack stack, String getOrSet, String variableName, String setToValue, boolean sendFeedback) {
-        Minecraft.getInstance().execute(() -> {
+        ClientExecutor.execute(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("set")) {
                     VariableHandler.setVariable(variableName, setToValue);

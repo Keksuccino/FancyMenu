@@ -8,6 +8,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,12 @@ public class VariableHandler {
 
     public static void init() {
         readFromFile();
+    }
+
+    public static List<String> getVariableNames() {
+        List<String> l = new ArrayList<>();
+        l.addAll(variables.keySet());
+        return l;
     }
 
     @Nullable

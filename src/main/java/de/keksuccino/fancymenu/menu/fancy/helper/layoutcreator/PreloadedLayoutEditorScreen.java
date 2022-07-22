@@ -86,6 +86,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 				};
 
+				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
+
 				String ulWhitelist = meta.getEntryValue("universal_layout_whitelist");
 				if ((ulWhitelist != null) && ulWhitelist.contains(";")) {
 					this.universalLayoutWhitelist.addAll(Arrays.asList(ulWhitelist.split("[;]")));
@@ -275,6 +277,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("animatebackground")) {
 						String value = sec.getEntryValue("name");
 						String random = sec.getEntryValue("random");
+
+						String restartOnLoadString = sec.getEntryValue("restart_on_load");
+						if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+							this.restartAnimationBackgroundOnLoad = true;
+						}
 
 						if ((random != null) && random.equalsIgnoreCase("true")) {
 							this.randomBackgroundAnimation = true;

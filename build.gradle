@@ -29,6 +29,8 @@ minecraft {
 
     mappings channel: 'official', version: '1.18.2'
 
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
     runs {
         client {
             workingDirectory project.file('run')
