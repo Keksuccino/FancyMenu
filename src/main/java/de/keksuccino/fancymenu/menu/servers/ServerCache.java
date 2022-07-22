@@ -16,7 +16,7 @@ import java.util.Map;
 
 public class ServerCache {
 
-    static final ITextComponent CANT_CONNECT_TEXT = (new TranslationTextComponent("multiplayer.status.cannot_connect")).mergeStyle(TextFormatting.DARK_RED);
+    static final ITextComponent CANT_CONNECT_TEXT = (new TranslationTextComponent("multiplayer.status.cannot_connect")).withStyle(TextFormatting.DARK_RED);
 
     protected static ServerPinger pinger = new ServerPinger();
     protected static Map<String, ServerData> servers = new HashMap<String, ServerData>();
@@ -26,7 +26,7 @@ public class ServerCache {
         new Thread(() -> {
             while (true) {
                 try {
-                    if ((Minecraft.getInstance().currentScreen != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+                    if ((Minecraft.getInstance().screen != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
                         pingServers();
                     }
                 } catch (Exception e) {
@@ -42,12 +42,12 @@ public class ServerCache {
     }
 
     public static void cacheServer(ServerData server, ServerData serverUpdated) {
-        if (server.serverIP != null) {
+        if (server.ip != null) {
             try {
-                server.pingToServer = -1L;
-                serverUpdated.pingToServer = -1L;
-                servers.put(server.serverIP, server);
-                serversUpdated.put(server.serverIP, serverUpdated);
+                server.ping = -1L;
+                serverUpdated.ping = -1L;
+                servers.put(server.ip, server);
+                serversUpdated.put(server.ip, serverUpdated);
                 pingServers();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -61,13 +61,13 @@ public class ServerCache {
         }
 
         //Copy server data from old to new array only when server is done pinging
-        if (servers.get(ip).serverMOTD != null) {
-            if (!servers.get(ip).serverMOTD.equals(new TranslationTextComponent("multiplayer.status.pinging"))) {
-                serversUpdated.get(ip).pingToServer = servers.get(ip).pingToServer;
+        if (servers.get(ip).motd != null) {
+            if (!servers.get(ip).motd.equals(new TranslationTextComponent("multiplayer.status.pinging"))) {
+                serversUpdated.get(ip).ping = servers.get(ip).ping;
+                serversUpdated.get(ip).protocol = servers.get(ip).protocol;
+                serversUpdated.get(ip).motd = servers.get(ip).motd;
                 serversUpdated.get(ip).version = servers.get(ip).version;
-                serversUpdated.get(ip).serverMOTD = servers.get(ip).serverMOTD;
-                serversUpdated.get(ip).gameVersion = servers.get(ip).gameVersion;
-                serversUpdated.get(ip).populationInfo = servers.get(ip).populationInfo;
+                serversUpdated.get(ip).status = servers.get(ip).status;
                 serversUpdated.get(ip).playerList = servers.get(ip).playerList;
             }
         }
@@ -92,14 +92,14 @@ public class ServerCache {
             try {
                 new Thread(() -> {
                     try {
-                        pinger.ping(d, () -> {});
-                        if (d.populationInfo == StringTextComponent.EMPTY) {
-                            d.pingToServer = -1L;
-                            d.serverMOTD = CANT_CONNECT_TEXT;
+                        pinger.pingServer(d, () -> {});
+                        if (d.status == StringTextComponent.EMPTY) {
+                            d.ping = -1L;
+                            d.motd = CANT_CONNECT_TEXT;
                         }
                     } catch (Exception ex) {
-                        d.pingToServer = -1L;
-                        d.serverMOTD = CANT_CONNECT_TEXT;
+                        d.ping = -1L;
+                        d.motd = CANT_CONNECT_TEXT;
                     }
                 }).start();
             } catch (Exception e) {

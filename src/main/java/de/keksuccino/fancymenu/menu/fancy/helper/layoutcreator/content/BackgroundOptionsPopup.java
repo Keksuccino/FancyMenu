@@ -305,7 +305,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 			List<String> typeDescription = null;
 
-			drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, "§l" + Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), renderIn.width / 2, (renderIn.height / 2) - 110, -1);
+			drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), renderIn.width / 2, (renderIn.height / 2) - 110, -1);
 
 			this.typeSwitcher.render(matrix, (renderIn.width / 2) - (this.typeSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 85);
 
@@ -327,7 +327,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.desc"), "%n%"));
 
-				drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.animationSwitcher.render(matrix, (renderIn.width / 2) - (this.animationSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -356,7 +356,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.panorama.desc"), "%n%"));
 
-				drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.panoramaSwitcher.render(matrix, (renderIn.width / 2) - (this.panoramaSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -373,7 +373,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.slideshow.desc"), "%n%"));
 
-				drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.slideshowSwitcher.render(matrix, (renderIn.width / 2) - (this.slideshowSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -435,7 +435,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 							this.clearCustomBackgroundButton.active = true;
 						}
 
-						drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
+						drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 						this.customBackgroundSwitcher.render(matrix, (renderIn.width / 2) - (this.customBackgroundSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
 
@@ -529,7 +529,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 			int height = 10;
 
 			for (String s : desc) {
-				int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
+				int i = Minecraft.getInstance().font.width(s) + 10;
 				if (i > width) {
 					width = i;
 				}
@@ -539,11 +539,11 @@ public class BackgroundOptionsPopup extends FMPopup {
 			mouseX += 5;
 			mouseY += 5;
 
-			if (Minecraft.getInstance().currentScreen.width < mouseX + width) {
+			if (Minecraft.getInstance().screen.width < mouseX + width) {
 				mouseX -= width + 10;
 			}
 
-			if (Minecraft.getInstance().currentScreen.height < mouseY + height) {
+			if (Minecraft.getInstance().screen.height < mouseY + height) {
 				mouseY -= height + 10;
 			}
 
@@ -553,7 +553,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 			int i2 = 5;
 			for (String s : desc) {
-				AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, s, mouseX + 5, mouseY + i2, -1);
+				AbstractGui.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, -1);
 				i2 += 10;
 			}
 

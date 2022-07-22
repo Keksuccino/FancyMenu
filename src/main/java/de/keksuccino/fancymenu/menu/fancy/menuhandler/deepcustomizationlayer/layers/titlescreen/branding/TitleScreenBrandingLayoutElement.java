@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 
 import javax.annotation.Nonnull;
 
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement.SimplePropertiesSection;
+
 public class TitleScreenBrandingLayoutElement extends DeepCustomizationLayoutEditorElement {
 
     public TitleScreenBrandingLayoutElement(@Nonnull DeepCustomizationElement parentDeepCustomizationElement, @Nonnull DeepCustomizationItem customizationItemInstance, @Nonnull LayoutEditorScreen handler) {

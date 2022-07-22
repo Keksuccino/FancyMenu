@@ -151,14 +151,27 @@ public abstract class LayoutElement extends AbstractGui {
 		if (this.enableElementIdCopyButton) {
 			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
 				if (!(this instanceof LayoutVanillaButton)) {
-					Minecraft.getInstance().keyboardListener.setClipboardString(this.object.getActionId());
+					Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
 				} else {
-					Minecraft.getInstance().keyboardListener.setClipboardString("vanillabtn:" + ((LayoutVanillaButton) this).getButtonId());
+					Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton) this).getButtonId());
 				}
 			});
 			copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
 			this.rightclickMenu.addContent(copyIdButton);
 		}
+
+		if (this instanceof LayoutVanillaButton) {
+
+			AdvancedButton copyLocatorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.vanilla_button.copy_locator"), true, (press) -> {
+				String locator = this.handler.getScreenToCustomizeIdentifier() + ":" + ((LayoutVanillaButton)this).getButtonId();
+				Minecraft.getInstance().keyboardHandler.setClipboard(locator);
+			});
+			copyLocatorButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc"), "%n%"));
+			this.rightclickMenu.addContent(copyLocatorButton);
+
+		}
+
+		this.rightclickMenu.addSeparator();
 		
 		/** ORIENTATION **/
 		if (this.orientationCanBeChanged) {
@@ -281,8 +294,8 @@ public abstract class LayoutElement extends AbstractGui {
 				if (label == null) {
 					label = "Object";
 				} else {
-					if (Minecraft.getInstance().fontRenderer.getStringWidth(label) > 200) {
-						label = Minecraft.getInstance().fontRenderer.trimStringToWidth(label, 200) + "..";
+					if (Minecraft.getInstance().font.width(label) > 200) {
+						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
 					}
 				}
 				AdvancedButton btn = new AdvancedButton(0, 0, 0, 0, label, (press2) -> {
@@ -360,7 +373,7 @@ public abstract class LayoutElement extends AbstractGui {
 		//TODO übernehmen
 		/** VISIBILITY REQUIREMENTS **/
 		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-			Minecraft.getInstance().displayGuiScreen(new VisibilityRequirementsScreen(this.handler, this.object));
+			Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.handler, this.object));
 		});
 		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
 		if (this.enableVisibilityRequirements) {
@@ -649,12 +662,12 @@ public abstract class LayoutElement extends AbstractGui {
 			if (this.stretchX) {
 				this.object.posX = 0;
 				//TODO übernehmen
-				this.object.setWidth(Minecraft.getInstance().currentScreen.width);
+				this.object.setWidth(Minecraft.getInstance().screen.width);
 			}
 			if (this.stretchY) {
 				this.object.posY = 0;
 				//TODO übernehmen
-				this.object.setHeight(Minecraft.getInstance().currentScreen.height);
+				this.object.setHeight(Minecraft.getInstance().screen.height);
 			}
 			if (this.stretchX || this.stretchY) {
 				this.oElement.active = false;
@@ -735,7 +748,7 @@ public abstract class LayoutElement extends AbstractGui {
 		
 		//Reset cursor to default
 		if ((this.activeGrabber == -1) && (!MouseInput.isLeftMouseDown() || PopupHandler.isPopupActive())) {
-			GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
+			GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 		}
 				
 		//Update dragging state
@@ -894,28 +907,28 @@ public abstract class LayoutElement extends AbstractGui {
 		if (this.resizeable) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 				if (!this.stretchX) {
-					GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), hResizeCursor);
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 0;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 				if (!this.stretchX) {
-					GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), hResizeCursor);
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 1;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
 				if (!this.stretchY) {
-					GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), vResizeCursor);
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 2;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
 				if (!this.stretchY) {
-					GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), vResizeCursor);
+					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 3;
 				} else {
 					this.activeGrabber = -1;
@@ -928,12 +941,12 @@ public abstract class LayoutElement extends AbstractGui {
 		//TODO übernehmen
 		//Render pos and size values
 		RenderUtils.setScale(matrix, 0.5F);
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
-		AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		AbstractGui.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
 		//--------------------------
 	}
@@ -1198,86 +1211,6 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 		if (c.vrCheckForMultiplayer) {
 			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
-		}
-		if (c.vrCheckForRealTimeHour) {
-			String val = "";
-			for (int i : c.vrRealTimeHour) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimehour", "" + c.vrShowIfRealTimeHour);
-				sec.addEntry("vr:value:realtimehour", val);
-			}
-		}
-		if (c.vrCheckForRealTimeMinute) {
-			String val = "";
-			for (int i : c.vrRealTimeMinute) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimeminute", "" + c.vrShowIfRealTimeMinute);
-				sec.addEntry("vr:value:realtimeminute", val);
-			}
-		}
-		if (c.vrCheckForRealTimeSecond) {
-			String val = "";
-			for (int i : c.vrRealTimeSecond) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimesecond", "" + c.vrShowIfRealTimeSecond);
-				sec.addEntry("vr:value:realtimesecond", val);
-			}
-		}
-		if (c.vrCheckForRealTimeDay) {
-			String val = "";
-			for (int i : c.vrRealTimeDay) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimeday", "" + c.vrShowIfRealTimeDay);
-				sec.addEntry("vr:value:realtimeday", val);
-			}
-		}
-		//TODO übernehmen
-		if (c.vrCheckForRealTimeMonth) {
-			String val = "";
-			for (int i : c.vrRealTimeMonth) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimemonth", "" + c.vrShowIfRealTimeMonth);
-				sec.addEntry("vr:value:realtimemonth", val);
-			}
-		}
-		//TODO übernehmen
-		if (c.vrCheckForRealTimeYear) {
-			String val = "";
-			for (int i : c.vrRealTimeYear) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimeyear", "" + c.vrShowIfRealTimeYear);
-				sec.addEntry("vr:value:realtimeyear", val);
-			}
 		}
 		if (c.vrCheckForWindowWidth) {
 			String val = "";

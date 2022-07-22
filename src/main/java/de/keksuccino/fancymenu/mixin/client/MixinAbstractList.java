@@ -24,7 +24,7 @@ public abstract class MixinAbstractList {
 		
 	}
 	
-	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;draw()V", ordinal = 0, shift = Shift.AFTER), method = "render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V", cancellable = false)
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/Tessellator;end()V", ordinal = 0, shift = Shift.AFTER), method = "render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V", cancellable = false)
 	private void onRenderListBackgroundPost(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		
 		RenderGuiListBackgroundEvent.Post e = new RenderGuiListBackgroundEvent.Post(matrix, (AbstractList)((Object)this));

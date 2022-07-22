@@ -19,7 +19,7 @@ public class RangeSliderButton extends AdvancedSliderButton {
         this.minValue = minRangeValue;
         this.maxValue = maxRangeValue;
         this.setSelectedRangeValue(selectedRangeValue);
-        this.func_230979_b_();
+        this.updateMessage();
     }
 
     @Override
@@ -28,7 +28,7 @@ public class RangeSliderButton extends AdvancedSliderButton {
     }
 
     public int getSelectedRangeValue() {
-        return (int) MathHelper.lerp(MathHelper.clamp(this.sliderValue, 0.0D, 1.0D), minValue, maxValue);
+        return (int) MathHelper.lerp(MathHelper.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
     }
 
     public void setSelectedRangeValue(double rangeValue) {

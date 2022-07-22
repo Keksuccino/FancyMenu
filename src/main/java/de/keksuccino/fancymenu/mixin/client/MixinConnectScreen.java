@@ -15,11 +15,11 @@ public class MixinConnectScreen {
 
     private static final Logger MIXIN_LOGGER = LogManager.getLogger("fancymenu/mixin/ConnectScreen");
 
-    @Inject(at = @At("HEAD"), method = "connectToServer")
+    @Inject(at = @At("HEAD"), method = "join")
     private void onStartConnecting(ServerData server, CallbackInfo info) {
 
         if (server != null) {
-            LastWorldHandler.setLastWorld(server.serverIP, true);
+            LastWorldHandler.setLastWorld(server.ip, true);
         }
 
     }

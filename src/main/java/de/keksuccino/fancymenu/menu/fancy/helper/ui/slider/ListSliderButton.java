@@ -19,7 +19,7 @@ public class ListSliderButton extends AdvancedSliderButton {
         super(x, y, width, height, handleClick, 0, applyValueCallback);
         this.values = values;
         this.setSelectedIndex(selectedIndex);
-        this.func_230979_b_();
+        this.updateMessage();
     }
 
     @Override
@@ -35,7 +35,7 @@ public class ListSliderButton extends AdvancedSliderButton {
         if (!this.values.isEmpty()) {
             double minValue = 0;
             double maxValue = this.values.size()-1;
-            return (int) MathHelper.lerp(MathHelper.clamp(this.sliderValue, 0.0D, 1.0D), minValue, maxValue);
+            return (int) MathHelper.lerp(MathHelper.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
         }
         return 0;
     }

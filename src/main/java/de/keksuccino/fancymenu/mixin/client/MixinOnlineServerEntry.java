@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerSelectionList.NormalEntry.class)
 public class MixinOnlineServerEntry {
 
-    @Inject(at = @At("HEAD"), method = "func_238859_a_", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "drawIcon", cancellable = true)
     private void onDrawIcon(MatrixStack p_99890_, int p_99891_, int p_99892_, ResourceLocation p_99893_, CallbackInfo info) {
         if (!FancyMenu.config.getOrDefault("show_server_icons", true)) {
             info.cancel();

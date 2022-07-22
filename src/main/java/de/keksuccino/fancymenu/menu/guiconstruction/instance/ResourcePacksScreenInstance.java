@@ -28,32 +28,32 @@ public class ResourcePacksScreenInstance extends GuiInstance {
 			Consumer<ResourcePackList> c = new Consumer<ResourcePackList>() {
 				@Override
 				public void accept(ResourcePackList t) {
-					GameSettings settings = Minecraft.getInstance().gameSettings;
+					GameSettings settings = Minecraft.getInstance().options;
 					List<String> list = ImmutableList.copyOf(settings.resourcePacks);
 					settings.resourcePacks.clear();
 					settings.incompatibleResourcePacks.clear();
 
-					for(ResourcePackInfo resourcepackinfo : t.getEnabledPacks()) {
-						if (!resourcepackinfo.isOrderLocked()) {
-							settings.resourcePacks.add(resourcepackinfo.getName());
+					for(ResourcePackInfo resourcepackinfo : t.getSelectedPacks()) {
+						if (!resourcepackinfo.isFixedPosition()) {
+							settings.resourcePacks.add(resourcepackinfo.getId());
 							if (!resourcepackinfo.getCompatibility().isCompatible()) {
-								settings.incompatibleResourcePacks.add(resourcepackinfo.getName());
+								settings.incompatibleResourcePacks.add(resourcepackinfo.getId());
 							}
 						}
 					}
 
-					settings.saveOptions();
+					settings.save();
 					List<String> list1 = ImmutableList.copyOf(settings.resourcePacks);
 					if (!list1.equals(list)) {
-						Minecraft.getInstance().reloadResources();
+						Minecraft.getInstance().reloadResourcePacks();
 					}
 				}
 			};
 
 			try {
-				this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackList(), c, mc.getFileResourcePacks());
+				this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackRepository(), c, mc.getResourcePackDirectory());
 			} catch (Exception e) {
-				this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackList(), c, mc.getFileResourcePacks(), new StringTextComponent(""));
+				this.instance = (Screen) con.newInstance(this.findParameter(Screen.class), mc.getResourcePackRepository(), c, mc.getResourcePackDirectory(), new StringTextComponent(""));
 			}
 			
 		} catch (Exception e) {

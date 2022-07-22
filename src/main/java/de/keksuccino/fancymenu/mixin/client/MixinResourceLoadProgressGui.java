@@ -22,11 +22,10 @@ import net.minecraft.client.gui.ResourceLoadProgressGui;
 @Mixin(value = ResourceLoadProgressGui.class)
 public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 
-	@Shadow @Final private boolean reloading;
+	@Shadow @Final private boolean fadeIn;
 	@Shadow private long fadeOutStart;
 	@Shadow private long fadeInStart;
 
-	//TODO übernehmen
 	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V"), method = "render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V")
 	private void onRenderCurrentScreenInRender(Screen screen, MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		if (!MenuCustomization.isMenuCustomizable(screen)) {
@@ -34,21 +33,20 @@ public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 		}
 	}
 
-	//TODO übernehmen (remove cancellable)
 	@Inject(at = @At("HEAD"), method = "render")
 	private void onRender(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, CallbackInfo info) {
 		if (!FancyMenu.isDrippyLoadingScreenLoaded()) {
 
 			MixinCache.isSplashScreenRendering = true;
 
-			long k = Util.milliTime();
+			long k = Util.getMillis();
 
 			float f = this.fadeOutStart > -1L ? (float)(k - this.fadeOutStart) / 1000.0F : -1.0F;
 			float f1 = this.fadeInStart > -1L ? (float)(k - this.fadeInStart) / 500.0F : -1.0F;
 			if (f >= 1.0F) {
 				int l = MathHelper.ceil((1.0F - MathHelper.clamp(f - 1.0F, 0.0F, 1.0F)) * 255.0F);
 				MixinCache.currentSplashAlpha = l;
-			} else if (this.reloading) {
+			} else if (this.fadeIn) {
 				int i2 = MathHelper.ceil(MathHelper.clamp(f1, 0.15D, 1.0D) * 255.0D);
 				MixinCache.currentSplashAlpha = i2;
 			} else {
@@ -59,7 +57,7 @@ public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 	}
 
 	//TODO übernehmen (remove cancellable)
-	@Inject(at = @At("HEAD"), method = "func_238629_a_")
+	@Inject(at = @At("HEAD"), method = "drawProgressBar")
 	private void onRenderLoadingBar(MatrixStack matrix, int i1, int i2, int i3, int i4, float f1, CallbackInfo info) {
 		MixinCache.isSplashScreenRendering = false;
 	}

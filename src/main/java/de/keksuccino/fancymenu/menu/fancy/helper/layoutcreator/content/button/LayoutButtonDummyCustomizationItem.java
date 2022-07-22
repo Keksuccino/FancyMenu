@@ -79,7 +79,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 		}
 
 		if (texture != null) {
-			Minecraft.getInstance().getTextureManager().bindTexture(texture);
+			Minecraft.getInstance().getTextureManager().bind(texture);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 			//TODO übernehmen
 			Screen.blit(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
@@ -118,7 +118,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());
 		}
 		//TODO übernehmen
-        drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, new Color(255, 255, 255, 255).getRGB());
+        drawCenteredString(matrix, Minecraft.getInstance().font, new StringTextComponent(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, new Color(255, 255, 255, 255).getRGB());
         RenderSystem.disableBlend();
 	}
 

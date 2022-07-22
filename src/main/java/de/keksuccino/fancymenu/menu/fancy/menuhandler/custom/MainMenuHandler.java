@@ -22,6 +22,8 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
+import de.keksuccino.fancymenu.mixin.client.IMixinMainMenuScreen;
+import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -43,7 +45,6 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.GuiScreenEvent.BackgroundDrawnEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.BrandingControl;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class MainMenuHandler extends MenuHandlerBase {
 	
@@ -173,7 +174,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	@Override
 	public void drawToBackground(BackgroundDrawnEvent e) {
 		if (this.shouldCustomize(e.getGui())) {
-			FontRenderer font = Minecraft.getInstance().fontRenderer;
+			FontRenderer font = Minecraft.getInstance().font;
 			int width = e.getGui().width;
 			int height = e.getGui().height;
 			int j = width / 2 - 137;
@@ -186,8 +187,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
-				this.panorama.render(Minecraft.getInstance().getTickLength(), 1.0F);
-				Minecraft.getInstance().getTextureManager().bindTexture(new ResourceLocation("textures/gui/title/background/panorama_overlay.png"));
+				this.panorama.render(Minecraft.getInstance().getDeltaFrameTime(), 1.0F);
+				Minecraft.getInstance().getTextureManager().bind(new ResourceLocation("textures/gui/title/background/panorama_overlay.png"));
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				IngameGui.blit(matrix, 0, 0, width, height, 0.0F, 0.0F, 16, 128, 16, 128);
@@ -197,7 +198,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 			//Draw minecraft logo and edition textures if not disabled in the config
 			if (this.showLogo) {
-				Minecraft.getInstance().getTextureManager().bindTexture(MINECRAFT_TITLE_TEXTURES);
+				Minecraft.getInstance().getTextureManager().bind(MINECRAFT_TITLE_TEXTURES);
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 				if ((double) minecraftLogoSpelling < 1.0E-4D) {
 					e.getGui().blit(matrix, j + 0, 30, 0, 0, 99, 44);
@@ -210,14 +211,14 @@ public class MainMenuHandler extends MenuHandlerBase {
 					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
 				}
 
-				Minecraft.getInstance().getTextureManager().bindTexture(MINECRAFT_TITLE_EDITION);
+				Minecraft.getInstance().getTextureManager().bind(MINECRAFT_TITLE_EDITION);
 				IngameGui.blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 			}
 
 			//Draw branding strings to the main menu if not disabled in the config
 			if (this.showBranding) {
 				BrandingControl.forEachLine(true, true, (brdline, brd) -> {
-					AbstractGui.drawString(matrix, font, brd, 2, e.getGui().height - (10 + brdline * (font.FONT_HEIGHT + 1)), 16777215);
+					AbstractGui.drawString(matrix, font, brd, 2, e.getGui().height - (10 + brdline * (font.lineHeight + 1)), 16777215);
 				});
 			}
 
@@ -226,7 +227,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 			if (this.showForgeNotificationCopyright) {
 				BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {
-					AbstractGui.drawString(matrix, font, brd, e.getGui().width - font.getStringWidth(brd) - 1, e.getGui().height - (11 + (brdline + 1) * (font.FONT_HEIGHT + 1)), 16777215);
+					AbstractGui.drawString(matrix, font, brd, e.getGui().width - font.width(brd) - 1, e.getGui().height - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
 				});
 			}
 
@@ -235,7 +236,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			String cPos = FancyMenu.config.getOrDefault("copyrightposition", "bottom-right");
 			int cX = 0;
 			int cY = 0;
-			int cW = Minecraft.getInstance().fontRenderer.getStringWidth(c);
+			int cW = Minecraft.getInstance().font.width(c);
 			int cH = 10;
 
 			if (cPos.equalsIgnoreCase("top-left")) {
@@ -269,7 +270,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 				IngameGui.fill(matrix, cX, cY + cH - 1, cX + cW, cY + cH, -1);
 
 				if (MouseInput.isLeftMouseDown()) {
-					Minecraft.getInstance().displayGuiScreen(new WinGameScreen(false, Runnables.doNothing()));
+					Minecraft.getInstance().setScreen(new WinGameScreen(false, Runnables.doNothing()));
 				}
 			}
 
@@ -301,7 +302,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	private void renderButtons(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
 		List<Widget> buttons = this.getButtonList(e.getGui());
-		float partial = Minecraft.getInstance().getRenderPartialTicks();
+		float partial = Minecraft.getInstance().getFrameTime();
 
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
@@ -311,26 +312,24 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 
 	private void drawRealmsNotification(MatrixStack matrix, Screen gui) {
-		if (Minecraft.getInstance().gameSettings.realmsNotifications) {
-			Field f = ObfuscationReflectionHelper.findField(MainMenuScreen.class, "field_183503_M"); //"realmsNotification" field from GuiMainMenu
+		if (Minecraft.getInstance().options.realmsNotifications) {
 			Screen realms = null;
 			try {
-				realms = (Screen) f.get(gui);
+				realms = ((IMixinMainMenuScreen)gui).getRealmsNotificationsScreenFancyMenu();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			if (realms != null) {
 				//render
-				realms.render(matrix, (int)Minecraft.getInstance().mouseHelper.getMouseX(), (int)Minecraft.getInstance().mouseHelper.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
+				realms.render(matrix, (int)Minecraft.getInstance().mouseHandler.xpos(), (int)Minecraft.getInstance().mouseHandler.ypos(), Minecraft.getInstance().getFrameTime());
 			}
 		}
 	}
 
 	private List<Widget> getButtonList(Screen gui) {
-		Field f = ObfuscationReflectionHelper.findField(Screen.class, "field_230710_m_");
 		List<Widget> buttons = new ArrayList<Widget>();
 		try {
-			buttons = (List<Widget>) f.get(gui);
+			buttons = (List<Widget>) ((IMixinScreen)gui).getButtonsFancyMenu();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -339,9 +338,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	private void setWidthCopyrightRest(int i) {
 		try {
-			if (Minecraft.getInstance().currentScreen instanceof MainMenuScreen) {
-				Field f = ObfuscationReflectionHelper.findField(MainMenuScreen.class, "field_193979_N");
-				f.set(Minecraft.getInstance().currentScreen, i);
+			if (Minecraft.getInstance().screen instanceof MainMenuScreen) {
+				((IMixinMainMenuScreen)Minecraft.getInstance().screen).setCopyrightXFancyMenu(i);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -350,8 +348,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	protected static void setShowFadeInAnimation(boolean showFadeIn, MainMenuScreen s) {
 		try {
-			Field f = ObfuscationReflectionHelper.findField(MainMenuScreen.class, "field_213102_y");
-			f.setBoolean(s, showFadeIn);
+			((IMixinMainMenuScreen)s).setFadingFancyMenu(showFadeIn);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

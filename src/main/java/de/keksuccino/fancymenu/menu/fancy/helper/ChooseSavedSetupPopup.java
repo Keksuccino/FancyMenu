@@ -85,7 +85,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
         fill(matrix, 0, 0, renderIn.width, 40, this.overlayColor.getRGB());
         fill(matrix, 0, renderIn.height - 60, renderIn.width, renderIn.height, this.overlayColor.getRGB());
 
-        drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, "§l" + Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), renderIn.width / 2, 17, Color.WHITE.getRGB());
+        drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), renderIn.width / 2, 17, Color.WHITE.getRGB());
 
         this.chooseButton.x = renderIn.width / 2 - this.chooseButton.getWidth() - 5;
         this.chooseButton.y = renderIn.height - 40;
@@ -183,7 +183,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
             //Getting the longest string from the list to render the background with the correct width
             for (String s : desc) {
-                int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
+                int i = Minecraft.getInstance().font.width(s) + 10;
                 if (i > width) {
                     width = i;
                 }
@@ -193,11 +193,11 @@ public class ChooseSavedSetupPopup extends FMPopup {
             mouseX += 5;
             mouseY += 5;
 
-            if (Minecraft.getInstance().currentScreen.width < mouseX + width) {
+            if (Minecraft.getInstance().screen.width < mouseX + width) {
                 mouseX -= width + 10;
             }
 
-            if (Minecraft.getInstance().currentScreen.height < mouseY + height) {
+            if (Minecraft.getInstance().screen.height < mouseY + height) {
                 mouseY -= height + 10;
             }
 
@@ -207,7 +207,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
             int i2 = 5;
             for (String s : desc) {
-                drawString(matrix, Minecraft.getInstance().fontRenderer, s, mouseX + 5, mouseY + i2, -1);
+                drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, -1);
                 i2 += 10;
             }
 
@@ -268,18 +268,18 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
             //Render FM logo icon
             RenderSystem.enableBlend();
-            Minecraft.getInstance().getTextureManager().bindTexture(MenuBar.FM_LOGO_TEXTURE);
+            Minecraft.getInstance().getTextureManager().bind(MenuBar.FM_LOGO_TEXTURE);
             RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
             blit(matrix, this.x, this.y, 0.0F, 0.0F, 20, 20, 20, 20);
 
             //Render setup name
-            FontRenderer font = Minecraft.getInstance().fontRenderer;
+            FontRenderer font = Minecraft.getInstance().font;
             String name = this.setupFolder.getName();
             int maxNameWidth = this.getWidth() - 30 - 8;
-            if (font.getStringWidth(name) > maxNameWidth) {
-                name = font.trimStringToWidth(name, maxNameWidth) + "..";
+            if (font.width(name) > maxNameWidth) {
+                name = font.plainSubstrByWidth(name, maxNameWidth) + "..";
             }
-            font.drawStringWithShadow(matrix, name, this.x + 30, this.y + 7, -1);
+            font.drawShadow(matrix, name, this.x + 30, this.y + 7, -1);
 
             if (!MouseInput.isLeftMouseDown() && this.clickPre) {
                 this.click = true;

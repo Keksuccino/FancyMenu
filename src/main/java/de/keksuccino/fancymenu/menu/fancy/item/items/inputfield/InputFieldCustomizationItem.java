@@ -49,13 +49,13 @@ public class InputFieldCustomizationItem extends CustomizationItem {
             this.maxTextLength = 1;
         }
 
-        Screen current = Minecraft.getInstance().currentScreen;
-        this.textField = new AdvancedTextField(Minecraft.getInstance().fontRenderer, this.getPosX(current), this.getPosY(current), this.width, this.height, true, this.type.filter);
-        this.textField.setMaxStringLength(this.maxTextLength);
+        Screen current = Minecraft.getInstance().screen;
+        this.textField = new AdvancedTextField(Minecraft.getInstance().font, this.getPosX(current), this.getPosY(current), this.width, this.height, true, this.type.filter);
+        this.textField.setMaxLength(this.maxTextLength);
         if (this.linkedVariable != null) {
             String var = VariableHandler.getVariable(this.linkedVariable);
             if (var != null) {
-                this.textField.setText(var);
+                this.textField.setValue(var);
             }
         }
 
@@ -71,11 +71,11 @@ public class InputFieldCustomizationItem extends CustomizationItem {
             //Handle editor mode for text field
             if (isEditorActive()) {
                 this.textField.active = false;
-                this.textField.setEnabled(false);
+                this.textField.setEditable(false);
                 if (this.linkedVariable != null) {
                     String var = VariableHandler.getVariable(this.linkedVariable);
                     if (var != null) {
-                        this.textField.setText(var);
+                        this.textField.setValue(var);
                     }
                 }
             }
@@ -84,22 +84,22 @@ public class InputFieldCustomizationItem extends CustomizationItem {
             this.textField.y = this.getPosY(menu);
             this.textField.setWidth(this.width);
             this.textField.setHeight(this.height);
-            this.textField.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
+            this.textField.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
 
             //Update variable value on change
             if (!isEditorActive()) {
                 if (this.linkedVariable != null) {
-                    if (!this.lastValue.equals(this.textField.getText())) {
-                        VariableHandler.setVariable(linkedVariable, this.textField.getText());
+                    if (!this.lastValue.equals(this.textField.getValue())) {
+                        VariableHandler.setVariable(linkedVariable, this.textField.getValue());
                     }
                     String val = VariableHandler.getVariable(this.linkedVariable);
                     if (val != null) {
-                        if (!this.textField.getText().equals(val)) {
-                            this.textField.setText(val);
+                        if (!this.textField.getValue().equals(val)) {
+                            this.textField.setValue(val);
                         }
                     }
                 }
-                this.lastValue = this.textField.getText();
+                this.lastValue = this.textField.getValue();
             }
 
         }

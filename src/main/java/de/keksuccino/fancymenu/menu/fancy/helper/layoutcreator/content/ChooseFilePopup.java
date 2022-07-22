@@ -60,11 +60,11 @@ public class ChooseFilePopup extends FMTextInputPopup {
 		fill(matrix, 0, 0, renderIn.width, renderIn.height, new Color(0, 0, 0, 240).getRGB());
 		RenderSystem.disableBlend();
 		
-		AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, new StringTextComponent(title), renderIn.width / 2, (renderIn.height  / 2) - 40, Color.WHITE.getRGB());
+		AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().font, new StringTextComponent(title), renderIn.width / 2, (renderIn.height  / 2) - 40, Color.WHITE.getRGB());
 		
 		this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
 		this.textField.setY((renderIn.height  / 2) - (this.textField.getHeight() / 2));
-		this.textField.renderWidget(matrix, mouseX, mouseY, Minecraft.getInstance().getRenderPartialTicks());
+		this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getFrameTime());
 		
 		this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
 		this.doneButton.setY(((renderIn.height  / 2) + 100) - this.doneButton.getHeight() - 5);

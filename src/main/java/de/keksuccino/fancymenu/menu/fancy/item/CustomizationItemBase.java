@@ -268,7 +268,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 
 	//TODO übernehmen
 	protected static boolean isEditorActive() {
-		return (Minecraft.getInstance().currentScreen instanceof LayoutEditorScreen);
+		return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
 	}
 
 	//TODO übernehmen

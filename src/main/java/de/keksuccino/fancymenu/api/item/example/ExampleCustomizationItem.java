@@ -73,7 +73,7 @@ public class ExampleCustomizationItem extends CustomizationItem {
                 }
                 //The 'opacity' field is used to set the fade-in opacity of the item when the "delay appearance" option is enabled for it.
                 //Always try to make your items' opacity changeable by setting the 'opacity' field! (I also used it in the fill method for the background)
-                drawString(matrix, Minecraft.getInstance().fontRenderer, text, x + 10, y + 10, -1 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+                drawString(matrix, Minecraft.getInstance().font, text, x + 10, y + 10, -1 | MathHelper.ceil(this.opacity * 255.0F) << 24);
             }
 
         }

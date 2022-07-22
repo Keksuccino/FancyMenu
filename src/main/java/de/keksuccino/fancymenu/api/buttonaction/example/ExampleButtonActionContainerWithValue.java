@@ -31,7 +31,7 @@ public class ExampleButtonActionContainerWithValue extends ButtonActionContainer
         //This will open a new instance of the dirt message screen, when a button with this custom action is getting clicked
         //and will show the action value as message
         if (value != null) {
-            Minecraft.getInstance().displayGuiScreen(new DirtMessageScreen(new StringTextComponent(value)));
+            Minecraft.getInstance().setScreen(new DirtMessageScreen(new StringTextComponent(value)));
         }
 
     }

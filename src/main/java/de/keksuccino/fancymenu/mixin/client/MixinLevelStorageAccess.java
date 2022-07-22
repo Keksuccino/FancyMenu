@@ -18,11 +18,11 @@ public class MixinLevelStorageAccess {
 
     private static final Logger MIXIN_LOGGER = LogManager.getLogger("fancymenu/mixin/LevelStorageAccess");
 
-    @Shadow @Final private Path saveDir;
+    @Shadow @Final private Path levelPath;
 
     @Inject(at = @At("TAIL"), method = "<init>")
     private void onInit(SaveFormat this$0, String saveName, CallbackInfo info) {
-        LastWorldHandler.setLastWorld(this.saveDir.toFile().getPath().replace("\\", "/"), false);
+        LastWorldHandler.setLastWorld(this.levelPath.toFile().getPath().replace("\\", "/"), false);
     }
 
 }

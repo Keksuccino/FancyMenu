@@ -18,6 +18,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.api.item.LayoutEditorElement.SimplePropertiesSection;
+
 public class SliderLayoutEditorElement extends LayoutEditorElement {
 
     public SliderLayoutEditorElement(SliderCustomizationItemContainer parentContainer, SliderCustomizationItem customizationItemInstance, LayoutEditorScreen handler) {

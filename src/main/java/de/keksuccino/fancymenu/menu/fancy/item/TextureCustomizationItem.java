@@ -104,7 +104,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				
 			} else if (this.texture != null) {
 				
-				Minecraft.getInstance().getTextureManager().bindTexture(this.texture.getResourceLocation());
+				Minecraft.getInstance().getTextureManager().bind(this.texture.getResourceLocation());
 				RenderSystem.enableBlend();
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
 				//TODO übernehmen

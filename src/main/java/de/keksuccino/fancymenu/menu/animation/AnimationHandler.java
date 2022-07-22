@@ -392,7 +392,7 @@ public class AnimationHandler {
 							Texture to = t.getTexture(rl);
 							if (to == null) {
 								to = new SimpleTexture(rl);
-								t.loadTexture(rl, to);
+								t.register(rl, to);
 							}
 						}
 					}

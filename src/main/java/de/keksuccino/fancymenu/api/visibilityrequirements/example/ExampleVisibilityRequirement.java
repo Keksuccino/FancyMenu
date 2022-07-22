@@ -27,7 +27,7 @@ public class ExampleVisibilityRequirement extends VisibilityRequirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         //In this example, we just check if the window is in fullscreen mode and if it is, then we return true.
-        return Minecraft.getInstance().gameSettings.fullscreen;
+        return Minecraft.getInstance().options.fullscreen;
 
     }
 

@@ -29,7 +29,7 @@ public class ExampleButtonActionContainerWithoutValue extends ButtonActionContai
     public void execute(String value) {
 
         //This will open a new instance of the dirt message screen, when a button with this custom action is getting clicked
-        Minecraft.getInstance().displayGuiScreen(new DirtMessageScreen(new StringTextComponent("This is a useless message.")));
+        Minecraft.getInstance().setScreen(new DirtMessageScreen(new StringTextComponent("This is a useless message.")));
 
     }
 

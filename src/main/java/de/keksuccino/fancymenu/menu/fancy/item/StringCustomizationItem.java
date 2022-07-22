@@ -68,8 +68,8 @@ public class StringCustomizationItem extends CustomizationItemBase {
 			}
 		}
 
-		this.width = (int) (Minecraft.getInstance().fontRenderer.getStringWidth(this.value) * this.scale);
-		this.height = (int) (Minecraft.getInstance().fontRenderer.FONT_HEIGHT * this.scale);
+		this.width = (int) (Minecraft.getInstance().font.width(this.value) * this.scale);
+		this.height = (int) (Minecraft.getInstance().font.lineHeight * this.scale);
 
 	}
 
@@ -83,17 +83,17 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 		int x = this.getPosX(menu);
 		int y = this.getPosY(menu);
-		FontRenderer font = Minecraft.getInstance().fontRenderer;
+		FontRenderer font = Minecraft.getInstance().font;
 
 		RenderSystem.enableBlend();
-		matrix.push();
+		matrix.pushPose();
 		matrix.scale(this.scale, this.scale, this.scale);
 		if (this.shadow) {
-			font.drawStringWithShadow(matrix, "§f" + this.value, x, y, 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+			font.drawShadow(matrix, "§f" + this.value, x, y, 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
 		} else {
-			font.drawString(matrix, "§f" + this.value, x, y, 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+			font.draw(matrix, "§f" + this.value, x, y, 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
 		}
-		matrix.pop();
+		matrix.popPose();
 		RenderSystem.disableBlend();
 
 	}
@@ -103,9 +103,9 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		int x = super.getPosX(menu);
 		if (this.value != null) {
 			if (this.alignment == Alignment.CENTERED) {
-				x -= (int) ((Minecraft.getInstance().fontRenderer.getStringWidth(this.value) / 2) * this.scale);
+				x -= (int) ((Minecraft.getInstance().font.width(this.value) / 2) * this.scale);
 			} else if (this.alignment == Alignment.RIGHT) {
-				x -= (int) (Minecraft.getInstance().fontRenderer.getStringWidth(this.value) * this.scale);
+				x -= (int) (Minecraft.getInstance().font.width(this.value) * this.scale);
 			}
 		}
 		x = (int)(x / this.scale);

@@ -219,7 +219,7 @@ public class ExternalTextureSlideshowRenderer extends AbstractGui {
 			if (!this.previous.isReady()) {
 				this.previous.loadTexture();
 			}
-			matrix.push();
+			matrix.pushPose();
 			RenderSystem.enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
@@ -228,11 +228,11 @@ public class ExternalTextureSlideshowRenderer extends AbstractGui {
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, o);
 			ResourceLocation r = this.previous.getResourceLocation();
 			if (r != null) {
-				Minecraft.getInstance().getTextureManager().bindTexture(r);
+				Minecraft.getInstance().getTextureManager().bind(r);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			matrix.pop();
+			matrix.popPose();
 		}
 	}
 
@@ -245,7 +245,7 @@ public class ExternalTextureSlideshowRenderer extends AbstractGui {
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ResourceLocation r = this.current.getResourceLocation();
 			if (r != null) {
-				Minecraft.getInstance().getTextureManager().bindTexture(r);
+				Minecraft.getInstance().getTextureManager().bind(r);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
@@ -260,7 +260,7 @@ public class ExternalTextureSlideshowRenderer extends AbstractGui {
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 			ResourceLocation r = this.overlay_texture.getResourceLocation();
 			if (r != null) {
-				Minecraft.getInstance().getTextureManager().bindTexture(r);
+				Minecraft.getInstance().getTextureManager().bind(r);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}

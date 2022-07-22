@@ -29,13 +29,13 @@ public class IsSpectatorVisibilityRequirement extends VisibilityRequirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
 
-        if (Minecraft.getInstance().world != null) {
+        if (Minecraft.getInstance().level != null) {
             ClientPlayerEntity p = Minecraft.getInstance().player;
             ClientPlayNetHandler l = Minecraft.getInstance().getConnection();
             if (l != null) {
                 NetworkPlayerInfo playerinfo = l.getPlayerInfo(p.getGameProfile().getId());
                 if (playerinfo != null) {
-                    if (playerinfo.getGameType() == GameType.SPECTATOR) {
+                    if (playerinfo.getGameMode() == GameType.SPECTATOR) {
                         return true;
                     }
                 }

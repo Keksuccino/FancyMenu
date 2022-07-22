@@ -47,6 +47,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	protected static boolean isNewMenu = false;
 	protected boolean isNewMenuThis = false;
 	protected static Screen lastScreen = null;
+
+	protected static Map<String, String> vanillaLikeCache = new HashMap<>();
 	
 	public SplashTextCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -70,8 +72,12 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 					this.splashfile = null;
 				}
 			}
-			
-			this.text = item.getEntryValue("text");
+
+			if (!this.vanillaLike) {
+				this.text = item.getEntryValue("text");
+			} else if (vanillaLikeCache.containsKey(this.actionId)) {
+				this.text = vanillaLikeCache.get(this.actionId);
+			}
 			
 			String ro = item.getEntryValue("rotation");
 			if ((ro != null) && MathUtils.isFloat(ro)) {
@@ -129,7 +135,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		
 		if (this.shouldRender()) {
 			
-			this.renderSplash(matrix, Minecraft.getInstance().fontRenderer, menu);
+			this.renderSplash(matrix, Minecraft.getInstance().font, menu);
 			
 		}
 		
@@ -140,7 +146,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		String splash = null;
 
 		if (this.vanillaLike && (this.text == null)) {
-			this.text = Minecraft.getInstance().getSplashes().getSplashText();
+			this.text = Minecraft.getInstance().getSplashManager().getSplash();
+			vanillaLikeCache.put(this.actionId, this.text);
 		}
 		
 		if ((this.splashfile != null) && (this.text == null)) {
@@ -181,9 +188,9 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			float f = basescale;
 			if (this.bounce) {
-				f = f - MathHelper.abs(MathHelper.sin((float) (Util.milliTime() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+				f = f - MathHelper.abs(MathHelper.sin((float) (Util.getMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
 			}
-			f = f * 100.0F / (float) (font.getStringWidth(splash) + 32);
+			f = f * 100.0F / (float) (font.width(splash) + 32);
 			
 			RenderSystem.enableBlend();
 			
@@ -203,9 +210,9 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			Color c = new Color(this.basecolor.getRed(), this.basecolor.getGreen(), this.basecolor.getBlue(), alpha);
 			
 			if (this.shadow) {
-				font.drawStringWithShadow(matrix, splash, -(font.getStringWidth(splash) / 2), 0, c.getRGB());
+				font.drawShadow(matrix, splash, -(font.width(splash) / 2), 0, c.getRGB());
 			} else {
-				font.drawString(matrix, splash, -(font.getStringWidth(splash) / 2), 0, c.getRGB());
+				font.draw(matrix, splash, -(font.width(splash) / 2), 0, c.getRGB());
 			}
 
 			RenderSystem.popMatrix();
@@ -217,7 +224,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	
 	@SubscribeEvent
 	public static void onInitScreenPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		Screen s = Minecraft.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if ((lastScreen == null) || !lastScreen.getClass().getName().equals(s.getClass().getName())) {
 				isNewMenu = true;

@@ -132,15 +132,15 @@ public class LayoutString extends LayoutElement {
 		fill(matrix, this.getStringPosX() + this.object.getWidth(), this.getStringPosY(), this.getStringPosX() + this.object.getWidth() + 1, this.getStringPosY() + this.object.getHeight(), Color.BLUE.getRGB());
 	
 		//Render pos and size values
-		FontRenderer font = Minecraft.getInstance().fontRenderer;
+		FontRenderer font = Minecraft.getInstance().font;
 		RenderUtils.setScale(matrix, 0.5F);
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 44, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getStringScale(), this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.string.border.alignment") + ": " + this.getObject().alignment.key, this.getStringPosX()*2, (this.getStringPosY()*2) - 26, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.posx") + ": " + this.getStringPosX(), this.getStringPosX()*2, (this.getStringPosY()*2) - 17, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.getStringPosX()*2, (this.getStringPosY()*2) - 8, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.getStringPosY(), ((this.getStringPosX() + this.object.getWidth())*2)+3, ((this.getStringPosY() + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.getStringPosX() + this.object.getWidth())*2)+3, ((this.getStringPosY() + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getStringPosX()*2, (this.getStringPosY()*2) - 44, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getStringScale(), this.getStringPosX()*2, (this.getStringPosY()*2) - 35, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.string.border.alignment") + ": " + this.getObject().alignment.key, this.getStringPosX()*2, (this.getStringPosY()*2) - 26, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.posx") + ": " + this.getStringPosX(), this.getStringPosX()*2, (this.getStringPosY()*2) - 17, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.getStringPosX()*2, (this.getStringPosY()*2) - 8, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.getStringPosY(), ((this.getStringPosX() + this.object.getWidth())*2)+3, ((this.getStringPosY() + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.getStringPosX() + this.object.getWidth())*2)+3, ((this.getStringPosY() + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
 	}
 
@@ -219,7 +219,7 @@ public class LayoutString extends LayoutElement {
 		}
 		
 		((StringCustomizationItem)this.object).scale = scale;
-		this.setWidth((int)(Minecraft.getInstance().fontRenderer.getStringWidth(this.object.value)*scale));
+		this.setWidth((int)(Minecraft.getInstance().font.width(this.object.value)*scale));
 		this.setHeight((int)(7*scale));
 	}
 

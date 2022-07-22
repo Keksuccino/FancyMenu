@@ -17,6 +17,8 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import java.awt.*;
 import java.io.File;
 
+import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement.SimplePropertiesSection;
+
 public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEditorElement {
 
     public TitleScreenSplashLayoutElement(DeepCustomizationElement parentDeepCustomizationElement, DeepCustomizationItem customizationItemInstance, LayoutEditorScreen handler) {

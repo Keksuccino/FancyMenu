@@ -83,21 +83,21 @@ public class ButtonScriptEngine {
 				openWebLink(value);
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
-				if (Minecraft.getInstance().world != null) {
+				if (Minecraft.getInstance().level != null) {
 					if (!MinecraftForge.EVENT_BUS.post(new ClientChatEvent(value))) {
-						Minecraft.getInstance().player.sendChatMessage(value);
+						Minecraft.getInstance().player.chat(value);
 					}
 				}
 			}
 			if (action.equalsIgnoreCase("quitgame")) {
-				Minecraft.getInstance().shutdown();
+				Minecraft.getInstance().stop();
 			}
 			if (action.equalsIgnoreCase("joinserver")) {
-				Minecraft.getInstance().displayGuiScreen(new ConnectingScreen(Minecraft.getInstance().currentScreen, Minecraft.getInstance(), new ServerData("", value, false)));
+				Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerData("", value, false)));
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
-				if (Minecraft.getInstance().getSaveLoader().canLoadWorld(value)) {
-					Minecraft.getInstance().loadWorld(value);
+				if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
+					Minecraft.getInstance().loadLevel(value);
 				}
 			}
 			if (action.equalsIgnoreCase("openfile")) { //for files and folders
@@ -136,18 +136,27 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("opencustomgui")) {
 				if (CustomGuiLoader.guiExists(value)) {
-					Minecraft.getInstance().displayGuiScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().currentScreen, null));
+					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
 			if (action.equalsIgnoreCase("opengui")) {
 				if (value.equals(CreateWorldScreen.class.getName())) {
-					CreateWorldScreen.func_243425_a(Minecraft.getInstance().currentScreen);
+					Minecraft.getInstance().setScreen(CreateWorldScreen.create(Minecraft.getInstance().screen));
 				} else {
-					Screen s = GuiConstructor.tryToConstruct(value);
-					if (s != null) {
-						Minecraft.getInstance().displayGuiScreen(s);
-					} else {
+					try {
+						if (CustomGuiLoader.guiExists(value)) {
+							Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
+						} else {
+							Screen s = GuiConstructor.tryToConstruct(MenuCustomization.getValidMenuIdentifierFor(value));
+							if (s != null) {
+								Minecraft.getInstance().setScreen(s);
+							} else {
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+							}
+						}
+					} catch (Exception e) {
 						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+						e.printStackTrace();
 					}
 				}
 			}
@@ -241,10 +250,10 @@ public class ButtonScriptEngine {
 				runCMD(value);
 			}
 			if (action.equalsIgnoreCase("closegui")) {
-				Minecraft.getInstance().displayGuiScreen(null);
+				Minecraft.getInstance().setScreen(null);
 			}
 			if (action.equalsIgnoreCase("copytoclipboard")) {
-				Minecraft.getInstance().keyboardListener.setClipboardString(value);
+				Minecraft.getInstance().keyboardHandler.setClipboard(value);
 			}
 			if (action.equalsIgnoreCase("mimicbutton")) {
 				if ((value != null) && value.contains(":")) {
@@ -259,12 +268,12 @@ public class ButtonScriptEngine {
 				if (!LastWorldHandler.getLastWorld().equals("")) {
 					if (!LastWorldHandler.isLastWorldServer()) {
 						File f = new File(LastWorldHandler.getLastWorld());
-						if (Minecraft.getInstance().getSaveLoader().canLoadWorld(f.getName())) {
-							Minecraft.getInstance().loadWorld(f.getName());
+						if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
+							Minecraft.getInstance().loadLevel(f.getName());
 						}
 					} else {
 						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
-						Minecraft.getInstance().displayGuiScreen(new ConnectingScreen(Minecraft.getInstance().currentScreen, Minecraft.getInstance(), new ServerData("", ipRaw, false)));
+						Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerData("", ipRaw, false)));
 					}
 				}
 			}
@@ -293,7 +302,7 @@ public class ButtonScriptEngine {
 		try {
 			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
 			URL u = new URL(url);
-			if (!Minecraft.IS_RUNNING_ON_MAC) {
+			if (!Minecraft.ON_OSX) {
 				if (s.contains("win")) {
 					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
 				} else {
@@ -319,7 +328,7 @@ public class ButtonScriptEngine {
 	}
 
 	private static boolean isMacOS() {
-		return Minecraft.IS_RUNNING_ON_MAC;
+		return Minecraft.ON_OSX;
 	}	
 
 	private static boolean isWindows() {

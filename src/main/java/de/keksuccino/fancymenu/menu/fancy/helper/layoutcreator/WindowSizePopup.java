@@ -44,18 +44,18 @@ public class WindowSizePopup extends FMPopup {
 		});
 		this.addButton(doneButton);
 		
-		this.widthText = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
+		this.widthText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
 		if (type == ActionType.BIGGERTHAN) {
-			this.widthText.setText("" + parent.biggerThanWidth);
+			this.widthText.setValue("" + parent.biggerThanWidth);
 		} else {
-			this.widthText.setText("" + parent.smallerThanWidth);
+			this.widthText.setValue("" + parent.smallerThanWidth);
 		}
 		
-		this.heightText = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
+		this.heightText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler());
 		if (type == ActionType.BIGGERTHAN) {
-			this.heightText.setText("" + parent.biggerThanHeight);
+			this.heightText.setValue("" + parent.biggerThanHeight);
 		} else {
-			this.heightText.setText("" + parent.smallerThanHeight);
+			this.heightText.setValue("" + parent.smallerThanHeight);
 		}
 		
 		KeyboardHandler.addKeyPressedListener(this::onEnterPressed);
@@ -66,8 +66,8 @@ public class WindowSizePopup extends FMPopup {
 	public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
 		
-		float partial = Minecraft.getInstance().getRenderPartialTicks();
-		FontRenderer font = Minecraft.getInstance().fontRenderer;	
+		float partial = Minecraft.getInstance().getFrameTime();
+		FontRenderer font = Minecraft.getInstance().font;	
 		
 		if (this.type == ActionType.BIGGERTHAN) {
 			AbstractGui.drawCenteredString(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.biggerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
@@ -85,8 +85,8 @@ public class WindowSizePopup extends FMPopup {
 		this.heightText.y = (renderIn.height / 2) - 22;
 		this.heightText.render(matrix, mouseX, mouseY, partial);
 
-		AbstractGui.drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getMainWindow().getWidth(), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
-		AbstractGui.drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getMainWindow().getHeight(), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
+		AbstractGui.drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
+		AbstractGui.drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
 		
 		this.doneButton.x = (renderIn.width / 2) - this.doneButton.getWidth() - 5;
 		this.doneButton.y = (renderIn.height / 2) + 80;
@@ -100,9 +100,9 @@ public class WindowSizePopup extends FMPopup {
 	
 	private void onDoneButtonPressed() {
 		try {
-			if (MathUtils.isInteger(this.widthText.getText()) && MathUtils.isInteger(this.heightText.getText())) {
-				int w = Integer.parseInt(this.widthText.getText());
-				int h = Integer.parseInt(this.heightText.getText());
+			if (MathUtils.isInteger(this.widthText.getValue()) && MathUtils.isInteger(this.heightText.getValue())) {
+				int w = Integer.parseInt(this.widthText.getValue());
+				int h = Integer.parseInt(this.heightText.getValue());
 				if (type == ActionType.BIGGERTHAN) {
 					if ((this.parent.biggerThanWidth != w) || (this.parent.biggerThanHeight != h)) {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());

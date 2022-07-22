@@ -74,6 +74,7 @@ import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -125,6 +126,7 @@ public class LayoutEditorScreen extends Screen {
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
+	protected boolean restartAnimationBackgroundOnLoad = false;
 
 	protected String openAudio;
 	protected String closeAudio;
@@ -148,6 +150,8 @@ public class LayoutEditorScreen extends Screen {
 	protected int autoScalingWidth = 0;
 	protected int autoScalingHeight = 0;
 
+	protected String customMenuTitle = null;
+
 	protected int scale = 0;
 
 	protected boolean multiselectStretchedX = false;
@@ -169,6 +173,10 @@ public class LayoutEditorScreen extends Screen {
 	public LayoutEditorScreen(Screen screenToCustomize) {
 		super(new StringTextComponent(""));
 		this.screen = screenToCustomize;
+		ITextComponent cachedOriTitle = MenuHandlerBase.cachedOriginalMenuTitles.get(this.screen.getClass());
+		if (cachedOriTitle != null) {
+			this.screen.title = cachedOriTitle;
+		}
 
 		if (!initDone) {
 			KeyboardHandler.addKeyPressedListener(LayoutEditorScreen::onShortcutPressed);
@@ -207,28 +215,28 @@ public class LayoutEditorScreen extends Screen {
 		this.propertiesRightclickMenu.setAlwaysOnTop(true);
 
 		if (this.scale > 0) {
-			Minecraft.getInstance().getMainWindow().setGuiScale(this.scale);
+			Minecraft.getInstance().getWindow().setGuiScale(this.scale);
 		} else {
-			Minecraft.getInstance().getMainWindow().setGuiScale(Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont()));
+			Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
 		}
-		this.height = Minecraft.getInstance().getMainWindow().getScaledHeight();
-		this.width = Minecraft.getInstance().getMainWindow().getScaledWidth();
+		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
 		if ((this.autoScalingWidth != 0) && (this.autoScalingHeight != 0)) {
-			MainWindow m = Minecraft.getInstance().getMainWindow();
-			double guiWidth = this.width * m.getGuiScaleFactor();
-			double guiHeight = this.height * m.getGuiScaleFactor();
+			MainWindow m = Minecraft.getInstance().getWindow();
+			double guiWidth = this.width * m.getGuiScale();
+			double guiHeight = this.height * m.getGuiScale();
 			double percentX = (guiWidth / (double)this.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getGuiScaleFactor();
-			double newScaleY = (percentY / 100.0D) * m.getGuiScaleFactor();
+			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
 
 			m.setGuiScale(newScale);
-			this.width = m.getScaledWidth();
-			this.height = m.getScaledHeight();
+			this.width = m.getGuiScaledWidth();
+			this.height = m.getGuiScaledHeight();
 		} else if (this.scale <= 0) {
-			Minecraft.getInstance().getMainWindow().setGuiScale(Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont()));
+			Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
 		}
 
 		this.focusedObjects.clear();
@@ -299,6 +307,9 @@ public class LayoutEditorScreen extends Screen {
 			}
 			meta.addEntry("universal_layout_blacklist", bl);
 		}
+		if (this.customMenuTitle != null) {
+			meta.addEntry("custom_menu_title", this.customMenuTitle);
+		}
 
 		LayoutElement globalVisReqDummyLayoutElement = new LayoutElement(this.globalVisReqDummyItem, false, this, true) {
 			@Override public List<PropertiesSection> getProperties() { return null; }
@@ -324,6 +335,7 @@ public class LayoutEditorScreen extends Screen {
 			if (this.randomBackgroundAnimation) {
 				ps.addEntry("random", "true");
 			}
+			ps.addEntry("restart_on_load", "" + this.restartAnimationBackgroundOnLoad);
 			l.add(ps);
 		}
 
@@ -787,7 +799,7 @@ public class LayoutEditorScreen extends Screen {
 		fill(matrix, 0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
 
 		if (this.backgroundTexture != null) {
-			Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
+			Minecraft.getInstance().getTextureManager().bind(this.backgroundTexture.getResourceLocation());
 			
 			if (!this.panorama) {
 				if (!this.keepBackgroundAspectRatio) {
@@ -1293,8 +1305,8 @@ public class LayoutEditorScreen extends Screen {
 		this.history.saveSnapshot(this.history.createSnapshot());
 
 		int w = 100;
-		if (Minecraft.getInstance().fontRenderer.getStringWidth(label) + 10 > w) {
-			w = Minecraft.getInstance().fontRenderer.getStringWidth(label) + 10;
+		if (Minecraft.getInstance().font.width(label) + 10 > w) {
+			w = Minecraft.getInstance().font.width(label) + 10;
 		}
 		LayoutButton b = new LayoutButton(new MenuHandlerBase.ButtonCustomizationContainer(), w, 20, label, null, this);
 		b.object.posY = (int)(this.ui.bar.getHeight() * UIBase.getUIScale());
@@ -1512,7 +1524,7 @@ public class LayoutEditorScreen extends Screen {
 				this.history.editor = neweditor;
 				neweditor.single = ((PreloadedLayoutEditorScreen)this).single;
 
-				Minecraft.getInstance().displayGuiScreen(neweditor);
+				Minecraft.getInstance().setScreen(neweditor);
 			}
 
 		} else {
@@ -1544,7 +1556,7 @@ public class LayoutEditorScreen extends Screen {
 							this.history.editor = neweditor;
 							neweditor.single = file;
 
-							Minecraft.getInstance().displayGuiScreen(neweditor);
+							Minecraft.getInstance().setScreen(neweditor);
 						}
 					} else {
 						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
@@ -1617,7 +1629,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected static void onShortcutPressed(KeyboardData d) {
-		Screen c = Minecraft.getInstance().currentScreen;
+		Screen c = Minecraft.getInstance().screen;
 		if (c instanceof LayoutEditorScreen) {
 
 			//CTRL + C
@@ -1687,7 +1699,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected static void onArrowKeysPressed(KeyboardData d) {
-		Screen c = Minecraft.getInstance().currentScreen;
+		Screen c = Minecraft.getInstance().screen;
 		if (c instanceof LayoutEditorScreen) {
 			if (((LayoutEditorScreen) c).isObjectFocused() && !PopupHandler.isPopupActive()) {
 

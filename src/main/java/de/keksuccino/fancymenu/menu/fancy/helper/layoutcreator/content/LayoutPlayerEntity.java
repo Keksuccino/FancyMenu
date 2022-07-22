@@ -462,15 +462,15 @@ public class LayoutPlayerEntity extends LayoutElement {
 		fill(matrix, this.getEntityPosX() + this.object.getWidth(), this.getEntityPosY(), this.getEntityPosX() + this.object.getWidth() + 1, this.getEntityPosY() + this.object.getHeight(), Color.BLUE.getRGB());
 	
 		//Render pos and size values
-		FontRenderer font = Minecraft.getInstance().fontRenderer;
+		FontRenderer font = Minecraft.getInstance().font;
 		RenderUtils.setScale(matrix, 0.5F);
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 35, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getObject().scale, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 26, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.posx") + ": " + this.getEntityPosX(), this.getEntityPosX()*2, (this.getEntityPosY()*2) - 17, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.getEntityPosX()*2, (this.getEntityPosY()*2) - 8, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.orientation")+ ": " + this.object.orientation, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 35, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.string.border.scale") + ": " + this.getObject().scale, this.getEntityPosX()*2, (this.getEntityPosY()*2) - 26, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.posx") + ": " + this.getEntityPosX(), this.getEntityPosX()*2, (this.getEntityPosY()*2) - 17, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.getEntityPosX()*2, (this.getEntityPosY()*2) - 8, Color.WHITE.getRGB());
 		
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.getEntityPosY(), ((this.getEntityPosX() + this.object.getWidth())*2)+3, ((this.getEntityPosY() + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
-		font.drawString(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.getEntityPosX() + this.object.getWidth())*2)+3, ((this.getEntityPosY() + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.posy") + ": " + this.getEntityPosY(), ((this.getEntityPosX() + this.object.getWidth())*2)+3, ((this.getEntityPosY() + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		font.draw(matrix, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.getEntityPosX() + this.object.getWidth())*2)+3, ((this.getEntityPosY() + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
 	}
 
@@ -499,11 +499,11 @@ public class LayoutPlayerEntity extends LayoutElement {
 	}
 	
 	private int getEntityPosX() {
-		return (int) (this.getObject().getPosX(this.handler) - ((this.getObject().entity.getWidth()*this.getObject().scale) / 2));
+		return (int) (this.getObject().getPosX(this.handler) - ((this.getObject().entity.getBbWidth()*this.getObject().scale) / 2));
 	}
 	
 	private int getEntityPosY() {
-		return (int) (this.getObject().getPosY(this.handler) - (this.getObject().entity.getHeight()*this.getObject().scale));
+		return (int) (this.getObject().getPosY(this.handler) - (this.getObject().entity.getBbHeight()*this.getObject().scale));
 	}
 	
 	public PlayerEntityCustomizationItem getObject() {
@@ -547,8 +547,8 @@ public class LayoutPlayerEntity extends LayoutElement {
 		}
 		
 		this.getObject().scale = scale;
-		this.setWidth((int)(this.getObject().entity.getWidth()*scale));
-		this.setHeight((int)(this.getObject().entity.getHeight()*scale));
+		this.setWidth((int)(this.getObject().entity.getBbWidth()*scale));
+		this.setHeight((int)(this.getObject().entity.getBbHeight()*scale));
 	}
 
 	//TODO übernehmen

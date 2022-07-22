@@ -67,7 +67,7 @@ public class ButtonMimeHandler {
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
             String buttonId = buttonLocator.split("[:]", 2)[1];
             if (MathUtils.isLong(buttonId) || (buttonId.startsWith("button_compatibility_id:"))) {
-                Screen current = Minecraft.getInstance().currentScreen;
+                Screen current = Minecraft.getInstance().screen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
                     if (cachedButtons.containsKey(menuIdentifier)) {
                         ButtonPackage pack = cachedButtons.get(menuIdentifier);
@@ -75,12 +75,12 @@ public class ButtonMimeHandler {
                         if (d != null) {
                             if (d.getScreen() != current) {
                                 cacheFromInstance(current, true);
-                                Minecraft.getInstance().displayGuiScreen(current);
+                                Minecraft.getInstance().setScreen(current);
                             }
                         }
                     } else {
                         cacheFromInstance(current, true);
-                        Minecraft.getInstance().displayGuiScreen(current);
+                        Minecraft.getInstance().setScreen(current);
                     }
                 } else if (!cachedButtons.containsKey(menuIdentifier)) {
                     tryCache(menuIdentifier, false);

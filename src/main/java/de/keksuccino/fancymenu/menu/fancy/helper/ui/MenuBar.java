@@ -46,7 +46,7 @@ public class MenuBar extends UIBase {
 		//Add default FancyMenu button
 		AdvancedButton fmBtn = new AdvancedImageButton(0, 0, 0, 0, FM_LOGO_TEXTURE, true, (press) -> {
 
-			Minecraft.getInstance().displayGuiScreen(new FMConfigScreen(Minecraft.getInstance().currentScreen));
+			Minecraft.getInstance().setScreen(new FMConfigScreen(Minecraft.getInstance().screen));
 
 		}) {
 			@Override
@@ -261,7 +261,7 @@ public class MenuBar extends UIBase {
 					int mouseX = MouseInput.getMouseX();
 					int mouseY = MouseInput.getMouseY();
 					int width = screen.width;
-					float partialTicks = Minecraft.getInstance().getRenderPartialTicks();
+					float partialTicks = Minecraft.getInstance().getFrameTime();
 					
 					MouseInput.resetRenderScale();
 					
@@ -289,7 +289,7 @@ public class MenuBar extends UIBase {
 							if (b.visible) {
 								b.setHeight(this.height);
 								if (!(b instanceof AdvancedImageButton)) {
-									int i = Minecraft.getInstance().fontRenderer.getStringWidth(b.getMessageString());
+									int i = Minecraft.getInstance().font.width(b.getMessageString());
 									b.setWidth(i + 12);
 								}
 								b.x = xl;
@@ -306,7 +306,7 @@ public class MenuBar extends UIBase {
 							if (b.visible) {
 								b.setHeight(this.height);
 								if (!(b instanceof AdvancedImageButton)) {
-									int i = Minecraft.getInstance().fontRenderer.getStringWidth(b.getMessageString());
+									int i = Minecraft.getInstance().font.width(b.getMessageString());
 									b.setWidth(i + 12);
 								}
 								xr -= b.getWidth();
@@ -351,13 +351,13 @@ public class MenuBar extends UIBase {
 	}
 	
 	public boolean isHovered() {
-		if (Minecraft.getInstance().currentScreen == null) {
+		if (Minecraft.getInstance().screen == null) {
 			return false;
 		}
 		
 		MouseInput.setRenderScale(this.getScale());
 		
-		int width = Minecraft.getInstance().currentScreen.width;
+		int width = Minecraft.getInstance().screen.width;
 		int mX = MouseInput.getMouseX();
 		int mY = MouseInput.getMouseY();
 		

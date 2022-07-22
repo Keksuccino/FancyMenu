@@ -30,12 +30,12 @@ public class DynamicValueHelper {
 	public static String convertFromRaw(String in) {
 		int width = 0;
 		int height = 0;
-		String playername = Minecraft.getInstance().getSession().getUsername();
-		String playeruuid = Minecraft.getInstance().getSession().getPlayerID();
+		String playername = Minecraft.getInstance().getUser().getName();
+		String playeruuid = Minecraft.getInstance().getUser().getUuid();
 		String mcversion = MCPVersion.getMCVersion();
-		if (Minecraft.getInstance().currentScreen != null) {
-			width = Minecraft.getInstance().currentScreen.width;
-			height = Minecraft.getInstance().currentScreen.height;
+		if (Minecraft.getInstance().screen != null) {
+			width = Minecraft.getInstance().screen.width;
+			height = Minecraft.getInstance().screen.height;
 		}
 		
 		//Convert &-formatcodes to real ones
@@ -203,7 +203,7 @@ public class DynamicValueHelper {
 					String localizationKey = blank.split(":", 2)[1];
 					String localized = Locals.localize(localizationKey);
 					if (localized.equals(localizationKey)) {
-						localized = I18n.format(localizationKey);
+						localized = I18n.get(localizationKey);
 						if (localized == null) {
 							localized = localizationKey;
 						}
@@ -225,8 +225,8 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.gameVersion != null) {
-							in = in.replace(s, sd.gameVersion.getString());
+						if (sd.version != null) {
+							in = in.replace(s, sd.version.getString());
 						} else {
 							in = in.replace(s, "---");
 						}
@@ -247,7 +247,7 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.pingToServer != -1L) {
+						if (sd.ping != -1L) {
 							in = in.replace(s, "§aOnline");
 						} else {
 							in = in.replace(s, "§cOffline");
@@ -269,8 +269,8 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.populationInfo != null) {
-							in = in.replace(s, "" + sd.populationInfo.getString());
+						if (sd.status != null) {
+							in = in.replace(s, "" + sd.status.getString());
 						} else {
 							in = in.replace(s, "0/0");
 						}
@@ -291,7 +291,7 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						in = in.replace(s, "" + sd.pingToServer);
+						in = in.replace(s, "" + sd.ping);
 					}
 				}
 			}
@@ -309,8 +309,8 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.serverMOTD != null) {
-							in = in.replace(s, sd.serverMOTD.getString());
+						if (sd.motd != null) {
+							in = in.replace(s, sd.motd.getString());
 						} else {
 							in = in.replace(s, "");
 						}
@@ -331,8 +331,8 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.serverMOTD != null) {
-							List<String> lines = splitMotdLines(sd.serverMOTD.getString());
+						if (sd.motd != null) {
+							List<String> lines = splitMotdLines(sd.motd.getString());
 							if (!lines.isEmpty()) {
 								in = in.replace(s, lines.get(0));
 							} else {
@@ -358,8 +358,8 @@ public class DynamicValueHelper {
 					String ip = blank.split(":", 2)[1];
 					ServerData sd = ServerCache.getServer(ip);
 					if (sd != null) {
-						if (sd.serverMOTD != null) {
-							List<String> lines = splitMotdLines(sd.serverMOTD.getString());
+						if (sd.motd != null) {
+							List<String> lines = splitMotdLines(sd.motd.getString());
 							if (lines.size() >= 2) {
 								in = in.replace(s, lines.get(1));
 							} else {

@@ -21,16 +21,16 @@ public class TitleScreenForgeCopyrightItem extends DeepCustomizationItem {
     @Override
     public void render(MatrixStack matrix, Screen menu) throws IOException {
 
-        FontRenderer font = Minecraft.getInstance().fontRenderer;
+        FontRenderer font = Minecraft.getInstance().font;
 
         String line = Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright.example.line1");
         int lineCount = 0;
-        AbstractGui.drawString(matrix, font, line, menu.width - font.getStringWidth(line) - 1, menu.height - (11 + (lineCount + 1) * ( font.FONT_HEIGHT + 1)), 16777215);
+        AbstractGui.drawString(matrix, font, line, menu.width - font.width(line) - 1, menu.height - (11 + (lineCount + 1) * ( font.lineHeight + 1)), 16777215);
 
-        this.width = font.getStringWidth(line);
-        this.height = font.FONT_HEIGHT;
+        this.width = font.width(line);
+        this.height = font.lineHeight;
         this.posX = menu.width - this.width - 1;
-        this.posY = menu.height - 11 - font.FONT_HEIGHT;
+        this.posY = menu.height - 11 - font.lineHeight;
 
     }
 

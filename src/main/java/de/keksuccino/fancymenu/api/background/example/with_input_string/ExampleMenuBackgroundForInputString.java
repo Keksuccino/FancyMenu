@@ -52,7 +52,7 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
             if ((this.imageLocation != null) && this.imageLocation.isReady()) {
 
                 RenderSystem.enableBlend();
-                Minecraft.getInstance().textureManager.bindTexture(this.imageLocation.getResourceLocation());
+                Minecraft.getInstance().textureManager.bind(this.imageLocation.getResourceLocation());
                 RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
                 //If the keep-aspect-ratio toggle is disabled, just stretch the image background to the full size of the screen it is rendered in

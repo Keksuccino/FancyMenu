@@ -79,6 +79,7 @@ import net.minecraft.client.gui.widget.button.ImageButton;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -128,6 +129,8 @@ public class MenuHandlerBase {
 	protected String openAudio;
 	
 	protected static Screen scaleChangedIn = null;
+
+	public static Map<Class, ITextComponent> cachedOriginalMenuTitles = new HashMap<>();
 
 	/**
 	 * @param identifier Has to be the valid and full class name of the GUI screen.
@@ -180,19 +183,19 @@ public class MenuHandlerBase {
 		}
 		this.delayThreads.clear();
 
-		int mcscale = Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont());
+		int mcscale = Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode());
 
-		if (e.getGui() != Minecraft.getInstance().currentScreen) {
+		if (e.getGui() != Minecraft.getInstance().screen) {
 			return;
 		}
 
 		//Resetting scale to the normal value if it was changed in another screen
 		if ((scaleChangedIn != null) && (scaleChangedIn != e.getGui())) {
 			scaleChangedIn = null;
-			MainWindow m = Minecraft.getInstance().getMainWindow();
+			MainWindow m = Minecraft.getInstance().getWindow();
 			m.setGuiScale((double)mcscale);
-			e.getGui().width = m.getScaledWidth();
-			e.getGui().height = m.getScaledHeight();
+			e.getGui().width = m.getGuiScaledWidth();
+			e.getGui().height = m.getGuiScaledHeight();
 		}
 
 		if (!MenuCustomization.isValidScreen(e.getGui())) {
@@ -246,6 +249,11 @@ public class MenuHandlerBase {
 			}.visibilityRequirementContainer;
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
+			}
+
+			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+			if (cusMenuTitle != null) {
+				e.getGui().title = new StringTextComponent(cusMenuTitle);
 			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -345,28 +353,28 @@ public class MenuHandlerBase {
 		if (!this.sharedLayoutProps.scaled) {
 			if (scaleChangedIn != null) {
 				scaleChangedIn = null;
-				MainWindow m = Minecraft.getInstance().getMainWindow();
+				MainWindow m = Minecraft.getInstance().getWindow();
 				m.setGuiScale((double)mcscale);
-				e.getGui().width = m.getScaledWidth();
-				e.getGui().height = m.getScaledHeight();
+				e.getGui().width = m.getGuiScaledWidth();
+				e.getGui().height = m.getGuiScaledHeight();
 			}
 		}
 
 		//TODO übernehmen
 		//Handle auto scaling
 		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
-			MainWindow m = Minecraft.getInstance().getMainWindow();
-			double guiWidth = e.getGui().width * m.getGuiScaleFactor();
-			double guiHeight = e.getGui().height * m.getGuiScaleFactor();
+			MainWindow m = Minecraft.getInstance().getWindow();
+			double guiWidth = e.getGui().width * m.getGuiScale();
+			double guiHeight = e.getGui().height * m.getGuiScale();
 			double percentX = (guiWidth / (double)this.sharedLayoutProps.autoScaleBaseWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.sharedLayoutProps.autoScaleBaseHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getGuiScaleFactor();
-			double newScaleY = (percentY / 100.0D) * m.getGuiScaleFactor();
+			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
 
 			m.setGuiScale(newScale);
-			e.getGui().width = m.getScaledWidth();
-			e.getGui().height = m.getScaledHeight();
+			e.getGui().width = m.getGuiScaledWidth();
+			e.getGui().height = m.getGuiScaledHeight();
 			this.sharedLayoutProps.scaled = true;
 			scaleChangedIn = e.getGui();
 		}
@@ -382,9 +390,9 @@ public class MenuHandlerBase {
 			if (action.equalsIgnoreCase("overridemenu")) {
 				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
 					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getGui(), (onClose) -> {
-						e.getGui().onClose();
+						e.getGui().removed();
 					});
-					Minecraft.getInstance().displayGuiScreen(cus);
+					Minecraft.getInstance().setScreen(cus);
 				}
 			}
 
@@ -396,10 +404,10 @@ public class MenuHandlerBase {
 					if (newscale <= 0) {
 						newscale = 1;
 					}
-					MainWindow m = Minecraft.getInstance().getMainWindow();
+					MainWindow m = Minecraft.getInstance().getWindow();
 					m.setGuiScale((double)newscale);
-					e.getGui().width = m.getScaledWidth();
-					e.getGui().height = m.getScaledHeight();
+					e.getGui().width = m.getGuiScaledWidth();
+					e.getGui().height = m.getGuiScaledHeight();
 					this.sharedLayoutProps.scaled = true;
 				}
 			}
@@ -422,7 +430,7 @@ public class MenuHandlerBase {
 	@SubscribeEvent
 	public void onButtonsCached(ButtonCachedEvent e) {
 
-		if (e.getGui() != Minecraft.getInstance().currentScreen) {
+		if (e.getGui() != Minecraft.getInstance().screen) {
 			return;
 		}
 		if (!MenuCustomization.isValidScreen(e.getGui())) {
@@ -687,6 +695,11 @@ public class MenuHandlerBase {
 				if ((random != null) && random.equalsIgnoreCase("true")) {
 					ran = true;
 				}
+				boolean restartOnLoad = false;
+				String restartOnLoadString = sec.getEntryValue("restart_on_load");
+				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+					restartOnLoad = true;
+				}
 				if (value != null) {
 					if (value.contains(",")) {
 						for (String s2 : value.split("[,]")) {
@@ -720,6 +733,11 @@ public class MenuHandlerBase {
 					}
 
 					if (!this.backgroundAnimations.isEmpty()) {
+						if (restartOnLoad && MenuCustomization.isNewMenu()) {
+							for (IAnimationRenderer r : this.backgroundAnimations) {
+								r.resetAnimation();
+							}
+						}
 						if (ran) {
 							if (MenuCustomization.isNewMenu()) {
 								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
@@ -994,7 +1012,7 @@ public class MenuHandlerBase {
 
 			if (action.equalsIgnoreCase("addaudio")) {
 				if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
-					if ((Minecraft.getInstance().world == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
+					if ((Minecraft.getInstance().level == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
 						String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 						String loopString = sec.getEntryValue("loop");
 
@@ -1322,7 +1340,7 @@ public class MenuHandlerBase {
 					//-------------------------
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
-					Minecraft.getInstance().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
+					Minecraft.getInstance().getTextureManager().bind(this.backgroundTexture.getResourceLocation());
 
 					if (!this.panoramaback) {
 						//TODO übernehmen (kompletten teil; if + else)
@@ -1464,8 +1482,8 @@ public class MenuHandlerBase {
 	@SubscribeEvent
 	public void onButtonClickSound(PlayWidgetClickSoundEvent.Pre e) {
 		
-		if (this.shouldCustomize(Minecraft.getInstance().currentScreen)) {
-			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
+			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 
 				ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(e.getWidget());
 
@@ -1492,8 +1510,8 @@ public class MenuHandlerBase {
 	//TODO übernehmen
 	@SubscribeEvent
 	public void onButtonRenderBackground(RenderWidgetBackgroundEvent.Pre e) {
-		if (this.shouldCustomize(Minecraft.getInstance().currentScreen)) {
-			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
+			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 
 				Widget w = e.getWidget();
 				ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
@@ -1501,22 +1519,17 @@ public class MenuHandlerBase {
 					String normalBack = c.normalBackground;
 					String hoverBack = c.hoverBackground;
 					boolean hasCustomBackground = false;
+					boolean restart = false;
 					if (c.lastHoverState != w.isHovered()) {
-						if (w.isHovered()) {
-							if (c.restartAnimationOnHover) {
-								for (IAnimationRenderer i : c.cachedAnimations) {
-									if (i != null) {
-										i.resetAnimation();
-									}
-								}
-							}
+						if (w.isHovered() && c.restartAnimationOnHover) {
+							restart = true;
 						}
 					}
 					c.lastHoverState = w.isHovered();
 
 					if (!w.isHovered()) {
 						if (normalBack != null) {
-							if (this.renderCustomButtomBackground(e, normalBack)) {
+							if (this.renderCustomButtomBackground(e, normalBack, restart)) {
 								hasCustomBackground = true;
 							}
 						}
@@ -1525,13 +1538,13 @@ public class MenuHandlerBase {
 					if (w.isHovered()) {
 						if (w.active) {
 							if (hoverBack != null) {
-								if (this.renderCustomButtomBackground(e, hoverBack)) {
+								if (this.renderCustomButtomBackground(e, hoverBack, restart)) {
 									hasCustomBackground = true;
 								}
 							}
 						} else {
 							if (normalBack != null) {
-								if (this.renderCustomButtomBackground(e, normalBack)) {
+								if (this.renderCustomButtomBackground(e, normalBack, restart)) {
 									hasCustomBackground = true;
 								}
 							}
@@ -1542,7 +1555,7 @@ public class MenuHandlerBase {
 						if (w instanceof ImageButton) {
 							ITextComponent msg = w.getMessage();
 							if (msg != null) {
-								AbstractGui.drawCenteredString(e.getMatrixStack(), Minecraft.getInstance().fontRenderer, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, w.getFGColor() | MathHelper.ceil(e.getAlpha() * 255.0F) << 24);
+								AbstractGui.drawCenteredString(e.getMatrixStack(), Minecraft.getInstance().font, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, w.getFGColor() | MathHelper.ceil(e.getAlpha() * 255.0F) << 24);
 							}
 						}
 
@@ -1555,7 +1568,7 @@ public class MenuHandlerBase {
 	}
 
 	//TODO übernehmen
-	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background) {
+	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		Widget w = e.getWidget();
 		MatrixStack matrix = e.getMatrixStack();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
@@ -1566,6 +1579,9 @@ public class MenuHandlerBase {
 						String aniName = background.split("[:]", 2)[1];
 						if (AnimationHandler.animationExists(aniName)) {
 							IAnimationRenderer a = AnimationHandler.getAnimation(aniName);
+							if (restartAnimationBackground) {
+								a.resetAnimation();
+							}
 							this.renderBackgroundAnimation(e, a);
 							if (!c.cachedAnimations.contains(a)) {
 								c.cachedAnimations.add(a);
@@ -1577,6 +1593,9 @@ public class MenuHandlerBase {
 						if (f.isFile()) {
 							if (f.getPath().toLowerCase().endsWith(".gif")) {
 								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+								if (restartAnimationBackground) {
+									a.resetAnimation();
+								}
 								this.renderBackgroundAnimation(e, a);
 								if (!c.cachedAnimations.contains(a)) {
 									c.cachedAnimations.add(a);
@@ -1585,7 +1604,7 @@ public class MenuHandlerBase {
 							} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
 								ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
 								if (back != null) {
-									Minecraft.getInstance().textureManager.bindTexture(back.getResourceLocation());
+									Minecraft.getInstance().textureManager.bind(back.getResourceLocation());
 									RenderSystem.enableBlend();
 									RenderSystem.color4f(1.0F, 1.0F, 1.0F, e.getAlpha());
 									AbstractGui.blit(matrix, w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
@@ -1709,13 +1728,13 @@ public class MenuHandlerBase {
 	@SubscribeEvent
 	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
 
-		Screen s = Minecraft.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		
 		if (this.shouldCustomize(s)) {
 			if (MenuCustomization.isMenuCustomizable(s)) {
 
 				//Allow background stuff to be rendered in scrollable GUIs
-				if (Minecraft.getInstance().currentScreen != null) {
+				if (Minecraft.getInstance().screen != null) {
 					
 					this.renderBackground(e.getMatrixStack(), s);
 					
@@ -1736,7 +1755,7 @@ public class MenuHandlerBase {
 			}
 		} else {
 			ButtonData b;
-			if (I18n.hasKey(identifier)) {
+			if (I18n.exists(identifier)) {
 				b = ButtonCache.getButtonForKey(identifier);
 			} else {
 				b = ButtonCache.getButtonForName(identifier);

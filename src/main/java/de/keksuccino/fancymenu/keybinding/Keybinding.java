@@ -26,11 +26,11 @@ public class Keybinding {
 		
 		//It's not possible in GUIs to check for keypresses via Keybinding.isPressed(), so I'm doing it on my own
 		KeyboardHandler.addKeyPressedListener((c) -> {
-			if ((KeyReloadMenu.getKey().getKeyCode() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
+			if ((KeyReloadMenu.getKey().getValue() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
 				CustomizationHelper.reloadSystemAndMenu();
 			}
 
-			if ((KeyToggleHelper.getKey().getKeyCode() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
+			if ((KeyToggleHelper.getKey().getValue() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
 				try {
 					if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 						FancyMenu.config.setValue("showcustomizationbuttons", false);

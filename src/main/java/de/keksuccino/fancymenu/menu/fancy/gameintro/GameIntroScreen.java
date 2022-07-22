@@ -33,13 +33,13 @@ public class GameIntroScreen extends Screen {
 		this.main = main;
 		
 		this.keypress = KeyboardHandler.addKeyPressedListener((c) -> {
-			if ((Minecraft.getInstance().currentScreen == this) && this.skipable) {
+			if ((Minecraft.getInstance().screen == this) && this.skipable) {
 				if (c.keycode == 32) {
 					this.renderer.setLooped(this.loop);
 					this.renderer.setStretchImageToScreensize(this.stretched);
 					this.renderer.resetAnimation();
 					GameIntroHandler.introDisplayed = true;
-					Minecraft.getInstance().displayGuiScreen(this.main);
+					Minecraft.getInstance().setScreen(this.main);
 					MenuCustomization.reloadCurrentMenu();
 					KeyboardHandler.removeKeyPressedListener(this.keypress);
 				}
@@ -82,22 +82,22 @@ public class GameIntroScreen extends Screen {
 				this.renderer.setStretchImageToScreensize(this.stretched);
 				this.renderer.resetAnimation();
 				GameIntroHandler.introDisplayed = true;
-				Minecraft.getInstance().displayGuiScreen(this.main);
+				Minecraft.getInstance().setScreen(this.main);
 				MenuCustomization.reloadCurrentMenu();
 			}
 		}
 		
 		if (this.skipable) {
 			RenderSystem.enableBlend();
-			matrix.push();
+			matrix.pushPose();
 			matrix.scale(1.05F, 1.05F, 1.05F);
 			String text = Locals.localize("gameintro.skip");
 			String customtext = StringUtils.convertFormatCodes(FancyMenu.config.getOrDefault("customgameintroskiptext", ""), "&", "§");
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;
 			}
-			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
-			matrix.pop();
+			AbstractGui.drawCenteredString(matrix, Minecraft.getInstance().font, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
+			matrix.popPose();
 		}
 	}
 

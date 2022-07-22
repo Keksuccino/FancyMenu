@@ -19,7 +19,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -31,17 +30,7 @@ import net.minecraft.client.Minecraft;
 public class LayoutVanillaButton extends LayoutElement {
 	
 	public final ButtonData button;
-	//TODO übernehmen
 	public final MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
-	//TODO übernehmen
-//	public boolean hidden = false;
-//	public String backNormal = null;
-//	public String backHovered = null;
-//	public int clicks = 0;
-//	public String hoverLabel;
-//	public String hoverSound;
-//	public String clicksound = null;
-//	public String description = null;
 
 	//TODO übernehmen
 	public LayoutVanillaButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, ButtonData button, LayoutEditorScreen handler) {
@@ -76,7 +65,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			this.handler.postRenderTasks.add(new Runnable() {
 				@Override
 				public void run() {
-					Minecraft.getInstance().displayGuiScreen(LayoutVanillaButton.this.handler);
+					Minecraft.getInstance().setScreen(LayoutVanillaButton.this.handler);
 				}
 			});
 		});
@@ -374,7 +363,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				this.object.setWidth(this.button.width);
 				this.object.setHeight(this.button.height);
 				//-------------------
-				GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 				this.displaySetOrientationNotification();
 				return;
 			}
@@ -389,7 +378,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				this.object.setHeight(this.button.height);
 				//-------------------
 				this.handler.setObjectFocused(this, false, true);
-				GLFW.glfwSetCursor(Minecraft.getInstance().getMainWindow().getHandle(), normalCursor);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 				this.displaySetOrientationNotification();
 				return;
 			}
@@ -578,7 +567,8 @@ public class LayoutVanillaButton extends LayoutElement {
 
 	public void displaySetOrientationNotification() {
 		if (FancyMenu.config.getOrDefault("showvanillamovewarning", true)) {
-			PopupHandler.displayPopup(new VanillaButtonMovePopup(this.handler));
+			FMNotificationPopup p = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.orientation_needed"), "%n%"));
+			PopupHandler.displayPopup(p);
 		}
 	}
 	

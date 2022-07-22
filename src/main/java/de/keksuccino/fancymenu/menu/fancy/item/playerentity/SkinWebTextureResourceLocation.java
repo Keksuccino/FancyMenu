@@ -50,7 +50,7 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
                     NativeImage skinNew = new NativeImage(64, 64, true);
 
                     //Copy old skin texture to new skin
-                    skinNew.copyImageData(i);
+                    skinNew.copyFrom(i);
 
                     int xOffsetLeg = 16;
                     int yOffsetLeg = 32;
@@ -84,7 +84,7 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
 
                     i = skinNew;
                 }
-                this.location = Minecraft.getInstance().getTextureManager().getDynamicTextureLocation(this.filterUrl(this.url), new SelfcleaningDynamicTexture(i));
+                this.location = Minecraft.getInstance().getTextureManager().register(this.filterUrl(this.url), new SelfcleaningDynamicTexture(i));
                 s.close();
                 this.loaded = true;
             } catch (Exception var5) {

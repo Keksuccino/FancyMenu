@@ -33,7 +33,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 	public String rawURL = "";
 	protected volatile int unscaledHeight = 1;
 	protected volatile int unscaledWidth = 1;
-	protected FontRenderer font = Minecraft.getInstance().fontRenderer;
+	protected FontRenderer font = Minecraft.getInstance().font;
 	
 	public WebStringCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -96,7 +96,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 				float sc = (this.scale * m.getValue());
 				int x = (int) (this.getPosX(menu) / sc);
 				int y = (int) (this.getPosY(menu) / sc);
-				int stringwidth = (int) (font.getStringWidth(m.getKey()) * sc);
+				int stringwidth = (int) (font.width(m.getKey()) * sc);
 
 				if (this.alignment == Alignment.RIGHT) {
 					x = (int) (x + ((this.getWidth() - stringwidth) / sc));
@@ -105,14 +105,14 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 					x = (int) (x + (((this.getWidth() - stringwidth) / sc) / 2));
 				}
 				
-				matrix.push();
+				matrix.pushPose();
 				matrix.scale(sc, sc, sc);
 				if (this.shadow) {
-					font.drawStringWithShadow(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+					font.drawShadow(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
 				} else {
-					font.drawString(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
+					font.draw(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | MathHelper.ceil(this.opacity * 255.0F) << 24);
 				}
-				matrix.pop();
+				matrix.popPose();
 				
 				i += (10 * sc);
 				
@@ -186,7 +186,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 							}
 							float sc = getScaleMultiplicator(s);
 							s = getWithoutHeadlineCodes(s);
-							int i = (int) (font.getStringWidth(s) * sc);
+							int i = (int) (font.width(s) * sc);
 							if (i > w) {
 								w = i;
 							}
@@ -209,7 +209,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 							s = Locals.localize("customization.items.webstring.unabletoload");
 						}
 						lines.put(s, 1.0F);
-						unscaledWidth = font.getStringWidth(s);
+						unscaledWidth = font.width(s);
 						unscaledHeight = 10;
 						e.printStackTrace();
 					}
@@ -221,7 +221,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 						s = Locals.localize("customization.items.webstring.unabletoload");
 					}
 					lines.put(s, 1.0F);
-					unscaledWidth = font.getStringWidth(s);
+					unscaledWidth = font.width(s);
 					unscaledHeight = 10;
 					
 					System.out.println("########################## ERROR ##########################");

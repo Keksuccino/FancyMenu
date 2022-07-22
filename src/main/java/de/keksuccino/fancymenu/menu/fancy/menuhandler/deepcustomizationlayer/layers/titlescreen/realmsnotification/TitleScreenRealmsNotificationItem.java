@@ -36,12 +36,12 @@ public class TitleScreenRealmsNotificationItem extends DeepCustomizationItem {
         int realmsButtonWidth = 98;
 //        int realmsButtonHeight = 20;
 
-        Minecraft.getInstance().textureManager.bindTexture(NEWS_ICON_LOCATION);
+        Minecraft.getInstance().textureManager.bind(NEWS_ICON_LOCATION);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        matrix.push();
+        matrix.pushPose();
         matrix.scale(0.4F, 0.4F, 0.4F);
         AbstractGui.blit(matrix, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
-        matrix.pop();
+        matrix.popPose();
 
         this.width = 13;
         this.height = 13;

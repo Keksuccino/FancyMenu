@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(IngameMenuScreen.class)
 public interface IMixinPauseScreen {
 
-    @Accessor("isFullMenu") public boolean getShowPauseMenuFancyMenu();
+    @Accessor("showPauseMenu") public boolean getShowPauseMenuFancyMenu();
 
 }

@@ -16,11 +16,11 @@ public class CloseGuiScreenCommand {
     }
 
     private static int closeGui(CommandSource stack) {
-        Minecraft.getInstance().execute(() -> {
+        ClientExecutor.execute(() -> {
             try {
-                Minecraft.getInstance().displayGuiScreen(null);
+                Minecraft.getInstance().setScreen(null);
             } catch (Exception e) {
-                stack.sendErrorMessage(new StringTextComponent("Error while executing command!"));
+                stack.sendFailure(new StringTextComponent("Error while executing command!"));
                 e.printStackTrace();
             }
         });

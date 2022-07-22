@@ -50,7 +50,7 @@ public class LayoutButton extends LayoutElement {
 		super.init();
 
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config"), (press) -> {
-			Minecraft.getInstance().displayGuiScreen(new ButtonActionScreen(this.handler, this));
+			Minecraft.getInstance().setScreen(new ButtonActionScreen(this.handler, this));
 		});
 		this.rightclickMenu.addContent(b3);
 

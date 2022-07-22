@@ -30,14 +30,14 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
         lastWidth = 0;
         lastHeight = 0;
 
-        FontRenderer font = Minecraft.getInstance().fontRenderer;
+        FontRenderer font = Minecraft.getInstance().font;
         BrandingControl.forEachLine(true, true, (brdline, brd) -> {
-            AbstractGui.drawString(matrix, font, brd, 2, menu.height - ( 10 + brdline * (font.FONT_HEIGHT + 1)), 16777215);
-            int w = font.getStringWidth(brd);
+            AbstractGui.drawString(matrix, font, brd, 2, menu.height - ( 10 + brdline * (font.lineHeight + 1)), 16777215);
+            int w = font.width(brd);
             if (lastWidth < w) {
                 lastWidth = w;
             }
-            lastHeight += font.FONT_HEIGHT + 1;
+            lastHeight += font.lineHeight + 1;
         });
 
         this.width = lastWidth;

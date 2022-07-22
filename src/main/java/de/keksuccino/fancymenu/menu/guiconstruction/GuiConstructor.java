@@ -15,6 +15,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 public class GuiConstructor {
 	
@@ -24,23 +26,29 @@ public class GuiConstructor {
 		
 		parameters.put(Minecraft.class, Minecraft.getInstance());
 		parameters.put(Screen.class, null);
-		parameters.put(GameSettings.class, Minecraft.getInstance().gameSettings);
+		parameters.put(GameSettings.class, Minecraft.getInstance().options);
 		parameters.put(LanguageManager.class, Minecraft.getInstance().getLanguageManager());
-		parameters.put(boolean.class, true);
+		parameters.put(Boolean.class, true);
 		parameters.put(PlayerEntity.class, null);
 		parameters.put(String.class, "");
 		parameters.put(ClientAdvancementManager.class, null);
+		parameters.put(ITextComponent.class, new StringTextComponent(""));
+		parameters.put(boolean.class, true);
+		parameters.put(int.class, 1);
+		parameters.put(long.class, 1L);
+		parameters.put(double.class, 1D);
+		parameters.put(float.class, 1F);
 		
 	}
 	
 	public static Screen tryToConstruct(String identifier) {
 		try {
 			//Update last screen
-			parameters.put(Screen.class, Minecraft.getInstance().currentScreen);
+			parameters.put(Screen.class, Minecraft.getInstance().screen);
 			//Update player
 			parameters.put(PlayerEntity.class, Minecraft.getInstance().player);
 			if ((Minecraft.getInstance().player != null) && (Minecraft.getInstance().player.connection != null)) {
-				parameters.put(ClientAdvancementManager.class, Minecraft.getInstance().player.connection.getAdvancementManager());
+				parameters.put(ClientAdvancementManager.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
 			
 			Class<?> gui = Class.forName(identifier);

@@ -181,15 +181,15 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		//TODO übernehmen
 		this.updateValues();
 
-		if (this.onlyOutgame && (Minecraft.getInstance().world != null)) {
+		if (this.onlyOutgame && (Minecraft.getInstance().level != null)) {
 			return;
 		}
 
-		if (this.onlyMultiplayer && ((Minecraft.getInstance().world == null) || Minecraft.getInstance().isSingleplayer())) {
+		if (this.onlyMultiplayer && ((Minecraft.getInstance().level == null) || Minecraft.getInstance().hasSingleplayerServer())) {
 			return;
 		}
 
-		if (this.onlySingleplayer && ((Minecraft.getInstance().world == null) || !Minecraft.getInstance().isSingleplayer())) {
+		if (this.onlySingleplayer && ((Minecraft.getInstance().level == null) || !Minecraft.getInstance().hasSingleplayerServer())) {
 			return;
 		}
 
@@ -217,7 +217,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			this.hover = false;
 		}
 		
-		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
+		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
 	}
 
 	//TODO übernehmen

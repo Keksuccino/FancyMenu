@@ -87,7 +87,7 @@ public class SliderCustomizationItem extends CustomizationItem {
         if (linkedVariable != null) {
             valString = VariableHandler.getVariable(linkedVariable);
         }
-        Screen current = Minecraft.getInstance().currentScreen;
+        Screen current = Minecraft.getInstance().screen;
         if (this.type == SliderType.RANGE) {
             int selectedRangeValue = this.minRangeValue;
             if ((valString != null) && MathUtils.isInteger(valString)) {
@@ -139,7 +139,7 @@ public class SliderCustomizationItem extends CustomizationItem {
             this.slider.y = this.getPosY(menu);
             this.slider.setWidth(this.width);
             this.slider.setHeight(this.height);
-            this.slider.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getRenderPartialTicks());
+            this.slider.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
 
             //Update variable value on change
             if (this.linkedVariable != null) {

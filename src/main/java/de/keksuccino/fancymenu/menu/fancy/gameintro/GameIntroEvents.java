@@ -23,7 +23,7 @@ public class GameIntroEvents {
 		if ((e.getGui() instanceof MainMenuScreen) && AnimationHandler.isReady() && !GameIntroHandler.introDisplayed) {
 			IAnimationRenderer intro = GameIntroHandler.getGameIntroAnimation();
 			if (intro != null) {
-				Minecraft.getInstance().displayGuiScreen(new GameIntroScreen(intro, (MainMenuScreen) e.getGui()));
+				Minecraft.getInstance().setScreen(new GameIntroScreen(intro, (MainMenuScreen) e.getGui()));
 			} else {
 				GameIntroHandler.introDisplayed = true;
 			}
@@ -32,7 +32,7 @@ public class GameIntroEvents {
 
 	@SubscribeEvent
 	public void onClientTick(TickEvent.ClientTickEvent e) {
-		if (!GameIntroHandler.introDisplayed && (Minecraft.getInstance().world != null)) {
+		if (!GameIntroHandler.introDisplayed && (Minecraft.getInstance().level != null)) {
 			GameIntroHandler.introDisplayed = true;
 		}
 	}

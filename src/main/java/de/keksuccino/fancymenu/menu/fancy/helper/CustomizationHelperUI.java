@@ -68,6 +68,7 @@ public class CustomizationHelperUI extends UIBase {
 	public static boolean showMenuInfo = false;
 	protected static List<ButtonData> buttons = new ArrayList<ButtonData>();
 	protected static int tick = 0;
+	protected static long lastButtonInfoRightClick = 0;
 	
 	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
 	protected static final ResourceLocation RELOAD_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "/filechooser/back_icon.png");
@@ -94,17 +95,17 @@ public class CustomizationHelperUI extends UIBase {
 			bar.addChild(currentMenu, "fm.ui.tab.current", ElementAlignment.LEFT);
 			
 			String toggleLabel = Locals.localize("helper.popup.togglecustomization.enable");
-			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 				toggleLabel = Locals.localize("helper.popup.togglecustomization.disable");
 			}
 			CustomizationButton toggleCustomizationButton = new CustomizationButton(0, 0, 0, 0, toggleLabel, true, (press) -> {
-				if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+				if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 					press.setMessage(new StringTextComponent(Locals.localize("helper.popup.togglecustomization.enable")));
-					MenuCustomization.disableCustomizationForMenu(Minecraft.getInstance().currentScreen);
+					MenuCustomization.disableCustomizationForMenu(Minecraft.getInstance().screen);
 					CustomizationHelper.reloadSystemAndMenu();
 				} else {
 					press.setMessage(new StringTextComponent(Locals.localize("helper.popup.togglecustomization.disable")));
-					MenuCustomization.enableCustomizationForMenu(Minecraft.getInstance().currentScreen);
+					MenuCustomization.enableCustomizationForMenu(Minecraft.getInstance().screen);
 					CustomizationHelper.reloadSystemAndMenu();
 				}
 			});
@@ -117,8 +118,8 @@ public class CustomizationHelperUI extends UIBase {
 			
 			CustomizationButton newLayoutButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.new"), true, (press) -> {
 				LayoutEditorScreen.isActive = true;
-				Screen s = Minecraft.getInstance().currentScreen;
-				Minecraft.getInstance().displayGuiScreen(new LayoutEditorScreen(s));
+				Screen s = Minecraft.getInstance().screen;
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(s));
 				MenuCustomization.stopSounds();
 				MenuCustomization.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
@@ -148,7 +149,7 @@ public class CustomizationHelperUI extends UIBase {
 				layoutsMenu.setParentButton((AdvancedButton) press);
 				layoutsMenu.openMenuAt(0, press.y);
 			});
-			if (!MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+			if (!MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 				layoutsButton.active = false;
 			}
 			layoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.desc"), "%n%"));
@@ -163,12 +164,12 @@ public class CustomizationHelperUI extends UIBase {
 			advancedMenu.addChild(overrideMenu);
 			
 			String overrLabel = Locals.localize("helper.buttons.tools.overridemenu");
-			if (CustomizationHelper.isScreenOverridden(Minecraft.getInstance().currentScreen)) {
+			if (CustomizationHelper.isScreenOverridden(Minecraft.getInstance().screen)) {
 				overrLabel = Locals.localize("helper.buttons.tools.resetoverride");
 			}
 			CustomizationButton overrideButton = new CustomizationButton(0, 0, 0, 0, overrLabel, true, (press) -> {
 				
-				if (!CustomizationHelper.isScreenOverridden(Minecraft.getInstance().currentScreen)) {
+				if (!CustomizationHelper.isScreenOverridden(Minecraft.getInstance().screen)) {
 					
 					overrideMenu.setParentButton((AdvancedButton) press);
 					overrideMenu.openMenuAt(0, press.y);
@@ -194,7 +195,7 @@ public class CustomizationHelperUI extends UIBase {
 								continue;
 							}
 							String identifier = metas.get(0).getEntryValue("identifier");
-							Screen overridden = ((CustomGuiBase)Minecraft.getInstance().currentScreen).getOverriddenScreen();
+							Screen overridden = ((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen();
 							if ((identifier == null) || !identifier.equalsIgnoreCase(overridden.getClass().getName())) {
 								continue;
 							}
@@ -234,15 +235,15 @@ public class CustomizationHelperUI extends UIBase {
 					}
 
 					CustomizationHelper.reloadSystemAndMenu();
-					if (Minecraft.getInstance().currentScreen instanceof CustomGuiBase) {
-						Minecraft.getInstance().displayGuiScreen(((CustomGuiBase) Minecraft.getInstance().currentScreen).getOverriddenScreen());
+					if (Minecraft.getInstance().screen instanceof CustomGuiBase) {
+						Minecraft.getInstance().setScreen(((CustomGuiBase) Minecraft.getInstance().screen).getOverriddenScreen());
 					}
 				}
 			});
 			overrideButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.overridewith.btndesc"), "%n%"));
-			if (!(Minecraft.getInstance().currentScreen instanceof CustomGuiBase)) {
+			if (!(Minecraft.getInstance().screen instanceof CustomGuiBase)) {
 				advancedMenu.addContent(overrideButton);
-			} else if (((CustomGuiBase)Minecraft.getInstance().currentScreen).getOverriddenScreen() != null) {
+			} else if (((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen() != null) {
 				advancedMenu.addContent(overrideButton);
 			}
 			
@@ -250,7 +251,7 @@ public class CustomizationHelperUI extends UIBase {
 				advancedMenu.setParentButton((AdvancedButton) press);
 				advancedMenu.openMenuAt(0, press.y);
 			});
-			if (!MenuCustomization.isMenuCustomizable(Minecraft.getInstance().currentScreen)) {
+			if (!MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 				advancedButton.active = false;
 			}
 			advancedButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.advanced.desc"), "%n%"));
@@ -259,10 +260,10 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			
 			CustomizationButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
-				Minecraft.getInstance().displayGuiScreen(null);
+				Minecraft.getInstance().setScreen(null);
 			});
 			closeCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
-			if ((Minecraft.getInstance().currentScreen instanceof CustomGuiBase) && (((CustomGuiBase)Minecraft.getInstance().currentScreen).getOverriddenScreen() == null)) {
+			if ((Minecraft.getInstance().screen instanceof CustomGuiBase) && (((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen() == null)) {
 				currentMenu.addContent(closeCustomGuiButton);
 			}
 			
@@ -280,7 +281,7 @@ public class CustomizationHelperUI extends UIBase {
 
 			CustomizationButton newUniversalLayoutButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts.new"), true, (press) -> {
 				LayoutEditorScreen.isActive = true;
-				Minecraft.getInstance().displayGuiScreen(new LayoutEditorScreen(new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().currentScreen, null)));
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null)));
 				MenuCustomization.stopSounds();
 				MenuCustomization.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
@@ -520,7 +521,7 @@ public class CustomizationHelperUI extends UIBase {
 			}) {
 				@Override
 				public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-					Screen current = Minecraft.getInstance().currentScreen;
+					Screen current = Minecraft.getInstance().screen;
 					if ((current != null) && MenuCustomization.isMenuCustomizable(current)) {
 						this.active = true;
 						this.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.buttoninfo.desc"), "%n%"));
@@ -560,40 +561,40 @@ public class CustomizationHelperUI extends UIBase {
 			bar.addChild(miscMenu, "fm.ui.tab.misc", ElementAlignment.LEFT);
 			
 			CustomizationButton closeGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
-				Minecraft.getInstance().displayGuiScreen(null);
+				Minecraft.getInstance().setScreen(null);
 			});
 			closeGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
 			miscMenu.addContent(closeGuiButton);
 			
 			CustomizationButton openWorldLoadingScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openworldloading"), true, (press) -> {
 				WorldLoadProgressScreen wl = new WorldLoadProgressScreen(new TrackingChunkStatusListener(0));
-				Minecraft.getInstance().displayGuiScreen(wl);
+				Minecraft.getInstance().setScreen(wl);
 			});
 			openWorldLoadingScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openworldloading.desc"), "%n%"));
 			miscMenu.addContent(openWorldLoadingScreenButton);
 			
 			CustomizationButton openMessageScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openmessagescreen"), true, (press) -> {
-				Minecraft.getInstance().displayGuiScreen(new DirtMessageScreen(new StringTextComponent("hello ・ω・")));
+				Minecraft.getInstance().setScreen(new DirtMessageScreen(new StringTextComponent("hello ・ω・")));
 			});
 			openMessageScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openmessagescreen.desc"), "%n%"));
 			miscMenu.addContent(openMessageScreenButton);
 
 			CustomizationButton openProgressScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_progress_screen"), true, (press) -> {
 				WorkingScreen s = new WorkingScreen();
-				s.displayLoadingString(new StringTextComponent("dummy stage name"));
-				s.setLoadingProgress(50);
-				Minecraft.getInstance().displayGuiScreen(s);
+				s.progressStage(new StringTextComponent("dummy stage name"));
+				s.progressStagePercentage(50);
+				Minecraft.getInstance().setScreen(s);
 			});
 			openProgressScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_progress_screen.btn.desc"), "%n%"));
 			miscMenu.addContent(openProgressScreenButton);
 
 			CustomizationButton openReceivingLevelScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen"), true, (press) -> {
 				DownloadTerrainScreen s = new DownloadTerrainScreen();
-				Minecraft.getInstance().displayGuiScreen(s);
+				Minecraft.getInstance().setScreen(s);
 			}) {
 				@Override
 				public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-					if (Minecraft.getInstance().world == null) {
+					if (Minecraft.getInstance().level == null) {
 						this.active = true;
 					} else {
 						this.active = false;
@@ -606,11 +607,11 @@ public class CustomizationHelperUI extends UIBase {
 
 			CustomizationButton openConnectScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_connect_screen"), true, (press) -> {
 				ConnectingScreen s = new ConnectingScreen(new MainMenuScreen(), Minecraft.getInstance(), "%fancymenu_dummy_address%", 25565);
-				Minecraft.getInstance().displayGuiScreen(s);
+				Minecraft.getInstance().setScreen(s);
 			}) {
 				@Override
 				public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-					if (Minecraft.getInstance().world == null) {
+					if (Minecraft.getInstance().level == null) {
 						this.active = true;
 					} else {
 						this.active = false;
@@ -630,7 +631,7 @@ public class CustomizationHelperUI extends UIBase {
 			
 			/** CLOSE GUI BUTTON START **/
 			AdvancedImageButton closeGuiButtonTab = new AdvancedImageButton(20, 20, 20, 20, CLOSE_BUTTON_TEXTURE, true, (press) -> {
-				Minecraft.getInstance().displayGuiScreen(null);
+				Minecraft.getInstance().setScreen(null);
 			}) {
 				@Override
 				public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
@@ -710,11 +711,15 @@ public class CustomizationHelperUI extends UIBase {
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected static void renderButtonInfo(MatrixStack matrix, Screen screen) {
 		if (showButtonInfo) {
+			//TODO übernehmen
+			boolean isButtonHovered = false;
 			for (ButtonData d : buttons) {
 				if (d.getButton().isHovered()) {
+					//TODO übernehmen
+					isButtonHovered = true;
 					long id = d.getId();
 					String idString = Locals.localize("helper.buttoninfo.idnotfound");
 					if (id >= 0) {
@@ -727,77 +732,104 @@ public class CustomizationHelperUI extends UIBase {
 					if (key == null) {
 						key = Locals.localize("helper.buttoninfo.keynotfound");
 					}
-					
+
 					List<String> info = new ArrayList<String>();
-					int width = Minecraft.getInstance().fontRenderer.getStringWidth(Locals.localize("helper.button.buttoninfo")) + 10;
-					
+					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
+
+					//TODO übernehmen
+					long now = System.currentTimeMillis();
+
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().getWidth());
 					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().getHeight());
-					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().fontRenderer.getStringWidth(d.getButton().getMessage().getString()));
-					
+					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
+					//TODO übernehmen
+					info.add("");
+					if (lastButtonInfoRightClick + 2000 < now) {
+						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator"));
+					} else {
+						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator.copied"));
+					}
+					//--------------------
+
+					//TODO übernehmen
+					if (MouseInput.isRightMouseDown()) {
+						Screen current = Minecraft.getInstance().screen;
+						String locator = current.getClass().getName() + ":" + idString;
+						Minecraft.getInstance().keyboardHandler.setClipboard(locator);
+						lastButtonInfoRightClick = now;
+					}
+
 					for (String s : info) {
-						int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
+						int i = Minecraft.getInstance().font.width(s) + 10;
 						if (i > width) {
 							width = i;
 						}
 					}
-					
-					matrix.push();
-					
+
+					matrix.pushPose();
+
 					matrix.scale(getUIScale(), getUIScale(), getUIScale());
-					
+
 					MouseInput.setRenderScale(getUIScale());
-					
+
 					int x = MouseInput.getMouseX();
 					if ((screen.width / getUIScale()) < x + width + 10) {
 						x -= width + 10;
 					}
-					
+
 					int y = MouseInput.getMouseY();
 					if ((screen.height / getUIScale()) < y + 80) {
 						y -= 90;
 					}
-					
-					fill(matrix, x, y, x + width + 10, y + 80, new Color(102, 0, 102, 200).getRGB());
-					
+
+					//TODO übernehmen
+					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
+
 					RenderSystem.enableBlend();
-					drawString(matrix, Minecraft.getInstance().fontRenderer, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, 0);
+					//TODO übernehmen
+					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
 					int i2 = 20;
 					for (String s : info) {
-						drawString(matrix, Minecraft.getInstance().fontRenderer, s, x + 10, y + 10 + i2, 0);
+						//TODO übernehmen
+						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
-					
+
 					MouseInput.resetRenderScale();
-					
-					matrix.pop();
-					
+
+					matrix.popPose();
+
 					RenderSystem.disableBlend();
-					
+
 					break;
 				}
 			}
+			//TODO übernehmen
+			if (!isButtonHovered) {
+				lastButtonInfoRightClick = 0;
+			}
+			//---------------
 		}
 	}
 
 	protected static void renderButtonInfoWarning(MatrixStack matrix, Screen screen) {
 		if (showButtonInfo && !MenuCustomization.isMenuCustomizable(screen)) {
 			List<String> info = new ArrayList<String>();
-			int width = Minecraft.getInstance().fontRenderer.getStringWidth(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
+			int width = Minecraft.getInstance().font.width(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
 
 			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2"));
 			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3"));
 
 			for (String s : info) {
-				int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
+				int i = Minecraft.getInstance().font.width(s) + 10;
 				if (i > width) {
 					width = i;
 				}
 			}
 
-			matrix.push();
+			matrix.pushPose();
 
 			matrix.scale(getUIScale(), getUIScale(), getUIScale());
 
@@ -816,17 +848,17 @@ public class CustomizationHelperUI extends UIBase {
 			fill(matrix, x, y, x + width + 10, y + 60, new Color(230, 15, 0, 240).getRGB());
 
 			RenderSystem.enableBlend();
-			drawString(matrix, Minecraft.getInstance().fontRenderer, "§f§l" + Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
+			drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
 
 			int i2 = 20;
 			for (String s : info) {
-				drawString(matrix, Minecraft.getInstance().fontRenderer, s, x + 10, y + 10 + i2, -1);
+				drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 				i2 += 10;
 			}
 
 			MouseInput.resetRenderScale();
 
-			matrix.pop();
+			matrix.popPose();
 
 			RenderSystem.disableBlend();
 		}
@@ -841,8 +873,8 @@ public class CustomizationHelperUI extends UIBase {
 			} else {
 				id = screen.getClass().getName();
 			}
-			int w = Minecraft.getInstance().fontRenderer.getStringWidth(infoTitle);
-			int w2 = Minecraft.getInstance().fontRenderer.getStringWidth(id);
+			int w = Minecraft.getInstance().font.width(infoTitle);
+			int w2 = Minecraft.getInstance().font.width(id);
 			if (w2 > w) {
 				w = w2;
 			}
@@ -850,17 +882,17 @@ public class CustomizationHelperUI extends UIBase {
 			
 			RenderSystem.enableBlend();
 			
-			matrix.push();
+			matrix.pushPose();
 			
 			matrix.scale(getUIScale(), getUIScale(), getUIScale());
 			
 			fill(matrix, 3, h, 3 + w + 4, h + 23, new Color(0, 0, 0, 240).getRGB());
 
-			drawString(matrix, Minecraft.getInstance().fontRenderer, infoTitle, 5, h + 2, 0);
+			drawString(matrix, Minecraft.getInstance().font, infoTitle, 5, h + 2, 0);
 			if (tick == 0) {
-				drawString(matrix, Minecraft.getInstance().fontRenderer, "§f" + id, 5, h + 13, 0);
+				drawString(matrix, Minecraft.getInstance().font, "§f" + id, 5, h + 13, 0);
 			} else {
-				drawString(matrix, Minecraft.getInstance().fontRenderer, "§a" + Locals.localize("helper.menuinfo.idcopied"), 5, h + 13, 0);
+				drawString(matrix, Minecraft.getInstance().font, "§a" + Locals.localize("helper.menuinfo.idcopied"), 5, h + 13, 0);
 			}
 
 			MouseInput.setRenderScale(getUIScale());
@@ -873,7 +905,7 @@ public class CustomizationHelperUI extends UIBase {
 					
 					if (MouseInput.isLeftMouseDown()) {
 						tick++;
-						Minecraft.getInstance().keyboardListener.setClipboardString(id);
+						Minecraft.getInstance().keyboardHandler.setClipboard(id);
 					}
 				}
 			}
@@ -887,19 +919,19 @@ public class CustomizationHelperUI extends UIBase {
 			
 			MouseInput.resetRenderScale();
 			
-			matrix.pop();
+			matrix.popPose();
 			
 			RenderSystem.disableBlend();
 		}
 	}
 	
 	protected static void renderUnicodeWarning(MatrixStack matrix, Screen screen) {
-		if (Minecraft.getInstance().gameSettings.forceUnicodeFont) {
+		if (Minecraft.getInstance().options.forceUnicodeFont) {
 			String title = Locals.localize("helper.ui.warning");
-			int w = Minecraft.getInstance().fontRenderer.getStringWidth(title);
+			int w = Minecraft.getInstance().font.width(title);
 			String[] lines = StringUtils.splitLines(Locals.localize("helper.ui.warning.unicode"), "%n%");
 			for (String s : lines) {
-				int w2 = Minecraft.getInstance().fontRenderer.getStringWidth(s);
+				int w2 = Minecraft.getInstance().font.width(s);
 				if (w2 > w) {
 					w = w2;
 				}
@@ -916,11 +948,11 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			fill(matrix, x - 4, y, x + w + 2, y + h, new Color(230, 15, 0, 240).getRGB());
 
-			drawString(matrix, Minecraft.getInstance().fontRenderer, title, x, y + 2, Color.WHITE.getRGB());
+			drawString(matrix, Minecraft.getInstance().font, title, x, y + 2, Color.WHITE.getRGB());
 			
 			int i = 0;
 			for (String s : lines) {
-				drawString(matrix, Minecraft.getInstance().fontRenderer, s, x, y + 13 + i, Color.WHITE.getRGB());
+				drawString(matrix, Minecraft.getInstance().font, s, x, y + 13 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
 			
@@ -973,7 +1005,7 @@ public class CustomizationHelperUI extends UIBase {
 					PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.buttons.tools.customguis.openbyname"), null, 240, (call) -> {
 						if (call != null) {
 							if (CustomGuiLoader.guiExists(call)) {
-								Minecraft.getInstance().displayGuiScreen(CustomGuiLoader.getGui(call, Minecraft.getInstance().currentScreen, null));
+								Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(call, Minecraft.getInstance().screen, null));
 							} else {
 								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.buttons.tools.customguis.invalididentifier")));
 							}
@@ -1019,8 +1051,8 @@ public class CustomizationHelperUI extends UIBase {
 
 				for (String s : l) {
 					String label = s;
-					if (Minecraft.getInstance().fontRenderer.getStringWidth(label) > 80) {
-						label = Minecraft.getInstance().fontRenderer.trimStringToWidth(label, 75) + "..";
+					if (Minecraft.getInstance().font.width(label) > 80) {
+						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 75) + "..";
 					}
 
 					this.addContent(new CustomizationButton(0, 0, 0, 0, label, true, (press) -> {
@@ -1044,7 +1076,7 @@ public class CustomizationHelperUI extends UIBase {
 			
 			CustomizationButton openMenuButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.open"), (press) -> {
 				if (CustomGuiLoader.guiExists(customGuiIdentifier)) {
-					Minecraft.getInstance().displayGuiScreen(CustomGuiLoader.getGui(customGuiIdentifier, Minecraft.getInstance().currentScreen, null));
+					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(customGuiIdentifier, Minecraft.getInstance().screen, null));
 				}
 			});
 			this.addContent(openMenuButton);
@@ -1098,9 +1130,9 @@ public class CustomizationHelperUI extends UIBase {
 		public void openMenuAt(Widget parentBtn) {
 			this.content.clear();
 
-			String identifier = Minecraft.getInstance().currentScreen.getClass().getName();
-			if (Minecraft.getInstance().currentScreen instanceof CustomGuiBase) {
-				identifier = ((CustomGuiBase) Minecraft.getInstance().currentScreen).getIdentifier();
+			String identifier = Minecraft.getInstance().screen.getClass().getName();
+			if (Minecraft.getInstance().screen instanceof CustomGuiBase) {
+				identifier = ((CustomGuiBase) Minecraft.getInstance().screen).getIdentifier();
 			}
 			if (this.isUniversal) {
 				identifier = "%fancymenu:universal_layout%";
@@ -1250,10 +1282,10 @@ public class CustomizationHelperUI extends UIBase {
 			this.addContent(toggleLayoutBtn);
 
 			CustomizationButton editLayoutBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.manage.edit"), (press) -> {
-				Screen s = Minecraft.getInstance().currentScreen;
+				Screen s = Minecraft.getInstance().screen;
 				if ((this.parent != null) && (this.parent instanceof ManageLayoutsContextMenu)) {
 					if (((ManageLayoutsContextMenu)this.parent).isUniversal) {
-						s = new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().currentScreen, null);
+						s = new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null);
 					}
 				}
 				CustomizationHelper.editLayout(s, layout);
@@ -1300,7 +1332,7 @@ public class CustomizationHelperUI extends UIBase {
 					PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.buttons.tools.customguis.pickbyname"), null, 240, (call) -> {
 						if (call != null) {
 							if (CustomGuiLoader.guiExists(call)) {
-								onOverrideWithCustomGui(Minecraft.getInstance().currentScreen, call);
+								onOverrideWithCustomGui(Minecraft.getInstance().screen, call);
 							} else {
 								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.buttons.tools.customguis.invalididentifier")));
 							}
@@ -1312,12 +1344,12 @@ public class CustomizationHelperUI extends UIBase {
 				
 				for (String s : l) {
 					String label = s;
-					if (Minecraft.getInstance().fontRenderer.getStringWidth(label) > 80) {
-						label = Minecraft.getInstance().fontRenderer.trimStringToWidth(label, 75) + "..";
+					if (Minecraft.getInstance().font.width(label) > 80) {
+						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 75) + "..";
 					}
 
 					this.addContent(new CustomizationButton(0, 0, 0, 0, label, true, (press) -> {
-						onOverrideWithCustomGui(Minecraft.getInstance().currentScreen, s);
+						onOverrideWithCustomGui(Minecraft.getInstance().screen, s);
 					}));
 
 				}

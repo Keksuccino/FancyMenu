@@ -93,10 +93,10 @@ public class CustomizationHelper {
 			CustomizationHelperUI.showMenuInfo = false;
 		}
 
-		MinecraftForge.EVENT_BUS.post(new MenuReloadedEvent(Minecraft.getInstance().currentScreen));
+		MinecraftForge.EVENT_BUS.post(new MenuReloadedEvent(Minecraft.getInstance().screen));
 		
 		try {
-			Minecraft.getInstance().displayGuiScreen(Minecraft.getInstance().currentScreen);
+			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -108,7 +108,7 @@ public class CustomizationHelper {
 			String url = f.toURI().toURL().toString();
 			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
 			URL u = new URL(url);
-			if (!Minecraft.IS_RUNNING_ON_MAC) {
+			if (!Minecraft.ON_OSX) {
 				if (s.contains("win")) {
 					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
 				} else {
@@ -146,7 +146,7 @@ public class CustomizationHelper {
 					meta.get(0).addEntry("path", layout.getPath());
 					
 					LayoutEditorScreen.isActive = true;
-					Minecraft.getInstance().displayGuiScreen(new PreloadedLayoutEditorScreen(current, l));
+					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
 					MenuCustomization.stopSounds();
 					MenuCustomization.resetSounds();
 					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {

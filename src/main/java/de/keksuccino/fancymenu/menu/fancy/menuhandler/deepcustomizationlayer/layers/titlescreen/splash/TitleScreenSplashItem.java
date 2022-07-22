@@ -74,7 +74,7 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
 
         if (!this.hidden) {
             RenderSystem.enableBlend();
-            this.renderSplash(matrix, Minecraft.getInstance().fontRenderer, menu);
+            this.renderSplash(matrix, Minecraft.getInstance().font, menu);
         }
 
     }
@@ -130,8 +130,8 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
         RenderSystem.pushMatrix();
         RenderSystem.translatef(finalPosX, finalPosY, 0.0F);
         RenderSystem.rotatef((float)this.splashRotation, 0.0F, 0.0F, 1.0F);
-        float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (Util.milliTime() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
-        f = f * 100.0F / (float) (font.getStringWidth(this.cachedSplashText) + 32);
+        float f = 1.8F - MathHelper.abs(MathHelper.sin((float) (Util.getMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+        f = f * 100.0F / (float) (font.width(this.cachedSplashText) + 32);
         RenderSystem.scalef(f, f, f);
 
         drawCenteredString(matrix, font, new StringTextComponent(this.cachedSplashText), 0, -8, this.splashColor.getRGB());
@@ -151,7 +151,7 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
                 }
             }
         }
-        return Minecraft.getInstance().getSplashes().getSplashText();
+        return Minecraft.getInstance().getSplashManager().getSplash();
     }
 
 }

@@ -87,7 +87,7 @@ public abstract class AdvancedSliderButton extends AbstractSlider {
 
     //applyValue
     @Override
-    protected void func_230972_a_() {
+    protected void applyValue() {
         if (this.applyValueCallback != null) {
             this.applyValueCallback.accept(this);
         }
@@ -95,7 +95,7 @@ public abstract class AdvancedSliderButton extends AbstractSlider {
 
     //updateMessage
     @Override
-    public void func_230979_b_() {
+    public void updateMessage() {
         String s = "";
         if (this.messagePrefix != null) {
             s += this.messagePrefix;
@@ -111,25 +111,25 @@ public abstract class AdvancedSliderButton extends AbstractSlider {
 
     public void setLabelPrefix(String prefix) {
         this.messagePrefix = prefix;
-        this.func_230979_b_();
+        this.updateMessage();
     }
 
     public void setLabelSuffix(String suffix) {
         this.messageSuffix = suffix;
-        this.func_230979_b_();
+        this.updateMessage();
     }
 
     public void setValue(double value) {
-        double d0 = this.sliderValue;
-        this.sliderValue = MathHelper.clamp(value, 0.0D, 1.0D);
-        if (d0 != this.sliderValue) {
-            this.func_230972_a_();
+        double d0 = this.value;
+        this.value = MathHelper.clamp(value, 0.0D, 1.0D);
+        if (d0 != this.value) {
+            this.applyValue();
         }
-        this.func_230979_b_();
+        this.updateMessage();
     }
 
     public double getValue() {
-        return this.sliderValue;
+        return this.value;
     }
 
     protected boolean isInputBlocked() {

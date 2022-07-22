@@ -31,18 +31,6 @@ public class VisibilityRequirementContainer {
     public boolean vrCheckForMultiplayer = false;
     public boolean vrShowIfMultiplayer = false;
     //---------
-    public boolean vrCheckForRealTimeHour = false;
-    public boolean vrShowIfRealTimeHour = false;
-    public List<Integer> vrRealTimeHour = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeMinute = false;
-    public boolean vrShowIfRealTimeMinute = false;
-    public List<Integer> vrRealTimeMinute = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeSecond = false;
-    public boolean vrShowIfRealTimeSecond = false;
-    public List<Integer> vrRealTimeSecond = new ArrayList<Integer>();
-    //---------
     public boolean vrCheckForWindowWidth = false;
     public boolean vrShowIfWindowWidth = false;
     public List<Integer> vrWindowWidth = new ArrayList<Integer>();
@@ -94,18 +82,6 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
-    public boolean vrCheckForRealTimeDay = false;
-    public boolean vrShowIfRealTimeDay = false;
-    public List<Integer> vrRealTimeDay = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeMonth = false;
-    public boolean vrShowIfRealTimeMonth = false;
-    public List<Integer> vrRealTimeMonth = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeYear = false;
-    public boolean vrShowIfRealTimeYear = false;
-    public List<Integer> vrRealTimeYear = new ArrayList<Integer>();
-    //---------
 
     public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
@@ -130,164 +106,6 @@ public class VisibilityRequirementContainer {
             this.vrCheckForMultiplayer = true;
             if (vrStringShowIfMultiplayer.equalsIgnoreCase("true")) {
                 this.vrShowIfMultiplayer = true;
-            }
-        }
-
-        //VR: Is Real Time Hour
-        String vrStringShowIfRealTimeHour = properties.getEntryValue("vr:showif:realtimehour");
-        if (vrStringShowIfRealTimeHour != null) {
-            if (vrStringShowIfRealTimeHour.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeHour = true;
-            }
-            String realTimeHour = properties.getEntryValue("vr:value:realtimehour");
-            if (realTimeHour != null) {
-                this.vrRealTimeHour.clear();
-                if (realTimeHour.contains(",")) {
-                    for (String s : realTimeHour.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeHour.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeHour.replace(" ", ""))) {
-                        this.vrRealTimeHour.add(Integer.parseInt(realTimeHour.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeHour.isEmpty()) {
-                    this.vrCheckForRealTimeHour = true;
-                }
-            }
-        }
-
-        //VR: Is Real Time Minute
-        String vrStringShowIfRealTimeMinute = properties.getEntryValue("vr:showif:realtimeminute");
-        if (vrStringShowIfRealTimeMinute != null) {
-            if (vrStringShowIfRealTimeMinute.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeMinute = true;
-            }
-            String realTimeMinute = properties.getEntryValue("vr:value:realtimeminute");
-            if (realTimeMinute != null) {
-                this.vrRealTimeMinute.clear();
-                if (realTimeMinute.contains(",")) {
-                    for (String s : realTimeMinute.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeMinute.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeMinute.replace(" ", ""))) {
-                        this.vrRealTimeMinute.add(Integer.parseInt(realTimeMinute.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeMinute.isEmpty()) {
-                    this.vrCheckForRealTimeMinute = true;
-                }
-            }
-        }
-
-        //VR: Is Real Time Second
-        String vrStringShowIfRealTimeSecond = properties.getEntryValue("vr:showif:realtimesecond");
-        if (vrStringShowIfRealTimeSecond != null) {
-            if (vrStringShowIfRealTimeSecond.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeSecond = true;
-            }
-            String realTimeSecond = properties.getEntryValue("vr:value:realtimesecond");
-            if (realTimeSecond != null) {
-                this.vrRealTimeSecond.clear();
-                if (realTimeSecond.contains(",")) {
-                    for (String s : realTimeSecond.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeSecond.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeSecond.replace(" ", ""))) {
-                        this.vrRealTimeSecond.add(Integer.parseInt(realTimeSecond.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeSecond.isEmpty()) {
-                    this.vrCheckForRealTimeSecond = true;
-                }
-            }
-        }
-
-        //VR: Is Real Time Day
-        String vrStringShowIfRealTimeDay = properties.getEntryValue("vr:showif:realtimeday");
-        if (vrStringShowIfRealTimeDay != null) {
-            if (vrStringShowIfRealTimeDay.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeDay = true;
-            }
-            String realTimeDay = properties.getEntryValue("vr:value:realtimeday");
-            if (realTimeDay != null) {
-                this.vrRealTimeDay.clear();
-                if (realTimeDay.contains(",")) {
-                    for (String s : realTimeDay.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeDay.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeDay.replace(" ", ""))) {
-                        this.vrRealTimeDay.add(Integer.parseInt(realTimeDay.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeDay.isEmpty()) {
-                    this.vrCheckForRealTimeDay = true;
-                }
-            }
-        }
-
-        //TODO übernehmen
-        //VR: Is Real Time Month
-        String vrStringShowIfRealTimeMonth = properties.getEntryValue("vr:showif:realtimemonth");
-        if (vrStringShowIfRealTimeMonth != null) {
-            if (vrStringShowIfRealTimeMonth.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeMonth = true;
-            }
-            String realTimeMonth = properties.getEntryValue("vr:value:realtimemonth");
-            if (realTimeMonth != null) {
-                this.vrRealTimeMonth.clear();
-                if (realTimeMonth.contains(",")) {
-                    for (String s : realTimeMonth.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeMonth.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeMonth.replace(" ", ""))) {
-                        this.vrRealTimeMonth.add(Integer.parseInt(realTimeMonth.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeMonth.isEmpty()) {
-                    this.vrCheckForRealTimeMonth = true;
-                }
-            }
-        }
-
-        //TODO übernehmen
-        //VR: Is Real Time Year
-        String vrStringShowIfRealTimeYear = properties.getEntryValue("vr:showif:realtimeyear");
-        if (vrStringShowIfRealTimeYear != null) {
-            if (vrStringShowIfRealTimeYear.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeYear = true;
-            }
-            String realTimeYear = properties.getEntryValue("vr:value:realtimeyear");
-            if (realTimeYear != null) {
-                this.vrRealTimeYear.clear();
-                if (realTimeYear.contains(",")) {
-                    for (String s : realTimeYear.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeYear.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeYear.replace(" ", ""))) {
-                        this.vrRealTimeYear.add(Integer.parseInt(realTimeYear.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeYear.isEmpty()) {
-                    this.vrCheckForRealTimeYear = true;
-                }
             }
         }
 
@@ -581,86 +399,6 @@ public class VisibilityRequirementContainer {
                 }
             }
 
-            //VR: Is Real Time Hour
-            if (this.vrCheckForRealTimeHour) {
-                if (this.vrShowIfRealTimeHour) {
-                    if (!this.vrRealTimeHour.contains(VisibilityRequirementHandler.realTimeHour)) {
-                        return false;
-                    }
-                } else {
-                    if (this.vrRealTimeHour.contains(VisibilityRequirementHandler.realTimeHour)) {
-                        return false;
-                    }
-                }
-            }
-
-            //VR: Is Real Time Minute
-            if (this.vrCheckForRealTimeMinute) {
-                if (this.vrShowIfRealTimeMinute) {
-                    if (!this.vrRealTimeMinute.contains(VisibilityRequirementHandler.realTimeMinute)) {
-                        return false;
-                    }
-                } else {
-                    if (this.vrRealTimeMinute.contains(VisibilityRequirementHandler.realTimeMinute)) {
-                        return false;
-                    }
-                }
-            }
-
-            //VR: Is Real Time Second
-            if (this.vrCheckForRealTimeSecond) {
-                if (this.vrShowIfRealTimeSecond) {
-                    if (!this.vrRealTimeSecond.contains(VisibilityRequirementHandler.realTimeSecond)) {
-                        return false;
-                    }
-                } else {
-                    if (this.vrRealTimeSecond.contains(VisibilityRequirementHandler.realTimeSecond)) {
-                        return false;
-                    }
-                }
-            }
-
-            //VR: Is Real Time Day
-            if (this.vrCheckForRealTimeDay) {
-                if (this.vrShowIfRealTimeDay) {
-                    if (!this.vrRealTimeDay.contains(VisibilityRequirementHandler.realTimeDay)) {
-                        return false;
-                    }
-                } else {
-                    if (this.vrRealTimeDay.contains(VisibilityRequirementHandler.realTimeDay)) {
-                        return false;
-                    }
-                }
-            }
-
-            //TODO übernehmen
-            //VR: Is Real Time Month
-            if (this.vrCheckForRealTimeMonth) {
-                if (this.vrShowIfRealTimeMonth) {
-                    if (!this.vrRealTimeMonth.contains(VisibilityRequirementHandler.realTimeMonth)) {
-                        return false;
-                    }
-                } else {
-                    if (this.vrRealTimeMonth.contains(VisibilityRequirementHandler.realTimeMonth)) {
-                        return false;
-                    }
-                }
-            }
-
-            //TODO übernehmen
-            //VR: Is Real Time Year
-            if (this.vrCheckForRealTimeYear) {
-                if (this.vrShowIfRealTimeYear) {
-                    if (!this.vrRealTimeYear.contains(VisibilityRequirementHandler.realTimeYear)) {
-                        return false;
-                    }
-                } else {
-                    if (this.vrRealTimeYear.contains(VisibilityRequirementHandler.realTimeYear)) {
-                        return false;
-                    }
-                }
-            }
-
             //VR: Is Window Width
             if (this.vrCheckForWindowWidth) {
                 if (this.vrShowIfWindowWidth) {
@@ -760,13 +498,13 @@ public class VisibilityRequirementContainer {
 
             //VR: Is Language
             if (this.vrCheckForLanguage) {
-                if ((this.vrLanguage != null) && (Minecraft.getInstance().gameSettings.language != null)) {
+                if ((this.vrLanguage != null) && (Minecraft.getInstance().options.languageCode != null)) {
                     if (this.vrShowIfLanguage) {
-                        if (!(Minecraft.getInstance().gameSettings.language.equals(this.vrLanguage))) {
+                        if (!(Minecraft.getInstance().options.languageCode.equals(this.vrLanguage))) {
                             return false;
                         }
                     } else {
-                        if (Minecraft.getInstance().gameSettings.language.equals(this.vrLanguage)) {
+                        if (Minecraft.getInstance().options.languageCode.equals(this.vrLanguage)) {
                             return false;
                         }
                     }
@@ -776,11 +514,11 @@ public class VisibilityRequirementContainer {
             //VR: Is Fullscreen
             if (this.vrCheckForFullscreen) {
                 if (this.vrShowIfFullscreen) {
-                    if (!Minecraft.getInstance().getMainWindow().isFullscreen()) {
+                    if (!Minecraft.getInstance().getWindow().isFullscreen()) {
                         return false;
                     }
                 } else {
-                    if (Minecraft.getInstance().getMainWindow().isFullscreen()) {
+                    if (Minecraft.getInstance().getWindow().isFullscreen()) {
                         return false;
                     }
                 }
@@ -861,11 +599,11 @@ public class VisibilityRequirementContainer {
             if (this.vrCheckForServerOnline) {
                 ServerData sd = ServerCache.getServer(this.vrServerOnline);
                 if (this.vrShowIfServerOnline) {
-                    if ((sd != null) && (sd.pingToServer == -1)) {
+                    if ((sd != null) && (sd.ping == -1)) {
                         return false;
                     }
                 } else {
-                    if ((sd != null) && (sd.pingToServer != -1)) {
+                    if ((sd != null) && (sd.ping != -1)) {
                         return false;
                     }
                 }
@@ -914,7 +652,7 @@ public class VisibilityRequirementContainer {
     }
 
     protected static boolean checkForGuiScale(String condition) {
-        double windowScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+        double windowScale = Minecraft.getInstance().getWindow().getGuiScale();
         if (condition.startsWith("double:")) {
             String value = condition.replace("double:", "");
             double valueScale = Double.parseDouble(value);

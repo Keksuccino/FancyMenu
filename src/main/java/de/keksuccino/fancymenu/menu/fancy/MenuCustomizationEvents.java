@@ -36,7 +36,7 @@ public class MenuCustomizationEvents {
 	public void onInitPrePre(GuiScreenEvent.InitGuiEvent.Pre e) {
 		if (!ButtonCache.isCaching()) {
 			if (MenuCustomization.isValidScreen(e.getGui())) {
-				Screen current = Minecraft.getInstance().currentScreen;
+				Screen current = Minecraft.getInstance().screen;
 				if (current != null) {
 					if (this.lastScreen != null) {
 						if (!this.lastScreen.getClass().getName().equals(current.getClass().getName())) {
@@ -87,28 +87,33 @@ public class MenuCustomizationEvents {
 		}
 
 		//Stopping menu music when deactivated in config
-		if ((Minecraft.getInstance().world == null)) {
+		if ((Minecraft.getInstance().level == null)) {
 			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
-				Minecraft.getInstance().getMusicTicker().stop();
+				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
 		}
 	}
 
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
+
+		if (Minecraft.getInstance().screen == null) {
+			this.lastScreen = null;
+		}
+
 		//Stopping audio for all menu handlers if no screen is being displayed
-		if ((Minecraft.getInstance().currentScreen == null) && !this.idle) {
+		if ((Minecraft.getInstance().screen == null) && !this.idle) {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 			this.idle = true;
 		}
 
-		if ((Minecraft.getInstance().world != null) && (Minecraft.getInstance().currentScreen == null) && this.resumeWorldMusic) {
-			Minecraft.getInstance().getSoundHandler().resume();
+		if ((Minecraft.getInstance().level != null) && (Minecraft.getInstance().screen == null) && this.resumeWorldMusic) {
+			Minecraft.getInstance().getSoundManager().resume();
 			this.resumeWorldMusic = false;
 		}
 
-		if (Minecraft.getInstance().getMainWindow().isFullscreen()) {
+		if (Minecraft.getInstance().getWindow().isFullscreen()) {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
@@ -117,7 +122,7 @@ public class MenuCustomizationEvents {
 			}
 		}
 
-		if (!scaleChecked && (Minecraft.getInstance().gameSettings != null)) {
+		if (!scaleChecked && (Minecraft.getInstance().options != null)) {
 			scaleChecked = true;
 
 			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
@@ -138,14 +143,14 @@ public class MenuCustomizationEvents {
 					}
 
 					LOGGER.info("########################### FANCYMENU: SETTING DEFAULT GUI SCALE!");
-					Minecraft.getInstance().gameSettings.guiScale = scale;
-					Minecraft.getInstance().gameSettings.saveOptions();
-					Minecraft.getInstance().updateWindowSize();
+					Minecraft.getInstance().options.guiScale = scale;
+					Minecraft.getInstance().options.save();
+					Minecraft.getInstance().resizeDisplay();
 				}
 			}
 		}
 
-		if (Minecraft.getInstance().currentScreen == null) {
+		if (Minecraft.getInstance().screen == null) {
 			MenuCustomization.isCurrentScrollable = false;
 		}
 		

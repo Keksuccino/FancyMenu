@@ -92,7 +92,7 @@ public class LayoutEditorUI extends UIBase {
 					if (call) {
 						MenuCustomization.stopSounds();
 						MenuCustomization.resetSounds();
-						Minecraft.getInstance().displayGuiScreen(new LayoutEditorScreen(this.parent.screen));
+						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.parent.screen));
 					}
 				});
 			});
@@ -147,7 +147,7 @@ public class LayoutEditorUI extends UIBase {
 			AdvancedButton undoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.undo"), true, (press) -> {
 				this.parent.history.stepBack();
 				try {
-					((LayoutEditorScreen)Minecraft.getInstance().currentScreen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
+					((LayoutEditorScreen)Minecraft.getInstance().screen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -157,7 +157,7 @@ public class LayoutEditorUI extends UIBase {
 			AdvancedButton redoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.redo"), true, (press) -> {
 				this.parent.history.stepForward();
 				try {
-					((LayoutEditorScreen)Minecraft.getInstance().currentScreen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
+					((LayoutEditorScreen)Minecraft.getInstance().screen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -284,15 +284,15 @@ public class LayoutEditorUI extends UIBase {
 				MenuCustomization.resetSounds();
 				MenuCustomizationProperties.loadProperties();
 
-				Minecraft.getInstance().getMainWindow().setGuiScale(Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont()));
-				this.parent.height = Minecraft.getInstance().getMainWindow().getScaledHeight();
-				this.parent.width = Minecraft.getInstance().getMainWindow().getScaledWidth();
+				Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
+				this.parent.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+				this.parent.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
 				Screen s = this.parent.screen;
 				if ((s instanceof CustomGuiBase) && ((CustomGuiBase)s).getIdentifier().equals("%fancymenu:universal_layout%")) {
 					s = ((CustomGuiBase)s).parent;
 				}
-				Minecraft.getInstance().displayGuiScreen(s);
+				Minecraft.getInstance().setScreen(s);
 			}
 		});
 	}
@@ -435,9 +435,9 @@ public class LayoutEditorUI extends UIBase {
 							}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), "%n%"));
 							PopupHandler.displayPopup(p);
 						}
-						Minecraft.getInstance().displayGuiScreen(this.parent);
+						Minecraft.getInstance().setScreen(this.parent);
 					});
-					Minecraft.getInstance().displayGuiScreen(s);
+					Minecraft.getInstance().setScreen(s);
 				});
 				universalLayoutMenu.addContent(removeBlacklistButton);
 
@@ -481,9 +481,9 @@ public class LayoutEditorUI extends UIBase {
 							}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), "%n%"));
 							PopupHandler.displayPopup(p);
 						}
-						Minecraft.getInstance().displayGuiScreen(this.parent);
+						Minecraft.getInstance().setScreen(this.parent);
 					});
-					Minecraft.getInstance().displayGuiScreen(s);
+					Minecraft.getInstance().setScreen(s);
 				});
 				universalLayoutMenu.addContent(removeWhitelistButton);
 
@@ -570,7 +570,79 @@ public class LayoutEditorUI extends UIBase {
 			slideBackgroundButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.btn.desc"), "%n%"));
 			this.addContent(slideBackgroundButton);
 			//------------------
+
+			/** RESTART ANIMATION ON LOAD **/
+			AdvancedButton restartOnLoadButton = new AdvancedButton(0, 0, 0, 16, "", true, (press) -> {
+				if (this.parent.restartAnimationBackgroundOnLoad) {
+					this.parent.restartAnimationBackgroundOnLoad = false;
+				} else {
+					this.parent.restartAnimationBackgroundOnLoad = true;
+				}
+			}) {
+				@Override
+				public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if (parent.backgroundAnimation != null) {
+						this.active = true;
+					} else {
+						this.active = false;
+					}
+					if (parent.restartAnimationBackgroundOnLoad) {
+						this.setMessage(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.on"));
+					} else {
+						this.setMessage(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.off"));
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
+			restartOnLoadButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.desc"), "%n%"));
+			this.addContent(restartOnLoadButton);
 			
+			this.addSeparator();
+
+			/** EDIT MENU TITLE **/
+			String defaultMenuTitleRaw = "";
+			if (this.parent.screen.getTitle() != null) {
+				defaultMenuTitleRaw = this.parent.screen.getTitle().getString();
+			}
+			String defaultMenuTitle = defaultMenuTitleRaw;
+			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
+					if (call != null) {
+						if (!call.equals(defaultMenuTitle)) {
+							if ((this.parent.customMenuTitle == null) || !this.parent.customMenuTitle.equals(call)) {
+								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+							}
+							this.parent.customMenuTitle = call;
+						} else {
+							if (this.parent.customMenuTitle != null) {
+								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+							}
+							this.parent.customMenuTitle = null;
+						}
+					}
+				});
+				if (this.parent.customMenuTitle != null) {
+					p.setText(this.parent.customMenuTitle);
+				} else {
+					p.setText(defaultMenuTitle);
+				}
+				PopupHandler.displayPopup(p);
+			});
+			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
+			this.addContent(editMenuTitleButton);
+
+			//TODO übernehmen
+			/** RESET MENU TITLE **/
+			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
+				if (this.parent.customMenuTitle != null) {
+					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+				}
+				this.parent.customMenuTitle = null;
+			});
+			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
+			this.addContent(resetMenuTitleButton);
+
+			//TODO übernehmen
 			this.addSeparator();
 
 			/** RANDOM MODE **/
@@ -697,12 +769,12 @@ public class LayoutEditorUI extends UIBase {
 					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.properties.autoscale.off"));
 					this.parent.autoScalingWidth = 0;
 					this.parent.autoScalingHeight = 0;
-					this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getMainWindow().getScaledWidth(), Minecraft.getInstance().getMainWindow().getScaledHeight());
+					this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 				} else {
 					PopupHandler.displayPopup(new AutoScalingPopup(this.parent, (call) -> {
 						if (call) {
 							((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.properties.autoscale.on"));
-							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getMainWindow().getScaledWidth(), Minecraft.getInstance().getMainWindow().getScaledHeight());
+							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 						}
 					}));
 				}
@@ -724,7 +796,7 @@ public class LayoutEditorUI extends UIBase {
 							}
 							
 							this.parent.scale = s;
-							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getMainWindow().getScaledWidth(), Minecraft.getInstance().getMainWindow().getScaledHeight());
+							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 						
 						}
 					}
@@ -838,7 +910,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** VISIBILITY REQUIREMENTS [LAYOUT-WIDE] **/
 			AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.global_visibility_requirements"), (press) -> {
-				Minecraft.getInstance().displayGuiScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
+				Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
 			});
 			visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.global_visibility_requirements.desc"), "%n%"));
 			this.addContent(visibilityRequirementsButton);
@@ -1144,8 +1216,8 @@ public class LayoutEditorUI extends UIBase {
 			
 			for (String s : SlideshowHandler.getSlideshowNames()) {
 				String name = s;
-				if (Minecraft.getInstance().fontRenderer.getStringWidth(name) > 90) {
-					name = Minecraft.getInstance().fontRenderer.trimStringToWidth(name, 90) + "..";
+				if (Minecraft.getInstance().font.width(name) > 90) {
+					name = Minecraft.getInstance().font.plainSubstrByWidth(name, 90) + "..";
 				}
 				
 				AdvancedButton slideshowB = new AdvancedButton(0, 0, 0, 20, name, true, (press) -> {
@@ -1229,8 +1301,8 @@ public class LayoutEditorUI extends UIBase {
 				for (Map.Entry<String, Boolean> m : this.parent.audio.entrySet()) {
 					
 					String label = new File(m.getKey()).getName();
-					if (Minecraft.getInstance().fontRenderer.getStringWidth(label) > 200) {
-						label = Minecraft.getInstance().fontRenderer.trimStringToWidth(label, 200) + "..";
+					if (Minecraft.getInstance().font.width(label) > 200) {
+						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
 					}
 					
 					FMContextMenu actionsMenu = new FMContextMenu();
@@ -1406,7 +1478,7 @@ public class LayoutEditorUI extends UIBase {
 							}
 						}
 						this.closeMenu();
-						Minecraft.getInstance().displayGuiScreen(this.parent);
+						Minecraft.getInstance().setScreen(this.parent);
 					});
 					resetOriBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation.btndesc"), "%n%"));
 					this.addContent(resetOriBtn);

@@ -17,7 +17,11 @@
     "MixinConnectingScreen",
     "IMixinPauseScreen",
     "IMixinMinecraft",
-    "IMixinChatScreen"
+    "IMixinChatScreen",
+    "IMixinScreen",
+    "IMixinMainMenuScreen",
+    "IMixinWidget",
+    "IMixinWorldLoadProgressScreen"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -182,7 +182,7 @@ public class MenuCustomization {
 		if (screen == null) {
 			return false;
 		}
-		if (Minecraft.getInstance().currentScreen != screen) {
+		if (Minecraft.getInstance().screen != screen) {
 			return false;
 		}
 		return true;
@@ -242,13 +242,13 @@ public class MenuCustomization {
 	}
 
 	public static void reloadCurrentMenu() {
-		Screen s = Minecraft.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if (isMenuCustomizable(s)) {
 				setIsNewMenu(true);
 				SoftMenuReloadEvent e = new SoftMenuReloadEvent(s);
 				MinecraftForge.EVENT_BUS.post(e);
-				Minecraft.getInstance().displayGuiScreen(s);
+				Minecraft.getInstance().setScreen(s);
 			}
 		}
 	}

@@ -141,7 +141,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			int y = this.getPosY(menu);
 
 			if (this.isTextureReady()) {
-				Minecraft.getInstance().textureManager.bindTexture(this.texture.getResourceLocation());
+				Minecraft.getInstance().textureManager.bind(this.texture.getResourceLocation());
 				RenderSystem.enableBlend();
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
 				blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
@@ -149,12 +149,12 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			} else if (isEditorActive()) {
 				fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
 				if (this.ready) {
-					drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().fontRenderer.FONT_HEIGHT / 2), -1);
+					drawCenteredString(matrix, Minecraft.getInstance().font, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
 				}
 			}
 
 			if (!this.ready && isEditorActive()) {
-				drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().fontRenderer.FONT_HEIGHT / 2), -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
 			}
 
 		}

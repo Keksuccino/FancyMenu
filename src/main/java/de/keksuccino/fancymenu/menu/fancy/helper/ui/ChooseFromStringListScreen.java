@@ -33,7 +33,7 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
 
         this.backButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.back"), true, (press) -> {
             this.onCancel();
-            Minecraft.getInstance().displayGuiScreen(this.parent);
+            Minecraft.getInstance().setScreen(this.parent);
         });
         UIBase.colorizeButton(this.backButton);
 
@@ -51,9 +51,9 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
 
     //On Esc
     @Override
-    public void closeScreen() {
+    public void onClose() {
         this.onCancel();
-        Minecraft.getInstance().displayGuiScreen(this.parent);
+        Minecraft.getInstance().setScreen(this.parent);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
     public static class StringScrollAreaEntry extends ScrollAreaEntry {
 
         protected String entryValue;
-        protected FontRenderer font = Minecraft.getInstance().fontRenderer;
+        protected FontRenderer font = Minecraft.getInstance().font;
         protected ChooseFromStringListScreen parentScreen;
 
         protected boolean isMouseDown = false;
@@ -100,9 +100,9 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
             }
 
             String value = this.entryValue;
-            if (font.getStringWidth(value) > this.getWidth() - 30) {
+            if (font.width(value) > this.getWidth() - 30) {
                 value = new StringBuilder(value).reverse().toString();
-                value = font.trimStringToWidth(value, this.getWidth() - 30);
+                value = font.plainSubstrByWidth(value, this.getWidth() - 30);
                 value = new StringBuilder(value).reverse().toString();
                 value = ".." + value;
             }

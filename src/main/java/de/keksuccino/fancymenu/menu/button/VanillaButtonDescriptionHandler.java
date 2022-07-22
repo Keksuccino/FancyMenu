@@ -59,7 +59,7 @@ public class VanillaButtonDescriptionHandler {
 			
 			//Getting the longest string from the list to render the background with the correct width
 			for (String s : descArray) {
-				int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
+				int i = Minecraft.getInstance().font.width(s) + 10;
 				if (i > width) {
 					width = i;
 				}
@@ -69,11 +69,11 @@ public class VanillaButtonDescriptionHandler {
 			mouseX += 5;
 			mouseY += 5;
 			
-			if (Minecraft.getInstance().currentScreen.width < mouseX + width) {
+			if (Minecraft.getInstance().screen.width < mouseX + width) {
 				mouseX -= width + 10;
 			}
 			
-			if (Minecraft.getInstance().currentScreen.height < mouseY + height) {
+			if (Minecraft.getInstance().screen.height < mouseY + height) {
 				mouseY -= height + 10;
 			}
 
@@ -85,7 +85,7 @@ public class VanillaButtonDescriptionHandler {
 
 			int i2 = 5;
 			for (String s : descArray) {
-				AbstractGui.drawString(matrix, Minecraft.getInstance().fontRenderer, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+				AbstractGui.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
 				i2 += 10;
 			}
 

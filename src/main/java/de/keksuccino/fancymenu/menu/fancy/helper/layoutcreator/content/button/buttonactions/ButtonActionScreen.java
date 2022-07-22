@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen.ScrollAreaEntryBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen.SeparatorEntry;
+
 public class ButtonActionScreen extends ScrollableScreen {
 
     protected static final Color ENTRY_BACK_1 = new Color(0, 0, 0, 50);
@@ -47,17 +50,17 @@ public class ButtonActionScreen extends ScrollableScreen {
 
         this.doneButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
             this.onDone();
-            this.closeScreen();
+            this.onClose();
         });
         this.doneButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.doneButton);
 
-        this.valueTextField = new DynamicValueTextfield(Minecraft.getInstance().fontRenderer, 0, 0, 150, 20, true, null);
+        this.valueTextField = new DynamicValueTextfield(Minecraft.getInstance().font, 0, 0, 150, 20, true, null);
         this.valueTextField.setCanLoseFocus(true);
-        this.valueTextField.setFocused2(false);
-        this.valueTextField.setMaxStringLength(1000);
+        this.valueTextField.setFocus(false);
+        this.valueTextField.setMaxLength(1000);
         if (this.parentButton.actionContent != null) {
-            this.valueTextField.setText(this.parentButton.actionContent);
+            this.valueTextField.setValue(this.parentButton.actionContent);
         }
 
         //LEGACY BUTTON ACTIONS
@@ -140,7 +143,7 @@ public class ButtonActionScreen extends ScrollableScreen {
         }
         String value = null;
         if (selected.hasValue) {
-            value = this.valueTextField.getText();
+            value = this.valueTextField.getValue();
         }
         if (!this.parentButton.actionType.equals(selected.name) || !this.parentButton.actionContent.equals(value)) {
             this.parentButton.handler.history.saveSnapshot(this.parentButton.handler.history.createSnapshot());
@@ -175,7 +178,7 @@ public class ButtonActionScreen extends ScrollableScreen {
             //Action Value Text Field
             this.valueTextField.setX(xCenter - (this.valueTextField.getWidth() / 2));
             this.valueTextField.setY(this.height - 85);
-            this.valueTextField.setEnabled(selected.hasValue);
+            this.valueTextField.setEditable(selected.hasValue);
             this.valueTextField.active = selected.hasValue;
             this.valueTextField.render(matrix, mouseX, mouseY, partialTicks);
 
@@ -262,17 +265,17 @@ public class ButtonActionScreen extends ScrollableScreen {
 
             int centerX = entry.x + (entry.getWidth() / 2);
             int centerY = entry.y + (entry.getHeight() / 2);
-            FontRenderer font = Minecraft.getInstance().fontRenderer;
+            FontRenderer font = Minecraft.getInstance().font;
 
             Color nameBackColor = new Color(255,255,255,30);
             String renderName = "§l" + this.name;
             if (this.selected) {
                 renderName = "§a§l" + this.name;
             }
-            int nameWidth = font.getStringWidth(renderName);
+            int nameWidth = font.width(renderName);
             int nameX = centerX - (nameWidth / 2);
             int nameY = centerY - 5;
-            fill(matrix, nameX - 5, nameY - 5, nameX + nameWidth + 5, nameY + font.FONT_HEIGHT + 5, nameBackColor.getRGB());
+            fill(matrix, nameX - 5, nameY - 5, nameX + nameWidth + 5, nameY + font.lineHeight + 5, nameBackColor.getRGB());
             drawCenteredString(matrix, font, renderName, centerX, nameY, -1);
 
         }

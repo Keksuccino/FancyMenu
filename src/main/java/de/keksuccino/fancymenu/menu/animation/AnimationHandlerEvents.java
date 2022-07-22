@@ -37,7 +37,7 @@ public class AnimationHandlerEvents {
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
 		//Stopping audio for all advanced animations if no screen is being displayed
-		if ((Minecraft.getInstance().currentScreen == null) && AnimationHandler.isReady() && !this.idle) {
+		if ((Minecraft.getInstance().screen == null) && AnimationHandler.isReady() && !this.idle) {
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 				if (r instanceof AdvancedAnimation) {
 					((AdvancedAnimation)r).stopAudio();

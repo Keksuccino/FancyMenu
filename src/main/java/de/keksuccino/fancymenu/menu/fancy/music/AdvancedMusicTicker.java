@@ -13,13 +13,13 @@ public class AdvancedMusicTicker extends MusicTicker {
 	}
 
 	@Override
-	public void selectRandomBackgroundMusic(BackgroundMusicSelector type) {
-		if ((Minecraft.getInstance().world == null) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
-			this.stop();
+	public void startPlaying(BackgroundMusicSelector type) {
+		if ((Minecraft.getInstance().level == null) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
+			this.stopPlaying();
 			return;
 		}
 		
-		super.selectRandomBackgroundMusic(type);
+		super.startPlaying(type);
 	}
 
 }

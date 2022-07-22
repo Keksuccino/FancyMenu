@@ -22,20 +22,20 @@ public class TitleScreenForgeTopItem extends DeepCustomizationItem {
     @Override
     public void render(MatrixStack matrix, Screen menu) throws IOException {
 
-        FontRenderer font = Minecraft.getInstance().fontRenderer;
+        FontRenderer font = Minecraft.getInstance().font;
 
         StringTextComponent line1 = new StringTextComponent(Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line1"));
-        AbstractGui.drawCenteredString(matrix, font, line1, menu.width / 2, 4 + (0 * (font.FONT_HEIGHT + 1)), -1);
+        AbstractGui.drawCenteredString(matrix, font, line1, menu.width / 2, 4 + (0 * (font.lineHeight + 1)), -1);
 
         StringTextComponent line2 = new StringTextComponent(Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line2"));
-        AbstractGui.drawCenteredString(matrix, font, line2, menu.width / 2, 4 + (1 * (font.FONT_HEIGHT + 1)), -1);
+        AbstractGui.drawCenteredString(matrix, font, line2, menu.width / 2, 4 + (1 * (font.lineHeight + 1)), -1);
 
-        this.width = font.getStringWidth(line1.getUnformattedComponentText());
-        int w2 = font.getStringWidth(line2.getUnformattedComponentText());
+        this.width = font.width(line1.getContents());
+        int w2 = font.width(line2.getContents());
         if (this.width < w2) {
             this.width = w2;
         }
-        this.height = (font.FONT_HEIGHT * 2) + 1;
+        this.height = (font.lineHeight * 2) + 1;
 
         this.posX = (menu.width / 2) - (this.width / 2);
         this.posY = 4;

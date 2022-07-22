@@ -550,7 +550,7 @@ public class SetupSharingEngine {
 
             PropertiesSection meta = new PropertiesSection("setup-meta");
             meta.addEntry("modloader", FancyMenu.MOD_LOADER);
-            meta.addEntry("mcversion", SharedConstants.getVersion().getName());
+            meta.addEntry("mcversion", SharedConstants.getCurrentVersion().getName());
             meta.addEntry("fmversion", FancyMenu.VERSION);
             set.addProperties(meta);
 
@@ -852,7 +852,7 @@ public class SetupSharingEngine {
                                 /** STEP 2 : CHECK MC VERSION **/
                                 if (step == 2) {
                                     if (setupProperties.mcVersion != null) {
-                                        if (!setupProperties.mcVersion.equals(SharedConstants.getVersion().getName())) {
+                                        if (!setupProperties.mcVersion.equals(SharedConstants.getCurrentVersion().getName())) {
                                             doStep = false;
                                             FMYesNoPopup pop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
                                                 if (call) {
@@ -861,7 +861,7 @@ public class SetupSharingEngine {
                                                 } else {
                                                     finish(true);
                                                 }
-                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentmcversion", setupProperties.mcVersion, SharedConstants.getVersion().getName()), "%n%"));
+                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentmcversion", setupProperties.mcVersion, SharedConstants.getCurrentVersion().getName()), "%n%"));
                                             PopupHandler.displayPopup(pop);
                                         } else {
                                             step = 3;
@@ -1212,7 +1212,7 @@ public class SetupSharingEngine {
             super.render(matrix, mouseX, mouseY, renderIn);
             int centerX = renderIn.width / 2;
             int centerY = renderIn.height / 2;
-            drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, this.status, centerX, centerY, -1);
+            drawCenteredString(matrix, Minecraft.getInstance().font, this.status, centerX, centerY, -1);
         }
 
     }

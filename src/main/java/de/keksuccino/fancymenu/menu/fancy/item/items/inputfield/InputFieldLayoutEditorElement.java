@@ -15,6 +15,8 @@ import de.keksuccino.konkrete.math.MathUtils;
 
 import java.awt.*;
 
+import de.keksuccino.fancymenu.api.item.LayoutEditorElement.SimplePropertiesSection;
+
 public class InputFieldLayoutEditorElement extends LayoutEditorElement {
 
     public InputFieldLayoutEditorElement(InputFieldCustomizationItemContainer parentContainer, InputFieldCustomizationItem customizationItemInstance, LayoutEditorScreen handler) {

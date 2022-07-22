@@ -38,16 +38,16 @@ public class PasteToChatButtonAction extends ButtonActionContainer {
             } else {
                 msg = value;
             }
-            if (Minecraft.getInstance().world != null) {
+            if (Minecraft.getInstance().level != null) {
                 if (Minecraft.getInstance().player != null) {
-                    Screen s = Minecraft.getInstance().currentScreen;
+                    Screen s = Minecraft.getInstance().screen;
                     if ((s == null) || !(s instanceof ChatScreen)) {
                         ((IMixinMinecraft)Minecraft.getInstance()).openChatScreenFancyMenu(msg);
                     } else if (s instanceof ChatScreen) {
                         if (append) {
-                            ((IMixinChatScreen)s).getInputFancyMenu().writeText(msg);
+                            ((IMixinChatScreen)s).getInputFancyMenu().insertText(msg);
                         } else {
-                            ((IMixinChatScreen)s).getInputFancyMenu().setText(msg);
+                            ((IMixinChatScreen)s).getInputFancyMenu().setValue(msg);
                         }
                     }
                 }

@@ -61,14 +61,14 @@ public class UIBase extends AbstractGui {
 	public static float getUIScale() {
 
 		float uiScale = FancyMenu.config.getOrDefault("uiscale", 1.0F);
-		double mcScale = Minecraft.getInstance().getMainWindow().getGuiScaleFactor();
+		double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
 
 		return (float) ((((double)baseUIScale) * (((double)baseUIScale) / mcScale)) * uiScale);
 		
 	}
 	
 	public static void openScaledContextMenuAt(FMContextMenu menu, int x, int y) {
-		Screen s = Minecraft.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			menu.openMenuAt((int) (x / UIBase.getUIScale()), (int) (y / UIBase.getUIScale()), (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
 		}
@@ -79,10 +79,10 @@ public class UIBase extends AbstractGui {
 	}
 	
 	public static void renderScaledContextMenu(MatrixStack matrix, FMContextMenu menu) {
-		Screen s = Minecraft.getInstance().currentScreen;
+		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {
 			
-			matrix.push();
+			matrix.pushPose();
 			
 			matrix.scale(UIBase.getUIScale(), UIBase.getUIScale(), UIBase.getUIScale());
 			
@@ -93,7 +93,7 @@ public class UIBase extends AbstractGui {
 			
 			menu.render(matrix, mouseX, mouseY, (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
 			
-			matrix.pop();
+			matrix.popPose();
 			
 		}
 	}

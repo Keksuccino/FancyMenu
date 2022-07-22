@@ -22,10 +22,10 @@ public class DynamicValueInputPopup extends FMTextInputPopup {
 		
 		super.init(color, title, filter, callback);
 		
-		this.textField = new DynamicValueTextfield(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, filter);
+		this.textField = new DynamicValueTextfield(Minecraft.getInstance().font, 0, 0, 200, 20, true, filter);
 		this.textField.setCanLoseFocus(true);
-		this.textField.setFocused2(false);
-		this.textField.setMaxStringLength(1000);
+		this.textField.setFocus(false);
+		this.textField.setMaxLength(1000);
 		
 	}
 	

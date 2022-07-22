@@ -11,10 +11,10 @@ import de.keksuccino.fancymenu.events.GuiInitCompletedEvent;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.VideoSettingsScreen;
@@ -22,7 +22,6 @@ import net.minecraft.client.gui.widget.Widget;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class ButtonCache {
 
@@ -31,7 +30,6 @@ public class ButtonCache {
 	private static Screen current = null;
 	private static boolean cached = false;
 	private static boolean caching = false;
-	//TODO übernehmen
 	private static Map<String, Widget> customButtons = new HashMap<String, Widget>();
 
 	@SubscribeEvent
@@ -89,7 +87,7 @@ public class ButtonCache {
 				return;
 			}
 
-			if ((s == Minecraft.getInstance().currentScreen)) {
+			if ((s == Minecraft.getInstance().screen)) {
 				updateButtons(s);
 			}
 
@@ -124,7 +122,7 @@ public class ButtonCache {
 		}
 		//Use the new id calculation system
 		List<ButtonData> ids = cacheButtons(s, 1000, 1000);
-		List<ButtonData> btns = cacheButtons(s, Minecraft.getInstance().getMainWindow().getScaledWidth(), Minecraft.getInstance().getMainWindow().getScaledHeight());
+		List<ButtonData> btns = cacheButtons(s, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 
 		if (btns.size() == ids.size()) {
 			int i = 0;
@@ -149,7 +147,6 @@ public class ButtonCache {
 			}
 		}
 
-		//TODO übernehmen 2.7.2
 		List<String> compIds = new ArrayList<>();
 		for (ButtonData d : buttons.values()) {
 			ButtonIdentificator.setCompatibilityIdentifierToData(d);
@@ -159,7 +156,6 @@ public class ButtonCache {
 				compIds.add(d.compatibilityId);
 			}
 		}
-		//-------------------
 
 	}
 
@@ -168,25 +164,19 @@ public class ButtonCache {
 		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
 		List<Long> ids = new ArrayList<Long>();
 		try {
+
 			//Resetting the button list
-			Field f0 = ReflectionHelper.findField(Screen.class, "field_230710_m_");
-			f0.set(s, new ArrayList<Widget>());
+			((IMixinScreen)s).setButtonsFancyMenu(new ArrayList<Widget>());
 
 			//Setting all important values for the GuiScreen to be able to initialize itself
-			//itemRenderer field
-			Field f1 = ReflectionHelper.findField(Screen.class, "field_230707_j_");
-			f1.set(s, Minecraft.getInstance().getItemRenderer());
-			//font field
-			Field f2 = ReflectionHelper.findField(Screen.class, "field_230712_o_");
-			f2.set(s, Minecraft.getInstance().fontRenderer);
+			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
+			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
-			//init
+			//Init screen
 			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 
-			//Reflecting the buttons list field to cache all buttons of the menu
-			Field f = ReflectionHelper.findField(Screen.class, "field_230710_m_");
-
-			for (Widget w : (List<Widget>) f.get(s)) {
+			//Cache all buttons of the menu
+			for (Widget w : (List<Widget>) ((IMixinScreen)s).getButtonsFancyMenu()) {
 				String idRaw = w.x + "" + w.y;
 				long id = 0;
 				if (MathUtils.isLong(idRaw)) {
@@ -195,6 +185,7 @@ public class ButtonCache {
 				ids.add(id);
 				buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
 			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -217,8 +208,7 @@ public class ButtonCache {
 		Widget ori = null;
 		if ((d != null) && (current != null)) {
 			try {
-				Field f = ObfuscationReflectionHelper.findField(Screen.class, "field_230710_m_");
-				List<Widget> l = (List<Widget>) f.get(current);
+				List<Widget> l = ((IMixinScreen)current).getButtonsFancyMenu();
 				List<Widget> l2 = new ArrayList<Widget>();
 
 				for (Widget b : l) {
@@ -230,7 +220,7 @@ public class ButtonCache {
 					}
 				}
 
-				f.set(current, l2);
+				((IMixinScreen)current).setButtonsFancyMenu(l2);
 				if (ori != null) {
 					replaced.put(d.getId(), ori);
 				}
@@ -322,17 +312,14 @@ public class ButtonCache {
 		return caching;
 	}
 
-	//TODO übernehmen
 	public static void clearCustomButtonCache() {
 		customButtons.clear();
 	}
 
-	//TODO übernehmen
 	public static void cacheCustomButton(String id, Widget w) {
 		customButtons.put(id, w);
 	}
 
-	//TODO übernehmen
 	public static Widget getCustomButton(String id) {
 		return customButtons.get(id);
 	}

@@ -45,7 +45,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
                     NativeImage skinNew = new NativeImage(64, 64, true);
 
                     //Copy old skin texture to new skin
-                    skinNew.copyImageData(i);
+                    skinNew.copyFrom(i);
 
                     int xOffsetLeg = 16;
                     int yOffsetLeg = 32;
@@ -79,7 +79,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
 
                     i = skinNew;
                 }
-                this.location = Minecraft.getInstance().getTextureManager().getDynamicTextureLocation("externaltexture", new SelfcleaningDynamicTexture(i));
+                this.location = Minecraft.getInstance().getTextureManager().register("externaltexture", new SelfcleaningDynamicTexture(i));
                 this.in.close();
                 this.loaded = true;
             } catch (Exception var2) {

@@ -49,9 +49,9 @@ public class CreateCustomGuiPopup extends FMPopup {
 		});
 		this.addButton(doneButton);
 		
-		this.identifierText = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, null);
+		this.identifierText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, null);
 		
-		this.titleText = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, null);
+		this.titleText = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, null);
 		
 		this.allowEscButton = new AdvancedButton(0, 0, 120, 20, "§a" + Locals.localize("helper.buttons.tools.creategui.allowesc"), true, (press) -> {
 			press.setMessage(new StringTextComponent("§a" + Locals.localize("helper.buttons.tools.creategui.allowesc")));
@@ -75,9 +75,9 @@ public class CreateCustomGuiPopup extends FMPopup {
 	public void render(MatrixStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
 		
-		float partial = Minecraft.getInstance().getRenderPartialTicks();
-		String id = this.identifierText.getText();
-		FontRenderer font = Minecraft.getInstance().fontRenderer;	
+		float partial = Minecraft.getInstance().getFrameTime();
+		String id = this.identifierText.getValue();
+		FontRenderer font = Minecraft.getInstance().font;	
 		
 		AbstractGui.drawCenteredString(matrix, font, "§l" + Locals.localize("helper.buttons.tools.creategui"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 		
@@ -125,8 +125,8 @@ public class CreateCustomGuiPopup extends FMPopup {
 	private void onDoneButtonPressed() {
 		try {
 			String name = "";
-			if (this.identifierText.getText() != null) {
-				name = FileUtils.generateAvailableFilename(FancyMenu.getCustomGuiPath().getPath(), this.identifierText.getText(), "txt");
+			if (this.identifierText.getValue() != null) {
+				name = FileUtils.generateAvailableFilename(FancyMenu.getCustomGuiPath().getPath(), this.identifierText.getValue(), "txt");
 				
 				File f = new File(FancyMenu.getCustomGuiPath().getPath() + "/" + name);
 				if (!f.exists()) {
@@ -134,9 +134,9 @@ public class CreateCustomGuiPopup extends FMPopup {
 				}
 				
 				List<String> l = new ArrayList<String>();
-				l.add("identifier = " + this.identifierText.getText());
-				if (this.titleText.getText() != null) {
-					l.add("title = " + this.titleText.getText());
+				l.add("identifier = " + this.identifierText.getValue());
+				if (this.titleText.getValue() != null) {
+					l.add("title = " + this.titleText.getValue());
 				}
 				l.add("allowesc = " + this.allowEsc);
 				
@@ -144,10 +144,10 @@ public class CreateCustomGuiPopup extends FMPopup {
 				
 				this.setDisplayed(false);
 				CustomGuiLoader.loadCustomGuis();
-				CustomGuiBase gui = CustomGuiLoader.getGui(this.identifierText.getText(), Minecraft.getInstance().currentScreen, null);
+				CustomGuiBase gui = CustomGuiLoader.getGui(this.identifierText.getValue(), Minecraft.getInstance().screen, null);
 				if (gui != null) {
-					Minecraft.getInstance().displayGuiScreen(gui);
-					Minecraft.getInstance().displayGuiScreen(new LayoutEditorScreen(gui));
+					Minecraft.getInstance().setScreen(gui);
+					Minecraft.getInstance().setScreen(new LayoutEditorScreen(gui));
 				}
 			}
 		} catch (Exception e) {

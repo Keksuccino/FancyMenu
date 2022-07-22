@@ -26,12 +26,12 @@ public class IsServerIpVisibilityRequirement extends VisibilityRequirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         if (value != null) {
-            if (Minecraft.getInstance().world != null) {
-                if (Minecraft.getInstance().getCurrentServerData() != null) {
+            if (Minecraft.getInstance().level != null) {
+                if (Minecraft.getInstance().getCurrentServer() != null) {
                     if (value.contains(":")) {
-                        return Minecraft.getInstance().getCurrentServerData().serverIP.equals(value);
+                        return Minecraft.getInstance().getCurrentServer().ip.equals(value);
                     } else {
-                        String curIp = Minecraft.getInstance().getCurrentServerData().serverIP;
+                        String curIp = Minecraft.getInstance().getCurrentServer().ip;
                         if (curIp.contains(":")) {
                             curIp = curIp.split("[:]", 2)[0];
                         }

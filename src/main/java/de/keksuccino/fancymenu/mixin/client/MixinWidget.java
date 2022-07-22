@@ -28,12 +28,12 @@ public abstract class MixinWidget extends AbstractGui {
 	@Shadow int width;
 	@Shadow float alpha;
 	
-	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V", ordinal = 0, shift = Shift.AFTER), method = "renderWidget(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V", cancellable = true)
+	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V", ordinal = 0, shift = Shift.AFTER), method = "renderButton", cancellable = true)
 	private void onRenderButton(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		info.cancel();
 		
 		Minecraft mc = Minecraft.getInstance();
-		FontRenderer font = mc.fontRenderer;
+		FontRenderer font = mc.font;
 		Widget b = (Widget)((Object)this);
 		
 		RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre(matrix, b, this.alpha);

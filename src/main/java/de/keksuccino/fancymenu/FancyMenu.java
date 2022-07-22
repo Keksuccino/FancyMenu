@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.commands.ClientExecutor;
 import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.VariableCommand;
@@ -19,6 +20,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.lay
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.konkrete.events.client.ClientCommandRegistrationEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -52,7 +54,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.10.1";
+	public static final String VERSION = "2.11.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -93,6 +95,8 @@ public class FancyMenu {
 	    		slideshowPath.mkdirs();
 
 	    		updateConfig();
+
+				ClientExecutor.init();
 
 				DeepCustomizationLayers.registerAll();
 
@@ -157,11 +161,11 @@ public class FancyMenu {
 	}
 
 	@SubscribeEvent
-	public void onRegisterCommands(RegisterCommandsEvent e) {
+	public void onRegisterCommands(ClientCommandRegistrationEvent e) {
 
-		OpenGuiScreenCommand.register(e.getDispatcher());
-		CloseGuiScreenCommand.register(e.getDispatcher());
-		VariableCommand.register(e.getDispatcher());
+		OpenGuiScreenCommand.register(e.dispatcher);
+		CloseGuiScreenCommand.register(e.dispatcher);
+		VariableCommand.register(e.dispatcher);
 
 	}
 	

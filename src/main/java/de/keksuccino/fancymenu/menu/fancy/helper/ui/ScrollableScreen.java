@@ -51,9 +51,9 @@ public class ScrollableScreen extends Screen {
 
     //On Esc
     @Override
-    public void closeScreen() {
+    public void onClose() {
         if (!PopupHandler.isPopupActive()) {
-            Minecraft.getInstance().displayGuiScreen(this.parent);
+            Minecraft.getInstance().setScreen(this.parent);
         }
     }
 
@@ -106,7 +106,7 @@ public class ScrollableScreen extends Screen {
             int height = 10;
             //Getting the longest string from the list to render the background with the correct width
             for (String s : desc) {
-                int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
+                int i = Minecraft.getInstance().font.width(s) + 10;
                 if (i > width) {
                     width = i;
                 }
@@ -114,10 +114,10 @@ public class ScrollableScreen extends Screen {
             }
             mouseX += 5;
             mouseY += 5;
-            if (Minecraft.getInstance().currentScreen.width < mouseX + width) {
+            if (Minecraft.getInstance().screen.width < mouseX + width) {
                 mouseX -= width + 10;
             }
-            if (Minecraft.getInstance().currentScreen.height < mouseY + height) {
+            if (Minecraft.getInstance().screen.height < mouseY + height) {
                 mouseY -= height + 10;
             }
             RenderUtils.setZLevelPre(matrix, 600);
@@ -125,7 +125,7 @@ public class ScrollableScreen extends Screen {
             RenderSystem.enableBlend();
             int i2 = 5;
             for (String s : desc) {
-                drawString(matrix, Minecraft.getInstance().fontRenderer, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+                drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
                 i2 += 10;
             }
             RenderUtils.setZLevelPost(matrix);
@@ -218,7 +218,7 @@ public class ScrollableScreen extends Screen {
                 this.button.setHeight(20);
                 this.button.setX(xCenter - (this.button.getWidth() / 2));
                 this.button.setY(render.entry.y + 2);
-                this.button.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getTickLength());
+                this.button.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
             };
             this.setHeight(24);
         }
@@ -232,7 +232,7 @@ public class ScrollableScreen extends Screen {
         public TextFieldEntry(ScrollArea parent, AdvancedTextField textField) {
             super(parent, null);
             this.textField = textField;
-            this.textField.setMaxStringLength(10000);
+            this.textField.setMaxLength(10000);
             this.renderBody = (render) -> {
                 int xCenter = render.entry.x + (render.entry.getWidth() / 2);
                 if (!this.isOverlayButtonHoveredAndOverlapsArea()) {
@@ -244,7 +244,7 @@ public class ScrollableScreen extends Screen {
                 this.textField.setHeight(20);
                 this.textField.setX(xCenter - (this.textField.getWidth() / 2));
                 this.textField.setY(render.entry.y + 2);
-                this.textField.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getTickLength());
+                this.textField.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
             };
             this.setHeight(24);
         }
@@ -262,14 +262,14 @@ public class ScrollableScreen extends Screen {
             this.bold = bold;
             this.renderBody = (render) -> {
                 if (this.text != null) {
-                    FontRenderer font = Minecraft.getInstance().fontRenderer;
+                    FontRenderer font = Minecraft.getInstance().font;
                     int xCenter = render.entry.x + (render.entry.getWidth() / 2);
                     int yCenter = render.entry.y + (render.entry.getHeight() / 2);
                     String s = this.text;
                     if (this.bold) {
                         s = "§l" + this.text;
                     }
-                    drawCenteredString(render.matrix, font, s, xCenter, yCenter - (font.FONT_HEIGHT / 2), -1);
+                    drawCenteredString(render.matrix, font, s, xCenter, yCenter - (font.lineHeight / 2), -1);
                 }
             };
             this.setHeight(18);

@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.gui.widget.Widget;
 
+import net.minecraft.client.gui.widget.button.Button.IPressable;
+
 public class CustomizationButton extends AdvancedButton {
 
 	public CustomizationButton(int x, int y, int widthIn, int heightIn, String buttonText, IPressable onPress) {

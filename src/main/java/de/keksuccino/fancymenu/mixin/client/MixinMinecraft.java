@@ -19,7 +19,7 @@ public class MixinMinecraft {
 
 	private static boolean customWindowInit = false;
 	
-	@Inject(at = @At(value = "HEAD"), method = "getWindowTitle", cancellable = true)
+	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	private void onGetWindowTitle(CallbackInfoReturnable<String> info) {
 
 		if (FancyMenu.config != null) {
@@ -38,7 +38,7 @@ public class MixinMinecraft {
 		
 	}
 
-	@Inject(at = @At(value = "HEAD"), method = "setLoadingGui")
+	@Inject(at = @At(value = "HEAD"), method = "setOverlay")
 	private void onSetLoadingGui(LoadingGui loadingGuiIn, CallbackInfo info) {
 		if (FancyMenu.config == null) {
 			return;

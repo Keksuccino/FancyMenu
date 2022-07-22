@@ -98,7 +98,7 @@ public class CustomGuiLoader {
 			}
 			return new CustomGuiBase(sec.getEntryValue("title"), identifier, esc, parent, overrides) {
 				@Override
-				public void onClose() {
+				public void removed() {
 					onClose.accept(this);
 				}
 			};

@@ -57,7 +57,7 @@ public class FMContextMenu extends ContextMenu {
 		
 		int i = 20;
 		for (AdvancedButton b : this.content) {
-			int sw = Minecraft.getInstance().fontRenderer.getStringWidth(b.getMessageString()) + 12;
+			int sw = Minecraft.getInstance().font.width(b.getMessageString()) + 12;
 			if (b.getWidth() > sw) {
 				sw = b.getWidth();
 			}

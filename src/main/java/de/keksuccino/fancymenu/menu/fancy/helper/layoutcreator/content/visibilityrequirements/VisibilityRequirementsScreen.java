@@ -25,6 +25,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen.ScrollAreaEntryBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen.SeparatorEntry;
+
 public class VisibilityRequirementsScreen extends ScrollableScreen {
 
     protected static final Color ENTRY_BACK_1 = new Color(0, 0, 0, 50);
@@ -42,7 +45,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
         this.parentItem = parentItem;
 
         this.doneButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
-            Minecraft.getInstance().displayGuiScreen(this.parent);
+            Minecraft.getInstance().setScreen(this.parent);
         });
         this.doneButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.doneButton);
@@ -223,7 +226,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
             descLines.add("");
             descLines.add(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.toggle.btn.desc"));
             this.enableRequirementButton.setDescription(descLines.toArray(new String[0]));
-            this.preRenderTasks.add(() -> enableRequirementButton.setWidth(Minecraft.getInstance().fontRenderer.getStringWidth(enableRequirementButton.getMessage().getUnformattedComponentText()) + 10));
+            this.preRenderTasks.add(() -> enableRequirementButton.setWidth(Minecraft.getInstance().font.width(enableRequirementButton.getMessage().getContents()) + 10));
             this.addButton(this.enableRequirementButton);
 
             /** Show If Button **/
@@ -260,12 +263,12 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
 
             if ((this.valueCallback != null) && (this.valueName != null)) {
                 this.hasValue = true;
-                this.valueTextField = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 150, 20, true, this.valueFilter);
+                this.valueTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
                 this.valueTextField.setCanLoseFocus(true);
-                this.valueTextField.setFocused2(false);
-                this.valueTextField.setMaxStringLength(1000);
+                this.valueTextField.setFocus(false);
+                this.valueTextField.setMaxLength(1000);
                 if (this.valueString != null) {
-                    this.valueTextField.setText(this.valueString);
+                    this.valueTextField.setValue(this.valueString);
                 }
             }
 
@@ -277,7 +280,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
                 r.run();
             }
 
-            float partial = Minecraft.getInstance().getRenderPartialTicks();
+            float partial = Minecraft.getInstance().getFrameTime();
             int originX = entry.x + (entry.getWidth() / 2);
             int originY = entry.y + (entry.getHeight() / 2);
             if (this.hasValue) {
@@ -299,15 +302,15 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
             this.showIfButton.active = this.enabled;
 
             if (this.valueTextField != null) {
-                drawCenteredString(matrix, Minecraft.getInstance().fontRenderer, this.valueName + ":", originX, originY - 10, -1);
+                drawCenteredString(matrix, Minecraft.getInstance().font, this.valueName + ":", originX, originY - 10, -1);
 
                 this.valueTextField.x = originX - (this.valueTextField.getWidth() / 2);
                 this.valueTextField.y = originY + 3;
                 this.valueTextField.render(matrix, mouseX, mouseY, partial);
                 this.valueTextField.active = this.enabled;
-                this.valueTextField.setEnabled(this.enabled);
-                this.valueCallback.accept(this.valueTextField.getText());
-                this.valueString = this.valueTextField.getText();
+                this.valueTextField.setEditable(this.enabled);
+                this.valueCallback.accept(this.valueTextField.getValue());
+                this.valueString = this.valueTextField.getValue();
             }
 
             this.renderButtons(matrix, mouseX, mouseY, partial);

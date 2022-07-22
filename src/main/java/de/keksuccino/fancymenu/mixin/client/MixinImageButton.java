@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.mixin.client;
 
-import java.lang.reflect.Field;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,18 +15,17 @@ import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.ImageButton;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 @Mixin(value = ImageButton.class)
 public abstract class MixinImageButton extends AbstractGui {
 
 	@Shadow private int xTexStart;
 	@Shadow private int yTexStart;
-	@Shadow private int yDiffText;
+	@Shadow private int yDiffTex;
 	@Shadow private int textureWidth;
 	@Shadow private int textureHeight;
 	
-	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V", ordinal = 0, shift = Shift.AFTER), method = "renderWidget(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V", cancellable = true)
+	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V", ordinal = 0, shift = Shift.AFTER), method = "renderButton", cancellable = true)
 	private void onRenderButton(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		info.cancel();
 		
@@ -42,7 +39,7 @@ public abstract class MixinImageButton extends AbstractGui {
 		if (!e.isCanceled()) {
 			int i = this.yTexStart;
 			if (b.isHovered()) {
-				i += this.yDiffText;
+				i += this.yDiffTex;
 			}
 			blit(matrix, b.x, b.y, (float)this.xTexStart, (float)i, b.getWidth(), b.getHeight(), this.textureWidth, this.textureHeight);
 		}
@@ -56,13 +53,7 @@ public abstract class MixinImageButton extends AbstractGui {
 	}
 	
 	private float getAlpha() {
-		try {
-			Field f = ObfuscationReflectionHelper.findField(Widget.class, "field_230695_q_");
-			return f.getFloat(this);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return 1.0F;
+		return ((IMixinWidget)this).getAlphaFancyMenu();
 	}
 	
 }

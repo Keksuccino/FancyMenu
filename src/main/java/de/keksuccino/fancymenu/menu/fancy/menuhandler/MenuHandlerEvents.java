@@ -32,15 +32,15 @@ public class MenuHandlerEvents {
 	public void onTick(ClientTickEvent e) {
 
 		//Resetting scale to the normal value when no GUI is active
-		if ((MenuHandlerBase.scaleChangedIn != null) && (Minecraft.getInstance().currentScreen == null)) {
+		if ((MenuHandlerBase.scaleChangedIn != null) && (Minecraft.getInstance().screen == null)) {
 			MenuHandlerBase.scaleChangedIn = null;
-			int mcscale = Minecraft.getInstance().getMainWindow().calcGuiScale(Minecraft.getInstance().gameSettings.guiScale, Minecraft.getInstance().getForceUnicodeFont());
-			MainWindow m = Minecraft.getInstance().getMainWindow();
+			int mcscale = Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode());
+			MainWindow m = Minecraft.getInstance().getWindow();
 			m.setGuiScale((double)mcscale);
 		}
 
 		//Resetting last active menu handler when no GUI is displayed
-		if (Minecraft.getInstance().currentScreen == null) {
+		if (Minecraft.getInstance().screen == null) {
 			MenuHandlerRegistry.setActiveHandler(null);
 		}
 

@@ -55,7 +55,7 @@ public class TitleScreenButtonsIdentificationContext extends MenuButtonsIdentifi
                     return "modmenu_titlescreen_mods_button";
                 }
             } else {
-                String label = c.getUnformattedComponentText();
+                String label = c.getContents();
                 if (label.equals("Copyright Mojang AB. Do not distribute!")) {
                     return "mc_titlescreen_copyright_button";
                 }

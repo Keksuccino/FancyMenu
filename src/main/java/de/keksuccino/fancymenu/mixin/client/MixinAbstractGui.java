@@ -18,14 +18,14 @@ public abstract class MixinAbstractGui {
         if (FancyMenu.config == null) {
             return color;
         }
-        if (Minecraft.getInstance().loadingGui == null) {
+        if (Minecraft.getInstance().overlay == null) {
             MixinCache.isSplashScreenRendering = false;
         }
-        if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().loadingGui != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
+        if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().overlay != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
             int backColor = color;
             int alpha = MixinCache.currentSplashAlpha;
 
-            Screen current = Minecraft.getInstance().currentScreen;
+            Screen current = Minecraft.getInstance().screen;
             if ((current != null) && (MenuCustomization.isMenuCustomizable(current) || FancyMenu.config.getOrDefault("preloadanimations", true))) {
                 alpha = 255;
             }
