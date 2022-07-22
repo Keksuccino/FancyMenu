@@ -34,6 +34,10 @@ dependencies {
 	implementation fileTree('libs') { include '*.jar' }
 }
 
+loom {
+	accessWidenerPath = file("src/main/resources/fancymenu.accessWidener")
+}
+
 processResources {
 	inputs.property "version", project.version
 

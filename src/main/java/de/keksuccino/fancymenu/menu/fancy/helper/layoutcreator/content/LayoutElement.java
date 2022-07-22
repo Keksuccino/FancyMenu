@@ -151,6 +151,19 @@ public abstract class LayoutElement extends GuiComponent {
 			this.rightclickMenu.addContent(copyIdButton);
 		}
 
+		if (this instanceof LayoutVanillaButton) {
+
+			AdvancedButton copyLocatorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.vanilla_button.copy_locator"), true, (press) -> {
+				String locator = this.handler.getScreenToCustomizeIdentifier() + ":" + ((LayoutVanillaButton)this).getButtonId();
+				Minecraft.getInstance().keyboardHandler.setClipboard(locator);
+			});
+			copyLocatorButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc"), "%n%"));
+			this.rightclickMenu.addContent(copyLocatorButton);
+
+		}
+
+		this.rightclickMenu.addSeparator();
+
 		/** ORIENTATION **/
 		if (this.orientationCanBeChanged) {
 			FMContextMenu orientationMenu = new FMContextMenu();
@@ -1169,86 +1182,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 		if (c.vrCheckForMultiplayer) {
 			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
-		}
-		if (c.vrCheckForRealTimeHour) {
-			String val = "";
-			for (int i : c.vrRealTimeHour) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimehour", "" + c.vrShowIfRealTimeHour);
-				sec.addEntry("vr:value:realtimehour", val);
-			}
-		}
-		if (c.vrCheckForRealTimeMinute) {
-			String val = "";
-			for (int i : c.vrRealTimeMinute) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimeminute", "" + c.vrShowIfRealTimeMinute);
-				sec.addEntry("vr:value:realtimeminute", val);
-			}
-		}
-		if (c.vrCheckForRealTimeSecond) {
-			String val = "";
-			for (int i : c.vrRealTimeSecond) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimesecond", "" + c.vrShowIfRealTimeSecond);
-				sec.addEntry("vr:value:realtimesecond", val);
-			}
-		}
-		if (c.vrCheckForRealTimeDay) {
-			String val = "";
-			for (int i : c.vrRealTimeDay) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimeday", "" + c.vrShowIfRealTimeDay);
-				sec.addEntry("vr:value:realtimeday", val);
-			}
-		}
-		//TODO übernehmen
-		if (c.vrCheckForRealTimeMonth) {
-			String val = "";
-			for (int i : c.vrRealTimeMonth) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimemonth", "" + c.vrShowIfRealTimeMonth);
-				sec.addEntry("vr:value:realtimemonth", val);
-			}
-		}
-		//TODO übernehmen
-		if (c.vrCheckForRealTimeYear) {
-			String val = "";
-			for (int i : c.vrRealTimeYear) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:realtimeyear", "" + c.vrShowIfRealTimeYear);
-				sec.addEntry("vr:value:realtimeyear", val);
-			}
 		}
 		if (c.vrCheckForWindowWidth) {
 			String val = "";

@@ -95,6 +95,11 @@ public class MenuCustomizationEvents {
 
 	@SubscribeEvent
 	public void onTick(ClientTickEvent.Pre e) {
+
+		if (Minecraft.getInstance().screen == null) {
+			this.lastScreen = null;
+		}
+
 		//Stopping audio for all menu handlers if no screen is being displayed
 		if ((Minecraft.getInstance().screen == null) && !this.idle) {
 			MenuCustomization.stopSounds();

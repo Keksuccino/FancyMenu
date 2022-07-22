@@ -33,6 +33,7 @@ import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.events.SubscribeEvent;
+import de.keksuccino.konkrete.events.client.ClientCommandRegistrationEvent;
 import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
@@ -44,7 +45,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.10.1";
+	public static final String VERSION = "2.11.1";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -150,11 +151,11 @@ public class FancyMenu implements ModInitializer {
     }
 
 	@SubscribeEvent
-	public void onRegisterCommands(CommandsRegisterEvent e) {
+	public void onRegisterCommands(ClientCommandRegistrationEvent e) {
 
-		OpenGuiScreenCommand.register(e.getDispatcher());
-		CloseGuiScreenCommand.register(e.getDispatcher());
-		VariableCommand.register(e.getDispatcher());
+		OpenGuiScreenCommand.register(e.dispatcher);
+		CloseGuiScreenCommand.register(e.dispatcher);
+		VariableCommand.register(e.dispatcher);
 
 	}
 
