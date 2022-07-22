@@ -18,7 +18,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
@@ -30,12 +29,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -66,7 +62,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	public float headRotationX = 0;
 	public float headRotationY = 0;
 
-	private static final Level DUMMY_WORLD = DummyWorldFactory.getDummyWorld();
 	private static final ClientLevel DUMMY_CLIENT_WORLD = DummyWorldFactory.getDummyClientWorld();
 	private static final BlockPos BLOCK_POS = new BlockPos(0, 0, 0);
 

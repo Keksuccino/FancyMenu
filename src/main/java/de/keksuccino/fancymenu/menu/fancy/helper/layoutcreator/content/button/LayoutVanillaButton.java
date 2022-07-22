@@ -490,7 +490,10 @@ public class LayoutVanillaButton extends LayoutElement {
 
 	public void displaySetOrientationNotification() {
 		if (FancyMenu.config.getOrDefault("showvanillamovewarning", true)) {
-			PopupHandler.displayPopup(new VanillaButtonMovePopup(this.handler));
+			//TODO übernehmen
+			FMNotificationPopup p = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.orientation_needed"), "%n%"));
+			PopupHandler.displayPopup(p);
+			//--------------
 		}
 	}
 	

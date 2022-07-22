@@ -564,7 +564,77 @@ public class LayoutEditorUI extends UIBase {
 			});
 			slideBackgroundButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.btn.desc"), "%n%"));
 			this.addContent(slideBackgroundButton);
+
+			/** RESTART ANIMATION ON LOAD **/
+			AdvancedButton restartOnLoadButton = new AdvancedButton(0, 0, 0, 16, "", true, (press) -> {
+				if (this.parent.restartAnimationBackgroundOnLoad) {
+					this.parent.restartAnimationBackgroundOnLoad = false;
+				} else {
+					this.parent.restartAnimationBackgroundOnLoad = true;
+				}
+			}) {
+				@Override
+				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if (parent.backgroundAnimation != null) {
+						this.active = true;
+					} else {
+						this.active = false;
+					}
+					if (parent.restartAnimationBackgroundOnLoad) {
+						this.setMessage(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.on"));
+					} else {
+						this.setMessage(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.off"));
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
+			restartOnLoadButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.desc"), "%n%"));
+			this.addContent(restartOnLoadButton);
 			
+			this.addSeparator();
+
+			/** EDIT MENU TITLE **/
+			String defaultMenuTitleRaw = "";
+			if (this.parent.screen.getTitle() != null) {
+				defaultMenuTitleRaw = this.parent.screen.getTitle().getString();
+			}
+			String defaultMenuTitle = defaultMenuTitleRaw;
+			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
+					if (call != null) {
+						if (!call.equals(defaultMenuTitle)) {
+							if ((this.parent.customMenuTitle == null) || !this.parent.customMenuTitle.equals(call)) {
+								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+							}
+							this.parent.customMenuTitle = call;
+						} else {
+							if (this.parent.customMenuTitle != null) {
+								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+							}
+							this.parent.customMenuTitle = null;
+						}
+					}
+				});
+				if (this.parent.customMenuTitle != null) {
+					p.setText(this.parent.customMenuTitle);
+				} else {
+					p.setText(defaultMenuTitle);
+				}
+				PopupHandler.displayPopup(p);
+			});
+			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
+			this.addContent(editMenuTitleButton);
+
+			/** RESET MENU TITLE **/
+			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
+				if (this.parent.customMenuTitle != null) {
+					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+				}
+				this.parent.customMenuTitle = null;
+			});
+			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
+			this.addContent(resetMenuTitleButton);
+
 			this.addSeparator();
 
 			/** RANDOM MODE **/

@@ -160,18 +160,29 @@ public class ButtonScriptEngine {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
+			//TODO übernehmen (ganze action)
 			if (action.equalsIgnoreCase("opengui")) {
 				if (value.equals(CreateWorldScreen.class.getName())) {
 					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
 				} else {
-					Screen s = GuiConstructor.tryToConstruct(value);
-					if (s != null) {
-						Minecraft.getInstance().setScreen(s);
-					} else {
+					try {
+						if (CustomGuiLoader.guiExists(value)) {
+							Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
+						} else {
+							Screen s = GuiConstructor.tryToConstruct(MenuCustomization.getValidMenuIdentifierFor(value));
+							if (s != null) {
+								Minecraft.getInstance().setScreen(s);
+							} else {
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+							}
+						}
+					} catch (Exception e) {
 						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+						e.printStackTrace();
 					}
 				}
 			}
+			//---------------
 			if (action.equalsIgnoreCase("movefile")) {
 				if (value.contains(";")) {
 					String from = cleanPath(value.split("[;]", 2)[0]);

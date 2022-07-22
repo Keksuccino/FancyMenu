@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.commands.ClientExecutor;
 import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.VariableCommand;
@@ -37,8 +38,8 @@ import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -49,8 +50,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
-	public static final String VERSION = "2.10.1";
+	//TODO übernehmen (+ locals; + konkrete version)
+	public static final String VERSION = "2.11.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -89,6 +90,9 @@ public class FancyMenu {
 	    		slideshowPath.mkdirs();
 
 	    		updateConfig();
+
+				//TODO übernehmen
+				ClientExecutor.init();
 
 				DeepCustomizationLayers.registerAll();
 
@@ -152,8 +156,9 @@ public class FancyMenu {
 		}
 	}
 
+	//TODO übernehmen (change to ClientCommandsEvent)
 	@SubscribeEvent
-	public void onRegisterCommands(RegisterCommandsEvent e) {
+	public void onRegisterCommands(RegisterClientCommandsEvent e) {
 
 		OpenGuiScreenCommand.register(e.getDispatcher());
 		CloseGuiScreenCommand.register(e.getDispatcher());

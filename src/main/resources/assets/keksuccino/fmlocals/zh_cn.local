@@ -143,9 +143,6 @@ helper.creator.items.button.editlabel = 编辑文本
 helper.creator.items.vanillabutton.resetorientation = 重置方位
 helper.creator.items.vanillabutton.hide = 隐藏按钮
 
-helper.creator.items.vanillabutton.noorientation.title = 需要特别照顾！
-helper.creator.items.vanillabutton.noorientation.desc = §o要想原版按钮听你的话，你得轻轻摸摸它的头。%n%%n%%n%要§l缩放或移动§r他们，你必须先给它们设置一个§l方位§r！%n%%n%可以通过§l右击§r按钮来设置。
-
 helper.creator.items.string.setscale = 设置大小
 helper.creator.items.string.setshadow = 阴影：§c关
 helper.creator.items.string.setnoshadow = 阴影：§a开

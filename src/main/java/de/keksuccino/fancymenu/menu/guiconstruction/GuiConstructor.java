@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.resources.language.LanguageManager;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
 public class GuiConstructor {
@@ -26,10 +27,19 @@ public class GuiConstructor {
 		parameters.put(Screen.class, null);
 		parameters.put(Options.class, Minecraft.getInstance().options);
 		parameters.put(LanguageManager.class, Minecraft.getInstance().getLanguageManager());
-		parameters.put(boolean.class, true);
+		//TODO übernehmen
+		parameters.put(Boolean.class, true);
 		parameters.put(Player.class, null);
 		parameters.put(String.class, "");
 		parameters.put(ClientAdvancements.class, null);
+		//TODO übernehmen
+		parameters.put(Component.class, Component.literal(""));
+		parameters.put(boolean.class, true);
+		parameters.put(int.class, 1);
+		parameters.put(long.class, 1L);
+		parameters.put(double.class, 1D);
+		parameters.put(float.class, 1F);
+		//----------------------
 		
 	}
 	

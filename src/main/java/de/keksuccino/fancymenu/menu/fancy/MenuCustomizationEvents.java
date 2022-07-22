@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -32,9 +33,25 @@ public class MenuCustomizationEvents {
 
 	protected Screen lastScreen = null;
 
+	//TODO übernehmen (1.19)
+	protected boolean fixedSelectWorldScreen = false;
+
+	//TODO übernehmen (1.19)
+	@SubscribeEvent
+	public void onRenderScreenPost(ScreenEvent.Render.Post e) {
+
+		//Fix bugged Singleplayer menu in 1.19
+		if ((e.getScreen() instanceof SelectWorldScreen) && !this.fixedSelectWorldScreen) {
+			this.fixedSelectWorldScreen = true;
+			Minecraft.getInstance().setScreen(e.getScreen());
+		}
+
+	}
+
 	//I don't fucking know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onInitPrePre(ScreenEvent.Init.Pre e) {
+
 		if (!ButtonCache.isCaching()) {
 			if (MenuCustomization.isValidScreen(e.getScreen())) {
 				Screen current = Minecraft.getInstance().screen;
@@ -53,7 +70,6 @@ public class MenuCustomizationEvents {
 				}
 				this.lastScreen = current;
 				if (MenuCustomization.isNewMenu) {
-//					LOGGER.info("################### NEW MENU: " + this.lastScreen.getClass().getName());
 					ButtonMimeHandler.clearCache();
 				}
 			}
@@ -98,6 +114,10 @@ public class MenuCustomizationEvents {
 
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
+
+		if (Minecraft.getInstance().screen == null) {
+			this.lastScreen = null;
+		}
 
 		//Stopping audio for all menu handlers if no screen is being displayed
 		if ((Minecraft.getInstance().screen == null) && !this.idle) {
