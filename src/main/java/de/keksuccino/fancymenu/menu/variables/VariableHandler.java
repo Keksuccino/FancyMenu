@@ -22,7 +22,6 @@ public class VariableHandler {
         readFromFile();
     }
 
-    //TODO übernehmen
     public static List<String> getVariableNames() {
         List<String> l = new ArrayList<>();
         l.addAll(variables.keySet());

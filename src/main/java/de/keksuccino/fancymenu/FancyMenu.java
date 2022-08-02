@@ -50,8 +50,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ locals; + konkrete version)
-	public static final String VERSION = "2.11.1";
+	//TODO übernehmen (+ Konkrete version updaten; + locals)
+	public static final String VERSION = "2.12.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -91,7 +91,6 @@ public class FancyMenu {
 
 	    		updateConfig();
 
-				//TODO übernehmen
 				ClientExecutor.init();
 
 				DeepCustomizationLayers.registerAll();
@@ -156,7 +155,6 @@ public class FancyMenu {
 		}
 	}
 
-	//TODO übernehmen (change to ClientCommandsEvent)
 	@SubscribeEvent
 	public void onRegisterCommands(RegisterClientCommandsEvent e) {
 

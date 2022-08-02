@@ -33,10 +33,8 @@ public class MenuCustomizationEvents {
 
 	protected Screen lastScreen = null;
 
-	//TODO übernehmen (1.19)
 	protected boolean fixedSelectWorldScreen = false;
 
-	//TODO übernehmen (1.19)
 	@SubscribeEvent
 	public void onRenderScreenPost(ScreenEvent.Render.Post e) {
 

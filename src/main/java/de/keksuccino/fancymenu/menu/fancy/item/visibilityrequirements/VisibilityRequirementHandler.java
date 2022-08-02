@@ -31,10 +31,8 @@ public class VisibilityRequirementHandler {
         }
 
         //VR: Is Window Width/Height X
-        //TODO übernehmen
         windowWidth = Minecraft.getInstance().getWindow().getScreenWidth();
         windowHeight = Minecraft.getInstance().getWindow().getScreenHeight();
-        //----------------------
 
     }
 

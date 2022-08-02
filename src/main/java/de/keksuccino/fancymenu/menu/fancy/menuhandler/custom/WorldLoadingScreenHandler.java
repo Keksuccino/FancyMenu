@@ -11,10 +11,8 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.chat.NarratorChatListener;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -54,7 +52,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 			long i = Util.getMillis();
 			if (i - this.lastNarratorUpdateTime > 2000L) {
 				this.lastNarratorUpdateTime = i;
-				NarratorChatListener.INSTANCE.sayNow((Component.translatable("narrator.loading", s)).getString());
+//				NarratorChatListener.INSTANCE.sayNow((Component.translatable("narrator.loading", s)).getString());
 			}
 			
 			if (FancyMenu.config.getOrDefault("showloadingscreenanimation", true)) {

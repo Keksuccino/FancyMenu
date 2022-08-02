@@ -24,10 +24,8 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
 
     public final DeepCustomizationElement parentDeepCustomizationElement;
 
-    //TODO übernehmen
     protected int dragMouseX = -1000;
     protected int dragMouseY = -1000;
-    //---------------------
 
     public DeepCustomizationLayoutEditorElement(@Nonnull DeepCustomizationElement parentDeepCustomizationElement, @Nonnull DeepCustomizationItem customizationItemInstance, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
         super(customizationItemInstance, destroyable, handler, doInit);
@@ -73,12 +71,10 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
             }
         }
 
-        //TODO übernehmen
         this.handleMoveWarning();
 
     }
 
-    //TODO übernehmen
     protected void handleMoveWarning() {
         if (!this.dragable) {
             if (MouseInput.isLeftMouseDown() && this.handler.isFocused(this) && this.hovered) {

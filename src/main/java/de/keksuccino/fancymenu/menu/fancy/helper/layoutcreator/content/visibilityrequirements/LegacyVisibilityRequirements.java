@@ -64,7 +64,6 @@ public class LegacyVisibilityRequirements {
             windowWidthValuePreset = "503, 918, 1920";
         }
         String windowWidthName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth");
-        //TODO übernehmen
         String windowWidthDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight());
         String windowWidthValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename");
         VisibilityRequirementsScreen.Requirement windowWidth = new VisibilityRequirementsScreen.Requirement(screen, windowWidthName, windowWidthDesc, windowWidthValueName, container.vrCheckForWindowWidth, container.vrShowIfWindowWidth,
@@ -101,7 +100,6 @@ public class LegacyVisibilityRequirements {
             windowHeightValuePreset = "410, 634, 1080";
         }
         String windowHeightName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight");
-        //TODO übernehmen
         String windowHeightDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight());
         String windowHeightValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename");
         VisibilityRequirementsScreen.Requirement windowHeight = new VisibilityRequirementsScreen.Requirement(screen, windowHeightName, windowHeightDesc, windowHeightValueName, container.vrCheckForWindowHeight, container.vrShowIfWindowHeight,
@@ -129,7 +127,6 @@ public class LegacyVisibilityRequirements {
 
         /** Window Width Bigger Than **/
         String windowWidthBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan");
-        //TODO übernehmen
         String windowWidthBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight());
         String windowWidthBiggerThanValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.valuename");
         VisibilityRequirementsScreen.Requirement windowWidthBiggerThan = new VisibilityRequirementsScreen.Requirement(screen, windowWidthBiggerThanName, windowWidthBiggerThanDesc, windowWidthBiggerThanValueName, container.vrCheckForWindowWidthBiggerThan, container.vrShowIfWindowWidthBiggerThan,
@@ -148,7 +145,6 @@ public class LegacyVisibilityRequirements {
 
         /** Window Height Bigger Than **/
         String windowHeightBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan");
-        //TODO übernehmen
         String windowHeightBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.desc", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight());
         String windowHeightBiggerThanValueName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.valuename");
         VisibilityRequirementsScreen.Requirement windowHeightBiggerThan = new VisibilityRequirementsScreen.Requirement(screen, windowHeightBiggerThanName, windowHeightBiggerThanDesc, windowHeightBiggerThanValueName, container.vrCheckForWindowHeightBiggerThan, container.vrShowIfWindowHeightBiggerThan,

@@ -299,6 +299,16 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		private Alignment(String key) {
 			this.key = key;
 		}
+
+		//TODO übernehmen
+		public static Alignment getByName(String name) {
+			for (Alignment a : Alignment.values()) {
+				if (a.key.equals(name)) {
+					return a;
+				}
+			}
+			return null;
+		}
 		
 	}
 

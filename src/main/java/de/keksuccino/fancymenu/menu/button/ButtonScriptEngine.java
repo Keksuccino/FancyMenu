@@ -17,6 +17,7 @@ import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
+import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
@@ -91,9 +92,9 @@ public class ButtonScriptEngine {
 					if (!MinecraftForge.EVENT_BUS.post(new ClientChatEvent(value))) {
 						if ((value != null) && value.startsWith("/")) {
 							value = value.substring(1);
-							Minecraft.getInstance().player.command(value);
+							MinecraftCompatibilityUtils.sendPlayerCommand(Minecraft.getInstance().player, value);
 						} else {
-							Minecraft.getInstance().player.chat(value);
+							MinecraftCompatibilityUtils.sendPlayerChatMessage(Minecraft.getInstance().player, value);
 						}
 					}
 				}
@@ -160,7 +161,6 @@ public class ButtonScriptEngine {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
-			//TODO übernehmen (ganze action)
 			if (action.equalsIgnoreCase("opengui")) {
 				if (value.equals(CreateWorldScreen.class.getName())) {
 					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
@@ -182,7 +182,6 @@ public class ButtonScriptEngine {
 					}
 				}
 			}
-			//---------------
 			if (action.equalsIgnoreCase("movefile")) {
 				if (value.contains(";")) {
 					String from = cleanPath(value.split("[;]", 2)[0]);

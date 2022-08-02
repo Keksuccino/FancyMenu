@@ -13,7 +13,6 @@ import java.util.List;
 
 public class VariableCommand {
 
-    //TODO übernehmen
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("fmvariable")
                 .then(Commands.argument("action", StringArgumentType.string())
@@ -46,7 +45,6 @@ public class VariableCommand {
         );
     }
 
-    //TODO übernehmen
     private static String[] getVariableNameSuggestions() {
         List<String> l = VariableHandler.getVariableNames();
         if (l.isEmpty()) {
@@ -56,7 +54,6 @@ public class VariableCommand {
     }
 
     private static int getVariable(CommandSourceStack stack, String getOrSet, String variableName) {
-        //TODO übernehmen (ClientExecutor)
         ClientExecutor.execute(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("get")) {
@@ -76,7 +73,6 @@ public class VariableCommand {
     }
 
     private static int setVariable(CommandSourceStack stack, String getOrSet, String variableName, String setToValue, boolean sendFeedback) {
-        //TODO übernehmen (ClientExecutor)
         ClientExecutor.execute(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("set")) {

@@ -7,6 +7,10 @@ public class Placeholders {
     public static void registerAll() {
 
         PlaceholderTextRegistry.registerPlaceholder(new GetVariablePlaceholder());
+        //TODO übernehmen
+        PlaceholderTextRegistry.registerPlaceholder(new JsonPlaceholder());
+        PlaceholderTextRegistry.registerPlaceholder(new WebTextPlaceholder());
+        //----------------------
 
     }
 

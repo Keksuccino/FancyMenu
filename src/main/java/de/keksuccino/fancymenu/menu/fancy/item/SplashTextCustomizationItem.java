@@ -48,7 +48,6 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	protected boolean isNewMenuThis = false;
 	protected static Screen lastScreen = null;
 
-	//TODO übernehmen
 	protected static Map<String, String> vanillaLikeCache = new HashMap<>();
 	
 	public SplashTextCustomizationItem(PropertiesSection item) {
@@ -74,13 +73,11 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			//TODO übernehmen
 			if (!this.vanillaLike) {
 				this.text = item.getEntryValue("text");
 			} else if (vanillaLikeCache.containsKey(this.actionId)) {
 				this.text = vanillaLikeCache.get(this.actionId);
 			}
-			//------------------
 			
 			String ro = item.getEntryValue("rotation");
 			if ((ro != null) && MathUtils.isFloat(ro)) {
@@ -150,7 +147,6 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 
 		if (this.vanillaLike && (this.text == null)) {
 			this.text = Minecraft.getInstance().getSplashManager().getSplash();
-			//TODO übernehmen
 			vanillaLikeCache.put(this.actionId, this.text);
 		}
 

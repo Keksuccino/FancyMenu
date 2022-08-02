@@ -15,7 +15,6 @@ public class CloseGuiScreenCommand {
     }
 
     private static int closeGui(CommandSourceStack stack) {
-        //TODO übernehmen (ClientExecutor)
         ClientExecutor.execute(() -> {
             try {
                 Minecraft.getInstance().setScreen(null);

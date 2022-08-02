@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.commands;
 
 import net.minecraftforge.common.MinecraftForge;

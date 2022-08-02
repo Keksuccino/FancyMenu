@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.commands;
 
 import com.mojang.brigadier.suggestion.Suggestions;
