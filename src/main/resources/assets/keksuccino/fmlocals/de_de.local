@@ -143,9 +143,6 @@ helper.creator.items.button.editlabel = Label bearbeiten
 helper.creator.items.vanillabutton.resetorientation = Orientierung löschen
 helper.creator.items.vanillabutton.hide = Button verstecken
 
-helper.creator.items.vanillabutton.noorientation.title = Besondere Pflege notwendig!
-helper.creator.items.vanillabutton.noorientation.desc = §oStandard Buttons müssen erst etwas verwöhnt werden, bevor sie auf dich hören.%n%%n%%n%Um §lGröße oder Position §rzu ändern, musst du ihnen eine §lOrientierung §rzuweisen!%n%%n%Das kannst du tun, indem du einen §lRechtsklick §rauf den Button machst.
-
 helper.creator.items.string.setscale = Schriftgröße
 helper.creator.items.string.setcentered = Zentrieren
 helper.creator.items.string.setuncentered = Nicht zentrieren
