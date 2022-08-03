@@ -45,10 +45,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.4.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.5.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
 public class FancyMenu {
 
-	public static final String VERSION = "2.11.1";
+	public static final String VERSION = "2.12.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");

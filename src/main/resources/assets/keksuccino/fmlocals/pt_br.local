@@ -143,9 +143,6 @@ helper.creator.items.button.editlabel = Editar rótulo
 helper.creator.items.vanillabutton.resetorientation = Resetar orientação
 helper.creator.items.vanillabutton.hide = Esconder botão
 
-helper.creator.items.vanillabutton.noorientation.title = Cuidado especial requerido!
-helper.creator.items.vanillabutton.noorientation.desc = §oBotões padrões precisam de um pouco de carinho antes de escutá-lo.%n%%n%%n%Para §lredimensionar ou movê- §rlos, eles precisaram de §lorientação §rantes!%n%%n%Você pode fazer isso ao §lclicar com o botão direito §rno botão.
-
 helper.creator.items.string.setscale = Colocar escala
 helper.creator.items.string.setcentered = Colocar no centro
 helper.creator.items.string.setuncentered = Colocar fora do centro

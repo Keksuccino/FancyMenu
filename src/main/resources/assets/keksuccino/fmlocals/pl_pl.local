@@ -143,9 +143,6 @@ helper.creator.items.button.editlabel = Edytuj Etykietę
 helper.creator.items.vanillabutton.resetorientation = Zresetuj Orientację
 helper.creator.items.vanillabutton.hide = Ukryj Przycisk
 
-helper.creator.items.vanillabutton.noorientation.title = Wymagana specjalna ostrożność!
-helper.creator.items.vanillabutton.noorientation.desc = §oStandardowe przyciski wymagają poklepania głowy, zanim cię posłuchają.%n%%n%%n%Aby §lzmienić ich rozmiar lub je przenieść§r, najpierw musisz dać im §lorientację§r!%n%%n%Możesz to zrobić, klikając §lprawym przyciskiem myszy§r na przycisk.
-
 helper.creator.items.string.setscale = Ustaw Skalę
 helper.creator.items.string.setcentered = Ustaw Na Środku
 helper.creator.items.string.setuncentered = Ustaw Nie Na Środku

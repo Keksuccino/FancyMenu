@@ -63,6 +63,8 @@ public abstract class LayoutElement extends Gui {
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
 	protected boolean resizeable = true;
+	protected boolean resizeableX = true;
+	protected boolean resizeableY = true;
 	protected boolean dragable = true;
 	protected boolean orientationCanBeChanged = true;
 	protected boolean enableElementIdCopyButton = true;
@@ -868,14 +870,14 @@ public abstract class LayoutElement extends Gui {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.height - (h / 2);
 
-		if (this.dragable) {
-			if (!this.stretchX) {
+		if (this.dragable && this.resizeable) {
+			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				GuiScreen.drawRect(xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
 				GuiScreen.drawRect(xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
-			if (!this.stretchY) {
+			if (!this.stretchY && this.resizeableY) {
 				//grabber top
 				GuiScreen.drawRect(xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
 				//grabber bottom
@@ -886,28 +888,28 @@ public abstract class LayoutElement extends Gui {
 		//Update cursor and active grabber when grabber is hovered
 		if (this.resizeable) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				if (!this.stretchX) {
+				if (!this.stretchX && this.resizeableX) {
 					MouseInput.setCursor(CursorType.HRESIZE);
 					this.activeGrabber = 0;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				if (!this.stretchX) {
+				if (!this.stretchX && this.resizeableX) {
 					MouseInput.setCursor(CursorType.HRESIZE);
 					this.activeGrabber = 1;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-				if (!this.stretchY) {
+				if (!this.stretchY && this.resizeableY) {
 					MouseInput.setCursor(CursorType.VRESIZE);
 					this.activeGrabber = 2;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-				if (!this.stretchY) {
+				if (!this.stretchY && this.resizeableY) {
 					MouseInput.setCursor(CursorType.VRESIZE);
 					this.activeGrabber = 3;
 				} else {
