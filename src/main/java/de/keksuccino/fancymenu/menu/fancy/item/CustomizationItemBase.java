@@ -310,6 +310,15 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		private Alignment(String key) {
 			this.key = key;
 		}
+
+		public static Alignment getByName(String name) {
+			for (Alignment a : Alignment.values()) {
+				if (a.key.equals(name)) {
+					return a;
+				}
+			}
+			return null;
+		}
 		
 	}
 

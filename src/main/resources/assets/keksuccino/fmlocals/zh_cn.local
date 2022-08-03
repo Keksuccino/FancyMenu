@@ -590,7 +590,7 @@ fancymenu.config.loadinganimationcolor.desc = 设置动画加载界面指针的�
 fancymenu.config.preloadanimations.desc = 在游戏加载时预加载动画材质。%n%这将导致加载界面在最后冻结。%n%但可有效防止动画在第一次播放时卡顿。
 
 fancymenu.config.customwindowtitle.desc = 设置自定义 Minecraft 窗口标题。
-fancymenu.config.customwindowicon.desc = 启用自定义 Miencraft 窗口图标。%n%详情请查询 Wiki:%n%§lfm.keksuccino.com
+fancymenu.config.customwindowicon.desc = 启用自定义 Miencraft 窗口图标。%n%详情请查询 Wiki:%n%§lfm.keksuccino.de
 
 fancymenu.config.showvanillamovewarning.desc = 启用试图在布局编辑器中移动未设置坐标原点的原版按钮时的警告。
 fancymenu.config.editordeleteconfirmation.desc = 启用删除元素时的二次确认弹出窗口。
@@ -735,3 +735,49 @@ fancymenu.helper.creator.backgroundoptions.backgroundanimation.set = 设置背�
 fancymenu.helper.creator.backgroundoptions.backgroundanimation.set.desc = 将选中的动画设置为启用的背景动画。
 fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear = 清除
 fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear.desc = 将选中的动画从启用的背景动画中移除。
+
+fancymenu.helper.editor.items.buttons.buttonbackground = 按钮背景
+fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground = 按钮正常背景
+fancymenu.helper.editor.items.buttons.buttonbackground.hoverbackground = 按钮接触时背景
+fancymenu.helper.editor.items.buttons.buttonbackground.type.image = 图片
+fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage = 选择图片
+fancymenu.helper.editor.items.buttons.buttonbackground.type.animation = 动画
+fancymenu.helper.editor.items.buttons.buttonbackground.type.animation.none = 无
+fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on = 循环播放背景: §a开
+fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.off = 循环播放背景: §c关
+fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc = 修改背景的循环设定。
+fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on = 当鼠标越过时重新播放: §a开
+fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.off = 当鼠标越过时重新播放: §c关
+fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc = 当鼠标越过后重新播放背景动画
+
+fancymenu.helper.editor.items.visibilityrequirements = 显示条件
+fancymenu.helper.editor.items.visibilityrequirements.btn.desc = 当符合条件时显示部件
+fancymenu.helper.editor.items.visibilityrequirements.enabled = {}: §a开启
+fancymenu.helper.editor.items.visibilityrequirements.disabled = {}: §c关闭
+fancymenu.helper.editor.items.visibilityrequirements.toggle.btn.desc = §o左键来启用条件
+fancymenu.helper.editor.items.visibilityrequirements.showif = 显示如果
+fancymenu.helper.editor.items.visibilityrequirements.showif.btn.desc = 显示如果符合条件
+fancymenu.helper.editor.items.visibilityrequirements.showifnot = 显示如果不是
+fancymenu.helper.editor.items.visibilityrequirements.showifnot.btn.desc = 显示如果不符合条件
+fancymenu.helper.editor.items.visibilityrequirements.requirement = 条件
+
+fancymenu.helper.editor.items.visibilityrequirements.singleplayer = 是否在单人游戏
+fancymenu.helper.editor.items.visibilityrequirements.singleplayer.desc = 检查是否在单人游戏
+
+fancymenu.helper.editor.items.visibilityrequirements.multiplayer = 是否在多人游戏
+fancymenu.helper.editor.items.visibilityrequirements.multiplayer.desc = 检查是否在多人游戏
+
+fancymenu.helper.editor.items.visibilityrequirements.worldloaded = 是否在游戏中
+fancymenu.helper.editor.items.visibilityrequirements.worldloaded.desc = 检查是否在游戏中%n%%n%该条件为真如果玩家r%n%在一个单人或多人世界中
+
+fancymenu.helper.editor.items.visibilityrequirements.realtimehour = 现在的时间的小时数是否为
+fancymenu.helper.editor.items.visibilityrequirements.realtimehour.desc = 检查现在的小时数是否为 X.%n%%n%你可以用逗号分隔多个数字,%n%用来一次检查多个%n%小时。
+fancymenu.helper.editor.items.visibilityrequirements.realtimehour.valuename = 真实时间小时 (用逗号分隔)
+
+fancymenu.helper.editor.items.visibilityrequirements.realtimeminute = 现在的时间的分钟数是否为
+fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.desc = 检查现在的分钟数是否为 X.%n%%n%你可以用逗号分隔多个数字,%n%用来一次检查多个%n%分钟数
+fancymenu.helper.editor.items.visibilityrequirements.realtimeminute.valuename = 真实时间分钟数 (用逗号风格)
+
+fancymenu.helper.editor.items.visibilityrequirements.realtimesecond = 现在的时间的秒数是否为
+fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.desc = 检查现在的秒数是否为 X.%n%%n%你可以用逗号分隔多个数字,%n%用来一次检查多个%n%秒数.
+fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.valuename = 真实事件秒数 (用逗号分隔)
