@@ -7,6 +7,7 @@ import java.util.Random;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
@@ -22,7 +23,6 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
-import de.keksuccino.fancymenu.mixin.client.IMixinTitleScreen;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
@@ -296,7 +296,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	private void drawRealmsNotification(PoseStack matrix, Screen gui) {
 		try {
 			if (Minecraft.getInstance().options.realmsNotifications().get()) {
-				Screen realms = ((IMixinTitleScreen)gui).getRealmsNotificationScreenFancyMenu();
+				Screen realms = MinecraftCompatibilityUtils.getTitleScreenRealmsNotificationsScreen((TitleScreen) gui);
 				if (realms != null) {
 					MouseHandler mh = Minecraft.getInstance().mouseHandler;
 					realms.render(matrix, (int)mh.xpos(), (int)mh.ypos(), Minecraft.getInstance().getFrameTime());

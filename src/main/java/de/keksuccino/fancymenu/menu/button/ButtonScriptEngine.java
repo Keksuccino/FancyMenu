@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -92,9 +93,9 @@ public class ButtonScriptEngine {
 				if (Minecraft.getInstance().level != null) {
 					if ((value != null) && value.startsWith("/")) {
 						value = value.substring(1);
-						Minecraft.getInstance().player.command(value);
+						MinecraftCompatibilityUtils.sendPlayerCommand(Minecraft.getInstance().player, value);
 					} else {
-						Minecraft.getInstance().player.chat(value);
+						MinecraftCompatibilityUtils.sendPlayerChatMessage(Minecraft.getInstance().player, value);
 					}
 				}
 			}

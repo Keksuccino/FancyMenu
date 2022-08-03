@@ -15,7 +15,6 @@
     "MixinWorldListEntry",
     "MixinMusicManager",
     "IMixinScreen",
-    "IMixinTitleScreen",
     "IMixinLevelLoadingScreen",
     "IMixinAbstractWidget",
     "MixinConnectScreen",

@@ -1103,17 +1103,17 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(webImageButton);
 
-			/** TEXT **/
-			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
-				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
-			});
-			this.addContent(textButton);
-
-			/** WEB TEXT **/
-			AdvancedButton webTextButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webtext"), (press) -> {
-				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebText));
-			});
-			this.addContent(webTextButton);
+//			/** TEXT **/
+//			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
+//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
+//			});
+//			this.addContent(textButton);
+//
+//			/** WEB TEXT **/
+//			AdvancedButton webTextButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webtext"), (press) -> {
+//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebText));
+//			});
+//			this.addContent(webTextButton);
 
 			/** SPLASH TEXT **/
 			FMContextMenu splashMenu = new FMContextMenu();

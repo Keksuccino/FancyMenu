@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "fancymenu",
-  "version": "2.11.1",
+  "version": "2.12.0",
   "name": "FancyMenu",
   "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2022 Keksuccino. FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.",
   "environment": "client",
@@ -25,8 +25,8 @@
   "depends": {
     "fabricloader": ">=0.13.3",
     "fabric": "*",
-    "konkrete": ">=1.4.0",
-	"minecraft": ">=1.18.2",
+    "konkrete": ">=1.5.0",
+	"minecraft": ">=1.19.0",
     "java": ">=17"
   },
   "accessWidener": "fancymenu.accessWidener"
