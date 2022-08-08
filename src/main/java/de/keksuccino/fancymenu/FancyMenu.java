@@ -3,10 +3,13 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.commands.ClientExecutor;
-import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.VariableCommand;
+import de.keksuccino.fancymenu.commands.client.ClientExecutor;
+import de.keksuccino.fancymenu.commands.client.CloseGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.client.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.client.VariableCommand;
+import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
@@ -30,6 +33,7 @@ import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.networking.Packets;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -45,10 +49,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.5.0,];required:forge@[14.23.5.2855,]", clientSideOnly = true)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.5.0,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
 public class FancyMenu {
 
-	public static final String VERSION = "2.12.0";
+	public static final String VERSION = "2.12.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -67,9 +71,8 @@ public class FancyMenu {
 	
 	public FancyMenu() {
 		try {
-			
-			//Useless now bc of clientSideOnly, but will keep this here to keep the code in sync with MC 1.15+ :)
-			if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+
+			if (isClientSide()) {
 
 				if (!MOD_DIR.isDirectory()) {
 					MOD_DIR.mkdirs();
@@ -136,22 +139,46 @@ public class FancyMenu {
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("Optifine compatibility mode!");
 				}
+
+				LOGGER.info("[FANCYMENU] Loading mod in client-side mode!");
 	        	
 	    	} else {
-	    		LOGGER.warn("WARNING: FancyMenu is a client mod and has no effect when loaded on a server!");
+				LOGGER.info("[FANCYMENU] Loading mod in server-side mode!");
 	    	}
+
+			Packets.registerAll();
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
+	public static boolean isClientSide() {
+		try {
+			Class.forName("net.minecraft.client.Minecraft");
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
+
 	@Mod.EventHandler
 	public void onRegisterCommands(FMLPreInitializationEvent e) {
 
-		ClientCommandHandler.instance.registerCommand(new OpenGuiScreenCommand());
-		ClientCommandHandler.instance.registerCommand(new CloseGuiScreenCommand());
-		ClientCommandHandler.instance.registerCommand(new VariableCommand());
+		if (isClientSide()) {
+			ClientCommandHandler.instance.registerCommand(new OpenGuiScreenCommand());
+			ClientCommandHandler.instance.registerCommand(new CloseGuiScreenCommand());
+			VariableCommand.init();
+			ClientCommandHandler.instance.registerCommand(new VariableCommand());
+		}
+
+	}
+
+	@Mod.EventHandler
+	public void onRegisterServerCommands(FMLServerStartingEvent e) {
+
+		e.registerServerCommand(new ServerOpenGuiScreenCommand());
+		e.registerServerCommand(new ServerCloseGuiScreenCommand());
+		e.registerServerCommand(new ServerVariableCommand());
 
 	}
 

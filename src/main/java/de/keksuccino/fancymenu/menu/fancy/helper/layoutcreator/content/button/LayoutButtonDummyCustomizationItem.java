@@ -86,7 +86,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setWidth(this.getWidth());
 			animation.setHeight(this.getHeight());
 			animation.setLooped(this.button.loopAnimation);
-			//TODO übernehmen 2.3.2
+			//--- 2.3.2
 			if (animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation) animation).setMuteAudio(true);
 			}
@@ -98,7 +98,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setWidth(aniWidth);
 			animation.setHeight(aniHeight);
 			animation.setLooped(aniLoop);
-			//TODO übernehmen 2.3.2
+			//--- 2.3.2
 			if (animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation) animation).setMuteAudio(false);
 			}

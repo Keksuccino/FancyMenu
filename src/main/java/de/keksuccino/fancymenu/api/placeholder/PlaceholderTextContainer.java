@@ -115,7 +115,7 @@ public abstract class PlaceholderTextContainer {
         return l;
     }
 
-    //TODO übernehmen
+    //---
     public static String getPlaceholderWithoutPercentPrefixSuffix(String placeholderWithPrefixSuffix) {
         return placeholderWithPrefixSuffix.substring(1, placeholderWithPrefixSuffix.length()-1);
     }

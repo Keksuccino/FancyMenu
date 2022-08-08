@@ -1,4 +1,4 @@
-//TODO übernehmen
+//---
 package de.keksuccino.fancymenu.menu.fancy.item.items.slider;
 
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;

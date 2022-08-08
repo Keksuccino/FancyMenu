@@ -918,7 +918,7 @@ public class MenuHandlerBase {
 						for (int i = 0; i < Integer.parseInt(clicks); i++) {
 							b.mousePressed(Minecraft.getMinecraft(), MouseInput.getMouseX(), MouseInput.getMouseY());
 							try {
-								//TODO reflection method
+								//--- method
 								//Method m = ReflectionHelper.findMethod(GuiScreen.class, "actionPerformed", "func_146284_a", GuiButton.class);
 								Method m = ObfuscationReflectionHelper.findMethod(GuiScreen.class, "func_146284_a", Void.class, GuiButton.class);
 								m.invoke(Minecraft.getMinecraft().currentScreen, b);

@@ -46,7 +46,6 @@ public class MixinMinecraft {
 		}
 	}
 
-	//TODO experimental
 	@Inject(at = @At("HEAD"), method = "launchIntegratedServer")
 	private void onLaunchIntegratedServer(String folderName, String worldName, WorldSettings settings, CallbackInfo info) {
 		LastWorldHandler.setLastWorld(folderName, false);
