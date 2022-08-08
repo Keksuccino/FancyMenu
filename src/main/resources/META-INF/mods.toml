@@ -42,11 +42,11 @@ modId="forge"
 mandatory=true
 versionRange="[40.0.2,)"
 ordering="NONE"
-side="CLIENT"
+side="BOTH"
 
 [[dependencies.fancymenu]]
 modId="minecraft"
 mandatory=true
 versionRange="[1.18.2,)"
 ordering="NONE"
-side="CLIENT"
+side="BOTH"
