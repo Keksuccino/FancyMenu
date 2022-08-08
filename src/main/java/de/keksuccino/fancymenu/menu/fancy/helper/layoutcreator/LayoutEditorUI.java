@@ -502,7 +502,7 @@ public class LayoutEditorUI extends UIBase {
 
 			}
 
-			//TODO übernehmen
+			//---
 			/** SET BACKGROUND **/
 			AdvancedButton backgroundOptionsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), true, (press) -> {
 				PopupHandler.displayPopup(new BackgroundOptionsPopup(this.parent));
@@ -534,7 +534,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(resetBackgroundButton);
 
-			//TODO übernehmen
+			//---
 			/** KEEP BACKGROUND ASPECT RATIO **/
 			String backgroundAspectLabel = Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.on");
 			if (!this.parent.keepBackgroundAspectRatio) {
@@ -552,7 +552,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(backgroundAspectButton);
 			//------------------
 
-			//TODO übernehmen
+			//---
 			/** SLIDE BACKGROUND IMAGE **/
 			String slideBackgroundLabel = Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.on");
 			if (!this.parent.panorama) {
@@ -631,7 +631,7 @@ public class LayoutEditorUI extends UIBase {
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
 
-			//TODO übernehmen
+			//---
 			/** RESET MENU TITLE **/
 			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
 				if (this.parent.customMenuTitle != null) {
@@ -642,7 +642,7 @@ public class LayoutEditorUI extends UIBase {
 			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
 			this.addContent(resetMenuTitleButton);
 
-			//TODO übernehmen
+			//---
 			this.addSeparator();
 
 			/** RANDOM MODE **/
@@ -758,7 +758,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(renderingOrderButton);
 
-			//TODO übernehmen
+			//---
 			/** AUTO-SCALING **/
 			String autoScalingLabel = Locals.localize("fancymenu.helper.editor.properties.autoscale.off");
 			if ((this.parent.autoScalingWidth != 0) && (this.parent.autoScalingHeight != 0)) {
@@ -804,7 +804,7 @@ public class LayoutEditorUI extends UIBase {
 				p.setText("" + this.parent.scale);
 				PopupHandler.displayPopup(p);
 			});
-			//TODO übernehmen
+			//---
 			menuScaleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.scale.btn.desc"), "%n%"));
 			this.addContent(menuScaleButton);
 			
@@ -1471,7 +1471,7 @@ public class LayoutEditorUI extends UIBase {
 								vb.object.orientation = "original";
 								vb.object.posX = vb.button.x;
 								vb.object.posY = vb.button.y;
-								//TODO übernehmen
+								//---
 								vb.object.setWidth(vb.button.width);
 								vb.object.setHeight(vb.button.height);
 								//----------------
@@ -1508,7 +1508,7 @@ public class LayoutEditorUI extends UIBase {
 				
 				if (allBtns) {
 
-					//TODO übernehmen (dafür altes button texture system weg)
+					//--- (dafür altes button texture system weg)
 					/** BUTTONS: BACKGROUND **/
 					AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), true, (press) -> {
 						this.parent.setButtonTexturesForFocusedObjects();
@@ -1525,7 +1525,7 @@ public class LayoutEditorUI extends UIBase {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 									this.parent.history.setPreventSnapshotSaving(true);
 
-									//TODO übernehmen
+									//---
 									for (LayoutElement o : this.parent.focusedObjectsCache) {
 										if (o instanceof LayoutVanillaButton) {
 											LayoutVanillaButton vb = (LayoutVanillaButton) o;
@@ -1554,7 +1554,7 @@ public class LayoutEditorUI extends UIBase {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
-						//TODO übernehmen
+						//---
 						for (LayoutElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
@@ -1580,7 +1580,7 @@ public class LayoutEditorUI extends UIBase {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 									this.parent.history.setPreventSnapshotSaving(true);
 
-									//TODO übernehmen
+									//---
 									for (LayoutElement o : this.parent.focusedObjectsCache) {
 										if (o instanceof LayoutVanillaButton) {
 											LayoutVanillaButton vb = (LayoutVanillaButton) o;
@@ -1609,7 +1609,7 @@ public class LayoutEditorUI extends UIBase {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
-						//TODO übernehmen
+						//---
 						for (LayoutElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;

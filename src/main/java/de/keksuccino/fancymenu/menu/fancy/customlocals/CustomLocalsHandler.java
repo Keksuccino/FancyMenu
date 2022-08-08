@@ -1,4 +1,4 @@
-//TODO übernehmen
+//---
 package de.keksuccino.fancymenu.menu.fancy.customlocals;
 
 import de.keksuccino.konkrete.localization.Locals;

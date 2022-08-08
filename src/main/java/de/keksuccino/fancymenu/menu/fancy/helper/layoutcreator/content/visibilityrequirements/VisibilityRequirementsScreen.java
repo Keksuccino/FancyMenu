@@ -1,4 +1,4 @@
-//TODO übernehmen
+//---
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements;
 
 import com.mojang.blaze3d.matrix.MatrixStack;

@@ -94,7 +94,7 @@ public abstract class LayoutElement extends AbstractGui {
 	private static boolean shiftListener = false;
 	
 	private final boolean destroyable;
-	//TODO übernehmen
+	//---
 	public boolean enableVisibilityRequirements = true;
 
 	public final String objectId = UUID.randomUUID().toString();
@@ -106,7 +106,7 @@ public abstract class LayoutElement extends AbstractGui {
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
 
-	//TODO übernehmen
+	//---
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
 		this.object = object;
@@ -132,13 +132,13 @@ public abstract class LayoutElement extends AbstractGui {
 			shiftListener = true;
 		}
 
-		//TODO übernehmen
+		//---
 		if (doInit) {
 			this.init();
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
 		this(object, destroyable, handler, true);
 	}
@@ -148,7 +148,7 @@ public abstract class LayoutElement extends AbstractGui {
 		this.rightclickMenu = new FMContextMenu();
 		this.rightclickMenu.setAlwaysOnTop(true);
 
-		//TODO übernehmen
+		//---
 		/** COPY ELEMENT ID **/
 		if (this.enableElementIdCopyButton) {
 			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
@@ -372,7 +372,7 @@ public abstract class LayoutElement extends AbstractGui {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
 
-		//TODO übernehmen
+		//---
 		/** VISIBILITY REQUIREMENTS **/
 		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
 			Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.handler, this.object));
@@ -530,7 +530,7 @@ public abstract class LayoutElement extends AbstractGui {
 
 	}
 
-	//TODO übernehmen
+	//---
 	protected void setOrientation(String pos) {
 		if (!this.orientationCanBeChanged) {
 			return;
@@ -663,12 +663,12 @@ public abstract class LayoutElement extends AbstractGui {
 		try {
 			if (this.stretchX) {
 				this.object.posX = 0;
-				//TODO übernehmen
+				//---
 				this.object.setWidth(Minecraft.getInstance().screen.width);
 			}
 			if (this.stretchY) {
 				this.object.posY = 0;
-				//TODO übernehmen
+				//---
 				this.object.setHeight(Minecraft.getInstance().screen.height);
 			}
 			if (this.stretchX || this.stretchY) {
@@ -818,7 +818,7 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 
 		if (!MouseInput.isLeftMouseDown()) {
-			//TODO übernehmen
+			//---
 			if (((this.startWidth != this.object.getWidth()) || (this.startHeight != this.object.getHeight())) && this.resizing) {
 				if (this.cachedSnapshot != null) {
 					this.handler.history.saveSnapshot(this.cachedSnapshot);
@@ -827,7 +827,7 @@ public abstract class LayoutElement extends AbstractGui {
 			
 			this.startX = this.object.posX;
 			this.startY = this.object.posY;
-			//TODO übernehmen
+			//---
 			this.startWidth = this.object.getWidth();
 			this.startHeight = this.object.getHeight();
 			//--------------
@@ -866,7 +866,7 @@ public abstract class LayoutElement extends AbstractGui {
 	}
 	
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
-		//TODO übernehmen
+		//---
 		//horizontal line top
 		AbstractGui.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
@@ -880,7 +880,7 @@ public abstract class LayoutElement extends AbstractGui {
 		int w = 4;
 		int h = 4;
 
-		//TODO übernehmen
+		//---
 		int yHorizontal = this.object.getPosY(handler) + (this.object.getHeight() / 2) - (h / 2);
 		int xHorizontalLeft = this.object.getPosX(handler) - (w / 2);
 		int xHorizontalRight = this.object.getPosX(handler) + this.object.getWidth() - (w / 2);
@@ -891,14 +891,14 @@ public abstract class LayoutElement extends AbstractGui {
 		//--------------------------------
 
 		if (this.dragable && this.resizeable) {
-			//TODO übernehmen (if)
+			//--- (if)
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
 				fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
-			//TODO übernehmen (if)
+			//--- (if)
 			if (!this.stretchY && this.resizeableY) {
 				//grabber top
 				fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
@@ -910,7 +910,7 @@ public abstract class LayoutElement extends AbstractGui {
 		//Update cursor and active grabber when grabber is hovered
 		if (this.resizeable) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 0;
@@ -918,7 +918,7 @@ public abstract class LayoutElement extends AbstractGui {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 1;
@@ -926,7 +926,7 @@ public abstract class LayoutElement extends AbstractGui {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 2;
@@ -934,7 +934,7 @@ public abstract class LayoutElement extends AbstractGui {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 3;
@@ -946,7 +946,7 @@ public abstract class LayoutElement extends AbstractGui {
 			}
 		}
 
-		//TODO übernehmen
+		//---
 		//Render pos and size values
 		RenderUtils.setScale(matrix, 0.5F);
 		AbstractGui.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
@@ -959,7 +959,7 @@ public abstract class LayoutElement extends AbstractGui {
 		//--------------------------
 	}
 
-	//TODO übernehmen
+	//---
 	protected void renderHighlightBorder(MatrixStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
 		
@@ -1019,7 +1019,7 @@ public abstract class LayoutElement extends AbstractGui {
 			diffY = Math.negateExact(this.startY - mouseY);
 		}
 
-		//TODO übernehmen (bis runter)
+		//--- (bis runter)
 		if (!this.stretchX) {
 			if (g == 0) { //left
 				int w = this.startWidth + this.getOppositeInt(diffX);
@@ -1086,7 +1086,7 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	protected void updateHovered(int mouseX, int mouseY) {
 		if ((mouseX >= this.object.getPosX(handler)) && (mouseX <= this.object.getPosX(handler) + this.object.getWidth()) && (mouseY >= this.object.getPosY(handler)) && mouseY <= this.object.getPosY(handler) + this.object.getHeight()) {
 			this.hovered = true;
@@ -1143,22 +1143,22 @@ public abstract class LayoutElement extends AbstractGui {
 		return this.object.getPosY(handler);
 	}
 
-	//TODO übernehmen
+	//---
 	public void setWidth(int width) {
 		this.object.setWidth(width);
 	}
 
-	//TODO übernehmen
+	//---
 	public void setHeight(int height) {
 		this.object.setHeight(height);
 	}
 
-	//TODO übernehmen
+	//---
 	public int getWidth() {
 		return this.object.getWidth();
 	}
 
-	//TODO übernehmen
+	//---
 	public int getHeight() {
 		return this.object.getHeight();
 	}

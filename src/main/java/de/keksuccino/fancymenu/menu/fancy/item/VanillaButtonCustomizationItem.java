@@ -104,7 +104,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	public void render(MatrixStack matrix, Screen menu) throws IOException {
 		if (this.parent != null) {
 
-			//TODO übernehmen
+			//---
 			this.updateValues();
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
@@ -127,7 +127,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			//TODO übernehmen
+			//---
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
 					this.parent.hasHoverLabel = true;
@@ -162,7 +162,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	protected void updateValues() {
 
 		if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {

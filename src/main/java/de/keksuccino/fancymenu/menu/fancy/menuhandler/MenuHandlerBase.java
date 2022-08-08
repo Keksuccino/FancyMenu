@@ -360,7 +360,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
+		//---
 		//Handle auto scaling
 		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
 			MainWindow m = Minecraft.getInstance().getWindow();
@@ -412,7 +412,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//TODO übernehmen
+			//---
 			if (action.equalsIgnoreCase("autoscale")) {
 				String baseWidth = sec.getEntryValue("basewidth");
 				if (MathUtils.isInteger(baseWidth)) {
@@ -469,11 +469,11 @@ public class MenuHandlerBase {
 		this.hidden.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
-		//TODO übernehmen
+		//---
 //		this.vanillaClickSounds.clear();
 //		this.vanillaIdleTextures.clear();
 //		this.vanillaHoverTextures.clear();
-		//TODO übernehmen
+		//---
 		this.vanillaButtonCustomizations.clear();
 		this.vanillaButtonVisibilityRequirementContainers.clear();
 		//-----------
@@ -572,7 +572,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
+		//---
 		//Handle vanilla button visibility requirements
 		for (Map.Entry<Widget, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
 			boolean isBtnHidden = false;
@@ -600,7 +600,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
+		//---
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
 				if (this.visibilityRequirementsMet(m.getKey().getButton())) {
@@ -609,7 +609,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//TODO übernehmen
+		//---
 		//Cache custom buttons
 		ButtonCache.clearCustomButtonCache();
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
@@ -640,7 +640,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//TODO übernehmen
+			//---
 			if (action.equalsIgnoreCase("backgroundoptions")) {
 				String keepAspect = sec.getEntryValue("keepaspectratio");
 				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
@@ -825,7 +825,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//TODO übernehmen
+			//---
 			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 				if (b != null) {
 					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
@@ -886,7 +886,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//TODO übernehmen
+			//---
 			if (action.equalsIgnoreCase("setbuttonclicksound")) {
 				if (b != null) {
 					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
@@ -896,7 +896,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//TODO übernehmen
+			//---
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 				if (b != null) {
 					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd, this).visibilityRequirementContainer);
@@ -1310,7 +1310,7 @@ public class MenuHandlerBase {
 			//Rendering the background animation to the menu
 			if (this.canRenderBackground()) {
 				if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
-					//TODO übernehmen (ganzen teil)
+					//--- (ganzen teil)
 					boolean b = this.backgroundAnimation.isStretchedToStreensize();
 					int wOri = this.backgroundAnimation.getWidth();
 					int hOri = this.backgroundAnimation.getHeight();
@@ -1343,7 +1343,7 @@ public class MenuHandlerBase {
 					Minecraft.getInstance().getTextureManager().bind(this.backgroundTexture.getResourceLocation());
 
 					if (!this.panoramaback) {
-						//TODO übernehmen (kompletten teil; if + else)
+						//--- (kompletten teil; if + else)
 						if (!this.keepBackgroundAspectRatio) {
 							IngameGui.blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
@@ -1478,7 +1478,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	@SubscribeEvent
 	public void onButtonClickSound(PlayWidgetClickSoundEvent.Pre e) {
 		
@@ -1507,7 +1507,7 @@ public class MenuHandlerBase {
 
 	}
 
-	//TODO übernehmen
+	//---
 	@SubscribeEvent
 	public void onButtonRenderBackground(RenderWidgetBackgroundEvent.Pre e) {
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
@@ -1567,7 +1567,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		Widget w = e.getWidget();
 		MatrixStack matrix = e.getMatrixStack();
@@ -1619,7 +1619,7 @@ public class MenuHandlerBase {
 		return false;
 	}
 
-	//TODO übernehmen
+	//---
 	protected void renderBackgroundAnimation(RenderWidgetBackgroundEvent e, IAnimationRenderer ani) {
 		Widget w = e.getWidget();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
@@ -1660,7 +1660,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	protected ButtonCustomizationContainer getContainerForVanillaButton(Widget w) {
 		if (!this.vanillaButtonCustomizations.containsKey(w)) {
 			ButtonCustomizationContainer c = new ButtonCustomizationContainer();
@@ -1716,7 +1716,7 @@ public class MenuHandlerBase {
 		return null;
 	}
 
-	//TODO übernehmen
+	//---
 	protected boolean visibilityRequirementsMet(Widget b) {
 		VisibilityRequirementContainer c = this.vanillaButtonVisibilityRequirementContainers.get(b);
 		if (c != null) {
@@ -1903,7 +1903,7 @@ public class MenuHandlerBase {
 	public static class SharedLayoutProperties {
 		
 		public boolean scaled = false;
-		//TODO übernehmen
+		//---
 		public int autoScaleBaseWidth = 0;
 		public int autoScaleBaseHeight = 0;
 		//---------------------
@@ -1914,7 +1914,7 @@ public class MenuHandlerBase {
 		
 	}
 
-	//TODO übernehmen
+	//---
 	public static class ButtonCustomizationContainer {
 
 		public String normalBackground = null;

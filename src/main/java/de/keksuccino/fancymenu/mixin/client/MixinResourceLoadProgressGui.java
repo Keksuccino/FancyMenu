@@ -56,7 +56,7 @@ public abstract class MixinResourceLoadProgressGui extends AbstractGui {
 		}
 	}
 
-	//TODO übernehmen (remove cancellable)
+	//--- (remove cancellable)
 	@Inject(at = @At("HEAD"), method = "drawProgressBar")
 	private void onRenderLoadingBar(MatrixStack matrix, int i1, int i2, int i3, int i4, float f1, CallbackInfo info) {
 		MixinCache.isSplashScreenRendering = false;

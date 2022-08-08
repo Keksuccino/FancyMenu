@@ -46,7 +46,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 			this.renderer.setPosX(x);
 			this.renderer.setPosY(y);
 
-			//TODO übernehmen
+			//---
 			if (this.getHeight() > -1) {
 				this.renderer.setHeight(this.getHeight());
 			}
@@ -64,7 +64,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	public AnimationCustomizationItem clone() {
 		AnimationCustomizationItem item = new AnimationCustomizationItem(new PropertiesSection(""));

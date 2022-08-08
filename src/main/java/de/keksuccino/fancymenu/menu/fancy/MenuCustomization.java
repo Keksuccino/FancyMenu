@@ -265,14 +265,14 @@ public class MenuCustomization {
 		CustomizationHelper.reloadSystemAndMenu();
 	}
 
-	//TODO übernehmen
+	//---
 	public static void enableLayout(MenuCustomizationProperties.LayoutProperties layout) {
 		if (layout.path != null) {
 			enableLayout(layout.path);
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	public static void disableLayout(String path) {
 		try {
 			File f = new File(path);
@@ -286,7 +286,7 @@ public class MenuCustomization {
 		CustomizationHelper.reloadSystemAndMenu();
 	}
 
-	//TODO übernehmen
+	//---
 	public static void disableLayout(MenuCustomizationProperties.LayoutProperties layout) {
 		if (layout.path != null) {
 			disableLayout(layout.path);

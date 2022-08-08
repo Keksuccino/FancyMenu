@@ -11,7 +11,7 @@ public abstract class MenuButtonsIdentificationContext {
     @Nullable
     protected abstract String getRawCompatibilityIdentifierForButton(ButtonData data);
 
-    //TODO übernehmen 2.7.2
+    //--- 2.7.2
     public String getCompatibilityIdentifierForButton(ButtonData data) {
         String s = this.getRawCompatibilityIdentifierForButton(data);
         if (s != null) {

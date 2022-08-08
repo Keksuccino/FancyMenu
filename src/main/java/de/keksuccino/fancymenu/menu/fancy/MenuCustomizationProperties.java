@@ -229,7 +229,7 @@ public class MenuCustomizationProperties {
 		return l;
 	}
 
-	//TODO übernehmen
+	//---
 	public static class LayoutProperties {
 
 		public PropertiesSet properties;

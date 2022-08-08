@@ -232,7 +232,7 @@ public class LayoutSplashText extends LayoutElement {
 		return l;
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
 		//horizontal line top

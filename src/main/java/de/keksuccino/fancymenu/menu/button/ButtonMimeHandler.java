@@ -121,7 +121,7 @@ public class ButtonMimeHandler {
 
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
-                //TODO übernehmen 2.7.2
+                //--- 2.7.2
                 List<String> compIds = new ArrayList<>();
                 for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
                     ButtonIdentificator.setCompatibilityIdentifierToData(d);

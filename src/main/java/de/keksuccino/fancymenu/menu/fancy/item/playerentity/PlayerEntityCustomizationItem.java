@@ -211,7 +211,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			this.value = "Player Entity";
 		}
 
-		//TODO übernehmen
+		//---
 		this.setWidth((int)(this.entity.getBbWidth()*this.scale));
 		this.setHeight((int)(this.entity.getBbHeight()*this.scale));
 		//--------------
@@ -232,7 +232,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 					}
 					
 					//Update object width and height for layout editor
-					//TODO übernehmen
+					//---
 					this.setWidth((int)(this.entity.getBbWidth()*this.scale));
 					this.setHeight((int)(this.entity.getBbHeight()*this.scale));
 					//--------------

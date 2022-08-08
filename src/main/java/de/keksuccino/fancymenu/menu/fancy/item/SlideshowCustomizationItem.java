@@ -50,7 +50,7 @@ public class SlideshowCustomizationItem extends CustomizationItemBase {
 			this.renderer.x = x;
 			this.renderer.y = y;
 
-			//TODO übernehmen
+			//---
 			if (this.getHeight() > -1) {
 				this.renderer.height = this.getHeight();
 			}

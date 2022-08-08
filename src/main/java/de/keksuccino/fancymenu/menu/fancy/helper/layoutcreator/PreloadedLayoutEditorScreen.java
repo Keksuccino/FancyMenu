@@ -45,18 +45,18 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 	public String single;
 	private boolean audioInit = false;
 
-	//TODO übernehmen
+	//---
 	protected List<PropertiesSet> cachedProperties = new ArrayList<PropertiesSet>();
 	protected boolean isPreLoadedInitialized = false;
 	//------------------
 
-	//TODO übernehmen
+	//---
 	public PreloadedLayoutEditorScreen(Screen screenToCustomize, List<PropertiesSet> properties) {
 		super(screenToCustomize);
 		this.cachedProperties = properties;
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	protected void init() {
 		super.init();
@@ -66,19 +66,19 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	protected void initPreLoaded() {
 
 		List<LayoutElement> con = new ArrayList<LayoutElement>();
-		//TODO übernehmen
+		//---
 //		Map<Long, LayoutVanillaButton> vanillas = new HashMap<Long, LayoutVanillaButton>();
 
-		//TODO übernehmen (cachedProperties)
+		//--- (cachedProperties)
 		if (this.cachedProperties.size() == 1) {
-			//TODO übernehmen (cachedProperties)
+			//--- (cachedProperties)
 			List<PropertiesSection> l = this.cachedProperties.get(0).getPropertiesOfType("customization-meta");
 			if (l.isEmpty()) {
-				//TODO übernehmen (cachedProperties)
+				//--- (cachedProperties)
 				l = this.cachedProperties.get(0).getPropertiesOfType("type-meta");
 			}
 			if (!l.isEmpty()) {
@@ -179,7 +179,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				//TODO übernehmen
+				//---
 				String filePath = meta.getEntryValue("path");
 				if (filePath != null) {
 					this.single = filePath;
@@ -211,7 +211,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("backgroundoptions")) {
 						String keepAspect = sec.getEntryValue("keepaspectratio");
 						if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
@@ -333,7 +333,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("hidebutton")) {
 						if (b != null) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
@@ -341,7 +341,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 						String value = sec.getEntryValue("value");
 						if ((value != null) && (b != null)) {
@@ -350,7 +350,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("resizebutton")) {
 						String width = sec.getEntryValue("width");
 						String height = sec.getEntryValue("height");
@@ -363,7 +363,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("movebutton")) {
 						String posX = sec.getEntryValue("x");
 						String posY = sec.getEntryValue("y");
@@ -380,7 +380,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("setbuttontexture")) {
 						if (b != null) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
@@ -421,7 +421,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("addhoversound")) {
 						if (b != null) {
 							String path = sec.getEntryValue("path");
@@ -435,7 +435,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("sethoverlabel")) {
 						if (b != null) {
 							String label = sec.getEntryValue("label");
@@ -446,7 +446,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("setbuttonclicksound")) {
 						if (b != null) {
 							String path = sec.getEntryValue("path");
@@ -460,7 +460,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("clickbutton")) {
 						if (b != null) {
 							String clicks = sec.getEntryValue("clicks");
@@ -472,7 +472,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("hidebuttonfor")) {
 						if (b != null) {
 							String seconds = sec.getEntryValue("seconds");
@@ -566,7 +566,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						con.add(o);
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
@@ -595,7 +595,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.object.delayAppearanceSec = bc.delayAppearanceSec;
 								this.object.fadeIn = bc.fadeIn;
 								this.object.fadeInSpeed = bc.fadeInSpeed;
-								//TODO übernehmen
+								//---
 								this.object.visibilityRequirementContainer = bc.visibilityRequirementContainer;
 								this.object.setActionId(bc.getActionId());
 								//------------------
@@ -729,7 +729,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("autoscale")) {
 						String w = sec.getEntryValue("basewidth");
 						String h = sec.getEntryValue("baseheight");
@@ -763,7 +763,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("setbuttondescription")) {
 						if (b != null) {
 							String desc = sec.getEntryValue("description");
@@ -774,7 +774,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					//TODO übernehmen
+					//---
 					if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 						if (b != null) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
@@ -920,7 +920,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 	}
 
-	//TODO übernehmen
+	//---
 	protected LayoutVanillaButton getVanillaButton(ButtonData b) {
 		MenuHandlerBase.ButtonCustomizationContainer cc = this.vanillaButtonCustomizationContainers.get(b.getId());
 		if (cc != null) {

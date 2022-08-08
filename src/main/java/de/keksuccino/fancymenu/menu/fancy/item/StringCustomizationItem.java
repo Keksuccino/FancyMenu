@@ -20,14 +20,14 @@ public class StringCustomizationItem extends CustomizationItemBase {
 	public boolean shadow = false;
 	public Alignment alignment = Alignment.LEFT;
 
-	//TODO übernehmen
+	//---
 	public String valueRaw;
 
 	public StringCustomizationItem(PropertiesSection item) {
 		super(item);
 
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtext")) {
-			//TODO übernehmen
+			//---
 			this.valueRaw = item.getEntryValue("value");
 			this.updateValue();
 			//-----------------
@@ -57,7 +57,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	protected void updateValue() {
 
 		if (this.valueRaw != null) {
@@ -78,7 +78,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 			return;
 		}
 
-		//TODO übernehmen
+		//---
 		this.updateValue();
 
 		int x = this.getPosX(menu);

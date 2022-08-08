@@ -119,7 +119,7 @@ public class LayoutString extends LayoutElement {
 		
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
@@ -144,7 +144,7 @@ public class LayoutString extends LayoutElement {
 		RenderUtils.postScale(matrix);
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	protected void renderHighlightBorder(MatrixStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
@@ -185,7 +185,7 @@ public class LayoutString extends LayoutElement {
 		return -1;
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	protected void setOrientation(String pos) {
 		super.setOrientation(pos);
@@ -223,7 +223,7 @@ public class LayoutString extends LayoutElement {
 		this.setHeight((int)(7*scale));
 	}
 
-	//TODO übernehmen
+	//---
 	public void setText(String text) {
 		if (!this.getObject().valueRaw.equals(text)) {
 			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -256,7 +256,7 @@ public class LayoutString extends LayoutElement {
 		}
 	}
 
-	//TODO übernehmen
+	//---
 	@Override
 	protected void updateHovered(int mouseX, int mouseY) {
 		if ((mouseX >= this.getStringPosX()) && (mouseX <= this.getStringPosX() + this.object.getWidth()) && (mouseY >= this.getStringPosY()) && mouseY <= this.getStringPosY() + this.object.getHeight()) {
@@ -293,7 +293,7 @@ public class LayoutString extends LayoutElement {
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("alignment", "" + this.getObject().alignment.key);
 
-		//TODO übernehmen
+		//---
 		this.addVisibilityPropertiesTo(p1);
 
 		l.add(p1);

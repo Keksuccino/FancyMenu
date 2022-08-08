@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.commands;
+package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;

@@ -1,4 +1,4 @@
-//TODO übernehmen
+//---
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.slider;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
