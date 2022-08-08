@@ -554,7 +554,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 	}
 
-	//TODO übernehmen 2.7.3 (extends)
+	//--- 2.7.3 (extends)
 	public static class MenuPlayerEntity extends AbstractClientPlayer {
 
 		public volatile ResourceLocation skinLocation;
@@ -576,7 +576,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		
 		public MenuPlayerEntity(String playerName) {
 //			super(DUMMY_WORLD, BLOCK_POS, 0, new GameProfile(Player.createPlayerUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
-			//TODO übernehmen 2.7.3
+			//--- 2.7.3
 			super(DUMMY_CLIENT_WORLD, new GameProfile(Player.createPlayerUUID(getRawPlayerName(playerName)), getRawPlayerName(playerName)));
 			if (playerName != null) {
 				this.playerName = playerName;
@@ -590,13 +590,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			return playerName;
 		}
 
-		//TODO übernehmen 2.7.3
+		//--- 2.7.3
 		@Override
 		public Vec3 position() {
 			return new Vec3(-100000, -100000, -100000);
 		}
 
-		//TODO übernehmen 2.7.3
+		//--- 2.7.3
 		@Override
 		public double distanceToSqr(Entity p_20281_) {
 			return 0;

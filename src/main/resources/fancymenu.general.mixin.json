@@ -16,7 +16,8 @@
     "MixinLevelStorageAccess",
     "IMixinPauseScreen",
     "IMixinChatScreen",
-    "IMixinMinecraft"
+    "IMixinMinecraft",
+    "MixinLocalPlayer"
   ],
   "injectors": {
     "defaultRequire": 1

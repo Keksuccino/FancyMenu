@@ -1651,7 +1651,7 @@ public class MenuHandlerBase extends GuiComponent {
 	protected CustomizationItemBase getItemByActionId(String actionId) {
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {
-				//TODO übernehmen
+				//---
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
 					return c;
@@ -1664,7 +1664,7 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 		for (CustomizationItemBase c : this.frontRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {
-				//TODO übernehmen
+				//---
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
 					return c;
@@ -1675,7 +1675,7 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 		}
-		//TODO übernehmen
+		//---
 		if (actionId.startsWith("vanillabtn:")) {
 			String idRaw = actionId.split("[:]", 2)[1];
 			ButtonData d;
@@ -1726,7 +1726,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 	}
 
-	//TODO übernehmen
+	//---
 	private static ButtonData getButton(String identifier) {
 		if (identifier.startsWith("%id=")) {
 			String p = identifier.split("[=]")[1].replace("%", "");

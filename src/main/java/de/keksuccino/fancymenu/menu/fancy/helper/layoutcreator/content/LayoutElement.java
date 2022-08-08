@@ -151,7 +151,7 @@ public abstract class LayoutElement extends GuiComponent {
 				if (!(this instanceof LayoutVanillaButton)) {
 					Minecraft.getInstance().keyboardHandler.setClipboard(this.object.getActionId());
 				} else {
-					//TODO übernehmen
+					//---
 					Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton) this).getButtonId());
 				}
 			});
@@ -878,14 +878,14 @@ public abstract class LayoutElement extends GuiComponent {
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
 		if (this.dragable && this.resizeable) {
-			//TODO übernehmen (if)
+			//--- (if)
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
 				GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
-			//TODO übernehmen (if)
+			//--- (if)
 			if (!this.stretchY && this.resizeableY) {
 				//grabber top
 				GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
@@ -897,7 +897,7 @@ public abstract class LayoutElement extends GuiComponent {
 		//Update cursor and active grabber when grabber is hovered
 		if (this.resizeable) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 0;
@@ -905,7 +905,7 @@ public abstract class LayoutElement extends GuiComponent {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 1;
@@ -913,7 +913,7 @@ public abstract class LayoutElement extends GuiComponent {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 2;
@@ -921,7 +921,7 @@ public abstract class LayoutElement extends GuiComponent {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-				//TODO übernehmen (if)
+				//--- (if)
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 3;
@@ -1178,7 +1178,7 @@ public abstract class LayoutElement extends GuiComponent {
 	/** Called when a vanilla button object was updated in the editor. **/
 	public void onUpdateVanillaButton(LayoutVanillaButton btn) {
 		if (this.object.orientationElementIdentifier != null) {
-			//TODO übernehmen
+			//---
 			String id = "vanillabtn:" + btn.getButtonId();
 			if (this.object.orientationElementIdentifier.equals(id)) {
 				this.object.orientationElement = this.handler.getElementByActionId(id).object;

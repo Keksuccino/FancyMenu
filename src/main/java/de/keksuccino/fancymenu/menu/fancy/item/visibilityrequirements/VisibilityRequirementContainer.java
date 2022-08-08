@@ -236,7 +236,7 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
+        //---
         //VR: Is Real Time Month
         String vrStringShowIfRealTimeMonth = properties.getEntryValue("vr:showif:realtimemonth");
         if (vrStringShowIfRealTimeMonth != null) {
@@ -263,7 +263,7 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
+        //---
         //VR: Is Real Time Year
         String vrStringShowIfRealTimeYear = properties.getEntryValue("vr:showif:realtimeyear");
         if (vrStringShowIfRealTimeYear != null) {

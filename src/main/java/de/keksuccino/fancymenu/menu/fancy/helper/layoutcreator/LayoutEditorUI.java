@@ -625,7 +625,7 @@ public class LayoutEditorUI extends UIBase {
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
 
-			//TODO übernehmen
+			//---
 			/** RESET MENU TITLE **/
 			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
 				if (this.parent.customMenuTitle != null) {
@@ -636,7 +636,7 @@ public class LayoutEditorUI extends UIBase {
 			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
 			this.addContent(resetMenuTitleButton);
 
-			//TODO übernehmen
+			//---
 			this.addSeparator();
 
 			/** RANDOM MODE **/

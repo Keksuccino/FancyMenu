@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class ButtonMimeHandler {
 
-    //TODO übernehmen
+    //---
     private static Logger LOGGER = LogManager.getLogger("fancymenu/ButtonMimeHandler");
 
     protected static Map<String, ButtonPackage> cachedButtons = new HashMap<>();
@@ -40,7 +40,7 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        //TODO übernehmen
+        //---
         LOGGER.warn("tryCache: Failed to cache buttons of screen!");
         return false;
     }
@@ -60,7 +60,7 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        //TODO übernehmen
+        //---
         LOGGER.warn("cacheFromInstance: Failed to cache buttons of screen!");
         return false;
     }
@@ -70,13 +70,13 @@ public class ButtonMimeHandler {
             String menuIdentifier = buttonLocator.split("[:]", 2)[0];
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
             String buttonId = buttonLocator.split("[:]", 2)[1];
-            //TODO übernehmen (if)
+            //--- (if)
             if (MathUtils.isLong(buttonId) || (buttonId.startsWith("button_compatibility_id:"))) {
                 Screen current = Minecraft.getInstance().screen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
                     if (cachedButtons.containsKey(menuIdentifier)) {
                         ButtonPackage pack = cachedButtons.get(menuIdentifier);
-                        //TODO übernehmen
+                        //---
                         ButtonData d = pack.getButton(buttonId);
                         if (d != null) {
                             if (d.getScreen() != current) {
@@ -93,7 +93,7 @@ public class ButtonMimeHandler {
                 }
                 ButtonPackage p = cachedButtons.get(menuIdentifier);
                 if (p != null) {
-                    //TODO übernehmen
+                    //---
                     return p.getButton(buttonId);
                 }
             }
@@ -114,7 +114,7 @@ public class ButtonMimeHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //TODO übernehmen
+        //---
         LOGGER.warn("Failed to execute button click action!");
         return false;
     }
@@ -141,7 +141,7 @@ public class ButtonMimeHandler {
                 }
                 return true;
             } else {
-                //TODO übernehmen
+                //---
                 LOGGER.error("Failed to setup ButtonPackage instance! Screen is null!");
             }
             return false;
@@ -151,12 +151,12 @@ public class ButtonMimeHandler {
             return this.buttons;
         }
 
-        //TODO übernehmen
+        //---
 //        public ButtonData getButton(long id) {
 //            return this.buttons.get(id);
 //        }
 
-        //TODO übernehmen
+        //---
         public ButtonData getButton(String id) {
             if (MathUtils.isLong(id)) {
                 return this.buttons.get(Long.parseLong(id));

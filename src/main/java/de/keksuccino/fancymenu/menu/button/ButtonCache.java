@@ -211,7 +211,7 @@ public class ButtonCache {
 		updateButtons(s);
 	}
 
-	//TODO übernehmen
+	//---
 //	/**
 //	 * Returns the button id or -1 if the button has no cached id.
 //	 */
@@ -224,7 +224,7 @@ public class ButtonCache {
 //		return -1;
 //	}
 
-	//TODO übernehmen
+	//---
 //	/**
 //	 * Returns the button name or null if the button has no cached name.
 //	 */
@@ -256,7 +256,7 @@ public class ButtonCache {
 		return buttons.get(id);
 	}
 
-	//TODO übernehmen
+	//---
 	/**
 	 * Returns the button for this ID or null if no button with this ID was found.
 	 */

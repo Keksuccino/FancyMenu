@@ -189,7 +189,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (identifier != null) {
 						if (identifier.contains("%") && identifier.contains("=")) {
 							String id = identifier.split("[=]", 2)[1].replace("%", "").replace(" ", "");
-							//TODO übernehmen
+							//---
 							if (MathUtils.isInteger(id)) {
 								b = ButtonCache.getButtonForId(Integer.parseInt(id));
 							} else if (id.startsWith("button_compatibility_id:")) {
