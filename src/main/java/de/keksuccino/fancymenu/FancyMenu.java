@@ -3,10 +3,13 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.commands.ClientExecutor;
-import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.VariableCommand;
+import de.keksuccino.fancymenu.commands.client.ClientExecutor;
+import de.keksuccino.fancymenu.commands.client.CloseGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.client.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.client.VariableCommand;
+import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
@@ -20,6 +23,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.lay
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.networking.Packets;
 import net.minecraft.resources.ResourceLocation;
 
 import de.keksuccino.fancymenu.keybinding.Keybinding;
@@ -40,6 +44,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -50,8 +55,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ Konkrete version updaten; + locals)
-	public static final String VERSION = "2.12.0";
+	public static final String VERSION = "2.12.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -138,17 +142,21 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
-				MinecraftForge.EVENT_BUS.register(this);
-
 //				MinecraftForge.EVENT_BUS.register(new Test());
 
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("Optifine compatibility mode!");
 				}
+
+				LOGGER.info("[FANCYMENU] Loading mod in client-side mode!");
 	        	
 	    	} else {
-	    		LOGGER.warn("WARNING: FancyMenu is a client mod and has no effect when loaded on a server!");
+				LOGGER.info("[FANCYMENU] Loading mod in server-side mode!");
 	    	}
+
+			Packets.registerAll();
+
+			MinecraftForge.EVENT_BUS.register(this);
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -161,6 +169,15 @@ public class FancyMenu {
 		OpenGuiScreenCommand.register(e.getDispatcher());
 		CloseGuiScreenCommand.register(e.getDispatcher());
 		VariableCommand.register(e.getDispatcher());
+
+	}
+
+	@SubscribeEvent
+	public void onRegisterServerCommands(RegisterCommandsEvent e) {
+
+		ServerOpenGuiScreenCommand.register(e.getDispatcher());
+		ServerCloseGuiScreenCommand.register(e.getDispatcher());
+		ServerVariableCommand.register(e.getDispatcher());
 
 	}
 	

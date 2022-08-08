@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.commands;
+package de.keksuccino.fancymenu.commands.client;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
