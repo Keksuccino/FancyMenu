@@ -3,9 +3,12 @@ package de.keksuccino.fancymenu;
 import java.io.File;
 
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.commands.CloseGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.OpenGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.VariableCommand;
+import de.keksuccino.fancymenu.commands.client.CloseGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.client.OpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.client.VariableCommand;
+import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
+import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.events.CommandsRegisterEvent;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -29,6 +32,7 @@ import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.networking.Packets;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -37,6 +41,7 @@ import de.keksuccino.konkrete.events.client.ClientCommandRegistrationEvent;
 import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.resources.ResourceLocation;
@@ -45,7 +50,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.12.0";
+	public static final String VERSION = "2.12.1";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -131,18 +136,21 @@ public class FancyMenu implements ModInitializer {
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
-				Konkrete.getEventHandler().registerEventsFrom(this);
-
-//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundType());
-//				MenuBackgroundTypeRegistry.registerBackgroundType(new ExampleMenuBackgroundTypeWithInputString());
-
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("Optifine compatibility mode!");
 				}
+
+				LOGGER.info("[FANCYMENU] Loading mod in client-side mode!");
 	        	
 	    	} else {
-	    		LOGGER.warn("WARNING: FancyMenu is a client mod and has no effect when loaded on a server!");
+				LOGGER.info("[FANCYMENU] Loading mod in server-side mode!");
 	    	}
+
+			Packets.registerAll();
+
+			registerServerCommands();
+
+			Konkrete.getEventHandler().registerEventsFrom(this);
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -153,9 +161,25 @@ public class FancyMenu implements ModInitializer {
 	@SubscribeEvent
 	public void onRegisterCommands(ClientCommandRegistrationEvent e) {
 
-		OpenGuiScreenCommand.register(e.dispatcher);
-		CloseGuiScreenCommand.register(e.dispatcher);
-		VariableCommand.register(e.dispatcher);
+		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+
+			OpenGuiScreenCommand.register(e.dispatcher);
+			CloseGuiScreenCommand.register(e.dispatcher);
+			VariableCommand.register(e.dispatcher);
+
+		}
+
+	}
+
+	public void registerServerCommands() {
+
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+
+			ServerOpenGuiScreenCommand.register(dispatcher);
+			ServerCloseGuiScreenCommand.register(dispatcher);
+			ServerVariableCommand.register(dispatcher);
+
+		});
 
 	}
 

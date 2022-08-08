@@ -10,7 +10,6 @@
     "MixinTexturedButtonWidget",
     "MixinSplashScreen",
     "MixinGuiComponent",
-    "MixinAdvancementCommand",
     "MixinOnlineServerEntry",
     "MixinWorldListEntry",
     "MixinMusicManager",
@@ -23,7 +22,8 @@
     "IMixinPauseScreen",
     "IMixinMinecraft",
     "IMixinChatScreen",
-    "MixinScreen"
+    "MixinScreen",
+    "MixinCommands"
   ],
   "server": [],
   "injectors": {
