@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.menu.button.placeholders;
+package de.keksuccino.fancymenu.menu.placeholders;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;

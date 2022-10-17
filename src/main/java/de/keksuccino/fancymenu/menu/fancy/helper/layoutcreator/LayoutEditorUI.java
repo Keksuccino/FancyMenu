@@ -1102,7 +1102,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(webImageButton);
 
-			//TODO übernehmen
+			
 //			/** TEXT **/
 //			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
 //				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
@@ -1157,10 +1157,12 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(buttonButton);
 
 			/** PLAYER ENTITY **/
-			AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
-				this.parent.addPlayerEntity();
-			});
-			this.addContent(playerEntityButton);
+			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
+					this.parent.addPlayerEntity();
+				});
+				this.addContent(playerEntityButton);
+			}
 			
 			/** ANIMATION **/
 			FMContextMenu animationMenu = new FMContextMenu();

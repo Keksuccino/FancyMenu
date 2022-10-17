@@ -11,7 +11,7 @@ public class CustomizationItems {
 
         CustomizationItemRegistry.registerItem(new InputFieldCustomizationItemContainer());
         CustomizationItemRegistry.registerItem(new SliderCustomizationItemContainer());
-        //TODO übernehmen
+        
         CustomizationItemRegistry.registerItem(new TextCustomizationItemContainer());
 
     }

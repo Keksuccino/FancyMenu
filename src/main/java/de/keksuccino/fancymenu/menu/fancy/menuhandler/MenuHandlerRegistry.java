@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.common.MinecraftForge;
 
 public class MenuHandlerRegistry {
@@ -32,4 +33,9 @@ public class MenuHandlerRegistry {
 			lastActiveHandler = handlers.get(menuIdentifier);
 		}
 	}
+
+	public static MenuHandlerBase getHandlerFor(Screen screen) {
+		return handlers.get(screen.getClass().getName());
+	}
+
 }

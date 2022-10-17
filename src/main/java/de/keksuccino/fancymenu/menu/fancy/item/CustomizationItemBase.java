@@ -300,7 +300,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 			this.key = key;
 		}
 
-		//TODO übernehmen
+		
 		public static Alignment getByName(String name) {
 			for (Alignment a : Alignment.values()) {
 				if (a.key.equals(name)) {

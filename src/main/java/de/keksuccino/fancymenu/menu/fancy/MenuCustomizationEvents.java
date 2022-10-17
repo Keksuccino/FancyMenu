@@ -72,6 +72,7 @@ public class MenuCustomizationEvents {
 				}
 			}
 		}
+
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)

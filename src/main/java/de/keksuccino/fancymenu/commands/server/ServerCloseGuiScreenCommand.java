@@ -1,4 +1,3 @@
-//TODO übernehmen 2.12.1
 package de.keksuccino.fancymenu.commands.server;
 
 import com.mojang.brigadier.CommandDispatcher;

@@ -27,6 +27,7 @@ println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getPro
 
 minecraft {
 
+//    mappings channel: 'official', version: '1.19.2'
     mappings channel: 'official', version: '1.19.1'
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -58,6 +59,7 @@ repositories {
 
 dependencies {
 
+//    minecraft 'net.minecraftforge:forge:1.19.2-43.1.1'
     minecraft 'net.minecraftforge:forge:1.19.1-42.0.0'
 	
 	implementation fileTree('libs') { include '*.jar' }
