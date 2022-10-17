@@ -13,12 +13,14 @@ import java.util.Locale;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.mixin.client.IMixinServerList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import com.google.common.io.Files;
 
@@ -108,7 +110,21 @@ public class ButtonScriptEngine {
 					if (s == null) {
 						s = new TitleScreen();
 					}
-					ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), new ServerData("", value.replace(" ", ""), false));
+					ServerData d = null;
+					ServerList l = new ServerList(Minecraft.getInstance());
+					l.load();
+					for (ServerData data : ((IMixinServerList)l).getServerListFancyMenu()) {
+						if (data.ip.equals(value.replace(" ", ""))) {
+							d = data;
+							break;
+						}
+					}
+					if (d == null) {
+						d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
+						l.add(d);
+						l.save();
+					}
+					ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), d);
 				}
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
@@ -299,7 +315,25 @@ public class ButtonScriptEngine {
 								port = Integer.parseInt(portString);
 							}
 						}
-						ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), new ServerData("", ipRaw, false));
+						Screen s = Minecraft.getInstance().screen;
+						if (s == null) {
+							s = new TitleScreen();
+						}
+						ServerData d = null;
+						ServerList l = new ServerList(Minecraft.getInstance());
+						l.load();
+						for (ServerData data : ((IMixinServerList)l).getServerListFancyMenu()) {
+							if (data.ip.equals(ipRaw)) {
+								d = data;
+								break;
+							}
+						}
+						if (d == null) {
+							d = new ServerData(ipRaw, ipRaw, false);
+							l.add(d);
+							l.save();
+						}
+						ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), d);
 					}
 				}
 			}

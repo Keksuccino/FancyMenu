@@ -84,6 +84,9 @@ public class MenuCustomization {
 			for (PropertiesSection sec : s.getProperties()) {
 				String identifier = null;
 				try {
+					if (isBlacklistedMenu(sec.getSectionType())) {
+						continue;
+					}
 					if (sec.getSectionType().equals("net.mehvahdjukaar.supplementaries.compat.configured.CustomConfigScreen")) {
 						identifier = sec.getSectionType();
 					} else if ((sec.getSectionType() != null) && (sec.getSectionType().length() > 5)) {
@@ -157,6 +160,9 @@ public class MenuCustomization {
 	}
 
 	public static String getValidMenuIdentifierFor(String identifier) {
+		if (isBlacklistedMenu(identifier)) {
+			return identifier;
+		}
 		if (CustomGuiLoader.guiExists(identifier)) {
 			return identifier;
 		}
@@ -292,6 +298,13 @@ public class MenuCustomization {
 		if (layout.path != null) {
 			disableLayout(layout.path);
 		}
+	}
+
+	public static boolean isBlacklistedMenu(String menuIdentifierOrPartOfIdentifier) {
+		if (menuIdentifierOrPartOfIdentifier.startsWith("com.simibubi.create.")) {
+			return true;
+		}
+		return false;
 	}
 	
 }

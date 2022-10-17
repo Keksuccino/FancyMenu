@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.keksuccino.konkrete.Konkrete;
+import net.minecraft.client.gui.screens.Screen;
 
 public class MenuHandlerRegistry {
 	
@@ -32,4 +33,9 @@ public class MenuHandlerRegistry {
 			lastActiveHandler = handlers.get(menuIdentifier);
 		}
 	}
+
+	public static MenuHandlerBase getHandlerFor(Screen screen) {
+		return handlers.get(screen.getClass().getName());
+	}
+
 }
