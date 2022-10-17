@@ -17,7 +17,7 @@
     "IMixinPauseScreen",
     "IMixinChatScreen",
     "IMixinMinecraft",
-    "MixinLocalPlayer"
+    "IMixinServerList"
   ],
   "injectors": {
     "defaultRequire": 1

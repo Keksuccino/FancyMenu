@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
@@ -763,35 +764,37 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 					}
 
-					if (action.equalsIgnoreCase("addentity")) {
-						LayoutPlayerEntity o = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(sec), this);
+					if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+						if (action.equalsIgnoreCase("addentity")) {
+							LayoutPlayerEntity o = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(sec), this);
 
-						String playername = sec.getEntryValue("playername");
-						if ((playername != null) && (playername.replace(" ", "").equals("%playername%"))) {
-							o.isCLientPlayerName = true;
+							String playername = sec.getEntryValue("playername");
+							if ((playername != null) && (playername.replace(" ", "").equals("%playername%"))) {
+								o.isCLientPlayerName = true;
+							}
+
+							String capePath = sec.getEntryValue("capepath");
+							if (capePath != null) {
+								o.capePath = capePath;
+							}
+
+							String capeUrl = sec.getEntryValue("capeurl");
+							if (capeUrl != null) {
+								o.capeUrl = capeUrl;
+							}
+
+							String skinPath = sec.getEntryValue("skinpath");
+							if (skinPath != null) {
+								o.skinPath = skinPath;
+							}
+
+							String skinUrl = sec.getEntryValue("skinurl");
+							if (skinUrl != null) {
+								o.skinUrl = skinUrl;
+							}
+
+							con.add(o);
 						}
-
-						String capePath = sec.getEntryValue("capepath");
-						if (capePath != null) {
-							o.capePath = capePath;
-						}
-
-						String capeUrl = sec.getEntryValue("capeurl");
-						if (capeUrl != null) {
-							o.capeUrl = capeUrl;
-						}
-
-						String skinPath = sec.getEntryValue("skinpath");
-						if (skinPath != null) {
-							o.skinPath = skinPath;
-						}
-
-						String skinUrl = sec.getEntryValue("skinurl");
-						if (skinUrl != null) {
-							o.skinUrl = skinUrl;
-						}
-
-						con.add(o);
 					}
 
 					if (action.equalsIgnoreCase("addslideshow")) {

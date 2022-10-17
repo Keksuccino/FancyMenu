@@ -979,11 +979,13 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 
-			if (action.equalsIgnoreCase("addentity")) {
-				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new PlayerEntityCustomizationItem(sec));
-				} else {
-					frontRenderItems.add(new PlayerEntityCustomizationItem(sec));
+			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				if (action.equalsIgnoreCase("addentity")) {
+					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+						backgroundRenderItems.add(new PlayerEntityCustomizationItem(sec));
+					} else {
+						frontRenderItems.add(new PlayerEntityCustomizationItem(sec));
+					}
 				}
 			}
 
@@ -1042,20 +1044,21 @@ public class MenuHandlerBase extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("setopenaudio")) {
-				String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
-
-				if (path != null) {
-					File f = new File(path);
-					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-						try {
-							String name = "opensound_" + path + Files.size(f.toPath());
-							MenuCustomization.registerSound(name, path);
-							SoundHandler.resetSound(name);
-							SoundHandler.playSound(name);
-							this.openAudio = name;
-							this.sharedLayoutProps.openAudioSet = true;
-						} catch (Exception ex) {
-							ex.printStackTrace();
+				if (MenuCustomization.isNewMenu()) {
+					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
+					if (path != null) {
+						File f = new File(path);
+						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+							try {
+								String name = "opensound_" + path + Files.size(f.toPath());
+								MenuCustomization.registerSound(name, path);
+								SoundHandler.resetSound(name);
+								SoundHandler.playSound(name);
+								this.openAudio = name;
+								this.sharedLayoutProps.openAudioSet = true;
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}
 						}
 					}
 				}

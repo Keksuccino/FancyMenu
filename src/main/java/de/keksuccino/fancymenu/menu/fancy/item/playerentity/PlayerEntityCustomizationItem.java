@@ -14,6 +14,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -51,8 +52,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PlayerEntityCustomizationItem extends CustomizationItemBase {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	public MenuPlayerEntity entity;
 	public int scale = 30;
@@ -72,7 +77,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 	public PlayerEntityCustomizationItem(PropertiesSection item) {
 		super(item);
-		
+		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			LOGGER.warn("CRITICAL WARNING: Player Entity element constructed while level registry interactions were disabled! Please report this to the dev of FancyMenu!");
+		}
 		String scaleString = item.getEntryValue("scale");
 		if ((scaleString != null) && MathUtils.isDouble(scaleString)) {
 			//Avoiding errors when trying to set a double/long value as scale

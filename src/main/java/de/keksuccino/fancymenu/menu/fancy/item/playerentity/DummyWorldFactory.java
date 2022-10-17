@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Either;
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.ClientTelemetryManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -29,6 +30,9 @@ public class DummyWorldFactory {
 	private static ClientTelemetryManager telemetryManager = null;
 
 	public static ClientLevel getDummyClientWorld() {
+		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			return null;
+		}
 		return new DummyClientWorld();
 	}
 
