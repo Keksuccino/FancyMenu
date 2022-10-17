@@ -8,17 +8,17 @@ import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.command.ClientExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
 import de.keksuccino.konkrete.localization.Locals;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 public class OpenGuiScreenCommand {
 
-    public static void register(CommandDispatcher<CommandSourceStack> d) {
-        d.register(Commands.literal("openguiscreen").then(Commands.argument("menu_identifier", StringArgumentType.string())
+    public static void register(CommandDispatcher<FabricClientCommandSource> d) {
+        d.register(ClientCommandManager.literal("openguiscreen").then(ClientCommandManager.argument("menu_identifier", StringArgumentType.string())
                 .executes((stack) -> {
                     return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"));
                 })
@@ -28,7 +28,7 @@ public class OpenGuiScreenCommand {
         ));
     }
 
-    private static int openGui(CommandSourceStack stack, String menuIdentifierOrCustomGuiName) {
+    private static int openGui(FabricClientCommandSource stack, String menuIdentifierOrCustomGuiName) {
         try {
             //TODO übernehmen
             if (menuIdentifierOrCustomGuiName.equalsIgnoreCase(CreateWorldScreen.class.getName())) {
@@ -49,11 +49,11 @@ public class OpenGuiScreenCommand {
                         Minecraft.getInstance().setScreen(s);
                     });
                 } else {
-                    stack.sendFailure(Component.literal(Locals.localize("fancymenu.commands.openguiscreen.cannotopen")));
+                    stack.sendError(Component.literal(Locals.localize("fancymenu.commands.openguiscreen.cannotopen")));
                 }
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal(Locals.localize("fancymenu.commands.openguiscreen.error")));
+            stack.sendError(Component.literal(Locals.localize("fancymenu.commands.openguiscreen.error")));
             e.printStackTrace();
         }
         return 1;

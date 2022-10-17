@@ -13,12 +13,12 @@ import de.keksuccino.konkrete.command.CommandUtils;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.localization.Locals;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
 import java.util.Arrays;
@@ -29,24 +29,24 @@ public class VariableCommand {
     protected static Screen lastScreen = null;
     protected static boolean initialized = false;
 
-    public static void register(CommandDispatcher<CommandSourceStack> d) {
+    public static void register(CommandDispatcher<FabricClientCommandSource> d) {
         if (!initialized) {
             Konkrete.getEventHandler().registerEventsFrom(new VariableCommand());
             initialized = true;
         }
-        d.register(Commands.literal("fmvariable")
-                .then(Commands.argument("action", StringArgumentType.string())
+        d.register(ClientCommandManager.literal("fmvariable")
+                .then(ClientCommandManager.argument("action", StringArgumentType.string())
                         .suggests(((context, builder) -> {
                             return CommandUtils.getStringSuggestions(builder, "get", "set");
                         }))
-                        .then(Commands.argument("variable_name", StringArgumentType.string())
+                        .then(ClientCommandManager.argument("variable_name", StringArgumentType.string())
                                 .executes((stack) -> {
                                     return getVariable(stack.getSource(), StringArgumentType.getString(stack, "action"), StringArgumentType.getString(stack, "variable_name"));
                                 })
                                 .suggests(((context, builder) -> {
                                     return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
                                 }))
-                                .then(Commands.argument("set_to_value", StringArgumentType.string())
+                                .then(ClientCommandManager.argument("set_to_value", StringArgumentType.string())
                                         .suggests(((context, builder) -> {
                                             if (StringArgumentType.getString(context, "action").equalsIgnoreCase("set")) {
                                                 return CommandUtils.getStringSuggestions(builder, "<set_to_value>");
@@ -54,7 +54,7 @@ public class VariableCommand {
                                                 return CommandUtils.getStringSuggestions(builder, new String[0]);
                                             }
                                         }))
-                                        .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
+                                        .then(ClientCommandManager.argument("send_chat_feedback", BoolArgumentType.bool())
                                                 .executes((stack) -> {
                                                     return setVariable(stack.getSource(), StringArgumentType.getString(stack, "action"), StringArgumentType.getString(stack, "variable_name"), StringArgumentType.getString(stack, "set_to_value"), BoolArgumentType.getBool(stack, "send_chat_feedback"));
                                                 })
@@ -73,36 +73,36 @@ public class VariableCommand {
         return l.toArray(new String[0]);
     }
 
-    private static int getVariable(CommandSourceStack stack, String getOrSet, String variableName) {
+    private static int getVariable(FabricClientCommandSource stack, String getOrSet, String variableName) {
         ClientExecutor.execute(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("get")) {
                     String s = VariableHandler.getVariable(variableName);
                     if (s != null) {
-                        stack.sendSuccess(Component.literal(Locals.localize("fancymenu.commands.variable.get.success", s)), false);
+                        stack.sendFeedback(Component.literal(Locals.localize("fancymenu.commands.variable.get.success", s)));
                     } else {
-                        stack.sendFailure(Component.literal(Locals.localize("fancymenu.commands.variable.not_found")));
+                        stack.sendError(Component.literal(Locals.localize("fancymenu.commands.variable.not_found")));
                     }
                 }
             } catch (Exception e) {
-                stack.sendFailure(Component.literal("Error while executing command!"));
+                stack.sendError(Component.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         });
         return 1;
     }
 
-    private static int setVariable(CommandSourceStack stack, String getOrSet, String variableName, String setToValue, boolean sendFeedback) {
+    private static int setVariable(FabricClientCommandSource stack, String getOrSet, String variableName, String setToValue, boolean sendFeedback) {
         ClientExecutor.execute(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("set")) {
                     VariableHandler.setVariable(variableName, setToValue);
                     if (sendFeedback) {
-                        stack.sendSuccess(Component.literal(Locals.localize("fancymenu.commands.variable.set.success", setToValue)), false);
+                        stack.sendFeedback(Component.literal(Locals.localize("fancymenu.commands.variable.set.success", setToValue)));
                     }
                 }
             } catch (Exception e) {
-                stack.sendFailure(Component.literal("Error while executing command!"));
+                stack.sendError(Component.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         });

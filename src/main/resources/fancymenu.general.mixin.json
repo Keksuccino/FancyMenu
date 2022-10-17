@@ -7,7 +7,7 @@
     "MixinAbstractWidget",
     "MixinEntryListWidget",
     "MixinMinecraft",
-    "MixinTexturedButtonWidget",
+    "MixinImageButton",
     "MixinSplashScreen",
     "MixinGuiComponent",
     "MixinAdvancementCommand",
@@ -22,7 +22,8 @@
     "IMixinPauseScreen",
     "IMixinChatScreen",
     "IMixinMinecraft",
-    "MixinScreen"
+    "MixinScreen",
+    "IMixinServerList"
   ],
   "server": [],
   "injectors": {

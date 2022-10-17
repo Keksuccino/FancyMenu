@@ -9,14 +9,13 @@ import de.keksuccino.fancymenu.commands.client.VariableCommand;
 import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
-import de.keksuccino.fancymenu.events.CommandsRegisterEvent;
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.button.placeholders.Placeholders;
+import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -37,10 +36,10 @@ import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.ClientCommandRegistrationEvent;
 import de.keksuccino.konkrete.localization.Locals;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
@@ -50,7 +49,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.12.1";
+	public static final String VERSION = "2.12.5";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -134,16 +133,18 @@ public class FancyMenu implements ModInitializer {
 	        	
 //	        	Konkrete.getEventHandler().registerEventsFrom(new Test());
 
+				registerClientCommands();
+
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
 				if (isOptifineCompatibilityMode()) {
-					LOGGER.info("Optifine compatibility mode!");
+					LOGGER.info("[FANCYMENU] Optifine compatibility mode enabled!");
 				}
 
-				LOGGER.info("[FANCYMENU] Loading mod in client-side mode!");
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 	        	
 	    	} else {
-				LOGGER.info("[FANCYMENU] Loading mod in server-side mode!");
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
 
 			Packets.registerAll();
@@ -151,6 +152,10 @@ public class FancyMenu implements ModInitializer {
 			registerServerCommands();
 
 			Konkrete.getEventHandler().registerEventsFrom(this);
+
+			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+			}
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -158,16 +163,29 @@ public class FancyMenu implements ModInitializer {
     	
     }
 
+//	@SubscribeEvent
+//	public void onRegisterCommands(ClientCommandRegistrationEvent e) {
+//
+//		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+//
+//			OpenGuiScreenCommand.register(e.dispatcher);
+//			CloseGuiScreenCommand.register(e.dispatcher);
+//			VariableCommand.register(e.dispatcher);
+//
+//		}
+//
+//	}
+
 	@SubscribeEvent
-	public void onRegisterCommands(ClientCommandRegistrationEvent e) {
+	public void registerClientCommands() {
 
-		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+		ClientCommandRegistrationCallback.EVENT.register((dispatcher, context) -> {
 
-			OpenGuiScreenCommand.register(e.dispatcher);
-			CloseGuiScreenCommand.register(e.dispatcher);
-			VariableCommand.register(e.dispatcher);
+			OpenGuiScreenCommand.register(dispatcher);
+			CloseGuiScreenCommand.register(dispatcher);
+			VariableCommand.register(dispatcher);
 
-		}
+		});
 
 	}
 
@@ -256,6 +274,8 @@ public class FancyMenu implements ModInitializer {
 			config.registerValue("gridsize", 10, "layouteditor");
 
 			config.registerValue("uiscale", 1.0F, "ui");
+
+			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			
 			config.syncConfig();
 			

@@ -7,6 +7,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.UUID;
+
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,9 +54,13 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @SuppressWarnings("resource")
 public class PlayerEntityCustomizationItem extends CustomizationItemBase {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	public MenuPlayerEntity entity;
 	public int scale = 30;
@@ -74,7 +80,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	
 	public PlayerEntityCustomizationItem(PropertiesSection item) {
 		super(item);
-
+		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			LOGGER.warn("CRITICAL WARNING: Player Entity element constructed while level registry interactions were disabled! Please report this to the dev of FancyMenu!");
+		}
 		String scaleString = item.getEntryValue("scale");
 		if ((scaleString != null) && MathUtils.isDouble(scaleString)) {
 			//Avoiding errors when trying to set a double/long value as scale
