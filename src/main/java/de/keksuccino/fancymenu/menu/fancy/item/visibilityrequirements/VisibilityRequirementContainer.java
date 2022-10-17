@@ -402,11 +402,11 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Width
             if (this.vrCheckForWindowWidth) {
                 if (this.vrShowIfWindowWidth) {
-                    if (!this.vrWindowWidth.contains(VisibilityRequirementHandler.windowWidth)) {
+                    if (!this.vrWindowWidth.contains(Minecraft.getMinecraft().displayWidth)) {
                         return false;
                     }
                 } else {
-                    if (this.vrWindowWidth.contains(VisibilityRequirementHandler.windowWidth)) {
+                    if (this.vrWindowWidth.contains(Minecraft.getMinecraft().displayWidth)) {
                         return false;
                     }
                 }
@@ -415,11 +415,11 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Height
             if (this.vrCheckForWindowHeight) {
                 if (this.vrShowIfWindowHeight) {
-                    if (!this.vrWindowHeight.contains(VisibilityRequirementHandler.windowHeight)) {
+                    if (!this.vrWindowHeight.contains(Minecraft.getMinecraft().displayHeight)) {
                         return false;
                     }
                 } else {
-                    if (this.vrWindowHeight.contains(VisibilityRequirementHandler.windowHeight)) {
+                    if (this.vrWindowHeight.contains(Minecraft.getMinecraft().displayHeight)) {
                         return false;
                     }
                 }
@@ -428,11 +428,11 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Width Bigger Than
             if (this.vrCheckForWindowWidthBiggerThan) {
                 if (this.vrShowIfWindowWidthBiggerThan) {
-                    if (VisibilityRequirementHandler.windowWidth <= this.vrWindowWidthBiggerThan) {
+                    if (Minecraft.getMinecraft().displayWidth <= this.vrWindowWidthBiggerThan) {
                         return false;
                     }
                 } else {
-                    if (VisibilityRequirementHandler.windowWidth >= this.vrWindowWidthBiggerThan) {
+                    if (Minecraft.getMinecraft().displayWidth >= this.vrWindowWidthBiggerThan) {
                         return false;
                     }
                 }
@@ -441,11 +441,11 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Height Bigger Than
             if (this.vrCheckForWindowHeightBiggerThan) {
                 if (this.vrShowIfWindowHeightBiggerThan) {
-                    if (VisibilityRequirementHandler.windowHeight <= this.vrWindowHeightBiggerThan) {
+                    if (Minecraft.getMinecraft().displayHeight <= this.vrWindowHeightBiggerThan) {
                         return false;
                     }
                 } else {
-                    if (VisibilityRequirementHandler.windowHeight >= this.vrWindowHeightBiggerThan) {
+                    if (Minecraft.getMinecraft().displayHeight >= this.vrWindowHeightBiggerThan) {
                         return false;
                     }
                 }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.GameType;
@@ -13,6 +14,9 @@ import net.minecraft.world.storage.WorldInfo;
 public class DummyWorldFactory {
 	
 	public static World getDummyWorld() {
+		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			return null;
+		}
 		return new DummyWorld();
 	}
 	

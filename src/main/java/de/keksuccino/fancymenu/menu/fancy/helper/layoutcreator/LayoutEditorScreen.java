@@ -76,6 +76,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Keyboard;
 
 public class LayoutEditorScreen extends GuiScreen {
 
@@ -189,6 +190,8 @@ public class LayoutEditorScreen extends GuiScreen {
 
 	@Override
 	public void initGui() {
+
+		Keyboard.enableRepeatEvents(true);
 		
 		this.ui.updateUI();
 		
@@ -237,7 +240,12 @@ public class LayoutEditorScreen extends GuiScreen {
 		this.focusChangeBlocker.clear();
 		
 	}
-	
+
+	@Override
+	public void onGuiClosed() {
+		Keyboard.enableRepeatEvents(false);
+	}
+
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 	}
@@ -1254,13 +1262,15 @@ public class LayoutEditorScreen extends GuiScreen {
 	}
 	
 	protected void addPlayerEntity() {
-		PropertiesSection s = new PropertiesSection("customization");
-		s.addEntry("action", "addentity");
-		LayoutPlayerEntity e = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(s), this);
-		e.setX(e.getWidth());
-		e.setY(e.getHeight());
-		this.history.saveSnapshot(this.history.createSnapshot());
-		this.addContent(e);
+		if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "addentity");
+			LayoutPlayerEntity e = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(s), this);
+			e.setX(e.getWidth());
+			e.setY(e.getHeight());
+			this.history.saveSnapshot(this.history.createSnapshot());
+			this.addContent(e);
+		}
 	}
 	
 	protected void addAnimation(String name) {

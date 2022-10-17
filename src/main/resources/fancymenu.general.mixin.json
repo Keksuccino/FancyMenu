@@ -15,7 +15,8 @@
     "MixinOnlineServerEntry",
     "MixinWorldListEntry",
     "MixinConnectScreen",
-    "IMixinChatScreen"
+    "IMixinChatScreen",
+    "IMixinServerList"
   ],
   "injectors": {
     "defaultRequire": 1

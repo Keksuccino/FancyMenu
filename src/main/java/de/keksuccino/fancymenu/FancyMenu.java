@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.button.placeholders.Placeholders;
+import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -41,7 +41,6 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
@@ -49,10 +48,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.5.0,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.5.3,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
 public class FancyMenu {
 
-	public static final String VERSION = "2.12.1";
+	public static final String VERSION = "2.12.5";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -137,16 +136,20 @@ public class FancyMenu {
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
 				if (isOptifineCompatibilityMode()) {
-					LOGGER.info("Optifine compatibility mode!");
+					LOGGER.info("[FANCYMENU] Optifine compatibility mode enabled!");
 				}
 
-				LOGGER.info("[FANCYMENU] Loading mod in client-side mode!");
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 	        	
 	    	} else {
-				LOGGER.info("[FANCYMENU] Loading mod in server-side mode!");
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
 
 			Packets.registerAll();
+
+			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -260,6 +263,8 @@ public class FancyMenu {
 			config.registerValue("gridsize", 10, "layouteditor");
 			
 			config.registerValue("uiscale", 1.0F, "ui");
+
+			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			
 			config.syncConfig();
 			

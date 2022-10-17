@@ -27,6 +27,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.mixin.client.IMixinServerList;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -36,6 +37,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -95,7 +97,21 @@ public class ButtonScriptEngine {
 				Minecraft.getMinecraft().shutdown();
 			}
 			if (action.equalsIgnoreCase("joinserver")) {
-				Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), new ServerData("", value, false)));
+				ServerData d = null;
+				ServerList l = new ServerList(Minecraft.getMinecraft());
+				l.loadServerList();
+				for (ServerData data : ((IMixinServerList)l).getServersFancyMenu()) {
+					if (data.serverIP.equals(value)) {
+						d = data;
+						break;
+					}
+				}
+				if (d == null) {
+					d = new ServerData(value, value, false);
+					l.addServerData(d);
+					l.saveServerList();
+				}
+				Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), d));
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
 				if (Minecraft.getMinecraft().getSaveLoader().canLoadWorld(value)) {
@@ -271,7 +287,21 @@ public class ButtonScriptEngine {
 						}
 					} else {
 						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
-						Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), new ServerData("", ipRaw, false)));
+						ServerData d = null;
+						ServerList l = new ServerList(Minecraft.getMinecraft());
+						l.loadServerList();
+						for (ServerData data : ((IMixinServerList)l).getServersFancyMenu()) {
+							if (data.serverIP.equals(ipRaw)) {
+								d = data;
+								break;
+							}
+						}
+						if (d == null) {
+							d = new ServerData(ipRaw, ipRaw, false);
+							l.addServerData(d);
+							l.saveServerList();
+						}
+						Minecraft.getMinecraft().displayGuiScreen(new GuiConnecting(Minecraft.getMinecraft().currentScreen, Minecraft.getMinecraft(), d));
 					}
 				}
 			}

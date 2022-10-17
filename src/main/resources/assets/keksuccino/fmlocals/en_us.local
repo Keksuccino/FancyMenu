@@ -1012,6 +1012,10 @@ fancymenu.customization.items.input_field.editor.set_variable.desc = Link this t
 fancymenu.customization.items.input_field.editor.set_max_length = Set Max Text Length
 fancymenu.customization.items.input_field.editor.set_type = Set Type
 fancymenu.customization.items.input_field.editor.set_type.desc = Set the type if this text field.%n%%n%The type defines what characters%n%the user can use in the field.%n%%n%For example:%n%If the field is%n%set to "Only Numbers", the%n%user will only be able to%n%type numbers into the field.
+fancymenu.customization.items.input_field.type.integer = Only Numbers
+fancymenu.customization.items.input_field.type.decimal = Only Decimal Numbers
+fancymenu.customization.items.input_field.type.url = URL
+fancymenu.customization.items.input_field.type.text = Text
 
 fancymenu.customization.items.slider = Slider
 fancymenu.customization.items.slider.desc = A slider button.%n%%n%Can be used to set variable%n%values by user input.
@@ -1028,6 +1032,8 @@ fancymenu.customization.items.slider.editor.list.set_list_values.desc = The list
 fancymenu.customization.items.slider.editor.list.set_list_values.error.not_enough_values = §c§lError!%n%%n%You need at least 2 values!%n% %n% %n% %n%
 fancymenu.customization.items.slider.editor.set_variable = Link To Variable
 fancymenu.customization.items.slider.editor.set_variable.desc = Link this slider to a variable.%n%Use the variable name.%n%%n%The variable can be a new%n%or an existing variable.
+fancymenu.customization.items.slider.type.range = Range [Numbers]
+fancymenu.customization.items.slider.type.list = List [Text Values]
 
 fancymenu.helper.editor.global_visibility_requirements = Visibility Requirements [Layout-Wide]
 fancymenu.helper.editor.global_visibility_requirements.desc = Just like visibility requirements%n%for elements, this will set%n%these requirements on the%n%layout level.%n%%n%This means, the whole layout%n%will be visible/invisible depending%n%on its requirements.
@@ -1107,3 +1113,14 @@ fancymenu.helper.placeholder.json.desc = Parse a JSON and get a%n%value from it.
 
 fancymenu.helper.placeholder.webtext = Web Text
 fancymenu.helper.placeholder.webtext.desc = Gets the first line of%n%plain text content from a website.%n%%n%Replace <link_to_text> with the%n%link to the page you want to%n%get the text from.%n%%n%§cDon't forget to remove < and >%n%§cfrom the arguments!
+
+fancymenu.config.categories.compatibility = COMPATIBILITY
+fancymenu.config.allow_level_registry_interactions = World Registry Interactions
+fancymenu.config.allow_level_registry_interactions.desc = Allow interactions with all kinds of%n%world registries, like world type,%n%entity, etc., which can cause%n%problems with other entity and%n%world mods.%n%%n%§cDisabling this will also disable%n%§cplayer entity elements!
+
+
+
+
+
+
+

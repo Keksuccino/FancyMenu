@@ -31,31 +31,35 @@ public abstract class MixinGuiButtonImage extends Gui {
 
 		info.cancel();
 		
-		RenderWidgetEvent.Pre ep = new RenderWidgetEvent.Pre((GuiButton)((Object)this), 1.0F);
-		MinecraftForge.EVENT_BUS.post(ep);
-		if (ep.isCanceled()) {
-			return;
-		}
-		
-		GuiButtonImage b = ((GuiButtonImage)((Object)this));
-		
-		RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre((GuiButton)((Object)this), ep.getAlpha());
-		MinecraftForge.EVENT_BUS.post(e);
-		GlStateManager.enableBlend();
-		GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
-		if (!e.isCanceled()) {
-			int i = this.xTexStart;
-            int j = this.yTexStart;
+		try {
+			RenderWidgetEvent.Pre ep = new RenderWidgetEvent.Pre((GuiButton)((Object)this), 1.0F);
+			MinecraftForge.EVENT_BUS.post(ep);
+			if (ep.isCanceled()) {
+				return;
+			}
 
-            if (b.isMouseOver()) {
-                j += this.yDiffText;
-            }
-            this.drawTexturedModalRect(b.x, b.y, i, j, b.width, b.height);
+			GuiButtonImage b = ((GuiButtonImage)((Object)this));
+
+			RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre((GuiButton)((Object)this), ep.getAlpha());
+			MinecraftForge.EVENT_BUS.post(e);
+			GlStateManager.enableBlend();
+			GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
+			if (!e.isCanceled()) {
+				int i = this.xTexStart;
+				int j = this.yTexStart;
+
+				if (b.isMouseOver()) {
+					j += this.yDiffText;
+				}
+				this.drawTexturedModalRect(b.x, b.y, i, j, b.width, b.height);
+			}
+			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post((GuiButton)((Object)this), e.getAlpha());
+			MinecraftForge.EVENT_BUS.post(e2);
+
+			GlStateManager.enableDepth();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post((GuiButton)((Object)this), e.getAlpha());
-		MinecraftForge.EVENT_BUS.post(e2);
-		
-		GlStateManager.enableDepth();
 		
 	}
 	

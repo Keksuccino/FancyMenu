@@ -29,35 +29,39 @@ public class MixinGuiButtonLanguage {
 
 		info.cancel();
 
-		RenderWidgetEvent.Pre ep = new RenderWidgetEvent.Pre((GuiButton)((Object)this), 1.0F);
-		MinecraftForge.EVENT_BUS.post(ep);
-		if (ep.isCanceled()) {
-			return;
+		try {
+			RenderWidgetEvent.Pre ep = new RenderWidgetEvent.Pre((GuiButton)((Object)this), 1.0F);
+			MinecraftForge.EVENT_BUS.post(ep);
+			if (ep.isCanceled()) {
+				return;
+			}
+
+			GuiButtonLanguage b = ((GuiButtonLanguage)((Object)this));
+			int mouseX = MouseInput.getMouseX();
+			int mouseY = MouseInput.getMouseY();
+			boolean hovered = mouseX >= b.x && mouseY >= b.y && mouseX < b.x + b.width && mouseY < b.y + b.height;
+
+			RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre((GuiButton)((Object)this), ep.getAlpha());
+			MinecraftForge.EVENT_BUS.post(e);
+			if (!e.isCanceled()) {
+				if (b.visible) {
+					Minecraft.getMinecraft().getTextureManager().bindTexture(BUTTON_TEXTURES);
+					GlStateManager.enableBlend();
+					GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
+					int i = 106;
+
+					if (hovered) {
+						i += b.height;
+					}
+
+					b.drawTexturedModalRect(b.x, b.y, 0, i, b.width, b.height);
+				}
+			}
+			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post((GuiButton)((Object)this), e.getAlpha());
+			MinecraftForge.EVENT_BUS.post(e2);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		GuiButtonLanguage b = ((GuiButtonLanguage)((Object)this));
-		int mouseX = MouseInput.getMouseX();
-		int mouseY = MouseInput.getMouseY();
-		boolean hovered = mouseX >= b.x && mouseY >= b.y && mouseX < b.x + b.width && mouseY < b.y + b.height;
-
-		RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre((GuiButton)((Object)this), ep.getAlpha());
-		MinecraftForge.EVENT_BUS.post(e);
-		if (!e.isCanceled()) {
-			if (b.visible) {
-	            Minecraft.getMinecraft().getTextureManager().bindTexture(BUTTON_TEXTURES);
-	            GlStateManager.enableBlend();
-	            GlStateManager.color(1.0F, 1.0F, 1.0F, e.getAlpha());
-	            int i = 106;
-
-	            if (hovered) {
-	                i += b.height;
-	            }
-
-	            b.drawTexturedModalRect(b.x, b.y, 0, i, b.width, b.height);
-	        }
-		}
-		RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post((GuiButton)((Object)this), e.getAlpha());
-		MinecraftForge.EVENT_BUS.post(e2);
 		
 	}
 	

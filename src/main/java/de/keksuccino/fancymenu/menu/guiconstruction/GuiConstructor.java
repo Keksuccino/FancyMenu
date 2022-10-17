@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.instance.GuiInstance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -41,6 +42,9 @@ public class GuiConstructor {
 	
 	public static GuiScreen tryToConstruct(String identifier) {
 		try {
+			if (MenuCustomization.isBlacklistedMenu(identifier)) {
+				return null;
+			}
 			//Update last screen
 			parameters.put(GuiScreen.class, Minecraft.getMinecraft().currentScreen);
 			//Update player

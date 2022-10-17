@@ -8,6 +8,7 @@ import java.util.Scanner;
 
 import com.mojang.authlib.GameProfile;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -39,8 +40,12 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PlayerEntityCustomizationItem extends CustomizationItemBase {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	public MenuPlayerEntity entity;
 	public int scale = 30;
@@ -59,7 +64,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	
 	public PlayerEntityCustomizationItem(PropertiesSection item) {
 		super(item);
-		
+		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			LOGGER.warn("CRITICAL WARNING: Player Entity element constructed while level registry interactions were disabled! Please report this to the dev of FancyMenu!");
+		}
 		String scaleString = item.getEntryValue("scale");
 		if ((scaleString != null) && MathUtils.isDouble(scaleString)) {
 			//Avoiding errors when trying to set a double/long value as scale
