@@ -56,14 +56,17 @@ public class CustomizationHelper {
 			}
 		}
 
-		if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
-			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
-				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
-					if (!(e.getGui() instanceof ButtonActionScreen)) {
-						if (!(e.getGui() instanceof VisibilityRequirementsScreen)) {
+		//---
+		if (!MenuCustomization.isBlacklistedMenu(e.getGui().getClass().getName())) {
+			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
+				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
+					if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
+						if (!(e.getGui() instanceof ButtonActionScreen)) {
+							if (!(e.getGui() instanceof VisibilityRequirementsScreen)) {
 
-							CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+								CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
 
+							}
 						}
 					}
 				}

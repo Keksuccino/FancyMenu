@@ -13,8 +13,8 @@ import java.util.Locale;
 public class VisibilityRequirementHandler {
 
     public static boolean isSingleplayer = false;
-    public static int windowWidth = 0;
-    public static int windowHeight = 0;
+    @Deprecated public static int windowWidth = 0;
+    @Deprecated public static int windowHeight = 0;
     public static boolean worldLoaded = false;
 
     public static void init() {

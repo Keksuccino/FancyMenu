@@ -4,6 +4,7 @@ import java.util.OptionalLong;
 import java.util.UUID;
 
 import com.mojang.authlib.GameProfile;
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.network.play.ClientPlayNetHandler;
@@ -15,11 +16,13 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 
-import net.minecraft.client.world.ClientWorld.ClientWorldInfo;
-
 public class DummyWorldFactory {
 
 	public static ClientWorld getDummyClientWorld() {
+		//---
+		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			return null;
+		}
 		return new DummyClientWorld();
 	}
 

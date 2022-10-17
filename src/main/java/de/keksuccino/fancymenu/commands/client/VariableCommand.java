@@ -22,13 +22,13 @@ import java.util.List;
 
 public class VariableCommand {
 
-    //TODO übernehmen 2.12.1
+    //---
     protected static Screen lastScreen = null;
     protected static boolean initialized = false;
     //------------------
 
     public static void register(CommandDispatcher<CommandSource> d) {
-        //TODO übernehmen 2.12.1
+        //---
         if (!initialized) {
             MinecraftForge.EVENT_BUS.register(new VariableCommand());
             initialized = true;
@@ -109,7 +109,7 @@ public class VariableCommand {
         return 1;
     }
 
-    //TODO übernehmen 2.12.1
+    //---
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent e) {
 

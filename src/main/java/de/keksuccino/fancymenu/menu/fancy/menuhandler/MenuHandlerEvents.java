@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.MainWindow;
@@ -14,6 +15,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class MenuHandlerEvents {
 
 	private MenuHandlerBase current;
+	//---
+	private Screen lastScreen;
 	
 	@SubscribeEvent
 	public void onOpenGui(GuiOpenEvent e) {
@@ -44,22 +47,32 @@ public class MenuHandlerEvents {
 			MenuHandlerRegistry.setActiveHandler(null);
 		}
 
+		//---
 		//Play menu close audio on menu close/switch
-		if (this.current != MenuHandlerRegistry.getLastActiveHandler()) {
-			if (this.current != null) {
-				String audio = this.current.closeAudio;
-				if (audio != null) {
-					SoundHandler.resetSound(audio);
-					SoundHandler.playSound(audio);
+		if (this.lastScreen != Minecraft.getInstance().screen) {
+			if (this.lastScreen != null) {
+				MenuHandlerBase handler = MenuHandlerRegistry.getHandlerFor(this.lastScreen);
+				if (handler != null) {
+					String audio = handler.closeAudio;
+					if (audio != null) {
+						SoundHandler.resetSound(audio);
+						SoundHandler.playSound(audio);
+					}
 				}
 			}
 		}
+
 		this.current = MenuHandlerRegistry.getLastActiveHandler();
+		//---
+		this.lastScreen = Minecraft.getInstance().screen;
 		
 	}
 	
 	private void initHandler(Screen s) {
 		if (s != null) {
+			if (MenuCustomization.isBlacklistedMenu(s.getClass().getName())) {
+				return;
+			}
 			if (s instanceof CustomGuiBase) {
 				if (!MenuHandlerRegistry.isHandlerRegistered(((CustomGuiBase)s).getIdentifier())) {
 					MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(((CustomGuiBase)s).getIdentifier()));

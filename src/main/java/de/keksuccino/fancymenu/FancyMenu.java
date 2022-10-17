@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.button.placeholders.Placeholders;
+import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
@@ -58,8 +58,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen 2.12.1
-	public static final String VERSION = "2.12.1";
+	//TODO übernehmen 2.12.5
+	public static final String VERSION = "2.12.5";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -148,28 +148,28 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("assets/fancymenu", this::onClientSetup);
 
-				//TODO übernehmen 2.12.1
-//				MinecraftForge.EVENT_BUS.register(this);
-
 //				MinecraftForge.EVENT_BUS.register(new Test());
 
 				if (isOptifineCompatibilityMode()) {
-					LOGGER.info("Optifine compatibility mode!");
+					LOGGER.info("[FANCYMENU] Optifine compatibility mode enabled!");
 				}
 
-				//TODO übernehmen 2.12.1
-				LOGGER.info("[FANCYMENU] Loading mod in client-side mode!");
+				//---
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 
 	    	} else {
-				//TODO übernehmen 2.12.1
-				LOGGER.info("[FANCYMENU] Loading mod in server-side mode!");
+				//---
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
 
-			//TODO übernehmen 1.12.1
 			Packets.registerAll();
 
-			//TODO übernehmen 2.12.1
 			MinecraftForge.EVENT_BUS.register(this);
+
+			//---
+			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -185,7 +185,7 @@ public class FancyMenu {
 
 	}
 
-	//TODO übernehmen 2.12.1
+	//---
 	@SubscribeEvent
 	public void onRegisterServerCommands(RegisterCommandsEvent e) {
 
@@ -272,6 +272,9 @@ public class FancyMenu {
 			config.registerValue("gridsize", 10, "layouteditor");
 
 			config.registerValue("uiscale", 1.0F, "ui");
+
+			//---
+			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			
 			config.syncConfig();
 			

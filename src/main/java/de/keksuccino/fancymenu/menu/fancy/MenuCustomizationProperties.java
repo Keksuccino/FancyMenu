@@ -53,6 +53,9 @@ public class MenuCustomizationProperties {
 						if (s2 == null) {
 							continue;
 						}
+						if (MenuCustomization.isBlacklistedMenu(s2)) {
+							continue;
+						}
 						if (!isVersionCompatible(s4, s5, FancyMenu.VERSION)) {
 							continue;
 						}

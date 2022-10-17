@@ -21,7 +21,8 @@
     "IMixinScreen",
     "IMixinMainMenuScreen",
     "IMixinWidget",
-    "IMixinWorldLoadProgressScreen"
+    "IMixinWorldLoadProgressScreen",
+    "IMixinServerList"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -245,7 +245,7 @@ public class LayoutEditorScreen extends Screen {
 		this.focusChangeBlocker.clear();
 		
 	}
-	
+
 	@Override
 	public boolean shouldCloseOnEsc() {
 		return false;
@@ -1264,13 +1264,16 @@ public class LayoutEditorScreen extends Screen {
 	}
 	
 	protected void addPlayerEntity() {
-		PropertiesSection s = new PropertiesSection("customization");
-		s.addEntry("action", "addentity");
-		LayoutPlayerEntity e = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(s), this);
-		e.setX(e.getWidth());
-		e.setY(e.getHeight());
-		this.history.saveSnapshot(this.history.createSnapshot());
-		this.addContent(e);
+		//---
+		if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "addentity");
+			LayoutPlayerEntity e = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(s), this);
+			e.setX(e.getWidth());
+			e.setY(e.getHeight());
+			this.history.saveSnapshot(this.history.createSnapshot());
+			this.addContent(e);
+		}
 	}
 	
 	protected void addAnimation(String name) {

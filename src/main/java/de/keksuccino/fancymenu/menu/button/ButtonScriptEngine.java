@@ -27,6 +27,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.mixin.client.IMixinServerList;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
@@ -36,6 +37,7 @@ import net.minecraft.client.gui.screen.ConnectingScreen;
 import net.minecraft.client.gui.screen.CreateWorldScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ServerList;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -92,8 +94,23 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("quitgame")) {
 				Minecraft.getInstance().stop();
 			}
+			//TODO übernehmen 2.12.5
 			if (action.equalsIgnoreCase("joinserver")) {
-				Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerData("", value, false)));
+				ServerData d = null;
+				ServerList l = new ServerList(Minecraft.getInstance());
+				l.load();
+				for (ServerData data : ((IMixinServerList)l).getServerListFancyMenu()) {
+					if (data.ip.equals(value)) {
+						d = data;
+						break;
+					}
+				}
+				if (d == null) {
+					d = new ServerData(value, value, false);
+					l.add(d);
+					l.save();
+				}
+				Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), d));
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
 				if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
@@ -272,8 +289,25 @@ public class ButtonScriptEngine {
 							Minecraft.getInstance().loadLevel(f.getName());
 						}
 					} else {
+						//TODO übernehmen 2.12.5
 						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
-						Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerData("", ipRaw, false)));
+//						Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerData("", ipRaw, false)));
+						ServerData d = null;
+						ServerList l = new ServerList(Minecraft.getInstance());
+						l.load();
+						for (ServerData data : ((IMixinServerList)l).getServerListFancyMenu()) {
+							if (data.ip.equals(ipRaw)) {
+								d = data;
+								break;
+							}
+						}
+						if (d == null) {
+							d = new ServerData(ipRaw, ipRaw, false);
+							l.add(d);
+							l.save();
+						}
+						Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), d));
+						//-----------------------
 					}
 				}
 			}
