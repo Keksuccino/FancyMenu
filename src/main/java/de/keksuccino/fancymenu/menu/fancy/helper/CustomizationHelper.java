@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
 
@@ -20,7 +21,10 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.konkrete.resources.ITextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -79,7 +83,8 @@ public class CustomizationHelper {
 	public static void reloadSystemAndMenu() {
 		
 		FancyMenu.updateConfig();
-		
+
+		clearKonkreteTextureCache();
 		MenuCustomization.resetSounds();
 		MenuCustomization.stopSounds();
 		AnimationHandler.resetAnimations();
@@ -101,6 +106,28 @@ public class CustomizationHelper {
 			e.printStackTrace();
 		}
 		
+	}
+
+	public static void clearKonkreteTextureCache() {
+		try {
+
+			Field texturesField = TextureHandler.class.getDeclaredField("textures");
+			texturesField.setAccessible(true);
+			Map<String, ITextureResourceLocation> textures = (Map<String, ITextureResourceLocation>) texturesField.get(TextureHandler.class);
+			textures.clear();
+
+			Field gifsField = TextureHandler.class.getDeclaredField("gifs");
+			gifsField.setAccessible(true);
+			Map<String, ExternalGifAnimationRenderer> gifs = (Map<String, ExternalGifAnimationRenderer>) gifsField.get(TextureHandler.class);
+			for (ExternalGifAnimationRenderer g : gifs.values()) {
+				g.setLooped(false);
+				g.resetAnimation();
+			}
+			gifs.clear();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void openFile(File f) {

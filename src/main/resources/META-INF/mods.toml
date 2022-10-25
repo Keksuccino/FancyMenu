@@ -9,7 +9,7 @@ license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
 # The modid of the mod
 modId="fancymenu" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="2.12.5" #mandatory
+version="2.12.6" #mandatory
  # A display name for the mod
 displayName="FancyMenu" #mandatory
 # A text field displayed in the mod UI
