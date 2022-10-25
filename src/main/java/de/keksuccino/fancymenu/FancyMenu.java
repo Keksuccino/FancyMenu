@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderHandler;
 import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
@@ -49,7 +50,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.12.5";
+	public static final String VERSION = "2.12.6";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -142,6 +143,13 @@ public class FancyMenu implements ModInitializer {
 				}
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
+
+				//TODO remove debug
+				de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.Placeholders.registerAll();
+				String placeholder3 = "{\"placeholder\":\"test_placeholder_3\"}";
+				String placeholder2 = "{\"placeholder\":\"test_placeholder_2\"}";
+				String placeholder1 = "{\"placeholder\":\"test_placeholder_1\",\"values\":{\"value_1\":\"" + placeholder2 + "\",\"value_2\":\"" + placeholder3 + "\"}}";
+				LOGGER.info("############################### PLACEHOLDER: " + PlaceholderHandler.replacePlaceholders(placeholder1));
 	        	
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
