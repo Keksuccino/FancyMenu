@@ -311,6 +311,9 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.simibubi.create.")) {
 			return true;
 		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.panoramica.")) {
+			return true;
+		}
 		return false;
 	}
 	

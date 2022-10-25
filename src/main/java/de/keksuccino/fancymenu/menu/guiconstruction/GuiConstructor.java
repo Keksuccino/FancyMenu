@@ -33,18 +33,20 @@ public class GuiConstructor {
 		parameters.put(ClientAdvancementManager.class, null);
 		parameters.put(ITextComponent.class, new TextComponentString(""));
 		parameters.put(boolean.class, true);
-		parameters.put(int.class, 1);
-		parameters.put(long.class, 1L);
-		parameters.put(double.class, 1D);
-		parameters.put(float.class, 1F);
+		parameters.put(int.class, 0);
+		parameters.put(long.class, 0L);
+		parameters.put(double.class, 0D);
+		parameters.put(float.class, 0F);
 		
 	}
 	
 	public static GuiScreen tryToConstruct(String identifier) {
 		try {
+
 			if (MenuCustomization.isBlacklistedMenu(identifier)) {
 				return null;
 			}
+
 			//Update last screen
 			parameters.put(GuiScreen.class, Minecraft.getMinecraft().currentScreen);
 			//Update player
@@ -52,30 +54,53 @@ public class GuiConstructor {
 			if ((Minecraft.getMinecraft().player != null) && (Minecraft.getMinecraft().player.connection != null)) {
 				parameters.put(ClientAdvancementManager.class, Minecraft.getMinecraft().player.connection.getAdvancementManager());
 			}
-			
+
 			Class<?> gui = Class.forName(identifier);
 			if ((gui != null) && GuiScreen.class.isAssignableFrom(gui)) {
-				Constructor<?>[] c = gui.getConstructors();
-				
-				if ((c != null) && (c.length > 0)) {
-					Constructor<?> con = c[0];
-					Class<?>[] pars = con.getParameterTypes();
-					List<Object> pars2 = new ArrayList<Object>();
-					
-					for (Class<?> par : pars) {
-						if (parameters.containsKey(par)) {
-							pars2.add(parameters.get(par));
+				Constructor<?>[] constructors = gui.getConstructors();
+				if ((constructors != null) && (constructors.length > 0)) {
+					Constructor<?> con = null;
+					//Try to find constructor without parameters
+					for (Constructor<?> constructor : constructors) {
+						if (constructor.getParameterTypes().length == 0) {
+							con = constructor;
+							break;
 						}
 					}
-					
-					return createNewInstance(con, pars2, gui);
+					if (con == null) {
+						//Try to find constructor with supported parameters
+						for (Constructor<?> constructor : constructors) {
+							if (supportsAllParameters(constructor.getParameterTypes())) {
+								con = constructor;
+								break;
+							}
+						}
+					}
+					if (con != null) {
+						Class<?>[] params = con.getParameterTypes();
+						List<Object> paramInstances = new ArrayList<>();
+						for (Class<?> p : params) {
+							paramInstances.add(parameters.get(p));
+						}
+						return createNewInstance(con, paramInstances, gui);
+					}
+					return null;
 				}
 			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
-		} 
-		
+		}
 		return null;
+	}
+
+	private static boolean supportsAllParameters(Class<?>[] params) {
+		for (Class<?> par : params) {
+			if (!parameters.containsKey(par)) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	private static GuiScreen createNewInstance(Constructor<?> con, List<Object> paras, Class<?> gui) {
