@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.DrawWidgetBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -1515,7 +1515,7 @@ public class MenuHandlerBase {
 
 	//---
 	@SubscribeEvent
-	public void onButtonRenderBackground(RenderWidgetBackgroundEvent.Pre e) {
+	public void onButtonRenderBackground(DrawWidgetBackgroundEvent.Pre e) {
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
 			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 
@@ -1574,7 +1574,7 @@ public class MenuHandlerBase {
 	}
 
 	//---
-	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
+	protected boolean renderCustomButtomBackground(DrawWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		Widget w = e.getWidget();
 		MatrixStack matrix = e.getMatrixStack();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
@@ -1626,7 +1626,7 @@ public class MenuHandlerBase {
 	}
 
 	//---
-	protected void renderBackgroundAnimation(RenderWidgetBackgroundEvent e, IAnimationRenderer ani) {
+	protected void renderBackgroundAnimation(DrawWidgetBackgroundEvent e, IAnimationRenderer ani) {
 		Widget w = e.getWidget();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
 		if (c != null) {

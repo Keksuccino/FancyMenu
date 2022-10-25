@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.DrawWidgetBackgroundEvent;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.ImageButton;
@@ -26,13 +26,13 @@ public abstract class MixinImageButton extends AbstractGui {
 	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/button/ImageButton;blit(Lcom/mojang/blaze3d/matrix/MatrixStack;IIFFIIII)V"),method = "renderButton")
 	private void redirectBlitInRenderButton(MatrixStack poseStack, int x, int y, float texX, float texY, int width, int height, int texWidth, int texHeight) {
 		try {
-			RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre(poseStack, (Widget)((Object)this), this.getAlpha());
+			DrawWidgetBackgroundEvent.Pre e = new DrawWidgetBackgroundEvent.Pre(poseStack, (Widget)((Object)this), this.getAlpha());
 			MinecraftForge.EVENT_BUS.post(e);
 			if (!e.isCanceled()) {
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, e.getAlpha());
 				blit(poseStack, x, y, texX, texY, width, height, texWidth, texHeight);
 			}
-			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post(poseStack, (Widget)((Object)this), e.getAlpha());
+			DrawWidgetBackgroundEvent.Post e2 = new DrawWidgetBackgroundEvent.Post(poseStack, (Widget)((Object)this), e.getAlpha());
 			MinecraftForge.EVENT_BUS.post(e2);
 		} catch (Exception e) {
 			e.printStackTrace();

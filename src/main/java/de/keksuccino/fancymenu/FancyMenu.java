@@ -59,7 +59,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen 2.12.5
-	public static final String VERSION = "2.12.5";
+	public static final String VERSION = "2.12.6";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -154,11 +154,17 @@ public class FancyMenu {
 					LOGGER.info("[FANCYMENU] Optifine compatibility mode enabled!");
 				}
 
-				//---
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 
+				//TODO remove debug
+				try {
+					Class.forName("de.keksuccino.fancymenu.events.DrawWidgetBackgroundEvent");
+					LOGGER.info("[FANCYMENU] DrawWidgetBackgroundEvent class found! That's a good thing!");
+				} catch (Exception e) {
+					LOGGER.error("[FANCYMENU] Unable to load DrawWidgetBackgroundEvent class! This shouldn't happen!");
+				}
+
 	    	} else {
-				//---
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
 
@@ -166,7 +172,6 @@ public class FancyMenu {
 
 			MinecraftForge.EVENT_BUS.register(this);
 
-			//---
 			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
 				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
 			}

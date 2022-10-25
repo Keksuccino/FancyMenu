@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.DrawWidgetBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetLabelEvent;
 import net.minecraft.client.Minecraft;
@@ -33,13 +33,12 @@ public abstract class MixinWidget extends AbstractGui {
 
 		info.cancel();
 
-		//--- (try-catch)
 		try {
 			Minecraft mc = Minecraft.getInstance();
 			FontRenderer font = mc.font;
 			Widget b = (Widget)((Object)this);
 
-			RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre(matrix, b, this.alpha);
+			DrawWidgetBackgroundEvent.Pre e = new DrawWidgetBackgroundEvent.Pre(matrix, b, this.alpha);
 			MinecraftForge.EVENT_BUS.post(e);
 			this.alpha = e.getAlpha();
 			if (!e.isCanceled()) {
@@ -47,7 +46,7 @@ public abstract class MixinWidget extends AbstractGui {
 				this.blit(matrix, b.x, b.y, 0, 46 + i * 20, this.width / 2, this.height);
 				this.blit(matrix, b.x + this.width / 2, b.y, 200 - this.width / 2, 46 + i * 20, this.width / 2, this.height);
 			}
-			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post(matrix, b, this.alpha);
+			DrawWidgetBackgroundEvent.Post e2 = new DrawWidgetBackgroundEvent.Post(matrix, b, this.alpha);
 			MinecraftForge.EVENT_BUS.post(e2);
 
 			this.renderBg(matrix, mc, mouseX, mouseY);
