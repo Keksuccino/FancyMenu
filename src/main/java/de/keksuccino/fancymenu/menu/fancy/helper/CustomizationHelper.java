@@ -1,13 +1,18 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
+import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
+import de.keksuccino.konkrete.resources.ITextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import com.google.common.io.Files;
@@ -81,7 +86,8 @@ public class CustomizationHelper {
 	public static void reloadSystemAndMenu() {
 		
 		FancyMenu.updateConfig();
-		
+
+		clearKonkreteTextureCache();
 		MenuCustomization.resetSounds();
 		MenuCustomization.stopSounds();
 		AnimationHandler.resetAnimations();
@@ -103,6 +109,28 @@ public class CustomizationHelper {
 			e.printStackTrace();
 		}
 		
+	}
+
+	public static void clearKonkreteTextureCache() {
+		try {
+
+			Field texturesField = TextureHandler.class.getDeclaredField("textures");
+			texturesField.setAccessible(true);
+			Map<String, ITextureResourceLocation> textures = (Map<String, ITextureResourceLocation>) texturesField.get(TextureHandler.class);
+			textures.clear();
+
+			Field gifsField = TextureHandler.class.getDeclaredField("gifs");
+			gifsField.setAccessible(true);
+			Map<String, ExternalGifAnimationRenderer> gifs = (Map<String, ExternalGifAnimationRenderer>) gifsField.get(TextureHandler.class);
+			for (ExternalGifAnimationRenderer g : gifs.values()) {
+				g.setLooped(false);
+				g.resetAnimation();
+			}
+			gifs.clear();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static void openFile(File f) {
