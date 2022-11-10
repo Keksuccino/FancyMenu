@@ -25,23 +25,28 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				this.value = this.value.replace("\\", "/");
 				
 				File f = new File(this.value);
+				String finalValue = this.value;
+				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+					finalValue = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + this.value;
+					f = new File(finalValue);
+				}
 				if (f.exists() && f.isFile() && (f.getName().endsWith(".png") || f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".gif"))) {
 					try {
 						int w = 0;
 					    int h = 0;
 					    double ratio;
-					    
+
 						if (f.getName().endsWith(".gif")) {
-							this.gif = TextureHandler.getGifResource(this.value);
+							this.gif = TextureHandler.getGifResource(finalValue);
 							if (this.gif != null) {
 								w = this.gif.getWidth();
 								h = this.gif.getHeight();
 							}
 						} else {
-							this.texture = TextureHandler.getResource(this.value);
+							this.texture = TextureHandler.getResource(finalValue);
 							if (this.texture != null) {
 								w = this.texture.getWidth();
-							    h = this.texture.getHeight();
+								h = this.texture.getHeight();
 							}
 						}
 						

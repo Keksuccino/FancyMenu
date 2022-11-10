@@ -16,7 +16,7 @@ import org.lwjgl.opengl.DisplayMode;
 
 public class MainWindowHandler {
 
-	private static File icondir = new File("config/fancymenu/minecraftwindow/icons");
+	private static File icondir = new File(FancyMenu.MOD_DIR, "/minecraftwindow/icons");
 
 	private static int scale = 1;
 	private static boolean isScaleSet = false;

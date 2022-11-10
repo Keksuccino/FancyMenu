@@ -153,9 +153,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 			ChooseFilePopup t = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
-						File home = new File("");
+						File home = Minecraft.getMinecraft().mcDataDir;
 						call = call.replace("\\", "/");
 						File f = new File(call);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+							f = new File(Minecraft.getMinecraft().mcDataDir, call);
+						}
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (f.exists() && f.isFile() && f.getName().endsWith(".png")) {
 							if (filename.equals(f.getName())) {
@@ -259,9 +262,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 			ChooseFilePopup t = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
-						File home = new File("");
+						File home = Minecraft.getMinecraft().mcDataDir;
 						call = call.replace("\\", "/");
 						File f = new File(call);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+							f = new File(Minecraft.getMinecraft().mcDataDir, call);
+						}
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (f.exists() && f.isFile() && f.getName().endsWith(".png")) {
 							if (filename.equals(f.getName())) {

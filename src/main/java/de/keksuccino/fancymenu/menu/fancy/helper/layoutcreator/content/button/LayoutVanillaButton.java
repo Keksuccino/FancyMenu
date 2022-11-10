@@ -167,6 +167,9 @@ public class LayoutVanillaButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+							f = new File(Minecraft.getMinecraft().mcDataDir, call);
+						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 							if ((this.customizationContainer.hoverSound == null) || !this.customizationContainer.hoverSound.equals(call)) {
 								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -198,6 +201,9 @@ public class LayoutVanillaButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+							f = new File(Minecraft.getMinecraft().mcDataDir, call);
+						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 							if ((this.customizationContainer.clickSound == null) || !this.customizationContainer.clickSound.equals(call)) {
 								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());

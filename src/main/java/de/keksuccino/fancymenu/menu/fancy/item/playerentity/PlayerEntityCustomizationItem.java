@@ -92,10 +92,14 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String skin = fixBackslashPath(item.getEntryValue("skinpath"));
 		if ((skin != null) && (this.entity.skinLocation == null)) {
+			File f = new File(skin);
+			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+				skin = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + skin;
+				f = new File(skin);
+			}
 			ExternalTextureResourceLocation r = TextureHandler.getResource(skin);
 			if (r != null) {
 				if (r.getHeight() < 64) {
-					File f = new File(skin);
 					if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
 						String sha1 = PlayerEntityCache.calculateSHA1(f);
 						if (sha1 != null) {
@@ -126,6 +130,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String cape = fixBackslashPath(item.getEntryValue("capepath"));
 		if ((cape != null) && (this.entity.capeLocation == null)) {
+			File f = new File(cape);
+			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+				cape = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + cape;
+			}
 			ExternalTextureResourceLocation r = TextureHandler.getResource(cape);
 			if (r != null) {
 				this.entity.capeLocation = r.getResourceLocation();

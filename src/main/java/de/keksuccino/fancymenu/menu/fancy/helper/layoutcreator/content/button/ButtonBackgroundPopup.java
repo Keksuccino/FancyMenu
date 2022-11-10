@@ -124,9 +124,12 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.chooseNormalBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
-                    File home = new File("");
+                    File home = Minecraft.getMinecraft().mcDataDir;
                     call = call.replace("\\", "/");
                     File f = new File(call);
+                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                        f = new File(Minecraft.getMinecraft().mcDataDir, call);
+                    }
                     String filteredName = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
                     if (f.isFile()) {
                         if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
@@ -166,9 +169,12 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.chooseHoverBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
-                    File home = new File("");
+                    File home = Minecraft.getMinecraft().mcDataDir;
                     call = call.replace("\\", "/");
                     File f = new File(call);
+                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                        f = new File(Minecraft.getMinecraft().mcDataDir, call);
+                    }
                     String filteredName = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
                     if (f.isFile()) {
                         if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
@@ -309,9 +315,12 @@ public class ButtonBackgroundPopup extends FMPopup {
         if (this.normalBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
             if ((this.normalBackgroundImageTextField.getText() != null) && !this.normalBackgroundImageTextField.getText().replace(" ", "").equals("")) {
                 File f = new File(this.normalBackgroundImageTextField.getText());
+                if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                    f = new File(Minecraft.getMinecraft().mcDataDir, this.normalBackgroundImageTextField.getText());
+                }
                 if (f.isFile()) {
                     if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png") || f.getPath().toLowerCase().endsWith(".gif")) {
-                        this.customizationContainer.normalBackground = f.getPath();
+                        this.customizationContainer.normalBackground = this.normalBackgroundImageTextField.getText();
                     }
                 }
             }
@@ -326,9 +335,12 @@ public class ButtonBackgroundPopup extends FMPopup {
         if (this.hoverBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
             if ((this.hoverBackgroundImageTextField.getText() != null) && !this.hoverBackgroundImageTextField.getText().replace(" ", "").equals("")) {
                 File f = new File(this.hoverBackgroundImageTextField.getText());
+                if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                    f = new File(Minecraft.getMinecraft().mcDataDir, this.hoverBackgroundImageTextField.getText());
+                }
                 if (f.isFile()) {
                     if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png") || f.getPath().toLowerCase().endsWith(".gif")) {
-                        this.customizationContainer.hoverBackground = f.getPath();
+                        this.customizationContainer.hoverBackground = this.hoverBackgroundImageTextField.getText();
                     }
                 }
             }

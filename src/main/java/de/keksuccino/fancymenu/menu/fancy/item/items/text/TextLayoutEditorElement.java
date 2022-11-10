@@ -88,6 +88,9 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }, "txt");
                 if (i.source != null) {
                     File f = new File(i.source);
+                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                        f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + i.source);
+                    }
                     if (f.isFile()) {
                         p.setText(i.source);
                     }
