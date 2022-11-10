@@ -15,7 +15,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderHandler;
 import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
@@ -44,28 +43,35 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallba
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.12.6";
+	//TODO übernehmen
+	public static final String VERSION = "2.12.7";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
 
-	public static final File MOD_DIR = new File("config/fancymenu");
-	public static final File INSTANCE_DATA_DIR = new File("fancymenu_data");
+	//TODO übernehmen
+	public static final File MOD_DIR = new File(Minecraft.getInstance().gameDirectory, "/config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File(Minecraft.getInstance().gameDirectory, "/fancymenu_data");
+	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
+	//---------------------
 
-	private static File animationsPath = new File(MOD_DIR.getPath() + "/animations");
-	private static File customizationPath = new File(MOD_DIR.getPath() + "/customization");
-	private static File customGuiPath = new File(MOD_DIR.getPath() + "/customguis");
-	private static File buttonscriptPath = new File(MOD_DIR.getPath() + "/buttonscripts");
-	private static File panoramaPath = new File(MOD_DIR.getPath() + "/panoramas");
-	private static File slideshowPath = new File(MOD_DIR.getPath() + "/slideshows");
+	//TODO übernehmen
+	private static File animationsPath = new File(MOD_DIR, "/animations");
+	private static File customizationPath = new File(MOD_DIR, "/customization");
+	private static File customGuiPath = new File(MOD_DIR, "/customguis");
+	private static File buttonscriptPath = new File(MOD_DIR, "/buttonscripts");
+	private static File panoramaPath = new File(MOD_DIR, "/panoramas");
+	private static File slideshowPath = new File(MOD_DIR, "/slideshows");
+	//---------------------------
 	
     @Override
     public void onInitialize() {
@@ -143,13 +149,6 @@ public class FancyMenu implements ModInitializer {
 				}
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
-
-				//TODO remove debug
-				de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.Placeholders.registerAll();
-				String placeholder3 = "{\"placeholder\":\"test_placeholder_3\"}";
-				String placeholder2 = "{\"placeholder\":\"test_placeholder_2\"}";
-				String placeholder1 = "{\"placeholder\":\"test_placeholder_1\",\"values\":{\"value_1\":\"" + placeholder2 + "\",\"value_2\":\"" + placeholder3 + "\"}}";
-				LOGGER.info("############################### PLACEHOLDER: " + PlaceholderHandler.replacePlaceholders(placeholder1));
 	        	
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
