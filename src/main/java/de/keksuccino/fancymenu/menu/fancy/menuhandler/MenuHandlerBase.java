@@ -674,6 +674,10 @@ public class MenuHandlerBase {
 				}
 				if (value != null) {
 					File f = new File(value.replace("\\", "/"));
+					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						value = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + value.replace("\\", "/");
+						f = new File(value);
+					}
 					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
 							this.backgroundTexture = TextureHandler.getResource(value);
@@ -1018,13 +1022,16 @@ public class MenuHandlerBase {
 					if ((Minecraft.getInstance().level == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
 						String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 						String loopString = sec.getEntryValue("loop");
-
 						boolean loop = false; 
 						if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
 							loop = true;
 						}
 						if (path != null) {
 							File f = new File(path);
+							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+								path = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path;
+								f = new File(path);
+							}
 							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 								try {
 									String name = path + Files.size(f.toPath());
@@ -1044,6 +1051,10 @@ public class MenuHandlerBase {
 
 				if (path != null) {
 					File f = new File(path);
+					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						path = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path;
+						f = new File(path);
+					}
 					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 						try {
 							String name = "closesound_" + path + Files.size(f.toPath());
@@ -1064,6 +1075,10 @@ public class MenuHandlerBase {
 					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 					if (path != null) {
 						File f = new File(path);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+							path = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path;
+							f = new File(path);
+						}
 						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 							try {
 								String name = "opensound_" + path + Files.size(f.toPath());
@@ -1496,6 +1511,10 @@ public class MenuHandlerBase {
 				if (c != null) {
 					if (c.clickSound != null) {
 						File f = new File(c.clickSound);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+							c.clickSound = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + c.clickSound;
+							f = new File(c.clickSound);
+						}
 						if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
 
 							SoundHandler.registerSound(f.getPath(), f.getPath());
@@ -1596,6 +1615,10 @@ public class MenuHandlerBase {
 						}
 					} else {
 						File f = new File(background);
+						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+							background = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + background;
+							f = new File(background);
+						}
 						if (f.isFile()) {
 							if (f.getPath().toLowerCase().endsWith(".gif")) {
 								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
@@ -1856,6 +1879,10 @@ public class MenuHandlerBase {
 			if (!this.layouts.isEmpty()) {
 				if ((this.onlyFirstTime || !MenuCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
 					File f = new File(this.lastLayoutPath);
+					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						this.lastLayoutPath = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.lastLayoutPath;
+						f = new File(this.lastLayoutPath);
+					}
 					if (f.exists()) {
 						for (PropertiesSet s : this.layouts) {
 							List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
