@@ -45,8 +45,6 @@
 //
 //    protected volatile long lastFrameTime = -1L;
 //
-//    //TODO extra thread für play
-//    //TODO volume handling wie bei video extension
 //    // - Button action, um volume up/down für ALLE
 //    // - Button action um volume up/down für EINZELNE animation
 //
@@ -177,7 +175,6 @@
 //                    long msPerFrame = 1000L / (long)this.fps;
 //                    if ((this.lastFrameTime + msPerFrame) <= now) {
 //                        this.currentFrameIndex++;
-//                        //TODO hier weiter machen
 //                    }
 //
 //                }

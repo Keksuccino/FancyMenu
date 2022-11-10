@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content;
 
 import java.awt.Color;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -207,9 +208,19 @@ public class LayoutSplashText extends LayoutElement {
 		if (this.getObject().text != null) {
 			p1.addEntry("text", this.getObject().text);
 		}
+		//TODO übernehmen
 		if (this.getObject().splashfile != null) {
-			p1.addEntry("splashfilepath", this.getObject().splashfile.getPath());
+			File home = Minecraft.getInstance().gameDirectory;
+			String path = this.getObject().splashfile.getAbsolutePath();
+			if (path.startsWith(home.getAbsolutePath())) {
+				path = path.replace(home.getAbsolutePath(), "");
+				if (path.startsWith("\\") || path.startsWith("/")) {
+					path = path.substring(1);
+				}
+			}
+			p1.addEntry("splashfilepath", path);
 		}
+		//-----------------------
 		p1.addEntry("x", "" + this.object.posX);
 		p1.addEntry("y", "" + this.object.posY);
 		p1.addEntry("orientation", this.object.orientation);

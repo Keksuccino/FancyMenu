@@ -37,9 +37,11 @@ import java.util.function.Consumer;
 
 public class SetupSharingEngine {
 
-    public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File("config/fancymenu/menu_identifiers.db");
-    public static final File FM_SETUPS_DIR = new File("fancymenu_setups/exported_setups");
-    public static final File SETUP_BACKUP_DIR = new File("fancymenu_setups/.backups");
+    //TODO übernehmen 4
+    public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
+    public static final File FM_SETUPS_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/exported_setups");
+    public static final File SETUP_BACKUP_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/.backups");
+    //---------------------
 
     protected static MenuIdentifierDatabase menuIdentifierDatabase = null;
 
@@ -70,7 +72,6 @@ public class SetupSharingEngine {
         try {
             FMYesNoPopup importConfirmPop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
                 if (call) {
-                    //TODO besseres popup mit file chooser für folders
                     FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.setupsharing.import.enterpath"), null, 240, (call2) -> {
                         importSetupWithPathRaw(call2);
                     });
@@ -335,7 +336,8 @@ public class SetupSharingEngine {
                 return null;
             }
 
-            File exportToTemp = new File("fm_export_temp_folder_" + UUID.randomUUID());
+            //TODO übernehmen 4
+            File exportToTemp = new File(Minecraft.getInstance().gameDirectory, "fm_export_temp_folder_" + UUID.randomUUID());
             File exportToTempSetup = new File(exportToTemp.getPath() + "/setup");
             exportToTempSetup.mkdirs();
 
@@ -481,7 +483,8 @@ public class SetupSharingEngine {
 
             //Export setup (config/fancymenu)
             try {
-                File fmDir = new File("config/fancymenu");
+                //TODO übernehmen 2
+                File fmDir = FancyMenu.MOD_DIR;
                 File target = new File(exportToTempSetup.getAbsolutePath() + "/config/fancymenu");
                 target.mkdirs();
                 FileUtils.copyDirectory(fmDir, target);
@@ -629,38 +632,6 @@ public class SetupSharingEngine {
         return l;
     }
 
-//    protected static List<String> getButtonActionResources(PropertiesSection layoutAction) {
-//        List<String> l = new ArrayList<>();
-//        try {
-//            String action = layoutAction.getEntryValue("action");
-//            if (action != null) {
-//                if (action.equalsIgnoreCase("addbutton")) {
-//                    String buttonAction = layoutAction.getEntryValue("buttonaction");
-//                    if (buttonAction != null) {
-//                        String actionValue = layoutAction.getEntryValue("value");
-//                        String homePath = CustomizationItemBase.fixBackslashPath(new File("").getAbsolutePath());
-//
-//                        if (buttonAction.equalsIgnoreCase("openfile")) {
-//                            if (actionValue != null) {
-//                                File f = new File(actionValue);
-//                                if (f.exists()) {
-//                                    String fullPath = CustomizationItemBase.fixBackslashPath(f.getAbsolutePath());
-//                                    if (fullPath.startsWith(homePath) && !f.getCanonicalPath().equals(new File(homePath).getCanonicalPath())) {
-//                                        //do stuff
-//                                    }
-//                                }
-//                            }
-//                        }
-//
-//                    }
-//                }
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return l;
-//    }
-
     public static String getShortPath(String path) {
         if (path == null) {
             return null;
@@ -670,7 +641,8 @@ public class SetupSharingEngine {
         if (!pathRaw.exists()) {
             return null;
         }
-        File home = new File("");
+        //TODO übernehmen 2
+        File home = Minecraft.getInstance().gameDirectory;
         if (pathRaw.getAbsolutePath().startsWith(home.getAbsolutePath())) {
             path = pathRaw.getAbsolutePath().replace(home.getAbsolutePath(), "");
             if (path.startsWith("\\") || path.startsWith("/")) {
@@ -711,13 +683,15 @@ public class SetupSharingEngine {
                 }
                 if (mainAni instanceof ResourcePackAnimationRenderer) {
                     String namespace = ((ResourcePackAnimationRenderer) mainAni).getPath();
-                    File lmrAni = new File("resources/" + namespace);
+                    //TODO übernehmen 2
+                    File lmrAni = new File(Minecraft.getInstance().gameDirectory, "resources/" + namespace);
                     if (lmrAni.isDirectory()) {
                         meta.type = AnimationType.LMR;
                         meta.resourcesPath = lmrAni.getPath();
                         return meta;
                     }
-                    File resPackDir = new File("resourcepacks");
+                    //TODO übernehmen 2
+                    File resPackDir = new File(Minecraft.getInstance().gameDirectory, "resourcepacks");
                     if (resPackDir.isDirectory()) {
                         for (File f : resPackDir.listFiles()) {
                             File packAni = new File(f.getPath() + "/assets/" + namespace);
@@ -892,7 +866,6 @@ public class SetupSharingEngine {
 
                                 /** STEP 4 : CHECK MOD LIST **/
                                 if (step == 4) {
-                                    //TODO implement mod check
                                     step = 5;
                                 }
 
@@ -919,11 +892,13 @@ public class SetupSharingEngine {
                                         importBlockerPopup = new StatusPopup(Locals.localize("fancymenu.helper.setupsharing.import.importingsetup"));
                                         PopupHandler.displayPopup(importBlockerPopup);
                                         if (this.setupInstancePath.isDirectory()) {
-                                            File targetRaw = new File("");
+                                            //TODO übernehmen 2
+                                            File targetRaw = Minecraft.getInstance().gameDirectory;
                                             File targetDir = new File(targetRaw.getAbsolutePath());
                                             if (targetDir.isDirectory()) {
                                                 try {
-                                                    File fmFolder = new File("config/fancymenu");
+                                                    //TODO übernehmen 2
+                                                    File fmFolder = FancyMenu.MOD_DIR;
                                                     File customizationFolder = new File(fmFolder.getPath() + "/customization");
                                                     File customizableMenusFile = new File(fmFolder.getPath() + "/customizablemenus.txt");
                                                     //Delete most important stuff first, in case something fails later when deleting the whole dir

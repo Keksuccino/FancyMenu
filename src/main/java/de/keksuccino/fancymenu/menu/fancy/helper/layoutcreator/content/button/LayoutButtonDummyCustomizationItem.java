@@ -56,6 +56,11 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 				}
 			} else {
 				File f = new File(this.button.normalBackground);
+				//TODO übernehmen
+				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+					f = new File(Minecraft.getInstance().gameDirectory, this.button.normalBackground);
+				}
+				//----------------------
 				if (f.isFile()) {
 					if (f.getPath().toLowerCase().endsWith(".gif")) {
 						animation = TextureHandler.getGifResource(f.getPath());

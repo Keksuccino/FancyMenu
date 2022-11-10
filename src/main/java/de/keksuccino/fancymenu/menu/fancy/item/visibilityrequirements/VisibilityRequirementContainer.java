@@ -402,12 +402,10 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Width
             if (this.vrCheckForWindowWidth) {
                 if (this.vrShowIfWindowWidth) {
-                    //TODO übernehmen ------------
                     if (!this.vrWindowWidth.contains(Minecraft.getInstance().getWindow().getWidth())) {
                         return false;
                     }
                 } else {
-                    //TODO übernehmen -------------
                     if (this.vrWindowWidth.contains(Minecraft.getInstance().getWindow().getWidth())) {
                         return false;
                     }
@@ -417,12 +415,10 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Height
             if (this.vrCheckForWindowHeight) {
                 if (this.vrShowIfWindowHeight) {
-                    //TODO übernehmen -------------------
                     if (!this.vrWindowHeight.contains(Minecraft.getInstance().getWindow().getHeight())) {
                         return false;
                     }
                 } else {
-                    //TODO übernehmen -----------------
                     if (this.vrWindowHeight.contains(Minecraft.getInstance().getWindow().getHeight())) {
                         return false;
                     }
@@ -432,12 +428,10 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Width Bigger Than
             if (this.vrCheckForWindowWidthBiggerThan) {
                 if (this.vrShowIfWindowWidthBiggerThan) {
-                    //TODO übernehmen --------------
                     if (Minecraft.getInstance().getWindow().getWidth() <= this.vrWindowWidthBiggerThan) {
                         return false;
                     }
                 } else {
-                    //TODO übernehmen ---------------
                     if (Minecraft.getInstance().getWindow().getWidth() >= this.vrWindowWidthBiggerThan) {
                         return false;
                     }
@@ -447,12 +441,10 @@ public class VisibilityRequirementContainer {
             //VR: Is Window Height Bigger Than
             if (this.vrCheckForWindowHeightBiggerThan) {
                 if (this.vrShowIfWindowHeightBiggerThan) {
-                    //TODO übernehmen -----------------
                     if (Minecraft.getInstance().getWindow().getHeight() <= this.vrWindowHeightBiggerThan) {
                         return false;
                     }
                 } else {
-                    //TODO übernehmen ------------------
                     if (Minecraft.getInstance().getWindow().getHeight() >= this.vrWindowHeightBiggerThan) {
                         return false;
                     }

@@ -16,6 +16,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.Minecraft;
 
 import java.awt.*;
 import java.io.File;
@@ -88,6 +89,11 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }, "txt");
                 if (i.source != null) {
                     File f = new File(i.source);
+                    //TODO übernehmen
+                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                        f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + i.source);
+                    }
+                    //----------------------
                     if (f.isFile()) {
                         p.setText(i.source);
                     }

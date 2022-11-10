@@ -7,6 +7,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.web.WebUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
@@ -65,6 +66,12 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
                     String link = l.get(1);
                     String jsonPath = l.get(2);
                     File f = new File(link);
+                    //TODO übernehmen
+                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                        String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + link;
+                        f = new File(linkTemp);
+                    }
+                    //----------------------
                     if (f.isFile()) {
                         List<String> json = JsonUtils.getJsonValueByPath(f, jsonPath);
                         if (json != null) {

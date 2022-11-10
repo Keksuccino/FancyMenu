@@ -56,7 +56,6 @@
 //    private Supplier<PackResources> createSupplier(File packZipOrFolder) {
 //        if (packZipOrFolder.isDirectory()) {
 //            return () -> {
-//                //TODO return animation folder pack
 //                return null;
 //            };
 //        } else {

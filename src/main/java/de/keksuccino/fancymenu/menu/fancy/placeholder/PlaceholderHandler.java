@@ -49,7 +49,6 @@ public class PlaceholderHandler {
     }
 
     //Only works for one level of properties
-    //TODO Make this work with placeholders nested in property (sub-placeholders)
     public static List<String> parseRawProperties(String placeholder, List<String> l) {
         if ((placeholder != null) && placeholder.startsWith("%{") && placeholder.endsWith("}%")) {
             boolean inProperty = false;
