@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,7 +22,7 @@ public class PanoramaHandler {
 	}
 	
 	public static void updatePanoramas() {
-		File f = new File("config/fancymenu/panoramas/");
+		File f = FancyMenu.getPanoramaPath();
 		if (!f.exists()) {
 			f.mkdirs();
 		}

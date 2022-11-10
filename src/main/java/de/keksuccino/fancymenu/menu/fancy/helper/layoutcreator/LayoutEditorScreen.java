@@ -1130,7 +1130,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected void addTexture(String path) {
-		File home = new File("");
+		File home = Minecraft.getInstance().gameDirectory;
 		if (path == null) {
 			return;
 		}
@@ -1140,7 +1140,7 @@ public class LayoutEditorScreen extends Screen {
 				path = path.substring(1);
 			}
 		}
-		File f = new File(path);
+		File f = new File(Minecraft.getInstance().gameDirectory, path);
 		String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 		if (f.exists()) {
 			if (filename.equals(f.getName())) {
@@ -1211,7 +1211,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 	
 	protected void addMultiSplashText(String path) {
-		File home = new File("");
+		File home = Minecraft.getInstance().gameDirectory;
 		if (path == null) {
 			return;
 		}
@@ -1221,7 +1221,7 @@ public class LayoutEditorScreen extends Screen {
 				path = path.substring(1);
 			}
 		}
-		File f = new File(path);
+		File f = new File(Minecraft.getInstance().gameDirectory, path);
 		if (f.exists() && f.getPath().toLowerCase().endsWith(".txt")) {
 			
 			this.history.saveSnapshot(this.history.createSnapshot());
@@ -1341,15 +1341,14 @@ public class LayoutEditorScreen extends Screen {
 	
 	protected void addAudio(String path) {
 		if (path != null) {
-			File home = new File("");
+			File home = Minecraft.getInstance().gameDirectory;
 			if (path.startsWith(home.getAbsolutePath())) {
 				path = path.replace(home.getAbsolutePath(), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}
 			}
-			
-			File f = new File(path);
+			File f = new File(Minecraft.getInstance().gameDirectory, path);
 			if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 				if (!this.audio.containsKey(path)) {
 					this.history.saveSnapshot(this.history.createSnapshot());
@@ -1401,21 +1400,20 @@ public class LayoutEditorScreen extends Screen {
 	
 	public void setBackgroundTexture(String path) {
 		if (path != null) {
-			File home = new File("");
+			File home = Minecraft.getInstance().gameDirectory;
 			if (path.startsWith(home.getAbsolutePath())) {
 				path = path.replace(home.getAbsolutePath(), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}
 			}
-			
-			File f = new File(path);
+			File f = new File(Minecraft.getInstance().gameDirectory, path);
 			String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 				if (filename.equals(f.getName())) {
 					this.history.saveSnapshot(this.history.createSnapshot());
-					
-					this.backgroundTexture = TextureHandler.getResource(path);
+
+					this.backgroundTexture = TextureHandler.getResource(Minecraft.getInstance().gameDirectory.getPath() + "/" + path);
 					this.backgroundTexturePath = path;
 					if (this.backgroundAnimation != null) {
 						((AdvancedAnimation)this.backgroundAnimation).stopAudio();
@@ -1542,7 +1540,10 @@ public class LayoutEditorScreen extends Screen {
 
 					String file = FancyMenu.getCustomizationPath().getPath() + "/" + call + ".txt";
 					File f = new File(file);
-
+					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						file = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + file;
+						f = new File(file);
+					}
 					if (!f.exists()) {
 						if (!CustomizationHelper.saveLayoutTo(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
