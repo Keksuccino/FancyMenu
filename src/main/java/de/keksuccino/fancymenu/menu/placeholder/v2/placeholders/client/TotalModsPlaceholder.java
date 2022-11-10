@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class TotalModsPlaceholder extends Placeholder {
 
-    private static final File MOD_DIRECTORY = new File("mods");
+    private static final File MOD_DIRECTORY = new File(Minecraft.getInstance().gameDirectory, "mods");
 
     private static int cachedTotalMods = -10;
 

@@ -7,6 +7,7 @@ import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
+import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +28,9 @@ public class RandomTextPlaceholder extends Placeholder {
         String intervalString = dps.values.get("interval");
         if ((pathString != null) && (intervalString != null)) {
             File path = new File(pathString);
+            if (!path.exists() || !path.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                path = new File(Minecraft.getInstance().gameDirectory, pathString);
+            }
             if (MathUtils.isLong(intervalString) && path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {
                 long interval = Long.parseLong(intervalString) * 1000;
                 if (interval < 0L) {

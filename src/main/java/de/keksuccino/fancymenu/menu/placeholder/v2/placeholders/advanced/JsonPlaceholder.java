@@ -8,6 +8,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.web.WebUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
@@ -57,6 +58,10 @@ public class JsonPlaceholder extends Placeholder {
         String jsonPath = dps.values.get("json_path");
         if ((source != null) && (jsonPath != null)) {
             File f = new File(source);
+            if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + source;
+                f = new File(linkTemp);
+            }
             if (f.isFile()) {
                 List<String> json = JsonUtils.getJsonValueByPath(f, jsonPath);
                 if (json != null) {
@@ -66,13 +71,9 @@ public class JsonPlaceholder extends Placeholder {
                 if (!isInvalidWebPlaceholderLink(source)) {
                     List<String> json = getCachedWebPlaceholder(dps.originalString);
                     if (json != null) {
-                        //TODO remove debug
-//                        LOGGER.info("##################### Using cached JSON web placeholder: " + dps.originalString);
                         return formatJsonToString(json);
                     } else {
                         if (!isWebPlaceholderUpdating(dps.originalString)) {
-                            //TODO remove debug
-//                            LOGGER.info("##################### Caching JSON web placeholder: " + dps.originalString);
                             cacheWebPlaceholder(dps.originalString, source, jsonPath);
                         }
                         return "";

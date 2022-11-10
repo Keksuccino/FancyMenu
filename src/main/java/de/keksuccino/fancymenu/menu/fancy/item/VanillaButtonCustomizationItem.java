@@ -13,6 +13,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.sound.SoundHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -40,9 +41,14 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				this.value = fixBackslashPath(item.getEntryValue("path"));
 				if (this.value != null) {
 					File f = new File(this.value);
+					String finalValue = this.value;
+					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						finalValue = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.value;
+						f = new File(finalValue);
+					}
 					if (f.exists() && f.isFile()) {
-						if (!SoundHandler.soundExists(this.value)) {
-							MenuCustomization.registerSound(this.value, this.value);
+						if (!SoundHandler.soundExists(finalValue)) {
+							MenuCustomization.registerSound(finalValue, finalValue);
 						}
 					} else {
 						System.out.println("################### ERROR ###################");

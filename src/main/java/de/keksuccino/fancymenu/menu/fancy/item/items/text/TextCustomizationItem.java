@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -245,6 +246,9 @@ public class TextCustomizationItem extends CustomizationItem {
                         }
                     } else if (this.sourceMode == SourceMode.LOCAL_SOURCE) {
                         File f = new File(de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.source));
+                        if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                            f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + PlaceholderParser.replacePlaceholders(this.source));
+                        }
                         if (f.isFile()) {
                             linesRaw.addAll(FileUtils.getFileLines(f));
                         }

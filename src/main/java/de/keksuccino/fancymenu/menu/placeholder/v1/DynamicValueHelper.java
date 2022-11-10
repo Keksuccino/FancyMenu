@@ -24,7 +24,7 @@ import net.minecraftforge.versions.mcp.MCPVersion;
 @Deprecated
 public class DynamicValueHelper {
 
-	private static final File MOD_DIRECTORY = new File("mods");
+	private static final File MOD_DIRECTORY = new File(Minecraft.getInstance().gameDirectory, "mods");
 
 	private static int cachedTotalMods = -10;
 	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
@@ -142,6 +142,9 @@ public class DynamicValueHelper {
 					if (value.contains(":")) {
 						String pathString = value.split(":", 2)[0];
 						File path = new File(pathString);
+						if (!path.exists() || !path.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+							path = new File(Minecraft.getInstance().gameDirectory, pathString);
+						}
 						String intervalString = value.split(":", 2)[1];
 						if (MathUtils.isLong(intervalString) && path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {
 							long interval = Long.parseLong(intervalString) * 1000;

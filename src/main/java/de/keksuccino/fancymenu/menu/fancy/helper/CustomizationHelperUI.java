@@ -60,39 +60,39 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CustomizationHelperUI extends UIBase {
-	
+
 	public static MenuBar bar;
-	
+
 	public static boolean showButtonInfo = false;
 	public static boolean showMenuInfo = false;
 	protected static List<ButtonData> buttons = new ArrayList<ButtonData>();
 	protected static int tick = 0;
 	protected static long lastButtonInfoRightClick = 0;
-	
+
 	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
 	protected static final ResourceLocation RELOAD_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "/filechooser/back_icon.png");
-	
+
 	public static void init() {
-		
+
 		MinecraftForge.EVENT_BUS.register(new CustomizationHelperUI());
-		
+
 	}
-	
+
 	public static void updateUI() {
 		try {
-			
+
 			boolean extended = true;
 			if (bar != null) {
 				extended = bar.isExtended();
 			}
-			
+
 			bar = new MenuBar();
-			
+
 			/** CURRENT MENU TAB START **/
 			FMContextMenu currentMenu = new FMContextMenu();
 			currentMenu.setAutoclose(true);
 			bar.addChild(currentMenu, "fm.ui.tab.current", ElementAlignment.LEFT);
-			
+
 			String toggleLabel = Locals.localize("helper.popup.togglecustomization.enable");
 			if (MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 				toggleLabel = Locals.localize("helper.popup.togglecustomization.disable");
@@ -110,11 +110,11 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			toggleCustomizationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.onoff.btndesc"), "%n%"));
 			currentMenu.addContent(toggleCustomizationButton);
-			
+
 			FMContextMenu layoutsMenu = new FMContextMenu();
 			layoutsMenu.setAutoclose(true);
 			currentMenu.addChild(layoutsMenu);
-			
+
 			CustomizationButton newLayoutButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.new"), true, (press) -> {
 				LayoutEditorScreen.isActive = true;
 				Screen s = Minecraft.getInstance().screen;
@@ -136,14 +136,14 @@ public class CustomizationHelperUI extends UIBase {
 			ManageLayoutsContextMenu manageLayoutsMenu = new ManageLayoutsContextMenu(false);
 			manageLayoutsMenu.setAutoclose(true);
 			layoutsMenu.addChild(manageLayoutsMenu);
-			
+
 			CustomizationButton manageLayoutsButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.manage"), true, (press) -> {
 				manageLayoutsMenu.setParentButton((AdvancedButton) press);
 				manageLayoutsMenu.openMenuAt(press);
 			});
 			manageLayoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.desc"), "%n%"));
 			layoutsMenu.addContent(manageLayoutsButton);
-			
+
 			CustomizationButton layoutsButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts"), true, (press) -> {
 				layoutsMenu.setParentButton((AdvancedButton) press);
 				layoutsMenu.openMenuAt(0, press.y);
@@ -153,26 +153,26 @@ public class CustomizationHelperUI extends UIBase {
 			}
 			layoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.desc"), "%n%"));
 			currentMenu.addContent(layoutsButton);
-			
+
 			FMContextMenu advancedMenu = new FMContextMenu();
 			advancedMenu.setAutoclose(true);
 			currentMenu.addChild(advancedMenu);
-			
+
 			OverrideMenuContextMenu overrideMenu = new OverrideMenuContextMenu();
 			overrideMenu.setAutoclose(true);
 			advancedMenu.addChild(overrideMenu);
-			
+
 			String overrLabel = Locals.localize("helper.buttons.tools.overridemenu");
 			if (CustomizationHelper.isScreenOverridden(Minecraft.getInstance().screen)) {
 				overrLabel = Locals.localize("helper.buttons.tools.resetoverride");
 			}
 			CustomizationButton overrideButton = new CustomizationButton(0, 0, 0, 0, overrLabel, true, (press) -> {
-				
+
 				if (!CustomizationHelper.isScreenOverridden(Minecraft.getInstance().screen)) {
-					
+
 					overrideMenu.setParentButton((AdvancedButton) press);
 					overrideMenu.openMenuAt(0, press.y);
-					
+
 				} else {
 
 					for (String s : FileUtils.getFiles(FancyMenu.getCustomizationPath().getPath())) {
@@ -245,7 +245,7 @@ public class CustomizationHelperUI extends UIBase {
 			} else if (((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen() != null) {
 				advancedMenu.addContent(overrideButton);
 			}
-			
+
 			CustomizationButton advancedButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current.advanced"), true, (press) -> {
 				advancedMenu.setParentButton((AdvancedButton) press);
 				advancedMenu.openMenuAt(0, press.y);
@@ -257,7 +257,7 @@ public class CustomizationHelperUI extends UIBase {
 			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
 				currentMenu.addContent(advancedButton);
 			}
-			
+
 			CustomizationButton closeCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
 				Minecraft.getInstance().setScreen(null);
 			});
@@ -265,7 +265,7 @@ public class CustomizationHelperUI extends UIBase {
 			if ((Minecraft.getInstance().screen instanceof CustomGuiBase) && (((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen() == null)) {
 				currentMenu.addContent(closeCustomGuiButton);
 			}
-			
+
 			CustomizationButton currentTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.current"), true, (press) -> {
 				currentMenu.setParentButton((AdvancedButton) press);
 				currentMenu.openMenuAt(press.x, press.y + press.getHeight());
@@ -397,7 +397,8 @@ public class CustomizationHelperUI extends UIBase {
 										PopupHandler.displayPopup(restoreBlockerPopup);
 										try {
 											try {
-												File fmFolder = new File("config/fancymenu");
+												//TODO übernehmen 2
+												File fmFolder = FancyMenu.MOD_DIR;
 												if (fmFolder.isDirectory()) {
 													org.apache.commons.io.FileUtils.deleteDirectory(fmFolder);
 												}
@@ -405,7 +406,8 @@ public class CustomizationHelperUI extends UIBase {
 												e2.printStackTrace();
 											}
 
-											File homeRaw = new File("");
+											//TODO übernehmen 2
+											File homeRaw = Minecraft.getInstance().gameDirectory;
 											File home = new File(homeRaw.getAbsolutePath());
 											if (home.isDirectory()) {
 												//Check that we're really in the correct dir, because I'm paranoid
@@ -454,7 +456,7 @@ public class CustomizationHelperUI extends UIBase {
 				e.printStackTrace();
 			}
 			/** SETUP TAB END **/
-			
+
 			/** CUSTOM GUI TAB START **/
 			FMContextMenu customGuiMenu = new FMContextMenu();
 			customGuiMenu.setAutoclose(true);
@@ -489,12 +491,12 @@ public class CustomizationHelperUI extends UIBase {
 				bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
 			}
 			/** CUSTOM GUI TAB END **/
-			
+
 			/** TOOLS TAB START **/
 			FMContextMenu toolsMenu = new FMContextMenu();
 			toolsMenu.setAutoclose(true);
 			bar.addChild(toolsMenu, "fm.ui.tab.tools", ElementAlignment.LEFT);
-			
+
 			CustomizationButton menuInfoButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools.menuinfo.off"), true, (press) -> {
 				if (showMenuInfo) {
 					showMenuInfo = false;
@@ -547,32 +549,32 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			clearVariablesButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.desc"), "%n%"));
 			toolsMenu.addContent(clearVariablesButton);
-			
+
 			CustomizationButton toolsTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.tools"), true, (press) -> {
 				toolsMenu.setParentButton((AdvancedButton) press);
 				toolsMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
 			bar.addElement(toolsTab, "fm.ui.tab.tools", ElementAlignment.LEFT, false);
 			/** TOOLS TAB END **/
-			
+
 			/** MISCELLANEOUS TAB START **/
 			FMContextMenu miscMenu = new FMContextMenu();
 			miscMenu.setAutoclose(true);
 			bar.addChild(miscMenu, "fm.ui.tab.misc", ElementAlignment.LEFT);
-			
+
 			CustomizationButton closeGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
 				Minecraft.getInstance().setScreen(null);
 			});
 			closeGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
 			miscMenu.addContent(closeGuiButton);
-			
+
 			CustomizationButton openWorldLoadingScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openworldloading"), true, (press) -> {
 				LevelLoadingScreen wl = new LevelLoadingScreen(new StoringChunkProgressListener(0));
 				Minecraft.getInstance().setScreen(wl);
 			});
 			openWorldLoadingScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openworldloading.desc"), "%n%"));
 			miscMenu.addContent(openWorldLoadingScreenButton);
-			
+
 			CustomizationButton openMessageScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openmessagescreen"), true, (press) -> {
 				Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Component.literal("hello ・ω・")));
 			});
@@ -627,7 +629,7 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			bar.addElement(miscTab, "fm.ui.tab.misc", ElementAlignment.LEFT, false);
 			/** MISCELLANEOUS TAB END **/
-			
+
 			/** CLOSE GUI BUTTON START **/
 			AdvancedImageButton closeGuiButtonTab = new AdvancedImageButton(20, 20, 20, 20, CLOSE_BUTTON_TEXTURE, true, (press) -> {
 				Minecraft.getInstance().setScreen(null);
@@ -644,7 +646,7 @@ public class CustomizationHelperUI extends UIBase {
 			closeGuiButtonTab.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
 			bar.addElement(closeGuiButtonTab, "fm.ui.tab.closegui", ElementAlignment.RIGHT, false);
 			/** CLOSE GUI BUTTON END **/
-			
+
 			/** RELOAD BUTTON START **/
 			AdvancedImageButton reloadButtonTab = new AdvancedImageButton(20, 20, 20, 20, RELOAD_BUTTON_TEXTURE, true, (press) -> {
 				CustomizationHelper.reloadSystemAndMenu();
@@ -661,7 +663,7 @@ public class CustomizationHelperUI extends UIBase {
 			reloadButtonTab.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.reload.desc"), "%n%"));
 			bar.addElement(reloadButtonTab, "fm.ui.tab.reload", ElementAlignment.RIGHT, false);
 			/** RELOAD BUTTON END **/
-			
+
 			AdvancedButton expandButton = bar.getElement("menubar.default.extendbtn");
 			if (expandButton != null) {
 				if (expandButton instanceof AdvancedImageButton) {
@@ -671,46 +673,46 @@ public class CustomizationHelperUI extends UIBase {
 					}
 				}
 			}
-			
+
 			bar.setExtended(extended);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void render(PoseStack matrix, Screen screen) {
 		try {
-			
+
 			if (bar != null) {
-				if (!PopupHandler.isPopupActive()) { 
+				if (!PopupHandler.isPopupActive()) {
 					if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 						if (!(screen instanceof LayoutEditorScreen) && !(screen instanceof ConfigScreen) && !(screen instanceof GameIntroScreen) && AnimationHandler.isReady() && MenuCustomization.isValidScreen(screen)) {
-							
+
 							RenderUtils.setZLevelPre(matrix, 400);
-							
+
 							renderMenuInfo(matrix, screen);
-							
+
 							renderUnicodeWarning(matrix, screen);
-							
+
 							renderButtonInfo(matrix, screen);
 
 							renderButtonInfoWarning(matrix, screen);
-							
+
 							RenderUtils.setZLevelPost(matrix);
-							
+
 							bar.render(matrix, screen);
-							
+
 						}
 					}
 				}
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected static void renderButtonInfo(PoseStack matrix, Screen screen) {
 		if (showButtonInfo) {
 			boolean isButtonHovered = false;
@@ -729,7 +731,7 @@ public class CustomizationHelperUI extends UIBase {
 					if (key == null) {
 						key = Locals.localize("helper.buttoninfo.keynotfound");
 					}
-					
+
 					List<String> info = new ArrayList<String>();
 					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
 
@@ -759,25 +761,25 @@ public class CustomizationHelperUI extends UIBase {
 							width = i;
 						}
 					}
-					
+
 					matrix.pushPose();
-					
+
 					matrix.scale(getUIScale(), getUIScale(), getUIScale());
-					
+
 					MouseInput.setRenderScale(getUIScale());
-					
+
 					int x = MouseInput.getMouseX();
 					if ((screen.width / getUIScale()) < x + width + 10) {
 						x -= width + 10;
 					}
-					
+
 					int y = MouseInput.getMouseY();
 					if ((screen.height / getUIScale()) < y + 80) {
 						y -= 90;
 					}
 
 					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
-					
+
 					RenderSystem.enableBlend();
 					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
@@ -786,13 +788,13 @@ public class CustomizationHelperUI extends UIBase {
 						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
-					
+
 					MouseInput.resetRenderScale();
-					
+
 					matrix.popPose();
-					
+
 					RenderSystem.disableBlend();
-					
+
 					break;
 				}
 			}
@@ -851,7 +853,7 @@ public class CustomizationHelperUI extends UIBase {
 			RenderSystem.disableBlend();
 		}
 	}
-	
+
 	protected static void renderMenuInfo(PoseStack matrix, Screen screen) {
 		if (showMenuInfo) {
 			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
@@ -867,13 +869,13 @@ public class CustomizationHelperUI extends UIBase {
 				w = w2;
 			}
 			int h = bar.getHeight() + 5;
-			
+
 			RenderSystem.enableBlend();
-			
+
 			matrix.pushPose();
-			
+
 			matrix.scale(getUIScale(), getUIScale(), getUIScale());
-			
+
 			fill(matrix, 3, h, 3 + w + 4, h + 23, new Color(0, 0, 0, 240).getRGB());
 
 			drawString(matrix, Minecraft.getInstance().font, infoTitle, 5, h + 2, 0);
@@ -884,13 +886,13 @@ public class CustomizationHelperUI extends UIBase {
 			}
 
 			MouseInput.setRenderScale(getUIScale());
-			
+
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			if (!bar.isChildOpen()) {
 				if ((mouseX >= 5) && (mouseX <= 5 + w2) && (mouseY >= h + 13) && (mouseY <= h + 13 + 10) && (tick == 0)) {
 					fill(matrix, 5, h + 13 + 10 - 1, 5 + w2, h + 13 + 10, -1);
-					
+
 					if (MouseInput.isLeftMouseDown()) {
 						tick++;
 						Minecraft.getInstance().keyboardHandler.setClipboard(id);
@@ -904,15 +906,15 @@ public class CustomizationHelperUI extends UIBase {
 					tick = 0;
 				}
 			}
-			
+
 			MouseInput.resetRenderScale();
-			
+
 			matrix.popPose();
-			
+
 			RenderSystem.disableBlend();
 		}
 	}
-	
+
 	protected static void renderUnicodeWarning(PoseStack matrix, Screen screen) {
 		//TODO übernehmen
 		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
@@ -928,12 +930,12 @@ public class CustomizationHelperUI extends UIBase {
 					w = w2;
 				}
 			}
-			
+
 			int x = screen.width - w - 5;
 			int y = (int) ((bar.getHeight() + 5) * UIBase.getUIScale());
-			
+
 			RenderSystem.enableBlend();
-			
+
 			int h = 13;
 			if (lines.length > 0) {
 				h += 10*lines.length;
@@ -941,45 +943,45 @@ public class CustomizationHelperUI extends UIBase {
 			fill(matrix, x - 4, y, x + w + 2, y + h, new Color(230, 15, 0, 240).getRGB());
 
 			drawString(matrix, Minecraft.getInstance().font, title, x, y + 2, Color.WHITE.getRGB());
-			
+
 			int i = 0;
 			for (String s : lines) {
 				drawString(matrix, Minecraft.getInstance().font, s, x, y + 13 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
-			
+
 			RenderSystem.disableBlend();
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void onButtonsCached(ButtonCachedEvent e) {
 		buttons = e.getButtonDataList();
 	}
-	
+
 	@SubscribeEvent
 	public void onInitScreen(ScreenEvent.Init.Pre e) {
 		try {
-			
+
 			if (e.getScreen() != null) {
 				if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
-					
+
 					updateUI();
-					
+
 				}
 			}
-			
+
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
-	
+
 	private static class ManageCustomGuiContextMenu extends FMContextMenu {
 
 		private ManageCustomGuiSubContextMenu manageMenu;
 
 		public ManageCustomGuiContextMenu() {
-			
+
 			this.manageMenu = new ManageCustomGuiSubContextMenu();
 			this.addChild(this.manageMenu);
 
@@ -1038,7 +1040,7 @@ public class CustomizationHelperUI extends UIBase {
 						}
 					}));
 				}));
-				
+
 				this.addSeparator();
 
 				for (String s : l) {
@@ -1054,18 +1056,18 @@ public class CustomizationHelperUI extends UIBase {
 				}
 
 			}
-			
+
 			super.openMenuAt(x, y);
 
 		}
-		
+
 	}
-	
+
 	private static class ManageCustomGuiSubContextMenu extends FMContextMenu {
 
 		public void openMenuAt(int x, int y, String customGuiIdentifier) {
 			this.content.clear();
-			
+
 			CustomizationButton openMenuButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.open"), (press) -> {
 				if (CustomGuiLoader.guiExists(customGuiIdentifier)) {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(customGuiIdentifier, Minecraft.getInstance().screen, null));
@@ -1102,7 +1104,7 @@ public class CustomizationHelperUI extends UIBase {
 
 			this.openMenuAt(x, y);
 		}
-		
+
 	}
 
 	private static class ManageLayoutsContextMenu extends FMContextMenu {
@@ -1116,7 +1118,7 @@ public class CustomizationHelperUI extends UIBase {
 
 			this.manageSubPopup = new ManageLayoutsSubContextMenu();
 			this.addChild(this.manageSubPopup);
-			
+
 		}
 
 		public void openMenuAt(AbstractWidget parentBtn) {
@@ -1129,7 +1131,7 @@ public class CustomizationHelperUI extends UIBase {
 			if (this.isUniversal) {
 				identifier = "%fancymenu:universal_layout%";
 			}
-			
+
 			List<PropertiesSet> enabled = MenuCustomizationProperties.getPropertiesWithIdentifier(identifier);
 			if (!this.isUniversal) {
 				List<PropertiesSet> sets = new ArrayList<>();
@@ -1157,7 +1159,7 @@ public class CustomizationHelperUI extends UIBase {
 						File f = new File(meta.getEntryValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
-							
+
 							int totalactions = s.getProperties().size() - 1;
 							CustomizationButton layoutEntryBtn = new CustomizationButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.manageSubPopup.setParentButton((AdvancedButton) press);
@@ -1169,7 +1171,7 @@ public class CustomizationHelperUI extends UIBase {
 					}
 				}
 			}
-			
+
 			List<PropertiesSet> disabled = MenuCustomizationProperties.getDisabledPropertiesWithIdentifier(identifier);
 			if (!this.isUniversal) {
 				List<PropertiesSet> sets = new ArrayList<>();
@@ -1197,7 +1199,7 @@ public class CustomizationHelperUI extends UIBase {
 						File f = new File(meta.getEntryValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
-							
+
 							int totalactions = s.getProperties().size() - 1;
 							CustomizationButton layoutEntryBtn = new CustomizationButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.manageSubPopup.setParentButton((AdvancedButton) press);
@@ -1209,7 +1211,7 @@ public class CustomizationHelperUI extends UIBase {
 					}
 				}
 			}
-			
+
 			if (enabled.isEmpty() && disabled.isEmpty()) {
 				CustomizationButton emptyBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), (press) -> {});
 				this.addContent(emptyBtn);
@@ -1217,11 +1219,11 @@ public class CustomizationHelperUI extends UIBase {
 
 			this.openMenuAt(parentBtn.x - this.getWidth() - 2, parentBtn.y);
 		}
-		
+
 		@Override
 		public void render(PoseStack matrix, int mouseX, int mouseY) {
 			super.render(matrix, mouseX, mouseY);
-			
+
 			if (this.manageSubPopup != null) {
 				this.manageSubPopup.render(matrix, mouseX, mouseY);
 				if (!this.isOpen()) {
@@ -1229,14 +1231,14 @@ public class CustomizationHelperUI extends UIBase {
 				}
 			}
 		}
-		
+
 		@Override
 		public void closeMenu() {
 			if (!this.manageSubPopup.isHoveredOrFocused()) {
 				super.closeMenu();
 			}
 		}
-		
+
 		@Override
 		public boolean isHoveredOrFocused() {
 			if (this.manageSubPopup.isOpen() && this.manageSubPopup.isHoveredOrFocused()) {
@@ -1245,15 +1247,15 @@ public class CustomizationHelperUI extends UIBase {
 				return super.isHoveredOrFocused();
 			}
 		}
-		
+
 	}
 
 	private static class ManageLayoutsSubContextMenu extends FMContextMenu {
 
 		public void openMenuAt(int x, int y, File layout, boolean disabled) {
-			
+
 			this.content.clear();
-			
+
 			String toggleLabel = Locals.localize("helper.buttons.customization.managelayouts.disable");
 			if (disabled) {
 				toggleLabel = Locals.localize("helper.buttons.customization.managelayouts.enable");
@@ -1284,13 +1286,13 @@ public class CustomizationHelperUI extends UIBase {
 			});
 			editLayoutBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.edit.desc"), "%n%"));
 			this.addContent(editLayoutBtn);
-			
+
 			CustomizationButton openInTextEditorBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.openintexteditor"), (press) -> {
 				CustomizationHelper.openFile(layout);
 			});
 			openInTextEditorBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.openintexteditor.desc"), "%n%"));
 			this.addContent(openInTextEditorBtn);
-			
+
 			CustomizationButton deleteLayoutBtn = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.delete"), (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
@@ -1303,17 +1305,17 @@ public class CustomizationHelperUI extends UIBase {
 				CustomizationHelper.reloadSystemAndMenu();
 			});
 			this.addContent(deleteLayoutBtn);
-			
+
 			this.openMenuAt(x, y);
-			
+
 		}
 	}
-	
+
 	private static class OverrideMenuContextMenu extends FMContextMenu {
-		
+
 		@Override
 		public void openMenuAt(int x, int y) {
-			
+
 			this.content.clear();
 
 			List<String> l = CustomGuiLoader.getCustomGuis();
@@ -1331,9 +1333,9 @@ public class CustomizationHelperUI extends UIBase {
 						}
 					}));
 				}));
-				
+
 				this.addSeparator();
-				
+
 				for (String s : l) {
 					String label = s;
 					if (Minecraft.getInstance().font.width(label) > 80) {
@@ -1349,11 +1351,11 @@ public class CustomizationHelperUI extends UIBase {
 			} else {
 				this.addContent(new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), true, (press) -> {}));
 			}
-			
+
 			super.openMenuAt(x, y);
-			
+
 		}
-		
+
 	}
 
 	private static void onOverrideWithCustomGui(Screen current, String customGuiIdentifier) {
