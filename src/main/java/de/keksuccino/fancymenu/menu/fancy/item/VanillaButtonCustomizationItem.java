@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.TextComponent;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -40,13 +42,18 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				this.value = fixBackslashPath(item.getEntryValue("path"));
 				if (this.value != null) {
 					File f = new File(this.value);
+					String finalValue = this.value;
+					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						finalValue = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.value;
+						f = new File(finalValue);
+					}
 					if (f.exists() && f.isFile()) {
-						if (!SoundHandler.soundExists(this.value)) {
-							MenuCustomization.registerSound(this.value, this.value);
+						if (!SoundHandler.soundExists(finalValue)) {
+							MenuCustomization.registerSound(finalValue, finalValue);
 						}
 					} else {
 						System.out.println("################### ERROR ###################");
-						System.out.println("[FancyMenu] Sound file '" + this.value + "'for 'addhoversound' customization action not found!");
+						System.out.println("[FancyMenu] Soundfile '" + this.value + "'for 'addhoversound' customization action not found!");
 						System.out.println("#############################################");
 						this.value = null;
 					}

@@ -397,7 +397,7 @@ public class CustomizationHelperUI extends UIBase {
 										PopupHandler.displayPopup(restoreBlockerPopup);
 										try {
 											try {
-												File fmFolder = new File("config/fancymenu");
+												File fmFolder = FancyMenu.MOD_DIR;
 												if (fmFolder.isDirectory()) {
 													org.apache.commons.io.FileUtils.deleteDirectory(fmFolder);
 												}
@@ -405,7 +405,7 @@ public class CustomizationHelperUI extends UIBase {
 												e2.printStackTrace();
 											}
 
-											File homeRaw = new File("");
+											File homeRaw = Minecraft.getInstance().gameDirectory;
 											File home = new File(homeRaw.getAbsolutePath());
 											if (home.isDirectory()) {
 												//Check that we're really in the correct dir, because I'm paranoid

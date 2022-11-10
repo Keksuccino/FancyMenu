@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 public class MainWindowHandler {
 
 	private static String windowtitle = null;
-	private static File icondir = new File("config/fancymenu/minecraftwindow/icons");
+	private static File icondir = new File(FancyMenu.MOD_DIR, "/minecraftwindow/icons");
 	
 	public static void init() {
 		if (!icondir.exists()) {

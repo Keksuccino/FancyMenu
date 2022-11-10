@@ -814,6 +814,9 @@ public class LayoutEditorUI extends UIBase {
 							this.parent.openAudio = null;
 						} else {
 							File f = new File(call);
+							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								if (this.parent.openAudio != call) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -857,6 +860,9 @@ public class LayoutEditorUI extends UIBase {
 							this.parent.closeAudio = null;
 						} else {
 							File f = new File(call);
+							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								if (this.parent.closeAudio != call) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -1511,6 +1517,9 @@ public class LayoutEditorUI extends UIBase {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 							if (call != null) {
 								File f = new File(call);
+								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 									this.parent.history.setPreventSnapshotSaving(true);
@@ -1564,6 +1573,9 @@ public class LayoutEditorUI extends UIBase {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 							if (call != null) {
 								File f = new File(call);
+								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 									this.parent.history.setPreventSnapshotSaving(true);

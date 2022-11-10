@@ -43,28 +43,35 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.12.6";
+	//TODO übernehmen
+	public static final String VERSION = "2.12.7";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
 
-	public static final File MOD_DIR = new File("config/fancymenu");
-	public static final File INSTANCE_DATA_DIR = new File("fancymenu_data");
+	//TODO übernehmen
+	public static final File MOD_DIR = new File(Minecraft.getInstance().gameDirectory, "/config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File(Minecraft.getInstance().gameDirectory, "/fancymenu_data");
+	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
+	//---------------------
 
-	private static File animationsPath = new File(MOD_DIR.getPath() + "/animations");
-	private static File customizationPath = new File(MOD_DIR.getPath() + "/customization");
-	private static File customGuiPath = new File(MOD_DIR.getPath() + "/customguis");
-	private static File buttonscriptPath = new File(MOD_DIR.getPath() + "/buttonscripts");
-	private static File panoramaPath = new File(MOD_DIR.getPath() + "/panoramas");
-	private static File slideshowPath = new File(MOD_DIR.getPath() + "/slideshows");
+	//TODO übernehmen
+	private static File animationsPath = new File(MOD_DIR, "/animations");
+	private static File customizationPath = new File(MOD_DIR, "/customization");
+	private static File customGuiPath = new File(MOD_DIR, "/customguis");
+	private static File buttonscriptPath = new File(MOD_DIR, "/buttonscripts");
+	private static File panoramaPath = new File(MOD_DIR, "/panoramas");
+	private static File slideshowPath = new File(MOD_DIR, "/slideshows");
+	//---------------------------
 	
     @Override
     public void onInitialize() {
