@@ -208,7 +208,7 @@ public class LayoutSplashText extends LayoutElement {
 		if (this.getObject().text != null) {
 			p1.addEntry("text", this.getObject().text);
 		}
-		//TODO übernehmen
+		//---
 		if (this.getObject().splashfile != null) {
 			File home = Minecraft.getInstance().gameDirectory;
 			String path = this.getObject().splashfile.getAbsolutePath();

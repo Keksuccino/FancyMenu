@@ -56,7 +56,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 				}
 			} else {
 				File f = new File(this.button.normalBackground);
-				//TODO übernehmen
+				//---
 				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 					f = new File(Minecraft.getInstance().gameDirectory, this.button.normalBackground);
 				}

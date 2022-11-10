@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 
 public class SetupSharingEngine {
 
-    //TODO übernehmen 4
+    //--- 4
     public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
     public static final File FM_SETUPS_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/exported_setups");
     public static final File SETUP_BACKUP_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/.backups");
@@ -336,7 +336,7 @@ public class SetupSharingEngine {
                 return null;
             }
 
-            //TODO übernehmen 4
+            //--- 4
             File exportToTemp = new File(Minecraft.getInstance().gameDirectory, "fm_export_temp_folder_" + UUID.randomUUID());
             File exportToTempSetup = new File(exportToTemp.getPath() + "/setup");
             exportToTempSetup.mkdirs();
@@ -483,7 +483,7 @@ public class SetupSharingEngine {
 
             //Export setup (config/fancymenu)
             try {
-                //TODO übernehmen 2
+                //--- 2
                 File fmDir = FancyMenu.MOD_DIR;
                 File target = new File(exportToTempSetup.getAbsolutePath() + "/config/fancymenu");
                 target.mkdirs();
@@ -641,7 +641,7 @@ public class SetupSharingEngine {
         if (!pathRaw.exists()) {
             return null;
         }
-        //TODO übernehmen 2
+        //--- 2
         File home = Minecraft.getInstance().gameDirectory;
         if (pathRaw.getAbsolutePath().startsWith(home.getAbsolutePath())) {
             path = pathRaw.getAbsolutePath().replace(home.getAbsolutePath(), "");
@@ -683,14 +683,14 @@ public class SetupSharingEngine {
                 }
                 if (mainAni instanceof ResourcePackAnimationRenderer) {
                     String namespace = ((ResourcePackAnimationRenderer) mainAni).getPath();
-                    //TODO übernehmen 2
+                    //--- 2
                     File lmrAni = new File(Minecraft.getInstance().gameDirectory, "resources/" + namespace);
                     if (lmrAni.isDirectory()) {
                         meta.type = AnimationType.LMR;
                         meta.resourcesPath = lmrAni.getPath();
                         return meta;
                     }
-                    //TODO übernehmen 2
+                    //--- 2
                     File resPackDir = new File(Minecraft.getInstance().gameDirectory, "resourcepacks");
                     if (resPackDir.isDirectory()) {
                         for (File f : resPackDir.listFiles()) {
@@ -892,12 +892,12 @@ public class SetupSharingEngine {
                                         importBlockerPopup = new StatusPopup(Locals.localize("fancymenu.helper.setupsharing.import.importingsetup"));
                                         PopupHandler.displayPopup(importBlockerPopup);
                                         if (this.setupInstancePath.isDirectory()) {
-                                            //TODO übernehmen 2
+                                            //--- 2
                                             File targetRaw = Minecraft.getInstance().gameDirectory;
                                             File targetDir = new File(targetRaw.getAbsolutePath());
                                             if (targetDir.isDirectory()) {
                                                 try {
-                                                    //TODO übernehmen 2
+                                                    //--- 2
                                                     File fmFolder = FancyMenu.MOD_DIR;
                                                     File customizationFolder = new File(fmFolder.getPath() + "/customization");
                                                     File customizableMenusFile = new File(fmFolder.getPath() + "/customizablemenus.txt");

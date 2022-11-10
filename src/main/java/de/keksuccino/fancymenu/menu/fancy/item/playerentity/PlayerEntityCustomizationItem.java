@@ -104,7 +104,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String skin = fixBackslashPath(item.getEntryValue("skinpath"));
 		if ((skin != null) && (this.entity.skinLocation == null)) {
-			//TODO übernehmen
+			//---
 			File f = new File(skin);
 			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 				skin = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + skin;
@@ -144,7 +144,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String cape = fixBackslashPath(item.getEntryValue("capepath"));
 		if ((cape != null) && (this.entity.capeLocation == null)) {
-			//TODO übernehmen
+			//---
 			File f = new File(cape);
 			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 				cape = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + cape;

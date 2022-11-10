@@ -169,7 +169,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
-						//TODO übernehmen
+						//---
 						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
@@ -205,7 +205,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
-						//TODO übernehmen
+						//---
 						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}

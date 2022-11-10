@@ -156,7 +156,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 			ChooseFilePopup t = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
-						//TODO übernehmen
+						//---
 						File home = Minecraft.getInstance().gameDirectory;
 						call = call.replace("\\", "/");
 						File f = new File(call);
@@ -266,7 +266,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 			ChooseFilePopup t = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
-						//TODO übernehmen
+						//---
 						File home = Minecraft.getInstance().gameDirectory;
 						call = call.replace("\\", "/");
 						File f = new File(call);

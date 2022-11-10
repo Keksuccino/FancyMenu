@@ -14,7 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class MainWindowHandler {
 
 	private static String windowtitle = null;
-	//TODO übernehmen
+	//---
 	private static File icondir = new File(FancyMenu.MOD_DIR, "/minecraftwindow/icons");
 	
 	public static void init() {

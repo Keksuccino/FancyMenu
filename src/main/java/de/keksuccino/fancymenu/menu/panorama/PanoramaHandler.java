@@ -22,7 +22,7 @@ public class PanoramaHandler {
 	}
 	
 	public static void updatePanoramas() {
-		//TODO übernehmen
+		//---
 		File f = FancyMenu.getPanoramaPath();
 		if (!f.exists()) {
 			f.mkdirs();

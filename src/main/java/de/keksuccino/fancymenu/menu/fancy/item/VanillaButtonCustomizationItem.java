@@ -43,7 +43,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				this.value = fixBackslashPath(item.getEntryValue("path"));
 				if (this.value != null) {
 					File f = new File(this.value);
-					//TODO übernehmen
+					//---
 					String finalValue = this.value;
 					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 						finalValue = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.value;

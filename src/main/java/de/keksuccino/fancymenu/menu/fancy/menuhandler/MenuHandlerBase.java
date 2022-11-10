@@ -665,7 +665,7 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 				if (value != null) {
 					File f = new File(value.replace("\\", "/"));
-					//TODO übernehmen
+					//---
 					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 						value = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + value.replace("\\", "/");
 						f = new File(value);
@@ -1018,7 +1018,7 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 						if (path != null) {
 							File f = new File(path);
-							//TODO übernehmen
+							//---
 							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 								path = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path;
 								f = new File(path);
@@ -1043,7 +1043,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 				if (path != null) {
 					File f = new File(path);
-					//TODO übernehmen
+					//---
 					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 						path = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path;
 						f = new File(path);
@@ -1067,7 +1067,7 @@ public class MenuHandlerBase extends GuiComponent {
 					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 					if (path != null) {
 						File f = new File(path);
-						//TODO übernehmen
+						//---
 						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 							path = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path;
 							f = new File(path);
@@ -1500,7 +1500,7 @@ public class MenuHandlerBase extends GuiComponent {
 				if (c != null) {
 					if (c.clickSound != null) {
 						File f = new File(c.clickSound);
-						//TODO übernehmen
+						//---
 						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 							c.clickSound = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + c.clickSound;
 							f = new File(c.clickSound);
@@ -1604,7 +1604,7 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 					} else {
 						File f = new File(background);
-						//TODO übernehmen
+						//---
 						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 							background = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + background;
 							f = new File(background);
@@ -1867,7 +1867,7 @@ public class MenuHandlerBase extends GuiComponent {
 			if (!this.layouts.isEmpty()) {
 				if ((this.onlyFirstTime || !MenuCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
 					File f = new File(this.lastLayoutPath);
-					//TODO übernehmen
+					//---
 					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 						this.lastLayoutPath = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.lastLayoutPath;
 						f = new File(this.lastLayoutPath);

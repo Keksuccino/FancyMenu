@@ -57,7 +57,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (this.hoverSound != null) {
 				this.hoverSound = this.hoverSound.replace("\\", "/");
 				File f = new File(this.hoverSound);
-				//TODO übernehmen
+				//---
 				String fullPath = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.hoverSound;
 				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 					f = new File(fullPath);
@@ -94,7 +94,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (click != null) {
 				click.replace("\\", "/");
 				File f = new File(click);
-				//TODO übernehmen
+				//---
 				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 					f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + click);
 				}
@@ -126,7 +126,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 				if (backNormal != null) {
 					File f = new File(backNormal.replace("\\", "/"));
-					//TODO übernehmen
+					//---
 					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backNormal);
 					}
@@ -151,7 +151,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 				if (backHover != null) {
 					File f = new File(backHover.replace("\\", "/"));
-					//TODO übernehmen
+					//---
 					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backHover);
 					}

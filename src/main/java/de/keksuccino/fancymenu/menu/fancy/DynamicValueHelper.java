@@ -22,7 +22,7 @@ import net.minecraftforge.versions.mcp.MCPVersion;
 
 public class DynamicValueHelper {
 
-	//TODO übernehmen 3
+	//--- 3
 	private static final File MOD_DIRECTORY = new File(Minecraft.getInstance().gameDirectory, "mods");
 
 	private static int cachedTotalMods = -10;
@@ -138,7 +138,7 @@ public class DynamicValueHelper {
 					if (value.contains(":")) {
 						String pathString = value.split(":", 2)[0];
 						File path = new File(pathString);
-						//TODO übernehmen 3
+						//--- 3
 						if (!path.exists() || !path.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 							path = new File(Minecraft.getInstance().gameDirectory, pathString);
 						}

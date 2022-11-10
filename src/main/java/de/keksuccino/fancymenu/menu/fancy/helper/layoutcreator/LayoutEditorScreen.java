@@ -1129,7 +1129,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected void addTexture(String path) {
-		//TODO übernehmen
+		//---
 		File home = Minecraft.getInstance().gameDirectory;
 		if (path == null) {
 			return;
@@ -1212,7 +1212,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 	
 	protected void addMultiSplashText(String path) {
-		//TODO übernehmen
+		//---
 		File home = Minecraft.getInstance().gameDirectory;
 		if (path == null) {
 			return;
@@ -1344,7 +1344,7 @@ public class LayoutEditorScreen extends Screen {
 	
 	protected void addAudio(String path) {
 		if (path != null) {
-			//TODO übernehmen
+			//---
 			File home = Minecraft.getInstance().gameDirectory;
 			if (path.startsWith(home.getAbsolutePath())) {
 				path = path.replace(home.getAbsolutePath(), "");
@@ -1405,7 +1405,7 @@ public class LayoutEditorScreen extends Screen {
 	
 	public void setBackgroundTexture(String path) {
 		if (path != null) {
-			//TODO übernehmen
+			//---
 			File home = Minecraft.getInstance().gameDirectory;
 			if (path.startsWith(home.getAbsolutePath())) {
 				path = path.replace(home.getAbsolutePath(), "");
@@ -1420,7 +1420,7 @@ public class LayoutEditorScreen extends Screen {
 				if (filename.equals(f.getName())) {
 					this.history.saveSnapshot(this.history.createSnapshot());
 
-					//TODO übernehmen
+					//---
 					this.backgroundTexture = TextureHandler.getResource(Minecraft.getInstance().gameDirectory.getPath() + "/" + path);
 					this.backgroundTexturePath = path;
 					if (this.backgroundAnimation != null) {
@@ -1544,14 +1544,14 @@ public class LayoutEditorScreen extends Screen {
 
 				if ((call != null) && (call.length() > 0)) {
 
-					String file = FancyMenu.getCustomizationPath().getPath() + "/" + call + ".txt";
+					//TODO übernehmen
+					String file = FancyMenu.getCustomizationPath().getAbsolutePath()+ "/" + call + ".txt";
 					File f = new File(file);
 					//TODO übernehmen
-					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-						file = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + file;
-						f = new File(file);
-					}
-					//----------------------
+//					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+//						file = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + file;
+//						f = new File(file);
+//					}
 					if (!f.exists()) {
 						if (!CustomizationHelper.saveLayoutTo(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));

@@ -245,7 +245,7 @@ public class TextCustomizationItem extends CustomizationItem {
                         }
                     } else if (this.sourceMode == SourceMode.LOCAL_SOURCE) {
                         File f = new File(DynamicValueHelper.convertFromRaw(this.source));
-                        //TODO übernehmen
+                        //---
                         if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
                             f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + DynamicValueHelper.convertFromRaw(this.source));
                         }

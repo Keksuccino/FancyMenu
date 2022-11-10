@@ -66,7 +66,7 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
                     String link = l.get(1);
                     String jsonPath = l.get(2);
                     File f = new File(link);
-                    //TODO übernehmen
+                    //---
                     if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
                         String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + link;
                         f = new File(linkTemp);

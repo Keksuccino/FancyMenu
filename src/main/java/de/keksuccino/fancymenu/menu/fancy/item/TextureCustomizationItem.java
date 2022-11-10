@@ -28,7 +28,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 			if (this.value != null) {
 				this.value = this.value.replace("\\", "/");
 				File f = new File(this.value);
-				//TODO übernehmen
+				//---
 				String finalValue = this.value;
 				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
 					finalValue = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.value;
@@ -41,7 +41,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 					    int h = 0;
 					    double ratio;
 
-						//TODO übernehmen
+						//---
 						if (f.getName().endsWith(".gif")) {
 							this.gif = TextureHandler.getGifResource(finalValue);
 							if (this.gif != null) {
