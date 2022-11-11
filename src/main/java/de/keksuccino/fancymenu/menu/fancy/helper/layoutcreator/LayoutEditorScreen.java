@@ -1538,12 +1538,8 @@ public class LayoutEditorScreen extends GuiScreen {
 
 				if ((call != null) && (call.length() > 0)) {
 
-					String file = FancyMenu.getCustomizationPath().getPath() + "/" + call + ".txt";
+					String file = FancyMenu.getCustomizationPath().getAbsolutePath()+ "/" + call + ".txt";
 					File f = new File(file);
-					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-						file = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + file;
-						f = new File(file);
-					}
 					if (!f.exists()) {
 						if (!CustomizationHelper.saveLayoutTo(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
