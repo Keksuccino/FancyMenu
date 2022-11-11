@@ -112,7 +112,8 @@ public class FancyMenu implements ModInitializer {
 				ButtonIdentificator.init();
 
 	    		AnimationHandler.init();
-	    		AnimationHandler.loadCustomAnimations();
+				//TODO übernehmen 2.12.8-1
+				//AnimationHandler.loadCustomAnimations();
 	    		
 	    		PanoramaHandler.init();
 	    		
@@ -212,6 +213,9 @@ public class FancyMenu implements ModInitializer {
 		try {
 
 			initLocals();
+
+			//TODO übernehmen 2.12.8-1
+			AnimationHandler.loadCustomAnimations();
 
 			SetupSharingEngine.init();
 
