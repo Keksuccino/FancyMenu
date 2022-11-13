@@ -309,5 +309,19 @@ public class MenuCustomization {
 		}
 		return false;
 	}
+
+	public static String getAbsoluteGameDirectoryPath(String path) {
+		try {
+			path = path.replace("\\", "/");
+			String gameDir = FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/");
+			if (!path.startsWith(gameDir)) {
+				String fixed = gameDir + "/" + path;
+				return fixed;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return path;
+	}
 	
 }

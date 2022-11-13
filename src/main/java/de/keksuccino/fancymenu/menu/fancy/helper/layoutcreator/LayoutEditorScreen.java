@@ -1138,8 +1138,8 @@ public class LayoutEditorScreen extends Screen {
 		if (path == null) {
 			return;
 		}
-		if (path.startsWith(home.getAbsolutePath())) {
-			path = path.replace(home.getAbsolutePath(), "");
+		if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+			path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 			if (path.startsWith("\\") || path.startsWith("/")) {
 				path = path.substring(1);
 			}
@@ -1219,8 +1219,8 @@ public class LayoutEditorScreen extends Screen {
 		if (path == null) {
 			return;
 		}
-		if (path.startsWith(home.getAbsolutePath())) {
-			path = path.replace(home.getAbsolutePath(), "");
+		if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+			path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 			if (path.startsWith("\\") || path.startsWith("/")) {
 				path = path.substring(1);
 			}
@@ -1346,8 +1346,8 @@ public class LayoutEditorScreen extends Screen {
 	protected void addAudio(String path) {
 		if (path != null) {
 			File home = Minecraft.getInstance().gameDirectory;
-			if (path.startsWith(home.getAbsolutePath())) {
-				path = path.replace(home.getAbsolutePath(), "");
+			if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+				path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}
@@ -1405,8 +1405,8 @@ public class LayoutEditorScreen extends Screen {
 	public void setBackgroundTexture(String path) {
 		if (path != null) {
 			File home = Minecraft.getInstance().gameDirectory;
-			if (path.startsWith(home.getAbsolutePath())) {
-				path = path.replace(home.getAbsolutePath(), "");
+			if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+				path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}
@@ -1540,7 +1540,7 @@ public class LayoutEditorScreen extends Screen {
 
 				if ((call != null) && (call.length() > 0)) {
 
-					String file = FancyMenu.getCustomizationPath().getAbsolutePath()+ "/" + call + ".txt";
+					String file = FancyMenu.getCustomizationPath().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
 					File f = new File(file);
 					if (!f.exists()) {
 						if (!CustomizationHelper.saveLayoutTo(this.getAllProperties(), file)) {
