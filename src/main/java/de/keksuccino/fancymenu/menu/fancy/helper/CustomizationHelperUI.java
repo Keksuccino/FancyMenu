@@ -409,7 +409,7 @@ public class CustomizationHelperUI extends UIBase {
 												e2.printStackTrace();
 											}
 											File homeRaw = Minecraft.getInstance().gameDirectory;
-											File home = new File(homeRaw.getAbsolutePath());
+											File home = new File(homeRaw.getAbsolutePath().replace("\\", "/"));
 											if (home.isDirectory()) {
 												//Check that we're really in the correct dir, because I'm paranoid
 												File config = new File(home.getPath() + "/config");

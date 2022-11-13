@@ -36,7 +36,7 @@ public class MenuCustomizationProperties {
 		
 		for (File f2 : dir.listFiles()) {
 			if (f2.getPath().toLowerCase().endsWith(".txt")) {
-				PropertiesSet s = PropertiesSerializer.getProperties(f2.getAbsolutePath());
+				PropertiesSet s = PropertiesSerializer.getProperties(f2.getAbsolutePath().replace("\\", "/"));
 				if ((s != null) && s.getPropertiesType().equalsIgnoreCase("menu")) {
 					List<PropertiesSection> l = s.getPropertiesOfType("customization-meta");
 					if (l.isEmpty()) {

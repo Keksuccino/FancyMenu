@@ -56,13 +56,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			this.hoverSound = item.getEntryValue("hoversound");
 			if (this.hoverSound != null) {
 				this.hoverSound = this.hoverSound.replace("\\", "/");
-				File f = new File(this.hoverSound);
-				String fullPath = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.hoverSound;
-				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-					f = new File(fullPath);
-				}
+				File f = new File(MenuCustomization.getAbsoluteGameDirectoryPath(this.hoverSound));
 				if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-					MenuCustomization.registerSound(fullPath, fullPath);
+					MenuCustomization.registerSound(this.hoverSound, this.hoverSound);
 				} else {
 					this.hoverSound = null;
 				}
@@ -92,8 +88,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (click != null) {
 				click.replace("\\", "/");
 				File f = new File(click);
-				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-					f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + click);
+				if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+					f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + click);
 				}
 				if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
 					SoundHandler.registerSound(f.getPath(), f.getPath());
@@ -122,8 +118,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 				if (backNormal != null) {
 					File f = new File(backNormal.replace("\\", "/"));
-					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backNormal);
+					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + backNormal);
 					}
 					if (f.isFile()) {
 						if (f.getPath().toLowerCase().endsWith(".gif")) {
@@ -145,8 +141,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 				if (backHover != null) {
 					File f = new File(backHover.replace("\\", "/"));
-					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backHover);
+					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + backHover);
 					}
 					if (f.isFile()) {
 						if (f.getPath().toLowerCase().endsWith(".gif")) {

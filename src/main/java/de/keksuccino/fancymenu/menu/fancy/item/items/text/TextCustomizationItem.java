@@ -245,8 +245,8 @@ public class TextCustomizationItem extends CustomizationItem {
                         }
                     } else if (this.sourceMode == SourceMode.LOCAL_SOURCE) {
                         File f = new File(DynamicValueHelper.convertFromRaw(this.source));
-                        if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-                            f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + DynamicValueHelper.convertFromRaw(this.source));
+                        if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+                            f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + DynamicValueHelper.convertFromRaw(this.source));
                         }
                         if (f.isFile()) {
                             linesRaw.addAll(FileUtils.getFileLines(f));
