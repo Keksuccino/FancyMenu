@@ -127,15 +127,15 @@ public class ButtonBackgroundPopup extends FMPopup {
                     File home = Minecraft.getMinecraft().mcDataDir;
                     call = call.replace("\\", "/");
                     File f = new File(call);
-                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                    if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
                         f = new File(Minecraft.getMinecraft().mcDataDir, call);
                     }
                     String filteredName = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
                     if (f.isFile()) {
                         if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                             if (filteredName.equals(f.getName())) {
-                                if (call.startsWith(home.getAbsolutePath())) {
-                                    call = call.replace(home.getAbsolutePath(), "");
+                                if (call.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+                                    call = call.replace(home.getAbsolutePath().replace("\\", "/"), "");
                                     if (call.startsWith("\\") || call.startsWith("/")) {
                                         call = call.substring(1);
                                     }
@@ -172,15 +172,15 @@ public class ButtonBackgroundPopup extends FMPopup {
                     File home = Minecraft.getMinecraft().mcDataDir;
                     call = call.replace("\\", "/");
                     File f = new File(call);
-                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                    if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
                         f = new File(Minecraft.getMinecraft().mcDataDir, call);
                     }
                     String filteredName = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
                     if (f.isFile()) {
                         if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                             if (filteredName.equals(f.getName())) {
-                                if (call.startsWith(home.getAbsolutePath())) {
-                                    call = call.replace(home.getAbsolutePath(), "");
+                                if (call.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+                                    call = call.replace(home.getAbsolutePath().replace("\\", "/"), "");
                                     if (call.startsWith("\\") || call.startsWith("/")) {
                                         call = call.substring(1);
                                     }
@@ -315,7 +315,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         if (this.normalBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
             if ((this.normalBackgroundImageTextField.getText() != null) && !this.normalBackgroundImageTextField.getText().replace(" ", "").equals("")) {
                 File f = new File(this.normalBackgroundImageTextField.getText());
-                if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
                     f = new File(Minecraft.getMinecraft().mcDataDir, this.normalBackgroundImageTextField.getText());
                 }
                 if (f.isFile()) {
@@ -335,7 +335,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         if (this.hoverBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
             if ((this.hoverBackgroundImageTextField.getText() != null) && !this.hoverBackgroundImageTextField.getText().replace(" ", "").equals("")) {
                 File f = new File(this.hoverBackgroundImageTextField.getText());
-                if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+                if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
                     f = new File(Minecraft.getMinecraft().mcDataDir, this.hoverBackgroundImageTextField.getText());
                 }
                 if (f.isFile()) {

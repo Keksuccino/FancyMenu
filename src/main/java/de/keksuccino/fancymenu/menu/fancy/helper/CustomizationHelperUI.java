@@ -405,7 +405,7 @@ public class CustomizationHelperUI extends UIBase {
 
 											//TODO übernehmen 2
 											File homeRaw = Minecraft.getMinecraft().mcDataDir;
-											File home = new File(homeRaw.getAbsolutePath());
+											File home = new File(homeRaw.getAbsolutePath().replace("\\", "/"));
 											if (home.isDirectory()) {
 												//Check that we're really in the correct dir, because I'm paranoid
 												File config = new File(home.getPath() + "/config");

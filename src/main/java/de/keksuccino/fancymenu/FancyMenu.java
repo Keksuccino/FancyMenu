@@ -53,7 +53,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.12.8";
+	public static final String VERSION = "2.12.9";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -61,8 +61,8 @@ public class FancyMenu {
 	public static Config config;
 
 	//TODO übernehmen
-	public static final File MOD_DIR = new File(Minecraft.getMinecraft().mcDataDir, "/config/fancymenu");
-	public static final File INSTANCE_DATA_DIR = new File(Minecraft.getMinecraft().mcDataDir, "/fancymenu_data");
+	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
 	//---------------------
 
@@ -147,16 +147,16 @@ public class FancyMenu {
 				}
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
+
+				if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+				}
 	        	
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
 
 			Packets.registerAll();
-
-			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
-			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -349,6 +349,14 @@ public class FancyMenu {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	public static File getGameDirectory() {
+		if (FMLClientHandler.instance().getSide() == Side.CLIENT) {
+			return Minecraft.getMinecraft().mcDataDir;
+		} else {
+			return new File("");
+		}
 	}
 
 }

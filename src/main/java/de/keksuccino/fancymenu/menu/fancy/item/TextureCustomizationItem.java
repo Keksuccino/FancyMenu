@@ -26,8 +26,8 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				
 				File f = new File(this.value);
 				String finalValue = this.value;
-				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-					finalValue = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + this.value;
+				if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+					finalValue = Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + this.value;
 					f = new File(finalValue);
 				}
 				if (f.exists() && f.isFile() && (f.getName().endsWith(".png") || f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".gif"))) {

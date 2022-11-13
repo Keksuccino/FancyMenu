@@ -759,8 +759,8 @@ public class LayoutEditorUI extends UIBase {
 							this.parent.openAudio = null;
 						} else {
 							File f = new File(call);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-								f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + call);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + call);
 							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								if (this.parent.openAudio != call) {
@@ -805,8 +805,8 @@ public class LayoutEditorUI extends UIBase {
 							this.parent.closeAudio = null;
 						} else {
 							File f = new File(call);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-								f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + call);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + call);
 							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								if (this.parent.closeAudio != call) {
@@ -1453,8 +1453,8 @@ public class LayoutEditorUI extends UIBase {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 							if (call != null) {
 								File f = new File(call);
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-									f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + call);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + call);
 								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -1509,8 +1509,8 @@ public class LayoutEditorUI extends UIBase {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 							if (call != null) {
 								File f = new File(call);
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-									f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + call);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + call);
 								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());

@@ -93,8 +93,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		String skin = fixBackslashPath(item.getEntryValue("skinpath"));
 		if ((skin != null) && (this.entity.skinLocation == null)) {
 			File f = new File(skin);
-			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-				skin = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + skin;
+			if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+				skin = Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + skin;
 				f = new File(skin);
 			}
 			ExternalTextureResourceLocation r = TextureHandler.getResource(skin);
@@ -131,8 +131,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		String cape = fixBackslashPath(item.getEntryValue("capepath"));
 		if ((cape != null) && (this.entity.capeLocation == null)) {
 			File f = new File(cape);
-			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
-				cape = Minecraft.getMinecraft().mcDataDir.getAbsolutePath() + "/" + cape;
+			if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
+				cape = Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + cape;
 			}
 			ExternalTextureResourceLocation r = TextureHandler.getResource(cape);
 			if (r != null) {

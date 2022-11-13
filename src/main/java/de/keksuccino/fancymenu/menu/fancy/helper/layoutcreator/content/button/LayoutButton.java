@@ -145,7 +145,7 @@ public class LayoutButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getMinecraft().mcDataDir, call);
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
@@ -179,7 +179,7 @@ public class LayoutButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getMinecraft().mcDataDir, call);
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
