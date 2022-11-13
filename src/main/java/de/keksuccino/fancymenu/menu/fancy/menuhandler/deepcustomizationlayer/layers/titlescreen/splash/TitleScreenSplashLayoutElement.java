@@ -54,7 +54,7 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
                 if (call != null) {
                     if (!call.replace(" ", "").equals("")) {
                         File f = new File(call);
-                        if (f.exists() && f.getAbsolutePath().toLowerCase().endsWith(".txt")) {
+                        if (f.exists() && f.getAbsolutePath().replace("\\", "/").toLowerCase().endsWith(".txt")) {
                             if ((this.getSplashItem().splashTextFilePath == null) || !this.getSplashItem().splashTextFilePath.equals(call)) {
                                 this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
                             }

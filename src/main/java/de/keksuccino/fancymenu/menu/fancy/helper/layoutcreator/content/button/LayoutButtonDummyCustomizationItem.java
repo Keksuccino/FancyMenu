@@ -62,7 +62,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 				}
 			} else {
 				File f = new File(this.button.normalBackground);
-				if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+				if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 					f = new File(Minecraft.getInstance().gameDirectory, this.button.normalBackground);
 				}
 				if (f.isFile()) {

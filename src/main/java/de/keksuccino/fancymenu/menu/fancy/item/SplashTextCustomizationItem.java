@@ -68,8 +68,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			String filepath = fixBackslashPath(item.getEntryValue("splashfilepath"));
 			if (filepath != null) {
 				this.splashfile = new File(filepath);
-				if (!this.splashfile.exists() || !this.splashfile.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-					filepath = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + filepath;
+				if (!this.splashfile.exists() || !this.splashfile.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+					filepath = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + filepath;
 					this.splashfile = new File(filepath);
 				}
 				if (!this.splashfile.exists() || !this.splashfile.getPath().toLowerCase().endsWith(".txt")) {

@@ -101,8 +101,8 @@ public class BackgroundOptionsPopup extends FMPopup {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					File f = new File(call);
-					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 					}
 					if (f.isFile()) {
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());

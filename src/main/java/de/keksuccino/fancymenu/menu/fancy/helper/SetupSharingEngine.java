@@ -353,7 +353,7 @@ public class SetupSharingEngine {
                         if (!exportedResources.contains(s) && !failedToExportResources.contains(s)) {
                             File oriFile = new File(s);
                             if (oriFile.isFile()) {
-                                File target = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(oriFile.getPath()));
+                                File target = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(oriFile.getPath()));
                                 File targetParent = target.getParentFile();
                                 if (targetParent != null) {
                                     targetParent.mkdirs();
@@ -361,7 +361,7 @@ public class SetupSharingEngine {
                                 FileUtils.copyFile(oriFile, target);
                                 exportedResources.add(s);
                             } else if (oriFile.isDirectory()) {
-                                String targetDir = exportToTempSetup.getAbsolutePath() + "/" + getShortPath(oriFile.getPath());
+                                String targetDir = exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(oriFile.getPath());
                                 File target = new File(targetDir);
                                 target.mkdirs();
                                 FileUtils.copyDirectory(oriFile, target);
@@ -413,11 +413,11 @@ public class SetupSharingEngine {
                                 }
                                 if (propsPath.isDirectory()) {
                                     if (resPath.isDirectory()) {
-                                        File resTarget = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(resPath.getPath()));
+                                        File resTarget = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(resPath.getPath()));
                                         resTarget.mkdirs();
                                         FileUtils.copyDirectory(resPath, resTarget);
                                         if ((packMetaPath != null) && packMetaPath.isFile()) {
-                                            File packMetaTarget = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(packMetaPath.getPath()));
+                                            File packMetaTarget = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(packMetaPath.getPath()));
                                             FileUtils.copyFile(packMetaPath, packMetaTarget);
                                             exportedAnimations.add(m.name);
                                         }
@@ -429,7 +429,7 @@ public class SetupSharingEngine {
                                 File resPath = new File(m.resourcesPath);
                                 if (propsPath.isDirectory()) {
                                     if (resPath.isDirectory()) {
-                                        File resTarget = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(resPath.getPath()));
+                                        File resTarget = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(resPath.getPath()));
                                         resTarget.mkdirs();
                                         FileUtils.copyDirectory(resPath, resTarget);
                                         exportedAnimations.add(m.name);
@@ -466,10 +466,10 @@ public class SetupSharingEngine {
                     if (splashFile.isFile()) {
                         File parent = splashFile.getParentFile();
                         if (parent != null) {
-                            File targetParent = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(parent.getPath()));
+                            File targetParent = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(parent.getPath()));
                             targetParent.mkdirs();
                         }
-                        File copyTo = new File(exportToTempSetup.getAbsolutePath() + "/" + getShortPath(splashFile.getPath()));
+                        File copyTo = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(splashFile.getPath()));
                         FileUtils.copyFile(splashFile, copyTo);
                     } else {
                         unableToExport.add("CONFIG: CUSTOM VANILLA SPLASH FILE: " + splashPath);
@@ -483,7 +483,7 @@ public class SetupSharingEngine {
             //Export setup (config/fancymenu)
             try {
                 File fmDir = FancyMenu.MOD_DIR;
-                File target = new File(exportToTempSetup.getAbsolutePath() + "/config/fancymenu");
+                File target = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/config/fancymenu");
                 target.mkdirs();
                 FileUtils.copyDirectory(fmDir, target);
             } catch (Exception e2) {
@@ -492,7 +492,7 @@ public class SetupSharingEngine {
             }
 
             //Generate setup.properties in setup root
-            writeSetupPropertiesFile(exportToTemp.getAbsolutePath() + "/setup.properties");
+            writeSetupPropertiesFile(exportToTemp.getAbsolutePath().replace("\\", "/") + "/setup.properties");
 
             //Copy exported setup from temp dir to target + delete temp dir
             try {
@@ -640,8 +640,8 @@ public class SetupSharingEngine {
             return null;
         }
         File home = Minecraft.getInstance().gameDirectory;
-        if (pathRaw.getAbsolutePath().startsWith(home.getAbsolutePath())) {
-            path = pathRaw.getAbsolutePath().replace(home.getAbsolutePath(), "");
+        if (pathRaw.getAbsolutePath().replace("\\", "/").startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+            path = pathRaw.getAbsolutePath().replace("\\", "/").replace(home.getAbsolutePath().replace("\\", "/"), "");
             if (path.startsWith("\\") || path.startsWith("/")) {
                 path = path.substring(1);
             }
@@ -889,7 +889,7 @@ public class SetupSharingEngine {
                                         PopupHandler.displayPopup(importBlockerPopup);
                                         if (this.setupInstancePath.isDirectory()) {
                                             File targetRaw = Minecraft.getInstance().gameDirectory;
-                                            File targetDir = new File(targetRaw.getAbsolutePath());
+                                            File targetDir = new File(targetRaw.getAbsolutePath().replace("\\", "/"));
                                             if (targetDir.isDirectory()) {
                                                 try {
                                                     File fmFolder = FancyMenu.MOD_DIR;
