@@ -90,8 +90,8 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 if (i.source != null) {
                     File f = new File(i.source);
                     //---
-                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-                        f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + i.source);
+                    if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+                        f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + i.source);
                     }
                     //----------------------
                     if (f.isFile()) {

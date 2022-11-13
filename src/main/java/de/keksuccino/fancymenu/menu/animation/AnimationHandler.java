@@ -88,7 +88,7 @@ public class AnimationHandler {
 			
 			if (a.isDirectory()) {
 
-				File p = new File(a.getAbsolutePath() + "/animation.properties");
+				File p = new File(a.getAbsolutePath().replace("\\", "/") + "/animation.properties");
 				if (!p.exists()) {
 					continue;
 				}
@@ -201,12 +201,12 @@ public class AnimationHandler {
 					}
 				}
 
-				File audio1 = new File(a.getAbsolutePath() + "/audio/mainaudio.wav");
+				File audio1 = new File(a.getAbsolutePath().replace("\\", "/") + "/audio/mainaudio.wav");
 				if (audio1.exists()) {
 					mainAudio = audio1.getPath();
 				}
 				
-				File audio2 = new File(a.getAbsolutePath() + "/audio/introaudio.wav");
+				File audio2 = new File(a.getAbsolutePath().replace("\\", "/") + "/audio/introaudio.wav");
 				if (audio2.exists()) {
 					introAudio = audio2.getPath();
 				}

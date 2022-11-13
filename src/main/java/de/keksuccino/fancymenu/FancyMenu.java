@@ -57,27 +57,29 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.12.8";
+	// replace: .getAbsolutePath() -> .getAbsolutePath().replace("\\", "/")
+	// replace: .replace("\\", "/").replace("\\", "/") -> .replace("\\", "/")
+
+	//TODO übernehmen
+	public static final String VERSION = "2.12.9";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 	
 	public static Config config;
 
-	//---
-	public static final File MOD_DIR = new File(Minecraft.getInstance().gameDirectory, "/config/fancymenu");
-	public static final File INSTANCE_DATA_DIR = new File(Minecraft.getInstance().gameDirectory, "/fancymenu_data");
+	//TODO übernehmen
+	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
+	//-------------------
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
-	//---------------------
 
-	//---
 	private static File animationsPath = new File(MOD_DIR, "/animations");
 	private static File customizationPath = new File(MOD_DIR, "/customization");
 	private static File customGuiPath = new File(MOD_DIR, "/customguis");
 	private static File buttonscriptPath = new File(MOD_DIR, "/buttonscripts");
 	private static File panoramaPath = new File(MOD_DIR, "/panoramas");
 	private static File slideshowPath = new File(MOD_DIR, "/slideshows");
-	//---------------------------
 
 	public FancyMenu() {
 		try {
@@ -158,6 +160,11 @@ public class FancyMenu {
 				}
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
+
+				//TODO übernehmen
+				if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+				}
 	        	
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
@@ -167,9 +174,10 @@ public class FancyMenu {
 
 			MinecraftForge.EVENT_BUS.register(this);
 
-			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
-			}
+			//TODO übernehmen
+//			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+//				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+//			}
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -362,6 +370,15 @@ public class FancyMenu {
 			return true;
 		} catch (Exception e) {}
 		return false;
+	}
+
+	//TODO übernehmen
+	public static File getGameDirectory() {
+		if (FMLEnvironment.dist == Dist.CLIENT) {
+			return Minecraft.getInstance().gameDirectory;
+		} else {
+			return new File("");
+		}
 	}
 
 }

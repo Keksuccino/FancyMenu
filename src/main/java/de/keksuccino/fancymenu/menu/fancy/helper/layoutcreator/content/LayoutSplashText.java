@@ -211,9 +211,9 @@ public class LayoutSplashText extends LayoutElement {
 		//---
 		if (this.getObject().splashfile != null) {
 			File home = Minecraft.getInstance().gameDirectory;
-			String path = this.getObject().splashfile.getAbsolutePath();
-			if (path.startsWith(home.getAbsolutePath())) {
-				path = path.replace(home.getAbsolutePath(), "");
+			String path = this.getObject().splashfile.getAbsolutePath().replace("\\", "/");
+			if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+				path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}

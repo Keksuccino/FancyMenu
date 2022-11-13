@@ -139,7 +139,7 @@ public class DynamicValueHelper {
 						String pathString = value.split(":", 2)[0];
 						File path = new File(pathString);
 						//--- 3
-						if (!path.exists() || !path.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!path.exists() || !path.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							path = new File(Minecraft.getInstance().gameDirectory, pathString);
 						}
 						//-------------------

@@ -160,15 +160,15 @@ public class LayoutPlayerEntity extends LayoutElement {
 						File home = Minecraft.getInstance().gameDirectory;
 						call = call.replace("\\", "/");
 						File f = new File(call);
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
 						//----------------------
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (f.exists() && f.isFile() && f.getName().endsWith(".png")) {
 							if (filename.equals(f.getName())) {
-								if (call.startsWith(home.getAbsolutePath())) {
-									call = call.replace(home.getAbsolutePath(), "");
+								if (call.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+									call = call.replace(home.getAbsolutePath().replace("\\", "/"), "");
 									if (call.startsWith("\\") || call.startsWith("/")) {
 										call = call.substring(1);
 									}
@@ -270,15 +270,15 @@ public class LayoutPlayerEntity extends LayoutElement {
 						File home = Minecraft.getInstance().gameDirectory;
 						call = call.replace("\\", "/");
 						File f = new File(call);
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
 						//----------------------
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (f.exists() && f.isFile() && f.getName().endsWith(".png")) {
 							if (filename.equals(f.getName())) {
-								if (call.startsWith(home.getAbsolutePath())) {
-									call = call.replace(home.getAbsolutePath(), "");
+								if (call.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+									call = call.replace(home.getAbsolutePath().replace("\\", "/"), "");
 									if (call.startsWith("\\") || call.startsWith("/")) {
 										call = call.substring(1);
 									}

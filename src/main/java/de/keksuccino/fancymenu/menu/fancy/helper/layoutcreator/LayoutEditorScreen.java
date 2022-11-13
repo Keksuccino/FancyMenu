@@ -1134,8 +1134,8 @@ public class LayoutEditorScreen extends Screen {
 		if (path == null) {
 			return;
 		}
-		if (path.startsWith(home.getAbsolutePath())) {
-			path = path.replace(home.getAbsolutePath(), "");
+		if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+			path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 			if (path.startsWith("\\") || path.startsWith("/")) {
 				path = path.substring(1);
 			}
@@ -1217,8 +1217,8 @@ public class LayoutEditorScreen extends Screen {
 		if (path == null) {
 			return;
 		}
-		if (path.startsWith(home.getAbsolutePath())) {
-			path = path.replace(home.getAbsolutePath(), "");
+		if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+			path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 			if (path.startsWith("\\") || path.startsWith("/")) {
 				path = path.substring(1);
 			}
@@ -1344,16 +1344,14 @@ public class LayoutEditorScreen extends Screen {
 	
 	protected void addAudio(String path) {
 		if (path != null) {
-			//---
 			File home = Minecraft.getInstance().gameDirectory;
-			if (path.startsWith(home.getAbsolutePath())) {
-				path = path.replace(home.getAbsolutePath(), "");
+			if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+				path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}
 			}
 			File f = new File(Minecraft.getInstance().gameDirectory, path);
-			//--------------------
 			if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 				if (!this.audio.containsKey(path)) {
 					this.history.saveSnapshot(this.history.createSnapshot());
@@ -1407,8 +1405,8 @@ public class LayoutEditorScreen extends Screen {
 		if (path != null) {
 			//---
 			File home = Minecraft.getInstance().gameDirectory;
-			if (path.startsWith(home.getAbsolutePath())) {
-				path = path.replace(home.getAbsolutePath(), "");
+			if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+				path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 				if (path.startsWith("\\") || path.startsWith("/")) {
 					path = path.substring(1);
 				}
@@ -1544,14 +1542,8 @@ public class LayoutEditorScreen extends Screen {
 
 				if ((call != null) && (call.length() > 0)) {
 
-					//TODO übernehmen
-					String file = FancyMenu.getCustomizationPath().getAbsolutePath()+ "/" + call + ".txt";
+					String file = FancyMenu.getCustomizationPath().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
 					File f = new File(file);
-					//TODO übernehmen
-//					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-//						file = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + file;
-//						f = new File(file);
-//					}
 					if (!f.exists()) {
 						if (!CustomizationHelper.saveLayoutTo(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));

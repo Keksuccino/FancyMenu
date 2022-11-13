@@ -814,8 +814,8 @@ public class LayoutEditorUI extends UIBase {
 						} else {
 							File f = new File(call);
 							//---
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 							}
 							//----------------------
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
@@ -862,8 +862,8 @@ public class LayoutEditorUI extends UIBase {
 						} else {
 							File f = new File(call);
 							//---
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 							}
 							//----------------------
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
@@ -1516,8 +1516,8 @@ public class LayoutEditorUI extends UIBase {
 							if (call != null) {
 								File f = new File(call);
 								//---
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 								}
 								//----------------------
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
@@ -1574,8 +1574,8 @@ public class LayoutEditorUI extends UIBase {
 							if (call != null) {
 								File f = new File(call);
 								//---
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 								}
 								//----------------------
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {

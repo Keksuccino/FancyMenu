@@ -38,20 +38,15 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		this.handler = handler;
 
 		if ((this.action != null) && (this.parent != null)) {
-			
+
+			//TODO übernehmen
 			if (this.action.equalsIgnoreCase("addhoversound")) {
 				this.value = fixBackslashPath(item.getEntryValue("path"));
 				if (this.value != null) {
-					File f = new File(this.value);
-					//---
-					String finalValue = this.value;
-					if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-						finalValue = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + this.value;
-						f = new File(finalValue);
-					}
+					File f = new File(MenuCustomization.getAbsoluteGameDirectoryPath(this.value));
 					if (f.exists() && f.isFile()) {
-						if (!SoundHandler.soundExists(finalValue)) {
-							MenuCustomization.registerSound(finalValue, finalValue);
+						if (!SoundHandler.soundExists(this.value)) {
+							MenuCustomization.registerSound(this.value, this.value);
 						}
 					} else {
 						System.out.println("################### ERROR ###################");
@@ -59,9 +54,9 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 						System.out.println("#############################################");
 						this.value = null;
 					}
-					//----------------------
 				}
 			}
+			//------------------------
 
 			if (this.action.equalsIgnoreCase("sethoverlabel")) {
 				this.hoverLabelRaw = item.getEntryValue("label");

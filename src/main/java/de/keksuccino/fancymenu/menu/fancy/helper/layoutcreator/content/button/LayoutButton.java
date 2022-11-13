@@ -147,7 +147,7 @@ public class LayoutButton extends LayoutElement {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
 						//---
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
 						//----------------------
@@ -183,7 +183,7 @@ public class LayoutButton extends LayoutElement {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
 						//---
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
 						//----------------------
