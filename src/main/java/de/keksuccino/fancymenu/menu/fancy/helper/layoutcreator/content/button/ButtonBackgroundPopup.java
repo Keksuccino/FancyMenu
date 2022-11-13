@@ -129,7 +129,7 @@ public class ButtonBackgroundPopup extends FMPopup {
                     File home = Minecraft.getInstance().gameDirectory;
                     call = call.replace("\\", "/");
                     File f = new File(call);
-                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                    if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                         f = new File(Minecraft.getInstance().gameDirectory, call);
                     }
                     //------------------------
@@ -137,8 +137,8 @@ public class ButtonBackgroundPopup extends FMPopup {
                     if (f.isFile()) {
                         if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                             if (filteredName.equals(f.getName())) {
-                                if (call.startsWith(home.getAbsolutePath())) {
-                                    call = call.replace(home.getAbsolutePath(), "");
+                                if (call.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+                                    call = call.replace(home.getAbsolutePath().replace("\\", "/"), "");
                                     if (call.startsWith("\\") || call.startsWith("/")) {
                                         call = call.substring(1);
                                     }
@@ -177,7 +177,7 @@ public class ButtonBackgroundPopup extends FMPopup {
                     File home = Minecraft.getInstance().gameDirectory;
                     call = call.replace("\\", "/");
                     File f = new File(call);
-                    if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                    if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                         f = new File(Minecraft.getInstance().gameDirectory, call);
                     }
                     //------------------------
@@ -185,8 +185,8 @@ public class ButtonBackgroundPopup extends FMPopup {
                     if (f.isFile()) {
                         if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                             if (filteredName.equals(f.getName())) {
-                                if (call.startsWith(home.getAbsolutePath())) {
-                                    call = call.replace(home.getAbsolutePath(), "");
+                                if (call.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+                                    call = call.replace(home.getAbsolutePath().replace("\\", "/"), "");
                                     if (call.startsWith("\\") || call.startsWith("/")) {
                                         call = call.substring(1);
                                     }
@@ -323,7 +323,7 @@ public class ButtonBackgroundPopup extends FMPopup {
             if ((this.normalBackgroundImageTextField.getValue() != null) && !this.normalBackgroundImageTextField.getValue().replace(" ", "").equals("")) {
                 File f = new File(this.normalBackgroundImageTextField.getValue());
                 //TODO übernehmen
-                if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                     f = new File(Minecraft.getInstance().gameDirectory, this.normalBackgroundImageTextField.getValue());
                 }
                 if (f.isFile()) {
@@ -345,7 +345,7 @@ public class ButtonBackgroundPopup extends FMPopup {
             if ((this.hoverBackgroundImageTextField.getValue() != null) && !this.hoverBackgroundImageTextField.getValue().replace(" ", "").equals("")) {
                 File f = new File(this.hoverBackgroundImageTextField.getValue());
                 //TODO übernehmen
-                if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+                if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                     f = new File(Minecraft.getInstance().gameDirectory, this.hoverBackgroundImageTextField.getValue());
                 }
                 if (f.isFile()) {
