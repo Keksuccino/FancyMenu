@@ -39,7 +39,6 @@ public class IsTextVisibilityRequirement extends VisibilityRequirement {
             }
             boolean b = true;
             for (String s : secStrings) {
-                //TODO remove debug
 //                LOGGER.info("###################### IS TEXT: SEC: " + s);
                 if (!isSectionMet(parseSection(s))) {
                     b = false;

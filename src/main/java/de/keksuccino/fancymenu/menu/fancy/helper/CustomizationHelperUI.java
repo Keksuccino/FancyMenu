@@ -397,7 +397,7 @@ public class CustomizationHelperUI extends UIBase {
 										PopupHandler.displayPopup(restoreBlockerPopup);
 										try {
 											try {
-												//TODO übernehmen 2
+												//TODO übernehmen 2 (acidentally copied this todo from hotfix branch??)
 												File fmFolder = FancyMenu.MOD_DIR;
 												if (fmFolder.isDirectory()) {
 													org.apache.commons.io.FileUtils.deleteDirectory(fmFolder);
@@ -406,9 +406,9 @@ public class CustomizationHelperUI extends UIBase {
 												e2.printStackTrace();
 											}
 
-											//TODO übernehmen 2
+											//TODO übernehmen 2 (acidentally copied this todo from hotfix branch??)
 											File homeRaw = Minecraft.getInstance().gameDirectory;
-											File home = new File(homeRaw.getAbsolutePath());
+											File home = new File(homeRaw.getAbsolutePath().replace("\\", "/"));
 											if (home.isDirectory()) {
 												//Check that we're really in the correct dir, because I'm paranoid
 												File config = new File(home.getPath() + "/config");

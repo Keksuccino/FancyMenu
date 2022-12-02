@@ -9,6 +9,8 @@ import java.util.Scanner;
 import java.util.UUID;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
+import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -95,7 +97,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String skinUrl = item.getEntryValue("skinurl");
 		if (skinUrl != null) {
-			skinUrl = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(skinUrl);
+			//TODO übernehmen
+			skinUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(skinUrl), "§", "&");
 			WebTextureResourceLocation wt = TextureHandler.getWebResource(skinUrl);
 			if (wt != null) {
 				this.entity.skinLocation = wt.getResourceLocation();
@@ -105,8 +108,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		String skin = fixBackslashPath(item.getEntryValue("skinpath"));
 		if ((skin != null) && (this.entity.skinLocation == null)) {
 			File f = new File(skin);
-			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-				skin = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + skin;
+			if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+				skin = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + skin;
 				f = new File(skin);
 			}
 			ExternalTextureResourceLocation r = TextureHandler.getResource(skin);
@@ -133,7 +136,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String capeUrl = item.getEntryValue("capeurl");
 		if (capeUrl != null) {
-			capeUrl = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(capeUrl);
+			//TODO übernehmen
+			capeUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(capeUrl), "§", "&");
 			WebTextureResourceLocation wt = TextureHandler.getWebResource(capeUrl);
 			if (wt != null) {
 				this.entity.capeLocation = wt.getResourceLocation();
@@ -143,8 +147,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		String cape = fixBackslashPath(item.getEntryValue("capepath"));
 		if ((cape != null) && (this.entity.capeLocation == null)) {
 			File f = new File(cape);
-			if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-				cape = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + cape;
+			if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+				cape = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + cape;
 			}
 			ExternalTextureResourceLocation r = TextureHandler.getResource(cape);
 			if (r != null) {

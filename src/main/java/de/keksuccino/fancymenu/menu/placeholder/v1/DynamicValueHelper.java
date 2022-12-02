@@ -142,7 +142,7 @@ public class DynamicValueHelper {
 					if (value.contains(":")) {
 						String pathString = value.split(":", 2)[0];
 						File path = new File(pathString);
-						if (!path.exists() || !path.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!path.exists() || !path.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							path = new File(Minecraft.getInstance().gameDirectory, pathString);
 						}
 						String intervalString = value.split(":", 2)[1];

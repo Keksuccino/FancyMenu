@@ -50,6 +50,8 @@ public class WebTextPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String link = dps.values.get("link");
         if (link != null) {
+            //TODO übernehmen
+            link = StringUtils.convertFormatCodes(link, "§", "&");
             if (!isInvalidWebPlaceholderLink(link)) {
                 List<String> lines = getCachedWebPlaceholder(dps.originalString);
                 if (lines != null) {

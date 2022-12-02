@@ -72,7 +72,7 @@ helper.creator.add.button.label = Button Label
 
 helper.creator.add.audio = Audio
 
-helper.creator.vanillabutton.autoclick = Click button
+helper.creator.vanillabutton.autoclick = Automatic Button Clicks
 helper.creator.vanillabutton.autoclick.popup = Automatic Button Clicks
 
 helper.creator.backgroundoptions = Background Options
@@ -168,7 +168,7 @@ helper.buttons.tools.creategui.create = Create
 
 gameintro.skip = PRESS SPACE TO SKIP
 
-helper.creator.items.chooselayer = Choose Layer
+helper.creator.items.chooselayer = Pick Element
 
 customization.items.webstring.unabletoload = Unable to load web text! Invalid URL or not connected to internet!
 
@@ -738,9 +738,9 @@ fancymenu.config.gridsize.desc = The inner size of one grid square.
 
 fancymenu.helper.editor.properties.scale.btn.desc = Force a GUI scale for this menu.%n%%n%This will override the scale%n%set in the Minecraft settings.%n%%n%§cOnly overrides the scale for the specific menu,%n%§cnot all menus.
 
-fancymenu.helper.editor.properties.autoscale.on = Layout Auto-Scaling: §aOn
-fancymenu.helper.editor.properties.autoscale.off = Layout Auto-Scaling: §cOff
-fancymenu.helper.editor.properties.autoscale.btn.desc = Let FancyMenu handle the scale of%n%the menu, so your layout works for%n%every scale and resolution.%n%%n%§cThis will make text elements look%n%§cblurry at some scales.%n%§cThis can't be fixed and the best%n%§cworkaround is to use images%n%§cwith background as text elements.
+fancymenu.helper.editor.properties.autoscale.on = Auto-Scaling: §aOn
+fancymenu.helper.editor.properties.autoscale.off = Auto-Scaling: §cOff
+fancymenu.helper.editor.properties.autoscale.btn.desc = Let FancyMenu handle the scale of%n%the menu, so your layout%n%works for every scale and%n%resolution.%n%%n%To do this, resize the window%n%so everything looks good and%n%elements are not too far apart%n%from each other and click on%n%this button.%n%%n%§cThis will make text elements look%n%§cblurry at some scales.%n%§cThis can't be fixed and the best%n%§cworkaround is to use images%n%§cwith background as text elements.
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1 = Here you can set the base window size of your layout.
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2 = This should be the size your layout was designed for.
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3 = If you made it in the current window size, just leave the values like they are.
@@ -1154,16 +1154,24 @@ fancymenu.helper.editor.items.visibilityrequirements.is_number.desc = Check if a
 fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename = Compare Section(s)
 
 fancymenu.helper.editor.items.features.advanced_positioning = Advanced Positioning
-fancymenu.helper.editor.items.features.advanced_positioning.active = Advanced Positioning (§6Active!§r)
+fancymenu.helper.editor.items.features.advanced_positioning.active = Advanced Positioning (§6Active§r)
 fancymenu.helper.editor.items.features.advanced_positioning.desc = §cONLY FOR ADVANCED USERS!%n%%n%Allows you to manually set the%n%position of the element.%n%%n%Advanced positions support placeholders,%n%so you can calculate positions%n%by using the Calculator placeholder,%n%get positions of other elements%n%and much more.%n%%n%Many useful placeholders for element%n%positioning can be found%n%in the "GUI" and "Advanced"%n%placeholder categories.%n%%n%§cYou will not be able to resize or%n%§cdrag and move the element while this%n%§cfeature is in use.%n%%n%§cTo "disable" it, just set both the%n%§cX position and Y position to an%n%§cempty value.
 fancymenu.helper.editor.items.features.advanced_positioning.posx = X Position
 fancymenu.helper.editor.items.features.advanced_positioning.posy = Y Position
 
 fancymenu.helper.editor.items.features.advanced_sizing = Advanced Sizing
-fancymenu.helper.editor.items.features.advanced_sizing.active = Advanced Sizing (§6Active!§r)
+fancymenu.helper.editor.items.features.advanced_sizing.active = Advanced Sizing (§6Active§r)
 fancymenu.helper.editor.items.features.advanced_sizing.desc = §cONLY FOR ADVANCED USERS!%n%%n%Allows you to manually set the%n%size of the element.%n%%n%Advanced sizes support placeholders,%n%so you can calculate sizes%n%by using the Calculator placeholder,%n%get sizes of other elements%n%and much more.%n%%n%Many useful placeholders for element%n%sizing can be found%n%in the "GUI" and "Advanced"%n%placeholder categories.%n%%n%§cYou will not be able to resize%n%§cthe element on axes that got%n%§coverridden by an advanced size.%n%%n%§cTo "undo" the override, just set%n%§cthe respective advanced sizing value%n%§cto an empty/blank one.
 fancymenu.helper.editor.items.features.advanced_sizing.width = Width
 fancymenu.helper.editor.items.features.advanced_sizing.height = Height
+
+fancymenu.helper.editor.properties.autoscale.forced_scale_needed = You need to set a §lforced GUI scale%n%before you can use auto-scaling!%n%%n%It's recommended to use 2 as%n%forced GUI scale.%n%%n%§cTo set a forced GUI scale,%n%§cright-click the editor background%n%§cand click on §lForce GUI Scale§r§c.
+
+fancymenu.customization.items.ticker = Ticker
+fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%every tick.%n%%n%Supports asynchronous ticking%n%and tick delays.
+
+
+
 
 
 

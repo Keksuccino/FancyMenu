@@ -239,8 +239,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							value = value.replace("\\", "/");
 							String valueFinal = value;
 							File f = new File(value);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								valueFinal = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + value;
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								valueFinal = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + value;
 								f = new File(valueFinal);
 							}
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
@@ -355,6 +355,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							int h = Integer.parseInt(height);
 							van.object.setWidth(w);
 							van.object.setHeight(h);
+							//TODO übernehmen
+							van.object.advancedWidth = sec.getEntryValue("advanced_width");
+							van.object.advancedHeight = sec.getEntryValue("advanced_height");
+							//-------------------------
 						}
 					}
 
@@ -370,6 +374,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							van.object.orientation = orientation;
 							van.object.posX = x;
 							van.object.posY = y;
+							//TODO übernehmen
+							van.object.advancedPosX = sec.getEntryValue("advanced_posx");
+							van.object.advancedPosY = sec.getEntryValue("advanced_posy");
+							//----------------------
 							van.object.orientationElementIdentifier = sec.getEntryValue("orientation_element");
 						}
 					}
@@ -386,8 +394,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							if ((backNormal != null) || (backHover != null) || (backAniNormal != null) || (backAniHover != null)) {
 								if (backNormal != null) {
 									File f = new File(backNormal.replace("\\", "/"));
-									if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-										f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backNormal.replace("\\", "/"));
+									if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+										f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + backNormal.replace("\\", "/"));
 									}
 									if (f.isFile()) {
 										van.customizationContainer.normalBackground = backNormal;
@@ -399,8 +407,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								}
 								if (backHover != null) {
 									File f = new File(backHover.replace("\\", "/"));
-									if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-										f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backHover.replace("\\", "/"));
+									if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+										f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + backHover.replace("\\", "/"));
 									}
 									if (f.isFile()) {
 										van.customizationContainer.hoverBackground = backHover;
@@ -425,8 +433,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							String path = sec.getEntryValue("path");
 							if (path != null) {
 								File f = new File(path);
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path);
 								}
 								if (f.isFile() && f.getName().endsWith(".wav")) {
 									LayoutVanillaButton van = this.getVanillaButton(b);
@@ -451,8 +459,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							String path = sec.getEntryValue("path");
 							if (path != null) {
 								File f = new File(path);
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path);
 								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									LayoutVanillaButton van = this.getVanillaButton(b);
@@ -637,8 +645,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						if ((backNormal != null) || (backHover != null) || (backAniNormal != null) || (backAniHover != null)) {
 							if (backNormal != null) {
 								File f = new File(backNormal.replace("\\", "/"));
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backNormal.replace("\\", "/"));
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + backNormal.replace("\\", "/"));
 								}
 								if (f.isFile()) {
 									lb.customizationContainer.normalBackground = backNormal;
@@ -650,8 +658,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							}
 							if (backHover != null) {
 								File f = new File(backHover.replace("\\", "/"));
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + backHover.replace("\\", "/"));
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + backHover.replace("\\", "/"));
 								}
 								if (f.isFile()) {
 									lb.customizationContainer.hoverBackground = backHover;
@@ -701,8 +709,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						}
 						if (path != null) {
 							File home = Minecraft.getInstance().gameDirectory;
-							if (path.startsWith(home.getAbsolutePath())) {
-								path = path.replace(home.getAbsolutePath(), "");
+							if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
+								path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
 								if (path.startsWith("\\") || path.startsWith("/")) {
 									path = path.substring(1);
 								}
@@ -749,8 +757,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						String path = sec.getEntryValue("path");
 						if (path != null) {
 							File f = new File(path);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path);
 							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								this.openAudio = path;
@@ -762,8 +770,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						String path = sec.getEntryValue("path");
 						if (path != null) {
 							File f = new File(path);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + path);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path);
 							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								this.closeAudio = path;

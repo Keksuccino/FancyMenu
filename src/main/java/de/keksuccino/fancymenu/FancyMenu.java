@@ -64,8 +64,8 @@ public class FancyMenu {
 	
 	public static Config config;
 
-	public static final File MOD_DIR = new File(Minecraft.getInstance().gameDirectory, "/config/fancymenu");
-	public static final File INSTANCE_DATA_DIR = new File(Minecraft.getInstance().gameDirectory, "/fancymenu_data");
+	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
+	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
 
 	private static File animationsPath = new File(MOD_DIR, "/animations");
@@ -158,14 +158,10 @@ public class FancyMenu {
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 
-				//TODO remove debug
-//				String placeholder3 = "{\"placeholder\":\"test_placeholder_3\"}";
-//				String placeholder2 = "{\"placeholder\":\"test_placeholder_2\"}";
-//				String placeholder1 = "{\"placeholder\":\"test_placeholder_1\",\"values\":{\"value_1\":\"valueeeee lel \" " + placeholder2 + "\",\"value_2\":\"" + placeholder2 + "\"}}";
-//				String placeholder0 = "{\"placeholder\":\"test_placeholder_1\",\"values\":{\"value_1\":\"valueeeee lel\\{\\}\"\" " + placeholder1 + "\",\"value_2\":\"" + placeholder3 + "\"}}";
-//				String placeholder4 = "{\"placeholder\":\"test_placeholder_4\",\"values\":{\"value_3\":\"" + placeholder1 + "\",\"value_4\":\"" + "some test" + "\"}}";
-//				LOGGER.info("############################### PLACEHOLDER: " + PlaceholderParser.replacePlaceholders("This is a text containing a placeholder: " + placeholder0 + " | and it has a suffix for debug purposes. | Now it also has a second placeholder: " + placeholder3));
-	        	
+				if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
+				}
+
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
@@ -173,10 +169,6 @@ public class FancyMenu {
 			Packets.registerAll();
 
 			MinecraftForge.EVENT_BUS.register(this);
-
-			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
-			}
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -371,6 +363,14 @@ public class FancyMenu {
 			return true;
 		} catch (Exception e) {}
 		return false;
+	}
+
+	public static File getGameDirectory() {
+		if (FMLEnvironment.dist == Dist.CLIENT) {
+			return Minecraft.getInstance().gameDirectory;
+		} else {
+			return new File("");
+		}
 	}
 
 }

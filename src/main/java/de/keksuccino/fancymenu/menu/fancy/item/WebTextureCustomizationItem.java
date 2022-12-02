@@ -13,7 +13,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.annotations.OptifineFix;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -38,7 +40,8 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
-				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.value);
+				//TODO übernehmen
+				this.value = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.value), "§", "&");
 
 				if ((this.getWidth() <= 0) && (this.getHeight() <= 0)) {
 					this.setWidth(100);

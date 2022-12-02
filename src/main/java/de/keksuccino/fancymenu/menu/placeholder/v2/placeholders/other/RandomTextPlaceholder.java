@@ -28,7 +28,7 @@ public class RandomTextPlaceholder extends Placeholder {
         String intervalString = dps.values.get("interval");
         if ((pathString != null) && (intervalString != null)) {
             File path = new File(pathString);
-            if (!path.exists() || !path.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+            if (!path.exists() || !path.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                 path = new File(Minecraft.getInstance().gameDirectory, pathString);
             }
             if (MathUtils.isLong(intervalString) && path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {

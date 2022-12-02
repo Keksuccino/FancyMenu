@@ -57,9 +57,10 @@ public class JsonPlaceholder extends Placeholder {
         String source = dps.values.get("source");
         String jsonPath = dps.values.get("json_path");
         if ((source != null) && (jsonPath != null)) {
+            source = StringUtils.convertFormatCodes(source, "§", "&");
             File f = new File(source);
-            if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-                String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + source;
+            if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+                String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + source;
                 f = new File(linkTemp);
             }
             if (f.isFile()) {

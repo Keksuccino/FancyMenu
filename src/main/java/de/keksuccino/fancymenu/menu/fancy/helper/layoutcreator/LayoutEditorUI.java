@@ -750,6 +750,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(renderingOrderButton);
 
+			//TODO übernehmen
 			/** AUTO-SCALING **/
 			String autoScalingLabel = Locals.localize("fancymenu.helper.editor.properties.autoscale.off");
 			if ((this.parent.autoScalingWidth != 0) && (this.parent.autoScalingHeight != 0)) {
@@ -769,26 +770,39 @@ public class LayoutEditorUI extends UIBase {
 						}
 					}));
 				}
-			});
-			autoScalingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.btn.desc"), "%n%"));
+			}) {
+				@Override
+				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if (parent.scale != 0) {
+						this.active = true;
+						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.btn.desc"), "%n%"));
+					} else {
+						this.active = false;
+						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"), "%n%"));
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
 			this.addContent(autoScalingButton);
-			
+			//--------------------------
+
+			//TODO übernehmen
 			/** FORCE GUI SCALE **/
 			AdvancedButton menuScaleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
-					if ((call != null) && MathUtils.isInteger(call)) {
-						int s = Integer.parseInt(call);
+					if (call != null) {
+						int s = 0;
+						if (MathUtils.isInteger(call)) {
+							s = Integer.parseInt(call);
+						}
 						if (s < 0) {
 							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.rightclick.scale.invalid"), "", "", "", "");
 						} else {
-
 							if (this.parent.scale != s) {
 								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 							}
-							
 							this.parent.scale = s;
 							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
-						
 						}
 					}
 				});
@@ -797,6 +811,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			menuScaleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.scale.btn.desc"), "%n%"));
 			this.addContent(menuScaleButton);
+			//-------------------
 			
 			/** OPEN/CLOSE SOUND **/
 			FMContextMenu openCloseSoundMenu = new FMContextMenu();
@@ -813,8 +828,8 @@ public class LayoutEditorUI extends UIBase {
 							this.parent.openAudio = null;
 						} else {
 							File f = new File(call);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								if (this.parent.openAudio != call) {
@@ -859,8 +874,8 @@ public class LayoutEditorUI extends UIBase {
 							this.parent.closeAudio = null;
 						} else {
 							File f = new File(call);
-							if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 							}
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
 								if (this.parent.closeAudio != call) {
@@ -1511,8 +1526,8 @@ public class LayoutEditorUI extends UIBase {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 							if (call != null) {
 								File f = new File(call);
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -1567,8 +1582,8 @@ public class LayoutEditorUI extends UIBase {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 							if (call != null) {
 								File f = new File(call);
-								if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + call);
+								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 								}
 								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());

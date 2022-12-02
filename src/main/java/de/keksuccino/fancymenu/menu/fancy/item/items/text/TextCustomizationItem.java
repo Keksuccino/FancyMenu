@@ -246,15 +246,17 @@ public class TextCustomizationItem extends CustomizationItem {
                         }
                     } else if (this.sourceMode == SourceMode.LOCAL_SOURCE) {
                         File f = new File(de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.source));
-                        if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
-                            f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath() + "/" + PlaceholderParser.replacePlaceholders(this.source));
+                        if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+                            f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + PlaceholderParser.replacePlaceholders(this.source));
                         }
                         if (f.isFile()) {
                             linesRaw.addAll(FileUtils.getFileLines(f));
                         }
                     } else if (this.sourceMode == SourceMode.WEB_SOURCE) {
-                        if (WebUtils.isValidUrl(de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.source))) {
-                            String fixedSource = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.source);
+                        //TODO übernehmen (if)
+                        if (WebUtils.isValidUrl(StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&"))) {
+                            //TODO übernehmen
+                            String fixedSource = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&");
                             //Get raw github file
                             if (fixedSource.toLowerCase().contains("/blob/") && (fixedSource.toLowerCase().startsWith("http://github.com/")
                                     || fixedSource.toLowerCase().startsWith("https://github.com/")|| fixedSource.toLowerCase().startsWith("http://www.github.com/")

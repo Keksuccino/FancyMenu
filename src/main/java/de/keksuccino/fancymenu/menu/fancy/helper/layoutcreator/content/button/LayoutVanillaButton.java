@@ -31,14 +31,6 @@ public class LayoutVanillaButton extends LayoutElement {
 	public final ButtonData button;
 	public final MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
 
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-	//TODO ADD SUPPORT FOR ADVANCED POSITIONING + SIZING
-
 	public LayoutVanillaButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, ButtonData button, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, button.label, button.width, button.height, button.x, button.y), true, handler, false);
 		this.button = button;
@@ -52,10 +44,6 @@ public class LayoutVanillaButton extends LayoutElement {
 	public void init() {
 		this.orderable = false;
 		this.copyable = false;
-//		//TODO übernehmen
-//		this.supportsAdvancedPositioning = false;
-//		this.supportsAdvancedSizing = false;
-//		//-----------------
 
 		super.init();
 
@@ -180,7 +168,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
@@ -214,7 +202,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						File f = new File(call);
-						if (!f.exists() || !f.getAbsolutePath().startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath())) {
+						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
@@ -393,17 +381,35 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 			s.addEntry("x", "" + this.object.posX);
 			s.addEntry("y", "" + this.object.posY);
+			//TODO übernehmen
+			if (this.object.advancedPosX != null) {
+				s.addEntry("advanced_posx", this.object.advancedPosX);
+			}
+			if (this.object.advancedPosY != null) {
+				s.addEntry("advanced_posy", this.object.advancedPosY);
+			}
+			//-------------------
 			l.add(s);
 		}
+
 		// resizebutton
-		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height))) {
+		//TODO übernehmen
+		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height) || (this.object.advancedHeight != null) || (this.object.advancedWidth != null))) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "resizebutton");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("width", "" + this.object.getWidth());
-			s.addEntry("height", "" + this.object.getHeight());
+			s.addEntry("width", "" + this.object.width);
+			s.addEntry("height", "" + this.object.width);
+			if (this.object.advancedWidth != null) {
+				s.addEntry("advanced_width", this.object.advancedWidth);
+			}
+			if (this.object.advancedHeight != null) {
+				s.addEntry("advanced_height", this.object.advancedHeight);
+			}
 			l.add(s);
 		}
+		//----------------------
+
 		// renamebutton
 		if (this.customizationContainer.customButtonLabel != null) {
 			if (!this.customizationContainer.customButtonLabel.equals(this.button.label)) {
