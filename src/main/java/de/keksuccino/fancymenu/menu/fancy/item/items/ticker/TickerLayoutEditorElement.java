@@ -4,7 +4,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -12,12 +12,9 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
+import net.minecraft.client.Minecraft;
 
 import java.awt.*;
-
-//TODO implement Ticker GUI
-// - Button in right-click menu to add new action (opens normal button action selection screen)
-// - Button in right-click menu to manage actions (remove, edit) (is list screen with all actions in order)
 
 public class TickerLayoutEditorElement extends LayoutEditorElement {
 
@@ -28,86 +25,102 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
     @Override
     public void init() {
 
+        this.supportsAdvancedPositioning = false;
+        this.supportsAdvancedSizing = false;
+
         super.init();
 
         TickerCustomizationItem i = ((TickerCustomizationItem)this.object);
 
-        AdvancedButton setVariableButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.input_field.editor.set_variable"), (press) -> {
-            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.input_field.editor.set_variable"), null, 240, (call) -> {
+        AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.add_action"), (press) -> {
+            ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
                 if (call != null) {
-                    if (!call.replace(" ", "").equals("")) {
-                        if ((i.linkedVariable == null) || (!i.linkedVariable.equals(call))) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-                        }
-                        i.linkedVariable = call;
-                    } else {
-                        if (i.linkedVariable != null) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-                        }
-                        i.linkedVariable = null;
-                    }
+                    this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                    i.actions.add(new TickerCustomizationItem.ActionContainer(call.get(0), call.get(1)));
                 }
             });
-            if (i.linkedVariable != null) {
-                p.setText(i.linkedVariable);
-            }
-            PopupHandler.displayPopup(p);
+            Minecraft.getInstance().setScreen(s);
         });
-        setVariableButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.input_field.editor.set_variable.desc"), "%n%"));
-        this.rightclickMenu.addContent(setVariableButton);
+        addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.add_action.desc"), "%n%"));
+        this.rightclickMenu.addContent(addActionButton);
 
-        AdvancedButton setMaxLengthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.input_field.editor.set_max_length"), (press) -> {
-            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.input_field.editor.set_max_length"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+        AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.manage_actions"), (press) -> {
+            ManageTickerActionsScreen s = new ManageTickerActionsScreen(this.handler, this);
+            Minecraft.getInstance().setScreen(s);
+        });
+        manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.manage_actions.desc"), "%n%"));
+        this.rightclickMenu.addContent(manageActionsButton);
+
+        this.rightclickMenu.addSeparator();
+
+        AdvancedButton tickDelayButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.tick_delay"), (press) -> {
+            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0), Locals.localize("fancymenu.customization.items.ticker.tick_delay"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
                 if (call != null) {
-                    if (!call.replace(" ", "").equals("")) {
-                        if (MathUtils.isInteger(call)) {
-                            int ml = Integer.parseInt(call);
-                            if (ml != i.maxTextLength) {
+                    if (MathUtils.isLong(call)) {
+                        long delay = Long.parseLong(call);
+                        if (i.tickDelayMs != delay) {
+                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                        }
+                        i.tickDelayMs = delay;
+                    } else {
+                        if (call.replace(" ", "").equals("")) {
+                            if (i.tickDelayMs != 0) {
                                 this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
                             }
-                            i.maxTextLength = ml;
+                            i.tickDelayMs = 0;
                         }
-                    } else {
-                        if (i.maxTextLength != 10000) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-                        }
-                        i.maxTextLength = 10000;
                     }
                 }
             });
-            p.setText("" + i.maxTextLength);
+            p.setText("" + i.tickDelayMs);
             PopupHandler.displayPopup(p);
         });
-        this.rightclickMenu.addContent(setMaxLengthButton);
+        tickDelayButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.tick_delay.desc"), "%n%"));
+        this.rightclickMenu.addContent(tickDelayButton);
 
-        FMContextMenu setTypeMenu = new FMContextMenu();
-        this.rightclickMenu.addChild(setTypeMenu);
+        AdvancedButton asyncButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
+            if (i.isAsync) {
+                i.isAsync = false;
+            } else {
+                i.isAsync = true;
+            }
+        }) {
+            @Override
+            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                if (i.isAsync) {
+                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.async.on"));
+                } else {
+                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.async.off"));
+                }
+                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+            }
+        };
+        asyncButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.async.desc"), "%n%"));
+        this.rightclickMenu.addContent(asyncButton);
 
-        AdvancedButton setTypeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.input_field.editor.set_type"), true, (press) -> {
-            setTypeMenu.setParentButton((AdvancedButton) press);
-            setTypeMenu.openMenuAt(0, press.y);
-        });
-        setTypeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.input_field.editor.set_type.desc"), "%n%"));
-        this.rightclickMenu.addContent(setTypeButton);
-        for (TickerCustomizationItem.InputFieldType t : TickerCustomizationItem.InputFieldType.values()) {
-            AdvancedButton typeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.input_field.type." + t.getName()), (press) -> {
-                if (i.type != t) {
-                    this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+        AdvancedButton oneTickModeButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
+            if (i.tickMode == TickerCustomizationItem.TickMode.NORMAL) {
+                i.tickMode = TickerCustomizationItem.TickMode.ONCE_PER_SESSION;
+            } else if (i.tickMode == TickerCustomizationItem.TickMode.ONCE_PER_SESSION){
+                i.tickMode = TickerCustomizationItem.TickMode.ON_MENU_LOAD;
+            } else if (i.tickMode == TickerCustomizationItem.TickMode.ON_MENU_LOAD) {
+                i.tickMode = TickerCustomizationItem.TickMode.NORMAL;
+            }
+        }) {
+            @Override
+            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                if (i.tickMode == TickerCustomizationItem.TickMode.NORMAL) {
+                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.normal"));
+                } else if (i.tickMode == TickerCustomizationItem.TickMode.ONCE_PER_SESSION){
+                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.once_per_session"));
+                } else if (i.tickMode == TickerCustomizationItem.TickMode.ON_MENU_LOAD) {
+                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.on_menu_load"));
                 }
-                i.type = t;
-            }) {
-                @Override
-                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                    if (i.type == t) {
-                        this.setMessage("§a" + Locals.localize("fancymenu.customization.items.input_field.type." + t.getName()));
-                    } else {
-                        this.setMessage(Locals.localize("fancymenu.customization.items.input_field.type." + t.getName()));
-                    }
-                    super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-                }
-            };
-            setTypeMenu.addContent(typeButton);
-        }
+                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+            }
+        };
+        oneTickModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.tick_mode.desc"), "%n%"));
+        this.rightclickMenu.addContent(oneTickModeButton);
 
     }
 
@@ -118,11 +131,18 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 
         SimplePropertiesSection sec = new SimplePropertiesSection();
 
-        if (i.linkedVariable != null) {
-            sec.addEntry("linked_variable", i.linkedVariable);
+        sec.addEntry("is_async", "" + i.isAsync);
+        sec.addEntry("tick_delay", "" + i.tickDelayMs);
+        sec.addEntry("tick_mode", "" + i.tickMode.name);
+        int index = 0;
+        for (TickerCustomizationItem.ActionContainer c : i.actions) {
+            String v = c.value;
+            if (v == null) {
+                v = "";
+            }
+            sec.addEntry("tickeraction_" + index + "_" + c.action, v);
+            index++;
         }
-        sec.addEntry("input_field_type", i.type.getName());
-        sec.addEntry("max_text_length", "" + i.maxTextLength);
 
         return sec;
 

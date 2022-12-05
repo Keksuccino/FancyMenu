@@ -988,7 +988,7 @@ fancymenu.helper.buttonaction.disable_layout.value.desc = Layout Name
 
 fancymenu.helper.ui.visibility_requirements.manage = Manage Visibility Requirements
 
-fancymenu.helper.ui.button_action.set = Set Button Action
+fancymenu.helper.ui.button_action.set = Choose Action
 
 fancymenu.guicomponents.done = Done
 
@@ -1137,7 +1137,7 @@ fancymenu.helper.placeholder.elementposx.desc = Gets the X position of an elemen
 fancymenu.helper.placeholder.elementposy = Element Y Position
 fancymenu.helper.placeholder.elementposy.desc = Gets the Y position of an element%n%by its element ID.%n%%n%Just replace 'some.element.id' with%n%the actual element ID.%n%%n%§cYou can get the ID of elements%n%§cby right-clicking them in the editor.
 fancymenu.helper.placeholder.calc = Calculator
-fancymenu.helper.placeholder.calc.desc = Solves arithmetic expressions.%n%%n%Just replace the example expression%n%with the real one.
+fancymenu.helper.placeholder.calc.desc = Solves arithmetic expressions.%n%%n%Just replace the example expression%n%with the real one.%n%%n%Set 'decimal' to 'false' if the%n%placeholder should return a LONG%n%instead of a DOUBLE.
 fancymenu.helper.placeholder.mouseposx = Mouse X Position
 fancymenu.helper.placeholder.mouseposx.desc = Gets the mouse X position.%n%%n%§cAlways returns 10 while in the editor,%n%§cso you can still edit the element%n%§cwithout it following your mouse when%n%§cusing it for advanced sizing/positioning.
 fancymenu.helper.placeholder.mouseposy = Mouse Y Position
@@ -1168,11 +1168,29 @@ fancymenu.helper.editor.items.features.advanced_sizing.height = Height
 fancymenu.helper.editor.properties.autoscale.forced_scale_needed = You need to set a §lforced GUI scale%n%before you can use auto-scaling!%n%%n%It's recommended to use 2 as%n%forced GUI scale.%n%%n%§cTo set a forced GUI scale,%n%§cright-click the editor background%n%§cand click on §lForce GUI Scale§r§c.
 
 fancymenu.customization.items.ticker = Ticker
-fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%every tick.%n%%n%Supports asynchronous ticking%n%and tick delays.
+fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%every tick.%n%%n%Supports asynchronous ticking%n%and tick delays.%n%%n%Can be set to tick only once%n%every time you open the menu.
+fancymenu.customization.items.ticker.add_action = Add Action
+fancymenu.customization.items.ticker.add_action.desc = Add a new action to the list of%n%actions this ticker should execute.
+fancymenu.customization.items.ticker.manage_actions = Manage Actions
+fancymenu.customization.items.ticker.manage_actions.desc = Edit or remove actions of this ticker.
+fancymenu.customization.items.ticker.manage_actions.action = §lAction: §r{}
+fancymenu.customization.items.ticker.manage_actions.value = §lValue: §r{}
+fancymenu.customization.items.ticker.manage_actions.remove = Remove Action
+fancymenu.customization.items.ticker.manage_actions.remove.confirm = §c§lAre you sure?%n%%n%Do you really want to remove this action?%n% %n% %n% %n%
+fancymenu.customization.items.ticker.manage_actions.edit = Edit Action
+fancymenu.customization.items.ticker.tick_delay = Tick Delay [ms]
+fancymenu.customization.items.ticker.tick_delay.desc = Set the delay between ticks in milliseconds.
+fancymenu.customization.items.ticker.async.on = Async: §aOn
+fancymenu.customization.items.ticker.async.off = Async: §cOff
+fancymenu.customization.items.ticker.async.desc = If the ticker should run in%n%a separate thread (asynchronous).
+fancymenu.customization.items.ticker.tick_mode.normal = Tick Mode: §6Normal
+fancymenu.customization.items.ticker.tick_mode.once_per_session = Tick Mode: §6Session
+fancymenu.customization.items.ticker.tick_mode.on_menu_load = Tick Mode: §6Menu-Load
+fancymenu.customization.items.ticker.tick_mode.desc = §lNormal: §rTicker ticks every tick.%n%%n%§lSession: §rTicker ticks once%n%per game session.%n%%n%§lMenu-Load: §rTicker ticks once%n%every time you load the menu.%n%Keep in mind that menus get%n%also reloaded when changing the%n%window size.
 
-
-
-
+fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered = Is Element Hovered
+fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.desc = Check if an element is hovered.%n%Use its element ID to identify it.%n%%n%You can get the ID of an element%n%by right-clicking it in the editor.
+fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.valuename = Target Element ID
 
 
 

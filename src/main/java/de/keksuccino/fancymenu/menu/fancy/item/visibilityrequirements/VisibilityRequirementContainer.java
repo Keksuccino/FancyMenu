@@ -721,6 +721,8 @@ public class VisibilityRequirementContainer {
 
         } catch (Exception e) {
             e.printStackTrace();
+            //TODO übernehmen
+            return false;
         }
 
         //TODO übernehmen

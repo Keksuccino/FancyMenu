@@ -4,6 +4,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
+import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -15,13 +16,18 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TickerCustomizationItemContainer extends CustomizationItemContainer {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static volatile List<TickerCustomizationItem.TickerItemThreadController> cachedThreadControllers = new ArrayList<>();
+    public static volatile List<String> cachedOncePerSessionItems = new ArrayList<>();
 
     public TickerCustomizationItemContainer() {
         super("fancymenu_customization_item_ticker");
@@ -58,6 +64,12 @@ public class TickerCustomizationItemContainer extends CustomizationItemContainer
             }
             cachedThreadControllers = keep;
         }
+    }
+
+    @SubscribeEvent
+    public void onMenuReload(MenuReloadedEvent e) {
+        cachedOncePerSessionItems.clear();
+        LOGGER.info("[FancyMenu] Successfully cleared cached once-per-session ticker elements.");
     }
 
     @Override

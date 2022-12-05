@@ -26,11 +26,15 @@ public class PlaceholderEditBox extends AdvancedTextField {
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	private AdvancedImageButton variableButton;
-	private FMContextMenu variableMenu;
+	//TODO übernehmen (make public)
+	public FMContextMenu variableMenu;
+
+	//TODO übernehmen
+	public boolean renderContextMenu = true;
 	
 	private static final ResourceLocation VARIABLES_BUTTON_RESOURCE = new ResourceLocation("keksuccino", "add_btn.png");
 
-	//TODO übernehmen
+	//TODO übernehmen (whole constructor??)
 	public PlaceholderEditBox(Font font, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(font, x, y, width, height, handleTextField, filter);
 
@@ -97,33 +101,35 @@ public class PlaceholderEditBox extends AdvancedTextField {
 	@Override
 	public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
 		if (this.variableButton != null) {
-			
+
 			this.variableButton.setWidth(this.height);
 			this.variableButton.setHeight(this.height);
-			
+
 			super.renderButton(matrix, mouseX, mouseY, partialTicks);
-			
+
 			this.variableButton.setX(this.x + this.width + 5);
 			this.variableButton.setY(this.y);
 			this.variableButton.render(matrix, mouseX, mouseY, partialTicks);
-			
-			float scale = UIBase.getUIScale();
-			
-			MouseInput.setRenderScale(scale);
-			
-			matrix.pushPose();
-			
-			matrix.scale(scale, scale, scale);
-			
-			if (this.variableMenu != null) {
-				this.variableMenu.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY());
+
+			//TODO übernehmen
+			if (this.renderContextMenu) {
+				this.renderContextMenu(matrix);
 			}
-			
-			matrix.popPose();
-			
-			MouseInput.resetRenderScale();
-			
+
 		}
+	}
+
+	//TODO übernehmen (move from renderButton method to this one)
+	public void renderContextMenu(PoseStack matrix) {
+		float scale = UIBase.getUIScale();
+		MouseInput.setRenderScale(scale);
+		matrix.pushPose();
+		matrix.scale(scale, scale, scale);
+		if (this.variableMenu != null) {
+			this.variableMenu.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY());
+		}
+		matrix.popPose();
+		MouseInput.resetRenderScale();
 	}
 
 }

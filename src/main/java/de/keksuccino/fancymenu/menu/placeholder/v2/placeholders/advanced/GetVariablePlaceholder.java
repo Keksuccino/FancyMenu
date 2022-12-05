@@ -24,6 +24,9 @@ public class GetVariablePlaceholder extends Placeholder {
         String name = dps.values.get("name");
         if (name != null) {
             String val = VariableHandler.getVariable(name);
+            if (val == null) {
+                val = "0";
+            }
             return val;
         }
         return null;

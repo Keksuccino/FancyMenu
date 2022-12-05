@@ -141,7 +141,6 @@ public class PlaceholderParser {
     @NotNull
     private static Map<String, String> getPlaceholderValues(Placeholder placeholder, String valueString) {
         if ((placeholder == null) || (valueString == null) || (placeholder.getValueNames() == null) || (placeholder.getValueNames().isEmpty())) {
-            //TODO remove debug
 //            LOGGER.info("################ PLACEHOLDER: " + placeholder);
 //            LOGGER.info("################ VALUE STRING: " + valueString);
 //            LOGGER.info("################ VALUE NAMES: " + placeholder.getValueNames());

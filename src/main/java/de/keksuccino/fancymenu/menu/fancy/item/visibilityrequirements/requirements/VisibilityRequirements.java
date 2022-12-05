@@ -35,6 +35,9 @@ public class VisibilityRequirements {
         VisibilityRequirementRegistry.registerRequirement(new IsNumberVisibilityRequirement());
         //---------------------
 
+        //TODO übernehmen
+        VisibilityRequirementRegistry.registerRequirement(new IsElementHoveredVisibilityRequirement());
+
     }
 
 }

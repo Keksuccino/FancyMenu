@@ -57,6 +57,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomiz
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -104,6 +105,8 @@ public class MenuHandlerBase extends GuiComponent {
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
+	//TODO übernehmen
+	protected String customMenuTitle = null;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
@@ -236,6 +239,9 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.sharedLayoutProps = new SharedLayoutProperties();
 
+		//TODO übernehmen
+		this.customMenuTitle = null;
+
 		for (PropertiesSet s : rawLayouts) {
 			
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -255,7 +261,10 @@ public class MenuHandlerBase extends GuiComponent {
 
 			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
 			if (cusMenuTitle != null) {
-				e.getScreen().title = Component.literal(cusMenuTitle);
+				//TODO übernehmen
+				this.customMenuTitle = cusMenuTitle;
+				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
+				//--------------------------
 			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -1279,6 +1288,11 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 		if (!MenuCustomization.isMenuCustomizable(e.getScreen())) {
 			return;
+		}
+
+		//TODO übernehmen
+		if (this.customMenuTitle != null) {
+			e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle));
 		}
 
 		if (!this.backgroundDrawable) {

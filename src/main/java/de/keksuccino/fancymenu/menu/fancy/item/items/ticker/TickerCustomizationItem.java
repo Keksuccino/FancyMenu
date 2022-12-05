@@ -24,7 +24,10 @@ public class TickerCustomizationItem extends CustomizationItem {
     public volatile List<ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
+    public volatile TickMode tickMode = TickMode.NORMAL;
 
+    protected volatile boolean ready = false;
+    protected volatile boolean ticked = false;
     protected volatile long lastTick = -1;
     protected volatile TickerItemThreadController asyncThreadController = null;
 
@@ -62,15 +65,35 @@ public class TickerCustomizationItem extends CustomizationItem {
             this.isAsync = true;
         }
 
+        String tickModeString = item.getEntryValue("tick_mode");
+        if (tickModeString != null) {
+            TickMode t = TickMode.getByName(tickModeString);
+            if (t != null) {
+                this.tickMode = t;
+            }
+        }
+
     }
 
     public void tick() {
 
-        if (this.shouldRender()) {
+        if (this.ready && this.shouldRender()) {
 
+            if (this.ticked && (this.tickMode == TickMode.ON_MENU_LOAD)) {
+                return;
+            }
+            if ((this.tickMode == TickMode.ONCE_PER_SESSION) && TickerCustomizationItemContainer.cachedOncePerSessionItems.contains(this.actionId)) {
+                return;
+            }
+            if (this.tickMode == TickMode.ONCE_PER_SESSION) {
+                TickerCustomizationItemContainer.cachedOncePerSessionItems.add(this.actionId);
+            } else {
+                TickerCustomizationItemContainer.cachedOncePerSessionItems.remove(this.actionId);
+            }
             long now = System.currentTimeMillis();
             if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
                 this.lastTick = now;
+                this.ticked = true;
                 for (ActionContainer a : this.actions) {
                     a.execute();
                 }
@@ -83,10 +106,12 @@ public class TickerCustomizationItem extends CustomizationItem {
     @Override
     public void render(PoseStack matrix, Screen menu) throws IOException {
 
+        this.ready = true;
+
         if (isEditorActive()) {
             RenderSystem.enableBlend();
             fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.ORANGE.getRGB());
-            drawCenteredString(matrix, Minecraft.getInstance().font, "§f" + Locals.localize("fancymenu.customization.items.ticker"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2), -1);
+            drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.customization.items.ticker"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
         } else if (!this.isAsync) {
             this.tick();
         }
@@ -140,6 +165,30 @@ public class TickerCustomizationItem extends CustomizationItem {
     public static class TickerItemThreadController {
 
         public volatile boolean running = true;
+
+    }
+
+    public static enum TickMode {
+
+        NORMAL("normal"),
+        ONCE_PER_SESSION("once_per_session"),
+        ON_MENU_LOAD("on_menu_load");
+
+        public final String name;
+
+        TickMode(String name) {
+            this.name = name;
+        }
+
+        @Nullable
+        public static TickMode getByName(String name) {
+            for (TickMode t : TickMode.values()) {
+                if (t.name.equals(name)) {
+                    return t;
+                }
+            }
+            return null;
+        }
 
     }
 

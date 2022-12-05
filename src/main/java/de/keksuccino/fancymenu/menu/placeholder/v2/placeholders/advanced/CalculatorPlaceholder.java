@@ -20,12 +20,20 @@ public class CalculatorPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+        String decimalString = dps.values.get("decimal");
+        boolean decimal = true;
+        if ((decimalString != null) && decimalString.equalsIgnoreCase("false")) {
+            decimal = false;
+        }
         String ex = dps.values.get("expression");
         if (ex != null) {
             try {
                 Expression expression = new ExpressionBuilder(ex).build();
                 if (expression.validate().isValid()) {
-                    return "" + expression.evaluate();
+                    if (decimal) {
+                        return "" + expression.evaluate();
+                    }
+                    return "" + Math.round(expression.evaluate());
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -38,6 +46,7 @@ public class CalculatorPlaceholder extends Placeholder {
     public @Nullable List<String> getValueNames() {
         List<String> l = new ArrayList<>();
         l.add("expression");
+        l.add("decimal");
         return l;
     }
 
@@ -59,6 +68,7 @@ public class CalculatorPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         Map<String, String> m = new HashMap<>();
+        m.put("decimal", "true");
         m.put("expression", "2 + 1 - 10");
         return DeserializedPlaceholderString.build(this.getIdentifier(), m);
     }
