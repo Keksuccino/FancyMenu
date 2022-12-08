@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import com.google.common.collect.Lists;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -126,8 +126,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			this.value = "splash text";
 			
-			this.width = (int) (30 * basescale * this.scale);
-			this.height = (int) (10 * basescale * this.scale);
+			this.setWidth((int) (30 * basescale * this.scale));
+			this.setHeight((int) (10 * basescale * this.scale));
 			
 		}
 	}
@@ -139,8 +139,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 		this.isNewMenuThis = isNewMenu;
 		
-		this.width = (int) (30 * basescale * this.scale);
-		this.height = (int) (10 * basescale * this.scale);
+		this.setWidth((int) (30 * basescale * this.scale));
+		this.setHeight((int) (10 * basescale * this.scale));
 		
 		if (this.shouldRender()) {
 			
@@ -187,7 +187,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			if (this.value != null) {
 				if (!isEditorActive()) {
-					splash = DynamicValueHelper.convertFromRaw(splash);
+					splash = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(splash);
 				} else {
 					splash = StringUtils.convertFormatCodes(splash, "&", "§");
 				}
@@ -207,7 +207,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			GlStateManager.scale(this.scale, this.scale, this.scale);
 			
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(((this.getPosX(s) + (this.width / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
+			GlStateManager.translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
 			GlStateManager.rotate(this.rotation, 0.0F, 0.0F, 1.0F);
 			GlStateManager.scale(f, f, f);
 

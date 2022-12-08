@@ -2,6 +2,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements;
 
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderEditBox;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
@@ -33,6 +34,8 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
 
     protected int entryBackTick = 0;
     protected AdvancedButton doneButton;
+
+    protected List<PlaceholderEditBox> contextMenuRenderQueue = new ArrayList<>();
 
     public VisibilityRequirementsScreen(GuiScreen parent, CustomizationItemBase parentItem) {
 
@@ -123,6 +126,11 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
         this.doneButton.x = xCenter - (this.doneButton.width / 2);
         this.doneButton.y = this.height - 35;
         this.doneButton.drawButton(Minecraft.getMinecraft(), mouseX, mouseY, partialTicks);
+
+        for (PlaceholderEditBox b : this.contextMenuRenderQueue) {
+            b.renderContextMenu();
+        }
+        this.contextMenuRenderQueue.clear();
 
     }
 
@@ -258,7 +266,8 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
 
             if ((this.valueCallback != null) && (this.valueName != null)) {
                 this.hasValue = true;
-                this.valueTextField = new AdvancedTextField(Minecraft.getMinecraft().fontRenderer, 0, 0, 150, 20, true, this.valueFilter);
+                this.valueTextField = new PlaceholderEditBox(Minecraft.getMinecraft().fontRenderer, 0, 0, 150, 20, true, this.valueFilter);
+                ((PlaceholderEditBox)this.valueTextField).renderContextMenu = false;
                 this.valueTextField.setCanLoseFocus(true);
                 this.valueTextField.setFocused(false);
                 this.valueTextField.setMaxStringLength(1000);
@@ -301,6 +310,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
                 this.valueTextField.x = originX - (this.valueTextField.getWidth() / 2);
                 this.valueTextField.y = originY + 3;
                 this.valueTextField.drawTextBox();
+                this.parent.contextMenuRenderQueue.add(((PlaceholderEditBox)this.valueTextField));
                 this.valueTextField.setEnabled(this.enabled);
                 this.valueCallback.accept(this.valueTextField.getText());
                 this.valueString = this.valueTextField.getText();

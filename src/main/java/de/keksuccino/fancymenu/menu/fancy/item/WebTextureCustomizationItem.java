@@ -9,7 +9,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
@@ -38,9 +39,9 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
-				this.value = DynamicValueHelper.convertFromRaw(this.value);
+				this.value = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.value), "§", "&");
 
-				if ((this.width <= 0) && (this.height <= 0)) {
+				if ((this.getWidth() <= 0) && (this.getHeight() <= 0)) {
 					this.setWidth(100);
 				}
 
@@ -80,10 +81,10 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	protected void calculateAspectRatio() {
 		if (this.webTexture == null) {
-			if (this.width <= 0) {
+			if (this.getWidth() <= 0) {
 				this.setWidth(100);
 			}
-			if (this.height <= 0) {
+			if (this.getHeight() <= 0) {
 				this.setHeight(100);
 			}
 			this.ready = true;
@@ -123,12 +124,12 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			} else if (isEditorActive()) {
 				drawRect(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
 				if (this.ready) {
-					drawCenteredString(Minecraft.getMinecraft().fontRenderer, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT / 2), -1);
+					drawCenteredString(Minecraft.getMinecraft().fontRenderer, "§lMISSING", this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT / 2), -1);
 				}
 			}
 
 			if (!this.ready && isEditorActive()) {
-				drawCenteredString(Minecraft.getMinecraft().fontRenderer, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT / 2), -1);
+				drawCenteredString(Minecraft.getMinecraft().fontRenderer, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT / 2), -1);
 			}
 
 		}

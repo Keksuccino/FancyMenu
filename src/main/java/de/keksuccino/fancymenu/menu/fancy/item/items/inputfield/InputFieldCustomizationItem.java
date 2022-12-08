@@ -48,7 +48,7 @@ public class InputFieldCustomizationItem extends CustomizationItem {
         }
 
         GuiScreen current = Minecraft.getMinecraft().currentScreen;
-        this.textField = new AdvancedTextField(Minecraft.getMinecraft().fontRenderer, this.getPosX(current), this.getPosY(current), this.width, this.height, true, this.type.filter);
+        this.textField = new AdvancedTextField(Minecraft.getMinecraft().fontRenderer, this.getPosX(current), this.getPosY(current), this.getWidth(), this.getHeight(), true, this.type.filter);
         this.textField.setMaxStringLength(this.maxTextLength);
         if (this.linkedVariable != null) {
             String var = VariableHandler.getVariable(this.linkedVariable);
@@ -79,8 +79,8 @@ public class InputFieldCustomizationItem extends CustomizationItem {
 
             this.textField.x = this.getPosX(menu);
             this.textField.y = this.getPosY(menu);
-            this.textField.width = this.width;
-            this.textField.height = this.height;
+            this.textField.width = this.getWidth();
+            this.textField.height = this.getHeight();
             this.textField.drawTextBox();
 
             //Update variable value on change

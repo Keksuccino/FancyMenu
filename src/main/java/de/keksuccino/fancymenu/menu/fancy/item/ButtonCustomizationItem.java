@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -50,7 +50,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				actionvalue = "";
 			}
 			if (!isEditorActive()) {
-				actionvalue = DynamicValueHelper.convertFromRaw(actionvalue);
+				actionvalue = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(actionvalue);
 			}
 
 			this.hoverSound = item.getEntryValue("hoversound");
@@ -99,7 +99,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 			String desc = item.getEntryValue("description");
 			if (desc != null) {
-				this.button.setDescription(StringUtils.splitLines(DynamicValueHelper.convertFromRaw(desc), "%n%"));
+				this.button.setDescription(StringUtils.splitLines(de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(desc), "%n%"));
 			}
 
 			String backNormal = fixBackslashPath(item.getEntryValue("backgroundnormal"));
@@ -219,14 +219,14 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 		if (this.labelRaw != null) {
 			if (!isEditorActive()) {
-				this.value = DynamicValueHelper.convertFromRaw(this.labelRaw);
+				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.labelRaw);
 			} else {
 				this.value = StringUtils.convertFormatCodes(this.labelRaw, "&", "§");
 			}
 		}
 		if (this.hoverLabelRaw != null) {
 			if (!isEditorActive()) {
-				this.hoverLabel = DynamicValueHelper.convertFromRaw(this.hoverLabelRaw);
+				this.hoverLabel = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.hoverLabelRaw);
 			} else {
 				this.hoverLabel = StringUtils.convertFormatCodes(this.hoverLabelRaw, "&", "§");
 			}

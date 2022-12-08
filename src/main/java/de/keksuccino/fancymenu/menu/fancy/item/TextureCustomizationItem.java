@@ -106,7 +106,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(this.texture.getResourceLocation());
 				GlStateManager.enableBlend();
 				GlStateManager.color(1.0F, 1.0F, 1.0F, this.opacity);
-				GuiScreen.drawModalRectWithCustomSizedTexture(x, y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				GuiScreen.drawModalRectWithCustomSizedTexture(x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				GlStateManager.disableBlend();
 				
 			}

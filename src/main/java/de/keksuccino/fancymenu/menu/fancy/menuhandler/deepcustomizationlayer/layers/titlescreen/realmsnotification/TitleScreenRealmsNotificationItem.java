@@ -41,8 +41,8 @@ public class TitleScreenRealmsNotificationItem extends DeepCustomizationItem {
         Gui.drawModalRectWithCustomSizedTexture((int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
         GlStateManager.popMatrix();
 
-        this.width = 13;
-        this.height = 13;
+        this.setWidth(13);
+        this.setHeight(13);
         this.posX = realmsButtonX + realmsButtonWidth + xOffset - 17;
         this.posY = realmsButtonY + 4;
 

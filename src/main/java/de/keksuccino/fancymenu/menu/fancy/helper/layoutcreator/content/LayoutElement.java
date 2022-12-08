@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
@@ -63,6 +64,8 @@ public abstract class LayoutElement extends Gui {
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
 	protected boolean resizeable = true;
+	protected boolean supportsAdvancedPositioning = true;
+	protected boolean supportsAdvancedSizing = true;
 	protected boolean resizeableX = true;
 	protected boolean resizeableY = true;
 	protected boolean dragable = true;
@@ -266,10 +269,170 @@ public abstract class LayoutElement extends Gui {
 			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 				orientationMenu.setParentButton((AdvancedButton) press);
 				orientationMenu.openMenuAt(0, press.y);
-			});
+			}) {
+				@Override
+				public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+					if ((object.advancedPosX != null) || (object.advancedPosY != null)) {
+						this.enabled = false;
+					} else {
+						this.enabled = true;
+					}
+					super.drawButton(mc, mouseX, mouseY, partialTicks);
+				}
+			};
 			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
 			this.rightclickMenu.addContent(orientationButton);
 		}
+
+		/** ADVANCED POSITIONING **/
+		FMContextMenu advancedPositioningMenu = new FMContextMenu();
+		advancedPositioningMenu.setAutoclose(true);
+		this.rightclickMenu.addChild(advancedPositioningMenu);
+
+		AdvancedButton advancedPositioningButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
+			advancedPositioningMenu.setParentButton((AdvancedButton) press);
+			advancedPositioningMenu.openMenuAt(0, press.y);
+		}) {
+			@Override
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+				if ((object.advancedPosX != null) || (object.advancedPosY != null)) {
+					this.displayString = Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.active");
+				} else {
+					this.displayString = Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning");
+				}
+				super.drawButton(mc, mouseX, mouseY, partialTicks);
+			}
+		};
+		advancedPositioningButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.desc"), "%n%"));
+		if (this.supportsAdvancedPositioning) {
+			this.rightclickMenu.addContent(advancedPositioningButton);
+		}
+
+		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), null, 240, (call) -> {
+				if (call != null) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					if (call.replace(" ", "").equals("")) {
+						this.object.advancedPosX = null;
+					} else {
+						this.object.advancedPosX = call;
+					}
+					this.object.posX = 0;
+					this.object.posY = 0;
+					this.object.orientation = "top-left";
+				}
+			});
+			if (this.object.advancedPosX != null) {
+				p.setText(this.object.advancedPosX);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedPositioningMenu.addContent(advancedPosXButton);
+
+		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), null, 240, (call) -> {
+				if (call != null) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					if (call.replace(" ", "").equals("")) {
+						this.object.advancedPosY = null;
+					} else {
+						this.object.advancedPosY = call;
+					}
+					this.object.posX = 0;
+					this.object.posY = 0;
+					this.object.orientation = "top-left";
+				}
+			});
+			if (this.object.advancedPosY != null) {
+				p.setText(this.object.advancedPosY);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedPositioningMenu.addContent(advancedPosYButton);
+
+		/** ADVANCED SIZING **/
+		FMContextMenu advancedSizingMenu = new FMContextMenu();
+		advancedSizingMenu.setAutoclose(true);
+		this.rightclickMenu.addChild(advancedSizingMenu);
+
+		AdvancedButton advancedSizingButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
+			advancedSizingMenu.setParentButton((AdvancedButton) press);
+			advancedSizingMenu.openMenuAt(0, press.y);
+		}) {
+			@Override
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+				if ((object.advancedWidth != null) || (object.advancedHeight != null)) {
+					this.displayString = Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.active");
+				} else {
+					this.displayString = Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing");
+				}
+				super.drawButton(mc, mouseX, mouseY, partialTicks);
+			}
+		};
+		advancedSizingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.desc"), "%n%"));
+		if (this.supportsAdvancedSizing) {
+			this.rightclickMenu.addContent(advancedSizingButton);
+		}
+
+		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), null, 240, (call) -> {
+				if (call != null) {
+					if (call.replace(" ", "").equals("")) {
+						if ((this.object.advancedWidth != null) || (this.object.getWidth() != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.setWidth(50);
+						this.object.advancedWidth = null;
+					} else {
+						if ((this.object.advancedWidth == null) || !call.equals(this.object.advancedWidth) || (this.object.getWidth() != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.setWidth(50);
+						this.object.advancedWidth = call;
+						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
+							this.object.orientation = "top-left";
+							this.object.posX = 0;
+							this.object.posY = 0;
+						}
+					}
+				}
+			});
+			if (this.object.advancedWidth != null) {
+				p.setText(this.object.advancedWidth);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedSizingMenu.addContent(advancedWidthButton);
+
+		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), null, 240, (call) -> {
+				if (call != null) {
+					if (call.replace(" ", "").equals("")) {
+						if ((this.object.advancedHeight != null) || (this.object.getHeight() != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.setHeight(50);
+						this.object.advancedHeight = null;
+					} else {
+						if ((this.object.advancedHeight == null) || !call.equals(this.object.advancedHeight) || (this.object.getHeight() != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.setHeight(50);
+						this.object.advancedHeight = call;
+						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
+							this.object.orientation = "top-left";
+							this.object.posX = 0;
+							this.object.posY = 0;
+						}
+					}
+				}
+			});
+			if (this.object.advancedHeight != null) {
+				p.setText(this.object.advancedHeight);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedSizingMenu.addContent(advancedHeightButton);
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -313,7 +476,17 @@ public abstract class LayoutElement extends Gui {
 			} else {
 				this.setStretchedX(true, true);
 			}
-		});
+		}) {
+			@Override
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+				if (object.advancedWidth != null) {
+					this.enabled = false;
+				} else {
+					this.enabled = true;
+				}
+				super.drawButton(mc, mouseX, mouseY, partialTicks);
+			}
+		};
 		stretchMenu.addContent(stretchXButton);
 
 		stretchYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
@@ -322,7 +495,17 @@ public abstract class LayoutElement extends Gui {
 			} else {
 				this.setStretchedY(true, true);
 			}
-		});
+		}) {
+			@Override
+			public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+				if (object.advancedHeight != null) {
+					this.enabled = false;
+				} else {
+					this.enabled = true;
+				}
+				super.drawButton(mc, mouseX, mouseY, partialTicks);
+			}
+		};
 		stretchMenu.addContent(stretchYButton);
 		
 		AdvancedButton stretchButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch"), true, (press) -> {
@@ -740,7 +923,7 @@ public abstract class LayoutElement extends Gui {
 		}
 				
 		//Update dragging state
-		if (this.dragable) {
+		if (this.dragable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null)) {
 			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 				this.dragging = true;
 			} else {
@@ -804,7 +987,7 @@ public abstract class LayoutElement extends Gui {
 		}
 		
 		if (!MouseInput.isLeftMouseDown()) {
-			if (((this.startWidth != this.object.width) || (this.startHeight != this.object.height)) && this.resizing) {
+			if (((this.startWidth != this.object.getWidth()) || (this.startHeight != this.object.getHeight())) && this.resizing) {
 				if (this.cachedSnapshot != null) {
 					this.handler.history.saveSnapshot(this.cachedSnapshot);
 				}
@@ -812,8 +995,8 @@ public abstract class LayoutElement extends Gui {
 			
 			this.startX = this.object.posX;
 			this.startY = this.object.posY;
-			this.startWidth = this.object.width;
-			this.startHeight = this.object.height;
+			this.startWidth = this.object.getWidth();
+			this.startHeight = this.object.getHeight();
 			this.resizing = false;
 		}
 
@@ -851,26 +1034,26 @@ public abstract class LayoutElement extends Gui {
 	
 	protected void renderBorder(int mouseX, int mouseY) {
 		//horizontal line top
-		GuiScreen.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
+		GuiScreen.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		GuiScreen.drawRect(this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		GuiScreen.drawRect(this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line left
-		GuiScreen.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
+		GuiScreen.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line right
-		GuiScreen.drawRect(this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, Color.BLUE.getRGB());
-		
+		GuiScreen.drawRect(this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+
 		int w = 4;
 		int h = 4;
 		
-		int yHorizontal = this.object.getPosY(handler) + (this.object.height / 2) - (h / 2);
+		int yHorizontal = this.object.getPosY(handler) + (this.object.getHeight() / 2) - (h / 2);
 		int xHorizontalLeft = this.object.getPosX(handler) - (w / 2);
-		int xHorizontalRight = this.object.getPosX(handler) + this.object.width - (w / 2);
+		int xHorizontalRight = this.object.getPosX(handler) + this.object.getWidth() - (w / 2);
 		
-		int xVertical = this.object.getPosX(handler) + (this.object.width / 2) - (w / 2);
+		int xVertical = this.object.getPosX(handler) + (this.object.getWidth() / 2) - (w / 2);
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
-		int yVerticalBottom = this.object.getPosY(handler) + this.object.height - (h / 2);
+		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		if (this.dragable && this.resizeable) {
+		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				GuiScreen.drawRect(xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
@@ -886,7 +1069,7 @@ public abstract class LayoutElement extends Gui {
 		}
 		
 		//Update cursor and active grabber when grabber is hovered
-		if (this.resizeable) {
+		if (this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 				if (!this.stretchX && this.resizeableX) {
 					MouseInput.setCursor(CursorType.HRESIZE);
@@ -918,16 +1101,18 @@ public abstract class LayoutElement extends Gui {
 			} else {
 				this.activeGrabber = -1;
 			}
+		} else {
+			this.activeGrabber = -1;
 		}
 		
 		//Render pos and size values
 		RenderUtils.setScale(0.5F);
 		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
 		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.width, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 14, Color.WHITE.getRGB());
-		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.height, ((this.object.getPosX(handler) + this.object.width)*2)+3, ((this.object.getPosY(handler) + this.object.height)*2) - 5, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		this.drawString(Minecraft.getMinecraft().fontRenderer, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale();
 	}
 	
@@ -935,13 +1120,13 @@ public abstract class LayoutElement extends Gui {
 		Color c = new Color(0, 200, 255, 255);
 		
 		//horizontal line top
-		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + 1, c.getRGB());
+		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
 		//horizontal line bottom
-		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler) + this.object.height - 1, this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line left
-		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		Gui.drawRect(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line right
-		Gui.drawRect(this.object.getPosX(handler) + this.object.width - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.width, this.object.getPosY(handler) + this.object.height, c.getRGB());
+		Gui.drawRect(this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 	}
 	
 	/**
@@ -1185,30 +1370,12 @@ public abstract class LayoutElement extends Gui {
 			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
 		}
 		if (c.vrCheckForWindowWidth) {
-			String val = "";
-			for (int i : c.vrWindowWidth) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
-				sec.addEntry("vr:value:windowwidth", val);
-			}
+			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
+			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
 		}
 		if (c.vrCheckForWindowHeight) {
-			String val = "";
-			for (int i : c.vrWindowHeight) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
-				sec.addEntry("vr:value:windowheight", val);
-			}
+			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
+			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
 		}
 		if (c.vrCheckForWindowWidthBiggerThan) {
 			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);

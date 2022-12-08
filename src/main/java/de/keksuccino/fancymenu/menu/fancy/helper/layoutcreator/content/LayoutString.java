@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
@@ -21,12 +21,14 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 
+@Deprecated
 public class LayoutString extends LayoutElement {
 
 	protected AdvancedButton alignmentLeftBtn;
 	protected AdvancedButton alignmentRightBtn;
 	protected AdvancedButton alignmentCenteredBtn;
-	
+
+	@Deprecated
 	public LayoutString(StringCustomizationItem parent, LayoutEditorScreen handler) {
 		super(parent, true, handler);
 		this.setScale(this.getStringScale());
@@ -108,7 +110,7 @@ public class LayoutString extends LayoutElement {
 		this.rightclickMenu.addContent(alignmentBtn);
 		
 		AdvancedButton editTextB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.string.edit"), true, (press) -> {
-			DynamicValueInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.string.edit") + ":", null, 240, this::setTextCallback);
+			PlaceholderInputPopup i = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.string.edit") + ":", null, 240, this::setTextCallback);
 			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
 			PopupHandler.displayPopup(i);
 		});

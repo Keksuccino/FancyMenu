@@ -27,8 +27,8 @@ public class TitleScreenLogoItem extends DeepCustomizationItem {
 
         this.posX = j;
         this.posY = 30;
-        this.width = 155 + 119;
-        this.height = 52;
+        this.setWidth(155 + 119);
+        this.setHeight(52);
 
         GlStateManager.enableBlend();
 

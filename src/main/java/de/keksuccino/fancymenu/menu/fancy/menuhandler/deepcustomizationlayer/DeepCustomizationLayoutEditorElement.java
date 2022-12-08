@@ -47,6 +47,8 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
         this.orientationCanBeChanged = false;
         this.enableVisibilityRequirements = false;
         this.enableElementIdCopyButton = false;
+        this.supportsAdvancedPositioning = false;
+        this.supportsAdvancedSizing = false;
     }
 
     @Override

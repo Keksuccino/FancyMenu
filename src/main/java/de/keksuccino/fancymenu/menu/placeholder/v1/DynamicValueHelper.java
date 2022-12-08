@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.menu.fancy;
+package de.keksuccino.fancymenu.menu.placeholder.v1;
 
 import java.io.File;
 import java.util.*;
@@ -20,10 +20,12 @@ import net.minecraftforge.common.ForgeVersion;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 
+@Deprecated
 public class DynamicValueHelper {
 
 	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
-	
+
+	@Deprecated
 	public static String convertFromRaw(String in) {
 		int width = 0;
 		int height = 0;
@@ -119,7 +121,8 @@ public class DynamicValueHelper {
 		
 		return in;
 	}
-	
+
+	@Deprecated
 	public static boolean containsDynamicValues(String in) {
 		String s = convertFromRaw(in);
 		return !s.equals(in);
@@ -491,6 +494,7 @@ public class DynamicValueHelper {
 		return bytes / 1024L / 1024L;
 	}
 
+	@Deprecated
 	public static class RandomTextPackage {
 		public String currentText = null;
 		public long lastChange = 0L;

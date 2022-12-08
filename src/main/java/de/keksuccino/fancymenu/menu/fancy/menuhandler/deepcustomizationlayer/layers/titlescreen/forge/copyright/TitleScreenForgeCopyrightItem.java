@@ -25,9 +25,9 @@ public class TitleScreenForgeCopyrightItem extends DeepCustomizationItem {
         int lineCount = 0;
         menu.drawString(font, line, menu.width - font.getStringWidth(line) - 1, menu.height - (11 + (lineCount + 1) * ( font.FONT_HEIGHT + 1)), 16777215);
 
-        this.width = font.getStringWidth(line);
-        this.height = font.FONT_HEIGHT;
-        this.posX = menu.width - this.width - 1;
+        this.setWidth(font.getStringWidth(line));
+        this.setHeight(font.FONT_HEIGHT);
+        this.posX = menu.width - this.getWidth() - 1;
         this.posY = menu.height - 11 - font.FONT_HEIGHT;
 
     }

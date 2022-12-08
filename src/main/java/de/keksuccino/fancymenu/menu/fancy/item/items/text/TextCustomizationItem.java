@@ -4,8 +4,9 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.text;
 import com.google.common.collect.LinkedListMultimap;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -133,9 +134,9 @@ public class TextCustomizationItem extends CustomizationItem {
 
     public void updateScrollArea() {
 
-//        this.width = this.cachedTextWidth;
+//        this.getWidth() = this.cachedTextWidth;
 
-        this.scrollArea = new ScrollArea(0, 0, this.width, this.height);
+        this.scrollArea = new ScrollArea(0, 0, this.getWidth(), this.getHeight());
         this.scrollArea.backgroundColor = new Color(0,0,0,0);
         this.scrollArea.enableScrolling = this.enableScrolling;
 
@@ -203,15 +204,15 @@ public class TextCustomizationItem extends CustomizationItem {
                     if (this.scrollArea != null) {
                         this.scrollArea.x = this.getPosX(menu);
                         this.scrollArea.y = this.getPosY(menu);
-                        this.scrollArea.width = this.width;
-                        this.scrollArea.height = this.height;
+                        this.scrollArea.width = this.getWidth();
+                        this.scrollArea.height = this.getHeight();
                         this.scrollArea.render();
                     }
 
                 } else if (isEditorActive()) {
                     //Render "updating" view in editor
                     drawRect(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
-                    drawCenteredString(font, Locals.localize("fancymenu.customization.items.text.status.loading"), this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (font.FONT_HEIGHT / 2), -1);
+                    drawCenteredString(font, Locals.localize("fancymenu.customization.items.text.status.loading"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (font.FONT_HEIGHT / 2), -1);
                 }
 
             }
@@ -245,16 +246,17 @@ public class TextCustomizationItem extends CustomizationItem {
                             linesRaw.add(this.source);
                         }
                     } else if (this.sourceMode == SourceMode.LOCAL_SOURCE) {
-                        File f = new File(DynamicValueHelper.convertFromRaw(this.source));
+                        File f = new File(de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.source));
                         if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/"))) {
-                            f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + DynamicValueHelper.convertFromRaw(this.source));
+                            f = new File(Minecraft.getMinecraft().mcDataDir.getAbsolutePath().replace("\\", "/") + "/" + de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.source));
                         }
                         if (f.isFile()) {
                             linesRaw.addAll(FileUtils.getFileLines(f));
                         }
                     } else if (this.sourceMode == SourceMode.WEB_SOURCE) {
-                        if (WebUtils.isValidUrl(DynamicValueHelper.convertFromRaw(this.source))) {
-                            String fixedSource = DynamicValueHelper.convertFromRaw(this.source);
+                        if (WebUtils.isValidUrl(StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&"))) {
+                            //TODO übernehmen
+                            String fixedSource = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&");
                             //Get raw github file
                             if (fixedSource.toLowerCase().contains("/blob/") && (fixedSource.toLowerCase().startsWith("http://github.com/")
                                     || fixedSource.toLowerCase().startsWith("https://github.com/")|| fixedSource.toLowerCase().startsWith("http://www.github.com/")
@@ -435,9 +437,9 @@ public class TextCustomizationItem extends CustomizationItem {
                         s = StringUtils.convertFormatCodes(s, "&", "§");
                     } else {
                         //Update placeholders every render tick
-                        s = DynamicValueHelper.convertFromRaw(s);
+                        s = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(s);
                         //Support for a second layer of placeholders (this is only useful for when getting text with the web text placeholder and similar placeholders)
-                        s = DynamicValueHelper.convertFromRaw(s);
+                        s = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(s);
                     }
                     Color baseColor = this.parentItem.getBaseColor();
                     int color = -1;

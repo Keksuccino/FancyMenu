@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -56,14 +56,14 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 		if (this.valueRaw != null) {
 			if (!isEditorActive()) {
-				this.value = DynamicValueHelper.convertFromRaw(this.valueRaw);
+				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.valueRaw);
 			} else {
 				this.value = StringUtils.convertFormatCodes(this.valueRaw, "&", "§");
 			}
 		}
 
-		this.width = (int) (Minecraft.getMinecraft().fontRenderer.getStringWidth(this.value) * this.scale);
-		this.height = (int) (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT * this.scale);
+		this.setWidth((int) (Minecraft.getMinecraft().fontRenderer.getStringWidth(this.value) * this.scale));
+		this.setHeight((int) (Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT * this.scale));
 
 	}
 

@@ -858,6 +858,9 @@ public class CustomizationHelperUI extends UIBase {
 	}
 	
 	protected static void renderUnicodeWarning(GuiScreen screen) {
+		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
+			return;
+		}
 		if (Minecraft.getMinecraft().gameSettings.forceUnicodeFont) {
 			String title = Locals.localize("helper.ui.warning");
 			int w = Minecraft.getMinecraft().fontRenderer.getStringWidth(title);

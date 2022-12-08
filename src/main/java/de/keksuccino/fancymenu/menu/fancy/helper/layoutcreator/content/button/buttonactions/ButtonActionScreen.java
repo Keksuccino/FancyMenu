@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.b
 
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueTextfield;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderEditBox;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
@@ -24,6 +24,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ButtonActionScreen extends ScrollableScreen {
 
@@ -35,27 +36,42 @@ public class ButtonActionScreen extends ScrollableScreen {
     protected List<ButtonAction> buttonActions = new ArrayList<>();
     protected int entryBackTick = 0;
     protected AdvancedButton doneButton;
-    protected DynamicValueTextfield valueTextField;
+    protected PlaceholderEditBox valueTextField;
+
+    protected Consumer<List<String>> callback;
 
     public ButtonActionScreen(GuiScreen parent, LayoutButton parentButton) {
+        this(parent, parentButton, null);
+    }
+
+    public ButtonActionScreen(GuiScreen parent, Consumer<List<String>> callback) {
+        this(parent, null, callback);
+    }
+
+    protected ButtonActionScreen(GuiScreen parent, @Nullable LayoutButton parentButton, @Nullable Consumer<List<String>> callback) {
 
         super(parent, Locals.localize("fancymenu.helper.ui.button_action.set"));
 
         this.parentButton = parentButton;
+        this.callback = callback;
 
         this.doneButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
-            this.onDone();
-            this.closeScreen();
+            if (!this.valueTextField.variableMenu.isOpen()) {
+                this.onDone();
+                this.closeScreen();
+            }
         });
         this.doneButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.doneButton);
 
-        this.valueTextField = new DynamicValueTextfield(Minecraft.getMinecraft().fontRenderer, 0, 0, 150, 20, true, null);
+        this.valueTextField = new PlaceholderEditBox(Minecraft.getMinecraft().fontRenderer, 0, 0, 150, 20, true, null);
         this.valueTextField.setCanLoseFocus(true);
         this.valueTextField.setFocused(false);
         this.valueTextField.setMaxStringLength(1000);
-        if (this.parentButton.actionContent != null) {
-            this.valueTextField.setText(this.parentButton.actionContent);
+        if (this.parentButton != null) {
+            if (this.parentButton.actionContent != null) {
+                this.valueTextField.setText(this.parentButton.actionContent);
+            }
         }
 
         //LEGACY BUTTON ACTIONS
@@ -69,8 +85,10 @@ public class ButtonActionScreen extends ScrollableScreen {
         }
 
         ButtonAction selectedAction = null;
-        if (this.parentButton.actionType != null) {
-            selectedAction = this.getButtonActionByName(this.parentButton.actionType);
+        if (this.parentButton != null) {
+            if (this.parentButton.actionType != null) {
+                selectedAction = this.getButtonActionByName(this.parentButton.actionType);
+            }
         }
         if (selectedAction == null) {
             selectedAction = this.buttonActions.get(0);
@@ -140,11 +158,22 @@ public class ButtonActionScreen extends ScrollableScreen {
         if (selected.hasValue) {
             value = this.valueTextField.getText();
         }
-        if (!this.parentButton.actionType.equals(selected.name) || !this.parentButton.actionContent.equals(value)) {
-            this.parentButton.handler.history.saveSnapshot(this.parentButton.handler.history.createSnapshot());
+        if (this.parentButton != null) {
+            if (!this.parentButton.actionType.equals(selected.name) || !this.parentButton.actionContent.equals(value)) {
+                this.parentButton.handler.history.saveSnapshot(this.parentButton.handler.history.createSnapshot());
+            }
+            this.parentButton.actionType = selected.name;
+            this.parentButton.actionContent = value;
         }
-        this.parentButton.actionType = selected.name;
-        this.parentButton.actionContent = value;
+        if (this.callback != null) {
+            List<String> l = new ArrayList<>();
+            l.add(selected.name);
+            if (value == null) {
+                value = "";
+            }
+            l.add(value);
+            this.callback.accept(l);
+        }
     }
 
     @Override
@@ -174,6 +203,9 @@ public class ButtonActionScreen extends ScrollableScreen {
             this.valueTextField.x = xCenter - (this.valueTextField.getWidth() / 2);
             this.valueTextField.y = this.height - 85;
             this.valueTextField.setEnabled(selected.hasValue);
+            for (AdvancedButton b : this.valueTextField.variableMenu.getContent()) {
+                b.ignoreLeftMouseDownClickBlock = true;
+            }
             this.valueTextField.drawTextBox();
 
             //Action Value Example
@@ -198,6 +230,18 @@ public class ButtonActionScreen extends ScrollableScreen {
 
     }
 
+    public void setValueString(String value) {
+        this.valueTextField.setText(value);
+    }
+
+    public void setButtonAction(String buttonAction) {
+        ButtonAction b = this.getButtonActionByName(buttonAction);
+        if (b == null) {
+            b = this.buttonActions.get(0);
+        }
+        this.setButtonActionSelected(b, true);
+    }
+
     public static class ButtonActionScrollEntry extends ScrollAreaEntryBase {
 
         public ButtonAction action;
@@ -220,7 +264,9 @@ public class ButtonActionScreen extends ScrollableScreen {
             int footerHeight = 115;
             if (!this.leftMouseDown && (MouseInput.getMouseY() < (this.action.parent.height - footerHeight))) {
                 if (this.isHovered() && MouseInput.isLeftMouseDown()) {
-                    action.setSelected(true);
+                    if (!this.action.parent.valueTextField.variableMenu.isOpen()) {
+                        this.action.setSelected(true);
+                    }
                 }
             }
             this.leftMouseDown = MouseInput.isLeftMouseDown();

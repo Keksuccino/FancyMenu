@@ -9,9 +9,11 @@ import java.util.Scanner;
 import com.mojang.authlib.GameProfile;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -76,14 +78,14 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		this.playerName = item.getEntryValue("playername");
 		
 		if (this.playerName != null) {
-			this.playerName = DynamicValueHelper.convertFromRaw(this.playerName);
+			this.playerName = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.playerName);
 		}
 		
 		this.entity = new MenuPlayerEntity(this.playerName);
 		
 		String skinUrl = item.getEntryValue("skinurl");
 		if (skinUrl != null) {
-			skinUrl = DynamicValueHelper.convertFromRaw(skinUrl);
+			skinUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(skinUrl), "§", "&");
 			WebTextureResourceLocation wt = TextureHandler.getWebResource(skinUrl);
 			if (wt != null) {
 				this.entity.skinLocation = wt.getResourceLocation();
@@ -121,7 +123,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		
 		String capeUrl = item.getEntryValue("capeurl");
 		if (capeUrl != null) {
-			capeUrl = DynamicValueHelper.convertFromRaw(capeUrl);
+			capeUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(capeUrl), "§", "&");
 			WebTextureResourceLocation wt = TextureHandler.getWebResource(capeUrl);
 			if (wt != null) {
 				this.entity.capeLocation = wt.getResourceLocation();
@@ -213,8 +215,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			this.value = "Player Entity";
 		}
 		
-		this.width = (int) (this.entity.width*this.scale);
-		this.height = (int) (this.entity.height*this.scale);
+		this.setWidth((int) (this.entity.width*this.scale));
+		this.setHeight((int) (this.entity.height*this.scale));
 		
 	}
 
@@ -232,8 +234,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 					}
 					
 					//Update object width and height for layout editor
-					this.width = (int) (this.entity.width*this.scale);
-					this.height = (int) (this.entity.height*this.scale);
+					this.setWidth((int) (this.entity.width*this.scale));
+					this.setHeight((int) (this.entity.height*this.scale));
 					
 					int mX = MouseInput.getMouseX();
 					int mY = MouseInput.getMouseY();

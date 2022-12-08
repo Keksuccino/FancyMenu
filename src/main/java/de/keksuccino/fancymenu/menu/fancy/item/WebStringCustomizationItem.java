@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import com.google.common.collect.LinkedListMultimap;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -39,7 +39,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
-				this.value = DynamicValueHelper.convertFromRaw(this.value);
+				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.value);
 			}
 			
 			String multi = item.getEntryValue("multiline");
@@ -180,7 +180,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 							if (isEditorActive()) {
 								s = StringUtils.convertFormatCodes(s, "&", "§");
 							} else {
-								s = DynamicValueHelper.convertFromRaw(s);
+								s = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(s);
 							}
 							float sc = getScaleMultiplicator(s);
 							s = getWithoutHeadlineCodes(s);

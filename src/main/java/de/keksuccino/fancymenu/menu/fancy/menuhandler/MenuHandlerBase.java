@@ -28,7 +28,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -89,8 +89,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class MenuHandlerBase {
 
-	protected List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
-	protected List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
+	public List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
+	public List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
 	
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected IAnimationRenderer backgroundAnimation = null;
@@ -827,19 +827,8 @@ public class MenuHandlerBase {
 			}
 
 			if (action.equalsIgnoreCase("resizebutton")) {
-				String width = sec.getEntryValue("width");
-				String height = sec.getEntryValue("height");
-				if (width != null) {
-					width = DynamicValueHelper.convertFromRaw(width);
-				}
-				if (height != null) {
-					height = DynamicValueHelper.convertFromRaw(height);
-				}
-				if ((width != null) && (height != null) && (b != null)) {
-					if (MathUtils.isInteger(width) && MathUtils.isInteger(height)) {
-						b.setWidth(Integer.parseInt(width));
-						b.height = Integer.parseInt(height);
-					}
+				if (b != null) {
+					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 
@@ -1091,7 +1080,7 @@ public class MenuHandlerBase {
 				if (b != null) {
 					String desc = sec.getEntryValue("description");
 					if (desc != null) {
-						this.sharedLayoutProps.descriptions.put(bd, DynamicValueHelper.convertFromRaw(desc));
+						this.sharedLayoutProps.descriptions.put(bd, de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(desc));
 					}
 				}
 			}
@@ -1694,7 +1683,7 @@ public class MenuHandlerBase {
 		return this.vanillaButtonCustomizations.get(w);
 	}
 
-	protected CustomizationItemBase getItemByActionId(String actionId) {
+	public CustomizationItemBase getItemByActionId(String actionId) {
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();

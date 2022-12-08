@@ -48,11 +48,11 @@ public class SlideshowCustomizationItem extends CustomizationItemBase {
 			this.renderer.x = x;
 			this.renderer.y = y;
 			
-			if (this.height > -1) {
-				this.renderer.height = this.height;
+			if (this.getHeight() > -1) {
+				this.renderer.height = this.getHeight();
 			}
-			if (this.width > -1) {
-				this.renderer.width = this.width;
+			if (this.getWidth() > -1) {
+				this.renderer.width = this.getWidth();
 			}
 			
 			this.renderer.render();

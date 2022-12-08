@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
+import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -49,11 +49,11 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.5.3,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
+@Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.6.0,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.12.9";
+	public static final String VERSION = "2.13.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -106,6 +106,8 @@ public class FancyMenu {
 				VisibilityRequirements.registerAll();
 
 				Placeholders.registerAll();
+
+				de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.Placeholders.registerAll();
 
 				CustomizationItems.registerAll();
 
@@ -270,6 +272,7 @@ public class FancyMenu {
 			config.registerValue("gridsize", 10, "layouteditor");
 			
 			config.registerValue("uiscale", 1.0F, "ui");
+			config.registerValue("show_unicode_warning", true, "ui");
 
 			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			

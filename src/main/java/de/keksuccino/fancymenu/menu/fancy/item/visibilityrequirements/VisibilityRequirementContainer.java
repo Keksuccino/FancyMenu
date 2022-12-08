@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -33,19 +34,23 @@ public class VisibilityRequirementContainer {
     //---------
     public boolean vrCheckForWindowWidth = false;
     public boolean vrShowIfWindowWidth = false;
-    public List<Integer> vrWindowWidth = new ArrayList<Integer>();
+    //TODO übernehmen (string)
+    public String vrWindowWidth = null;
     //---------
     public boolean vrCheckForWindowHeight = false;
     public boolean vrShowIfWindowHeight = false;
-    public List<Integer> vrWindowHeight = new ArrayList<Integer>();
+    //TODO übernehmen (string)
+    public String vrWindowHeight = null;
     //---------
     public boolean vrCheckForWindowWidthBiggerThan = false;
     public boolean vrShowIfWindowWidthBiggerThan = false;
-    public int vrWindowWidthBiggerThan = 0;
+    //TODO übernehmen (String)
+    public String vrWindowWidthBiggerThan = null;
     //---------
     public boolean vrCheckForWindowHeightBiggerThan = false;
     public boolean vrShowIfWindowHeightBiggerThan = false;
-    public int vrWindowHeightBiggerThan = 0;
+    //TODO übernehmen (String)
+    public String vrWindowHeightBiggerThan = null;
     //---------
     public boolean vrCheckForButtonHovered = false;
     public boolean vrShowIfButtonHovered = false;
@@ -117,21 +122,8 @@ public class VisibilityRequirementContainer {
             }
             String windowWidth = properties.getEntryValue("vr:value:windowwidth");
             if (windowWidth != null) {
-                this.vrWindowWidth.clear();
-                if (windowWidth.contains(",")) {
-                    for (String s : windowWidth.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrWindowWidth.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(windowWidth.replace(" ", ""))) {
-                        this.vrWindowWidth.add(Integer.parseInt(windowWidth.replace(" ", "")));
-                    }
-                }
-                if (!this.vrWindowWidth.isEmpty()) {
-                    this.vrCheckForWindowWidth = true;
-                }
+                this.vrWindowWidth = windowWidth;
+                this.vrCheckForWindowWidth = true;
             }
         }
 
@@ -143,21 +135,8 @@ public class VisibilityRequirementContainer {
             }
             String windowHeight = properties.getEntryValue("vr:value:windowheight");
             if (windowHeight != null) {
-                this.vrWindowHeight.clear();
-                if (windowHeight.contains(",")) {
-                    for (String s : windowHeight.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrWindowHeight.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(windowHeight.replace(" ", ""))) {
-                        this.vrWindowHeight.add(Integer.parseInt(windowHeight.replace(" ", "")));
-                    }
-                }
-                if (!this.vrWindowHeight.isEmpty()) {
-                    this.vrCheckForWindowHeight = true;
-                }
+                this.vrWindowHeight = windowHeight;
+                this.vrCheckForWindowHeight = true;
             }
         }
 
@@ -168,9 +147,9 @@ public class VisibilityRequirementContainer {
                 this.vrShowIfWindowWidthBiggerThan = true;
             }
             String windowWidth = properties.getEntryValue("vr:value:windowwidthbiggerthan");
-            if ((windowWidth != null) && MathUtils.isInteger(windowWidth)) {
+            if (windowWidth != null) {
                 this.vrCheckForWindowWidthBiggerThan = true;
-                this.vrWindowWidthBiggerThan = Integer.parseInt(windowWidth);
+                this.vrWindowWidthBiggerThan = windowWidth;
             }
         }
 
@@ -181,9 +160,9 @@ public class VisibilityRequirementContainer {
                 this.vrShowIfWindowHeightBiggerThan = true;
             }
             String windowHeight = properties.getEntryValue("vr:value:windowheightbiggerthan");
-            if ((windowHeight != null) && MathUtils.isInteger(windowHeight)) {
+            if (windowHeight != null) {
                 this.vrCheckForWindowHeightBiggerThan = true;
-                this.vrWindowHeightBiggerThan = Integer.parseInt(windowHeight);
+                this.vrWindowHeightBiggerThan = windowHeight;
             }
         }
 
@@ -359,6 +338,24 @@ public class VisibilityRequirementContainer {
 
     }
 
+    private static Object replacePlaceholdersIn(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String) {
+            return PlaceholderParser.replacePlaceholders((String)value);
+        } else if (value instanceof List<?>) {
+            List<String> vals = new ArrayList<>();
+            for (Object o : ((List<?>)value)) {
+                if (o instanceof String) {
+                    vals.add(PlaceholderParser.replacePlaceholders(((String)o)));
+                }
+            }
+            return vals;
+        }
+        return null;
+    }
+
     public boolean isVisible() {
 
         if (forceShow) {
@@ -367,6 +364,26 @@ public class VisibilityRequirementContainer {
         if (forceHide) {
             return false;
         }
+
+        String cachedvrWindowWidth = vrWindowWidth;
+        String cachedvrWindowHeight = vrWindowHeight;
+        String cachedvrWindowWidthBiggerThan = vrWindowWidthBiggerThan;
+        String cachedvrWindowHeightBiggerThan = vrWindowHeightBiggerThan;
+        String cachedvrButtonHovered = vrButtonHovered;
+        String cachedvrLanguage = vrLanguage;
+        List<String> cachedvrModLoaded = vrModLoaded;
+        String cachedvrServerOnline = vrServerOnline;
+        List<String> cachedvrGuiScale = vrGuiScale;
+
+        vrWindowWidth = (String) replacePlaceholdersIn(vrWindowWidth);
+        vrWindowHeight = (String) replacePlaceholdersIn(vrWindowHeight);
+        vrWindowWidthBiggerThan = (String) replacePlaceholdersIn(vrWindowWidthBiggerThan);
+        vrWindowHeightBiggerThan = (String) replacePlaceholdersIn(vrWindowHeightBiggerThan);
+        vrButtonHovered = (String) replacePlaceholdersIn(vrButtonHovered);
+        vrLanguage = (String) replacePlaceholdersIn(vrLanguage);
+        vrModLoaded = (List<String>) replacePlaceholdersIn(vrModLoaded);
+        vrServerOnline = (String) replacePlaceholdersIn(vrServerOnline);
+        vrGuiScale = (List<String>) replacePlaceholdersIn(vrGuiScale);
 
         try {
 
@@ -401,52 +418,88 @@ public class VisibilityRequirementContainer {
 
             //VR: Is Window Width
             if (this.vrCheckForWindowWidth) {
-                if (this.vrShowIfWindowWidth) {
-                    if (!this.vrWindowWidth.contains(Minecraft.getMinecraft().displayWidth)) {
-                        return false;
+                if (this.vrWindowWidth != null) {
+                    List<Integer> l = new ArrayList<>();
+                    if (this.vrWindowWidth.contains(",")) {
+                        for (String s : this.vrWindowWidth.replace(" ", "").split("[,]")) {
+                            if (MathUtils.isInteger(s)) {
+                                l.add(Integer.parseInt(s));
+                            }
+                        }
+                    } else {
+                        if (MathUtils.isInteger(this.vrWindowWidth.replace(" ", ""))) {
+                            l.add(Integer.parseInt(this.vrWindowWidth.replace(" ", "")));
+                        }
                     }
-                } else {
-                    if (this.vrWindowWidth.contains(Minecraft.getMinecraft().displayWidth)) {
-                        return false;
+                    if (!l.isEmpty()) {
+                        if (this.vrShowIfWindowWidth) {
+                            if (!l.contains(Minecraft.getMinecraft().displayWidth)) {
+                                return false;
+                            }
+                        } else {
+                            if (l.contains(Minecraft.getMinecraft().displayWidth)) {
+                                return false;
+                            }
+                        }
                     }
                 }
             }
 
             //VR: Is Window Height
             if (this.vrCheckForWindowHeight) {
-                if (this.vrShowIfWindowHeight) {
-                    if (!this.vrWindowHeight.contains(Minecraft.getMinecraft().displayHeight)) {
-                        return false;
+                if (this.vrWindowHeight != null) {
+                    List<Integer> l = new ArrayList<>();
+                    if (this.vrWindowHeight.contains(",")) {
+                        for (String s : this.vrWindowHeight.replace(" ", "").split("[,]")) {
+                            if (MathUtils.isInteger(s)) {
+                                l.add(Integer.parseInt(s));
+                            }
+                        }
+                    } else {
+                        if (MathUtils.isInteger(this.vrWindowHeight.replace(" ", ""))) {
+                            l.add(Integer.parseInt(this.vrWindowHeight.replace(" ", "")));
+                        }
                     }
-                } else {
-                    if (this.vrWindowHeight.contains(Minecraft.getMinecraft().displayHeight)) {
-                        return false;
+                    if (!l.isEmpty()) {
+                        if (this.vrShowIfWindowHeight) {
+                            if (!l.contains(Minecraft.getMinecraft().displayHeight)) {
+                                return false;
+                            }
+                        } else {
+                            if (l.contains(Minecraft.getMinecraft().displayHeight)) {
+                                return false;
+                            }
+                        }
                     }
                 }
             }
 
             //VR: Is Window Width Bigger Than
             if (this.vrCheckForWindowWidthBiggerThan) {
-                if (this.vrShowIfWindowWidthBiggerThan) {
-                    if (Minecraft.getMinecraft().displayWidth <= this.vrWindowWidthBiggerThan) {
-                        return false;
-                    }
-                } else {
-                    if (Minecraft.getMinecraft().displayWidth >= this.vrWindowWidthBiggerThan) {
-                        return false;
+                if (MathUtils.isInteger(this.vrWindowWidthBiggerThan)) {
+                    if (this.vrShowIfWindowWidthBiggerThan) {
+                        if (Minecraft.getMinecraft().displayWidth <= Integer.parseInt(this.vrWindowWidthBiggerThan)) {
+                            return false;
+                        }
+                    } else {
+                        if (Minecraft.getMinecraft().displayWidth >= Integer.parseInt(this.vrWindowWidthBiggerThan)) {
+                            return false;
+                        }
                     }
                 }
             }
 
             //VR: Is Window Height Bigger Than
             if (this.vrCheckForWindowHeightBiggerThan) {
-                if (this.vrShowIfWindowHeightBiggerThan) {
-                    if (Minecraft.getMinecraft().displayHeight <= this.vrWindowHeightBiggerThan) {
-                        return false;
-                    }
-                } else {
-                    if (Minecraft.getMinecraft().displayHeight >= this.vrWindowHeightBiggerThan) {
-                        return false;
+                if (MathUtils.isInteger(this.vrWindowHeightBiggerThan)) {
+                    if (this.vrShowIfWindowHeightBiggerThan) {
+                        if (Minecraft.getMinecraft().displayHeight <= Integer.parseInt(this.vrWindowHeightBiggerThan)) {
+                            return false;
+                        }
+                    } else {
+                        if (Minecraft.getMinecraft().displayHeight >= Integer.parseInt(this.vrWindowHeightBiggerThan)) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -631,11 +684,13 @@ public class VisibilityRequirementContainer {
 
                 if (p.checkFor) {
                     if (p.showIf) {
-                        if (!p.requirement.isRequirementMet(p.value)) {
+                        //TODO übernehmen (if)
+                        if (!p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
                     } else {
-                        if (p.requirement.isRequirementMet(p.value)) {
+                        //TODO übernehmen (if)
+                        if (p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
                     }
@@ -645,7 +700,18 @@ public class VisibilityRequirementContainer {
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+
+        vrWindowWidth = cachedvrWindowWidth;
+        vrWindowHeight = cachedvrWindowHeight;
+        vrWindowWidthBiggerThan = cachedvrWindowWidthBiggerThan;
+        vrWindowHeightBiggerThan = cachedvrWindowHeightBiggerThan;
+        vrButtonHovered = cachedvrButtonHovered;
+        vrLanguage = cachedvrLanguage;
+        vrModLoaded = cachedvrModLoaded;
+        vrServerOnline = cachedvrServerOnline;
+        vrGuiScale = cachedvrGuiScale;
 
         return true;
 

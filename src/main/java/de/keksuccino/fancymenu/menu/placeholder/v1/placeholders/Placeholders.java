@@ -1,10 +1,12 @@
 //---
-package de.keksuccino.fancymenu.menu.placeholders;
+package de.keksuccino.fancymenu.menu.placeholder.v1.placeholders;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 
+@Deprecated
 public class Placeholders {
 
+    @Deprecated
     public static void registerAll() {
 
         PlaceholderTextRegistry.registerPlaceholder(new GetVariablePlaceholder());
