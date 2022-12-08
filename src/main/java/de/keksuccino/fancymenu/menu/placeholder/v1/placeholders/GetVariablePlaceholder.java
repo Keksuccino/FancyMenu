@@ -1,5 +1,5 @@
 //TODO übernehmen
-package de.keksuccino.fancymenu.menu.placeholders;
+package de.keksuccino.fancymenu.menu.placeholder.v1.placeholders;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;

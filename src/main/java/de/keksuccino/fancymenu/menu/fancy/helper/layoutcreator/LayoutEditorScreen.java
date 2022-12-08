@@ -28,7 +28,6 @@ import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -72,7 +71,6 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -166,7 +164,7 @@ public class LayoutEditorScreen extends Screen {
 		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 	};
 
-	protected LayoutEditorUI ui = new LayoutEditorUI(this);
+	public LayoutEditorUI ui = new LayoutEditorUI(this);
 
 	public LayoutEditorScreen(Screen screenToCustomize) {
 
@@ -583,7 +581,7 @@ public class LayoutEditorScreen extends Screen {
 			LayoutElement ob = null;
 			LayoutElement top = null;
 			for (LayoutElement o : this.content) {
-				if (o.isHovered()) {
+				if (o.isHoveredOrFocused()) {
 					top = o;
 					if (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) {
 						ob = o;
@@ -976,7 +974,7 @@ public class LayoutEditorScreen extends Screen {
 
 	public boolean isFocusedHovered() {
 		for (LayoutElement o : this.focusedObjects) {
-			if (o.isHovered()) {
+			if (o.isHoveredOrFocused()) {
 				return true;
 			}
 		}
@@ -1028,7 +1026,7 @@ public class LayoutEditorScreen extends Screen {
 
 	public boolean isContentHovered() {
 		for (LayoutElement o : this.content) {
-			if (o.isHovered()) {
+			if (o.isHoveredOrFocused()) {
 				return true;
 			}
 		}

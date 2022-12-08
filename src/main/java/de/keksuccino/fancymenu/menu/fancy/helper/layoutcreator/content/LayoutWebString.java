@@ -17,12 +17,14 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
+@Deprecated
 public class LayoutWebString extends LayoutElement {
 	
 	protected AdvancedButton alignmentLeftBtn;
 	protected AdvancedButton alignmentRightBtn;
 	protected AdvancedButton alignmentCenteredBtn;
-	
+
+	@Deprecated
 	public LayoutWebString(WebStringCustomizationItem parent, LayoutEditorScreen handler) {
 		super(parent, true, handler);
 		this.setScale(this.getStringScale());

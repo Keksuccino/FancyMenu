@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.api.placeholder;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,7 @@ public abstract class PlaceholderTextContainer {
 
     /**
      * Returns the category of this placeholder.<br>
-     * Placeholders get categorized in the {@link de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup}.<br><br>
+     * Placeholders get categorized in the {@link PlaceholderInputPopup}.<br><br>
      *
      * When returning <b>NULL</b>, the placeholder will be put into the "Other" category.<br><br>
      *
@@ -62,7 +64,7 @@ public abstract class PlaceholderTextContainer {
 
     /**
      * The description of this placeholder.<br>
-     * Is displayed when hovering over the button for this placeholder in the {@link de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup}.<br><br>
+     * Is displayed when hovering over the button for this placeholder in the {@link PlaceholderInputPopup}.<br><br>
      *
      * Every string in the returned string array is one line of text in the button tooltip.
      *

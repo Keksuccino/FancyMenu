@@ -5,9 +5,12 @@ import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 public class TextCustomizationItemContainer extends CustomizationItemContainer {
 
@@ -20,6 +23,10 @@ public class TextCustomizationItemContainer extends CustomizationItemContainer {
         TextCustomizationItem i = new TextCustomizationItem(this, new PropertiesSection("dummy"));
         i.width = 200;
         i.height = 40;
+        Screen s = Minecraft.getInstance().screen;
+        if ((s != null) && (s instanceof LayoutEditorScreen)) {
+            i.posY = (int)(((LayoutEditorScreen)s).ui.bar.getHeight() * UIBase.getUIScale());
+        }
         return i;
     }
 

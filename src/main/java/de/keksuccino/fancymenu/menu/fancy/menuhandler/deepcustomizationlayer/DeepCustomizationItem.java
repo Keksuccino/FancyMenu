@@ -18,10 +18,10 @@ public abstract class DeepCustomizationItem extends CustomizationItemBase {
             this.value = parentElement.getDisplayName();
         }
         if (this.width == -1) {
-            this.width = 10;
+            this.setWidth(10);
         }
         if (this.height == -1) {
-            this.height = 10;
+            this.setHeight(10);
         }
 
         String hiddenString = item.getEntryValue("hidden");

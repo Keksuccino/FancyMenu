@@ -1,8 +1,9 @@
 //TODO übernehmen
-package de.keksuccino.fancymenu.menu.placeholders;
+package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.other;
 
-import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
+import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -10,16 +11,15 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.web.WebUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class WebTextPlaceholder extends PlaceholderTextContainer {
+public class WebTextPlaceholder extends Placeholder {
 
-    private static final Logger LOGGER = LogManager.getLogger("fancymenu/WebTextPlaceholder");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static volatile Map<String, List<String>> cachedPlaceholders = new HashMap<>();
     protected static volatile List<String> currentlyUpdatingPlaceholders = new ArrayList<>();
@@ -28,7 +28,7 @@ public class WebTextPlaceholder extends PlaceholderTextContainer {
     protected static boolean eventsRegistered = false;
 
     public WebTextPlaceholder() {
-        super("fancymenu_placeholder_web_text");
+        super("webtext");
         if (!eventsRegistered) {
             Konkrete.getEventHandler().registerEventsFrom(WebTextPlaceholder.class);
             eventsRegistered = true;
@@ -40,40 +40,32 @@ public class WebTextPlaceholder extends PlaceholderTextContainer {
         try {
             cachedPlaceholders.clear();
             invalidWebPlaceholderLinks.clear();
-            LOGGER.info("WebTextPlaceholder cache successfully cleared!");
+            LOGGER.info("V2 WebTextPlaceholder cache successfully cleared!");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
     @Override
-    public String replacePlaceholders(String rawIn) {
-
-        String s = rawIn;
-
-        List<String> l = getPlaceholdersWithValue(s, "%webtext:");
-        for (String s2 : l) {
-            if (s2.contains(":")) {
-                String blank = getPlaceholderWithoutPercentPrefixSuffix(s2);
-                String link = blank.split("[:]", 2)[1];
-                if (!isInvalidWebPlaceholderLink(link)) {
-                    List<String> lines = getCachedWebPlaceholder(s2);
-                    if (lines != null) {
-                        if (!lines.isEmpty()) {
-                            s = s.replace(s2, lines.get(0));
-                        }
-                    } else {
-                        if (!isWebPlaceholderUpdating(s2)) {
-                            cacheWebPlaceholder(s2, link);
-                        }
-                        s = s.replace(s2, "");
+    public String getReplacementFor(DeserializedPlaceholderString dps) {
+        String link = dps.values.get("link");
+        if (link != null) {
+            link = StringUtils.convertFormatCodes(link, "§", "&");
+            if (!isInvalidWebPlaceholderLink(link)) {
+                List<String> lines = getCachedWebPlaceholder(dps.originalString);
+                if (lines != null) {
+                    if (!lines.isEmpty()) {
+                        return lines.get(0);
                     }
+                } else {
+                    if (!isWebPlaceholderUpdating(dps.originalString)) {
+                        cacheWebPlaceholder(dps.originalString, link);
+                    }
+                    return "";
                 }
             }
         }
-
-        return s;
-
+        return null;
     }
 
     protected static boolean isInvalidWebPlaceholderLink(String link) {
@@ -130,13 +122,10 @@ public class WebTextPlaceholder extends PlaceholderTextContainer {
     }
 
     @Override
-    public String getPlaceholder() {
-        return "%webtext:<link_to_text>%";
-    }
-
-    @Override
-    public String getCategory() {
-        return null;
+    public @Nullable List<String> getValueNames() {
+        List<String> l = new ArrayList<>();
+        l.add("link");
+        return l;
     }
 
     @Override
@@ -145,8 +134,21 @@ public class WebTextPlaceholder extends PlaceholderTextContainer {
     }
 
     @Override
-    public String[] getDescription() {
-        return StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.webtext.desc"), "%n%");
+    public List<String> getDescription() {
+        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.webtext.desc"), "%n%"));
+    }
+
+    @Override
+    public String getCategory() {
+        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other");
+    }
+
+    @Override
+    public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
+        DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
+        dps.placeholder = this.getIdentifier();
+        dps.values.put("link", "http://somewebsite.com/textfile.txt");
+        return dps;
     }
 
 }
