@@ -1,7 +1,9 @@
-package de.keksuccino.fancymenu.menu.placeholders;
+//TODO übernehmen
+package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.advanced;
 
-import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
+import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -11,20 +13,19 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class JsonPlaceholder extends PlaceholderTextContainer {
+public class JsonPlaceholder extends Placeholder {
 
-    private static final Logger LOGGER = LogManager.getLogger("fancymenu/JsonPlaceholder");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static volatile Map<String, List<String>> cachedPlaceholders = new HashMap<>();
     protected static volatile List<String> currentlyUpdatingPlaceholders = new ArrayList<>();
@@ -33,7 +34,7 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
     protected static boolean eventsRegistered = false;
 
     public JsonPlaceholder() {
-        super("fancymenu_placeholder_json");
+        super("json");
         if (!eventsRegistered) {
             MinecraftForge.EVENT_BUS.register(JsonPlaceholder.class);
             eventsRegistered = true;
@@ -45,63 +46,49 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
         try {
             cachedPlaceholders.clear();
             invalidWebPlaceholderLinks.clear();
-            LOGGER.info("JsonPlaceholder cache successfully cleared!");
+            LOGGER.info("V2 JsonPlaceholder cache successfully cleared!");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
     @Override
-    public String replacePlaceholders(String rawIn) {
-
-        String s = rawIn;
-
-        try {
-
-            if (s.contains("%json:")) {
-                List<List<String>> placeholders = getJsonPlaceholders(rawIn);
-                for (List<String> l : placeholders) {
-                    String raw = l.get(0);
-                    String link = l.get(1);
-                    String jsonPath = l.get(2);
-                    File f = new File(link);
-                    if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-                        String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + link;
-                        f = new File(linkTemp);
-                    }
-                    if (f.isFile()) {
-                        List<String> json = JsonUtils.getJsonValueByPath(f, jsonPath);
-                        if (json != null) {
-                            s = replace(s, raw, json);
-                        }
+    public String getReplacementFor(DeserializedPlaceholderString dps) {
+        String source = dps.values.get("source");
+        String jsonPath = dps.values.get("json_path");
+        if ((source != null) && (jsonPath != null)) {
+            source = StringUtils.convertFormatCodes(source, "§", "&");
+            File f = new File(source);
+            if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+                String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + source;
+                f = new File(linkTemp);
+            }
+            if (f.isFile()) {
+                List<String> json = JsonUtils.getJsonValueByPath(f, jsonPath);
+                if (json != null) {
+                    return formatJsonToString(json);
+                }
+            } else {
+                if (!isInvalidWebPlaceholderLink(source)) {
+                    List<String> json = getCachedWebPlaceholder(dps.originalString);
+                    if (json != null) {
+                        return formatJsonToString(json);
                     } else {
-                        if (!isInvalidWebPlaceholderLink(link)) {
-                            List<String> json = getCachedWebPlaceholder(raw);
-                            if (json != null) {
-                                s = replace(s, raw, json);
-                            } else {
-                                if (!isWebPlaceholderUpdating(raw)) {
-                                    cacheWebPlaceholder(raw, link, jsonPath);
-                                }
-                                s = s.replace(raw, "");
-                            }
+                        if (!isWebPlaceholderUpdating(dps.originalString)) {
+                            cacheWebPlaceholder(dps.originalString, source, jsonPath);
                         }
+                        return "";
                     }
                 }
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-
-        return s;
-
+        return null;
     }
 
-    protected static String replace(String s, String raw, List<String> json) {
+    protected static String formatJsonToString(List<String> json) {
         if (!json.isEmpty()) {
             if (json.size() == 1) {
-                s = s.replace(raw, json.get(0));
+                return json.get(0);
             } else {
                 String rep = "";
                 for (String s2 : json) {
@@ -111,10 +98,10 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
                         rep += "%n%" + s2;
                     }
                 }
-                s = s.replace(raw, rep);
+                return rep;
             }
         }
-        return s;
+        return "§c[error while formatting JSON string]";
     }
 
     protected static boolean isInvalidWebPlaceholderLink(String link) {
@@ -144,16 +131,16 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
         return true;
     }
 
-    protected static void cacheWebPlaceholder(String placeholder, String link, String jsonPath) {
+    protected static void cacheWebPlaceholder(String placeholder, String source, String jsonPath) {
         try {
             if (!currentlyUpdatingPlaceholders.contains(placeholder)) {
                 currentlyUpdatingPlaceholders.add(placeholder);
                 new Thread(() -> {
                     try {
-                        if (WebUtils.isValidUrl(link)) {
-                            cachedPlaceholders.put(placeholder, JsonUtils.getJsonValueByPath(getJsonStringFromURL(link), jsonPath));
+                        if (WebUtils.isValidUrl(source)) {
+                            cachedPlaceholders.put(placeholder, JsonUtils.getJsonValueByPath(getJsonStringFromURL(source), jsonPath));
                         } else {
-                            invalidWebPlaceholderLinks.add(link);
+                            invalidWebPlaceholderLinks.add(source);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -198,36 +185,12 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
         return null;
     }
 
-    protected static List<List<String>> getJsonPlaceholders(String rawIn) {
-        List<List<String>> l = new ArrayList<>();
-        if (rawIn.contains("%json:")) {
-            for (String s : rawIn.split("%json:")) {
-                if (s.contains(";path:")) {
-                    String link = s.split(";", 2)[0];
-                    String jsonPath = s.split(";", 2)[1].replace("path:", "");
-                    if (jsonPath.contains("%")) {
-                        jsonPath = jsonPath.split("%", 2)[0];
-                    }
-                    String rawPlaceholder = "%json:" + link + ";path:" + jsonPath + "%";
-                    List<String> values = new ArrayList<>();
-                    values.add(rawPlaceholder);
-                    values.add(link);
-                    values.add(jsonPath);
-                    l.add(values);
-                }
-            }
-        }
+    @Override
+    public @Nullable List<String> getValueNames() {
+        List<String> l = new ArrayList<>();
+        l.add("source");
+        l.add("json_path");
         return l;
-    }
-
-    @Override
-    public String getPlaceholder() {
-        return "%json:<link_or_path_to_JSON_file>;path:<JSON_path>%";
-    }
-
-    @Override
-    public String getCategory() {
-        return null;
     }
 
     @Override
@@ -236,8 +199,22 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
     }
 
     @Override
-    public String[] getDescription() {
-        return StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.json.desc"), "%n%");
+    public List<String> getDescription() {
+        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.json.desc"), "%n%"));
+    }
+
+    @Override
+    public String getCategory() {
+        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.advanced");
+    }
+
+    @Override
+    public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
+        DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
+        dps.placeholder = this.getIdentifier();
+        dps.values.put("source", "path_or_link_to_json");
+        dps.values.put("json_path", "$.some.json.path");
+        return dps;
     }
 
 }

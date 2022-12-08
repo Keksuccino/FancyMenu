@@ -8,7 +8,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
@@ -97,7 +97,7 @@ public class LayoutButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, (call) -> {
+			FMTextInputPopup i = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel") + ":", null, 240, (call) -> {
 				if (call != null) {
 					if (!this.object.value.equals(call)) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -113,7 +113,7 @@ public class LayoutButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
-			FMTextInputPopup ip = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "", null, 240, (call) -> {
+			FMTextInputPopup ip = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "", null, 240, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(call)) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -209,7 +209,7 @@ public class LayoutButton extends LayoutElement {
 		this.rightclickMenu.addContent(b10);
 
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
-			FMTextInputPopup in = new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
+			FMTextInputPopup in = new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						if ((this.customizationContainer.buttonDescription == null) || !this.customizationContainer.buttonDescription.equals(call)) {
@@ -300,6 +300,18 @@ public class LayoutButton extends LayoutElement {
 		if (this.actionType != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("actionid", this.object.getActionId());
+			if (this.object.advancedPosX != null) {
+				s.addEntry("advanced_posx", this.object.advancedPosX);
+			}
+			if (this.object.advancedPosY != null) {
+				s.addEntry("advanced_posy", this.object.advancedPosY);
+			}
+			if (this.object.advancedWidth != null) {
+				s.addEntry("advanced_width", this.object.advancedWidth);
+			}
+			if (this.object.advancedHeight != null) {
+				s.addEntry("advanced_height", this.object.advancedHeight);
+			}
 			if (this.object.delayAppearance) {
 				s.addEntry("delayappearance", "true");
 				s.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

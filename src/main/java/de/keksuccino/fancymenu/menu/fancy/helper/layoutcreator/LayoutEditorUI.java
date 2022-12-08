@@ -21,7 +21,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.ActionType;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
@@ -600,7 +600,7 @@ public class LayoutEditorUI extends UIBase {
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
+				PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
 					if (call != null) {
 						if (!call.equals(defaultMenuTitle)) {
 							if ((this.parent.customMenuTitle == null) || !this.parent.customMenuTitle.equals(call)) {
@@ -771,26 +771,37 @@ public class LayoutEditorUI extends UIBase {
 						}
 					}));
 				}
-			});
-			autoScalingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.btn.desc"), "%n%"));
+			}) {
+				@Override
+				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if (parent.scale != 0) {
+						this.active = true;
+						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.btn.desc"), "%n%"));
+					} else {
+						this.active = false;
+						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"), "%n%"));
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
 			this.addContent(autoScalingButton);
-			
+
 			/** FORCE GUI SCALE **/
 			AdvancedButton menuScaleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
-					if ((call != null) && MathUtils.isInteger(call)) {
-						int s = Integer.parseInt(call);
+					if (call != null) {
+						int s = 0;
+						if (MathUtils.isInteger(call)) {
+							s = Integer.parseInt(call);
+						}
 						if (s < 0) {
 							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.rightclick.scale.invalid"), "", "", "", "");
 						} else {
-
 							if (this.parent.scale != s) {
 								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 							}
-							
 							this.parent.scale = s;
 							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
-						
 						}
 					}
 				});
@@ -1106,7 +1117,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebTexture));
+				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebTexture));
 			});
 			this.addContent(webImageButton);
 			
@@ -1116,7 +1127,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(splashMenu);
 			
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.add.splash.single.desc"), null, 240, this.parent::addSingleSplashText));
+				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.add.splash.single.desc"), null, 240, this.parent::addSingleSplashText));
 			});
 			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
 			splashMenu.addContent(singleSplashButton);
@@ -1147,7 +1158,7 @@ public class LayoutEditorUI extends UIBase {
 			
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this.parent::addButton));
+				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this.parent::addButton));
 			});
 			this.addContent(buttonButton);
 

@@ -11,7 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -182,7 +182,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 
 			if (this.value != null) {
 				if (!isEditorActive()) {
-					splash = DynamicValueHelper.convertFromRaw(splash);
+					splash = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(splash);
 				} else {
 					splash = StringUtils.convertFormatCodes(splash, "&", "§");
 				}
@@ -202,7 +202,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			matrix.scale(this.scale, this.scale, this.scale);
 
 			matrix.pushPose();
-			matrix.translate(((this.getPosX(s) + (this.width / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
+			matrix.translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
 			matrix.mulPose(Vector3f.ZP.rotationDegrees(this.rotation));
 			matrix.scale(f, f, f);
 

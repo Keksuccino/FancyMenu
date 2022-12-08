@@ -95,6 +95,18 @@ public abstract class LayoutEditorElement extends LayoutElement {
         }
         sec.addEntry("action", "custom_layout_element:" + this.parentItemContainer.getIdentifier());
         sec.addEntry("actionid", this.object.getActionId());
+        if (this.object.advancedPosX != null) {
+            sec.addEntry("advanced_posx", this.object.advancedPosX);
+        }
+        if (this.object.advancedPosY != null) {
+            sec.addEntry("advanced_posy", this.object.advancedPosY);
+        }
+        if (this.object.advancedWidth != null) {
+            sec.addEntry("advanced_width", this.object.advancedWidth);
+        }
+        if (this.object.advancedHeight != null) {
+            sec.addEntry("advanced_height", this.object.advancedHeight);
+        }
         if (this.object.delayAppearance) {
             sec.addEntry("delayappearance", "true");
             sec.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

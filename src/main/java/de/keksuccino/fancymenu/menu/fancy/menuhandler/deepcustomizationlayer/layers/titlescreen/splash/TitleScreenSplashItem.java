@@ -58,20 +58,20 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
     //Only used in editor
     @Override
     public int getPosX(Screen menu) {
-        return this.lastSplashPosX - (this.width / 2);
+        return this.lastSplashPosX - (this.getWidth() / 2);
     }
 
     //Only used in editor
     @Override
     public int getPosY(Screen menu) {
-        return this.lastSplashPosY - (this.height / 2);
+        return this.lastSplashPosY - (this.getHeight() / 2);
     }
 
     @Override
     public void render(PoseStack matrix, Screen menu) throws IOException {
 
-        this.width = 60;
-        this.height = 30;
+        this.setWidth(60);
+        this.setHeight(30);
 
         if (!this.hidden) {
             RenderSystem.enableBlend();

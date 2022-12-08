@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -30,33 +31,25 @@ public class VisibilityRequirementContainer {
     public boolean vrCheckForMultiplayer = false;
     public boolean vrShowIfMultiplayer = false;
     //---------
-    public boolean vrCheckForRealTimeHour = false;
-    public boolean vrShowIfRealTimeHour = false;
-    public List<Integer> vrRealTimeHour = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeMinute = false;
-    public boolean vrShowIfRealTimeMinute = false;
-    public List<Integer> vrRealTimeMinute = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeSecond = false;
-    public boolean vrShowIfRealTimeSecond = false;
-    public List<Integer> vrRealTimeSecond = new ArrayList<Integer>();
-    //---------
     public boolean vrCheckForWindowWidth = false;
     public boolean vrShowIfWindowWidth = false;
-    public List<Integer> vrWindowWidth = new ArrayList<Integer>();
+    //TODO übernehmen (string)
+    public String vrWindowWidth = null;
     //---------
     public boolean vrCheckForWindowHeight = false;
     public boolean vrShowIfWindowHeight = false;
-    public List<Integer> vrWindowHeight = new ArrayList<Integer>();
+    //TODO übernehmen (string)
+    public String vrWindowHeight = null;
     //---------
     public boolean vrCheckForWindowWidthBiggerThan = false;
     public boolean vrShowIfWindowWidthBiggerThan = false;
-    public int vrWindowWidthBiggerThan = 0;
+    //TODO übernehmen (String)
+    public String vrWindowWidthBiggerThan = null;
     //---------
     public boolean vrCheckForWindowHeightBiggerThan = false;
     public boolean vrShowIfWindowHeightBiggerThan = false;
-    public int vrWindowHeightBiggerThan = 0;
+    //TODO übernehmen (String)
+    public String vrWindowHeightBiggerThan = null;
     //---------
     public boolean vrCheckForButtonHovered = false;
     public boolean vrShowIfButtonHovered = false;
@@ -93,18 +86,6 @@ public class VisibilityRequirementContainer {
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
     //---------
-    public boolean vrCheckForRealTimeDay = false;
-    public boolean vrShowIfRealTimeDay = false;
-    public List<Integer> vrRealTimeDay = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeMonth = false;
-    public boolean vrShowIfRealTimeMonth = false;
-    public List<Integer> vrRealTimeMonth = new ArrayList<Integer>();
-    //---------
-    public boolean vrCheckForRealTimeYear = false;
-    public boolean vrShowIfRealTimeYear = false;
-    public List<Integer> vrRealTimeYear = new ArrayList<Integer>();
-    //---------
 
     public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
@@ -132,164 +113,7 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //VR: Is Real Time Hour
-        String vrStringShowIfRealTimeHour = properties.getEntryValue("vr:showif:realtimehour");
-        if (vrStringShowIfRealTimeHour != null) {
-            if (vrStringShowIfRealTimeHour.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeHour = true;
-            }
-            String realTimeHour = properties.getEntryValue("vr:value:realtimehour");
-            if (realTimeHour != null) {
-                this.vrRealTimeHour.clear();
-                if (realTimeHour.contains(",")) {
-                    for (String s : realTimeHour.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeHour.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeHour.replace(" ", ""))) {
-                        this.vrRealTimeHour.add(Integer.parseInt(realTimeHour.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeHour.isEmpty()) {
-                    this.vrCheckForRealTimeHour = true;
-                }
-            }
-        }
-
-        //VR: Is Real Time Minute
-        String vrStringShowIfRealTimeMinute = properties.getEntryValue("vr:showif:realtimeminute");
-        if (vrStringShowIfRealTimeMinute != null) {
-            if (vrStringShowIfRealTimeMinute.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeMinute = true;
-            }
-            String realTimeMinute = properties.getEntryValue("vr:value:realtimeminute");
-            if (realTimeMinute != null) {
-                this.vrRealTimeMinute.clear();
-                if (realTimeMinute.contains(",")) {
-                    for (String s : realTimeMinute.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeMinute.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeMinute.replace(" ", ""))) {
-                        this.vrRealTimeMinute.add(Integer.parseInt(realTimeMinute.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeMinute.isEmpty()) {
-                    this.vrCheckForRealTimeMinute = true;
-                }
-            }
-        }
-
-        //VR: Is Real Time Second
-        String vrStringShowIfRealTimeSecond = properties.getEntryValue("vr:showif:realtimesecond");
-        if (vrStringShowIfRealTimeSecond != null) {
-            if (vrStringShowIfRealTimeSecond.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeSecond = true;
-            }
-            String realTimeSecond = properties.getEntryValue("vr:value:realtimesecond");
-            if (realTimeSecond != null) {
-                this.vrRealTimeSecond.clear();
-                if (realTimeSecond.contains(",")) {
-                    for (String s : realTimeSecond.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeSecond.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeSecond.replace(" ", ""))) {
-                        this.vrRealTimeSecond.add(Integer.parseInt(realTimeSecond.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeSecond.isEmpty()) {
-                    this.vrCheckForRealTimeSecond = true;
-                }
-            }
-        }
-
-        //VR: Is Real Time Day
-        String vrStringShowIfRealTimeDay = properties.getEntryValue("vr:showif:realtimeday");
-        if (vrStringShowIfRealTimeDay != null) {
-            if (vrStringShowIfRealTimeDay.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeDay = true;
-            }
-            String realTimeDay = properties.getEntryValue("vr:value:realtimeday");
-            if (realTimeDay != null) {
-                this.vrRealTimeDay.clear();
-                if (realTimeDay.contains(",")) {
-                    for (String s : realTimeDay.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeDay.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeDay.replace(" ", ""))) {
-                        this.vrRealTimeDay.add(Integer.parseInt(realTimeDay.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeDay.isEmpty()) {
-                    this.vrCheckForRealTimeDay = true;
-                }
-            }
-        }
-
-        //---
-        //VR: Is Real Time Month
-        String vrStringShowIfRealTimeMonth = properties.getEntryValue("vr:showif:realtimemonth");
-        if (vrStringShowIfRealTimeMonth != null) {
-            if (vrStringShowIfRealTimeMonth.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeMonth = true;
-            }
-            String realTimeMonth = properties.getEntryValue("vr:value:realtimemonth");
-            if (realTimeMonth != null) {
-                this.vrRealTimeMonth.clear();
-                if (realTimeMonth.contains(",")) {
-                    for (String s : realTimeMonth.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeMonth.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeMonth.replace(" ", ""))) {
-                        this.vrRealTimeMonth.add(Integer.parseInt(realTimeMonth.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeMonth.isEmpty()) {
-                    this.vrCheckForRealTimeMonth = true;
-                }
-            }
-        }
-
-        //---
-        //VR: Is Real Time Year
-        String vrStringShowIfRealTimeYear = properties.getEntryValue("vr:showif:realtimeyear");
-        if (vrStringShowIfRealTimeYear != null) {
-            if (vrStringShowIfRealTimeYear.equalsIgnoreCase("true")) {
-                this.vrShowIfRealTimeYear = true;
-            }
-            String realTimeYear = properties.getEntryValue("vr:value:realtimeyear");
-            if (realTimeYear != null) {
-                this.vrRealTimeYear.clear();
-                if (realTimeYear.contains(",")) {
-                    for (String s : realTimeYear.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrRealTimeYear.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(realTimeYear.replace(" ", ""))) {
-                        this.vrRealTimeYear.add(Integer.parseInt(realTimeYear.replace(" ", "")));
-                    }
-                }
-                if (!this.vrRealTimeYear.isEmpty()) {
-                    this.vrCheckForRealTimeYear = true;
-                }
-            }
-        }
-
+        //TODO übernehmen
         //VR: Is Window Width
         String vrStringShowIfWindowWidth = properties.getEntryValue("vr:showif:windowwidth");
         if (vrStringShowIfWindowWidth != null) {
@@ -298,24 +122,13 @@ public class VisibilityRequirementContainer {
             }
             String windowWidth = properties.getEntryValue("vr:value:windowwidth");
             if (windowWidth != null) {
-                this.vrWindowWidth.clear();
-                if (windowWidth.contains(",")) {
-                    for (String s : windowWidth.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrWindowWidth.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(windowWidth.replace(" ", ""))) {
-                        this.vrWindowWidth.add(Integer.parseInt(windowWidth.replace(" ", "")));
-                    }
-                }
-                if (!this.vrWindowWidth.isEmpty()) {
-                    this.vrCheckForWindowWidth = true;
-                }
+                this.vrWindowWidth = windowWidth;
+                this.vrCheckForWindowWidth = true;
             }
         }
+        //--------------------------
 
+        //TODO übernehmen
         //VR: Is Window Height
         String vrStringShowIfWindowHeight = properties.getEntryValue("vr:showif:windowheight");
         if (vrStringShowIfWindowHeight != null) {
@@ -324,24 +137,13 @@ public class VisibilityRequirementContainer {
             }
             String windowHeight = properties.getEntryValue("vr:value:windowheight");
             if (windowHeight != null) {
-                this.vrWindowHeight.clear();
-                if (windowHeight.contains(",")) {
-                    for (String s : windowHeight.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            this.vrWindowHeight.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(windowHeight.replace(" ", ""))) {
-                        this.vrWindowHeight.add(Integer.parseInt(windowHeight.replace(" ", "")));
-                    }
-                }
-                if (!this.vrWindowHeight.isEmpty()) {
-                    this.vrCheckForWindowHeight = true;
-                }
+                this.vrWindowHeight = windowHeight;
+                this.vrCheckForWindowHeight = true;
             }
         }
+        //-------------------------
 
+        //TODO übernehmen
         //VR: Is Window Width Bigger Than
         String vrStringShowIfWindowWidthBiggerThan = properties.getEntryValue("vr:showif:windowwidthbiggerthan");
         if (vrStringShowIfWindowWidthBiggerThan != null) {
@@ -349,12 +151,14 @@ public class VisibilityRequirementContainer {
                 this.vrShowIfWindowWidthBiggerThan = true;
             }
             String windowWidth = properties.getEntryValue("vr:value:windowwidthbiggerthan");
-            if ((windowWidth != null) && MathUtils.isInteger(windowWidth)) {
+            if (windowWidth != null) {
                 this.vrCheckForWindowWidthBiggerThan = true;
-                this.vrWindowWidthBiggerThan = Integer.parseInt(windowWidth);
+                this.vrWindowWidthBiggerThan = windowWidth;
             }
         }
+        //--------------------------------
 
+        //TODO übernehmen
         //VR: Is Window Height Bigger Than
         String vrStringShowIfWindowHeightBiggerThan = properties.getEntryValue("vr:showif:windowheightbiggerthan");
         if (vrStringShowIfWindowHeightBiggerThan != null) {
@@ -362,11 +166,12 @@ public class VisibilityRequirementContainer {
                 this.vrShowIfWindowHeightBiggerThan = true;
             }
             String windowHeight = properties.getEntryValue("vr:value:windowheightbiggerthan");
-            if ((windowHeight != null) && MathUtils.isInteger(windowHeight)) {
+            if (windowHeight != null) {
                 this.vrCheckForWindowHeightBiggerThan = true;
-                this.vrWindowHeightBiggerThan = Integer.parseInt(windowHeight);
+                this.vrWindowHeightBiggerThan = windowHeight;
             }
         }
+        //---------------------------
 
         //VR: Is Button Hovered
         String vrStringShowIfButtonHovered = properties.getEntryValue("vr:showif:buttonhovered");
@@ -541,6 +346,25 @@ public class VisibilityRequirementContainer {
 
     }
 
+    //TODO übernehmen
+    private static Object replacePlaceholdersIn(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String) {
+            return PlaceholderParser.replacePlaceholders((String)value);
+        } else if (value instanceof List<?>) {
+            List<String> vals = new ArrayList<>();
+            for (Object o : ((List<?>)value)) {
+                if (o instanceof String) {
+                    vals.add(PlaceholderParser.replacePlaceholders(((String)o)));
+                }
+            }
+            return vals;
+        }
+        return null;
+    }
+
     public boolean isVisible() {
 
         if (forceShow) {
@@ -549,6 +373,30 @@ public class VisibilityRequirementContainer {
         if (forceHide) {
             return false;
         }
+
+        //TODO übernehmen
+        String cachedvrWindowWidth = vrWindowWidth;
+        String cachedvrWindowHeight = vrWindowHeight;
+        String cachedvrWindowWidthBiggerThan = vrWindowWidthBiggerThan;
+        String cachedvrWindowHeightBiggerThan = vrWindowHeightBiggerThan;
+        String cachedvrButtonHovered = vrButtonHovered;
+        String cachedvrLanguage = vrLanguage;
+        List<String> cachedvrModLoaded = vrModLoaded;
+        String cachedvrServerOnline = vrServerOnline;
+        List<String> cachedvrGuiScale = vrGuiScale;
+        //------------------------
+
+        //TODO übernehmen
+        vrWindowWidth = (String) replacePlaceholdersIn(vrWindowWidth);
+        vrWindowHeight = (String) replacePlaceholdersIn(vrWindowHeight);
+        vrWindowWidthBiggerThan = (String) replacePlaceholdersIn(vrWindowWidthBiggerThan);
+        vrWindowHeightBiggerThan = (String) replacePlaceholdersIn(vrWindowHeightBiggerThan);
+        vrButtonHovered = (String) replacePlaceholdersIn(vrButtonHovered);
+        vrLanguage = (String) replacePlaceholdersIn(vrLanguage);
+        vrModLoaded = (List<String>) replacePlaceholdersIn(vrModLoaded);
+        vrServerOnline = (String) replacePlaceholdersIn(vrServerOnline);
+        vrGuiScale = (List<String>) replacePlaceholdersIn(vrGuiScale);
+        //-------------------------
 
         try {
 
@@ -581,65 +429,101 @@ public class VisibilityRequirementContainer {
                 }
             }
 
+            //TODO übernehmen
             //VR: Is Window Width
             if (this.vrCheckForWindowWidth) {
-                if (this.vrShowIfWindowWidth) {
-                    //TODO übernehmen ------------
-                    if (!this.vrWindowWidth.contains(Minecraft.getInstance().getWindow().getWidth())) {
-                        return false;
+                if (this.vrWindowWidth != null) {
+                    List<Integer> l = new ArrayList<>();
+                    if (this.vrWindowWidth.contains(",")) {
+                        for (String s : this.vrWindowWidth.replace(" ", "").split("[,]")) {
+                            if (MathUtils.isInteger(s)) {
+                                l.add(Integer.parseInt(s));
+                            }
+                        }
+                    } else {
+                        if (MathUtils.isInteger(this.vrWindowWidth.replace(" ", ""))) {
+                            l.add(Integer.parseInt(this.vrWindowWidth.replace(" ", "")));
+                        }
                     }
-                } else {
-                    //TODO übernehmen -------------
-                    if (this.vrWindowWidth.contains(Minecraft.getInstance().getWindow().getWidth())) {
-                        return false;
+                    if (!l.isEmpty()) {
+                        if (this.vrShowIfWindowWidth) {
+                            if (!l.contains(Minecraft.getInstance().getWindow().getWidth())) {
+                                return false;
+                            }
+                        } else {
+                            if (l.contains(Minecraft.getInstance().getWindow().getWidth())) {
+                                return false;
+                            }
+                        }
                     }
                 }
             }
+            //---------------------------
 
+            //TODO übernehmen
             //VR: Is Window Height
             if (this.vrCheckForWindowHeight) {
-                if (this.vrShowIfWindowHeight) {
-                    //TODO übernehmen -------------------
-                    if (!this.vrWindowHeight.contains(Minecraft.getInstance().getWindow().getHeight())) {
-                        return false;
+                if (this.vrWindowHeight != null) {
+                    List<Integer> l = new ArrayList<>();
+                    if (this.vrWindowHeight.contains(",")) {
+                        for (String s : this.vrWindowHeight.replace(" ", "").split("[,]")) {
+                            if (MathUtils.isInteger(s)) {
+                                l.add(Integer.parseInt(s));
+                            }
+                        }
+                    } else {
+                        if (MathUtils.isInteger(this.vrWindowHeight.replace(" ", ""))) {
+                            l.add(Integer.parseInt(this.vrWindowHeight.replace(" ", "")));
+                        }
                     }
-                } else {
-                    //TODO übernehmen -----------------
-                    if (this.vrWindowHeight.contains(Minecraft.getInstance().getWindow().getHeight())) {
-                        return false;
+                    if (!l.isEmpty()) {
+                        if (this.vrShowIfWindowHeight) {
+                            if (!l.contains(Minecraft.getInstance().getWindow().getHeight())) {
+                                return false;
+                            }
+                        } else {
+                            if (l.contains(Minecraft.getInstance().getWindow().getHeight())) {
+                                return false;
+                            }
+                        }
                     }
                 }
             }
+            //---------------------------
 
+            //TODO übernehmen
             //VR: Is Window Width Bigger Than
             if (this.vrCheckForWindowWidthBiggerThan) {
-                if (this.vrShowIfWindowWidthBiggerThan) {
-                    //TODO übernehmen --------------
-                    if (Minecraft.getInstance().getWindow().getWidth() <= this.vrWindowWidthBiggerThan) {
-                        return false;
-                    }
-                } else {
-                    //TODO übernehmen ---------------
-                    if (Minecraft.getInstance().getWindow().getWidth() >= this.vrWindowWidthBiggerThan) {
-                        return false;
+                if (MathUtils.isInteger(this.vrWindowWidthBiggerThan)) {
+                    if (this.vrShowIfWindowWidthBiggerThan) {
+                        if (Minecraft.getInstance().getWindow().getWidth() <= Integer.parseInt(this.vrWindowWidthBiggerThan)) {
+                            return false;
+                        }
+                    } else {
+                        if (Minecraft.getInstance().getWindow().getWidth() >= Integer.parseInt(this.vrWindowWidthBiggerThan)) {
+                            return false;
+                        }
                     }
                 }
             }
+            //-------------------------
 
+            //TODO übernehmen
             //VR: Is Window Height Bigger Than
             if (this.vrCheckForWindowHeightBiggerThan) {
-                if (this.vrShowIfWindowHeightBiggerThan) {
-                    //TODO übernehmen -----------------
-                    if (Minecraft.getInstance().getWindow().getHeight() <= this.vrWindowHeightBiggerThan) {
-                        return false;
-                    }
-                } else {
-                    //TODO übernehmen ------------------
-                    if (Minecraft.getInstance().getWindow().getHeight() >= this.vrWindowHeightBiggerThan) {
-                        return false;
+                if (MathUtils.isInteger(this.vrWindowHeightBiggerThan)) {
+                    if (this.vrShowIfWindowHeightBiggerThan) {
+                        if (Minecraft.getInstance().getWindow().getHeight() <= Integer.parseInt(this.vrWindowHeightBiggerThan)) {
+                            return false;
+                        }
+                    } else {
+                        if (Minecraft.getInstance().getWindow().getHeight() >= Integer.parseInt(this.vrWindowHeightBiggerThan)) {
+                            return false;
+                        }
                     }
                 }
             }
+            //-----------------------------
 
             //VR: Is Button Hovered
             if (this.vrCheckForButtonHovered) {
@@ -821,11 +705,13 @@ public class VisibilityRequirementContainer {
 
                 if (p.checkFor) {
                     if (p.showIf) {
-                        if (!p.requirement.isRequirementMet(p.value)) {
+                        //TODO übernehmen (if)
+                        if (!p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
                     } else {
-                        if (p.requirement.isRequirementMet(p.value)) {
+                        //TODO übernehmen (if)
+                        if (p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
                     }
@@ -835,7 +721,21 @@ public class VisibilityRequirementContainer {
 
         } catch (Exception e) {
             e.printStackTrace();
+            //TODO übernehmen
+            return false;
         }
+
+        //TODO übernehmen
+        vrWindowWidth = cachedvrWindowWidth;
+        vrWindowHeight = cachedvrWindowHeight;
+        vrWindowWidthBiggerThan = cachedvrWindowWidthBiggerThan;
+        vrWindowHeightBiggerThan = cachedvrWindowHeightBiggerThan;
+        vrButtonHovered = cachedvrButtonHovered;
+        vrLanguage = cachedvrLanguage;
+        vrModLoaded = cachedvrModLoaded;
+        vrServerOnline = cachedvrServerOnline;
+        vrGuiScale = cachedvrGuiScale;
+        //-------------------------
 
         return true;
 

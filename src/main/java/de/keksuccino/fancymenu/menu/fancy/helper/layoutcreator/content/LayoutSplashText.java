@@ -195,6 +195,18 @@ public class LayoutSplashText extends LayoutElement {
 		
 		PropertiesSection p1 = new PropertiesSection("customization");
 		p1.addEntry("actionid", this.object.getActionId());
+		if (this.object.advancedPosX != null) {
+			p1.addEntry("advanced_posx", this.object.advancedPosX);
+		}
+		if (this.object.advancedPosY != null) {
+			p1.addEntry("advanced_posy", this.object.advancedPosY);
+		}
+		if (this.object.advancedWidth != null) {
+			p1.addEntry("advanced_width", this.object.advancedWidth);
+		}
+		if (this.object.advancedHeight != null) {
+			p1.addEntry("advanced_height", this.object.advancedHeight);
+		}
 		if (this.object.delayAppearance) {
 			p1.addEntry("delayappearance", "true");
 			p1.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

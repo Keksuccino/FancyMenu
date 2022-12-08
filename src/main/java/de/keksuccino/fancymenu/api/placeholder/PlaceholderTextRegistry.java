@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 
 import java.util.*;
 
+@Deprecated
 public class PlaceholderTextRegistry {
 
     private static Map<String, PlaceholderTextContainer> placeholders = new LinkedHashMap<>();

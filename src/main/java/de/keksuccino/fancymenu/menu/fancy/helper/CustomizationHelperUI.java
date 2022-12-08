@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.time.temporal.TemporalField;
 import java.util.*;
 
 import com.google.common.io.Files;
@@ -20,7 +19,6 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroScreen;
@@ -35,13 +33,11 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar.ElementAlignment;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
-import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.screens.ConfigScreen;
-import de.keksuccino.konkrete.gui.screens.popup.NotificationPopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -927,6 +923,9 @@ public class CustomizationHelperUI extends UIBase {
 	}
 	
 	protected static void renderUnicodeWarning(PoseStack matrix, Screen screen) {
+		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
+			return;
+		}
 		if (Minecraft.getInstance().options.forceUnicodeFont) {
 			String title = Locals.localize("helper.ui.warning");
 			int w = Minecraft.getInstance().font.width(title);

@@ -27,7 +27,6 @@ import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -56,7 +55,6 @@ import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
-import de.keksuccino.konkrete.gui.content.IMenu;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
@@ -71,7 +69,6 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -165,8 +162,8 @@ public class LayoutEditorScreen extends Screen {
 	protected CustomizationItemBase globalVisReqDummyItem = new CustomizationItemBase(new PropertiesSection("")) {
 		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 	};
-	
-	protected LayoutEditorUI ui = new LayoutEditorUI(this);
+
+	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	
 	public LayoutEditorScreen(Screen screenToCustomize) {
 		super(new TextComponent(""));
