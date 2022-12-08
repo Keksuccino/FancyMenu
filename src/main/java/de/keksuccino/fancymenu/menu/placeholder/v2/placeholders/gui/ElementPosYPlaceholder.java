@@ -4,6 +4,7 @@ package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.gui;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
@@ -30,6 +31,9 @@ public class ElementPosYPlaceholder extends Placeholder {
         if (id != null) {
             CustomizationItemBase element = findCustomizationItemForId(id);
             if (element != null) {
+                if (element instanceof VanillaButtonCustomizationItem) {
+                    return "" + ((VanillaButtonCustomizationItem) element).parent.getButton().y;
+                }
                 return "" + element.getPosY(Minecraft.getInstance().screen);
             }
         }

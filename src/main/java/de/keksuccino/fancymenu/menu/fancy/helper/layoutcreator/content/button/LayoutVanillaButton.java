@@ -399,7 +399,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			s.addEntry("action", "resizebutton");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 			s.addEntry("width", "" + this.object.width);
-			s.addEntry("height", "" + this.object.width);
+			s.addEntry("height", "" + this.object.height);
 			if (this.object.advancedWidth != null) {
 				s.addEntry("advanced_width", this.object.advancedWidth);
 			}

@@ -67,7 +67,6 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean supportsAdvancedPositioning = true;
 	protected boolean supportsAdvancedSizing = true;
 	//----------------------
-	
 	protected boolean resizeableX = true;
 	protected boolean resizeableY = true;
 	protected boolean dragable = true;
@@ -108,6 +107,8 @@ public abstract class LayoutElement extends GuiComponent {
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
+
+	//TODO übernehmen replace in this class: this.object.width/height -> this.object.getWidth()/getHeight()
 
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
@@ -397,11 +398,16 @@ public abstract class LayoutElement extends GuiComponent {
 						this.object.width = 50;
 						this.object.advancedWidth = null;
 					} else {
-						if (!call.equals(this.object.advancedWidth) || (this.object.width != 50)) {
+						if ((this.object.advancedWidth == null) || !call.equals(this.object.advancedWidth) || (this.object.width != 50)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
 						this.object.width = 50;
 						this.object.advancedWidth = call;
+						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
+							this.object.orientation = "top-left";
+							this.object.posX = 0;
+							this.object.posY = 0;
+						}
 					}
 				}
 			});
@@ -422,11 +428,16 @@ public abstract class LayoutElement extends GuiComponent {
 						this.object.height = 50;
 						this.object.advancedHeight = null;
 					} else {
-						if (!call.equals(this.object.advancedHeight) || (this.object.height != 50)) {
+						if ((this.object.advancedHeight == null) || !call.equals(this.object.advancedHeight) || (this.object.height != 50)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
 						this.object.height = 50;
 						this.object.advancedHeight = call;
+						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
+							this.object.orientation = "top-left";
+							this.object.posX = 0;
+							this.object.posY = 0;
+						}
 					}
 				}
 			});
@@ -1062,19 +1073,15 @@ public abstract class LayoutElement extends GuiComponent {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-
 		//TODO übernehmen (if)
-		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedHeight == null)) {
-			//TODO übernehmen (if)
-			if (!this.stretchX && this.resizeableX && (this.object.advancedWidth == null)) {
+		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
+			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
 				GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
-
-			//TODO übernehmen (if)
-			if (!this.stretchY && this.resizeableY && (this.object.advancedHeight == null)) {
+			if (!this.stretchY && this.resizeableY) {
 				//grabber top
 				GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
 				//grabber bottom
@@ -1083,38 +1090,31 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		if (this.resizeable) {
+		//TODO übernehmen (if)
+		if (this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-
-				//TODO übernehmen (if)
-				if (!this.stretchX && this.resizeableX && (this.object.advancedWidth == null)) {
+				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 0;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-
-				//TODO übernehmen (if)
-				if (!this.stretchX && this.resizeableX && (this.object.advancedWidth == null)) {
+				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 1;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-
-				//TODO übernehmen (if)
-				if (!this.stretchY && this.resizeableY && (this.object.advancedHeight == null)) {
+				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 2;
 				} else {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-
-				//TODO übernehmen (if)
-				if (!this.stretchY && this.resizeableY && (this.object.advancedHeight == null)) {
+				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 3;
 				} else {
@@ -1123,6 +1123,9 @@ public abstract class LayoutElement extends GuiComponent {
 			} else {
 				this.activeGrabber = -1;
 			}
+		} else {
+			//TODO übernehnen
+			this.activeGrabber = -1;
 		}
 
 		//Render pos and size values

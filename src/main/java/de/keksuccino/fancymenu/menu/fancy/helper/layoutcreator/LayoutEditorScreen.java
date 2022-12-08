@@ -161,8 +161,9 @@ public class LayoutEditorScreen extends Screen {
 	protected CustomizationItemBase globalVisReqDummyItem = new CustomizationItemBase(new PropertiesSection("")) {
 		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 	};
-	
-	protected LayoutEditorUI ui = new LayoutEditorUI(this);
+
+	//TODO übernehmen (public)
+	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	
 	public LayoutEditorScreen(Screen screenToCustomize) {
 		super(Component.literal(""));

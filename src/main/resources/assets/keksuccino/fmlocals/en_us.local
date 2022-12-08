@@ -1168,7 +1168,7 @@ fancymenu.helper.editor.items.features.advanced_sizing.height = Height
 fancymenu.helper.editor.properties.autoscale.forced_scale_needed = You need to set a §lforced GUI scale%n%before you can use auto-scaling!%n%%n%It's recommended to use 2 as%n%forced GUI scale.%n%%n%§cTo set a forced GUI scale,%n%§cright-click the editor background%n%§cand click on §lForce GUI Scale§r§c.
 
 fancymenu.customization.items.ticker = Ticker
-fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%every tick.%n%%n%Supports asynchronous ticking%n%and tick delays.%n%%n%Can be set to tick only once%n%every time you open the menu.
+fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%every tick.%n%%n%Supports asynchronous ticking%n%and tick delays.%n%%n%Can be set to tick only once%n%every time you open the menu.%n%%n%§cThis element is only visible%n%§cin the editor.
 fancymenu.customization.items.ticker.add_action = Add Action
 fancymenu.customization.items.ticker.add_action.desc = Add a new action to the list of%n%actions this ticker should execute.
 fancymenu.customization.items.ticker.manage_actions = Manage Actions

@@ -56,7 +56,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ locals)
+	//TODO übernehmen (+ locals; + min Konkrete version 1.6.0)
 	public static final String VERSION = "2.13.0";
 	public static final String MOD_LOADER = "forge";
 

@@ -397,7 +397,6 @@ public class CustomizationHelperUI extends UIBase {
 										PopupHandler.displayPopup(restoreBlockerPopup);
 										try {
 											try {
-												//TODO übernehmen 2 (acidentally copied this todo from hotfix branch??)
 												File fmFolder = FancyMenu.MOD_DIR;
 												if (fmFolder.isDirectory()) {
 													org.apache.commons.io.FileUtils.deleteDirectory(fmFolder);
@@ -405,8 +404,6 @@ public class CustomizationHelperUI extends UIBase {
 											} catch (Exception e2) {
 												e2.printStackTrace();
 											}
-
-											//TODO übernehmen 2 (acidentally copied this todo from hotfix branch??)
 											File homeRaw = Minecraft.getInstance().gameDirectory;
 											File home = new File(homeRaw.getAbsolutePath().replace("\\", "/"));
 											if (home.isDirectory()) {
@@ -920,6 +917,7 @@ public class CustomizationHelperUI extends UIBase {
 		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
 			return;
 		}
+		//-------------
 		if (Minecraft.getInstance().options.forceUnicodeFont().get()) {
 			String title = Locals.localize("helper.ui.warning");
 			int w = Minecraft.getInstance().font.width(title);

@@ -34,7 +34,7 @@ public class PlaceholderEditBox extends AdvancedTextField {
 	
 	private static final ResourceLocation VARIABLES_BUTTON_RESOURCE = new ResourceLocation("keksuccino", "add_btn.png");
 
-	//TODO übernehmen (whole constructor??)
+	//TODO übernehmen (whole constructor)
 	public PlaceholderEditBox(Font font, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(font, x, y, width, height, handleTextField, filter);
 

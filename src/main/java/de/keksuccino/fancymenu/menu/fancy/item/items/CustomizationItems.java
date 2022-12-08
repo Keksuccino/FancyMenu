@@ -12,9 +12,7 @@ public class CustomizationItems {
 
         CustomizationItemRegistry.registerItem(new InputFieldCustomizationItemContainer());
         CustomizationItemRegistry.registerItem(new SliderCustomizationItemContainer());
-        
         CustomizationItemRegistry.registerItem(new TextCustomizationItemContainer());
-
         //TODO übernehmen
         CustomizationItemRegistry.registerItem(new TickerCustomizationItemContainer());
 

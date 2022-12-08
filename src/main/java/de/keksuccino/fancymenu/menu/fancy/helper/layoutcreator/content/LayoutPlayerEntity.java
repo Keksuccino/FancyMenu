@@ -45,6 +45,8 @@ public class LayoutPlayerEntity extends LayoutElement {
 	public void init() {
 
 		this.fadeable = false;
+		//TODO übernehmen
+		this.supportsAdvancedSizing = false;
 		
 		super.init();
 		

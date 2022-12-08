@@ -34,6 +34,9 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public String orientationElementIdentifier = null;
 	public CustomizationItemBase orientationElement = null;
 	//TODO übernehmen ( replace this.width & this.height in sub classes with this.getWidth() & this.getHeight() )
+	// 1. Copy original CustomizationItemBase class to text file
+	// 2. Edit -> Find -> Replace in Files -> Scope -> Class Hierarchy -> CustomizationItemBase
+	// 3. Paste back original CustomizationItemBase class
 	public int width = -1;
 	public int height = -1;
 	//TODO übernehmen

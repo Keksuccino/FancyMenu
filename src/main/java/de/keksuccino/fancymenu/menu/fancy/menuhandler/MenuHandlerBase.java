@@ -88,8 +88,10 @@ public class MenuHandlerBase extends GuiComponent {
 
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuHandlerBase");
 
+	//TODO übernehmen (public)
 	public List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
 	public List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
+	//--------------------------
 	
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected IAnimationRenderer backgroundAnimation = null;
