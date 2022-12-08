@@ -14,10 +14,10 @@ public abstract class CustomizationItem extends CustomizationItemBase {
             this.value = parentContainer.getDisplayName();
         }
         if (this.width == -1) {
-            this.width = 10;
+            this.setWidth(10);
         }
         if (this.height == -1) {
-            this.height = 10;
+            this.setHeight(10);
         }
     }
 

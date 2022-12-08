@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibili
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderEditBox;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
@@ -25,9 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen.ScrollAreaEntryBase;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen.SeparatorEntry;
-
 public class VisibilityRequirementsScreen extends ScrollableScreen {
 
     protected static final Color ENTRY_BACK_1 = new Color(0, 0, 0, 50);
@@ -37,6 +35,8 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
 
     protected int entryBackTick = 0;
     protected AdvancedButton doneButton;
+
+    protected List<PlaceholderEditBox> contextMenuRenderQueue = new ArrayList<>();
 
     public VisibilityRequirementsScreen(Screen parent, CustomizationItemBase parentItem) {
 
@@ -128,6 +128,11 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
         this.doneButton.setX(xCenter - (this.doneButton.getWidth() / 2));
         this.doneButton.setY(this.height - 35);
         this.doneButton.render(matrix, mouseX, mouseY, partialTicks);
+
+        for (PlaceholderEditBox b : this.contextMenuRenderQueue) {
+            b.renderContextMenu(matrix);
+        }
+        this.contextMenuRenderQueue.clear();
 
     }
 
@@ -263,7 +268,8 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
 
             if ((this.valueCallback != null) && (this.valueName != null)) {
                 this.hasValue = true;
-                this.valueTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
+                this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
+                ((PlaceholderEditBox)this.valueTextField).renderContextMenu = false;
                 this.valueTextField.setCanLoseFocus(true);
                 this.valueTextField.setFocus(false);
                 this.valueTextField.setMaxLength(1000);
@@ -307,6 +313,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
                 this.valueTextField.x = originX - (this.valueTextField.getWidth() / 2);
                 this.valueTextField.y = originY + 3;
                 this.valueTextField.render(matrix, mouseX, mouseY, partial);
+                this.parent.contextMenuRenderQueue.add(((PlaceholderEditBox)this.valueTextField));
                 this.valueTextField.active = this.enabled;
                 this.valueTextField.setEditable(this.enabled);
                 this.valueCallback.accept(this.valueTextField.getValue());

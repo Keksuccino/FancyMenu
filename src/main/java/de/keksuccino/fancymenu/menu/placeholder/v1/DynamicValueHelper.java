@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.menu.fancy;
+package de.keksuccino.fancymenu.menu.placeholder.v1;
 
 import java.io.File;
 import java.util.*;
@@ -20,13 +20,15 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
+@Deprecated
 public class DynamicValueHelper {
 
 	private static final File MOD_DIRECTORY = new File(Minecraft.getInstance().gameDirectory, "mods");
 
 	private static int cachedTotalMods = -10;
 	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
-	
+
+	@Deprecated
 	public static String convertFromRaw(String in) {
 		int width = 0;
 		int height = 0;

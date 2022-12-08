@@ -72,7 +72,7 @@ helper.creator.add.button.label = Button Label
 
 helper.creator.add.audio = Audio
 
-helper.creator.vanillabutton.autoclick = Click button
+helper.creator.vanillabutton.autoclick = Automatic Button Clicks
 helper.creator.vanillabutton.autoclick.popup = Automatic Button Clicks
 
 helper.creator.backgroundoptions = Background Options
@@ -168,7 +168,7 @@ helper.buttons.tools.creategui.create = Create
 
 gameintro.skip = PRESS SPACE TO SKIP
 
-helper.creator.items.chooselayer = Choose Layer
+helper.creator.items.chooselayer = Pick Element
 
 customization.items.webstring.unabletoload = Unable to load web text! Invalid URL or not connected to internet!
 
@@ -507,7 +507,7 @@ helper.ui.dynamicvariabletextfield.variables.mcversion.desc = Gets the Minecraft
 helper.ui.dynamicvariabletextfield.variables.forgeversion = Mod Loader Version
 helper.ui.dynamicvariabletextfield.variables.forgeversion.desc = Gets the mod loader version.
 helper.ui.dynamicvariabletextfield.variables.modversion = Mod Version
-helper.ui.dynamicvariabletextfield.variables.modversion.desc = Gets the version of a mod my its mod ID.%n%%n%Just replace '<modid>' in the placeholder%n%with an existing mod ID.
+helper.ui.dynamicvariabletextfield.variables.modversion.desc = Gets the version of a mod my its mod ID.%n%%n%Just replace 'some_mod_id' in the placeholder%n%with an existing mod ID.
 helper.ui.dynamicvariabletextfield.variables.totalmods = Total Mods Count
 helper.ui.dynamicvariabletextfield.variables.totalmods.desc = Gets the total mods count.%n%This includes disabled mods.
 helper.ui.dynamicvariabletextfield.variables.loadedmods = Active Mods Count
@@ -729,7 +729,7 @@ fancymenu.helper.editor.items.copyid = Copy Element ID
 fancymenu.helper.editor.items.copyid.btn.desc = Copy the ID of this element, to use%n%it in visibility requirements, etc.
 
 fancymenu.helper.ui.dynamicvariabletextfield.variables.local = Localize Text
-fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace '<localization.key>' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.com%n%%n%§lExample:%n%%local:some.local.key%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace 'localization.key' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.com
 
 fancymenu.config.showgrid = Show Grid
 fancymenu.config.showgrid.desc = Add a grid to the editor for easier aligning.
@@ -738,9 +738,9 @@ fancymenu.config.gridsize.desc = The inner size of one grid square.
 
 fancymenu.helper.editor.properties.scale.btn.desc = Force a GUI scale for this menu.%n%%n%This will override the scale%n%set in the Minecraft settings.%n%%n%§cOnly overrides the scale for the specific menu,%n%§cnot all menus.
 
-fancymenu.helper.editor.properties.autoscale.on = Layout Auto-Scaling: §aOn
-fancymenu.helper.editor.properties.autoscale.off = Layout Auto-Scaling: §cOff
-fancymenu.helper.editor.properties.autoscale.btn.desc = Let FancyMenu handle the scale of%n%the menu, so your layout works for%n%every scale and resolution.%n%%n%§cThis will make text elements look%n%§cblurry at some scales.%n%§cThis can't be fixed and the best%n%§cworkaround is to use images%n%§cwith background as text elements.
+fancymenu.helper.editor.properties.autoscale.on = Auto-Scaling: §aOn
+fancymenu.helper.editor.properties.autoscale.off = Auto-Scaling: §cOff
+fancymenu.helper.editor.properties.autoscale.btn.desc = Let FancyMenu handle the scale of%n%the menu, so your layout%n%works for every scale and%n%resolution.%n%%n%To do this, resize the window%n%so everything looks good and%n%elements are not too far apart%n%from each other and click on%n%this button.%n%%n%§cThis will make text elements look%n%§cblurry at some scales.%n%§cThis can't be fixed and the best%n%§cworkaround is to use images%n%§cwith background as text elements.
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1 = Here you can set the base window size of your layout.
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2 = This should be the size your layout was designed for.
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3 = If you made it in the current window size, just leave the values like they are.
@@ -760,17 +760,18 @@ fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeminute = Minute
 fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimesecond = Second
 
 fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd = Server MOTD
+fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd.desc = Gets the MOTD of a server.%n%Just replace 'someserver.com:25565'%n%with the actual server IP%n%and '1' with the MOTD line.%n%MOTDs only have 2 lines, so%n%the only valid line values are%n%'1' and '2'.
 fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping = Server PING
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping.desc = Gets the current ping to a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverping:gommehd.net%
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount = Server Players Count
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount.desc = Gets the player count of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverplayercount:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping.desc = Gets the ping to a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount = Server Player Count
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount.desc = Gets the player count of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
 fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus = Server Status
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus.desc = Gets the status (online/offline) of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverstatus:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus.desc = Gets the status (online/offline) of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
 fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion = Server Version
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion.desc = Gets the MC version of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%serverversion:gommehd.net%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion.desc = Gets the MC version of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.percentram = Currently Used RAM in %
-fancymenu.helper.ui.dynamicvariabletextfield.variables.usedram = Currently Used RAM in MB
+fancymenu.helper.ui.dynamicvariabletextfield.variables.percentram = Used RAM in %
+fancymenu.helper.ui.dynamicvariabletextfield.variables.usedram = Used RAM in MB
 fancymenu.helper.ui.dynamicvariabletextfield.variables.maxram = Max RAM in MB
 
 fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground = Set Background
@@ -845,7 +846,7 @@ helper.creator.custombutton.config.actiontype.mimicbutton.desc.value.example = s
 fancymenu.custombutton.action.mimicbutton.unabletoexecute = §c§lError!%n%%n%Unable to execute button action!%n%%n%Invalid button locator or unable to%n%open parent screen of button.%n% %n% %n% %n%
 
 fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel = Vanilla Button Label
-fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Get the label of a vanilla button.%n%%n%§cReplace "<button_locator>" with%n%§cthe correct button locator%n%§cof the target button.%n%%n%The button locator is a combination%n%of the menu identifier of the menu%n%the button is in and the %n%ID of the button, separated%n%by a colon.%n%%n%Example Button Locator:%n%some.menu.identifier:505280
+fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Get the label of a vanilla button.%n%%n%Replace 'some.menu.identifier:505280' with%n%the correct button locator%n%of the target button.%n%%n%The button locator is a combination%n%of the menu identifier of the menu%n%the button is in and the %n%ID of the button, separated%n%by a colon.%n%%n%§cYou can right-click a button%n%§cin the editor to copy its locator.
 
 fancymenu.helper.editor.windowsizerestrictions.reset = Reset Window Size Restrictions
 fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc = Reset/remove all window size restrictions.
@@ -858,11 +859,6 @@ fancymenu.config.show_server_icons = Show Server Icons
 fancymenu.config.show_server_icons.desc = If the server icons should be visible.
 fancymenu.config.show_world_icons = Show World Icons
 fancymenu.config.show_world_icons.desc = If the world icons should be visible.
-
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line1 = Server MOTD Line 1
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line1.desc = Gets the first line of the MOTD of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%servermotd_line1:gommehd.net%
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line2 = Server MOTD Line 2
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd_line2.desc = Gets the second line of the MOTD of a server.%n%%n%Just replace '<serverIP>' in the%n%placeholder with a valid server IP.%n%%n%§lExample:%n%%servermotd_line2:gommehd.net%
 
 fancymenu.helper.ui.tools.buttoninfo.enablecustomizations = §cYou need to enable customizations%n%§cfor the current menu, to use this tool!
 fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1 = §lWarning!
@@ -921,7 +917,7 @@ fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.c
 fancymenu.guicomponents.back = Back
 
 fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext = Random Text From TXT File
-fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc = Picks a random text from a TXT file.%n%%n%Supports custom change intervals for texts.%n%%n%Just replace '<filepath>' (remove the < >)%n%with the path to your TXT file%n%and replace '<interval_sec>' (remove the < >)%n%with the change interval in seconds.%n%An interval of 0 will make it%n%pick a text only once per session.%n%%n%§lExample:%n%%randomtext:path/to/file.txt:10%
+fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc = Picks a random text from a TXT file.%n%%n%Supports custom change intervals for texts.%n%%n%Just replace 'randomtexts.txt' with%n%the path to your TXT file%n%and replace '10' with the%n%change interval in seconds.%n%An interval of 0 will make it%n%pick a text only once per session.
 
 fancymenu.helper.editor.items.visibilityrequirements.realtimeday = Is Real Time Day
 fancymenu.helper.editor.items.visibilityrequirements.realtimeday.desc = Check if the real time's current day is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one day%n%at once.
@@ -963,7 +959,7 @@ fancymenu.helper.buttonaction.paste_to_chat.desc = Paste text to the%n%chat inpu
 fancymenu.helper.buttonaction.paste_to_chat.value.desc = Append True/False & Text; Separated by Colon
 
 fancymenu.helper.placeholder.get_variable = Get Stored Variable
-fancymenu.helper.placeholder.get_variable.desc = Get the value of a stored variable.
+fancymenu.helper.placeholder.get_variable.desc = Gets the value of a stored variable.%n%%n%Just replace 'some_variable' with%n%the actual variable name.
 
 fancymenu.helper.visibilityrequirement.is_variable_value = Is Variable Value
 fancymenu.helper.visibilityrequirement.is_variable_value.desc = Check if the value of a stored%n%variable is X.%n%%n%The requirement value is%n%a combination of the%n%variable name and the%n%value to check if it matches%n%the stored one.%n%%n%The example has variable name%n%and variable value wrapped%n%in <>, but you need to remove these!
@@ -992,7 +988,7 @@ fancymenu.helper.buttonaction.disable_layout.value.desc = Layout Name
 
 fancymenu.helper.ui.visibility_requirements.manage = Manage Visibility Requirements
 
-fancymenu.helper.ui.button_action.set = Set Button Action
+fancymenu.helper.ui.button_action.set = Choose Action
 
 fancymenu.guicomponents.done = Done
 
@@ -1109,15 +1105,92 @@ fancymenu.customization.items.text.scrolling.off = Scrolling: §cOff
 fancymenu.customization.items.text.scrolling.desc = If scrolling is disabled,%n%the scroll bar will be invisible%n%and you are not able to scroll%n%by using the mouse wheel or%n%the bar.
 
 fancymenu.helper.placeholder.json = JSON Parser
-fancymenu.helper.placeholder.json.desc = Parse a JSON and get a%n%value from it.%n%%n%Replace <link_or_path_to_JSON_file>%n%with the path or link to%n%the JSON file you want to parse.%n%%n%Replace <JSON_path> with the path%n%to the value you want to get.%n%%n%§6Go to §lbit.ly/jsonfm §r§6to learn%n%§6more about JSON paths.%n%%n%§cDon't forget to remove < and >%n%§cfrom the arguments!
+fancymenu.helper.placeholder.json.desc = Parse a JSON and get a%n%value from it.%n%%n%Replace 'path_or_link_to_json' with%n%the path or link to the%n%JSON file you want to parse.%n%%n%Replace '$.some.json.path' with the%n%JSON path to the value you want%n%to get.%n%%n%§6Go to §lbit.ly/jsonfm §r§6to learn%n%§6more about JSON paths.
 
 fancymenu.helper.placeholder.webtext = Web Text
-fancymenu.helper.placeholder.webtext.desc = Gets the first line of%n%plain text content from a website.%n%%n%Replace <link_to_text> with the%n%link to the page you want to%n%get the text from.%n%%n%§cDon't forget to remove < and >%n%§cfrom the arguments!
+fancymenu.helper.placeholder.webtext.desc = Gets the first line of%n%plain text content from a website.%n%%n%Replace 'http://somewebsite.com/textfile.txt'%n%with the link to the page you%n%want to get the text from.
 
 fancymenu.config.categories.compatibility = COMPATIBILITY
 fancymenu.config.allow_level_registry_interactions = World Registry Interactions
 fancymenu.config.allow_level_registry_interactions.desc = Allow interactions with all kinds of%n%world registries, like world type,%n%entity, etc., which can cause%n%problems with other entity and%n%world mods.%n%%n%§cDisabling this will also disable%n%§cplayer entity elements!
 
+fancymenu.config.show_unicode_warning = Show Unicode Warning
+fancymenu.config.show_unicode_warning.desc = If the red warning should be%n%visible telling you that unicode%n%fonts aren't fully compatible%n%with the FancyMenu UI.
+
+fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth = Screen Width
+fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth.desc = The width of the current menu.
+fancymenu.helper.ui.dynamicvariabletextfield.variables.guiheight = Screen Height
+fancymenu.helper.ui.dynamicvariabletextfield.variables.guiheight.desc = The height of the current menu.
+
+fancymenu.helper.placeholder.stringify = Stringify
+fancymenu.helper.placeholder.stringify.desc = Stringifies a text by escaping all%n%syntax characters ( " { } ).%n%%n%This is useful when nesting other%n%placeholders as value. If the%n%replaced nested placeholder could%n%contain syntax characters that aren't%n%part of another placeholder, you need%n%to escape them.%n%%n%§cPlaceholders in the value will be%n%§creplaced first, so you don't need%n%§cto worry about them getting stringified.
+
+fancymenu.helper.ui.dynamicvariabletextfield.categories.advanced = Advanced
+fancymenu.helper.ui.dynamicvariabletextfield.categories.gui = GUI
+
+fancymenu.helper.placeholder.elementheight = Element Height
+fancymenu.helper.placeholder.elementheight.desc = Gets the height of an element%n%by its element ID.%n%%n%Just replace 'some.element.id' with%n%the actual element ID.%n%%n%§cYou can get the ID of elements%n%§cby right-clicking them in the editor.
+fancymenu.helper.placeholder.elementwidth = Element Width
+fancymenu.helper.placeholder.elementwidth.desc = Gets the width of an element%n%by its element ID.%n%%n%Just replace 'some.element.id' with%n%the actual element ID.%n%%n%§cYou can get the ID of elements%n%§cby right-clicking them in the editor.
+fancymenu.helper.placeholder.elementposx = Element X Position
+fancymenu.helper.placeholder.elementposx.desc = Gets the X position of an element%n%by its element ID.%n%%n%Just replace 'some.element.id' with%n%the actual element ID.%n%%n%§cYou can get the ID of elements%n%§cby right-clicking them in the editor.
+fancymenu.helper.placeholder.elementposy = Element Y Position
+fancymenu.helper.placeholder.elementposy.desc = Gets the Y position of an element%n%by its element ID.%n%%n%Just replace 'some.element.id' with%n%the actual element ID.%n%%n%§cYou can get the ID of elements%n%§cby right-clicking them in the editor.
+fancymenu.helper.placeholder.calc = Calculator
+fancymenu.helper.placeholder.calc.desc = Solves arithmetic expressions.%n%%n%Just replace the example expression%n%with the real one.%n%%n%Set 'decimal' to 'false' if the%n%placeholder should return a LONG%n%instead of a DOUBLE.
+fancymenu.helper.placeholder.mouseposx = Mouse X Position
+fancymenu.helper.placeholder.mouseposx.desc = Gets the mouse X position.%n%%n%§cAlways returns 10 while in the editor,%n%§cso you can still edit the element%n%§cwithout it following your mouse when%n%§cusing it for advanced sizing/positioning.
+fancymenu.helper.placeholder.mouseposy = Mouse Y Position
+fancymenu.helper.placeholder.mouseposy.desc = Gets the mouse Y position.%n%%n%§cAlways returns 10 while in the editor,%n%§cso you can still edit the element%n%§cwithout it following your mouse when%n%§cusing it for advanced sizing/positioning.
+fancymenu.helper.placeholder.guiscale = GUI Scale
+fancymenu.helper.placeholder.guiscale.desc = Gets the GUI scale.
+
+fancymenu.helper.editor.items.visibilityrequirements.is_text = Is Text
+fancymenu.helper.editor.items.visibilityrequirements.is_text.desc = Check if a text matches another.%n%%n%Compare Modes:%n%equals, contains, starts-with, ends-with%n%%n%Set the 3 dots after the 'mode' variable%n%to the compare mode you want to use.%n%%n%Set the 3 dots after the 'text' variable%n%to the text you want to check.%n%%n%Set the 3 dots after the 'compare_with'%n%variable to the text you want to%n%compare the first one with.%n%%n%§cYou can check for multiple texts/modes%n%§cat once by separating multiple%n%§ccompare sections by comma.
+fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename = Compare Section(s)
+
+fancymenu.helper.editor.items.visibilityrequirements.is_number = Is Number
+fancymenu.helper.editor.items.visibilityrequirements.is_number.desc = Check if a number matches another.%n%%n%Compare Modes:%n%equals, bigger-than, smaller-than,%n%bigger-than-or-equals,%n%smaller-than-or-equals%n%%n%Set the 3 dots after the 'mode' variable%n%to the compare mode you want to use.%n%%n%Set the 3 dots after the 'number' variable%n%to the number you want to check.%n%%n%Set the 3 dots after the 'compare_with'%n%variable to the number you want to%n%compare the first one with.%n%%n%§cYou can check for multiple numbers/modes%n%§cat once by separating multiple%n%§ccompare sections by comma.
+fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename = Compare Section(s)
+
+fancymenu.helper.editor.items.features.advanced_positioning = Advanced Positioning
+fancymenu.helper.editor.items.features.advanced_positioning.active = Advanced Positioning (§6Active§r)
+fancymenu.helper.editor.items.features.advanced_positioning.desc = §cONLY FOR ADVANCED USERS!%n%%n%Allows you to manually set the%n%position of the element.%n%%n%Advanced positions support placeholders,%n%so you can calculate positions%n%by using the Calculator placeholder,%n%get positions of other elements%n%and much more.%n%%n%Many useful placeholders for element%n%positioning can be found%n%in the "GUI" and "Advanced"%n%placeholder categories.%n%%n%§cYou will not be able to resize or%n%§cdrag and move the element while this%n%§cfeature is in use.%n%%n%§cTo "disable" it, just set both the%n%§cX position and Y position to an%n%§cempty value.
+fancymenu.helper.editor.items.features.advanced_positioning.posx = X Position
+fancymenu.helper.editor.items.features.advanced_positioning.posy = Y Position
+
+fancymenu.helper.editor.items.features.advanced_sizing = Advanced Sizing
+fancymenu.helper.editor.items.features.advanced_sizing.active = Advanced Sizing (§6Active§r)
+fancymenu.helper.editor.items.features.advanced_sizing.desc = §cONLY FOR ADVANCED USERS!%n%%n%Allows you to manually set the%n%size of the element.%n%%n%Advanced sizes support placeholders,%n%so you can calculate sizes%n%by using the Calculator placeholder,%n%get sizes of other elements%n%and much more.%n%%n%Many useful placeholders for element%n%sizing can be found%n%in the "GUI" and "Advanced"%n%placeholder categories.%n%%n%§cYou will not be able to resize%n%§cthe element on axes that got%n%§coverridden by an advanced size.%n%%n%§cTo "undo" the override, just set%n%§cthe respective advanced sizing value%n%§cto an empty/blank one.
+fancymenu.helper.editor.items.features.advanced_sizing.width = Width
+fancymenu.helper.editor.items.features.advanced_sizing.height = Height
+
+fancymenu.helper.editor.properties.autoscale.forced_scale_needed = You need to set a §lforced GUI scale%n%before you can use auto-scaling!%n%%n%It's recommended to use 2 as%n%forced GUI scale.%n%%n%§cTo set a forced GUI scale,%n%§cright-click the editor background%n%§cand click on §lForce GUI Scale§r§c.
+
+fancymenu.customization.items.ticker = Ticker
+fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%every tick.%n%%n%Supports asynchronous ticking%n%and tick delays.%n%%n%Can be set to tick only once%n%every time you open the menu.%n%%n%§cThis element is only visible%n%§cin the editor.
+fancymenu.customization.items.ticker.add_action = Add Action
+fancymenu.customization.items.ticker.add_action.desc = Add a new action to the list of%n%actions this ticker should execute.
+fancymenu.customization.items.ticker.manage_actions = Manage Actions
+fancymenu.customization.items.ticker.manage_actions.desc = Edit or remove actions of this ticker.
+fancymenu.customization.items.ticker.manage_actions.action = §lAction: §r{}
+fancymenu.customization.items.ticker.manage_actions.value = §lValue: §r{}
+fancymenu.customization.items.ticker.manage_actions.remove = Remove Action
+fancymenu.customization.items.ticker.manage_actions.remove.confirm = §c§lAre you sure?%n%%n%Do you really want to remove this action?%n% %n% %n% %n%
+fancymenu.customization.items.ticker.manage_actions.edit = Edit Action
+fancymenu.customization.items.ticker.tick_delay = Tick Delay [ms]
+fancymenu.customization.items.ticker.tick_delay.desc = Set the delay between ticks in milliseconds.
+fancymenu.customization.items.ticker.async.on = Async: §aOn
+fancymenu.customization.items.ticker.async.off = Async: §cOff
+fancymenu.customization.items.ticker.async.desc = If the ticker should run in%n%a separate thread (asynchronous).
+fancymenu.customization.items.ticker.tick_mode.normal = Tick Mode: §6Normal
+fancymenu.customization.items.ticker.tick_mode.once_per_session = Tick Mode: §6Session
+fancymenu.customization.items.ticker.tick_mode.on_menu_load = Tick Mode: §6Menu-Load
+fancymenu.customization.items.ticker.tick_mode.desc = §lNormal: §rTicker ticks every tick.%n%%n%§lSession: §rTicker ticks once%n%per game session.%n%%n%§lMenu-Load: §rTicker ticks once%n%every time you load the menu.%n%Keep in mind that menus get%n%also reloaded when changing the%n%window size.
+
+fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered = Is Element Hovered
+fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.desc = Check if an element is hovered.%n%Use its element ID to identify it.%n%%n%You can get the ID of an element%n%by right-clicking it in the editor.
+fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.valuename = Target Element ID
 
 
 

@@ -10,7 +10,7 @@ import java.util.Map;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -182,7 +182,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			if (this.value != null) {
 				if (!isEditorActive()) {
-					splash = DynamicValueHelper.convertFromRaw(splash);
+					splash = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(splash);
 				} else {
 					splash = StringUtils.convertFormatCodes(splash, "&", "§");
 				}

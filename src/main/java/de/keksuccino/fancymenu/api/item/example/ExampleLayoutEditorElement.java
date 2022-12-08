@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.api.item.example;
 
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -9,8 +9,6 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 
 import java.awt.*;
-
-import de.keksuccino.fancymenu.api.item.LayoutEditorElement.SimplePropertiesSection;
 
 public class ExampleLayoutEditorElement extends LayoutEditorElement {
 
@@ -60,7 +58,7 @@ public class ExampleLayoutEditorElement extends LayoutEditorElement {
         //This is the button to change the display text of the item. Will also be part of the right-click context menu.
         AdvancedButton displayTextButton = new AdvancedButton(0, 0, 0, 0, "Display Text", (press) -> {
             //This is also a text input popup, but with placeholder text value support (the little icon at the right side of the input field)
-            DynamicValueInputPopup pop = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "Set Display Text", null, 240, (callback) -> {
+            PlaceholderInputPopup pop = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "Set Display Text", null, 240, (callback) -> {
                 if (callback != null) {
                     if (!callback.equals(i.displayText)) {
                         //Again, save a snapshot before changing something!

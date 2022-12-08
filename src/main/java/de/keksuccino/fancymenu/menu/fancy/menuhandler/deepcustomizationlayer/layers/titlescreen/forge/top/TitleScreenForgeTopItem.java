@@ -30,14 +30,14 @@ public class TitleScreenForgeTopItem extends DeepCustomizationItem {
         StringTextComponent line2 = new StringTextComponent(Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line2"));
         AbstractGui.drawCenteredString(matrix, font, line2, menu.width / 2, 4 + (1 * (font.lineHeight + 1)), -1);
 
-        this.width = font.width(line1.getContents());
+        this.setWidth(font.width(line1.getContents()));
         int w2 = font.width(line2.getContents());
         if (this.width < w2) {
-            this.width = w2;
+            this.setWidth(w2);
         }
-        this.height = (font.lineHeight * 2) + 1;
+        this.setHeight((font.lineHeight * 2) + 1);
 
-        this.posX = (menu.width / 2) - (this.width / 2);
+        this.posX = (menu.width / 2) - (this.getWidth() / 2);
         this.posY = 4;
 
     }

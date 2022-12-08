@@ -368,6 +368,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							int h = Integer.parseInt(height);
 							van.object.setWidth(w);
 							van.object.setHeight(h);
+							van.object.advancedWidth = sec.getEntryValue("advanced_width");
+							van.object.advancedHeight = sec.getEntryValue("advanced_height");
 						}
 					}
 
@@ -384,6 +386,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							van.object.orientation = orientation;
 							van.object.posX = x;
 							van.object.posY = y;
+							van.object.advancedPosX = sec.getEntryValue("advanced_posx");
+							van.object.advancedPosY = sec.getEntryValue("advanced_posy");
 							van.object.orientationElementIdentifier = sec.getEntryValue("orientation_element");
 						}
 					}

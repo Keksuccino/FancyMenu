@@ -73,6 +73,18 @@ public class LayoutShape extends LayoutElement {
 			
 			s.addEntry("action", "addshape");
 			s.addEntry("actionid", this.object.getActionId());
+			if (this.object.advancedPosX != null) {
+				s.addEntry("advanced_posx", this.object.advancedPosX);
+			}
+			if (this.object.advancedPosY != null) {
+				s.addEntry("advanced_posy", this.object.advancedPosY);
+			}
+			if (this.object.advancedWidth != null) {
+				s.addEntry("advanced_width", this.object.advancedWidth);
+			}
+			if (this.object.advancedHeight != null) {
+				s.addEntry("advanced_height", this.object.advancedHeight);
+			}
 			if (this.object.delayAppearance) {
 				s.addEntry("delayappearance", "true");
 				s.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);
