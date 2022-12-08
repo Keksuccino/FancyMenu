@@ -94,7 +94,7 @@ public class SliderCustomizationItem extends CustomizationItem {
             if ((valString != null) && MathUtils.isInteger(valString)) {
                 selectedRangeValue = Integer.parseInt(valString);
             }
-            this.slider = new RangeSliderButton(this.getPosX(current), this.getPosY(current), this.width, this.height, true, this.minRangeValue, this.maxRangeValue, selectedRangeValue, (apply) -> {
+            this.slider = new RangeSliderButton(this.getPosX(current), this.getPosY(current), this.getWidth(), this.getHeight(), true, this.minRangeValue, this.maxRangeValue, selectedRangeValue, (apply) -> {
                 if (linkedVariable != null) {
                     VariableHandler.setVariable(linkedVariable, "" + ((RangeSliderButton)apply).getSelectedRangeValue());
                 }
@@ -112,7 +112,7 @@ public class SliderCustomizationItem extends CustomizationItem {
                     i++;
                 }
             }
-            this.slider = new ListSliderButton(this.getPosX(current), this.getPosY(current), this.width, this.height, true, this.listValues, selectedIndex, (apply) -> {
+            this.slider = new ListSliderButton(this.getPosX(current), this.getPosY(current), this.getWidth(), this.getHeight(), true, this.listValues, selectedIndex, (apply) -> {
                 if (linkedVariable != null) {
                     VariableHandler.setVariable(linkedVariable, ((ListSliderButton)apply).getSelectedListValue());
                 }
@@ -138,8 +138,8 @@ public class SliderCustomizationItem extends CustomizationItem {
 
             this.slider.x = this.getPosX(menu);
             this.slider.y = this.getPosY(menu);
-            this.slider.setWidth(this.width);
-            WidgetUtils.setHeight(this.slider, this.height);
+            this.slider.setWidth(this.getWidth());
+            WidgetUtils.setHeight(this.slider, this.getHeight());
             this.slider.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change

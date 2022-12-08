@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.SubscribeEvent;
@@ -119,8 +119,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			this.value = "splash text";
 			
-			this.width = (int) (30 * basescale * this.scale);
-			this.height = (int) (10 * basescale * this.scale);
+			this.setWidth((int) (30 * basescale * this.scale));
+			this.setHeight((int) (10 * basescale * this.scale));
 			
 		}
 	}
@@ -132,8 +132,8 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 		this.isNewMenuThis = isNewMenu;
 		
-		this.width = (int) (30 * basescale * this.scale);
-		this.height = (int) (10 * basescale * this.scale);
+		this.setWidth((int) (30 * basescale * this.scale));
+		this.setHeight((int) (10 * basescale * this.scale));
 		
 		if (this.shouldRender()) {
 			
@@ -180,7 +180,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			if (this.value != null) {
 				if (!isEditorActive()) {
-					splash = DynamicValueHelper.convertFromRaw(splash);
+					splash = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(splash);
 				} else {
 					splash = StringUtils.convertFormatCodes(splash, "&", "§");
 				}
@@ -200,7 +200,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			matrix.scale(this.scale, this.scale, this.scale);
 			
 			matrix.pushPose();
-			matrix.translate(((this.getPosX(s) + (this.width / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
+			matrix.translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
 			matrix.mulPose(Vector3f.ZP.rotationDegrees(this.rotation));
 			matrix.scale(f, f, f);
 

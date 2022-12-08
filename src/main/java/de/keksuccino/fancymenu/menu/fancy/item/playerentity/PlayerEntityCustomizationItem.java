@@ -5,9 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Scanner;
-import java.util.UUID;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
+import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -35,7 +36,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -44,7 +44,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -90,14 +90,14 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 		this.playerName = item.getEntryValue("playername");
 		
 		if (this.playerName != null) {
-			this.playerName = DynamicValueHelper.convertFromRaw(this.playerName);
+			this.playerName = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.playerName);
 		}
 		
 		this.entity = new MenuPlayerEntity(this.playerName);
 		
 		String skinUrl = item.getEntryValue("skinurl");
 		if (skinUrl != null) {
-			skinUrl = DynamicValueHelper.convertFromRaw(skinUrl);
+			skinUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(skinUrl), "§", "&");
 			WebTextureResourceLocation wt = TextureHandler.getWebResource(skinUrl);
 			if (wt != null) {
 				this.entity.skinLocation = wt.getResourceLocation();
@@ -135,7 +135,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 
 		String capeUrl = item.getEntryValue("capeurl");
 		if (capeUrl != null) {
-			capeUrl = DynamicValueHelper.convertFromRaw(capeUrl);
+			capeUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(capeUrl), "§", "&");
 			WebTextureResourceLocation wt = TextureHandler.getWebResource(capeUrl);
 			if (wt != null) {
 				this.entity.capeLocation = wt.getResourceLocation();

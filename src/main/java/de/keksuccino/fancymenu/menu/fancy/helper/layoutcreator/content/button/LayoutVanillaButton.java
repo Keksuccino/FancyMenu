@@ -14,12 +14,11 @@ import de.keksuccino.konkrete.localization.Locals;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -111,7 +110,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel"), null, 240, (call) -> {
+			FMTextInputPopup i = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel"), null, 240, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.customButtonLabel == null) || !this.customizationContainer.customButtonLabel.equals(call)) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -136,7 +135,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
-			FMTextInputPopup ip = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.hoverlabel"), null, 240, (call) -> {
+			FMTextInputPopup ip = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.hoverlabel"), null, 240, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -258,7 +257,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.rightclickMenu.addContent(b9);
 
 		AdvancedButton b13 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
-			FMTextInputPopup in = new DynamicValueInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
+			FMTextInputPopup in = new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
 				if (call != null) {
 					if (!call.replace(" ", "").equals("")) {
 						if ((this.customizationContainer.buttonDescription == null) || !this.customizationContainer.buttonDescription.equals(call)) {
@@ -382,15 +381,27 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 			s.addEntry("x", "" + this.object.posX);
 			s.addEntry("y", "" + this.object.posY);
+			if (this.object.advancedPosX != null) {
+				s.addEntry("advanced_posx", this.object.advancedPosX);
+			}
+			if (this.object.advancedPosY != null) {
+				s.addEntry("advanced_posy", this.object.advancedPosY);
+			}
 			l.add(s);
 		}
 		// resizebutton
-		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height))) {
+		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height) || (this.object.advancedHeight != null) || (this.object.advancedWidth != null))) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "resizebutton");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("width", "" + this.object.getWidth());
-			s.addEntry("height", "" + this.object.getHeight());
+			s.addEntry("width", "" + this.object.width);
+			s.addEntry("height", "" + this.object.height);
+			if (this.object.advancedWidth != null) {
+				s.addEntry("advanced_width", this.object.advancedWidth);
+			}
+			if (this.object.advancedHeight != null) {
+				s.addEntry("advanced_height", this.object.advancedHeight);
+			}
 			l.add(s);
 		}
 		// renamebutton

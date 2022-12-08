@@ -3,12 +3,12 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 import java.io.File;
 import java.io.IOException;
 
-import net.minecraft.client.Minecraft;
+import de.keksuccino.konkrete.gui.content.widget.WidgetUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.TextComponent;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -73,13 +73,13 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				String x = item.getEntryValue("x");
 				String y = item.getEntryValue("y");
 				if (x != null) {
-					x = DynamicValueHelper.convertFromRaw(x);
+					x = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(x);
 					if (MathUtils.isInteger(x)) {
 						this.posX = Integer.parseInt(x);
 					}
 				}
 				if (y != null) {
-					y = DynamicValueHelper.convertFromRaw(y);
+					y = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(y);
 					if (MathUtils.isInteger(y)) {
 						this.posY = Integer.parseInt(y);
 					}
@@ -156,6 +156,11 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				this.parent.getButton().x = this.getPosX(menu);
 				this.parent.getButton().y = this.getPosY(menu);
 			}
+
+			if (action.equalsIgnoreCase("resizebutton")) {
+				this.parent.getButton().setWidth(this.getWidth());
+				WidgetUtils.setHeight(this.parent.getButton(), this.getHeight());
+			}
 			
 		}
 	}
@@ -165,7 +170,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 			if (this.labelRaw != null) {
 				if (!isEditorActive()) {
-					this.value = DynamicValueHelper.convertFromRaw(this.labelRaw);
+					this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.labelRaw);
 				} else {
 					this.value = StringUtils.convertFormatCodes(this.labelRaw, "&", "§");
 				}
@@ -175,7 +180,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		if (this.action.equals("sethoverlabel")) {
 			if (this.hoverLabelRaw != null) {
 				if (!isEditorActive()) {
-					this.value = DynamicValueHelper.convertFromRaw(this.hoverLabelRaw);
+					this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.hoverLabelRaw);
 				} else {
 					this.value = StringUtils.convertFormatCodes(this.hoverLabelRaw, "&", "§");
 				}

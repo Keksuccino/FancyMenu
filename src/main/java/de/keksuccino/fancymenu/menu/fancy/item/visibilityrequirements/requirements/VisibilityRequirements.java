@@ -31,6 +31,11 @@ public class VisibilityRequirements {
         VisibilityRequirementRegistry.registerRequirement(new IsRealTimeMonthVisibilityRequirement());
         VisibilityRequirementRegistry.registerRequirement(new IsRealTimeYearVisibilityRequirement());
 
+        VisibilityRequirementRegistry.registerRequirement(new IsTextVisibilityRequirement());
+        VisibilityRequirementRegistry.registerRequirement(new IsNumberVisibilityRequirement());
+
+        VisibilityRequirementRegistry.registerRequirement(new IsElementHoveredVisibilityRequirement());
+
     }
 
 }

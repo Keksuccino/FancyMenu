@@ -36,10 +36,10 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
         }
         drawString(matrix, font, branding, 2, menu.height - 10, -1);
 
-        this.width = font.width(branding);
-        this.height = 10;
+        this.setWidth(font.width(branding));
+        this.setHeight(10);
         this.posX = 2;
-        this.posY = menu.height - 2 - this.height;
+        this.posY = menu.height - 2 - this.getHeight();
 
     }
 

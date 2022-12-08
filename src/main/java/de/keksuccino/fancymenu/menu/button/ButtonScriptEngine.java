@@ -12,8 +12,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.client.IMixinServerList;
+import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -84,8 +86,11 @@ public class ButtonScriptEngine {
 	@SuppressWarnings("resource")
 	public static void runButtonAction(String action, String value) {
 		try {
+			if (value != null) {
+				value = PlaceholderParser.replacePlaceholders(value);
+			}
 			if (action.equalsIgnoreCase("openlink")) {
-				openWebLink(value);
+				openWebLink(StringUtils.convertFormatCodes(value, "§", "&"));
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
 				if (Minecraft.getInstance().level != null) {
@@ -242,7 +247,7 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("downloadfile")) {
 				if (value.contains(";")) {
-					String url = cleanPath(value.split("[;]", 2)[0]);
+					String url = StringUtils.convertFormatCodes(cleanPath(value.split("[;]", 2)[0]), "§", "&");
 					String path = cleanPath(value.split("[;]", 2)[1]);
 					File f = new File(path);
 					if (!f.exists()) {

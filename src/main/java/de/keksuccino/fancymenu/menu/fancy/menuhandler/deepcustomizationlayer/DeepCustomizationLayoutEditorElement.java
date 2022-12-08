@@ -48,6 +48,8 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
         this.orientationCanBeChanged = false;
         this.enableVisibilityRequirements = false;
         this.enableElementIdCopyButton = false;
+        this.supportsAdvancedPositioning = false;
+        this.supportsAdvancedSizing = false;
     }
 
     @Override
@@ -105,11 +107,11 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
     }
 
     @Override
-    public boolean isHovered() {
+    public boolean isHoveredOrFocused() {
         if (this.getDeepCustomizationItem().hidden) {
             return false;
         }
-        return super.isHovered();
+        return super.isHoveredOrFocused();
     }
 
     @Override
