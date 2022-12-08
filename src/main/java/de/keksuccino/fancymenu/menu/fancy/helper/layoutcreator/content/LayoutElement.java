@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
@@ -62,10 +63,12 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
 	protected boolean resizeable = true;
-	
+	//TODO übernehmen
+	protected boolean supportsAdvancedPositioning = true;
+	protected boolean supportsAdvancedSizing = true;
+	//----------------------
 	protected boolean resizeableX = true;
 	protected boolean resizeableY = true;
-	//---------------
 	protected boolean dragable = true;
 	protected boolean orientationCanBeChanged = true;
 	protected boolean enableElementIdCopyButton = true;
@@ -95,7 +98,7 @@ public abstract class LayoutElement extends GuiComponent {
 	private final boolean destroyable;
 	public boolean enableVisibilityRequirements = true;
 
-	//NOT THE ACTION ID! Should change this to the action ID at some point.
+	/** NOT THE ACTION ID! Should change this to the action ID at some point. **/
 	public final String objectId = UUID.randomUUID().toString();
 
 	private Snapshot cachedSnapshot;
@@ -104,6 +107,8 @@ public abstract class LayoutElement extends GuiComponent {
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
+
+	//TODO übernehmen replace in this class: this.object.width/height -> this.object.getWidth()/getHeight()
 
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
@@ -269,13 +274,180 @@ public abstract class LayoutElement extends GuiComponent {
 			});
 			orientationMenu.addContent(o9);
 
+			//TODO übernehmen
 			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 				orientationMenu.setParentButton((AdvancedButton) press);
 				orientationMenu.openMenuAt(0, press.y);
-			});
+			}) {
+				@Override
+				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+					if ((object.advancedPosX != null) || (object.advancedPosY != null)) {
+						this.active = false;
+					} else {
+						this.active = true;
+					}
+					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+				}
+			};
 			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
 			this.rightclickMenu.addContent(orientationButton);
+			//-------------------------
+
 		}
+
+		//TODO übernehmen
+		/** ADVANCED POSITIONING **/
+		FMContextMenu advancedPositioningMenu = new FMContextMenu();
+		advancedPositioningMenu.setAutoclose(true);
+		this.rightclickMenu.addChild(advancedPositioningMenu);
+
+		AdvancedButton advancedPositioningButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
+			advancedPositioningMenu.setParentButton((AdvancedButton) press);
+			advancedPositioningMenu.openMenuAt(0, press.y);
+		}) {
+			@Override
+			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				if ((object.advancedPosX != null) || (object.advancedPosY != null)) {
+					this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.active"));
+				} else {
+					this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning"));
+				}
+				super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+			}
+		};
+		advancedPositioningButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.desc"), "%n%"));
+		if (this.supportsAdvancedPositioning) {
+			this.rightclickMenu.addContent(advancedPositioningButton);
+		}
+
+		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), null, 240, (call) -> {
+				if (call != null) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					if (call.replace(" ", "").equals("")) {
+						this.object.advancedPosX = null;
+					} else {
+						this.object.advancedPosX = call;
+					}
+					this.object.posX = 0;
+					this.object.posY = 0;
+					this.object.orientation = "top-left";
+				}
+			});
+			if (this.object.advancedPosX != null) {
+				p.setText(this.object.advancedPosX);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedPositioningMenu.addContent(advancedPosXButton);
+
+		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), null, 240, (call) -> {
+				if (call != null) {
+					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					if (call.replace(" ", "").equals("")) {
+						this.object.advancedPosY = null;
+					} else {
+						this.object.advancedPosY = call;
+					}
+					this.object.posX = 0;
+					this.object.posY = 0;
+					this.object.orientation = "top-left";
+				}
+			});
+			if (this.object.advancedPosY != null) {
+				p.setText(this.object.advancedPosY);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedPositioningMenu.addContent(advancedPosYButton);
+		//----------------------------
+
+		//TODO übernehmen
+		/** ADVANCED SIZING **/
+		FMContextMenu advancedSizingMenu = new FMContextMenu();
+		advancedSizingMenu.setAutoclose(true);
+		this.rightclickMenu.addChild(advancedSizingMenu);
+
+		AdvancedButton advancedSizingButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
+			advancedSizingMenu.setParentButton((AdvancedButton) press);
+			advancedSizingMenu.openMenuAt(0, press.y);
+		}) {
+			@Override
+			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				if ((object.advancedWidth != null) || (object.advancedHeight != null)) {
+					this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.active"));
+				} else {
+					this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing"));
+				}
+				super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+			}
+		};
+		advancedSizingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.desc"), "%n%"));
+		if (this.supportsAdvancedSizing) {
+			this.rightclickMenu.addContent(advancedSizingButton);
+		}
+
+		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), null, 240, (call) -> {
+				if (call != null) {
+					if (call.replace(" ", "").equals("")) {
+						if ((this.object.advancedWidth != null) || (this.object.width != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.width = 50;
+						this.object.advancedWidth = null;
+					} else {
+						if ((this.object.advancedWidth == null) || !call.equals(this.object.advancedWidth) || (this.object.width != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.width = 50;
+						this.object.advancedWidth = call;
+						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
+							this.object.orientation = "top-left";
+							this.object.posX = 0;
+							this.object.posY = 0;
+						}
+					}
+				}
+			});
+			if (this.object.advancedWidth != null) {
+				p.setText(this.object.advancedWidth);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedSizingMenu.addContent(advancedWidthButton);
+
+		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
+			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), null, 240, (call) -> {
+				if (call != null) {
+					if (call.replace(" ", "").equals("")) {
+						if ((this.object.advancedHeight != null) || (this.object.height != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.height = 50;
+						this.object.advancedHeight = null;
+					} else {
+						if ((this.object.advancedHeight == null) || !call.equals(this.object.advancedHeight) || (this.object.height != 50)) {
+							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						}
+						this.object.height = 50;
+						this.object.advancedHeight = call;
+						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
+							this.object.orientation = "top-left";
+							this.object.posX = 0;
+							this.object.posY = 0;
+						}
+					}
+				}
+			});
+			if (this.object.advancedHeight != null) {
+				p.setText(this.object.advancedHeight);
+			}
+			PopupHandler.displayPopup(p);
+		});
+		advancedSizingMenu.addContent(advancedHeightButton);
+		//----------------------------
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -313,24 +485,48 @@ public abstract class LayoutElement extends GuiComponent {
 		stretchMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(stretchMenu);
 
+		//TODO übernehmen
 		stretchXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
 			if (this.stretchX) {
 				this.setStretchedX(false, true);
 			} else {
 				this.setStretchedX(true, true);
 			}
-		});
+		}) {
+			@Override
+			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				if (object.advancedWidth != null) {
+					this.active = false;
+				} else {
+					this.active = true;
+				}
+				super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+			}
+		};
 		stretchMenu.addContent(stretchXButton);
+		//--------------------
 
+		//TODO übernehmen
 		stretchYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
 			if (this.stretchY) {
 				this.setStretchedY(false, true);
 			} else {
 				this.setStretchedY(true, true);
 			}
-		});
+		}) {
+			@Override
+			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				if (object.advancedHeight != null) {
+					this.active = false;
+				} else {
+					this.active = true;
+				}
+				super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+			}
+		};
 		stretchMenu.addContent(stretchYButton);
-		
+		//-------------------------
+
 		AdvancedButton stretchButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch"), true, (press) -> {
 			stretchMenu.setParentButton((AdvancedButton) press);
 			stretchMenu.openMenuAt(0, press.y);
@@ -746,7 +942,8 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 				
 		//Update dragging state
-		if (this.dragable) {
+		//TODO übernehmen (if)
+		if (this.dragable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null)) {
 			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 				this.dragging = true;
 			} else {
@@ -876,16 +1073,14 @@ public abstract class LayoutElement extends GuiComponent {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		
-		if (this.dragable && this.resizeable) {
-			
+		//TODO übernehmen (if)
+		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
 				GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
-			
 			if (!this.stretchY && this.resizeableY) {
 				//grabber top
 				GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
@@ -895,9 +1090,9 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		if (this.resizeable) {
+		//TODO übernehmen (if)
+		if (this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 0;
@@ -905,7 +1100,6 @@ public abstract class LayoutElement extends GuiComponent {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
-				
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 1;
@@ -913,7 +1107,6 @@ public abstract class LayoutElement extends GuiComponent {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
-				
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 2;
@@ -921,7 +1114,6 @@ public abstract class LayoutElement extends GuiComponent {
 					this.activeGrabber = -1;
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
-				
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 3;
@@ -931,6 +1123,9 @@ public abstract class LayoutElement extends GuiComponent {
 			} else {
 				this.activeGrabber = -1;
 			}
+		} else {
+			//TODO übernehnen
+			this.activeGrabber = -1;
 		}
 
 		//Render pos and size values
@@ -986,6 +1181,7 @@ public abstract class LayoutElement extends GuiComponent {
 	}
 	
 	protected void handleResize(int mouseX, int mouseY) {
+
 		int g = this.lastGrabber;
 		int diffX;
 		int diffY;
@@ -1198,30 +1394,16 @@ public abstract class LayoutElement extends GuiComponent {
 			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
 		}
 		if (c.vrCheckForWindowWidth) {
-			String val = "";
-			for (int i : c.vrWindowWidth) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
-				sec.addEntry("vr:value:windowwidth", val);
-			}
+			//TODO übernehmen
+			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
+			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
+			//-----------------
 		}
 		if (c.vrCheckForWindowHeight) {
-			String val = "";
-			for (int i : c.vrWindowHeight) {
-				val += i + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
-				sec.addEntry("vr:value:windowheight", val);
-			}
+			//TODO übernehmen
+			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
+			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
+			//-------------------
 		}
 		if (c.vrCheckForWindowWidthBiggerThan) {
 			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);

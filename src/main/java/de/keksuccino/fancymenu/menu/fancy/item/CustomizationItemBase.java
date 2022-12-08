@@ -3,10 +3,10 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 import java.io.IOException;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
@@ -33,8 +33,18 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public String orientation = "top-left";
 	public String orientationElementIdentifier = null;
 	public CustomizationItemBase orientationElement = null;
+	//TODO übernehmen ( replace this.width & this.height in sub classes with this.getWidth() & this.getHeight() )
+	// 1. Copy original CustomizationItemBase class to text file
+	// 2. Edit -> Find -> Replace in Files -> Scope -> Class Hierarchy -> CustomizationItemBase
+	// 3. Paste back original CustomizationItemBase class
 	public int width = -1;
 	public int height = -1;
+	//TODO übernehmen
+	public String advancedWidth;
+	public String advancedHeight;
+	public String advancedPosX;
+	public String advancedPosY;
+	//-----------------
 
 	public volatile boolean delayAppearance = false;
 	public volatile boolean delayAppearanceEverytime = false;
@@ -92,13 +102,13 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		String x = item.getEntryValue("x");
 		String y = item.getEntryValue("y");
 		if (x != null) {
-			x = DynamicValueHelper.convertFromRaw(x);
+			x = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(x);
 			if (MathUtils.isInteger(x)) {
 				this.posX = Integer.parseInt(x);
 			}
 		}
 		if (y != null) {
-			y = DynamicValueHelper.convertFromRaw(y);
+			y = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(y);
 			if (MathUtils.isInteger(y)) {
 				this.posY = Integer.parseInt(y);
 			}
@@ -116,7 +126,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 
 		String w = item.getEntryValue("width");
 		if (w != null) {
-			w = DynamicValueHelper.convertFromRaw(w);
+			w = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(w);
 			if (MathUtils.isInteger(w)) {
 				this.width = Integer.parseInt(w);
 			}
@@ -127,7 +137,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 
 		String h = item.getEntryValue("height");
 		if (h != null) {
-			h = DynamicValueHelper.convertFromRaw(h);
+			h = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(h);
 			if (MathUtils.isInteger(h)) {
 				this.height = Integer.parseInt(h);
 			}
@@ -135,6 +145,13 @@ public abstract class CustomizationItemBase extends GuiComponent {
 				this.height = 0;
 			}
 		}
+
+		//TODO übernehmen
+		this.advancedWidth = item.getEntryValue("advanced_width");
+		this.advancedHeight = item.getEntryValue("advanced_height");
+		this.advancedPosX = item.getEntryValue("advanced_posx");
+		this.advancedPosY = item.getEntryValue("advanced_posy");
+		//-------------------------
 
 		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
 
@@ -147,6 +164,16 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	 * NOT similar to {@code MenuCustomizationItem.posX}! 
 	 */
 	public int getPosX(Screen menu) {
+
+		//TODO übernehmen
+		if (this.advancedPosX != null) {
+			String s = PlaceholderParser.replacePlaceholders(this.advancedPosX).replace(" ", "");
+			if (MathUtils.isDouble(s)) {
+				return (int) Double.parseDouble(s);
+			}
+		}
+		//----------------
+
 		int w = menu.width;
 		int x = this.posX;
 
@@ -182,6 +209,16 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	 * NOT similar to {@code MenuCustomizationItem.posY}! 
 	 */
 	public int getPosY(Screen menu) {
+
+		//TODO übernehmen
+		if (this.advancedPosY != null) {
+			String s = PlaceholderParser.replacePlaceholders(this.advancedPosY).replace(" ", "");
+			if (MathUtils.isDouble(s)) {
+				return (int) Double.parseDouble(s);
+			}
+		}
+		//----------------
+
 		int h = menu.height;
 		int y = this.posY;
 
@@ -273,6 +310,14 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	}
 
 	public int getWidth() {
+		//TODO übernehmen
+		if (this.advancedWidth != null) {
+			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
+			if (MathUtils.isDouble(s)) {
+				return (int) Double.parseDouble(s);
+			}
+		}
+		//----------------
 		return this.width;
 	}
 
@@ -281,6 +326,14 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	}
 
 	public int getHeight() {
+		//TODO übernehmen
+		if (this.advancedHeight != null) {
+			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
+			if (MathUtils.isDouble(s)) {
+				return (int) Double.parseDouble(s);
+			}
+		}
+		//----------------
 		return this.height;
 	}
 

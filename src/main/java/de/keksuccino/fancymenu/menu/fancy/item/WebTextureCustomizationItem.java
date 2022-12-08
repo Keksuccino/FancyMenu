@@ -11,9 +11,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.annotations.OptifineFix;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -38,9 +40,10 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
-				this.value = DynamicValueHelper.convertFromRaw(this.value);
+				//TODO übernehmen
+				this.value = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.value), "§", "&");
 
-				if ((this.width <= 0) && (this.height <= 0)) {
+				if ((this.getWidth() <= 0) && (this.getHeight() <= 0)) {
 					this.setWidth(100);
 				}
 
@@ -110,10 +113,10 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 	protected void calculateAspectRatio() {
 		if ((this.texture == null) || !this.texture.isReady()) {
-			if (this.width <= 0) {
+			if (this.getWidth() <= 0) {
 				this.setWidth(100);
 			}
-			if (this.height <= 0) {
+			if (this.getHeight() <= 0) {
 				this.setHeight(100);
 			}
 			this.ready = true;
@@ -148,12 +151,12 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			} else if (isEditorActive()) {
 				fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
 				if (this.ready) {
-					drawCenteredString(matrix, Minecraft.getInstance().font, "§lMISSING", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+					drawCenteredString(matrix, Minecraft.getInstance().font, "§lMISSING", this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
 				}
 			}
 
 			if (!this.ready && isEditorActive()) {
-				drawCenteredString(matrix, Minecraft.getInstance().font, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.width / 2), this.getPosY(menu) + (this.height / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+				drawCenteredString(matrix, Minecraft.getInstance().font, "§lLOADING TEXTURE..", this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
 			}
 
 		}

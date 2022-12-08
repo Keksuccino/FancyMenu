@@ -4,10 +4,13 @@ import de.keksuccino.fancymenu.FancyMenu;
 
 import java.util.*;
 
+//TODO übernehmen (deprecated)
+@Deprecated
 public class PlaceholderTextRegistry {
 
     private static Map<String, PlaceholderTextContainer> placeholders = new LinkedHashMap<>();
 
+    @Deprecated
     public static void registerPlaceholder(PlaceholderTextContainer placeholder) {
         if (placeholder != null) {
             if (placeholder.getIdentifier() != null) {
@@ -24,6 +27,7 @@ public class PlaceholderTextRegistry {
     /**
      * Unregister a previously added placeholder.
      */
+    @Deprecated
     public static void unregisterPlaceholder(String placeholderIdentifier) {
         placeholders.remove(placeholderIdentifier);
     }
@@ -31,6 +35,7 @@ public class PlaceholderTextRegistry {
     /**
      * Get all registered placeholders as list.
      */
+    @Deprecated
     public static List<PlaceholderTextContainer> getPlaceholders() {
         List<PlaceholderTextContainer> l = new ArrayList<>();
         l.addAll(placeholders.values());
@@ -40,6 +45,7 @@ public class PlaceholderTextRegistry {
     /**
      * Get a registered placeholder by its identifier.
      */
+    @Deprecated
     public static PlaceholderTextContainer getPlaceholder(String placeholderIdentifier) {
         return placeholders.get(placeholderIdentifier);
     }

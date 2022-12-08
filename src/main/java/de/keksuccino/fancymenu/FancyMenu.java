@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.placeholders.Placeholders;
+import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
@@ -56,22 +56,16 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
-	// replace: .getAbsolutePath() -> .getAbsolutePath().replace("\\", "/")
-	// replace: .replace("\\", "/").replace("\\", "/") -> .replace("\\", "/")
-
-	//TODO übernehmen
-	public static final String VERSION = "2.12.9";
+	//TODO übernehmen (+ locals; + min Konkrete version 1.6.0)
+	public static final String VERSION = "2.13.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 	
 	public static Config config;
 
-	//TODO übernehmen
 	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
 	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
-	//-------------------
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
 
 	private static File animationsPath = new File(MOD_DIR, "/animations");
@@ -113,6 +107,9 @@ public class FancyMenu {
 				VisibilityRequirements.registerAll();
 
 				Placeholders.registerAll();
+
+				//TODO übernehmen
+				de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.Placeholders.registerAll();
 
 				CustomizationItems.registerAll();
 
@@ -161,11 +158,10 @@ public class FancyMenu {
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 
-				//TODO übernehmen
 				if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
 					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
 				}
-	        	
+
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode!");
 	    	}
@@ -173,11 +169,6 @@ public class FancyMenu {
 			Packets.registerAll();
 
 			MinecraftForge.EVENT_BUS.register(this);
-
-			//TODO übernehmen
-//			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-//				LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
-//			}
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -281,6 +272,8 @@ public class FancyMenu {
 			config.registerValue("gridsize", 10, "layouteditor");
 
 			config.registerValue("uiscale", 1.0F, "ui");
+			//TODO übernehmen
+			config.registerValue("show_unicode_warning", true, "ui");
 
 			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			
@@ -372,7 +365,6 @@ public class FancyMenu {
 		return false;
 	}
 
-	//TODO übernehmen
 	public static File getGameDirectory() {
 		if (FMLEnvironment.dist == Dist.CLIENT) {
 			return Minecraft.getInstance().gameDirectory;

@@ -53,14 +53,10 @@ public class LegacyVisibilityRequirements {
         }, null, null, null);
         requirements.add(worldLoaded);
 
+        //TODO übernehmen
         /** Is Window Width **/
-        String windowWidthValuePreset = "";
-        for (int i : container.vrWindowWidth) {
-            windowWidthValuePreset += i + ",";
-        }
-        if (windowWidthValuePreset.length() > 0) {
-            windowWidthValuePreset = windowWidthValuePreset.substring(0, windowWidthValuePreset.length() -1);
-        } else {
+        String windowWidthValuePreset = container.vrWindowWidth;;
+        if ((windowWidthValuePreset == null) || (windowWidthValuePreset.length() <= 0)) {
             windowWidthValuePreset = "503, 918, 1920";
         }
         String windowWidthName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidth");
@@ -73,30 +69,18 @@ public class LegacyVisibilityRequirements {
             container.vrShowIfWindowWidth = showIfCallback;
         }, (valueCallback) -> {
             if (valueCallback != null) {
-                container.vrWindowWidth.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrWindowWidth.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrWindowWidth.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
+                container.vrWindowWidth = valueCallback;
+            } else {
+                container.vrWindowWidth = null;
             }
-        }, multiIntegerFilter, windowWidthValuePreset);
+        }, null, windowWidthValuePreset);
         requirements.add(windowWidth);
+        //----------------------------
 
+        //TODO übernehmen
         /** Is Window Height **/
-        String windowHeightValuePreset = "";
-        for (int i : container.vrWindowHeight) {
-            windowHeightValuePreset += i + ",";
-        }
-        if (windowHeightValuePreset.length() > 0) {
-            windowHeightValuePreset = windowHeightValuePreset.substring(0, windowHeightValuePreset.length() -1);
-        } else {
+        String windowHeightValuePreset = container.vrWindowHeight;
+        if (windowHeightValuePreset == null) {
             windowHeightValuePreset = "410, 634, 1080";
         }
         String windowHeightName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheight");
@@ -109,22 +93,15 @@ public class LegacyVisibilityRequirements {
             container.vrShowIfWindowHeight = showIfCallback;
         }, (valueCallback) -> {
             if (valueCallback != null) {
-                container.vrWindowHeight.clear();
-                if (valueCallback.contains(",")) {
-                    for (String s : valueCallback.replace(" ", "").split("[,]")) {
-                        if (MathUtils.isInteger(s)) {
-                            container.vrWindowHeight.add(Integer.parseInt(s));
-                        }
-                    }
-                } else {
-                    if (MathUtils.isInteger(valueCallback.replace(" ", ""))) {
-                        container.vrWindowHeight.add(Integer.parseInt(valueCallback.replace(" ", "")));
-                    }
-                }
+                container.vrWindowHeight = valueCallback;
+            } else {
+                container.vrWindowHeight = null;
             }
         }, multiIntegerFilter, windowHeightValuePreset);
         requirements.add(windowHeight);
+        //------------------------
 
+        //TODO übernehmen
         /** Window Width Bigger Than **/
         String windowWidthBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan");
         String windowWidthBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc", "" + Minecraft.getInstance().getWindow().getWidth(), "" + Minecraft.getInstance().getWindow().getHeight());
@@ -135,14 +112,16 @@ public class LegacyVisibilityRequirements {
                 }, (showIfCallback) -> {
             container.vrShowIfWindowWidthBiggerThan = showIfCallback;
         }, (valueCallback) -> {
-            if ((valueCallback != null) && MathUtils.isInteger(valueCallback)) {
-                container.vrWindowWidthBiggerThan = Integer.parseInt(valueCallback);
+            if (valueCallback != null) {
+                container.vrWindowWidthBiggerThan = valueCallback;
             } else {
-                container.vrWindowWidthBiggerThan = 0;
+                container.vrWindowWidthBiggerThan = null;
             }
         }, integerCharFilter, "" + container.vrWindowWidthBiggerThan);
         requirements.add(windowWidthBiggerThan);
+        //---------------------------------
 
+        //TODO übernehmen
         /** Window Height Bigger Than **/
         String windowHeightBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan");
         String windowHeightBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.desc", "" + Minecraft.getInstance().getWindow().getWidth(), "" + Minecraft.getInstance().getWindow().getHeight());
@@ -153,13 +132,14 @@ public class LegacyVisibilityRequirements {
                 }, (showIfCallback) -> {
             container.vrShowIfWindowHeightBiggerThan = showIfCallback;
         }, (valueCallback) -> {
-            if ((valueCallback != null) && MathUtils.isInteger(valueCallback)) {
-                container.vrWindowHeightBiggerThan = Integer.parseInt(valueCallback);
+            if (valueCallback != null) {
+                container.vrWindowHeightBiggerThan = valueCallback;
             } else {
-                container.vrWindowHeightBiggerThan = 0;
+                container.vrWindowHeightBiggerThan = null;
             }
         }, integerCharFilter, "" + container.vrWindowHeightBiggerThan);
         requirements.add(windowHeightBiggerThan);
+        //-------------------------
 
         /** Button Hovered **/
         String buttonHoveredName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.buttonhovered");

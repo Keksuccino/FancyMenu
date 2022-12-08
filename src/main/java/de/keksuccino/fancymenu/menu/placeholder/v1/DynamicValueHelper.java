@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.menu.fancy;
+package de.keksuccino.fancymenu.menu.placeholder.v1;
 
 import java.io.File;
 import java.util.*;
@@ -20,14 +20,17 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
+//TODO übernehmen (deprecated & move zu v1 package)
+@Deprecated
 public class DynamicValueHelper {
 
-	//--- 3
 	private static final File MOD_DIRECTORY = new File(Minecraft.getInstance().gameDirectory, "mods");
 
 	private static int cachedTotalMods = -10;
 	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
 
+	//TODO übernehmen ( Edit -> Find -> Replace in Files -> "DynamicValueHelper.convertFromRaw(" to "de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(" )
+	@Deprecated
 	public static String convertFromRaw(String in) {
 		int width = 0;
 		int height = 0;
@@ -40,46 +43,46 @@ public class DynamicValueHelper {
 		}
 
 		//Convert &-formatcodes to real ones
-		in = StringUtils.convertFormatCodes(in, "&", "§");
+		in = StringUtils.convertFormatCodes(in, "&", "§"); //
 
 		//Replace height and width placeholders
-		in = in.replace("%guiwidth%", "" + width);
-		in = in.replace("%guiheight%", "" + height);
+		in = in.replace("%guiwidth%", "" + width); //
+		in = in.replace("%guiheight%", "" + height); //
 
 		//Replace player name and uuid placeholders
-		in = in.replace("%playername%", playername);
-		in = in.replace("%playeruuid%", playeruuid);
+		in = in.replace("%playername%", playername); //
+		in = in.replace("%playeruuid%", playeruuid); //
 
 		//Replace mc version placeholder
-		in = in.replace("%mcversion%", mcversion);
+		in = in.replace("%mcversion%", mcversion); //
 
 		//Replace mod version placeholder
-		in = replaceModVersionPlaceolder(in);
+		in = replaceModVersionPlaceolder(in); //
 
 		//Replace loaded mods placeholder
-		int loaded = getLoadedMods();
-		in = in.replace("%loadedmods%", "" + loaded);
+		int loaded = getLoadedMods(); //
+		in = in.replace("%loadedmods%", "" + loaded); //
 
 		//Replace total mods placeholder
-		int total = getTotalMods();
-		if (total < loaded) {
-			total = loaded;
-		}
-		in = in.replace("%totalmods%", "" + total);
+		int total = getTotalMods(); //
+		if (total < loaded) { //
+			total = loaded; //
+		} //
+		in = in.replace("%totalmods%", "" + total); //
 
-		in = replaceLocalsPlaceolder(in);
+		in = replaceLocalsPlaceolder(in); //
 
-		in = replaceServerMOTD(in);
-		in = replaceServerMotdFirstLine(in);
-		in = replaceServerMotdSecondLine(in);
+		in = replaceServerMOTD(in); //
+		in = replaceServerMotdFirstLine(in); //
+		in = replaceServerMotdSecondLine(in); //
 
-		in = replaceServerPing(in);
+		in = replaceServerPing(in); //
 
-		in = replaceServerVersion(in);
+		in = replaceServerVersion(in); //
 
-		in = replaceServerPlayerCount(in);
+		in = replaceServerPlayerCount(in); //
 
-		in = replaceServerStatus(in);
+		in = replaceServerStatus(in); //
 
 		if (in.contains("ram%")) {
 			long i = Runtime.getRuntime().maxMemory();
@@ -123,7 +126,8 @@ public class DynamicValueHelper {
 
 		return in;
 	}
-	
+
+	@Deprecated
 	public static boolean containsDynamicValues(String in) {
 		String s = convertFromRaw(in);
 		return !s.equals(in);
@@ -138,11 +142,9 @@ public class DynamicValueHelper {
 					if (value.contains(":")) {
 						String pathString = value.split(":", 2)[0];
 						File path = new File(pathString);
-						//--- 3
 						if (!path.exists() || !path.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							path = new File(Minecraft.getInstance().gameDirectory, pathString);
 						}
-						//-------------------
 						String intervalString = value.split(":", 2)[1];
 						if (MathUtils.isLong(intervalString) && path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {
 							long interval = Long.parseLong(intervalString) * 1000;

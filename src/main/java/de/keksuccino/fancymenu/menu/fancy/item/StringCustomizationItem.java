@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -14,6 +13,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
 
+@Deprecated
 public class StringCustomizationItem extends CustomizationItemBase {
 
 	public float scale = 1.0F;
@@ -22,6 +22,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 	public String valueRaw;
 
+	@Deprecated
 	public StringCustomizationItem(PropertiesSection item) {
 		super(item);
 
@@ -58,7 +59,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 		if (this.valueRaw != null) {
 			if (!isEditorActive()) {
-				this.value = DynamicValueHelper.convertFromRaw(this.valueRaw);
+				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.valueRaw);
 			} else {
 				this.value = StringUtils.convertFormatCodes(this.valueRaw, "&", "§");
 			}

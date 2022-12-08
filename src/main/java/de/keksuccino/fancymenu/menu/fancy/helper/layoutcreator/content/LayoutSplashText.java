@@ -195,6 +195,20 @@ public class LayoutSplashText extends LayoutElement {
 		
 		PropertiesSection p1 = new PropertiesSection("customization");
 		p1.addEntry("actionid", this.object.getActionId());
+		//TODO übernehmen
+		if (this.object.advancedPosX != null) {
+			p1.addEntry("advanced_posx", this.object.advancedPosX);
+		}
+		if (this.object.advancedPosY != null) {
+			p1.addEntry("advanced_posy", this.object.advancedPosY);
+		}
+		if (this.object.advancedWidth != null) {
+			p1.addEntry("advanced_width", this.object.advancedWidth);
+		}
+		if (this.object.advancedHeight != null) {
+			p1.addEntry("advanced_height", this.object.advancedHeight);
+		}
+		//-------------------------
 		if (this.object.delayAppearance) {
 			p1.addEntry("delayappearance", "true");
 			p1.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);
@@ -208,7 +222,6 @@ public class LayoutSplashText extends LayoutElement {
 		if (this.getObject().text != null) {
 			p1.addEntry("text", this.getObject().text);
 		}
-		//---
 		if (this.getObject().splashfile != null) {
 			File home = Minecraft.getInstance().gameDirectory;
 			String path = this.getObject().splashfile.getAbsolutePath().replace("\\", "/");
@@ -220,7 +233,6 @@ public class LayoutSplashText extends LayoutElement {
 			}
 			p1.addEntry("splashfilepath", path);
 		}
-		//-----------------------
 		p1.addEntry("x", "" + this.object.posX);
 		p1.addEntry("y", "" + this.object.posY);
 		p1.addEntry("orientation", this.object.orientation);

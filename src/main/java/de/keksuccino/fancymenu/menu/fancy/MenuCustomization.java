@@ -310,7 +310,6 @@ public class MenuCustomization {
 		return false;
 	}
 
-	//TODO übernehmen
 	public static String getAbsoluteGameDirectoryPath(String path) {
 		try {
 			path = path.replace("\\", "/");
@@ -324,5 +323,5 @@ public class MenuCustomization {
 		}
 		return path;
 	}
-
+	
 }

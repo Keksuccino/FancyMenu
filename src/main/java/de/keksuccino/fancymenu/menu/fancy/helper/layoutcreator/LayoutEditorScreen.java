@@ -27,7 +27,6 @@ import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -56,7 +55,6 @@ import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
-import de.keksuccino.konkrete.gui.content.IMenu;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
@@ -71,7 +69,6 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -164,8 +161,9 @@ public class LayoutEditorScreen extends Screen {
 	protected CustomizationItemBase globalVisReqDummyItem = new CustomizationItemBase(new PropertiesSection("")) {
 		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 	};
-	
-	protected LayoutEditorUI ui = new LayoutEditorUI(this);
+
+	//TODO übernehmen (public)
+	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	
 	public LayoutEditorScreen(Screen screenToCustomize) {
 		super(Component.literal(""));
@@ -1129,7 +1127,6 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected void addTexture(String path) {
-		//---
 		File home = Minecraft.getInstance().gameDirectory;
 		if (path == null) {
 			return;
@@ -1141,7 +1138,6 @@ public class LayoutEditorScreen extends Screen {
 			}
 		}
 		File f = new File(Minecraft.getInstance().gameDirectory, path);
-		//-------------------------
 		String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 		if (f.exists()) {
 			if (filename.equals(f.getName())) {
@@ -1212,7 +1208,6 @@ public class LayoutEditorScreen extends Screen {
 	}
 	
 	protected void addMultiSplashText(String path) {
-		//---
 		File home = Minecraft.getInstance().gameDirectory;
 		if (path == null) {
 			return;
@@ -1224,7 +1219,6 @@ public class LayoutEditorScreen extends Screen {
 			}
 		}
 		File f = new File(Minecraft.getInstance().gameDirectory, path);
-		//--------------------------
 		if (f.exists() && f.getPath().toLowerCase().endsWith(".txt")) {
 			
 			this.history.saveSnapshot(this.history.createSnapshot());
@@ -1403,7 +1397,6 @@ public class LayoutEditorScreen extends Screen {
 	
 	public void setBackgroundTexture(String path) {
 		if (path != null) {
-			//---
 			File home = Minecraft.getInstance().gameDirectory;
 			if (path.startsWith(home.getAbsolutePath().replace("\\", "/"))) {
 				path = path.replace(home.getAbsolutePath().replace("\\", "/"), "");
@@ -1412,13 +1405,11 @@ public class LayoutEditorScreen extends Screen {
 				}
 			}
 			File f = new File(Minecraft.getInstance().gameDirectory, path);
-			//------------------
 			String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 			if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 				if (filename.equals(f.getName())) {
 					this.history.saveSnapshot(this.history.createSnapshot());
 
-					//---
 					this.backgroundTexture = TextureHandler.getResource(Minecraft.getInstance().gameDirectory.getPath() + "/" + path);
 					this.backgroundTexturePath = path;
 					if (this.backgroundAnimation != null) {

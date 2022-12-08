@@ -27,10 +27,12 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.client.IMixinServerList;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -86,8 +88,14 @@ public class ButtonScriptEngine {
 	
 	public static void runButtonAction(String action, String value) {
 		try {
+			//TODO übernehmen
+			if (value != null) {
+				value = PlaceholderParser.replacePlaceholders(value);
+			}
+			//-------------------
 			if (action.equalsIgnoreCase("openlink")) {
-				openWebLink(value);
+				//TODO übernehmen
+				openWebLink(StringUtils.convertFormatCodes(value, "§", "&"));
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
 				if (Minecraft.getInstance().level != null) {
@@ -247,7 +255,8 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("downloadfile")) {
 				if (value.contains(";")) {
-					String url = cleanPath(value.split("[;]", 2)[0]);
+					//TODO übernehmen
+					String url = StringUtils.convertFormatCodes(cleanPath(value.split("[;]", 2)[0]), "§", "&");
 					String path = cleanPath(value.split("[;]", 2)[1]);
 					File f = new File(path);
 					if (!f.exists()) {

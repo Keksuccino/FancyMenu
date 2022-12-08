@@ -41,6 +41,7 @@
 //    }
 //
 //    public static void setVolumeForAll(int percentVolume) {
+//        //TODO add volume handling
 //    }
 //
 //}

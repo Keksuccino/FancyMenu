@@ -33,7 +33,6 @@ public class ChooseFilePopup extends FMTextInputPopup {
 		super.init(color, title, filter, callback);
 		
 		this.chooseFileBtn = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.choosefile.choose"), true, (press) -> {
-			//---
 			PopupHandler.displayPopup(new FMFilePickerPopup(Minecraft.getInstance().gameDirectory.getAbsoluteFile().getAbsolutePath().replace("\\", "/"), Minecraft.getInstance().gameDirectory.getAbsoluteFile().getAbsolutePath().replace("\\", "/"), this, true, (call) -> {
 				if (call != null) {
 					String path = call.getAbsolutePath().replace("\\", "/");
@@ -48,7 +47,6 @@ public class ChooseFilePopup extends FMTextInputPopup {
 					this.setText(path);
 				}
 			}, fileTypes));
-			//-----------------------
 		});
 		this.addButton(chooseFileBtn);
 	}

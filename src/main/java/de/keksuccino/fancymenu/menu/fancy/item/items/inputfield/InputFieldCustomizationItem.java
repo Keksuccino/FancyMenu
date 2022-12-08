@@ -49,7 +49,7 @@ public class InputFieldCustomizationItem extends CustomizationItem {
         }
 
         Screen current = Minecraft.getInstance().screen;
-        this.textField = new AdvancedTextField(Minecraft.getInstance().font, this.getPosX(current), this.getPosY(current), this.width, this.height, true, this.type.filter);
+        this.textField = new AdvancedTextField(Minecraft.getInstance().font, this.getPosX(current), this.getPosY(current), this.getWidth(), this.getHeight(), true, this.type.filter);
         this.textField.setMaxLength(this.maxTextLength);
         if (this.linkedVariable != null) {
             String var = VariableHandler.getVariable(this.linkedVariable);
@@ -81,8 +81,8 @@ public class InputFieldCustomizationItem extends CustomizationItem {
 
             this.textField.x = this.getPosX(menu);
             this.textField.y = this.getPosY(menu);
-            this.textField.setWidth(this.width);
-            this.textField.setHeight(this.height);
+            this.textField.setWidth(this.getWidth());
+            this.textField.setHeight(this.getHeight());
             this.textField.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change

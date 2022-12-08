@@ -5,12 +5,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.net.UrlEscapers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
@@ -46,6 +45,8 @@ public class LayoutPlayerEntity extends LayoutElement {
 	public void init() {
 
 		this.fadeable = false;
+		//TODO übernehmen
+		this.supportsAdvancedSizing = false;
 		
 		super.init();
 		
@@ -156,14 +157,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 			ChooseFilePopup t = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
-						//---
 						File home = Minecraft.getInstance().gameDirectory;
 						call = call.replace("\\", "/");
 						File f = new File(call);
 						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
-						//----------------------
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (f.exists() && f.isFile() && f.getName().endsWith(".png")) {
 							if (filename.equals(f.getName())) {
@@ -209,12 +208,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 		
 		AdvancedButton urlSkinB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.playerentity.texture.url"), true, (press) -> {
 
-			FMTextInputPopup t = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
+			FMTextInputPopup t = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
 						String finalURL = null;
 						call = WebUtils.filterURL(call);
-						finalURL = DynamicValueHelper.convertFromRaw(call);
+						finalURL = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(call);
 
 						if (WebUtils.isValidUrl(finalURL)) {
 							if (this.skinUrl != call) {
@@ -266,14 +265,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 			ChooseFilePopup t = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
-						//---
 						File home = Minecraft.getInstance().gameDirectory;
 						call = call.replace("\\", "/");
 						File f = new File(call);
 						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							f = new File(Minecraft.getInstance().gameDirectory, call);
 						}
-						//----------------------
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (f.exists() && f.isFile() && f.getName().endsWith(".png")) {
 							if (filename.equals(f.getName())) {
@@ -320,12 +317,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 		
 		AdvancedButton urlCapeB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.playerentity.texture.url"), true, (press) -> {
 
-			FMTextInputPopup t = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
+			FMTextInputPopup t = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
 						String finalURL = null;
 						call = WebUtils.filterURL(call);
-						finalURL = DynamicValueHelper.convertFromRaw(call);
+						finalURL = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(call);
 
 						if (WebUtils.isValidUrl(finalURL)) {
 							if (this.capeUrl != call) {
@@ -572,6 +569,20 @@ public class LayoutPlayerEntity extends LayoutElement {
 		
 		PropertiesSection p1 = new PropertiesSection("customization");
 		p1.addEntry("actionid", this.object.getActionId());
+		//TODO übernehmen
+		if (this.object.advancedPosX != null) {
+			p1.addEntry("advanced_posx", this.object.advancedPosX);
+		}
+		if (this.object.advancedPosY != null) {
+			p1.addEntry("advanced_posy", this.object.advancedPosY);
+		}
+		if (this.object.advancedWidth != null) {
+			p1.addEntry("advanced_width", this.object.advancedWidth);
+		}
+		if (this.object.advancedHeight != null) {
+			p1.addEntry("advanced_height", this.object.advancedHeight);
+		}
+		//-------------------------
 		if (this.object.delayAppearance) {
 			p1.addEntry("delayappearance", "true");
 			p1.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

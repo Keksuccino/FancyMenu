@@ -12,7 +12,6 @@ import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -22,6 +21,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
 
+@Deprecated
 public class WebStringCustomizationItem extends CustomizationItemBase {
 
 	public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
@@ -35,13 +35,14 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 	protected volatile int unscaledWidth = 1;
 	protected Font font = Minecraft.getInstance().font;
 
+	@Deprecated
 	public WebStringCustomizationItem(PropertiesSection item) {
 		super(item);
 		if ((this.action != null) && this.action.equalsIgnoreCase("addwebtext")) {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
-				this.value = DynamicValueHelper.convertFromRaw(this.value);
+				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.value);
 			}
 
 			String multi = item.getEntryValue("multiline");
@@ -182,7 +183,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 							if (isEditorActive()) {
 								s = StringUtils.convertFormatCodes(s, "&", "§");
 							} else {
-								s = DynamicValueHelper.convertFromRaw(s);
+								s = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(s);
 							}
 							float sc = getScaleMultiplicator(s);
 							s = getWithoutHeadlineCodes(s);

@@ -30,11 +30,11 @@ import java.util.List;
 import java.util.Map;
 
 public class BackgroundOptionsPopup extends FMPopup {
-	
+
 	public LayoutEditorScreen handler;
-	
+
 	public AdvancedButton doneButton;
-	
+
 	public AdvancedButton chooseTextureButton;
 
 	public AdvancedButton setPanoramaButton;
@@ -56,10 +56,10 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 	public Map<Integer, MenuBackgroundType> customBackgroundTypes = new HashMap<>();
 	public int lastSelectedTypeIndex = -10;
-	
+
 	public BackgroundOptionsPopup(LayoutEditorScreen handler) {
 		super(240);
-		
+
 		this.handler = handler;
 
 		this.typeSwitcher = new BackgroundOptionsSwitcher(120, true);
@@ -75,7 +75,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 		}
 		this.typeSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);
 		this.typeSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
-		
+
 		this.animationSwitcher = new HorizontalSwitcher(120, true);
 		for (String s : AnimationHandler.getCustomAnimationNames()) {
 			this.animationSwitcher.addValue(s);
@@ -101,11 +101,9 @@ public class BackgroundOptionsPopup extends FMPopup {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
 					File f = new File(call);
-					//---
 					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 						f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
 					}
-					//----------------------
 					if (f.isFile()) {
 						String filename = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(f.getName());
 						if (filename.equals(f.getName())) {
@@ -133,7 +131,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 			PopupHandler.displayPopup(cf);
 		});
 		this.addButton(chooseTextureButton);
-		
+
 		this.setPanoramaButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.backgroundoptions.panoramas.set"), true, (press) -> {
 			if (this.panoramaSwitcher.getSelectedValue() != null) {
 				if (PanoramaHandler.panoramaExists(this.panoramaSwitcher.getSelectedValue())) {
@@ -292,12 +290,12 @@ public class BackgroundOptionsPopup extends FMPopup {
 		});
 		this.clearImageButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.image.clear.btn.desc"), "%n%"));
 		this.addButton(clearImageButton);
-		
+
 		this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.done"), true, (press) -> {
 			this.setDisplayed(false);
 		});
 		this.addButton(this.doneButton);
-		
+
 		KeyboardHandler.addKeyPressedListener(this::onEnterPressed);
 		KeyboardHandler.addKeyPressedListener(this::onEscapePressed);
 	}
@@ -305,13 +303,13 @@ public class BackgroundOptionsPopup extends FMPopup {
 	@Override
 	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
 		super.render(matrix, mouseX, mouseY, renderIn);
-		
+
 		if (this.isDisplayed()) {
 
 			List<String> typeDescription = null;
 
 			drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), renderIn.width / 2, (renderIn.height / 2) - 110, -1);
-			
+
 			this.typeSwitcher.render(matrix, (renderIn.width / 2) - (this.typeSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 85);
 
 			this.chooseTextureButton.visible = false;
@@ -338,10 +336,10 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 				this.setAnimationButton.x = (renderIn.width / 2) - (this.setAnimationButton.getWidth() / 2);
 				this.setAnimationButton.y = (renderIn.height / 2) - 5;
-				
+
 				this.clearAnimationButton.x = (renderIn.width / 2) - (this.clearAnimationButton.getWidth() / 2);
 				this.clearAnimationButton.y = (renderIn.height / 2) + 20;
-				
+
 				this.setAnimationButton.visible = true;
 				this.clearAnimationButton.visible = true;
 
@@ -364,16 +362,16 @@ public class BackgroundOptionsPopup extends FMPopup {
 				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.panoramaSwitcher.render(matrix, (renderIn.width / 2) - (this.panoramaSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
-				
+
 				this.setPanoramaButton.x = (renderIn.width / 2) - (this.setPanoramaButton.getWidth() / 2);
 				this.setPanoramaButton.y = (renderIn.height / 2) - 5;
-				
+
 				this.clearPanoramaButton.x = (renderIn.width / 2) - (this.clearPanoramaButton.getWidth() / 2);
 				this.clearPanoramaButton.y = (renderIn.height / 2) + 20;
-				
+
 				this.setPanoramaButton.visible = true;
 				this.clearPanoramaButton.visible = true;
-				
+
 			} else if (selectedType.equals(Locals.localize("helper.creator.backgroundoptions.backgroundslideshow"))) {
 
 				typeDescription = Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.slideshow.desc"), "%n%"));
@@ -381,16 +379,16 @@ public class BackgroundOptionsPopup extends FMPopup {
 				drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.helper.editor.backgrounds.choose"), renderIn.width / 2, (renderIn.height / 2) - 50, -1);
 
 				this.slideshowSwitcher.render(matrix, (renderIn.width / 2) - (this.slideshowSwitcher.getTotalWidth() / 2), (renderIn.height / 2) - 35);
-				
+
 				this.setSlideshowButton.x = (renderIn.width / 2) - (this.setSlideshowButton.getWidth() / 2);
 				this.setSlideshowButton.y = (renderIn.height / 2) - 5;
-				
+
 				this.clearSlideshowButton.x = (renderIn.width / 2) - (this.clearSlideshowButton.getWidth() / 2);
 				this.clearSlideshowButton.y = (renderIn.height / 2) + 20;
-				
+
 				this.setSlideshowButton.visible = true;
 				this.clearSlideshowButton.visible = true;
-				
+
 			} else if (isCustomType(this.typeSwitcher.getSelectedValueIndex())) {
 
 				MenuBackgroundType t = this.customBackgroundTypes.get(this.typeSwitcher.getSelectedValueIndex());
@@ -457,10 +455,10 @@ public class BackgroundOptionsPopup extends FMPopup {
 			}
 
 			this.lastSelectedTypeIndex = this.typeSwitcher.getSelectedValueIndex();
-			
+
 			this.doneButton.x = (renderIn.width / 2) - (this.doneButton.getWidth() / 2);
 			this.doneButton.y = (renderIn.height / 2) + 85;
-			
+
 			this.renderButtons(matrix, mouseX, mouseY);
 
 			if ((typeDescription != null) && !typeDescription.isEmpty()) {
@@ -477,13 +475,13 @@ public class BackgroundOptionsPopup extends FMPopup {
 
 		}
 	}
-	
+
 	public void onEnterPressed(KeyboardData d) {
 		if ((d.keycode == 257) && this.isDisplayed()) {
 			this.setDisplayed(false);
 		}
 	}
-	
+
 	public void onEscapePressed(KeyboardData d) {
 		if ((d.keycode == 256) && this.isDisplayed()) {
 			this.setDisplayed(false);

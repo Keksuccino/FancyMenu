@@ -1,18 +1,23 @@
 package de.keksuccino.fancymenu.api.placeholder;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO übernehmen (deprecated)
 /**
  * A placeholder text container.<br><br>
  *
  * Needs to be registered to the {@link PlaceholderTextRegistry}.
  */
+@Deprecated
 public abstract class PlaceholderTextContainer {
 
     private final String placeholderIdentifier;
 
+    @Deprecated
     public PlaceholderTextContainer(@Nonnull String uniquePlaceholderIdentifier) {
         this.placeholderIdentifier = uniquePlaceholderIdentifier;
     }
@@ -27,6 +32,7 @@ public abstract class PlaceholderTextContainer {
      * @param rawIn The raw string with placeholders.
      * @return The given string with real values instead of placeholders.
      */
+    @Deprecated
     public abstract String replacePlaceholders(String rawIn);
 
     /**
@@ -37,11 +43,12 @@ public abstract class PlaceholderTextContainer {
      *
      * @return The placeholder.
      */
+    @Deprecated
     public abstract String getPlaceholder();
 
     /**
      * Returns the category of this placeholder.<br>
-     * Placeholders get categorized in the {@link de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup}.<br><br>
+     * Placeholders get categorized in the {@link PlaceholderInputPopup}.<br><br>
      *
      * When returning <b>NULL</b>, the placeholder will be put into the "Other" category.<br><br>
      *
@@ -49,6 +56,7 @@ public abstract class PlaceholderTextContainer {
      *
      * @return The category of the placeholder.
      */
+    @Deprecated
     public abstract String getCategory();
 
     /**
@@ -59,21 +67,24 @@ public abstract class PlaceholderTextContainer {
      *
      * @return The display name.
      */
+    @Deprecated
     public abstract String getDisplayName();
 
     /**
      * The description of this placeholder.<br>
-     * Is displayed when hovering over the button for this placeholder in the {@link de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup}.<br><br>
+     * Is displayed when hovering over the button for this placeholder in the {@link PlaceholderInputPopup}.<br><br>
      *
      * Every string in the returned string array is one line of text in the button tooltip.
      *
      * @return The placeholder description.
      */
+    @Deprecated
     public abstract String[] getDescription();
 
     /**
      * @return The unique identifier of the placeholder.
      */
+    @Deprecated
     public String getIdentifier() {
         return this.placeholderIdentifier;
     }
@@ -87,6 +98,7 @@ public abstract class PlaceholderTextContainer {
      * @param in The raw string the method should search for the placeholder.
      * @param placeholderBase The prefix of the placeholder. Example: "%placeholder:"
      */
+    @Deprecated
     public static List<String> getPlaceholdersWithValue(String in, String placeholderBase) {
         List<String> l = new ArrayList<String>();
         try {
@@ -115,6 +127,7 @@ public abstract class PlaceholderTextContainer {
         return l;
     }
 
+    @Deprecated
     public static String getPlaceholderWithoutPercentPrefixSuffix(String placeholderWithPrefixSuffix) {
         return placeholderWithPrefixSuffix.substring(1, placeholderWithPrefixSuffix.length()-1);
     }

@@ -2,12 +2,9 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -15,7 +12,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -39,7 +35,6 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 		if ((this.action != null) && (this.parent != null)) {
 
-			//TODO übernehmen
 			if (this.action.equalsIgnoreCase("addhoversound")) {
 				this.value = fixBackslashPath(item.getEntryValue("path"));
 				if (this.value != null) {
@@ -56,7 +51,6 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 					}
 				}
 			}
-			//------------------------
 
 			if (this.action.equalsIgnoreCase("sethoverlabel")) {
 				this.hoverLabelRaw = item.getEntryValue("label");
@@ -76,13 +70,13 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				String x = item.getEntryValue("x");
 				String y = item.getEntryValue("y");
 				if (x != null) {
-					x = DynamicValueHelper.convertFromRaw(x);
+					x = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(x);
 					if (MathUtils.isInteger(x)) {
 						this.posX = Integer.parseInt(x);
 					}
 				}
 				if (y != null) {
-					y = DynamicValueHelper.convertFromRaw(y);
+					y = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(y);
 					if (MathUtils.isInteger(y)) {
 						this.posY = Integer.parseInt(y);
 					}
@@ -160,6 +154,13 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				this.parent.getButton().y = this.getPosY(menu);
 			}
 
+			//TODO übernehmen
+			if (action.equalsIgnoreCase("resizebutton")) {
+				this.parent.getButton().setWidth(this.getWidth());
+				this.parent.getButton().setHeight(this.getHeight());
+			}
+			//--------------------
+
 		}
 	}
 
@@ -168,7 +169,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 			if (this.labelRaw != null) {
 				if (!isEditorActive()) {
-					this.value = DynamicValueHelper.convertFromRaw(this.labelRaw);
+					this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.labelRaw);
 				} else {
 					this.value = StringUtils.convertFormatCodes(this.labelRaw, "&", "§");
 				}
@@ -178,7 +179,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 		if (this.action.equals("sethoverlabel")) {
 			if (this.hoverLabelRaw != null) {
 				if (!isEditorActive()) {
-					this.value = DynamicValueHelper.convertFromRaw(this.hoverLabelRaw);
+					this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.hoverLabelRaw);
 				} else {
 					this.value = StringUtils.convertFormatCodes(this.hoverLabelRaw, "&", "§");
 				}

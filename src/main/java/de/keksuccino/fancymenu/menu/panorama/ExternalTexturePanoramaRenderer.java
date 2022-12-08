@@ -137,8 +137,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 			float pitch = Mth.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;
 
-			Tesselator tessellator = Tesselator.getInstance();
-			BufferBuilder bufferBuilder = tessellator.getBuilder();
+			Tesselator tesselator = Tesselator.getInstance();
+			BufferBuilder bufferBuilder = tesselator.getBuilder();
 			Matrix4f matrix4f = Matrix4f.perspective(this.fov, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
 			RenderSystem.setProjectionMatrix(matrix4f);
@@ -214,7 +214,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 							bufferBuilder.vertex(1.0D, 1.0D, 1.0D).uv(1.0F, 0.0F).color(255, 255, 255, l).endVertex();
 						}
 
-						tessellator.end();
+						tesselator.end();
 					}
 				}
 

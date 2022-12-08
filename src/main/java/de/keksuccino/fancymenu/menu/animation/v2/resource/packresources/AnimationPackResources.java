@@ -48,6 +48,7 @@ public abstract class AnimationPackResources extends AbstractPackResources {
         return null;
     }
 
+    //TODO Forge Only - Mixins needed in Fabric version: Override 'updatePackList' in 'PackScreen'
     @Override
     public boolean isHidden() {
         return true;

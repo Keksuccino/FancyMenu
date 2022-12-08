@@ -34,7 +34,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.menu.fancy.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -57,6 +57,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomiz
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -87,8 +88,10 @@ public class MenuHandlerBase extends GuiComponent {
 
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuHandlerBase");
 
-	protected List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
-	protected List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
+	//TODO übernehmen (public)
+	public List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
+	public List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
+	//--------------------------
 	
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected IAnimationRenderer backgroundAnimation = null;
@@ -104,6 +107,8 @@ public class MenuHandlerBase extends GuiComponent {
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
+	//TODO übernehmen
+	protected String customMenuTitle = null;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
@@ -236,6 +241,9 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.sharedLayoutProps = new SharedLayoutProperties();
 
+		//TODO übernehmen
+		this.customMenuTitle = null;
+
 		for (PropertiesSet s : rawLayouts) {
 			
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -255,7 +263,10 @@ public class MenuHandlerBase extends GuiComponent {
 
 			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
 			if (cusMenuTitle != null) {
-				e.getScreen().title = Component.literal(cusMenuTitle);
+				//TODO übernehmen
+				this.customMenuTitle = cusMenuTitle;
+				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
+				//--------------------------
 			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -665,12 +676,10 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 				if (value != null) {
 					File f = new File(value.replace("\\", "/"));
-					//---
 					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 						value = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + value.replace("\\", "/");
 						f = new File(value);
 					}
-					//----------------------
 					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
 							this.backgroundTexture = TextureHandler.getResource(value);
@@ -828,22 +837,27 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 
+			//TODO übernehmen
 			if (action.equalsIgnoreCase("resizebutton")) {
-				String width = sec.getEntryValue("width");
-				String height = sec.getEntryValue("height");
-				if (width != null) {
-					width = DynamicValueHelper.convertFromRaw(width);
-				}
-				if (height != null) {
-					height = DynamicValueHelper.convertFromRaw(height);
-				}
-				if ((width != null) && (height != null) && (b != null)) {
-					if (MathUtils.isInteger(width) && MathUtils.isInteger(height)) {
-						b.setWidth(Integer.parseInt(width));
-						b.setHeight(Integer.parseInt(height));
-					}
+//				String width = sec.getEntryValue("width");
+//				String height = sec.getEntryValue("height");
+//				if (width != null) {
+//					width = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(width);
+//				}
+//				if (height != null) {
+//					height = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(height);
+//				}
+//				if ((width != null) && (height != null) && (b != null)) {
+//					if (MathUtils.isInteger(width) && MathUtils.isInteger(height)) {
+//						b.setWidth(Integer.parseInt(width));
+//						b.setHeight(Integer.parseInt(height));
+//					}
+//				}
+				if (b != null) {
+					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
+			//--------------------
 
 			if (action.equalsIgnoreCase("movebutton")) {
 				if (b != null) {
@@ -1087,7 +1101,7 @@ public class MenuHandlerBase extends GuiComponent {
 				if (b != null) {
 					String desc = sec.getEntryValue("description");
 					if (desc != null) {
-						this.sharedLayoutProps.descriptions.put(bd, DynamicValueHelper.convertFromRaw(desc));
+						this.sharedLayoutProps.descriptions.put(bd, de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(desc));
 					}
 				}
 			}
@@ -1276,6 +1290,11 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 		if (!MenuCustomization.isMenuCustomizable(e.getScreen())) {
 			return;
+		}
+
+		//TODO übernehmen
+		if (this.customMenuTitle != null) {
+			e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle));
 		}
 
 		if (!this.backgroundDrawable) {
@@ -1494,12 +1513,10 @@ public class MenuHandlerBase extends GuiComponent {
 				if (c != null) {
 					if (c.clickSound != null) {
 						File f = new File(c.clickSound);
-						//---
 						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							c.clickSound = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + c.clickSound;
 							f = new File(c.clickSound);
 						}
-						//----------------------
 						if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
 
 							SoundHandler.registerSound(f.getPath(), f.getPath());
@@ -1598,12 +1615,10 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 					} else {
 						File f = new File(background);
-						//---
 						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 							background = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + background;
 							f = new File(background);
 						}
-						//----------------------
 						if (f.isFile()) {
 							if (f.getPath().toLowerCase().endsWith(".gif")) {
 								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
@@ -1682,7 +1697,8 @@ public class MenuHandlerBase extends GuiComponent {
 		return this.vanillaButtonCustomizations.get(w);
 	}
 
-	protected CustomizationItemBase getItemByActionId(String actionId) {
+	//TODO übernehmen (public)
+	public CustomizationItemBase getItemByActionId(String actionId) {
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
@@ -1861,12 +1877,10 @@ public class MenuHandlerBase extends GuiComponent {
 			if (!this.layouts.isEmpty()) {
 				if ((this.onlyFirstTime || !MenuCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
 					File f = new File(this.lastLayoutPath);
-					//---
 					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 						this.lastLayoutPath = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + this.lastLayoutPath;
 						f = new File(this.lastLayoutPath);
 					}
-					//----------------------
 					if (f.exists()) {
 						for (PropertiesSet s : this.layouts) {
 							List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.text;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.DynamicValueInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
@@ -89,11 +89,9 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }, "txt");
                 if (i.source != null) {
                     File f = new File(i.source);
-                    //---
                     if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                         f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + i.source);
                     }
-                    //----------------------
                     if (f.isFile()) {
                         p.setText(i.source);
                     }
@@ -105,7 +103,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 if (i.sourceMode == TextCustomizationItem.SourceMode.WEB_SOURCE) {
                     popupTitle = Locals.localize("fancymenu.customization.items.text.set_source.web");
                 }
-                DynamicValueInputPopup p = new DynamicValueInputPopup(new Color(0,0,0,0), popupTitle, null, 240, (call) -> {
+                PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), popupTitle, null, 240, (call) -> {
                     if (call != null) {
                         if (call.length() == 0) {
                             if (i.source != null) {

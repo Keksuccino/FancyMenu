@@ -22,7 +22,6 @@ public class PanoramaHandler {
 	}
 	
 	public static void updatePanoramas() {
-		//---
 		File f = FancyMenu.getPanoramaPath();
 		if (!f.exists()) {
 			f.mkdirs();

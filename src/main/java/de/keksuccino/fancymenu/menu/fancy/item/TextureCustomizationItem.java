@@ -27,21 +27,19 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 			this.value = fixBackslashPath(item.getEntryValue("path"));
 			if (this.value != null) {
 				this.value = this.value.replace("\\", "/");
+				
 				File f = new File(this.value);
-				//---
 				String finalValue = this.value;
 				if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
 					finalValue = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + this.value;
 					f = new File(finalValue);
 				}
-				//----------------------
 				if (f.exists() && f.isFile() && (f.getName().endsWith(".png") || f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".gif"))) {
 					try {
 						int w = 0;
 					    int h = 0;
 					    double ratio;
 
-						//---
 						if (f.getName().endsWith(".gif")) {
 							this.gif = TextureHandler.getGifResource(finalValue);
 							if (this.gif != null) {
@@ -52,10 +50,9 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 							this.texture = TextureHandler.getResource(finalValue);
 							if (this.texture != null) {
 								w = this.texture.getWidth();
-							    h = this.texture.getHeight();
+								h = this.texture.getHeight();
 							}
 						}
-						//----------------------
 						
 						ratio = (double) w / (double) h;
 
