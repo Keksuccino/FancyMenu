@@ -34,7 +34,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -53,7 +52,6 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
@@ -88,10 +86,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuHandlerBase");
 
-	//TODO übernehmen (public)
 	public List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
 	public List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
-	//--------------------------
 	
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected IAnimationRenderer backgroundAnimation = null;
@@ -107,7 +103,6 @@ public class MenuHandlerBase extends GuiComponent {
 	protected boolean panoMoveBack = false;
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
-	//TODO übernehmen
 	protected String customMenuTitle = null;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
@@ -241,7 +236,6 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.sharedLayoutProps = new SharedLayoutProperties();
 
-		//TODO übernehmen
 		this.customMenuTitle = null;
 
 		for (PropertiesSet s : rawLayouts) {
@@ -263,10 +257,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
 			if (cusMenuTitle != null) {
-				//TODO übernehmen
 				this.customMenuTitle = cusMenuTitle;
 				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
-				//--------------------------
 			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -837,27 +829,11 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 
-			//TODO übernehmen
 			if (action.equalsIgnoreCase("resizebutton")) {
-//				String width = sec.getEntryValue("width");
-//				String height = sec.getEntryValue("height");
-//				if (width != null) {
-//					width = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(width);
-//				}
-//				if (height != null) {
-//					height = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(height);
-//				}
-//				if ((width != null) && (height != null) && (b != null)) {
-//					if (MathUtils.isInteger(width) && MathUtils.isInteger(height)) {
-//						b.setWidth(Integer.parseInt(width));
-//						b.setHeight(Integer.parseInt(height));
-//					}
-//				}
 				if (b != null) {
 					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
-			//--------------------
 
 			if (action.equalsIgnoreCase("movebutton")) {
 				if (b != null) {
@@ -997,16 +973,6 @@ public class MenuHandlerBase extends GuiComponent {
 					backgroundRenderItems.add(new SlideshowCustomizationItem(sec));
 				} else {
 					frontRenderItems.add(new SlideshowCustomizationItem(sec));
-				}
-			}
-
-			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-				if (action.equalsIgnoreCase("addentity")) {
-					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(new PlayerEntityCustomizationItem(sec));
-					} else {
-						frontRenderItems.add(new PlayerEntityCustomizationItem(sec));
-					}
 				}
 			}
 
@@ -1292,7 +1258,6 @@ public class MenuHandlerBase extends GuiComponent {
 			return;
 		}
 
-		//TODO übernehmen
 		if (this.customMenuTitle != null) {
 			e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle));
 		}
@@ -1697,7 +1662,6 @@ public class MenuHandlerBase extends GuiComponent {
 		return this.vanillaButtonCustomizations.get(w);
 	}
 
-	//TODO übernehmen (public)
 	public CustomizationItemBase getItemByActionId(String actionId) {
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
 			if (c instanceof VanillaButtonCustomizationItem) {

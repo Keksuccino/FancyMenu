@@ -1,7 +1,5 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.gui;
 
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;

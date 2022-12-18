@@ -19,7 +19,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutPlayerEntity;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutShape;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSlideshow;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
@@ -31,8 +30,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.La
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
-import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.*;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
@@ -355,10 +352,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							int h = Integer.parseInt(height);
 							van.object.setWidth(w);
 							van.object.setHeight(h);
-							//TODO übernehmen
 							van.object.advancedWidth = sec.getEntryValue("advanced_width");
 							van.object.advancedHeight = sec.getEntryValue("advanced_height");
-							//-------------------------
 						}
 					}
 
@@ -374,10 +369,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							van.object.orientation = orientation;
 							van.object.posX = x;
 							van.object.posY = y;
-							//TODO übernehmen
 							van.object.advancedPosX = sec.getEntryValue("advanced_posx");
 							van.object.advancedPosY = sec.getEntryValue("advanced_posy");
-							//----------------------
 							van.object.orientationElementIdentifier = sec.getEntryValue("orientation_element");
 						}
 					}
@@ -799,39 +792,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								van.object.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
 								van.customizationContainer.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
 							}
-						}
-					}
-
-					if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-						if (action.equalsIgnoreCase("addentity")) {
-							LayoutPlayerEntity o = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(sec), this);
-
-							String playername = sec.getEntryValue("playername");
-							if ((playername != null) && (playername.replace(" ", "").equals("%playername%"))) {
-								o.isCLientPlayerName = true;
-							}
-
-							String capePath = sec.getEntryValue("capepath");
-							if (capePath != null) {
-								o.capePath = capePath;
-							}
-
-							String capeUrl = sec.getEntryValue("capeurl");
-							if (capeUrl != null) {
-								o.capeUrl = capeUrl;
-							}
-
-							String skinPath = sec.getEntryValue("skinpath");
-							if (skinPath != null) {
-								o.skinPath = skinPath;
-							}
-
-							String skinUrl = sec.getEntryValue("skinurl");
-							if (skinUrl != null) {
-								o.skinUrl = skinUrl;
-							}
-
-							con.add(o);
 						}
 					}
 

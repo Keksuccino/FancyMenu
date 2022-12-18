@@ -300,7 +300,6 @@ public class LayoutButton extends LayoutElement {
 		if (this.actionType != null) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("actionid", this.object.getActionId());
-			//TODO übernehmen
 			if (this.object.advancedPosX != null) {
 				s.addEntry("advanced_posx", this.object.advancedPosX);
 			}
@@ -313,7 +312,6 @@ public class LayoutButton extends LayoutElement {
 			if (this.object.advancedHeight != null) {
 				s.addEntry("advanced_height", this.object.advancedHeight);
 			}
-			//-------------------------
 			if (this.object.delayAppearance) {
 				s.addEntry("delayappearance", "true");
 				s.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

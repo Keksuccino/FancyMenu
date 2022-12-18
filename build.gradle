@@ -1,41 +1,51 @@
+
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
-		maven { url = 'https://repo.spongepowered.org/maven' }
+        maven { url = 'https://repo.spongepowered.org/maven' }
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1+', changing: true
-		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
     }
 }
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
+
+plugins {
+    id 'eclipse'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '5.1.+'
+}
+
 apply plugin: 'org.spongepowered.mixin'
 
 version = '1.0.0'
-group = 'de.keksuccino.fancymenu'
+group = 'de.keksuccino'
 archivesBaseName = 'fancymenu'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-compileJava {
-    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-}
 
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
-
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
 
-//    mappings channel: 'official', version: '1.19.2'
-    mappings channel: 'official', version: '1.19.1'
+    mappings channel: 'official', version: '1.19.3'
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
         client {
             workingDirectory project.file('run')
-            arg "-mixin.config=fancymenu.general.mixin.json"
+            property 'forge.enabledGameTestNamespaces', 'konkrete'
+			arg "-mixin.config=fancymenu.general.mixin.json"
+            mods {
+                fancymenu {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run_server')
+            property 'forge.enabledGameTestNamespaces', 'konkrete'
+			arg "-mixin.config=fancymenu.general.mixin.json"
             mods {
                 fancymenu {
                     source sourceSets.main
@@ -43,24 +53,18 @@ minecraft {
             }
         }
     }
+	
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-    // Put repositories for dependencies here
-    // ForgeGradle automatically adds the Forge maven and Maven Central for you
-
-    // If you have mod jar dependencies in ./libs, you can declare them as a repository like so:
-    // flatDir {
-    //     dir 'libs'
-    // }
+    
 }
 
 dependencies {
 
-//    minecraft 'net.minecraftforge:forge:1.19.2-43.1.1'
-    minecraft 'net.minecraftforge:forge:1.19.1-42.0.0'
+    minecraft 'net.minecraftforge:forge:1.19.3-44.0.5'
 	
 	implementation fileTree('libs') { include '*.jar' }
 
@@ -76,23 +80,35 @@ mixin {
 jar {
     manifest {
         attributes([
-            "Specification-Title": "FancyMenu",
-            "Specification-Vendor": "Keksuccino",
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"Keksuccino",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-            "Signing-Fingerprint": project.hasProperty('fingerprint') ? project.property('fingerprint') : 'unsigned',
-			"TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            "TweakOrder": 0,
-            "MixinConfigs" : "fancymenu.general.mixin.json"
+                "Specification-Title"     : "FancyMenu",
+                "Specification-Vendor"    : "Keksuccino",
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : project.jar.archiveVersion,
+                "Implementation-Vendor"   : "Keksuccino",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+				"TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": 0,
+                "MixinConfigs" : "fancymenu.general.mixin.json"
         ])
     }
 }
 
-
 jar.finalizedBy('reobfJar')
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
+}
 
-
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}

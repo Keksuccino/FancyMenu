@@ -17,7 +17,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -163,8 +163,7 @@ public class ButtonCache {
 		List<Long> ids = new ArrayList<Long>();
 		try {
 			//Resetting the button list
-			Field f0 = ReflectionHelper.findField(Screen.class, "f_169369_"); //renderables
-			f0.set(s, new ArrayList<Widget>());
+			s.renderables.clear();
 
 			//Setting all important values for the GuiScreen to be able to initialize itself
 			Field f1 = ReflectionHelper.findField(Screen.class, "f_96542_"); //itemRenderer
@@ -176,9 +175,8 @@ public class ButtonCache {
 			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 
 			//Reflecting the buttons list field to cache all buttons of the menu
-			Field f = ReflectionHelper.findField(Screen.class, "f_169369_"); //renderables
 
-			for (Widget d : (List<Widget>) f.get(s)) {
+			for (Renderable d : s.renderables) {
 				if (d instanceof AbstractWidget) {
 					AbstractWidget w = (AbstractWidget) d;
 					String idRaw = w.x + "" + w.y;

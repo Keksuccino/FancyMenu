@@ -10,8 +10,7 @@ import java.util.Map;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
+import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -203,7 +202,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 
 			matrix.pushPose();
 			matrix.translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
-			matrix.mulPose(Vector3f.ZP.rotationDegrees(this.rotation));
+			matrix.mulPose(Axis.ZP.rotationDegrees(this.rotation));
 			matrix.scale(f, f, f);
 
 			int alpha = this.basecolor.getAlpha();

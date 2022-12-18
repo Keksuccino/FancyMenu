@@ -381,19 +381,16 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 			s.addEntry("x", "" + this.object.posX);
 			s.addEntry("y", "" + this.object.posY);
-			//TODO übernehmen
 			if (this.object.advancedPosX != null) {
 				s.addEntry("advanced_posx", this.object.advancedPosX);
 			}
 			if (this.object.advancedPosY != null) {
 				s.addEntry("advanced_posy", this.object.advancedPosY);
 			}
-			//-------------------
 			l.add(s);
 		}
 
 		// resizebutton
-		//TODO übernehmen
 		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height) || (this.object.advancedHeight != null) || (this.object.advancedWidth != null))) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "resizebutton");
@@ -408,7 +405,6 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 			l.add(s);
 		}
-		//----------------------
 
 		// renamebutton
 		if (this.customizationContainer.customButtonLabel != null) {

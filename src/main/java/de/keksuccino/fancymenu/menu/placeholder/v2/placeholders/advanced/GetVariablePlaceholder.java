@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.advanced;
 
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;

@@ -53,7 +53,6 @@ public class LegacyVisibilityRequirements {
         }, null, null, null);
         requirements.add(worldLoaded);
 
-        //TODO übernehmen
         /** Is Window Width **/
         String windowWidthValuePreset = container.vrWindowWidth;;
         if ((windowWidthValuePreset == null) || (windowWidthValuePreset.length() <= 0)) {
@@ -75,9 +74,7 @@ public class LegacyVisibilityRequirements {
             }
         }, null, windowWidthValuePreset);
         requirements.add(windowWidth);
-        //----------------------------
 
-        //TODO übernehmen
         /** Is Window Height **/
         String windowHeightValuePreset = container.vrWindowHeight;
         if (windowHeightValuePreset == null) {
@@ -99,9 +96,7 @@ public class LegacyVisibilityRequirements {
             }
         }, multiIntegerFilter, windowHeightValuePreset);
         requirements.add(windowHeight);
-        //------------------------
 
-        //TODO übernehmen
         /** Window Width Bigger Than **/
         String windowWidthBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan");
         String windowWidthBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc", "" + Minecraft.getInstance().getWindow().getWidth(), "" + Minecraft.getInstance().getWindow().getHeight());
@@ -119,9 +114,7 @@ public class LegacyVisibilityRequirements {
             }
         }, integerCharFilter, "" + container.vrWindowWidthBiggerThan);
         requirements.add(windowWidthBiggerThan);
-        //---------------------------------
 
-        //TODO übernehmen
         /** Window Height Bigger Than **/
         String windowHeightBiggerThanName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan");
         String windowHeightBiggerThanDesc = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.windowheightbiggerthan.desc", "" + Minecraft.getInstance().getWindow().getWidth(), "" + Minecraft.getInstance().getWindow().getHeight());
@@ -139,7 +132,6 @@ public class LegacyVisibilityRequirements {
             }
         }, integerCharFilter, "" + container.vrWindowHeightBiggerThan);
         requirements.add(windowHeightBiggerThan);
-        //-------------------------
 
         /** Button Hovered **/
         String buttonHoveredName = Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.buttonhovered");

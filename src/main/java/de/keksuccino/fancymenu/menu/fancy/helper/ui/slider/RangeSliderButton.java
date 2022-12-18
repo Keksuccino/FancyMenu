@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 public class RangeSliderButton extends AdvancedSliderButton {
 
-    private static final Logger LOGGER = LogManager.getLogger("fancymenu/RangeSliderButton");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public double minValue;
     public double maxValue;
@@ -18,7 +18,6 @@ public class RangeSliderButton extends AdvancedSliderButton {
         this.minValue = minRangeValue;
         this.maxValue = maxRangeValue;
         this.setSelectedRangeValue(selectedRangeValue);
-//        this.value = ((Mth.clamp((float)selectedRangeValue, minRangeValue, maxRangeValue) - minRangeValue) / (maxRangeValue - minRangeValue));
         this.updateMessage();
     }
 
@@ -29,6 +28,10 @@ public class RangeSliderButton extends AdvancedSliderButton {
 
     public int getSelectedRangeValue() {
         return (int) Mth.lerp(Mth.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
+    }
+
+    public double getSelectedRangeDoubleValue() {
+        return Mth.lerp(Mth.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
     }
 
     public void setSelectedRangeValue(double rangeValue) {

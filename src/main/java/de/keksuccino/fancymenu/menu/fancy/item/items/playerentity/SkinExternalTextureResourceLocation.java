@@ -1,48 +1,64 @@
-package de.keksuccino.fancymenu.menu.fancy.item.playerentity;
+package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
-import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
-public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
+public class SkinExternalTextureResourceLocation extends ExternalTextureResourceLocation {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected boolean loaded = false;
+    protected String path;
+    protected InputStream in;
     protected int width = 0;
     protected int height = 0;
-    protected ResourceLocation location = null;
-    protected String url;
+    protected ResourceLocation location;
 
-    public SkinWebTextureResourceLocation(String url) {
-        super(url);
-        this.url = url;
+    public SkinExternalTextureResourceLocation(String path) {
+        super(path);
+        this.path = path;
     }
 
     @Override
     public void loadTexture() {
+
         if (!this.loaded) {
             try {
+
                 if (Minecraft.getInstance().getTextureManager() == null) {
-                    System.out.println("################################ WARNING ################################");
-                    System.out.println("Can't load texture '" + this.url + "'! Minecraft TextureManager instance not ready yet!");
+                    LOGGER.error("[FANCYMENU] Can't load texture '" + this.path + "'! Minecraft TextureManager instance not ready yet!");
                     return;
                 }
 
-                URL u = new URL(this.url);
-                HttpURLConnection httpcon = (HttpURLConnection)u.openConnection();
-                httpcon.addRequestProperty("User-Agent", "Mozilla/4.0");
-                InputStream s = httpcon.getInputStream();
-                if (s == null) {
-                    return;
+                ExternalTextureResourceLocation exRL = TextureHandler.getResource(this.path);
+                if (exRL != null) {
+                    ResourceLocation loc = exRL.getResourceLocation();
+                    if (loc != null) {
+                        if (exRL.getHeight() >= 64) {
+                            this.width = exRL.getWidth();
+                            this.height = exRL.getHeight();
+                            this.location = loc;
+                            this.loaded = true;
+                            return;
+                        }
+                    }
                 }
 
-                NativeImage i = NativeImage.read(s);
+                File f = new File(this.path);
+                this.in = new FileInputStream(f);
+
+                NativeImage i = NativeImage.read(this.in);
                 this.width = i.getWidth();
                 this.height = i.getHeight();
                 //Converting old 1.7 skins to new 1.8+ skin format
@@ -84,15 +100,14 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
 
                     i = skinNew;
                 }
-                this.location = Minecraft.getInstance().getTextureManager().register(this.filterUrl(this.url), new SelfcleaningDynamicTexture(i));
-                s.close();
+                this.location = Minecraft.getInstance().getTextureManager().register("externaltexture", new SelfcleaningDynamicTexture(i));
                 this.loaded = true;
-            } catch (Exception var5) {
-                System.out.println("######################### ERROR #########################");
-                System.out.println("Can't load texture '" + this.url + "'! Invalid URL!");
-                System.out.println("#########################################################");
-                this.loaded = false;
-                var5.printStackTrace();
+            } catch (Exception var2) {
+                var2.printStackTrace();
+            }
+
+            if (this.in != null) {
+                IOUtils.closeQuietly(this.in);
             }
 
         }
@@ -114,19 +129,13 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
     }
 
     @Override
-    public String getURL() {
-        return this.url;
-    }
-
-    @Override
     public boolean isReady() {
         return this.loaded;
     }
 
-    protected String filterUrl(String url) {
-        CharacterFilter c = new CharacterFilter();
-        c.addAllowedCharacters(new String[]{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."});
-        return c.filterForAllowedChars(url.toLowerCase());
+    @Override
+    public String getPath() {
+        return this.path;
     }
 
     /** First X/Y pixel is 0 **/

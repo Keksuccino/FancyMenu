@@ -7,8 +7,7 @@ import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -17,8 +16,11 @@ import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
@@ -139,13 +141,13 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 			Tesselator tesselator = Tesselator.getInstance();
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			Matrix4f matrix4f = Matrix4f.perspective(this.fov, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+			Matrix4f matrix4f = new Matrix4f().setPerspective((float) this.fov, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
 			RenderSystem.setProjectionMatrix(matrix4f);
 			PoseStack matrix = RenderSystem.getModelViewStack();
 			matrix.pushPose();
 			matrix.setIdentity();
-			matrix.mulPose(Vector3f.XP.rotationDegrees(180.0F));
+			matrix.mulPose(Axis.XP.rotationDegrees(180.0F));
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -159,8 +161,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				float f = ((float)(j % 2) / 2.0F - 0.5F) / 256.0F;
 				float g = ((float)(j / 2) / 2.0F - 0.5F) / 256.0F;
 				matrix.translate((double)f, (double)g, 0.0D);
-				matrix.mulPose(Vector3f.XP.rotationDegrees(pitch));
-				matrix.mulPose(Vector3f.YP.rotationDegrees(yaw));
+				matrix.mulPose(Axis.XP.rotationDegrees(pitch));
+				matrix.mulPose(Axis.YP.rotationDegrees(yaw));
 				RenderSystem.applyModelViewMatrix();
 
 				for(int k = 0; k < 6; ++k) {

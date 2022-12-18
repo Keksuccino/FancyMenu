@@ -23,12 +23,10 @@ public class TextCustomizationItemContainer extends CustomizationItemContainer {
         TextCustomizationItem i = new TextCustomizationItem(this, new PropertiesSection("dummy"));
         i.width = 200;
         i.height = 40;
-        //TODO übernehmen
         Screen s = Minecraft.getInstance().screen;
         if ((s != null) && (s instanceof LayoutEditorScreen)) {
             i.posY = (int)(((LayoutEditorScreen)s).ui.bar.getHeight() * UIBase.getUIScale());
         }
-        //-------------------
         return i;
     }
 

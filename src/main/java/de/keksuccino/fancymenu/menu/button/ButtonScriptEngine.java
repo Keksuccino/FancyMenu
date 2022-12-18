@@ -88,13 +88,10 @@ public class ButtonScriptEngine {
 	
 	public static void runButtonAction(String action, String value) {
 		try {
-			//TODO übernehmen
 			if (value != null) {
 				value = PlaceholderParser.replacePlaceholders(value);
 			}
-			//-------------------
 			if (action.equalsIgnoreCase("openlink")) {
-				//TODO übernehmen
 				openWebLink(StringUtils.convertFormatCodes(value, "§", "&"));
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
@@ -255,7 +252,6 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("downloadfile")) {
 				if (value.contains(";")) {
-					//TODO übernehmen
 					String url = StringUtils.convertFormatCodes(cleanPath(value.split("[;]", 2)[0]), "§", "&");
 					String path = cleanPath(value.split("[;]", 2)[1]);
 					File f = new File(path);

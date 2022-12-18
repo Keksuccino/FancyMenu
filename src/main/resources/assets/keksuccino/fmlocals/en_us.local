@@ -1192,8 +1192,72 @@ fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered = Is Ele
 fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.desc = Check if an element is hovered.%n%Use its element ID to identify it.%n%%n%You can get the ID of an element%n%by right-clicking it in the editor.
 fancymenu.helper.editor.items.visibilityrequirements.is_element_hovered.valuename = Target Element ID
 
+fancymenu.helper.editor.items.playerentity = Player Entity
+fancymenu.helper.editor.items.playerentity.desc = A customizable player entity.
 
+fancymenu.helper.editor.items.playerentity.copy_client_player.off = Copy Client Player: §cOff
+fancymenu.helper.editor.items.playerentity.copy_client_player.on = Copy Client Player: §aOn
+fancymenu.helper.editor.items.playerentity.copy_client_player.desc = Automatically make the entity look%n%like the client player.%n%%n%Copies the name, skin and cape.
+fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled = §cYou can't do this while%n%§c"Copy Client Player" is enabled.
+fancymenu.helper.editor.items.playerentity.set_player_name = Set Player Name
+fancymenu.helper.editor.items.playerentity.set_player_name.desc = Set the player's name.%n%%n%You can use any name here,%n%it doesn't have to be an%n%existing user.
 
+fancymenu.helper.editor.items.playerentity.skin.auto.off = Auto Skin: §cOff
+fancymenu.helper.editor.items.playerentity.skin.auto.on = Auto Skin: §aOn
+fancymenu.helper.editor.items.playerentity.skin.auto.desc = Tries to automatically pick%n%the skin based on the%n%element's player name.
+fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled = §cYou can't do this while%n%§c"Auto Skin" is enabled.
+fancymenu.helper.editor.items.playerentity.skin.set = Set Skin Texture
+fancymenu.helper.editor.items.playerentity.skin.set.desc = Set the skin texture.%n%Supports local and web textures.
+fancymenu.helper.editor.items.playerentity.skin.set.local = Set Local Skin Texture
+fancymenu.helper.editor.items.playerentity.skin.set.web = Set Web Skin Texture
 
+fancymenu.helper.editor.items.playerentity.cape.auto.off = Auto Cape: §cOff
+fancymenu.helper.editor.items.playerentity.cape.auto.on = Auto Cape: §aOn
+fancymenu.helper.editor.items.playerentity.cape.auto.desc = Tries to automatically pick%n%the cape based on the%n%element's player name.
+fancymenu.helper.editor.items.playerentity.cape.auto.blocked_until_disabled = §cYou can't do this while%n%§c"Auto Cape" is enabled.
+fancymenu.helper.editor.items.playerentity.cape.set = Set Cape Texture
+fancymenu.helper.editor.items.playerentity.cape.set.desc = Set the cape texture.%n%Supports local and web textures.
+fancymenu.helper.editor.items.playerentity.cape.set.local = Set Local Cape Texture
+fancymenu.helper.editor.items.playerentity.cape.set.web = Set Web Cape Texture
+
+fancymenu.helper.editor.items.playerentity.scale = Set Entity Scale
+fancymenu.helper.editor.items.playerentity.scale.desc = Set the entity's scale.%n%%n%Default scale is 30.
+
+fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.off = Follow Mouse: §cOff
+fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.on = Follow Mouse: §aOn
+fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.desc = If enabled, the player will follow%n%the mouse cursor.
+fancymenu.helper.editor.items.playerentity.rotation.custom = Set Player Rotation
+fancymenu.helper.editor.items.playerentity.rotation.custom.desc = Set the player head and body rotation.
+fancymenu.helper.editor.items.playerentity.rotation.custom.disabled = §cYou can't do this while%n%§c"Follow Mouse" is enabled.
+fancymenu.helper.editor.items.playerentity.rotation.bodyx = Body X Rotation: {}
+fancymenu.helper.editor.items.playerentity.rotation.bodyy = Body Y Rotation: {}
+fancymenu.helper.editor.items.playerentity.rotation.headx = Head X Rotation: {}
+fancymenu.helper.editor.items.playerentity.rotation.heady = Head Y Rotation: {}
+
+fancymenu.helper.editor.items.playerentity.slim.off = Slim Skin: §cOff
+fancymenu.helper.editor.items.playerentity.slim.on = Slim Skin: §aOn
+fancymenu.helper.editor.items.playerentity.slim.desc = If the skin should be slim.
+
+fancymenu.helper.editor.items.playerentity.crouching.off = Crouching: §cOff
+fancymenu.helper.editor.items.playerentity.crouching.on = Crouching: §aOn
+fancymenu.helper.editor.items.playerentity.crouching.desc = If the player should crouch.
+
+fancymenu.helper.editor.items.playerentity.show_name.off = Show Player Name: §cOff
+fancymenu.helper.editor.items.playerentity.show_name.on = Show Player Name: §aOn
+fancymenu.helper.editor.items.playerentity.show_name.desc = If the player name should be visible.
+
+fancymenu.helper.editor.items.playerentity.parrot.off = Parrot: §cOff
+fancymenu.helper.editor.items.playerentity.parrot.on = Parrot: §aOn
+fancymenu.helper.editor.items.playerentity.parrot.desc = If the player should have a parrot%n%on their shoulder.
+
+fancymenu.helper.editor.items.playerentity.parrot_left.off = Parrot On Left Shoulder: §cOff
+fancymenu.helper.editor.items.playerentity.parrot_left.on = Parrot On Left Shoulder: §aOn
+fancymenu.helper.editor.items.playerentity.parrot_left.desc = If the player's shoulder parrot%n%should be on the left shoulder.
+
+fancymenu.helper.editor.items.playerentity.baby.off = Is Baby: §cOff
+fancymenu.helper.editor.items.playerentity.baby.on = Is Baby: §aOn
+fancymenu.helper.editor.items.playerentity.baby.desc = If the player should be a baby.
+
+fancymenu.guicomponents.cancel = Cancel
 
 

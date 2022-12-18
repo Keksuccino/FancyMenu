@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
+import de.keksuccino.fancymenu.mixin.client.IMixinTitleScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -29,7 +30,8 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.CubeMap;
@@ -251,9 +253,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 
 	private void renderButtons(ScreenEvent.BackgroundRendered e, int mouseX, int mouseY) {
-		List<Widget> buttons = this.getButtonList(e.getScreen());
+		List<Renderable> buttons = e.getScreen().renderables;
 		float partial = Minecraft.getInstance().getFrameTime();
-
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
 				buttons.get(i).render(CurrentScreenHandler.getPoseStack(), mouseX, mouseY, partial);
@@ -263,13 +264,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	private void drawRealmsNotification(PoseStack matrix, Screen gui) {
 		if (Minecraft.getInstance().options.realmsNotifications().get()) {
-			Field f = ReflectionHelper.findField(TitleScreen.class, "f_96726_"); //realmsNotificationScreen
-			Screen realms = null;
-			try {
-				realms = (Screen) f.get(gui);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			Screen realms = ((IMixinTitleScreen)gui).getRealmsNotificationsScreenFancyMenu();
 			if (realms != null) {
 				//render
 				realms.render(matrix, (int)Minecraft.getInstance().mouseHandler.xpos(), (int)Minecraft.getInstance().mouseHandler.ypos(), Minecraft.getInstance().getFrameTime());
@@ -277,28 +272,14 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 
-	private List<Widget> getButtonList(Screen gui) {
-		List<Widget> buttons = new ArrayList<Widget>();
-		try {
-			Field f = ReflectionHelper.findField(Screen.class, "f_169369_"); //renderables
-			try {
-				buttons = (List<Widget>) f.get(gui);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return buttons;
-	}
-
+	//TODO 1.19.3 remove final from fading field
 	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
-		try {
-			Field f = ReflectionHelper.findField(TitleScreen.class, "f_96714_"); //fading
-			f.setBoolean(s, showFadeIn);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			Field f = ReflectionHelper.findField(TitleScreen.class, "f_96714_"); //fading
+//			f.setBoolean(s, showFadeIn);
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 
 }
