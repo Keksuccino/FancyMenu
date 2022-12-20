@@ -20,7 +20,7 @@ public class MinecraftVersionPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return SharedConstants.getCurrentVersion().getReleaseTarget();
+        return SharedConstants.getCurrentVersion().getName();
     }
 
     @Override

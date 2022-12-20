@@ -22,7 +22,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutPlayerEntity;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutShape;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSlideshow;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
@@ -34,7 +33,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.La
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
-import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
@@ -794,39 +792,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								van.object.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
 								van.customizationContainer.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
 							}
-						}
-					}
-
-					if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-						if (action.equalsIgnoreCase("addentity")) {
-							LayoutPlayerEntity o = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(sec), this);
-
-							String playername = sec.getEntryValue("playername");
-							if ((playername != null) && (playername.replace(" ", "").equals("%playername%"))) {
-								o.isCLientPlayerName = true;
-							}
-
-							String capePath = sec.getEntryValue("capepath");
-							if (capePath != null) {
-								o.capePath = capePath;
-							}
-
-							String capeUrl = sec.getEntryValue("capeurl");
-							if (capeUrl != null) {
-								o.capeUrl = capeUrl;
-							}
-
-							String skinPath = sec.getEntryValue("skinpath");
-							if (skinPath != null) {
-								o.skinPath = skinPath;
-							}
-
-							String skinUrl = sec.getEntryValue("skinurl");
-							if (skinUrl != null) {
-								o.skinUrl = skinUrl;
-							}
-
-							con.add(o);
 						}
 					}
 

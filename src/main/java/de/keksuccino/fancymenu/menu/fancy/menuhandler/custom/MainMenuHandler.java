@@ -37,7 +37,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.CubeMap;
@@ -283,7 +283,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	private void renderButtons(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
-		List<Widget> buttons = this.getButtonList(e.getGui());
+		List<Renderable> buttons = this.getButtonList(e.getGui());
 		float partial = Minecraft.getInstance().getFrameTime();
 		
 		if (buttons != null) {
@@ -307,17 +307,12 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 	
-	private List<Widget> getButtonList(Screen gui) {
+	private List<Renderable> getButtonList(Screen gui) {
 		return ((IMixinScreen)gui).getRenderablesFancyMenu();
 	}
 
 	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
-		try {
-			Field f = ReflectionHelper.findField(TitleScreen.class, "fading", "field_18222");
-			f.set(s, showFadeIn);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		s.fading = showFadeIn;
 	}
 
 }

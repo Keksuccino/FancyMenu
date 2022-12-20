@@ -31,7 +31,7 @@ public class DynamicValueHelper {
 		int height = 0;
 		String playername = Minecraft.getInstance().getUser().getName();
 		String playeruuid = Minecraft.getInstance().getUser().getUuid();
-		String mcversion = SharedConstants.getCurrentVersion().getReleaseTarget();
+		String mcversion = SharedConstants.getCurrentVersion().getName();
 		if (Minecraft.getInstance().screen != null) {
 			width = Minecraft.getInstance().screen.width;
 			height = Minecraft.getInstance().screen.height;

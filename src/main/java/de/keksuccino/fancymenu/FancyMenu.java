@@ -50,7 +50,7 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.13.0";
+	public static final String VERSION = "2.13.1";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -371,7 +371,7 @@ public class FancyMenu implements ModInitializer {
 	}
 
 	public static String getMinecraftVersion() {
-		return SharedConstants.getCurrentVersion().getReleaseTarget();
+		return SharedConstants.getCurrentVersion().getName();
 	}
 
 	public static File getGameDirectory() {

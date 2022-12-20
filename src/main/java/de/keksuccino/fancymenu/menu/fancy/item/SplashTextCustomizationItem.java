@@ -6,14 +6,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.SubscribeEvent;
@@ -201,7 +201,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			
 			matrix.pushPose();
 			matrix.translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
-			matrix.mulPose(Vector3f.ZP.rotationDegrees(this.rotation));
+			matrix.mulPose(Axis.ZP.rotationDegrees(this.rotation));
 			matrix.scale(f, f, f);
 
 			int alpha = this.basecolor.getAlpha();

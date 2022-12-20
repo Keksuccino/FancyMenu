@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -174,7 +174,7 @@ public class ButtonCache {
 
 			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 
-			for (Widget d : ((IMixinScreen)s).getRenderablesFancyMenu()) {
+			for (Renderable d : ((IMixinScreen)s).getRenderablesFancyMenu()) {
 				if (d instanceof AbstractWidget) {
 					AbstractWidget w = (AbstractWidget) d;
 					String idRaw = w.x + "" + w.y;

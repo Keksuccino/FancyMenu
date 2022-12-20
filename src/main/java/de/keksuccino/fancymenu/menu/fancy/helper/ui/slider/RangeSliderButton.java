@@ -32,8 +32,11 @@ public class RangeSliderButton extends AdvancedSliderButton {
         return (int) Mth.lerp(Mth.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
     }
 
+    public double getSelectedRangeDoubleValue() {
+        return Mth.lerp(Mth.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
+    }
+
     public void setSelectedRangeValue(double rangeValue) {
         this.setValue(((Mth.clamp(rangeValue, this.minValue, this.maxValue) - this.minValue) / (this.maxValue - this.minValue)));
     }
-
 }

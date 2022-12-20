@@ -217,7 +217,7 @@ public class ScrollableScreen extends Screen {
                     this.button.active = false;
                 }
                 this.button.setWidth(200);
-                this.button.setHeight(20);
+                WidgetUtils.setHeight(this.button, 20);
                 this.button.setX(xCenter - (this.button.getWidth() / 2));
                 this.button.setY(render.entry.y + 2);
                 this.button.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());

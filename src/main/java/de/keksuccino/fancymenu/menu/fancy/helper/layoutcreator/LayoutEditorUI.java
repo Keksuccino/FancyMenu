@@ -1173,14 +1173,6 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(buttonButton);
 
-			/** PLAYER ENTITY **/
-			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-				AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
-					this.parent.addPlayerEntity();
-				});
-				this.addContent(playerEntityButton);
-			}
-
 			/** ANIMATION **/
 			FMContextMenu animationMenu = new FMContextMenu();
 			animationMenu.setAutoclose(true);

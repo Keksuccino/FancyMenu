@@ -56,7 +56,7 @@ public class MenuCustomizationProperties {
 						if (!isVersionCompatible(s4, s5, FancyMenu.VERSION)) {
 							continue;
 						}
-						if (!isVersionCompatible(s6, s7, SharedConstants.getCurrentVersion().getReleaseTarget())) {
+						if (!isVersionCompatible(s6, s7, SharedConstants.getCurrentVersion().getName())) {
 							continue;
 						}
 						if (!allRequiredModsLoaded(s3)) {
