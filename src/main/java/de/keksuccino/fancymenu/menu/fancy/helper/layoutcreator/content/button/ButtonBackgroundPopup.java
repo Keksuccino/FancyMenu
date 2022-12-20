@@ -162,7 +162,6 @@ public class ButtonBackgroundPopup extends FMPopup {
                     PopupHandler.displayPopup(this);
                 }
             }, "jpg", "jpeg", "png");
-            //----------------------------
             PopupHandler.displayPopup(cf);
         });
         this.colorizePopupButton(chooseNormalBackgroundImageButton);
@@ -208,7 +207,6 @@ public class ButtonBackgroundPopup extends FMPopup {
                     PopupHandler.displayPopup(this);
                 }
             }, "jpg", "jpeg", "png");
-            //-------------------------
             PopupHandler.displayPopup(cf);
         });
         this.colorizePopupButton(chooseHoverBackgroundImageButton);

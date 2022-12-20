@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
 import de.keksuccino.fancymenu.api.item.CustomizationItem;

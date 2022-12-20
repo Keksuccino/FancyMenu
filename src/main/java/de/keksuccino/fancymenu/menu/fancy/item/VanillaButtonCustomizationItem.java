@@ -154,12 +154,10 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 				this.parent.getButton().y = this.getPosY(menu);
 			}
 
-			//TODO übernehmen
 			if (action.equalsIgnoreCase("resizebutton")) {
 				this.parent.getButton().setWidth(this.getWidth());
 				this.parent.getButton().setHeight(this.getHeight());
 			}
-			//--------------------
 
 		}
 	}

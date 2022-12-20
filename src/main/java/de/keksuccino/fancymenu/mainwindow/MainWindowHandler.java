@@ -10,6 +10,7 @@ import javax.imageio.ImageIO;
 import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.server.packs.resources.IoSupplier;
 
 public class MainWindowHandler {
 
@@ -60,10 +61,8 @@ public class MainWindowHandler {
 					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon32x32.png' not 32x32!");
 					return;
 				}
-				InputStream icon16 = new FileInputStream(i16);
-				InputStream icon32 = new FileInputStream(i32);
 				
-				Minecraft.getInstance().getWindow().setIcon(icon16, icon32);
+				Minecraft.getInstance().getWindow().setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
 				System.out.println("[FANCYMENU] Custom minecraft icon successfully loaded!");
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -33,18 +33,12 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public String orientation = "top-left";
 	public String orientationElementIdentifier = null;
 	public CustomizationItemBase orientationElement = null;
-	//TODO übernehmen ( replace this.width & this.height in sub classes with this.getWidth() & this.getHeight() )
-	// 1. Copy original CustomizationItemBase class to text file
-	// 2. Edit -> Find -> Replace in Files -> Scope -> Class Hierarchy -> CustomizationItemBase
-	// 3. Paste back original CustomizationItemBase class
 	public int width = -1;
 	public int height = -1;
-	//TODO übernehmen
 	public String advancedWidth;
 	public String advancedHeight;
 	public String advancedPosX;
 	public String advancedPosY;
-	//-----------------
 
 	public volatile boolean delayAppearance = false;
 	public volatile boolean delayAppearanceEverytime = false;
@@ -146,12 +140,10 @@ public abstract class CustomizationItemBase extends GuiComponent {
 			}
 		}
 
-		//TODO übernehmen
 		this.advancedWidth = item.getEntryValue("advanced_width");
 		this.advancedHeight = item.getEntryValue("advanced_height");
 		this.advancedPosX = item.getEntryValue("advanced_posx");
 		this.advancedPosY = item.getEntryValue("advanced_posy");
-		//-------------------------
 
 		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
 
@@ -165,14 +157,12 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	 */
 	public int getPosX(Screen menu) {
 
-		//TODO übernehmen
 		if (this.advancedPosX != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedPosX).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
 				return (int) Double.parseDouble(s);
 			}
 		}
-		//----------------
 
 		int w = menu.width;
 		int x = this.posX;
@@ -186,7 +176,6 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		if (orientation.equalsIgnoreCase("bottom-centered")) {
 			x += (w / 2);
 		}
-		//-----------------------------
 		if (orientation.equalsIgnoreCase("top-right")) {
 			x += w;
 		}
@@ -210,14 +199,12 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	 */
 	public int getPosY(Screen menu) {
 
-		//TODO übernehmen
 		if (this.advancedPosY != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedPosY).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
 				return (int) Double.parseDouble(s);
 			}
 		}
-		//----------------
 
 		int h = menu.height;
 		int y = this.posY;
@@ -228,14 +215,12 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		if (orientation.equalsIgnoreCase("bottom-left")) {
 			y += h;
 		}
-		//----------------------------
 		if (orientation.equalsIgnoreCase("mid-centered")) {
 			y += (h / 2);
 		}
 		if (orientation.equalsIgnoreCase("bottom-centered")) {
 			y += h;
 		}
-		//-----------------------------
 		if (orientation.equalsIgnoreCase("top-right")) {
 		}
 		if (orientation.equalsIgnoreCase("mid-right")) {
@@ -310,14 +295,12 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	}
 
 	public int getWidth() {
-		//TODO übernehmen
 		if (this.advancedWidth != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
 				return (int) Double.parseDouble(s);
 			}
 		}
-		//----------------
 		return this.width;
 	}
 
@@ -326,14 +309,12 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	}
 
 	public int getHeight() {
-		//TODO übernehmen
 		if (this.advancedHeight != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
 				return (int) Double.parseDouble(s);
 			}
 		}
-		//----------------
 		return this.height;
 	}
 

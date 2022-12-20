@@ -20,7 +20,6 @@ import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
-//TODO übernehmen (deprecated & move zu v1 package)
 @Deprecated
 public class DynamicValueHelper {
 
@@ -29,7 +28,6 @@ public class DynamicValueHelper {
 	private static int cachedTotalMods = -10;
 	public static Map<String, RandomTextPackage> randomTextIntervals = new HashMap<>();
 
-	//TODO übernehmen ( Edit -> Find -> Replace in Files -> "DynamicValueHelper.convertFromRaw(" to "de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(" )
 	@Deprecated
 	public static String convertFromRaw(String in) {
 		int width = 0;

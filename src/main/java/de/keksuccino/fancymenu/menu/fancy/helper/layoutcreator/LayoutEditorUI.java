@@ -452,9 +452,7 @@ public class LayoutEditorUI extends UIBase {
 				});
 				universalLayoutMenu.addContent(clearBlacklistButton);
 
-				//----------------------------------------------------------
 				universalLayoutMenu.addSeparator();
-				//----------------------------------------------------------
 
 				//Add to Whitelist -----------------
 				AdvancedButton addWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), true, (press) -> {
@@ -600,7 +598,6 @@ public class LayoutEditorUI extends UIBase {
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				//TODO übernehmen (change to placeholder input popup)
 				PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
 					if (call != null) {
 						if (!call.equals(defaultMenuTitle)) {
@@ -751,7 +748,6 @@ public class LayoutEditorUI extends UIBase {
 			});
 			this.addContent(renderingOrderButton);
 
-			//TODO übernehmen
 			/** AUTO-SCALING **/
 			String autoScalingLabel = Locals.localize("fancymenu.helper.editor.properties.autoscale.off");
 			if ((this.parent.autoScalingWidth != 0) && (this.parent.autoScalingHeight != 0)) {
@@ -785,9 +781,7 @@ public class LayoutEditorUI extends UIBase {
 				}
 			};
 			this.addContent(autoScalingButton);
-			//--------------------------
 
-			//TODO übernehmen
 			/** FORCE GUI SCALE **/
 			AdvancedButton menuScaleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
@@ -812,7 +806,6 @@ public class LayoutEditorUI extends UIBase {
 			});
 			menuScaleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.scale.btn.desc"), "%n%"));
 			this.addContent(menuScaleButton);
-			//-------------------
 			
 			/** OPEN/CLOSE SOUND **/
 			FMContextMenu openCloseSoundMenu = new FMContextMenu();
@@ -1171,20 +1164,14 @@ public class LayoutEditorUI extends UIBase {
 				splashMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(splashButton);
+
+			//TODO übernehmen (remove old player entity entry)
 			
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
 				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this.parent::addButton));
 			});
 			this.addContent(buttonButton);
-
-			/** PLAYER ENTITY **/
-			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-				AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
-					this.parent.addPlayerEntity();
-				});
-				this.addContent(playerEntityButton);
-			}
 			
 			/** ANIMATION **/
 			FMContextMenu animationMenu = new FMContextMenu();
@@ -1690,7 +1677,6 @@ public class LayoutEditorUI extends UIBase {
 				AdvancedButton emptyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
 				this.addContent(emptyButton);
 			}
-			//-----------------------
 			
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}

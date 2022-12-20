@@ -200,7 +200,6 @@ public class MenuCustomizationProperties {
 					}
 				}
 			}
-			//--------------------
 		}
 		return l;
 	}

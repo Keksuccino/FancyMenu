@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
@@ -301,6 +302,10 @@ public class MenuCustomization {
 	}
 
 	public static boolean isBlacklistedMenu(String menuIdentifierOrPartOfIdentifier) {
+		//TODO übernehmen
+		if (menuIdentifierOrPartOfIdentifier.startsWith(PlayerEntityRotationScreen.class.getName())) {
+			return true;
+		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.simibubi.create.")) {
 			return true;
 		}

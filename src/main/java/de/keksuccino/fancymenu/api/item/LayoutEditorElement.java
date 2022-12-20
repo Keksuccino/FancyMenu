@@ -95,7 +95,6 @@ public abstract class LayoutEditorElement extends LayoutElement {
         }
         sec.addEntry("action", "custom_layout_element:" + this.parentItemContainer.getIdentifier());
         sec.addEntry("actionid", this.object.getActionId());
-        //TODO übernehmen
         if (this.object.advancedPosX != null) {
             sec.addEntry("advanced_posx", this.object.advancedPosX);
         }
@@ -108,7 +107,6 @@ public abstract class LayoutEditorElement extends LayoutElement {
         if (this.object.advancedHeight != null) {
             sec.addEntry("advanced_height", this.object.advancedHeight);
         }
-        //-------------------------
         if (this.object.delayAppearance) {
             sec.addEntry("delayappearance", "true");
             sec.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

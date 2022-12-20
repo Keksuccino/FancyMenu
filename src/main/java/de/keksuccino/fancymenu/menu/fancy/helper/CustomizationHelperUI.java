@@ -311,7 +311,6 @@ public class CustomizationHelperUI extends UIBase {
 			universalLayoutsTabButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.universal_layouts.btn.desc"), "%n%"));
 			bar.addElement(universalLayoutsTabButton, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT, false);
 			/** UNIVERSAL LAYOUTS END **/
-			//--------------------------
 
 			/** SETUP TAB START **/
 			FMContextMenu setupMenu = new FMContextMenu();
@@ -913,11 +912,9 @@ public class CustomizationHelperUI extends UIBase {
 	}
 
 	protected static void renderUnicodeWarning(PoseStack matrix, Screen screen) {
-		//TODO übernehmen
 		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
 			return;
 		}
-		//-------------
 		if (Minecraft.getInstance().options.forceUnicodeFont().get()) {
 			String title = Locals.localize("helper.ui.warning");
 			int w = Minecraft.getInstance().font.width(title);

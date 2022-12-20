@@ -253,9 +253,7 @@ public class TextCustomizationItem extends CustomizationItem {
                             linesRaw.addAll(FileUtils.getFileLines(f));
                         }
                     } else if (this.sourceMode == SourceMode.WEB_SOURCE) {
-                        //TODO übernehmen (if)
                         if (WebUtils.isValidUrl(StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&"))) {
-                            //TODO übernehmen
                             String fixedSource = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&");
                             //Get raw github file
                             if (fixedSource.toLowerCase().contains("/blob/") && (fixedSource.toLowerCase().startsWith("http://github.com/")

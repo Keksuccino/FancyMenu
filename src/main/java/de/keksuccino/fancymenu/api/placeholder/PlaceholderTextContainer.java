@@ -6,7 +6,6 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-//TODO übernehmen (deprecated)
 /**
  * A placeholder text container.<br><br>
  *

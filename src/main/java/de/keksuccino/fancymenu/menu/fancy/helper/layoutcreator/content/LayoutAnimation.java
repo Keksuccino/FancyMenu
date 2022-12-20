@@ -30,7 +30,6 @@ public class LayoutAnimation extends LayoutElement {
 		
 		PropertiesSection p1 = new PropertiesSection("customization");
 		p1.addEntry("actionid", this.object.getActionId());
-		//TODO übernehmen
 		if (this.object.advancedPosX != null) {
 			p1.addEntry("advanced_posx", this.object.advancedPosX);
 		}
@@ -43,7 +42,6 @@ public class LayoutAnimation extends LayoutElement {
 		if (this.object.advancedHeight != null) {
 			p1.addEntry("advanced_height", this.object.advancedHeight);
 		}
-		//-------------------------
 		if (this.object.delayAppearance) {
 			p1.addEntry("delayappearance", "true");
 			p1.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);

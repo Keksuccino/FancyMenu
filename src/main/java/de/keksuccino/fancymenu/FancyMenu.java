@@ -56,8 +56,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ locals; + min Konkrete version 1.6.0)
-	public static final String VERSION = "2.13.0";
+	//TODO übernehmen 1.19.3 (+ locals)
+	public static final String VERSION = "2.13.1";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -108,7 +108,6 @@ public class FancyMenu {
 
 				Placeholders.registerAll();
 
-				//TODO übernehmen
 				de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.Placeholders.registerAll();
 
 				CustomizationItems.registerAll();
@@ -272,7 +271,6 @@ public class FancyMenu {
 			config.registerValue("gridsize", 10, "layouteditor");
 
 			config.registerValue("uiscale", 1.0F, "ui");
-			//TODO übernehmen
 			config.registerValue("show_unicode_warning", true, "ui");
 
 			config.registerValue("allow_level_registry_interactions", true, "compatibility");

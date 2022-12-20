@@ -39,29 +39,23 @@ public class ButtonActionScreen extends ScrollableScreen {
     protected AdvancedButton doneButton;
     protected PlaceholderEditBox valueTextField;
 
-    //TODO übernehmen
     protected Consumer<List<String>> callback;
 
-    //TODO übernehmen
     public ButtonActionScreen(Screen parent, LayoutButton parentButton) {
         this(parent, parentButton, null);
     }
 
-    //TODO übernehmen
     public ButtonActionScreen(Screen parent, Consumer<List<String>> callback) {
         this(parent, null, callback);
     }
 
-    //TODO übernehmen (params + make protected)
     protected ButtonActionScreen(Screen parent, @Nullable LayoutButton parentButton, @Nullable Consumer<List<String>> callback) {
 
         super(parent, Locals.localize("fancymenu.helper.ui.button_action.set"));
 
         this.parentButton = parentButton;
-        //TODO übernehmen
         this.callback = callback;
 
-        //TODO übernehmen
         this.doneButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
             if (!this.valueTextField.variableMenu.isOpen()) {
                 this.onDone();
@@ -70,13 +64,11 @@ public class ButtonActionScreen extends ScrollableScreen {
         });
         this.doneButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.doneButton);
-        //----------------------
 
         this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, null);
         this.valueTextField.setCanLoseFocus(true);
         this.valueTextField.setFocus(false);
         this.valueTextField.setMaxLength(1000);
-        //TODO übernehmen
         if (this.parentButton != null) {
             if (this.parentButton.actionContent != null) {
                 this.valueTextField.setValue(this.parentButton.actionContent);
@@ -94,7 +86,6 @@ public class ButtonActionScreen extends ScrollableScreen {
         }
 
         ButtonAction selectedAction = null;
-        //TODO übernehmen
         if (this.parentButton != null) {
             if (this.parentButton.actionType != null) {
                 selectedAction = this.getButtonActionByName(this.parentButton.actionType);
@@ -168,7 +159,6 @@ public class ButtonActionScreen extends ScrollableScreen {
         if (selected.hasValue) {
             value = this.valueTextField.getValue();
         }
-        //TODO übernehmen
         if (this.parentButton != null) {
             if (!this.parentButton.actionType.equals(selected.name) || !this.parentButton.actionContent.equals(value)) {
                 this.parentButton.handler.history.saveSnapshot(this.parentButton.handler.history.createSnapshot());
@@ -185,7 +175,6 @@ public class ButtonActionScreen extends ScrollableScreen {
             l.add(value);
             this.callback.accept(l);
         }
-        //----------------------------
     }
 
     @Override
@@ -216,11 +205,9 @@ public class ButtonActionScreen extends ScrollableScreen {
             this.valueTextField.setY(this.height - 85);
             this.valueTextField.setEditable(selected.hasValue);
             this.valueTextField.active = selected.hasValue;
-            //TODO übernehmen
             for (AdvancedButton b : this.valueTextField.variableMenu.getContent()) {
                 b.ignoreLeftMouseDownClickBlock = true;
             }
-            //---------------------
             this.valueTextField.render(matrix, mouseX, mouseY, partialTicks);
 
             //Action Value Example
@@ -245,12 +232,10 @@ public class ButtonActionScreen extends ScrollableScreen {
 
     }
 
-    //TODO übernehmen
     public void setValueString(String value) {
         this.valueTextField.setValue(value);
     }
 
-    //TODO übernehmen
     public void setButtonAction(String buttonAction) {
         ButtonAction b = this.getButtonActionByName(buttonAction);
         if (b == null) {
@@ -281,11 +266,9 @@ public class ButtonActionScreen extends ScrollableScreen {
             int footerHeight = 115;
             if (!this.leftMouseDown && (MouseInput.getMouseY() < (this.action.parent.height - footerHeight))) {
                 if (this.isHoveredOrFocused() && MouseInput.isLeftMouseDown()) {
-                    //TODO übernehmen
                     if (!this.action.parent.valueTextField.variableMenu.isOpen()) {
                         this.action.setSelected(true);
                     }
-                    //---------------------
                 }
             }
             this.leftMouseDown = MouseInput.isLeftMouseDown();

@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 
 import java.util.*;
 
-//TODO übernehmen (deprecated)
 @Deprecated
 public class PlaceholderTextRegistry {
 

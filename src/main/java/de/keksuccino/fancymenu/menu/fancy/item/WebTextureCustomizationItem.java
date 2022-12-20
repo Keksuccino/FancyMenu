@@ -40,7 +40,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 			this.value = item.getEntryValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
-				//TODO übernehmen
 				this.value = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.value), "§", "&");
 
 				if ((this.getWidth() <= 0) && (this.getHeight() <= 0)) {

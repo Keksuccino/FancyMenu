@@ -63,10 +63,8 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
 	protected boolean resizeable = true;
-	//TODO übernehmen
 	protected boolean supportsAdvancedPositioning = true;
 	protected boolean supportsAdvancedSizing = true;
-	//----------------------
 	protected boolean resizeableX = true;
 	protected boolean resizeableY = true;
 	protected boolean dragable = true;
@@ -107,8 +105,6 @@ public abstract class LayoutElement extends GuiComponent {
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-
-	//TODO übernehmen replace in this class: this.object.width/height -> this.object.getWidth()/getHeight()
 
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
@@ -274,7 +270,6 @@ public abstract class LayoutElement extends GuiComponent {
 			});
 			orientationMenu.addContent(o9);
 
-			//TODO übernehmen
 			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 				orientationMenu.setParentButton((AdvancedButton) press);
 				orientationMenu.openMenuAt(0, press.y);
@@ -291,11 +286,9 @@ public abstract class LayoutElement extends GuiComponent {
 			};
 			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
 			this.rightclickMenu.addContent(orientationButton);
-			//-------------------------
 
 		}
 
-		//TODO übernehmen
 		/** ADVANCED POSITIONING **/
 		FMContextMenu advancedPositioningMenu = new FMContextMenu();
 		advancedPositioningMenu.setAutoclose(true);
@@ -361,9 +354,7 @@ public abstract class LayoutElement extends GuiComponent {
 			PopupHandler.displayPopup(p);
 		});
 		advancedPositioningMenu.addContent(advancedPosYButton);
-		//----------------------------
 
-		//TODO übernehmen
 		/** ADVANCED SIZING **/
 		FMContextMenu advancedSizingMenu = new FMContextMenu();
 		advancedSizingMenu.setAutoclose(true);
@@ -447,7 +438,6 @@ public abstract class LayoutElement extends GuiComponent {
 			PopupHandler.displayPopup(p);
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
-		//----------------------------
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -485,7 +475,6 @@ public abstract class LayoutElement extends GuiComponent {
 		stretchMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(stretchMenu);
 
-		//TODO übernehmen
 		stretchXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
 			if (this.stretchX) {
 				this.setStretchedX(false, true);
@@ -504,9 +493,7 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		};
 		stretchMenu.addContent(stretchXButton);
-		//--------------------
 
-		//TODO übernehmen
 		stretchYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
 			if (this.stretchY) {
 				this.setStretchedY(false, true);
@@ -525,7 +512,6 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		};
 		stretchMenu.addContent(stretchYButton);
-		//-------------------------
 
 		AdvancedButton stretchButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch"), true, (press) -> {
 			stretchMenu.setParentButton((AdvancedButton) press);
@@ -942,7 +928,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 				
 		//Update dragging state
-		//TODO übernehmen (if)
 		if (this.dragable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null)) {
 			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 				this.dragging = true;
@@ -971,7 +956,6 @@ public abstract class LayoutElement extends GuiComponent {
 		} else {
 			this.resizing = false;
 		}
-		//-----------------------
 		
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
@@ -1073,7 +1057,6 @@ public abstract class LayoutElement extends GuiComponent {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		//TODO übernehmen (if)
 		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
@@ -1090,7 +1073,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		//TODO übernehmen (if)
 		if (this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 				if (!this.stretchX && this.resizeableX) {
@@ -1124,7 +1106,6 @@ public abstract class LayoutElement extends GuiComponent {
 				this.activeGrabber = -1;
 			}
 		} else {
-			//TODO übernehnen
 			this.activeGrabber = -1;
 		}
 
@@ -1394,16 +1375,12 @@ public abstract class LayoutElement extends GuiComponent {
 			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
 		}
 		if (c.vrCheckForWindowWidth) {
-			//TODO übernehmen
 			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
 			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
-			//-----------------
 		}
 		if (c.vrCheckForWindowHeight) {
-			//TODO übernehmen
 			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
 			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
-			//-------------------
 		}
 		if (c.vrCheckForWindowWidthBiggerThan) {
 			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);

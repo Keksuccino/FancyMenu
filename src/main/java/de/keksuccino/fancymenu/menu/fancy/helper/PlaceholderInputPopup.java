@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
 
-//TODO  übernehmen (change name of DynamicValueInputPopup)
 public class PlaceholderInputPopup extends FMTextInputPopup {
 
 	public PlaceholderInputPopup(Color color, String title, CharacterFilter filter, int alpha) {

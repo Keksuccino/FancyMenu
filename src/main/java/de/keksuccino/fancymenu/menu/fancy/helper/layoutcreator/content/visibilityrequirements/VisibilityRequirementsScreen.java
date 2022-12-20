@@ -36,7 +36,6 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
     protected int entryBackTick = 0;
     protected AdvancedButton doneButton;
 
-    //TODO übernehmen
     protected List<PlaceholderEditBox> contextMenuRenderQueue = new ArrayList<>();
 
     public VisibilityRequirementsScreen(Screen parent, CustomizationItemBase parentItem) {
@@ -129,12 +128,10 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
         this.doneButton.setY(this.height - 35);
         this.doneButton.render(matrix, mouseX, mouseY, partialTicks);
 
-        //TODO übernehmen
         for (PlaceholderEditBox b : this.contextMenuRenderQueue) {
             b.renderContextMenu(matrix);
         }
         this.contextMenuRenderQueue.clear();
-        //----------------------
 
     }
 
@@ -270,9 +267,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
 
             if ((this.valueCallback != null) && (this.valueName != null)) {
                 this.hasValue = true;
-                //TODO übernehmen (PlaceholderEditBox)
                 this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
-                //TODO übernehmen
                 ((PlaceholderEditBox)this.valueTextField).renderContextMenu = false;
                 this.valueTextField.setCanLoseFocus(true);
                 this.valueTextField.setFocus(false);
@@ -316,9 +311,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
                 this.valueTextField.x = originX - (this.valueTextField.getWidth() / 2);
                 this.valueTextField.y = originY + 3;
                 this.valueTextField.render(matrix, mouseX, mouseY, partial);
-                //TODO übernehmen
                 this.parent.contextMenuRenderQueue.add(((PlaceholderEditBox)this.valueTextField));
-                //----------------
                 this.valueTextField.active = this.enabled;
                 this.valueTextField.setEditable(this.enabled);
                 this.valueCallback.accept(this.valueTextField.getValue());

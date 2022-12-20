@@ -24,68 +24,62 @@ public class VisibilityRequirementContainer {
     //Visibility Requirements
     //VR show-if values are always the requirement that must be met to show the element.
     //So if the system should check for the main hand item and it's show-if value is set to FALSE, the element is visible if NO ITEM IS IN THE MAIN HAND.
-    //---------
     public boolean vrCheckForSingleplayer = false;
     public boolean vrShowIfSingleplayer = false;
-    //---------
+
     public boolean vrCheckForMultiplayer = false;
     public boolean vrShowIfMultiplayer = false;
-    //---------
+
     public boolean vrCheckForWindowWidth = false;
     public boolean vrShowIfWindowWidth = false;
-    //TODO übernehmen (string)
     public String vrWindowWidth = null;
-    //---------
+
     public boolean vrCheckForWindowHeight = false;
     public boolean vrShowIfWindowHeight = false;
-    //TODO übernehmen (string)
     public String vrWindowHeight = null;
-    //---------
+
     public boolean vrCheckForWindowWidthBiggerThan = false;
     public boolean vrShowIfWindowWidthBiggerThan = false;
-    //TODO übernehmen (String)
     public String vrWindowWidthBiggerThan = null;
-    //---------
+
     public boolean vrCheckForWindowHeightBiggerThan = false;
     public boolean vrShowIfWindowHeightBiggerThan = false;
-    //TODO übernehmen (String)
     public String vrWindowHeightBiggerThan = null;
-    //---------
+
     public boolean vrCheckForButtonHovered = false;
     public boolean vrShowIfButtonHovered = false;
     public String vrButtonHovered = null;
-    //---------
+
     public boolean vrCheckForWorldLoaded = false;
     public boolean vrShowIfWorldLoaded = false;
-    //---------
+
     public boolean vrCheckForLanguage = false;
     public boolean vrShowIfLanguage = false;
     public String vrLanguage = null;
-    //---------
+
     public boolean vrCheckForFullscreen = false;
     public boolean vrShowIfFullscreen = false;
-    //---------
+
     public boolean vrCheckForOsWindows = false;
     public boolean vrShowIfOsWindows = false;
-    //---------
+
     public boolean vrCheckForOsMac = false;
     public boolean vrShowIfOsMac = false;
-    //---------
+
     public boolean vrCheckForOsLinux = false;
     public boolean vrShowIfOsLinux = false;
-    //---------
+
     public boolean vrCheckForModLoaded = false;
     public boolean vrShowIfModLoaded = false;
     public List<String> vrModLoaded = new ArrayList<String>();
-    //---------
+
     public boolean vrCheckForServerOnline = false;
     public boolean vrShowIfServerOnline = false;
     public String vrServerOnline = null;
-    //---------
+
     public boolean vrCheckForGuiScale = false;
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
-    //---------
 
     public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
@@ -113,7 +107,6 @@ public class VisibilityRequirementContainer {
             }
         }
 
-        //TODO übernehmen
         //VR: Is Window Width
         String vrStringShowIfWindowWidth = properties.getEntryValue("vr:showif:windowwidth");
         if (vrStringShowIfWindowWidth != null) {
@@ -126,9 +119,7 @@ public class VisibilityRequirementContainer {
                 this.vrCheckForWindowWidth = true;
             }
         }
-        //--------------------------
 
-        //TODO übernehmen
         //VR: Is Window Height
         String vrStringShowIfWindowHeight = properties.getEntryValue("vr:showif:windowheight");
         if (vrStringShowIfWindowHeight != null) {
@@ -141,9 +132,7 @@ public class VisibilityRequirementContainer {
                 this.vrCheckForWindowHeight = true;
             }
         }
-        //-------------------------
 
-        //TODO übernehmen
         //VR: Is Window Width Bigger Than
         String vrStringShowIfWindowWidthBiggerThan = properties.getEntryValue("vr:showif:windowwidthbiggerthan");
         if (vrStringShowIfWindowWidthBiggerThan != null) {
@@ -156,9 +145,7 @@ public class VisibilityRequirementContainer {
                 this.vrWindowWidthBiggerThan = windowWidth;
             }
         }
-        //--------------------------------
 
-        //TODO übernehmen
         //VR: Is Window Height Bigger Than
         String vrStringShowIfWindowHeightBiggerThan = properties.getEntryValue("vr:showif:windowheightbiggerthan");
         if (vrStringShowIfWindowHeightBiggerThan != null) {
@@ -171,7 +158,6 @@ public class VisibilityRequirementContainer {
                 this.vrWindowHeightBiggerThan = windowHeight;
             }
         }
-        //---------------------------
 
         //VR: Is Button Hovered
         String vrStringShowIfButtonHovered = properties.getEntryValue("vr:showif:buttonhovered");
@@ -342,11 +328,9 @@ public class VisibilityRequirementContainer {
                 }
             }
         }
-        //--------------------
 
     }
 
-    //TODO übernehmen
     private static Object replacePlaceholdersIn(Object value) {
         if (value == null) {
             return null;
@@ -374,7 +358,6 @@ public class VisibilityRequirementContainer {
             return false;
         }
 
-        //TODO übernehmen
         String cachedvrWindowWidth = vrWindowWidth;
         String cachedvrWindowHeight = vrWindowHeight;
         String cachedvrWindowWidthBiggerThan = vrWindowWidthBiggerThan;
@@ -384,9 +367,7 @@ public class VisibilityRequirementContainer {
         List<String> cachedvrModLoaded = vrModLoaded;
         String cachedvrServerOnline = vrServerOnline;
         List<String> cachedvrGuiScale = vrGuiScale;
-        //------------------------
 
-        //TODO übernehmen
         vrWindowWidth = (String) replacePlaceholdersIn(vrWindowWidth);
         vrWindowHeight = (String) replacePlaceholdersIn(vrWindowHeight);
         vrWindowWidthBiggerThan = (String) replacePlaceholdersIn(vrWindowWidthBiggerThan);
@@ -396,7 +377,6 @@ public class VisibilityRequirementContainer {
         vrModLoaded = (List<String>) replacePlaceholdersIn(vrModLoaded);
         vrServerOnline = (String) replacePlaceholdersIn(vrServerOnline);
         vrGuiScale = (List<String>) replacePlaceholdersIn(vrGuiScale);
-        //-------------------------
 
         try {
 
@@ -429,7 +409,6 @@ public class VisibilityRequirementContainer {
                 }
             }
 
-            //TODO übernehmen
             //VR: Is Window Width
             if (this.vrCheckForWindowWidth) {
                 if (this.vrWindowWidth != null) {
@@ -458,9 +437,7 @@ public class VisibilityRequirementContainer {
                     }
                 }
             }
-            //---------------------------
 
-            //TODO übernehmen
             //VR: Is Window Height
             if (this.vrCheckForWindowHeight) {
                 if (this.vrWindowHeight != null) {
@@ -489,9 +466,7 @@ public class VisibilityRequirementContainer {
                     }
                 }
             }
-            //---------------------------
 
-            //TODO übernehmen
             //VR: Is Window Width Bigger Than
             if (this.vrCheckForWindowWidthBiggerThan) {
                 if (MathUtils.isInteger(this.vrWindowWidthBiggerThan)) {
@@ -506,9 +481,7 @@ public class VisibilityRequirementContainer {
                     }
                 }
             }
-            //-------------------------
 
-            //TODO übernehmen
             //VR: Is Window Height Bigger Than
             if (this.vrCheckForWindowHeightBiggerThan) {
                 if (MathUtils.isInteger(this.vrWindowHeightBiggerThan)) {
@@ -523,7 +496,6 @@ public class VisibilityRequirementContainer {
                     }
                 }
             }
-            //-----------------------------
 
             //VR: Is Button Hovered
             if (this.vrCheckForButtonHovered) {
@@ -705,12 +677,10 @@ public class VisibilityRequirementContainer {
 
                 if (p.checkFor) {
                     if (p.showIf) {
-                        //TODO übernehmen (if)
                         if (!p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
                     } else {
-                        //TODO übernehmen (if)
                         if (p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
@@ -721,11 +691,9 @@ public class VisibilityRequirementContainer {
 
         } catch (Exception e) {
             e.printStackTrace();
-            //TODO übernehmen
             return false;
         }
 
-        //TODO übernehmen
         vrWindowWidth = cachedvrWindowWidth;
         vrWindowHeight = cachedvrWindowHeight;
         vrWindowWidthBiggerThan = cachedvrWindowWidthBiggerThan;
@@ -735,7 +703,6 @@ public class VisibilityRequirementContainer {
         vrModLoaded = cachedvrModLoaded;
         vrServerOnline = cachedvrServerOnline;
         vrGuiScale = cachedvrGuiScale;
-        //-------------------------
 
         return true;
 
