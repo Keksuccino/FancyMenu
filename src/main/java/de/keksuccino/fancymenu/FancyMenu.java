@@ -51,7 +51,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu implements ModInitializer {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.13.0";
+	public static final String VERSION = "2.13.1";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");

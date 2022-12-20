@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
@@ -301,6 +302,9 @@ public class MenuCustomization {
 	}
 
 	public static boolean isBlacklistedMenu(String menuIdentifierOrPartOfIdentifier) {
+		if (menuIdentifierOrPartOfIdentifier.startsWith(PlayerEntityRotationScreen.class.getName())) {
+			return true;
+		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.simibubi.create.")) {
 			return true;
 		}
