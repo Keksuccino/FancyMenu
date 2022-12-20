@@ -232,7 +232,7 @@ public class MenuCustomizationProperties {
 		return l;
 	}
 
-	//---
+	
 	public static class LayoutProperties {
 
 		public PropertiesSet properties;

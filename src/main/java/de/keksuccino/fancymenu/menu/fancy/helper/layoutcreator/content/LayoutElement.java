@@ -63,10 +63,10 @@ public abstract class LayoutElement extends AbstractGui {
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
 	protected boolean resizeable = true;
-	//TODO übernehmen
+	
 	protected boolean supportsAdvancedPositioning = true;
 	protected boolean supportsAdvancedSizing = true;
-	//----------------------
+	
 
 	protected boolean resizeableX = true;
 	protected boolean resizeableY = true;
@@ -273,7 +273,7 @@ public abstract class LayoutElement extends AbstractGui {
 			});
 			orientationMenu.addContent(o9);
 
-			//TODO übernehmen
+			
 			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 				orientationMenu.setParentButton((AdvancedButton) press);
 				orientationMenu.openMenuAt(0, press.y);
@@ -290,11 +290,11 @@ public abstract class LayoutElement extends AbstractGui {
 			};
 			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
 			this.rightclickMenu.addContent(orientationButton);
-			//-------------------------
+			
 
 		}
 
-		//TODO übernehmen
+		
 		/** ADVANCED POSITIONING **/
 		FMContextMenu advancedPositioningMenu = new FMContextMenu();
 		advancedPositioningMenu.setAutoclose(true);
@@ -360,9 +360,9 @@ public abstract class LayoutElement extends AbstractGui {
 			PopupHandler.displayPopup(p);
 		});
 		advancedPositioningMenu.addContent(advancedPosYButton);
-		//----------------------------
+		
 
-		//TODO übernehmen
+		
 		/** ADVANCED SIZING **/
 		FMContextMenu advancedSizingMenu = new FMContextMenu();
 		advancedSizingMenu.setAutoclose(true);
@@ -446,7 +446,7 @@ public abstract class LayoutElement extends AbstractGui {
 			PopupHandler.displayPopup(p);
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
-		//----------------------------
+		
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -484,7 +484,7 @@ public abstract class LayoutElement extends AbstractGui {
 		stretchMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(stretchMenu);
 
-		//TODO übernehmen
+		
 		stretchXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
 			if (this.stretchX) {
 				this.setStretchedX(false, true);
@@ -503,9 +503,9 @@ public abstract class LayoutElement extends AbstractGui {
 			}
 		};
 		stretchMenu.addContent(stretchXButton);
-		//--------------------
+		
 
-		//TODO übernehmen
+		
 		stretchYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
 			if (this.stretchY) {
 				this.setStretchedY(false, true);
@@ -524,7 +524,7 @@ public abstract class LayoutElement extends AbstractGui {
 			}
 		};
 		stretchMenu.addContent(stretchYButton);
-		//-------------------------
+		
 
 		AdvancedButton stretchButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch"), true, (press) -> {
 			stretchMenu.setParentButton((AdvancedButton) press);
@@ -941,7 +941,7 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 
 		//Update dragging state
-		//TODO übernehmen (if)
+		
 		if (this.dragable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null)) {
 			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 				this.dragging = true;
@@ -970,7 +970,7 @@ public abstract class LayoutElement extends AbstractGui {
 		} else {
 			this.resizing = false;
 		}
-		//-----------------------
+		
 
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
@@ -1072,16 +1072,16 @@ public abstract class LayoutElement extends AbstractGui {
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		//TODO übernehmen (if)
+		
 		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
-			//TODO übernehmen (if)
+			
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
 				AbstractGui.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
 				AbstractGui.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
-			//TODO übernehmen (if)
+			
 			if (!this.stretchY && this.resizeableY) {
 				//grabber top
 				AbstractGui.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
@@ -1091,11 +1091,11 @@ public abstract class LayoutElement extends AbstractGui {
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		//TODO übernehmen (if)
+		
 		if (this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 
-				//TODO übernehmen (if)
+				
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 0;
@@ -1104,7 +1104,7 @@ public abstract class LayoutElement extends AbstractGui {
 				}
 			} else if ((mouseX >= xHorizontalRight) && (mouseX <= xHorizontalRight + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 
-				//TODO übernehmen (if)
+				
 				if (!this.stretchX && this.resizeableX) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), hResizeCursor);
 					this.activeGrabber = 1;
@@ -1113,7 +1113,7 @@ public abstract class LayoutElement extends AbstractGui {
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalTop) && (mouseY <= yVerticalTop + h)) {
 
-				//TODO übernehmen (if)
+				
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 2;
@@ -1122,7 +1122,7 @@ public abstract class LayoutElement extends AbstractGui {
 				}
 			} else if ((mouseX >= xVertical) && (mouseX <= xVertical + w) && (mouseY >= yVerticalBottom) && (mouseY <= yVerticalBottom + h)) {
 
-				//TODO übernehmen (if)
+				
 				if (!this.stretchY && this.resizeableY) {
 					GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), vResizeCursor);
 					this.activeGrabber = 3;
@@ -1403,16 +1403,16 @@ public abstract class LayoutElement extends AbstractGui {
 			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
 		}
 		if (c.vrCheckForWindowWidth) {
-			//TODO übernehmen
+			
 			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
 			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
-			//-----------------
+			
 		}
 		if (c.vrCheckForWindowHeight) {
-			//TODO übernehmen
+			
 			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
 			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
-			//-------------------
+			
 		}
 		if (c.vrCheckForWindowWidthBiggerThan) {
 			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);

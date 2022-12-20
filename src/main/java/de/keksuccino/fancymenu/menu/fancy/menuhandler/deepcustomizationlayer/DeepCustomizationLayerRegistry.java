@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer;
 
 import javax.annotation.Nullable;

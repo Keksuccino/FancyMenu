@@ -20,17 +20,17 @@ public class StringCustomizationItem extends CustomizationItemBase {
 	public boolean shadow = false;
 	public Alignment alignment = Alignment.LEFT;
 
-	//---
+
 	public String valueRaw;
 
 	public StringCustomizationItem(PropertiesSection item) {
 		super(item);
 
 		if ((this.action != null) && this.action.equalsIgnoreCase("addtext")) {
-			//---
+
 			this.valueRaw = item.getEntryValue("value");
 			this.updateValue();
-			//-----------------
+
 
 			String sh = item.getEntryValue("shadow");
 			if ((sh != null)) {
@@ -57,7 +57,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//---
+
 	protected void updateValue() {
 
 		if (this.valueRaw != null) {
@@ -78,7 +78,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 			return;
 		}
 
-		//---
+
 		this.updateValue();
 
 		int x = this.getPosX(menu);

@@ -1262,7 +1262,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 	
 	protected void addPlayerEntity() {
-		//---
+		
 		if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "addentity");

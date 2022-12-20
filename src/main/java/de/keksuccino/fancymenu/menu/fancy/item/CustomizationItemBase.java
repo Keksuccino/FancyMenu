@@ -50,7 +50,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
 
-	//---
+	
 	public VisibilityRequirementContainer visibilityRequirementContainer;
 
 	protected String actionId;
@@ -148,7 +148,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		this.advancedPosX = item.getEntryValue("advanced_posx");
 		this.advancedPosY = item.getEntryValue("advanced_posy");
 
-		//---
+		
 		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
 
 	}
@@ -180,7 +180,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		if (orientation.equalsIgnoreCase("bottom-centered")) {
 			x += (w / 2);
 		}
-		//-----------------------------
+		
 		if (orientation.equalsIgnoreCase("top-right")) {
 			x += w;
 		}
@@ -220,14 +220,14 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		if (orientation.equalsIgnoreCase("bottom-left")) {
 			y += h;
 		}
-		//----------------------------
+		
 		if (orientation.equalsIgnoreCase("mid-centered")) {
 			y += (h / 2);
 		}
 		if (orientation.equalsIgnoreCase("bottom-centered")) {
 			y += h;
 		}
-		//-----------------------------
+		
 		if (orientation.equalsIgnoreCase("top-right")) {
 		}
 		if (orientation.equalsIgnoreCase("mid-right")) {
@@ -276,7 +276,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		if (this.value == null) {
 			return false;
 		}
-		//---
+		
 		if (!this.visibilityRequirementsMet()) {
 			return false;
 		}
@@ -287,17 +287,17 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.actionId;
 	}
 
-	//---
+	
 	public void setActionId(String id) {
 		this.actionId = id;
 	}
 
-	//---
+	
 	protected static boolean isEditorActive() {
 		return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
 	}
 
-	//---
+	
 	protected boolean visibilityRequirementsMet() {
 		if (isEditorActive()) {
 			return true;
@@ -305,7 +305,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.visibilityRequirementContainer.isVisible();
 	}
 
-	//---
+	
 	public int getWidth() {
 		if (this.advancedWidth != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
@@ -316,12 +316,12 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.width;
 	}
 
-	//---
+	
 	public void setWidth(int width) {
 		this.width = width;
 	}
 
-	//---
+	
 	public int getHeight() {
 		if (this.advancedHeight != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
@@ -332,7 +332,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.height;
 	}
 
-	//---
+	
 	public void setHeight(int height) {
 		this.height = height;
 	}

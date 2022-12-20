@@ -34,7 +34,7 @@ public class MenuHandlerRegistry {
 		}
 	}
 
-	//---
+	
 	public static MenuHandlerBase getHandlerFor(Screen screen) {
 		return handlers.get(screen.getClass().getName());
 	}

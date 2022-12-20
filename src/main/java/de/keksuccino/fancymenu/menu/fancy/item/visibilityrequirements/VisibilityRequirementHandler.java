@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements;
 
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;

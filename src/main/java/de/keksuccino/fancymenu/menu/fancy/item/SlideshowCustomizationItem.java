@@ -50,14 +50,14 @@ public class SlideshowCustomizationItem extends CustomizationItemBase {
 			this.renderer.x = x;
 			this.renderer.y = y;
 
-			//---
+			
 			if (this.getHeight() > -1) {
 				this.renderer.height = this.getHeight();
 			}
 			if (this.getWidth() > -1) {
 				this.renderer.width = this.getWidth();
 			}
-			//------------------
+			
 			
 			this.renderer.render(matrix);
 			

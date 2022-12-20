@@ -365,7 +365,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//---
+
 		//Handle auto scaling
 		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
 			MainWindow m = Minecraft.getInstance().getWindow();
@@ -417,7 +417,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//---
+
 			if (action.equalsIgnoreCase("autoscale")) {
 				String baseWidth = sec.getEntryValue("basewidth");
 				if (MathUtils.isInteger(baseWidth)) {
@@ -474,14 +474,14 @@ public class MenuHandlerBase {
 		this.hidden.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
-		//---
+
 //		this.vanillaClickSounds.clear();
 //		this.vanillaIdleTextures.clear();
 //		this.vanillaHoverTextures.clear();
-		//---
+
 		this.vanillaButtonCustomizations.clear();
 		this.vanillaButtonVisibilityRequirementContainers.clear();
-		//-----------
+
 		this.audio.clear();
 		this.frontRenderItems.clear();
 		this.backgroundRenderItems.clear();
@@ -577,7 +577,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//---
+
 		//Handle vanilla button visibility requirements
 		for (Map.Entry<Widget, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
 			boolean isBtnHidden = false;
@@ -605,7 +605,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//---
+
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
 				if (this.visibilityRequirementsMet(m.getKey().getButton())) {
@@ -614,7 +614,7 @@ public class MenuHandlerBase {
 			}
 		}
 
-		//---
+
 		//Cache custom buttons
 		ButtonCache.clearCustomButtonCache();
 		for (CustomizationItemBase c : this.backgroundRenderItems) {
@@ -627,7 +627,7 @@ public class MenuHandlerBase {
 				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
 			}
 		}
-		//-----------------
+
 
 	}
 
@@ -645,7 +645,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//---
+
 			if (action.equalsIgnoreCase("backgroundoptions")) {
 				String keepAspect = sec.getEntryValue("keepaspectratio");
 				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
@@ -834,7 +834,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//---
+
 			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 				if (b != null) {
 					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
@@ -884,7 +884,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//---
+
 			if (action.equalsIgnoreCase("setbuttonclicksound")) {
 				if (b != null) {
 					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
@@ -894,7 +894,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//---
+
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 				if (b != null) {
 					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd, this).visibilityRequirementContainer);
@@ -990,7 +990,7 @@ public class MenuHandlerBase {
 				}
 			}
 
-			//---
+
 			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
 				if (action.equalsIgnoreCase("addentity")) {
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
@@ -1064,7 +1064,7 @@ public class MenuHandlerBase {
 			}
 
 			if (action.equalsIgnoreCase("setopenaudio")) {
-				//---
+
 				if (MenuCustomization.isNewMenu()) {
 					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 					if (path != null) {
@@ -1329,7 +1329,7 @@ public class MenuHandlerBase {
 			//Rendering the background animation to the menu
 			if (this.canRenderBackground()) {
 				if ((this.backgroundAnimation != null) && this.backgroundAnimation.isReady()) {
-					//--- (ganzen teil)
+
 					boolean b = this.backgroundAnimation.isStretchedToStreensize();
 					int wOri = this.backgroundAnimation.getWidth();
 					int hOri = this.backgroundAnimation.getHeight();
@@ -1356,13 +1356,13 @@ public class MenuHandlerBase {
 					this.backgroundAnimation.setPosX(xOri);
 					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
-					//-------------------------
+
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
 					Minecraft.getInstance().getTextureManager().bind(this.backgroundTexture.getResourceLocation());
 
 					if (!this.panoramaback) {
-						//--- (kompletten teil; if + else)
+
 						if (!this.keepBackgroundAspectRatio) {
 							IngameGui.blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
@@ -1377,7 +1377,7 @@ public class MenuHandlerBase {
 								IngameGui.blit(CurrentScreenHandler.getMatrixStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
 							}
 						}
-						//---------------------
+
 					} else {
 						int w = this.backgroundTexture.getWidth();
 						int h = this.backgroundTexture.getHeight();
@@ -1497,7 +1497,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	//---
+
 	@SubscribeEvent
 	public void onButtonClickSound(PlayWidgetClickSoundEvent.Pre e) {
 		
@@ -1530,7 +1530,7 @@ public class MenuHandlerBase {
 
 	}
 
-	//---
+
 	@SubscribeEvent
 	public void onButtonRenderBackground(DrawWidgetBackgroundEvent.Pre e) {
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
@@ -1590,7 +1590,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	//---
+
 	protected boolean renderCustomButtomBackground(DrawWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		Widget w = e.getWidget();
 		MatrixStack matrix = e.getMatrixStack();
@@ -1646,7 +1646,7 @@ public class MenuHandlerBase {
 		return false;
 	}
 
-	//---
+
 	protected void renderBackgroundAnimation(DrawWidgetBackgroundEvent e, IAnimationRenderer ani) {
 		Widget w = e.getWidget();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
@@ -1687,7 +1687,7 @@ public class MenuHandlerBase {
 		}
 	}
 
-	//---
+
 	protected ButtonCustomizationContainer getContainerForVanillaButton(Widget w) {
 		if (!this.vanillaButtonCustomizations.containsKey(w)) {
 			ButtonCustomizationContainer c = new ButtonCustomizationContainer();
@@ -1743,7 +1743,7 @@ public class MenuHandlerBase {
 		return null;
 	}
 
-	//---
+
 	protected boolean visibilityRequirementsMet(Widget b) {
 		VisibilityRequirementContainer c = this.vanillaButtonVisibilityRequirementContainers.get(b);
 		if (c != null) {
@@ -1934,10 +1934,10 @@ public class MenuHandlerBase {
 	public static class SharedLayoutProperties {
 		
 		public boolean scaled = false;
-		//---
+
 		public int autoScaleBaseWidth = 0;
 		public int autoScaleBaseHeight = 0;
-		//---------------------
+
 		public boolean backgroundTextureSet = false;
 		public boolean openAudioSet = false;
 		public boolean closeAudioSet = false;
@@ -1945,7 +1945,7 @@ public class MenuHandlerBase {
 		
 	}
 
-	//---
+
 	public static class ButtonCustomizationContainer {
 
 		public String normalBackground = null;

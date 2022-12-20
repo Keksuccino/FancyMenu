@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.networking;
 
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.ServerboundVariableCommandSuggestionsPacketHandler;

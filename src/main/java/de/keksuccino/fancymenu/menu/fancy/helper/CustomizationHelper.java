@@ -61,7 +61,7 @@ public class CustomizationHelper {
 			}
 		}
 
-		//---
+		
 		if (!MenuCustomization.isBlacklistedMenu(e.getGui().getClass().getName())) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {

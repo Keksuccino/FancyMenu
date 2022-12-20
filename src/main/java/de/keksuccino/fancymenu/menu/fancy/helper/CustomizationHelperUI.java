@@ -713,11 +713,11 @@ public class CustomizationHelperUI extends UIBase {
 
 	protected static void renderButtonInfo(MatrixStack matrix, Screen screen) {
 		if (showButtonInfo) {
-			//---
+			
 			boolean isButtonHovered = false;
 			for (ButtonData d : buttons) {
 				if (d.getButton().isHovered()) {
-					//---
+					
 					isButtonHovered = true;
 					long id = d.getId();
 					String idString = Locals.localize("helper.buttoninfo.idnotfound");
@@ -735,23 +735,23 @@ public class CustomizationHelperUI extends UIBase {
 					List<String> info = new ArrayList<String>();
 					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
 
-					//---
+					
 					long now = System.currentTimeMillis();
 
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().getWidth());
 					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().getHeight());
 					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
-					//---
+					
 					info.add("");
 					if (lastButtonInfoRightClick + 2000 < now) {
 						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator"));
 					} else {
 						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator.copied"));
 					}
-					//--------------------
+					
 
-					//---
+					
 					if (MouseInput.isRightMouseDown()) {
 						Screen current = Minecraft.getInstance().screen;
 						String locator = current.getClass().getName() + ":" + idString;
@@ -782,16 +782,16 @@ public class CustomizationHelperUI extends UIBase {
 						y -= 90;
 					}
 
-					//---
+					
 					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
 
 					RenderSystem.enableBlend();
-					//---
+					
 					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
 					int i2 = 20;
 					for (String s : info) {
-						//---
+						
 						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
@@ -805,11 +805,11 @@ public class CustomizationHelperUI extends UIBase {
 					break;
 				}
 			}
-			//---
+			
 			if (!isButtonHovered) {
 				lastButtonInfoRightClick = 0;
 			}
-			//---------------
+			
 		}
 	}
 

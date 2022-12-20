@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.slider;
 
 import net.minecraft.util.math.MathHelper;
@@ -29,6 +29,10 @@ public class RangeSliderButton extends AdvancedSliderButton {
 
     public int getSelectedRangeValue() {
         return (int) MathHelper.lerp(MathHelper.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
+    }
+
+    public double getSelectedRangeDoubleValue() {
+        return MathHelper.lerp(MathHelper.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
     }
 
     public void setSelectedRangeValue(double rangeValue) {

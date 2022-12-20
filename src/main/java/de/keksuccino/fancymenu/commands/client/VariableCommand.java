@@ -22,18 +22,18 @@ import java.util.List;
 
 public class VariableCommand {
 
-    //---
+    
     protected static Screen lastScreen = null;
     protected static boolean initialized = false;
-    //------------------
+    
 
     public static void register(CommandDispatcher<CommandSource> d) {
-        //---
+        
         if (!initialized) {
             MinecraftForge.EVENT_BUS.register(new VariableCommand());
             initialized = true;
         }
-        //------------------
+        
         d.register(Commands.literal("fmvariable")
                 .then(Commands.argument("action", StringArgumentType.string())
                         .suggests(((context, builder) -> {
@@ -109,7 +109,7 @@ public class VariableCommand {
         return 1;
     }
 
-    //---
+    
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent e) {
 

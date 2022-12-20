@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
@@ -83,7 +84,7 @@ public class MenuCustomization {
 			for (PropertiesSection sec : s.getProperties()) {
 				String identifier = null;
 				try {
-					//---
+					
 					if (isBlacklistedMenu(sec.getSectionType())) {
 						continue;
 					}
@@ -160,7 +161,7 @@ public class MenuCustomization {
 	}
 
 	public static String getValidMenuIdentifierFor(String identifier) {
-		//---
+		
 		if (isBlacklistedMenu(identifier)) {
 			return identifier;
 		}
@@ -273,14 +274,14 @@ public class MenuCustomization {
 		CustomizationHelper.reloadSystemAndMenu();
 	}
 
-	//---
+	
 	public static void enableLayout(MenuCustomizationProperties.LayoutProperties layout) {
 		if (layout.path != null) {
 			enableLayout(layout.path);
 		}
 	}
 
-	//---
+	
 	public static void disableLayout(String path) {
 		try {
 			File f = new File(path);
@@ -294,15 +295,18 @@ public class MenuCustomization {
 		CustomizationHelper.reloadSystemAndMenu();
 	}
 
-	//---
+	
 	public static void disableLayout(MenuCustomizationProperties.LayoutProperties layout) {
 		if (layout.path != null) {
 			disableLayout(layout.path);
 		}
 	}
 
-	//---
+	
 	public static boolean isBlacklistedMenu(String menuIdentifierOrPartOfIdentifier) {
+		if (menuIdentifierOrPartOfIdentifier.startsWith(PlayerEntityRotationScreen.class.getName())) {
+			return true;
+		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.simibubi.create.")) {
 			return true;
 		}

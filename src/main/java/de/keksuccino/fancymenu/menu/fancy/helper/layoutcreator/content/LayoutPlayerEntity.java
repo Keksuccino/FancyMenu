@@ -455,7 +455,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		
 	}
 
-	//---
+	
 	@Override
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
@@ -480,7 +480,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		RenderUtils.postScale(matrix);
 	}
 
-	//---
+	
 	@Override
 	protected void renderHighlightBorder(MatrixStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
@@ -526,7 +526,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		return -1;
 	}
 
-	//---
+	
 	@Override
 	protected void setOrientation(String pos) {
 		super.setOrientation(pos);
@@ -557,7 +557,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		this.setHeight((int)(this.getObject().entity.getBbHeight()*scale));
 	}
 
-	//---
+	
 	@Override
 	protected void updateHovered(int mouseX, int mouseY) {
 		if ((mouseX >= this.getEntityPosX()) && (mouseX <= this.getEntityPosX() + this.object.getWidth()) && (mouseY >= this.getEntityPosY()) && mouseY <= this.getEntityPosY() + this.object.getHeight()) {
@@ -633,7 +633,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		p1.addEntry("crouching", "" + this.getEntity().crouching);
 		p1.addEntry("showname", "" + this.getEntity().showName);
 
-		//---
+		
 		this.addVisibilityPropertiesTo(p1);
 
 		l.add(p1);

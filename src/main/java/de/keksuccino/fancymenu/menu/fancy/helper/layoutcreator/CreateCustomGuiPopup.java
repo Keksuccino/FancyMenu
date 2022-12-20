@@ -91,14 +91,14 @@ public class CreateCustomGuiPopup extends FMPopup {
 		this.titleText.y = (renderIn.height / 2) - 22;
 		this.titleText.render(matrix, mouseX, mouseY, partial);
 		
-		//---------
+		
 		AbstractGui.drawCenteredString(matrix, font, Locals.localize("helper.buttons.tools.creategui.allowescdesc"), renderIn.width / 2, (renderIn.height / 2) + 5, Color.WHITE.getRGB());
 		this.allowEscButton.x = (renderIn.width / 2) - this.allowEscButton.getWidth() - 5;
 		this.allowEscButton.y = (renderIn.height / 2) + 20;
 		
 		this.doNotAllowEscButton.x = (renderIn.width / 2) + 5;
 		this.doNotAllowEscButton.y = (renderIn.height / 2) + 20;
-		//----------
+		
 		
 		this.cancelButton.x = (renderIn.width / 2) - (this.cancelButton.getWidth() / 2);
 		this.cancelButton.y = (renderIn.height / 2) + 55;

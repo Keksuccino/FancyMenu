@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.text;
 
 import de.keksuccino.fancymenu.api.item.CustomizationItem;

@@ -46,14 +46,14 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 			this.renderer.setPosX(x);
 			this.renderer.setPosY(y);
 
-			//---
+			
 			if (this.getHeight() > -1) {
 				this.renderer.setHeight(this.getHeight());
 			}
 			if (this.getWidth() > -1) {
 				this.renderer.setWidth(this.getWidth());
 			}
-			//--------------
+			
 			
 			this.renderer.render(matrix);
 			
@@ -64,7 +64,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	//---
+	
 	@Override
 	public AnimationCustomizationItem clone() {
 		AnimationCustomizationItem item = new AnimationCustomizationItem(new PropertiesSection(""));

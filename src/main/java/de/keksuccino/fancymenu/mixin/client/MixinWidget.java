@@ -67,7 +67,7 @@ public abstract class MixinWidget extends AbstractGui {
 
 	@Inject(at = @At(value = "HEAD"), method = "render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V", cancellable = true)
 	private void onRenderPre(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		//--- (try-catch)
+
 		try {
 			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(matrix, (Widget)((Object)this), this.alpha);
 			MinecraftForge.EVENT_BUS.post(e);
@@ -82,7 +82,7 @@ public abstract class MixinWidget extends AbstractGui {
 
 	@Inject(at = @At(value = "TAIL"), method = "render(Lcom/mojang/blaze3d/matrix/MatrixStack;IIF)V", cancellable = true)
 	private void onRenderPost(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		//--- (try-catch)
+
 		try {
 			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(matrix, (Widget)((Object)this), this.alpha);
 			MinecraftForge.EVENT_BUS.post(e);
@@ -93,7 +93,7 @@ public abstract class MixinWidget extends AbstractGui {
 
 	@Inject(at = @At(value = "HEAD"), method = "playDownSound(Lnet/minecraft/client/audio/SoundHandler;)V", cancellable = true)
 	private void onButtonClickSoundPre(SoundHandler handler, CallbackInfo info) {
-		//--- (try-catch)
+
 		try {
 			PlayWidgetClickSoundEvent.Pre e = new PlayWidgetClickSoundEvent.Pre((Widget)((Object)this));
 			MinecraftForge.EVENT_BUS.post(e);
@@ -107,7 +107,7 @@ public abstract class MixinWidget extends AbstractGui {
 
 	@Inject(at = @At(value = "TAIL"), method = "playDownSound(Lnet/minecraft/client/audio/SoundHandler;)V", cancellable = true)
 	private void onButtonClickSoundPost(SoundHandler handler, CallbackInfo info) {
-		//--- (try-catch)
+
 		try {
 			PlayWidgetClickSoundEvent.Post e = new PlayWidgetClickSoundEvent.Post((Widget)((Object)this));
 			MinecraftForge.EVENT_BUS.post(e);

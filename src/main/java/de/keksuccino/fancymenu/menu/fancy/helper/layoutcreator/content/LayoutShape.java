@@ -105,7 +105,7 @@ public class LayoutShape extends LayoutElement {
 				s.addEntry("width", "%guiwidth%");
 			} else {
 				s.addEntry("x", "" + this.object.posX);
-				//---
+				
 				s.addEntry("width", "" + this.object.getWidth());
 			}
 			if (this.stretchY) {
@@ -113,11 +113,11 @@ public class LayoutShape extends LayoutElement {
 				s.addEntry("height", "%guiheight%");
 			} else {
 				s.addEntry("y", "" + this.object.posY);
-				//---
+				
 				s.addEntry("height", "" + this.object.getHeight());
 			}
 
-			//---
+			
 			this.addVisibilityPropertiesTo(s);
 			
 			l.add(s);

@@ -19,7 +19,7 @@ import net.minecraft.world.World;
 public class DummyWorldFactory {
 
 	public static ClientWorld getDummyClientWorld() {
-		//---
+		
 		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
 			return null;
 		}

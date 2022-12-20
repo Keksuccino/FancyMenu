@@ -121,7 +121,7 @@ public class ButtonMimeHandler {
 
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
-                //--- 2.7.2
+                
                 List<String> compIds = new ArrayList<>();
                 for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
                     ButtonIdentificator.setCompatibilityIdentifierToData(d);
@@ -132,7 +132,7 @@ public class ButtonMimeHandler {
                     }
                     this.buttons.put(d.getId(), d);
                 }
-                //----------------
+                
                 return true;
             } else {
                 LOGGER.error("Failed to set up ButtonPackage instance! Screen is null!");

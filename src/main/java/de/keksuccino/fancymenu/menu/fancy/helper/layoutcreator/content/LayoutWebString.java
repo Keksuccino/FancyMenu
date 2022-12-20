@@ -146,7 +146,7 @@ public class LayoutWebString extends LayoutElement {
 		return -1;
 	}
 
-	//---
+	
 	@Override
 	protected void setOrientation(String pos) {
 		super.setOrientation(pos);
@@ -225,7 +225,7 @@ public class LayoutWebString extends LayoutElement {
 		p1.addEntry("multiline", "" + this.getObject().multiline);
 		p1.addEntry("alignment", this.getObject().alignment.key);
 
-		//---
+		
 		this.addVisibilityPropertiesTo(p1);
 
 		l.add(p1);

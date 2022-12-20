@@ -15,7 +15,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class MenuHandlerEvents {
 
 	private MenuHandlerBase current;
-	//---
+	
 	private Screen lastScreen;
 	
 	@SubscribeEvent
@@ -47,7 +47,7 @@ public class MenuHandlerEvents {
 			MenuHandlerRegistry.setActiveHandler(null);
 		}
 
-		//---
+		
 		//Play menu close audio on menu close/switch
 		if (this.lastScreen != Minecraft.getInstance().screen) {
 			if (this.lastScreen != null) {
@@ -63,7 +63,7 @@ public class MenuHandlerEvents {
 		}
 
 		this.current = MenuHandlerRegistry.getLastActiveHandler();
-		//---
+		
 		this.lastScreen = Minecraft.getInstance().screen;
 		
 	}

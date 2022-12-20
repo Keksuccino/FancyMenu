@@ -25,26 +25,26 @@ import net.minecraft.util.text.StringTextComponent;
  */
 public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 
-	//---
+	
 //	private ResourceLocation texture = null;
-	//---
+	
 	protected MenuHandlerBase.ButtonCustomizationContainer button;
 
-	//--- (komplett)
+	
 	public LayoutButtonDummyCustomizationItem(MenuHandlerBase.ButtonCustomizationContainer button, String label, int width, int height, int x, int y) {
 		super(new PropertiesSection("customization"));
 		this.value = label;
 		this.action = "handlelayoutbutton";
-		//---
+		
 		this.setWidth(width);
 		this.setHeight(height);
-		//---------------
+		
 		this.posX = x;
 		this.posY = y;
 		this.button = button;
 	}
 
-	//---
+	
 	@Override
 	public void render(MatrixStack matrix, Screen menu) throws IOException {
 		RenderSystem.enableBlend();
@@ -84,7 +84,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 		if (texture != null) {
 			Minecraft.getInstance().getTextureManager().bind(texture);
 			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-			//---
+			
 			Screen.blit(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 		} else if (animation != null) {
 			int aniX = animation.getPosX();
@@ -95,12 +95,12 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 
 			animation.setPosX(this.getPosX(menu));
 			animation.setPosY(this.getPosY(menu));
-			//---
+			
 			animation.setWidth(this.getWidth());
 			animation.setHeight(this.getHeight());
-			//----------------
+			
 			animation.setLooped(this.button.loopAnimation);
-			//--- 2.3.2
+			
 			if (animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation) animation).setMuteAudio(true);
 			}
@@ -112,20 +112,20 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 			animation.setWidth(aniWidth);
 			animation.setHeight(aniHeight);
 			animation.setLooped(aniLoop);
-			//--- 2.3.2
+			
 			if (animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation) animation).setMuteAudio(false);
 			}
 		} else {
-			//---
+			
 			fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());
 		}
-		//---
+		
         drawCenteredString(matrix, Minecraft.getInstance().font, new StringTextComponent(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, new Color(255, 255, 255, 255).getRGB());
         RenderSystem.disableBlend();
 	}
 
-	//---
+	
 //	public void setTexture(ResourceLocation texture) {
 //		this.texture = texture;
 //	}

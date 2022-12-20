@@ -37,11 +37,11 @@ import java.util.function.Consumer;
 
 public class SetupSharingEngine {
 
-    //TODO übernehmen 4
+    
     public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
     public static final File FM_SETUPS_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/exported_setups");
     public static final File SETUP_BACKUP_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/.backups");
-    //---------------------
+    
 
     protected static MenuIdentifierDatabase menuIdentifierDatabase = null;
 
@@ -686,7 +686,7 @@ public class SetupSharingEngine {
                         meta.resourcesPath = lmrAni.getPath();
                         return meta;
                     }
-                    //TODO übernehmen 2
+                    
                     File resPackDir = new File(Minecraft.getInstance().gameDirectory, "resourcepacks");
                     if (resPackDir.isDirectory()) {
                         for (File f : resPackDir.listFiles()) {

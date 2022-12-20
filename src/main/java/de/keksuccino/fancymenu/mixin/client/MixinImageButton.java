@@ -22,7 +22,7 @@ public abstract class MixinImageButton extends AbstractGui {
 //	@Shadow private int textureWidth;
 //	@Shadow private int textureHeight;
 
-	//---
+	
 	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/button/ImageButton;blit(Lcom/mojang/blaze3d/matrix/MatrixStack;IIFFIIII)V"),method = "renderButton")
 	private void redirectBlitInRenderButton(MatrixStack poseStack, int x, int y, float texX, float texY, int width, int height, int texWidth, int texHeight) {
 		try {
@@ -39,7 +39,7 @@ public abstract class MixinImageButton extends AbstractGui {
 		}
 	}
 
-	//---
+	
 //	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;enableDepthTest()V", ordinal = 0, shift = Shift.AFTER), method = "renderButton", cancellable = true)
 //	private void onRenderImageButton(MatrixStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 //

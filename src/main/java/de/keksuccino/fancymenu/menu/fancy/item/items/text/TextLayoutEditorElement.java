@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.text;
 
 import com.mojang.blaze3d.matrix.MatrixStack;

@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.commands.server;
 
 import com.mojang.brigadier.CommandDispatcher;

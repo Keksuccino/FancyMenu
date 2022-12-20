@@ -293,7 +293,7 @@ public class ButtonScriptEngine {
 							Minecraft.getInstance().loadLevel(f.getName());
 						}
 					} else {
-						//TODO übernehmen 2.12.5
+						
 						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
 //						Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerData("", ipRaw, false)));
 						ServerData d = null;
@@ -311,7 +311,7 @@ public class ButtonScriptEngine {
 							l.save();
 						}
 						Minecraft.getInstance().setScreen(new ConnectingScreen(Minecraft.getInstance().screen, Minecraft.getInstance(), d));
-						//-----------------------
+						
 					}
 				}
 			}

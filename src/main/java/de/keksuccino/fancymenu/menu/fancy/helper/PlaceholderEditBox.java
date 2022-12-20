@@ -24,10 +24,10 @@ import java.util.*;
 public class PlaceholderEditBox extends AdvancedTextField {
 
 	private AdvancedImageButton variableButton;
-	//TODO übernehmen (make public)
+	
 	public FMContextMenu variableMenu;
 
-	//TODO übernehmen
+	
 	public boolean renderContextMenu = true;
 	
 	private static final ResourceLocation VARIABLES_BUTTON_RESOURCE = new ResourceLocation("keksuccino", "add_btn.png");

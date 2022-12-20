@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.mixin.client;
 
 import net.minecraft.client.Minecraft;

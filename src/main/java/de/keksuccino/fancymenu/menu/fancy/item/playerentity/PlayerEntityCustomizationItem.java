@@ -76,7 +76,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 	
 	public PlayerEntityCustomizationItem(PropertiesSection item) {
 		super(item);
-		//---
+		
 		if (!FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
 			LOGGER.warn("CRITICAL WARNING: Player Entity element constructed while level registry interactions were disabled! Please report this to the dev of FancyMenu!");
 		}
@@ -226,10 +226,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			this.value = "Player Entity";
 		}
 
-		//---
+		
 		this.setWidth((int)(this.entity.getBbWidth()*this.scale));
 		this.setHeight((int)(this.entity.getBbHeight()*this.scale));
-		//--------------
+		
 		
 	}
 
@@ -247,10 +247,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 					}
 					
 					//Update object width and height for layout editor
-					//---
+					
 					this.setWidth((int)(this.entity.getBbWidth()*this.scale));
 					this.setHeight((int)(this.entity.getBbHeight()*this.scale));
-					//--------------
+					
 					
 					int mX = MouseInput.getMouseX();
 					int mY = MouseInput.getMouseY();
@@ -281,7 +281,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			Quaternion q2 = Vector3f.XP.rotationDegrees(item.bodyRotationY);
 			q.mul(q2);
 			matrix.mulPose(q);
-			//-----------
+			
 			
 			//horizontal rotation body
 			item.entity.yBodyRot = item.bodyRotationX;

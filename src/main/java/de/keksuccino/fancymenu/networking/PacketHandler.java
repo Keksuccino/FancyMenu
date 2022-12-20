@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.networking;
 
 import net.minecraft.network.PacketBuffer;

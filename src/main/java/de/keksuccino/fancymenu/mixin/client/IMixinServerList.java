@@ -1,4 +1,4 @@
-//TODO übernehmen 2.12.5
+
 package de.keksuccino.fancymenu.mixin.client;
 
 import net.minecraft.client.multiplayer.ServerData;

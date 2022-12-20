@@ -54,7 +54,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 						
 						ratio = (double) w / (double) h;
 
-						//---
+						
 					    //Calculate missing width
 					    if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
 					    	this.setWidth((int)(this.getHeight() * ratio));
@@ -63,7 +63,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 					    if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
 					    	this.setHeight((int)(this.getWidth() / ratio));
 					    }
-					    //-------------------
+					    
 						
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -90,10 +90,10 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				
 				this.gif.setPosX(x);
 				this.gif.setPosY(y);
-				//---
+				
 				this.gif.setWidth(this.getWidth());
 				this.gif.setHeight(this.getHeight());
-				//----------------
+				
 
 				this.gif.setOpacity(this.opacity);
 				
@@ -111,7 +111,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				Minecraft.getInstance().getTextureManager().bind(this.texture.getResourceLocation());
 				RenderSystem.enableBlend();
 				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
-				//---
+				
 				IngameGui.blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				RenderSystem.disableBlend();
 				
@@ -125,7 +125,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 		if ((this.texture == null) && (this.gif == null)) {
 			return false;
 		}
-		//---
+		
 		if ((this.getWidth() < 0) || (this.getHeight() < 0)) {
 			return false;
 		}
