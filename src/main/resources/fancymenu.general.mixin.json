@@ -23,7 +23,9 @@
     "IMixinChatScreen",
     "IMixinMinecraft",
     "MixinScreen",
-    "IMixinServerList"
+    "IMixinServerList",
+    "IMixinGridWidget",
+    "IMixinTitleScreen"
   ],
   "server": [],
   "injectors": {
