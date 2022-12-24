@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.menu.button;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,12 +10,14 @@ import de.keksuccino.fancymenu.events.GuiInitCompletedEvent;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.mixin.client.IMixinGridWidget;
+import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.GridWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
@@ -157,42 +158,45 @@ public class ButtonCache {
 
 	}
 
+	//TODO übernehmen
 	public static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
 		caching = true;
-		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
+		List<ButtonData> buttonDataList = new ArrayList<ButtonData>();
 		List<Long> ids = new ArrayList<Long>();
 		try {
-			//Resetting the button list
+
+			//Reset the button list
 			s.renderables.clear();
 
-			//Setting all important values for the GuiScreen to be able to initialize itself
-			Field f1 = ReflectionHelper.findField(Screen.class, "f_96542_"); //itemRenderer
-			f1.set(s, Minecraft.getInstance().getItemRenderer());
-
-			Field f2 = ReflectionHelper.findField(Screen.class, "f_96547_"); //font
-			f2.set(s, Minecraft.getInstance().font);
-
+			//Set all important variables and init screen
+			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
+			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 
 			//Reflecting the buttons list field to cache all buttons of the menu
-
-			for (Renderable d : s.renderables) {
-				if (d instanceof AbstractWidget) {
-					AbstractWidget w = (AbstractWidget) d;
-					String idRaw = w.x + "" + w.y;
-					long id = 0;
-					if (MathUtils.isLong(idRaw)) {
-						id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
-					}
-					ids.add(id);
-					buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
+			List<AbstractWidget> widgets = new ArrayList<>();
+			for (Renderable r : s.renderables) {
+				if (r instanceof GridWidget) {
+					widgets.addAll(((IMixinGridWidget)r).invokeGetContainedChildrenFancyMenu());
+				} else if (r instanceof AbstractWidget) {
+					widgets.add((AbstractWidget)r);
 				}
 			}
+			for (AbstractWidget w : widgets) {
+				String idRaw = w.x + "" + w.y;
+				long id = 0;
+				if (MathUtils.isLong(idRaw)) {
+					id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
+				}
+				ids.add(id);
+				buttonDataList.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		caching = false;
-		return buttonlist;
+		return buttonDataList;
 	}
 
 	protected static Long getAvailableIdFromBaseId(long baseId, List<Long> ids) {

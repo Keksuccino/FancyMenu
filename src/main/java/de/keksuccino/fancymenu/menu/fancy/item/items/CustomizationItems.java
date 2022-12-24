@@ -15,7 +15,6 @@ public class CustomizationItems {
         CustomizationItemRegistry.registerItem(new SliderCustomizationItemContainer());
         CustomizationItemRegistry.registerItem(new TextCustomizationItemContainer());
         CustomizationItemRegistry.registerItem(new TickerCustomizationItemContainer());
-        //TODO übernehmen
         CustomizationItemRegistry.registerItem(new PlayerEntityCustomizationItemContainer());
 
     }

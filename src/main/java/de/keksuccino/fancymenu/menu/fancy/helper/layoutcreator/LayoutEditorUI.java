@@ -1164,8 +1164,6 @@ public class LayoutEditorUI extends UIBase {
 				splashMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(splashButton);
-
-			//TODO übernehmen (remove old player entity entry)
 			
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {

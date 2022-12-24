@@ -28,7 +28,6 @@ import org.joml.Quaternionf;
 
 import java.io.File;
 
-//TODO übernehmen (copy whole playerentity package)
 public class PlayerEntityCustomizationItem extends CustomizationItem {
 
     public PlayerEntityItemRenderer normalRenderer = new PlayerEntityItemRenderer(false);

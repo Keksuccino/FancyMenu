@@ -302,7 +302,6 @@ public class MenuCustomization {
 	}
 
 	public static boolean isBlacklistedMenu(String menuIdentifierOrPartOfIdentifier) {
-		//TODO übernehmen
 		if (menuIdentifierOrPartOfIdentifier.startsWith(PlayerEntityRotationScreen.class.getName())) {
 			return true;
 		}
