@@ -438,7 +438,6 @@ public abstract class LayoutElement extends GuiComponent {
 			PopupHandler.displayPopup(p);
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
-		//----------------------------
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
@@ -957,7 +956,6 @@ public abstract class LayoutElement extends GuiComponent {
 		} else {
 			this.resizing = false;
 		}
-		//-----------------------
 		
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {

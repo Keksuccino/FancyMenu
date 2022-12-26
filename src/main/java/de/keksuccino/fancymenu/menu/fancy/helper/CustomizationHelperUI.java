@@ -311,7 +311,6 @@ public class CustomizationHelperUI extends UIBase {
 			universalLayoutsTabButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.universal_layouts.btn.desc"), "%n%"));
 			bar.addElement(universalLayoutsTabButton, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT, false);
 			/** UNIVERSAL LAYOUTS END **/
-			//--------------------------
 
 			/** SETUP TAB START **/
 			FMContextMenu setupMenu = new FMContextMenu();

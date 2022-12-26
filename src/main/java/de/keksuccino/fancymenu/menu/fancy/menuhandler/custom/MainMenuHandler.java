@@ -272,14 +272,8 @@ public class MainMenuHandler extends MenuHandlerBase {
 		}
 	}
 
-	//TODO 1.19.3 remove final from fading field
 	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
-//		try {
-//			Field f = ReflectionHelper.findField(TitleScreen.class, "f_96714_"); //fading
-//			f.setBoolean(s, showFadeIn);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
+		s.fading = showFadeIn;
 	}
 
 }

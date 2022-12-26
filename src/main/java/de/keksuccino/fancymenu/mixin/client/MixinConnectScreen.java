@@ -28,7 +28,7 @@ public class MixinConnectScreen {
     }
 
     @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
-    private void onConnect(Minecraft mc, ServerAddress address, CallbackInfo info) {
+    private void onConnect(Minecraft p_251955_, ServerAddress address, ServerData p_252078_, CallbackInfo info) {
         if (address.getHost().equals("%fancymenu_dummy_address%")) {
             info.cancel();
         }

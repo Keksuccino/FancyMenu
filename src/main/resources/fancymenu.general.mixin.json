@@ -18,7 +18,9 @@
     "IMixinMinecraft",
     "IMixinChatScreen",
     "IMixinServerList",
-    "IMixinTitleScreen"
+    "IMixinTitleScreen",
+    "IMixinScreen",
+    "IMixinGridWidget"
   ],
   "injectors": {
     "defaultRequire": 1

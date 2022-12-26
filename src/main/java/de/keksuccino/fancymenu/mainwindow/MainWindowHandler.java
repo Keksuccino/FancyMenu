@@ -61,8 +61,6 @@ public class MainWindowHandler {
 					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon32x32.png' not 32x32!");
 					return;
 				}
-//				InputStream icon16 = new FileInputStream(i16);
-//				InputStream icon32 = new FileInputStream(i32);
 				
 				Minecraft.getInstance().getWindow().setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
 				System.out.println("[FANCYMENU] Custom minecraft icon successfully loaded!");

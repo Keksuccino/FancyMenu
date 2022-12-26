@@ -452,9 +452,7 @@ public class LayoutEditorUI extends UIBase {
 				});
 				universalLayoutMenu.addContent(clearBlacklistButton);
 
-				//----------------------------------------------------------
 				universalLayoutMenu.addSeparator();
-				//----------------------------------------------------------
 
 				//Add to Whitelist -----------------
 				AdvancedButton addWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), true, (press) -> {
@@ -1677,7 +1675,6 @@ public class LayoutEditorUI extends UIBase {
 				AdvancedButton emptyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
 				this.addContent(emptyButton);
 			}
-			//-----------------------
 			
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}

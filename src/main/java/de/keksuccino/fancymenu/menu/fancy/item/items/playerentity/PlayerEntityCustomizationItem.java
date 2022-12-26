@@ -28,7 +28,6 @@ import org.joml.Quaternionf;
 
 import java.io.File;
 
-//TODO übernehmen (copy whole playerentity package)
 public class PlayerEntityCustomizationItem extends CustomizationItem {
 
     public PlayerEntityItemRenderer normalRenderer = new PlayerEntityItemRenderer(false);
@@ -506,7 +505,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
         float angleY = angleYComponent;
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushPose();
-        modelViewStack.translate((posX+((this.getActiveEntityProperties().getDimensions().width / 2) * this.scale)), (posY+(this.getActiveEntityProperties().getDimensions().height * this.scale)), 1050.0F);
+        modelViewStack.translate((posX+((this.getActiveEntityProperties().getDimensions().width / 2) * scale)), (posY+(this.getActiveEntityProperties().getDimensions().height * this.scale)), 1050.0F);
         modelViewStack.scale(1.0F, 1.0F, -1.0F);
         RenderSystem.applyModelViewMatrix();
         PoseStack innerMatrix = new PoseStack();

@@ -880,7 +880,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				}
 			}
 		}
-		//--------------------------------
 
 		this.content.addAll(con);
 
