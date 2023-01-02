@@ -31,7 +31,6 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	public String hoverLabelRaw;
 	public String labelRaw;
-	//TODO übernehmen
 	public String tooltip;
 
 	public ButtonCustomizationItem(PropertiesSection item) {
@@ -52,10 +51,6 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (actionvalue == null) {
 				actionvalue = "";
 			}
-			//TODO übernehmen
-//			if (!isEditorActive()) {
-//				actionvalue = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(actionvalue);
-//			}
 
 			this.hoverSound = item.getEntryValue("hoversound");
 			if (this.hoverSound != null) {
@@ -101,12 +96,10 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			//TODO übernehmen
 			this.tooltip = item.getEntryValue("description");
 			if (this.tooltip != null) {
 				this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
 			}
-			//----------------
 
 			String backNormal = fixBackslashPath(item.getEntryValue("backgroundnormal"));
 			String backHover = fixBackslashPath(item.getEntryValue("backgroundhovered"));
@@ -223,11 +216,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	protected void updateValues() {
 
-		//TODO übernehmen
 		if (this.tooltip != null) {
 			this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
 		}
-		//-------------
 		if (this.labelRaw != null) {
 			if (!isEditorActive()) {
 				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.labelRaw);
