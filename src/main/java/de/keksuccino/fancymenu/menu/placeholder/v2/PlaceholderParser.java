@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 
 //Copyright (c) 2022 Keksuccino.
 //This code is licensed under DSMSL.
@@ -27,6 +27,9 @@ public class PlaceholderParser {
 
     @Nonnull
     public static String replacePlaceholders(@Nonnull String in) {
+        if (in == null) {
+            in = "";
+        }
         updateLogHandler();
         //TODO remove in a later release
         in = DynamicValueHelper.convertFromRaw(in);

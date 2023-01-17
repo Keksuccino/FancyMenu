@@ -25,68 +25,68 @@ public class VisibilityRequirementContainer {
     //Visibility Requirements
     //VR show-if values are always the requirement that must be met to show the element.
     //So if the system should check for the main hand item and it's show-if value is set to FALSE, the element is visible if NO ITEM IS IN THE MAIN HAND.
-    //---------
+    
     public boolean vrCheckForSingleplayer = false;
     public boolean vrShowIfSingleplayer = false;
-    //---------
+    
     public boolean vrCheckForMultiplayer = false;
     public boolean vrShowIfMultiplayer = false;
-    //---------
+    
     public boolean vrCheckForWindowWidth = false;
     public boolean vrShowIfWindowWidth = false;
-    //TODO übernehmen (string)
+    
     public String vrWindowWidth = null;
-    //---------
+    
     public boolean vrCheckForWindowHeight = false;
     public boolean vrShowIfWindowHeight = false;
-    //TODO übernehmen (string)
+    
     public String vrWindowHeight = null;
-    //---------
+    
     public boolean vrCheckForWindowWidthBiggerThan = false;
     public boolean vrShowIfWindowWidthBiggerThan = false;
-    //TODO übernehmen (String)
+    
     public String vrWindowWidthBiggerThan = null;
-    //---------
+    
     public boolean vrCheckForWindowHeightBiggerThan = false;
     public boolean vrShowIfWindowHeightBiggerThan = false;
-    //TODO übernehmen (String)
+    
     public String vrWindowHeightBiggerThan = null;
-    //---------
+    
     public boolean vrCheckForButtonHovered = false;
     public boolean vrShowIfButtonHovered = false;
     public String vrButtonHovered = null;
-    //---------
+    
     public boolean vrCheckForWorldLoaded = false;
     public boolean vrShowIfWorldLoaded = false;
-    //---------
+    
     public boolean vrCheckForLanguage = false;
     public boolean vrShowIfLanguage = false;
     public String vrLanguage = null;
-    //---------
+    
     public boolean vrCheckForFullscreen = false;
     public boolean vrShowIfFullscreen = false;
-    //---------
+    
     public boolean vrCheckForOsWindows = false;
     public boolean vrShowIfOsWindows = false;
-    //---------
+    
     public boolean vrCheckForOsMac = false;
     public boolean vrShowIfOsMac = false;
-    //---------
+    
     public boolean vrCheckForOsLinux = false;
     public boolean vrShowIfOsLinux = false;
-    //---------
+    
     public boolean vrCheckForModLoaded = false;
     public boolean vrShowIfModLoaded = false;
     public List<String> vrModLoaded = new ArrayList<String>();
-    //---------
+    
     public boolean vrCheckForServerOnline = false;
     public boolean vrShowIfServerOnline = false;
     public String vrServerOnline = null;
-    //---------
+    
     public boolean vrCheckForGuiScale = false;
     public boolean vrShowIfGuiScale = false;
     public List<String> vrGuiScale = new ArrayList<>();
-    //---------
+    
 
     public Map<String, RequirementPackage> customRequirements = new LinkedHashMap<>();
 
@@ -684,12 +684,12 @@ public class VisibilityRequirementContainer {
 
                 if (p.checkFor) {
                     if (p.showIf) {
-                        //TODO übernehmen (if)
+                        
                         if (!p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }
                     } else {
-                        //TODO übernehmen (if)
+                        
                         if (p.requirement.isRequirementMet(PlaceholderParser.replacePlaceholders(p.value))) {
                             return false;
                         }

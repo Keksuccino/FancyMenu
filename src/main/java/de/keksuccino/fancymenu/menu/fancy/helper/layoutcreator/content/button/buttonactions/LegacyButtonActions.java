@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions;
 
 import de.keksuccino.konkrete.localization.Locals;

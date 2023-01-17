@@ -38,7 +38,7 @@ public class AdvancedMusicTicker extends MusicTicker {
 	
 	protected ISound getCurrentMusic() {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(MusicTicker.class, "currentMusic", "field_147678_c");
 			Field f = ObfuscationReflectionHelper.findField(MusicTicker.class, "field_147678_c"); //currentMusic
 			return (ISound) f.get(this);
@@ -50,7 +50,7 @@ public class AdvancedMusicTicker extends MusicTicker {
 	
 	protected void setCurrentMusic(ISound sound) {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(MusicTicker.class, "currentMusic", "field_147678_c");
 			Field f = ObfuscationReflectionHelper.findField(MusicTicker.class, "field_147678_c"); //currentMusic
 			f.set(this, sound);
@@ -61,7 +61,7 @@ public class AdvancedMusicTicker extends MusicTicker {
 	
 	protected void setTimeUntilNext(int time) {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(MusicTicker.class, "timeUntilNextMusic", "field_147676_d");
 			Field f = ObfuscationReflectionHelper.findField(MusicTicker.class, "field_147676_d"); //timeUntilNextMusic
 			f.set(this, time);

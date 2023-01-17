@@ -1,4 +1,4 @@
-//--- 2.12.1
+
 package de.keksuccino.fancymenu.networking;
 
 import net.minecraft.entity.player.EntityPlayerMP;

@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.api.buttonaction;
 
 import javax.annotation.Nonnull;

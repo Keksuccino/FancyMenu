@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements;
 
 import com.google.common.io.Files;

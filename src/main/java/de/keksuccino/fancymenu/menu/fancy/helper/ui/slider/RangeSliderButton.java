@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.slider;
 
 import net.minecraft.util.math.MathHelper;

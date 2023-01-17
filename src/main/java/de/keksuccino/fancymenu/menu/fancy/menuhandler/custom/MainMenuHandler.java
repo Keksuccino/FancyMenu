@@ -363,7 +363,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private void drawRealmsNotification(GuiScreen gui) {
 		if (Minecraft.getMinecraft().gameSettings.getOptionOrdinalValue(GameSettings.Options.REALMS_NOTIFICATIONS)) {
-			//---
+			
 			//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiMainMenu.class, "field_183503_M", "realmsNotification");
 			Field f = ObfuscationReflectionHelper.findField(GuiMainMenu.class, "field_183503_M"); //realmsNotification
 			GuiScreen realms = null;
@@ -379,7 +379,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	private List<GuiButton> getButtonList(GuiScreen gui) {
-		//---
+		
 		//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146292_n", "buttonList");
 		Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146292_n"); //buttonList
 		List<GuiButton> buttons = new ArrayList<GuiButton>();
@@ -392,7 +392,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 	
 	private List<GuiLabel> getLabelList(GuiScreen gui) {
-		//---
+		
 		//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class, "field_146293_o", "labelList");
 		Field f = ObfuscationReflectionHelper.findField(GuiScreen.class, "field_146293_o"); //labelList
 		List<GuiLabel> labels = new ArrayList<GuiLabel>();
@@ -407,7 +407,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	private void setWidthCopyrightRest(int i) {
 		try {
 			if (Minecraft.getMinecraft().currentScreen instanceof GuiMainMenu) {
-				//---
+				
 				//Field f = ReflectionHelper.findField(GuiMainMenu.class, "field_193979_N", "widthCopyrightRest");
 				Field f = ObfuscationReflectionHelper.findField(GuiMainMenu.class, "field_193979_N"); //widthCopyrightRest
 				f.set(Minecraft.getMinecraft().currentScreen, i);
@@ -553,7 +553,7 @@ public class MainMenuHandler extends MenuHandlerBase {
     }
     
     private static float getZlevel(Gui gui) {
-		//---
+		
     	//Field f = net.minecraftforge.fml.relauncher.ReflectionHelper.findField(Gui.class, "field_73735_i", "zLevel");
 		Field f = ObfuscationReflectionHelper.findField(Gui.class, "field_73735_i"); //zLevel
     	try {

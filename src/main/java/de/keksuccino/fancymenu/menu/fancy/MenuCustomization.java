@@ -279,14 +279,14 @@ public class MenuCustomization {
 		CustomizationHelper.reloadSystemAndMenu();
 	}
 
-	//---
+	
 	public static void enableLayout(MenuCustomizationProperties.LayoutProperties layout) {
 		if (layout.path != null) {
 			enableLayout(layout.path);
 		}
 	}
 
-	//---
+	
 	public static void disableLayout(String path) {
 		try {
 			File f = new File(path);
@@ -300,7 +300,7 @@ public class MenuCustomization {
 		CustomizationHelper.reloadSystemAndMenu();
 	}
 
-	//---
+	
 	public static void disableLayout(MenuCustomizationProperties.LayoutProperties layout) {
 		if (layout.path != null) {
 			disableLayout(layout.path);
@@ -312,6 +312,9 @@ public class MenuCustomization {
 			return true;
 		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.panoramica.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("com.github.alexthe666.alexsmobs.")) {
 			return true;
 		}
 		return false;

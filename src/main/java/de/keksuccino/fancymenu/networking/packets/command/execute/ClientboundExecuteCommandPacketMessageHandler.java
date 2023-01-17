@@ -1,4 +1,4 @@
-//--- 2.12.1
+
 package de.keksuccino.fancymenu.networking.packets.command.execute;
 
 import net.minecraft.client.Minecraft;

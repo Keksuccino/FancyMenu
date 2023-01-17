@@ -15,7 +15,7 @@ public class FMCore implements IFMLLoadingPlugin {
         //TODO REMOVE DEBUG
 //        MixinBootstrap.init();
 //        Mixins.addConfiguration("fancymenu.general.mixin.json");
-        //--------------
+        
 
     }
 

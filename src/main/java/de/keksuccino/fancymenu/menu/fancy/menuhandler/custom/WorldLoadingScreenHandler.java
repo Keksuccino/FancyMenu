@@ -58,7 +58,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static int getProgress(GuiScreen screen) {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "progress", "");
 			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146590_g"); //progress
 			return f.getInt(screen);
@@ -70,7 +70,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static boolean getDoneWorking(GuiScreen screen) {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "doneWorking", "");
 			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146592_h"); //doneWorking
 			return f.getBoolean(screen);
@@ -82,7 +82,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static String getTitle(GuiScreen screen) {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "title", "");
 			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146591_a"); //title
 			return (String) f.get(screen);
@@ -94,7 +94,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static String getStage(GuiScreen screen) {
 		try {
-			//---
+			
 			//Field f = ReflectionHelper.findField(GuiScreenWorking.class, "stage", "");
 			Field f = ObfuscationReflectionHelper.findField(GuiScreenWorking.class, "field_146589_f"); //stage
 			return (String) f.get(screen);

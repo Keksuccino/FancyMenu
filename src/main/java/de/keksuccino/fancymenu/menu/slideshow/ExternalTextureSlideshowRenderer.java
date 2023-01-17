@@ -224,13 +224,13 @@ public class ExternalTextureSlideshowRenderer extends Gui {
 				o = this.slideshowOpacity;
 			}
 			GlStateManager.color(1.0F, 1.0F, 1.0F, o);
-			//------------------
+			
 			ResourceLocation r = this.previous.getResourceLocation();
 			if (r != null) {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(r);
 				drawModalRectWithCustomSizedTexture(this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
-			//-----------------
+			
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			GlStateManager.popMatrix();
 		}
@@ -248,7 +248,7 @@ public class ExternalTextureSlideshowRenderer extends Gui {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(r);
 				drawModalRectWithCustomSizedTexture(this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
-			//--------------
+			
 		}
 	}
 
@@ -264,7 +264,7 @@ public class ExternalTextureSlideshowRenderer extends Gui {
 				Minecraft.getMinecraft().getTextureManager().bindTexture(r);
 				drawModalRectWithCustomSizedTexture(this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
-			//-----------------
+			
 		}
 	}
 	

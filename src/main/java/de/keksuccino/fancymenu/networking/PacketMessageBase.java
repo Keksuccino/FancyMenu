@@ -1,4 +1,4 @@
-//--- 2.12.1
+
 package de.keksuccino.fancymenu.networking;
 
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;

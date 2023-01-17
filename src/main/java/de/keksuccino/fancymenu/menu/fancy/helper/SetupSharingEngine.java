@@ -36,11 +36,11 @@ import java.util.function.Consumer;
 
 public class SetupSharingEngine {
 
-    //TODO übernehmen 4
+    
     public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getMinecraft().mcDataDir, "config/fancymenu/menu_identifiers.db");
     public static final File FM_SETUPS_DIR = new File(Minecraft.getMinecraft().mcDataDir, "fancymenu_setups/exported_setups");
     public static final File SETUP_BACKUP_DIR = new File(Minecraft.getMinecraft().mcDataDir, "fancymenu_setups/.backups");
-    //---------------------
+    
 
     protected static MenuIdentifierDatabase menuIdentifierDatabase = null;
 
@@ -890,7 +890,7 @@ public class SetupSharingEngine {
                                             File targetDir = new File(targetRaw.getAbsolutePath().replace("\\", "/"));
                                             if (targetDir.isDirectory()) {
                                                 try {
-                                                    //TODO übernehmen 2
+                                                    
                                                     File fmFolder = FancyMenu.MOD_DIR;
                                                     File customizationFolder = new File(fmFolder.getPath() + "/customization");
                                                     File customizableMenusFile = new File(fmFolder.getPath() + "/customizablemenus.txt");

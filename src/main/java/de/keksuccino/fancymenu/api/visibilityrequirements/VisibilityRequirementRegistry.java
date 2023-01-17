@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.api.visibilityrequirements;
 
 import de.keksuccino.fancymenu.FancyMenu;

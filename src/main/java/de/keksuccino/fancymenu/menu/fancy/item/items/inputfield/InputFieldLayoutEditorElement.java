@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.inputfield;
 
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;

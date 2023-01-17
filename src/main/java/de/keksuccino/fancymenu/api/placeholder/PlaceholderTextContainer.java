@@ -117,7 +117,7 @@ public abstract class PlaceholderTextContainer {
         return l;
     }
 
-    //---
+    
     public static String getPlaceholderWithoutPercentPrefixSuffix(String placeholderWithPrefixSuffix) {
         return placeholderWithPrefixSuffix.substring(1, placeholderWithPrefixSuffix.length()-1);
     }
