@@ -313,6 +313,9 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.panoramica.")) {
 			return true;
 		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("com.github.alexthe666.alexsmobs.")) {
+			return true;
+		}
 		return false;
 	}
 

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.PlayerEntityItemRenderer;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.PlayerEntityProperties;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
@@ -24,11 +25,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Quaternion;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.text.StringTextComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.File;
 
 public class PlayerEntityCustomizationItem extends CustomizationItem {
+
+    //TODO übernehmen
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public PlayerEntityItemRenderer normalRenderer = new PlayerEntityItemRenderer(false);
     public PlayerEntityItemRenderer slimRenderer = new PlayerEntityItemRenderer(true);
@@ -51,6 +57,9 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     public volatile String capeUrl;
     protected volatile String oldCapeUrl = null;
     public volatile String capePath;
+    //TODO übernehmen
+    protected volatile ResourceLocation currentSkinLocation = null;
+    protected volatile ResourceLocation currentCapeLocation = null;
 
     public boolean followMouse = true;
     public float bodyRotationX;
@@ -61,6 +70,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     public PlayerEntityCustomizationItem(CustomizationItemContainer parentContainer, PropertiesSection item) {
 
         super(parentContainer, item);
+
+        if (isEditorActive()) {
+            PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.clear();
+        }
 
         String copyClientPlayerString = item.getEntryValue("copy_client_player");
         if ((copyClientPlayerString != null) && copyClientPlayerString.equals("true")) {
@@ -198,6 +211,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
             }
         }
 
+        if (!isEditorActive()) {
+            PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.put(this.actionId, this);
+        }
+
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {
@@ -255,6 +272,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setCapeByPlayerName() {
+        //TODO übernehmen
+        PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
+        if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
+            this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
+            return;
+        }
+        //---------------------
         new Thread(() -> {
             try {
                 if (this.playerName != null) {
@@ -272,6 +296,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setSkinByPlayerName() {
+        //TODO übernehmen
+        PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
+        if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
+            this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
+            return;
+        }
+        //---------------------
         new Thread(() -> {
             try {
                 if (this.playerName != null) {
@@ -297,6 +328,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setSkinTextureBySource(String sourcePathOrLink, boolean web) {
+        //TODO übernehmen
+        PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
+        if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
+            this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
+            return;
+        }
+        //---------------------
         if (sourcePathOrLink != null) {
             if (web) {
                 new Thread(() -> {
@@ -307,14 +345,29 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         this.skinPath = null;
                         String sha1 = PlayerEntityElementCache.calculateWebSourceSHA1(url);
                         if (sha1 != null) {
+                            //TODO übernehmen
                             if (!PlayerEntityElementCache.isSkinCached(sha1)) {
                                 SkinWebTextureResourceLocation sr = new SkinWebTextureResourceLocation(url);
-                                sr.loadTexture();
+                                sr.downloadTexture();
+                                if (sr.getDownloadedTexture() == null) {
+                                    return;
+                                }
+                                CustomizationHelper.runTaskInMainThread(() -> sr.loadTexture());
+                                long start = System.currentTimeMillis();
+                                while (sr.getResourceLocation() == null) {
+                                    long now = System.currentTimeMillis();
+                                    if ((start + 15000) <= now) {
+                                        LOGGER.error("[FANCYMENU] Failed to load web skin texture for Player Entity element!");
+                                        return;
+                                    }
+                                    Thread.sleep(100);
+                                }
                                 PlayerEntityElementCache.cacheSkin(sha1, sr.getResourceLocation());
                                 this.setSkinTextureLocation(sr.getResourceLocation());
                             } else {
                                 this.setSkinTextureLocation(PlayerEntityElementCache.getSkin(sha1));
                             }
+                            //---------------------
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -328,14 +381,25 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
                             String sha1 = PlayerEntityElementCache.calculateSHA1(f);
                             if (sha1 != null) {
+                                //TODO übernehmen
                                 if (!PlayerEntityElementCache.isSkinCached(sha1)) {
                                     SkinExternalTextureResourceLocation sr = new SkinExternalTextureResourceLocation(path);
-                                    sr.loadTexture();
+                                    CustomizationHelper.runTaskInMainThread(() -> sr.loadTexture());
+                                    long start = System.currentTimeMillis();
+                                    while (sr.getResourceLocation() == null) {
+                                        long now = System.currentTimeMillis();
+                                        if ((start + 15000) <= now) {
+                                            LOGGER.error("[FANCYMENU] Failed to load local skin texture for Player Entity element!");
+                                            return;
+                                        }
+                                        Thread.sleep(100);
+                                    }
                                     PlayerEntityElementCache.cacheSkin(sha1, sr.getResourceLocation());
                                     this.setSkinTextureLocation(sr.getResourceLocation());
                                 } else {
                                     this.setSkinTextureLocation(PlayerEntityElementCache.getSkin(sha1));
                                 }
+                                //------------------
                                 this.skinUrl = null;
                                 this.skinPath = sourcePathOrLink;
                             }
@@ -354,6 +418,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setCapeTextureBySource(String sourcePathOrLink, boolean web) {
+        //TODO übernehmen
+        PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
+        if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
+            this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
+            return;
+        }
+        //---------------------
         if (sourcePathOrLink != null) {
             if (web) {
                 new Thread(() -> {
@@ -364,14 +435,29 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         this.capePath = null;
                         String sha1 = PlayerEntityElementCache.calculateWebSourceSHA1(url);
                         if (sha1 != null) {
+                            //TODO übernehmen
                             if (!PlayerEntityElementCache.isCapeCached(sha1)) {
-                                WebTextureResourceLocation wr = new WebTextureResourceLocation(url);
-                                wr.loadTexture();
-                                PlayerEntityElementCache.cacheCape(sha1, wr.getResourceLocation());
-                                this.setCapeTextureLocation(wr.getResourceLocation());
+                                CapeWebTextureResourceLocation sr = new CapeWebTextureResourceLocation(url);
+                                sr.downloadTexture();
+                                if (sr.getDownloadedTexture() == null) {
+                                    return;
+                                }
+                                CustomizationHelper.runTaskInMainThread(() -> sr.loadTexture());
+                                long start = System.currentTimeMillis();
+                                while (sr.getResourceLocation() == null) {
+                                    long now = System.currentTimeMillis();
+                                    if ((start + 15000) <= now) {
+                                        LOGGER.error("[FANCYMENU] Failed to load web cape texture for Player Entity element!");
+                                        return;
+                                    }
+                                    Thread.sleep(100);
+                                }
+                                PlayerEntityElementCache.cacheCape(sha1, sr.getResourceLocation());
+                                this.setCapeTextureLocation(sr.getResourceLocation());
                             } else {
                                 this.setCapeTextureLocation(PlayerEntityElementCache.getCape(sha1));
                             }
+                            //------------------
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -384,10 +470,20 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         File f = new File(path);
                         if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
                             String sha1 = PlayerEntityElementCache.calculateSHA1(f);
+                            //TODO übernehmen
                             if (sha1 != null) {
                                 if (!PlayerEntityElementCache.isCapeCached(sha1)) {
                                     ExternalTextureResourceLocation er = new ExternalTextureResourceLocation(path);
-                                    er.loadTexture();
+                                    CustomizationHelper.runTaskInMainThread(() -> er.loadTexture());
+                                    long start = System.currentTimeMillis();
+                                    while (er.getResourceLocation() == null) {
+                                        long now = System.currentTimeMillis();
+                                        if ((start + 15000) <= now) {
+                                            LOGGER.error("[FANCYMENU] Failed to load local cape texture for Player Entity element!");
+                                            return;
+                                        }
+                                        Thread.sleep(100);
+                                    }
                                     PlayerEntityElementCache.cacheCape(sha1, er.getResourceLocation());
                                     this.setCapeTextureLocation(er.getResourceLocation());
                                 } else {
@@ -396,6 +492,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                                 this.capeUrl = null;
                                 this.capePath = sourcePathOrLink;
                             }
+                            //-------------------------
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -411,32 +508,17 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     protected void setSkinTextureLocation(ResourceLocation loc) {
+        //TODO übernehmen
+        this.currentSkinLocation = loc;
         this.normalRenderer.properties.setSkinTextureLocation(loc);
         this.slimRenderer.properties.setSkinTextureLocation(loc);
     }
 
     protected void setCapeTextureLocation(ResourceLocation loc) {
+        //TODO übernehmen
+        this.currentCapeLocation = loc;
         this.normalRenderer.properties.setCapeTextureLocation(loc);
         this.slimRenderer.properties.setCapeTextureLocation(loc);
-    }
-
-    @Nullable
-    protected ResourceLocation getResourceLocationOfWebResource(String url) {
-        try {
-            WebTextureResourceLocation wt = TextureHandler.getWebResource(url, false);
-            if (wt != null) {
-                if (!wt.isReady()) {
-                    wt.loadTexture();
-                }
-                ResourceLocation loc = wt.getResourceLocation();
-                if (loc != null) {
-                    return loc;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public PlayerEntityItemRenderer getActiveRenderer() {

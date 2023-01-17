@@ -82,6 +82,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class MenuHandlerBase {
@@ -129,6 +130,8 @@ public class MenuHandlerBase {
 
 	protected String closeAudio;
 	protected String openAudio;
+
+	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
 	
 	protected static Screen scaleChangedIn = null;
 
@@ -238,6 +241,8 @@ public class MenuHandlerBase {
 
 		this.customMenuTitle = null;
 
+		this.cachedLayoutWideRequirements.clear();
+
 		for (PropertiesSet s : rawLayouts) {
 			
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -251,6 +256,7 @@ public class MenuHandlerBase {
 			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
 				@Override public void render(MatrixStack matrix, Screen menu) throws IOException {}
 			}.visibilityRequirementContainer;
+			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
 			}
@@ -1270,6 +1276,29 @@ public class MenuHandlerBase {
 			t.start();
 			
 		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+			return;
+		}
+
+		//Re-init screen if layout-wide requirements changed
+		for (Map.Entry<VisibilityRequirementContainer, Boolean> m : this.cachedLayoutWideRequirements.entrySet()) {
+			if (m.getKey().isVisible() != m.getValue()) {
+				e.getGui().init(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
+				break;
+			}
+		}
+
 	}
 
 	@SubscribeEvent
