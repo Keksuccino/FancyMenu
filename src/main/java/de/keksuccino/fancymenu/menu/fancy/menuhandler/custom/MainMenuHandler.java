@@ -23,6 +23,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.lay
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import de.keksuccino.fancymenu.mixin.client.IMixinTitleScreen;
+import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
@@ -318,6 +319,11 @@ public class MainMenuHandler extends MenuHandlerBase {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		super.onRenderPre(e);
 	}
 
 }
