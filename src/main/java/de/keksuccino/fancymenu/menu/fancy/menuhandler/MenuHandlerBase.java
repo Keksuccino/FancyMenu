@@ -81,6 +81,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.util.Mth;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class MenuHandlerBase extends GuiComponent {
@@ -128,7 +129,9 @@ public class MenuHandlerBase extends GuiComponent {
 
 	protected String closeAudio;
 	protected String openAudio;
-	
+
+	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
+
 	protected static Screen scaleChangedIn = null;
 
 	public static Map<Class, Component> cachedOriginalMenuTitles = new HashMap<>();
@@ -237,6 +240,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.customMenuTitle = null;
 
+		this.cachedLayoutWideRequirements.clear();
+
 		for (PropertiesSet s : rawLayouts) {
 			
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -250,6 +255,7 @@ public class MenuHandlerBase extends GuiComponent {
 			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
 				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 			}.visibilityRequirementContainer;
+			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
 			}
@@ -1253,6 +1259,29 @@ public class MenuHandlerBase extends GuiComponent {
 			t.start();
 			
 		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(ScreenEvent.DrawScreenEvent.Pre e) {
+
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		if (!this.shouldCustomize(e.getScreen())) {
+			return;
+		}
+		if (!MenuCustomization.isMenuCustomizable(e.getScreen())) {
+			return;
+		}
+
+		//Re-init screen if layout-wide requirements changed
+		for (Map.Entry<VisibilityRequirementContainer, Boolean> m : this.cachedLayoutWideRequirements.entrySet()) {
+			if (m.getKey().isVisible() != m.getValue()) {
+				e.getScreen().init(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
+				break;
+			}
+		}
+
 	}
 
 	@SubscribeEvent

@@ -27,6 +27,9 @@ public class PlaceholderParser {
 
     @NotNull
     public static String replacePlaceholders(@NotNull String in) {
+        if (in == null) {
+            in = "";
+        }
         updateLogHandler();
         //TODO remove in a later release
         in = DynamicValueHelper.convertFromRaw(in);
