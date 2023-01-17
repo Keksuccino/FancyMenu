@@ -6,7 +6,9 @@ import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
+import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.InitGuiEvent.Pre;
@@ -52,6 +54,11 @@ public class DummyCoreMainHandler extends MainMenuHandler {
 	@Override
 	public void onRenderPost(DrawScreenEvent.Post e) {
 		super.onRenderPost(e);
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		super.onRenderPre(e);
 	}
 	
 	@SubscribeEvent

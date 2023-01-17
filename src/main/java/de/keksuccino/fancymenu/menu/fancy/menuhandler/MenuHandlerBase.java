@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
+import de.keksuccino.konkrete.events.EventPriority;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -125,6 +126,8 @@ public class MenuHandlerBase extends GuiComponent {
 	protected String closeAudio;
 	protected String openAudio;
 
+	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
+
 	protected static Screen scaleChangedIn = null;
 
 	public static Map<Class, Component> cachedOriginalMenuTitles = new HashMap<>();
@@ -233,6 +236,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.customMenuTitle = null;
 
+		this.cachedLayoutWideRequirements.clear();
+
 		for (PropertiesSet s : rawLayouts) {
 
 			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
@@ -246,6 +251,7 @@ public class MenuHandlerBase extends GuiComponent {
 			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
 				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 			}.visibilityRequirementContainer;
+			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
 			}
@@ -1237,6 +1243,29 @@ public class MenuHandlerBase extends GuiComponent {
 			t.start();
 
 		}
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+
+		if (PopupHandler.isPopupActive()) {
+			return;
+		}
+		if (!this.shouldCustomize(e.getGui())) {
+			return;
+		}
+		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+			return;
+		}
+
+		//Re-init screen if layout-wide requirements changed
+		for (Map.Entry<VisibilityRequirementContainer, Boolean> m : this.cachedLayoutWideRequirements.entrySet()) {
+			if (m.getKey().isVisible() != m.getValue()) {
+				e.getGui().init(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
+				break;
+			}
+		}
+
 	}
 
 	@SubscribeEvent

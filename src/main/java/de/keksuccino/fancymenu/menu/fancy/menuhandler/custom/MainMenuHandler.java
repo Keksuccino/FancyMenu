@@ -23,6 +23,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash.TitleScreenSplashItem;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
+import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
@@ -313,6 +314,11 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	protected static void setShowFadeInAnimation(boolean showFadeIn, TitleScreen s) {
 		s.fading = showFadeIn;
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		super.onRenderPre(e);
 	}
 
 }

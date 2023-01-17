@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import de.keksuccino.fancymenu.mixin.client.IMixinLevelLoadingScreen;
+import de.keksuccino.konkrete.events.EventPriority;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -130,6 +131,11 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	private static StoringChunkProgressListener getTracker(Screen screen) {
 		return ((IMixinLevelLoadingScreen)screen).getProgressListenerFancyMenu();
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		super.onRenderPre(e);
 	}
 
 }

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.mixin.client.IMixinPauseScreen;
+import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -96,6 +97,11 @@ public class PauseScreenHandler extends MenuHandlerBase {
             }
         }
         return true;
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+        super.onRenderPre(e);
     }
 
 }
