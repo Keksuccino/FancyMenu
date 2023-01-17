@@ -158,7 +158,6 @@ public class ButtonCache {
 
 	}
 
-	//TODO übernehmen
 	public static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
 		caching = true;
 		List<ButtonData> buttonDataList = new ArrayList<ButtonData>();

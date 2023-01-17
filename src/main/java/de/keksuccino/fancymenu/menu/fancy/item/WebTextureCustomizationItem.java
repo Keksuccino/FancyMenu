@@ -11,7 +11,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.annotations.OptifineFix;
@@ -49,7 +48,8 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 				if (cachedWebImages.containsKey(this.actionId)) {
 					this.texture = cachedWebImages.get(this.actionId);
 					this.calculateAspectRatio();
-					if ((this.texture.getResourceLocation() != null) && this.texture.getURL().equals(this.value)) {
+					//TODO übernehmen (if)
+					if ((this.texture != null) && (this.texture.getResourceLocation() != null) && (this.texture.getURL() != null) && this.texture.getURL().equals(this.value)) {
 						this.ready = true;
 					} else {
 						this.texture = null;

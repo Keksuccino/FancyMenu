@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -30,7 +31,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	public String hoverLabelRaw;
 	public String labelRaw;
-	
+	public String tooltip;
+
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
 		
@@ -48,9 +50,6 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			}
 			if (actionvalue == null) {
 				actionvalue = "";
-			}
-			if (!isEditorActive()) {
-				actionvalue = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(actionvalue);
 			}
 
 			this.hoverSound = item.getEntryValue("hoversound");
@@ -97,9 +96,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			String desc = item.getEntryValue("description");
-			if (desc != null) {
-				this.button.setDescription(StringUtils.splitLines(de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(desc), "%n%"));
+			this.tooltip = item.getEntryValue("description");
+			if (this.tooltip != null) {
+				this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
 			}
 
 			String backNormal = fixBackslashPath(item.getEntryValue("backgroundnormal"));
@@ -217,6 +216,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 
 	protected void updateValues() {
 
+		if (this.tooltip != null) {
+			this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
+		}
 		if (this.labelRaw != null) {
 			if (!isEditorActive()) {
 				this.value = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.labelRaw);

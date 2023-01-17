@@ -8,7 +8,6 @@ public class MinecraftCompatibilityUtils {
 
     private static final String VERSION = FancyMenu.getMinecraftVersion();
 
-    //TODO übernehmen
     public static void sendPlayerCommand(LocalPlayer player, String command) {
 //        //MC 1.19
 //        if (VERSION.equals("1.19")) {
@@ -31,7 +30,6 @@ public class MinecraftCompatibilityUtils {
         player.connection.sendCommand(command);
     }
 
-    //TODO übernehmen
     public static void sendPlayerChatMessage(LocalPlayer player, String message) {
 //        //MC 1.19
 //        if (VERSION.equals("1.19")) {

@@ -311,6 +311,10 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.panoramica.")) {
 			return true;
 		}
+		//TODO übernehmen
+		if (menuIdentifierOrPartOfIdentifier.startsWith("com.github.alexthe666.alexsmobs.")) {
+			return true;
+		}
 		return false;
 	}
 

@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -12,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PlayerEntityElementCache {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static volatile Map<String, ResourceLocation> skinCache = new HashMap<>();
 	private static volatile Map<String, ResourceLocation> capeCache = new HashMap<>();

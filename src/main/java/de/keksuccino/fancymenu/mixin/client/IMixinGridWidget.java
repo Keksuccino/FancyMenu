@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.List;
 
-//TODO übernehmen
 @Mixin(GridWidget.class)
 public interface IMixinGridWidget {
 
