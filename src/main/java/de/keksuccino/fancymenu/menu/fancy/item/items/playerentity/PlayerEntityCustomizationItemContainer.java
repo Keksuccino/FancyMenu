@@ -18,19 +18,15 @@ import java.util.Map;
 
 public class PlayerEntityCustomizationItemContainer extends CustomizationItemContainer {
 
-    //TODO übernehmen
     private static final Logger LOGGER = LogManager.getLogger();
 
-    //TODO übernehmen
     public static final Map<String, PlayerEntityCustomizationItem> ELEMENT_CACHE = new HashMap<>();
 
     public PlayerEntityCustomizationItemContainer() {
         super("fancymenu_customization_player_entity");
-        //TODO übernehmen
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    //TODO übernehmen
     @SubscribeEvent
     public void onMenuReload(MenuReloadedEvent e) {
         ELEMENT_CACHE.clear();

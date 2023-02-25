@@ -20,7 +20,8 @@
     "IMixinServerList",
     "IMixinTitleScreen",
     "IMixinScreen",
-    "IMixinGridWidget"
+    "IMixinGridWidget",
+    "IMixinEditBox"
   ],
   "injectors": {
     "defaultRequire": 1

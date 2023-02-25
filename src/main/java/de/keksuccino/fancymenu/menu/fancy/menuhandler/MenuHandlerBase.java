@@ -131,7 +131,6 @@ public class MenuHandlerBase extends GuiComponent {
 	protected String closeAudio;
 	protected String openAudio;
 
-	//TODO übernehmen
 	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
 
 	protected static Screen scaleChangedIn = null;
@@ -242,7 +241,6 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.customMenuTitle = null;
 
-		//TODO übernehmen
 		this.cachedLayoutWideRequirements.clear();
 
 		for (PropertiesSet s : rawLayouts) {
@@ -258,9 +256,7 @@ public class MenuHandlerBase extends GuiComponent {
 			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
 				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 			}.visibilityRequirementContainer;
-			//TODO übernehmen
 			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
-			//---------------
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
 			}
@@ -1256,7 +1252,6 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
-	//TODO übernehmen
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onRenderPre(ScreenEvent.Render.Pre e) {
 

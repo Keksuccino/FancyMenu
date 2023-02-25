@@ -57,7 +57,7 @@ import org.apache.logging.log4j.Logger;
 public class FancyMenu {
 
 	//TODO übernehmen
-	public static final String VERSION = "2.13.3";
+	public static final String VERSION = "2.14.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -147,7 +147,8 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
-//				MinecraftForge.EVENT_BUS.register(new Test());
+				//TODO remove debug
+				MinecraftForge.EVENT_BUS.register(new Test());
 
 //				FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterResourcePacks);
 

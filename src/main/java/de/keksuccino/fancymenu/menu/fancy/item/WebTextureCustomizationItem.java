@@ -48,7 +48,6 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 				if (cachedWebImages.containsKey(this.actionId)) {
 					this.texture = cachedWebImages.get(this.actionId);
 					this.calculateAspectRatio();
-					//TODO übernehmen (if)
 					if ((this.texture != null) && (this.texture.getResourceLocation() != null) && (this.texture.getURL() != null) && this.texture.getURL().equals(this.value)) {
 						this.ready = true;
 					} else {
