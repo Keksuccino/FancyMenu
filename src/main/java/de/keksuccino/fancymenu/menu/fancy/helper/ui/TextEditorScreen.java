@@ -42,6 +42,7 @@ public class TextEditorScreen extends Screen {
     public int lineHeight = 20;
     protected int currentLineWidth;
     protected final int keyPressedListenerId;
+    protected int lastTickFocusedLineIndex = -1;
 
     public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter) {
         super(name);
@@ -70,8 +71,8 @@ public class TextEditorScreen extends Screen {
 
         this.updateCurrentLineWidth();
 
-        this.updateLines((f) -> {
-            f.render(matrix, mouseX, mouseY, partial);
+        this.updateLines((line) -> {
+            line.render(matrix, mouseX, mouseY, partial);
         });
 
         this.verticalScrollBar.render(matrix);
@@ -79,19 +80,21 @@ public class TextEditorScreen extends Screen {
 
         super.render(matrix, mouseX, mouseY, partial);
 
+        this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
+
     }
 
     protected void updateLines(@Nullable Consumer<TextEditorInputBox> doAfterLineUpdate) {
         //Update positions and size of lines and render them
         int index = 0;
-        for (TextEditorInputBox f : this.textFieldLines) {
-            f.y = this.headerHeight + (20 * index) + this.getLineRenderOffsetY();
-            f.x = 20 + this.getLineRenderOffsetX();
-            f.setWidth(this.currentLineWidth);
-            f.setHeight(this.lineHeight);
-            ((IMixinEditBox)f).setDisplayPosFancyMenu(0);
+        for (TextEditorInputBox line : this.textFieldLines) {
+            line.y = this.headerHeight + (20 * index) + this.getLineRenderOffsetY();
+            line.x = 20 + this.getLineRenderOffsetX();
+            line.setWidth(this.currentLineWidth);
+            line.setHeight(this.lineHeight);
+            ((IMixinEditBox)line).setDisplayPosFancyMenu(0);
             if (doAfterLineUpdate != null) {
-                doAfterLineUpdate.accept(f);
+                doAfterLineUpdate.accept(line);
             }
             index++;
         }
@@ -152,6 +155,10 @@ public class TextEditorScreen extends Screen {
     @Nullable
     public TextEditorInputBox getLine(int index) {
         return this.textFieldLines.get(index);
+    }
+
+    public int getLineIndex(TextEditorInputBox inputBox) {
+        return this.textFieldLines.indexOf(inputBox);
     }
 
     protected void goUpLine() {
@@ -295,6 +302,9 @@ public class TextEditorScreen extends Screen {
 
         public TextEditorScreen parent;
         protected String lastTickValue = "";
+        protected int lastTickLineCount = -1;
+        protected int lastTickTotalLineHeight = 0;
+        protected boolean cursorPositionTicked = false;
 
         public TextEditorInputBox(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
             super(font, x, y, width, height, handleSelf, characterFilter);
@@ -307,6 +317,8 @@ public class TextEditorScreen extends Screen {
             super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 
             this.lastTickValue = this.getValue();
+            this.lastTickLineCount = this.parent.getLineCount();
+            this.lastTickTotalLineHeight = this.parent.getTotalLineHeight();
 
         }
 
@@ -321,13 +333,18 @@ public class TextEditorScreen extends Screen {
 
             if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this)) {
 
+                LOGGER.info("--------- TOTAL LINE HEIGHT START: " + this.parent.getTotalLineHeight());
+
                 int prevX = this.x;
+                int prevY = this.parent.getLine(0).y;
 
                 this.parent.updateCurrentLineWidth();
                 this.parent.updateLines(null);
 
-                //TODO vertikales cursor scrollen implementieren (auf neue logik umschreiben)
-                // - neue lines adden/removen, wenn vertikal gescrollt wurde, ist weird -> y pos von Zeilen fixen, wenn lines geadded/removed werden
+                //TODO Y offset für adden/removen von lines fixen
+                //TODO Y offset für adden/removen von lines fixen
+                //TODO Y offset für adden/removen von lines fixen
+                //TODO Y offset für adden/removen von lines fixen
 
                 //Make the lines scroll horizontally with the cursor position if the cursor is too far to the left or right
                 int cursorX = this.parent.getEditBoxCursorX(this);
@@ -337,8 +354,7 @@ public class TextEditorScreen extends Screen {
                 boolean textGotDeleted = this.lastTickValue.length() > this.getValue().length();
                 if (cursorX > maxToRight) {
                     float f = (float)(cursorX - maxToRight) / (float)this.parent.currentLineWidth;
-                    float newScrollX = currentScrollX + f;
-                    this.parent.horizontalScrollBar.setScroll(newScrollX);
+                    this.parent.horizontalScrollBar.setScroll(currentScrollX + f);
                 } else if (cursorX < maxToLeft) {
                     //By default, move back the line just a little when moving the cursor to the left side by using the mouse or arrow keys
                     float f = (float)(maxToLeft - cursorX) / (float)this.parent.currentLineWidth;
@@ -346,39 +362,65 @@ public class TextEditorScreen extends Screen {
                     if (textGotDeleted) {
                         f = (float)(maxToRight - maxToLeft) / (float)this.parent.currentLineWidth;
                     }
-                    float newScrollX = currentScrollX - f;
-                    this.parent.horizontalScrollBar.setScroll(newScrollX);
+                    this.parent.horizontalScrollBar.setScroll(currentScrollX - f);
                 } else if ((this.x < 0) && textGotDeleted && (prevX < this.x)) {
                     float f = (float)(this.x - prevX) / (float)this.parent.currentLineWidth;
-                    float newScrollX = currentScrollX + f;
-                    this.parent.horizontalScrollBar.setScroll(newScrollX);
+                    this.parent.horizontalScrollBar.setScroll(currentScrollX + f);
                 } else if (prevX > this.x) {
                     float f = (float)(prevX - this.x) / (float)this.parent.currentLineWidth;
-                    float newScrollX = currentScrollX - f;
-                    this.parent.horizontalScrollBar.setScroll(newScrollX);
+                    this.parent.horizontalScrollBar.setScroll(currentScrollX - f);
                 }
                 if (this.getCursorPosition() == 0) {
                     this.parent.horizontalScrollBar.setScroll(0.0F);
                 }
 
                 //Make the lines scroll vertically with the cursor position if the cursor is too far up or down
-                int lineY = this.y;
-                if (lineY > (this.parent.height - this.parent.footerHeight - this.parent.lineHeight)) {
-                    this.parent.verticalScrollBar.setScroll(this.parent.verticalScrollBar.getScroll() - (this.parent.lineHeight / this.parent.getTotalLineHeight()));
-//                    this.parent.offsetY -= this.parent.lineHeight;
-                } else if (lineY < this.parent.headerHeight) {
-                    this.parent.verticalScrollBar.setScroll(this.parent.verticalScrollBar.getScroll() + (this.parent.lineHeight / this.parent.getTotalLineHeight()));
-//                    this.parent.offsetY += this.parent.lineHeight;
-//                    if (this.parent.offsetY > 0) {
-//                        this.parent.offsetY = 0;
-//                    }
+                float currentScrollY = this.parent.verticalScrollBar.getScroll();
+                boolean lineGotAdded = this.lastTickLineCount < this.parent.getLineCount();
+                int totalLineHeight = this.parent.getTotalLineHeight();
+                if (this.parent.justSwitchedLineByWordDeletion) {
+                    totalLineHeight -= this.parent.lineHeight;
+                }
+                LOGGER.info("--------- TOTAL LINE HEIGHT USE/FINAL: " + totalLineHeight);
+                float lineHeightAsOffset = (float)this.parent.lineHeight / (float)totalLineHeight;
+                boolean isNewLine = this.parent.lastTickFocusedLineIndex != this.parent.getLineIndex(this);
+                if (isNewLine && !this.cursorPositionTicked) {
+                    LOGGER.info("-------------------");
+                    if (this.y < this.parent.headerHeight) {
+                        LOGGER.info("################# Y < MIN HEIGHT");
+                        this.parent.verticalScrollBar.setScroll(currentScrollY - lineHeightAsOffset);
+                    } else if (this.y > (this.parent.height - this.parent.footerHeight - this.parent.lineHeight)) {
+                        LOGGER.info("################# Y > MAX HEIGHT");
+                        this.parent.verticalScrollBar.setScroll(currentScrollY + lineHeightAsOffset);
+                    } else if (prevY < this.parent.getLine(0).y) {
+                        LOGGER.info("################# FIX Y 1");
+                        float f = (float)(this.parent.getLine(0).y - prevY) / (float)totalLineHeight;
+                        this.parent.verticalScrollBar.setScroll(currentScrollY + f);
+                    } else if (prevY > this.parent.getLine(0).y) {
+                        LOGGER.info("################# FIX Y 2");
+                        float f = (float)(prevY - this.parent.getLine(0).y) / (float)totalLineHeight;
+                        this.parent.verticalScrollBar.setScroll(currentScrollY - f);
+                    }
+                    LOGGER.info("PREV Y: " + prevY);
+                    LOGGER.info("Y: " + this.parent.getLine(0).y);
+                    LOGGER.info("INDEX: " + this.parent.getLineIndex(this));
                 }
                 if (this.parent.getFocusedLineIndex() == 0) {
                     this.parent.verticalScrollBar.setScroll(0.0F);
-//                    this.parent.offsetY = 0;
                 }
 
             }
+
+            this.cursorPositionTicked = true;
+
+        }
+
+        @Override
+        public void onTick() {
+
+            this.cursorPositionTicked = false;
+
+            super.onTick();
 
         }
 
