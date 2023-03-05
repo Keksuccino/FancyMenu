@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,6 +38,7 @@ public class TextEditorScreen extends Screen {
     protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, 40, 10, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
     protected int lastCursorPosSetByUser = 0;
     protected boolean justSwitchedLineByWordDeletion = false;
+    protected boolean focusedLineWasTooHigh = false;
     public int headerHeight = 50;
     public int footerHeight = 50;
     public int lineHeight = 20;
@@ -81,6 +83,14 @@ public class TextEditorScreen extends Screen {
         super.render(matrix, mouseX, mouseY, partial);
 
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
+        this.focusedLineWasTooHigh = false;
+
+        //TODO remove debug
+        TextEditorInputBox ib = this.getLine(0);
+        TextEditorInputBox ib2 = this.getLine(this.getLineCount()-1);
+        int totalHeight = (ib2.getY() + ib2.getHeight()) - ib.getY();
+        fill(matrix, ib.getX()-1, ib.getY(), ib.getX(), ib.getY() + totalHeight, Color.RED.getRGB());
+        //--------------
 
     }
 
@@ -298,6 +308,33 @@ public class TextEditorScreen extends Screen {
         return 0;
     }
 
+    protected void fixYScrollAfterDeletingLine(int yBeforeRemoving) {
+        if (this.isLineFocused()) {
+            this.updateCurrentLineWidth();
+            this.updateLines(null);
+            float currentScrollY = this.verticalScrollBar.getScroll();
+            int totalLineHeight = this.getTotalLineHeight();
+            if ((yBeforeRemoving < this.getLine(0).y) && !this.focusedLineWasTooHigh) {
+                LOGGER.info(">>>>>>>>>>>>>>>>>>>> FIXING Y SCROLL AFTER DELETING LINE!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                float diff = this.getLine(0).y - yBeforeRemoving;
+                float f = diff / (float)totalLineHeight;
+                this.verticalScrollBar.setScroll(currentScrollY + f);
+            }
+        }
+        if (this.getFocusedLineIndex() == 0) {
+            this.verticalScrollBar.setScroll(0.0F);
+        }
+    }
+
+    protected void fixYScrollAfterAddingLine(int yBeforeAdding) {
+        int totalLineHeight = this.getTotalLineHeight();
+        float currentScrollY = this.verticalScrollBar.getScroll();
+        if (yBeforeAdding > this.getLine(0).y) {
+            float f = (float)(yBeforeAdding - this.getLine(0).y) / (float)totalLineHeight;
+            this.verticalScrollBar.setScroll(currentScrollY - f);
+        }
+    }
+
     public static class TextEditorInputBox extends AdvancedTextField {
 
         public TextEditorScreen parent;
@@ -322,6 +359,14 @@ public class TextEditorScreen extends Screen {
 
         }
 
+        public int getRealHeight() {
+            int h = this.height;
+            if (((IMixinEditBox)this).getBorderedFancyMenu()) {
+                h += 2;
+            }
+            return h;
+        }
+
         @Override
         public void setCursorPosition(int newPos) {
 
@@ -333,18 +378,11 @@ public class TextEditorScreen extends Screen {
 
             if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this)) {
 
-                LOGGER.info("--------- TOTAL LINE HEIGHT START: " + this.parent.getTotalLineHeight());
-
-                int prevX = this.x;
-                int prevY = this.parent.getLine(0).y;
+                int xStart = this.x;
+                int yStart = this.parent.getLine(0).y;
 
                 this.parent.updateCurrentLineWidth();
                 this.parent.updateLines(null);
-
-                //TODO Y offset für adden/removen von lines fixen
-                //TODO Y offset für adden/removen von lines fixen
-                //TODO Y offset für adden/removen von lines fixen
-                //TODO Y offset für adden/removen von lines fixen
 
                 //Make the lines scroll horizontally with the cursor position if the cursor is too far to the left or right
                 int cursorX = this.parent.getEditBoxCursorX(this);
@@ -363,11 +401,11 @@ public class TextEditorScreen extends Screen {
                         f = (float)(maxToRight - maxToLeft) / (float)this.parent.currentLineWidth;
                     }
                     this.parent.horizontalScrollBar.setScroll(currentScrollX - f);
-                } else if ((this.x < 0) && textGotDeleted && (prevX < this.x)) {
-                    float f = (float)(this.x - prevX) / (float)this.parent.currentLineWidth;
+                } else if ((this.x < 0) && textGotDeleted && (xStart < this.x)) {
+                    float f = (float)(this.x - xStart) / (float)this.parent.currentLineWidth;
                     this.parent.horizontalScrollBar.setScroll(currentScrollX + f);
-                } else if (prevX > this.x) {
-                    float f = (float)(prevX - this.x) / (float)this.parent.currentLineWidth;
+                } else if (xStart > this.x) {
+                    float f = (float)(xStart - this.x) / (float)this.parent.currentLineWidth;
                     this.parent.horizontalScrollBar.setScroll(currentScrollX - f);
                 }
                 if (this.getCursorPosition() == 0) {
@@ -376,33 +414,41 @@ public class TextEditorScreen extends Screen {
 
                 //Make the lines scroll vertically with the cursor position if the cursor is too far up or down
                 float currentScrollY = this.parent.verticalScrollBar.getScroll();
-                boolean lineGotAdded = this.lastTickLineCount < this.parent.getLineCount();
                 int totalLineHeight = this.parent.getTotalLineHeight();
                 if (this.parent.justSwitchedLineByWordDeletion) {
                     totalLineHeight -= this.parent.lineHeight;
                 }
-                LOGGER.info("--------- TOTAL LINE HEIGHT USE/FINAL: " + totalLineHeight);
-                float lineHeightAsOffset = (float)this.parent.lineHeight / (float)totalLineHeight;
                 boolean isNewLine = this.parent.lastTickFocusedLineIndex != this.parent.getLineIndex(this);
                 if (isNewLine && !this.cursorPositionTicked) {
                     LOGGER.info("-------------------");
+                    LOGGER.info("TOTAL LINE HEIGHT USE/FINAL: " + totalLineHeight);
                     if (this.y < this.parent.headerHeight) {
+                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
+                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
+                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
+                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
+                        // -> vllt versuchen, den Teil in yFix methode oben zu packen und hier check adden, dass nur gefixt wird, wenn NICHT justSwitchedLine
+                        this.parent.focusedLineWasTooHigh = true;
                         LOGGER.info("################# Y < MIN HEIGHT");
-                        this.parent.verticalScrollBar.setScroll(currentScrollY - lineHeightAsOffset);
-                    } else if (this.y > (this.parent.height - this.parent.footerHeight - this.parent.lineHeight)) {
-                        LOGGER.info("################# Y > MAX HEIGHT");
-                        this.parent.verticalScrollBar.setScroll(currentScrollY + lineHeightAsOffset);
-                    } else if (prevY < this.parent.getLine(0).y) {
-                        LOGGER.info("################# FIX Y 1");
-                        float f = (float)(this.parent.getLine(0).y - prevY) / (float)totalLineHeight;
-                        this.parent.verticalScrollBar.setScroll(currentScrollY + f);
-                    } else if (prevY > this.parent.getLine(0).y) {
-                        LOGGER.info("################# FIX Y 2");
-                        float f = (float)(prevY - this.parent.getLine(0).y) / (float)totalLineHeight;
+                        if (this.parent.justSwitchedLineByWordDeletion) {
+                            LOGGER.info(">> JUST SWITCHED LINE!");
+                        }
+                        int diff = this.parent.headerHeight - this.y;
+                        float f = (float)diff / (float)totalLineHeight;
                         this.parent.verticalScrollBar.setScroll(currentScrollY - f);
                     }
-                    LOGGER.info("PREV Y: " + prevY);
+                    else if (this.y > (this.parent.height - this.parent.footerHeight - this.parent.lineHeight)) {
+                        LOGGER.info("################# Y > MAX HEIGHT");
+                        int diff = this.y - (this.parent.height - this.parent.footerHeight - this.parent.lineHeight);
+                        float f = (float)diff / (float)totalLineHeight;
+                        this.parent.verticalScrollBar.setScroll(currentScrollY + f);
+                    }
+                    else {
+                        this.parent.fixYScrollAfterAddingLine(yStart);
+                    }
+                    LOGGER.info("PREV Y: " + yStart);
                     LOGGER.info("Y: " + this.parent.getLine(0).y);
+                    LOGGER.info("Y END: " + (this.parent.getLine(this.parent.getLineCount()-1).y + this.parent.getLine(this.parent.getLineCount()-1).height));
                     LOGGER.info("INDEX: " + this.parent.getLineIndex(this));
                 }
                 if (this.parent.getFocusedLineIndex() == 0) {
@@ -437,6 +483,7 @@ public class TextEditorScreen extends Screen {
             if (!this.parent.justSwitchedLineByWordDeletion) {
                 if ((this.getCursorPosition() == 0) && (this.parent.getFocusedLineIndex() > 0)) {
                     int lastLineIndex = this.parent.getFocusedLineIndex();
+                    int yBeforeRemoving = this.parent.getLine(0).y;
                     this.parent.justSwitchedLineByWordDeletion = true;
                     this.parent.goUpLine();
                     this.parent.getFocusedLine().moveCursorToEnd();
@@ -446,6 +493,7 @@ public class TextEditorScreen extends Screen {
                     if (lastLineIndex > 0) {
                         this.parent.removeLineAtIndex(this.parent.getFocusedLineIndex()+1);
                     }
+                    this.parent.fixYScrollAfterDeletingLine(yBeforeRemoving);
                 } else {
                     super.deleteChars(i);
                 }
