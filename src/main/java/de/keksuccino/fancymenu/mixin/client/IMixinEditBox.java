@@ -21,4 +21,8 @@ public interface IMixinEditBox {
 
     @Accessor("formatter") BiFunction<String, Integer, FormattedCharSequence> getFormatterFancyMenu();
 
+    @Accessor("shiftPressed") void setShiftPressedFancyMenu(boolean b);
+
+    @Accessor("shiftPressed") boolean getShiftPressedFancyMenu();
+
 }

@@ -9,11 +9,13 @@ import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -38,13 +40,16 @@ public class TextEditorScreen extends Screen {
     protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, 40, 10, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
     protected int lastCursorPosSetByUser = 0;
     protected boolean justSwitchedLineByWordDeletion = false;
-    protected boolean focusedLineWasTooHigh = false;
+    protected boolean triggeredFocusedLineWasTooHighInCursorPosMethod = false;
     public int headerHeight = 50;
     public int footerHeight = 50;
+    public int borderLeft = 20;
+    public int borderRight = 20;
     public int lineHeight = 20;
     protected int currentLineWidth;
     protected final int keyPressedListenerId;
     protected int lastTickFocusedLineIndex = -1;
+    protected TextEditorInputBox firstHighlightLine = null;
 
     public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter) {
         super(name);
@@ -83,14 +88,111 @@ public class TextEditorScreen extends Screen {
         super.render(matrix, mouseX, mouseY, partial);
 
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
-        this.focusedLineWasTooHigh = false;
+        this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        //TODO remove debug
-        TextEditorInputBox ib = this.getLine(0);
-        TextEditorInputBox ib2 = this.getLine(this.getLineCount()-1);
-        int totalHeight = (ib2.getY() + ib2.getHeight()) - ib.getY();
-        fill(matrix, ib.getX()-1, ib.getY(), ib.getX(), ib.getY() + totalHeight, Color.RED.getRGB());
-        //--------------
+        this.renderBorder(matrix);
+
+        this.tickMouseHighlighting();
+
+    }
+
+    protected void renderBorder(PoseStack matrix) {
+        //top
+        fill(matrix, this.borderLeft - 1, this.headerHeight - 1, this.width - this.borderRight + 1, this.headerHeight, Color.RED.getRGB());
+        //left
+        fill(matrix, this.borderLeft - 1, this.headerHeight, this.borderLeft, this.height - this.footerHeight, Color.RED.getRGB());
+        //right
+        fill(matrix, this.width - this.borderRight, this.headerHeight, this.width - this.borderRight+1, this.height - this.footerHeight, Color.RED.getRGB());
+        //down
+        fill(matrix, this.borderLeft - 1, this.height - this.footerHeight, this.width - this.borderRight + 1, this.height - this.footerHeight + 1, Color.RED.getRGB());
+    }
+
+    protected void tickMouseHighlighting() {
+
+        //TODO wenn CTRL + A -> Alle zeilen markieren
+        //TODO wenn CTRL + C -> Alles kopieren
+        //TODO wenn CTRL + V wenn mouseHighlighting -> hightlighted clearen + leere zeilen löschen + kopiertes einfügen
+
+        if (!MouseInput.isLeftMouseDown()) {
+            this.firstHighlightLine = null;
+            return;
+        }
+
+        TextEditorInputBox first = this.firstHighlightLine;
+        TextEditorInputBox hovered = this.getHoveredLine();
+        if ((hovered != null) && !hovered.isFocused() && (first != null)) {
+
+            int firstIndex = this.getLineIndex(first);
+            int hoveredIndex = this.getLineIndex(hovered);
+            boolean firstIsBeforeHovered = hoveredIndex > firstIndex;
+            boolean firstIsAfterHovered = hoveredIndex < firstIndex;
+
+            if (first.isInMouseHighlightingMode) {
+                if (firstIsAfterHovered) {
+                    this.setFocusedLine(this.getLineIndex(hovered));
+                    if (!hovered.isInMouseHighlightingMode) {
+                        hovered.isInMouseHighlightingMode = true;
+                        hovered.getAsAccessor().setShiftPressedFancyMenu(false);
+                        hovered.moveCursorTo(hovered.getValue().length());
+                    }
+                } else if (firstIsBeforeHovered) {
+                    this.setFocusedLine(this.getLineIndex(hovered));
+                    if (!hovered.isInMouseHighlightingMode) {
+                        hovered.isInMouseHighlightingMode = true;
+                        hovered.getAsAccessor().setShiftPressedFancyMenu(false);
+                        hovered.moveCursorTo(0);
+                    }
+                } else if (first == hovered) {
+                    this.setFocusedLine(this.getLineIndex(first));
+                }
+            }
+
+            int startIndex = Math.min(hoveredIndex, firstIndex);
+            int endIndex = Math.max(hoveredIndex, firstIndex);
+            int index = 0;
+            for (TextEditorInputBox t : this.textFieldLines) {
+                //Highlight all lines between the first and current line and remove highlighting from lines outside of highlight range
+                if ((t != hovered) && (t != first)) {
+                    if ((index > startIndex) && (index < endIndex)) {
+                        if (firstIsAfterHovered) {
+                            t.setCursorPosition(0);
+                            t.setHighlightPos(t.getValue().length());
+                        } else if (firstIsBeforeHovered) {
+                            t.setCursorPosition(t.getValue().length());
+                            t.setHighlightPos(0);
+                        }
+                    } else {
+                        t.getAsAccessor().setShiftPressedFancyMenu(false);
+                        t.moveCursorTo(0);
+                        t.isInMouseHighlightingMode = false;
+                    }
+                }
+                index++;
+            }
+
+            if (first != hovered) {
+                first.getAsAccessor().setShiftPressedFancyMenu(true);
+                if (firstIsAfterHovered) {
+                    first.moveCursorTo(0);
+                } else if (firstIsBeforeHovered) {
+                    first.moveCursorTo(first.getValue().length());
+                }
+                first.getAsAccessor().setShiftPressedFancyMenu(false);
+            }
+
+        }
+
+        TextEditorInputBox focused = this.getFocusedLine();
+        if ((focused != null) && focused.isInMouseHighlightingMode) {
+            int i = Mth.floor(MouseInput.getMouseX()) - focused.getX();
+            if (focused.getAsAccessor().getBorderedFancyMenu()) {
+                i -= 4;
+            }
+            String s = this.font.plainSubstrByWidth(focused.getValue().substring(focused.getAsAccessor().getDisplayPosFancyMenu()), focused.getInnerWidth());
+            focused.getAsAccessor().setShiftPressedFancyMenu(true);
+            focused.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + focused.getAsAccessor().getDisplayPosFancyMenu());
+            focused.getAsAccessor().setShiftPressedFancyMenu(false);
+        }
 
     }
 
@@ -98,8 +200,8 @@ public class TextEditorScreen extends Screen {
         //Update positions and size of lines and render them
         int index = 0;
         for (TextEditorInputBox line : this.textFieldLines) {
-            line.y = this.headerHeight + (20 * index) + this.getLineRenderOffsetY();
-            line.x = 20 + this.getLineRenderOffsetX();
+            line.y = this.headerHeight + (this.lineHeight * index) + this.getLineRenderOffsetY();
+            line.x = this.borderLeft + this.getLineRenderOffsetX();
             line.setWidth(this.currentLineWidth);
             line.setHeight(this.lineHeight);
             ((IMixinEditBox)line).setDisplayPosFancyMenu(0);
@@ -167,6 +269,90 @@ public class TextEditorScreen extends Screen {
         return this.textFieldLines.get(index);
     }
 
+    protected void setFocusedLine(int index) {
+        if (index <= this.getLineCount()-1) {
+            for (TextEditorInputBox f : this.textFieldLines) {
+                f.setFocus(false);
+            }
+            this.getLine(index).setFocus(true);
+        }
+    }
+
+    /**
+     * Returns the index of the focused line or -1 if no line is focused.
+     **/
+    protected int getFocusedLineIndex() {
+        int index = 0;
+        for (TextEditorInputBox f : this.textFieldLines) {
+            if (f.isFocused()) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+
+    @Nullable
+    protected TextEditorInputBox getFocusedLine() {
+        if (this.isLineFocused()) {
+            return this.getLine(this.getFocusedLineIndex());
+        }
+        return null;
+    }
+
+    protected boolean isLineFocused() {
+        return (this.getFocusedLineIndex() > -1);
+    }
+
+    @Nullable
+    protected TextEditorInputBox getLineAfter(TextEditorInputBox line) {
+        int index = this.getLineIndex(line);
+        if ((index > -1) && (index < (this.getLineCount()-1))) {
+            return this.getLine(index+1);
+        }
+        return null;
+    }
+
+    @Nullable
+    protected TextEditorInputBox getLineBefore(TextEditorInputBox line) {
+        int index = this.getLineIndex(line);
+        if (index > 0) {
+            return this.getLine(index-1);
+        }
+        return null;
+    }
+
+    protected boolean isAtLeastOneLineInHighlightMode() {
+        for (TextEditorInputBox t : this.textFieldLines) {
+            if (t.isInMouseHighlightingMode) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Nullable
+    /** Returns the lines between two indexes, EXCLUDING start AND end indexes! **/
+    protected List<TextEditorInputBox> getLinesBetweenIndexes(int startIndex, int endIndex) {
+        startIndex = Math.min(Math.max(startIndex, 0), this.textFieldLines.size()-1);
+        endIndex = Math.min(Math.max(endIndex, 0), this.textFieldLines.size()-1);
+        List<TextEditorInputBox> l = this.textFieldLines.subList(startIndex, endIndex);
+        if (!l.isEmpty()) {
+            l.remove(0);
+        }
+        return l;
+    }
+
+    @Nullable
+    public TextEditorInputBox getHoveredLine() {
+        for (TextEditorInputBox t : this.textFieldLines) {
+            if (t.isHovered()) {
+                return t;
+            }
+        }
+        return null;
+    }
+
     public int getLineIndex(TextEditorInputBox inputBox) {
         return this.textFieldLines.indexOf(inputBox);
     }
@@ -206,41 +392,6 @@ public class TextEditorScreen extends Screen {
                 }
             }
         }
-    }
-
-    protected void setFocusedLine(int index) {
-        if (index <= this.getLineCount()-1) {
-            for (TextEditorInputBox f : this.textFieldLines) {
-                f.setFocus(false);
-            }
-            this.getLine(index).setFocus(true);
-        }
-    }
-
-    /**
-     * Returns the index of the focused line or -1 if no line is focused.
-     **/
-    protected int getFocusedLineIndex() {
-        int index = 0;
-        for (TextEditorInputBox f : this.textFieldLines) {
-            if (f.isFocused()) {
-                return index;
-            }
-            index++;
-        }
-        return -1;
-    }
-
-    @Nullable
-    protected TextEditorInputBox getFocusedLine() {
-        if (this.isLineFocused()) {
-            return this.getLine(this.getFocusedLineIndex());
-        }
-        return null;
-    }
-
-    protected boolean isLineFocused() {
-        return (this.getFocusedLineIndex() > -1);
     }
 
     protected void onKeyPress(KeyboardData d) {
@@ -308,17 +459,95 @@ public class TextEditorScreen extends Screen {
         return 0;
     }
 
+    protected void fixXYScroll(TextEditorInputBox calledIn) {
+
+        if (this.isLineFocused() && (this.getFocusedLine() == calledIn)) {
+
+            int xStart = calledIn.x;
+            int yStart = this.getLine(0).y;
+
+            this.updateCurrentLineWidth();
+            this.updateLines(null);
+
+            //Make the lines scroll horizontally with the cursor position if the cursor is too far to the left or right
+            int cursorX = this.getEditBoxCursorX(calledIn);
+            int maxToRight = this.width - this.borderRight;
+            int maxToLeft = this.borderLeft;
+            float currentScrollX = this.horizontalScrollBar.getScroll();
+            boolean textGotDeleted = calledIn.lastTickValue.length() > calledIn.getValue().length();
+            if (cursorX > maxToRight) {
+                float f = (float)(cursorX - maxToRight) / (float)this.currentLineWidth;
+                this.horizontalScrollBar.setScroll(currentScrollX + f);
+            } else if (cursorX < maxToLeft) {
+                //By default, move back the line just a little when moving the cursor to the left side by using the mouse or arrow keys
+                float f = (float)(maxToLeft - cursorX) / (float)this.currentLineWidth;
+                //But move it back a big chunk when deleting chars (by pressing backspace)
+                if (textGotDeleted) {
+                    f = (float)(maxToRight - maxToLeft) / (float)this.currentLineWidth;
+                }
+                this.horizontalScrollBar.setScroll(currentScrollX - f);
+            } else if ((calledIn.x < 0) && textGotDeleted && (xStart < calledIn.x)) {
+                float f = (float)(calledIn.x - xStart) / (float)this.currentLineWidth;
+                this.horizontalScrollBar.setScroll(currentScrollX + f);
+            } else if (xStart > calledIn.x) {
+                float f = (float)(xStart - calledIn.x) / (float)this.currentLineWidth;
+                this.horizontalScrollBar.setScroll(currentScrollX - f);
+            }
+            if (calledIn.getCursorPosition() == 0) {
+                this.horizontalScrollBar.setScroll(0.0F);
+            }
+
+            //Make the lines scroll vertically with the cursor position if the cursor is too far up or down
+            float currentScrollY = this.verticalScrollBar.getScroll();
+            int totalLineHeight = this.getTotalLineHeight();
+            if (this.justSwitchedLineByWordDeletion) {
+                totalLineHeight -= this.lineHeight;
+            }
+            boolean isNewLine = this.lastTickFocusedLineIndex != this.getLineIndex(calledIn);
+            if (isNewLine && !calledIn.cursorPositionTicked) {
+                if ((calledIn.y < this.headerHeight) && !this.justSwitchedLineByWordDeletion) {
+                    //This corrects the scroll when the cursor is too far up (only triggers when the cursor was moved up without deleting a line)
+                    this.triggeredFocusedLineWasTooHighInCursorPosMethod = true;
+                    int diff = this.headerHeight - calledIn.y;
+                    float f = (float)diff / (float)totalLineHeight;
+                    this.verticalScrollBar.setScroll(currentScrollY - f);
+                } else if (calledIn.y > (this.height - this.footerHeight - this.lineHeight)) {
+                    //Corrects the scroll when the cursor is too far down (triggers both when adding a line and when just moving the cursor down)
+                    int diff = calledIn.y - (this.height - this.footerHeight - this.lineHeight);
+                    float f = (float)diff / (float)totalLineHeight;
+                    this.verticalScrollBar.setScroll(currentScrollY + f);
+                } else {
+                    this.fixYScrollAfterAddingLine(yStart);
+                }
+            }
+            if (this.getFocusedLineIndex() == 0) {
+                this.verticalScrollBar.setScroll(0.0F);
+            }
+
+        }
+
+    }
+
     protected void fixYScrollAfterDeletingLine(int yBeforeRemoving) {
         if (this.isLineFocused()) {
             this.updateCurrentLineWidth();
             this.updateLines(null);
             float currentScrollY = this.verticalScrollBar.getScroll();
             int totalLineHeight = this.getTotalLineHeight();
-            if ((yBeforeRemoving < this.getLine(0).y) && !this.focusedLineWasTooHigh) {
-                LOGGER.info(">>>>>>>>>>>>>>>>>>>> FIXING Y SCROLL AFTER DELETING LINE!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                float diff = this.getLine(0).y - yBeforeRemoving;
-                float f = diff / (float)totalLineHeight;
-                this.verticalScrollBar.setScroll(currentScrollY + f);
+            if (yBeforeRemoving < this.getLine(0).y) {
+                if (!this.triggeredFocusedLineWasTooHighInCursorPosMethod) {
+                    //The total height of all lines combined decreases when deleting a line (duh), which results in the scroll getting f'ed up,
+                    //that's why we need to correct it here
+                    float diff = this.getLine(0).y - yBeforeRemoving;
+                    float f = diff / (float) totalLineHeight;
+                    this.verticalScrollBar.setScroll(currentScrollY + f);
+                    //When the cursor is too far up after deleting a line, correct the scroll (only triggers when deleting a line)
+                    if (this.getFocusedLine().y < this.headerHeight) {
+                        int diff2 = this.headerHeight - this.getFocusedLine().y;
+                        float f2 = (float) diff2 / (float) totalLineHeight;
+                        this.verticalScrollBar.setScroll(currentScrollY - f2);
+                    }
+                }
             }
         }
         if (this.getFocusedLineIndex() == 0) {
@@ -329,6 +558,7 @@ public class TextEditorScreen extends Screen {
     protected void fixYScrollAfterAddingLine(int yBeforeAdding) {
         int totalLineHeight = this.getTotalLineHeight();
         float currentScrollY = this.verticalScrollBar.getScroll();
+        //Same as when deleting a line, the total line height changes and breaks the scroll, so we need to fix it
         if (yBeforeAdding > this.getLine(0).y) {
             float f = (float)(yBeforeAdding - this.getLine(0).y) / (float)totalLineHeight;
             this.verticalScrollBar.setScroll(currentScrollY - f);
@@ -339,9 +569,8 @@ public class TextEditorScreen extends Screen {
 
         public TextEditorScreen parent;
         protected String lastTickValue = "";
-        protected int lastTickLineCount = -1;
-        protected int lastTickTotalLineHeight = 0;
         protected boolean cursorPositionTicked = false;
+        public boolean isInMouseHighlightingMode = false;
 
         public TextEditorInputBox(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
             super(font, x, y, width, height, handleSelf, characterFilter);
@@ -354,12 +583,10 @@ public class TextEditorScreen extends Screen {
             super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 
             this.lastTickValue = this.getValue();
-            this.lastTickLineCount = this.parent.getLineCount();
-            this.lastTickTotalLineHeight = this.parent.getTotalLineHeight();
 
         }
 
-        public int getRealHeight() {
+        public int getActualHeight() {
             int h = this.height;
             if (((IMixinEditBox)this).getBorderedFancyMenu()) {
                 h += 2;
@@ -367,96 +594,21 @@ public class TextEditorScreen extends Screen {
             return h;
         }
 
+        public IMixinEditBox getAsAccessor() {
+            return (IMixinEditBox) this;
+        }
+
         @Override
         public void setCursorPosition(int newPos) {
 
             super.setCursorPosition(newPos);
 
+            //Caching the last cursor position set by the user, to set it to the new line when changing the line
             if ((newPos != this.parent.lastCursorPosSetByUser) && this.isFocused()) {
                 this.parent.lastCursorPosSetByUser = this.getCursorPosition();
             }
 
-            if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this)) {
-
-                int xStart = this.x;
-                int yStart = this.parent.getLine(0).y;
-
-                this.parent.updateCurrentLineWidth();
-                this.parent.updateLines(null);
-
-                //Make the lines scroll horizontally with the cursor position if the cursor is too far to the left or right
-                int cursorX = this.parent.getEditBoxCursorX(this);
-                int maxToRight = this.parent.width - 20;
-                int maxToLeft = 20;
-                float currentScrollX = this.parent.horizontalScrollBar.getScroll();
-                boolean textGotDeleted = this.lastTickValue.length() > this.getValue().length();
-                if (cursorX > maxToRight) {
-                    float f = (float)(cursorX - maxToRight) / (float)this.parent.currentLineWidth;
-                    this.parent.horizontalScrollBar.setScroll(currentScrollX + f);
-                } else if (cursorX < maxToLeft) {
-                    //By default, move back the line just a little when moving the cursor to the left side by using the mouse or arrow keys
-                    float f = (float)(maxToLeft - cursorX) / (float)this.parent.currentLineWidth;
-                    //But move it back a big chunk when deleting chars (by pressing backspace)
-                    if (textGotDeleted) {
-                        f = (float)(maxToRight - maxToLeft) / (float)this.parent.currentLineWidth;
-                    }
-                    this.parent.horizontalScrollBar.setScroll(currentScrollX - f);
-                } else if ((this.x < 0) && textGotDeleted && (xStart < this.x)) {
-                    float f = (float)(this.x - xStart) / (float)this.parent.currentLineWidth;
-                    this.parent.horizontalScrollBar.setScroll(currentScrollX + f);
-                } else if (xStart > this.x) {
-                    float f = (float)(xStart - this.x) / (float)this.parent.currentLineWidth;
-                    this.parent.horizontalScrollBar.setScroll(currentScrollX - f);
-                }
-                if (this.getCursorPosition() == 0) {
-                    this.parent.horizontalScrollBar.setScroll(0.0F);
-                }
-
-                //Make the lines scroll vertically with the cursor position if the cursor is too far up or down
-                float currentScrollY = this.parent.verticalScrollBar.getScroll();
-                int totalLineHeight = this.parent.getTotalLineHeight();
-                if (this.parent.justSwitchedLineByWordDeletion) {
-                    totalLineHeight -= this.parent.lineHeight;
-                }
-                boolean isNewLine = this.parent.lastTickFocusedLineIndex != this.parent.getLineIndex(this);
-                if (isNewLine && !this.cursorPositionTicked) {
-                    LOGGER.info("-------------------");
-                    LOGGER.info("TOTAL LINE HEIGHT USE/FINAL: " + totalLineHeight);
-                    if (this.y < this.parent.headerHeight) {
-                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
-                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
-                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
-                        //TODO fixen: y korrektur zu ungenau, wenn getriggert bei löschen von Zeile (liegt vermutlich daran, dass offset nicht richtig korrigiert wird)
-                        // -> vllt versuchen, den Teil in yFix methode oben zu packen und hier check adden, dass nur gefixt wird, wenn NICHT justSwitchedLine
-                        this.parent.focusedLineWasTooHigh = true;
-                        LOGGER.info("################# Y < MIN HEIGHT");
-                        if (this.parent.justSwitchedLineByWordDeletion) {
-                            LOGGER.info(">> JUST SWITCHED LINE!");
-                        }
-                        int diff = this.parent.headerHeight - this.y;
-                        float f = (float)diff / (float)totalLineHeight;
-                        this.parent.verticalScrollBar.setScroll(currentScrollY - f);
-                    }
-                    else if (this.y > (this.parent.height - this.parent.footerHeight - this.parent.lineHeight)) {
-                        LOGGER.info("################# Y > MAX HEIGHT");
-                        int diff = this.y - (this.parent.height - this.parent.footerHeight - this.parent.lineHeight);
-                        float f = (float)diff / (float)totalLineHeight;
-                        this.parent.verticalScrollBar.setScroll(currentScrollY + f);
-                    }
-                    else {
-                        this.parent.fixYScrollAfterAddingLine(yStart);
-                    }
-                    LOGGER.info("PREV Y: " + yStart);
-                    LOGGER.info("Y: " + this.parent.getLine(0).y);
-                    LOGGER.info("Y END: " + (this.parent.getLine(this.parent.getLineCount()-1).y + this.parent.getLine(this.parent.getLineCount()-1).height));
-                    LOGGER.info("INDEX: " + this.parent.getLineIndex(this));
-                }
-                if (this.parent.getFocusedLineIndex() == 0) {
-                    this.parent.verticalScrollBar.setScroll(0.0F);
-                }
-
-            }
-
+            this.parent.fixXYScroll(this);
             this.cursorPositionTicked = true;
 
         }
@@ -465,6 +617,10 @@ public class TextEditorScreen extends Screen {
         public void onTick() {
 
             this.cursorPositionTicked = false;
+
+            if (!MouseInput.isLeftMouseDown() && this.isInMouseHighlightingMode) {
+                this.isInMouseHighlightingMode = false;
+            }
 
             super.onTick();
 
@@ -478,8 +634,8 @@ public class TextEditorScreen extends Screen {
 
         @Override
         public void deleteChars(int i) {
-            //If the user presses BACKSPACE and the cursor pos is at 0, it will jump one line up,
-            //adds the text behind the cursor at the end of the new line and deletes the old line
+            //If the user presses BACKSPACE and the cursor pos is at 0, it will jump one line up, adds
+            //the text behind the cursor at the end of the new line and deletes the old line
             if (!this.parent.justSwitchedLineByWordDeletion) {
                 if ((this.getCursorPosition() == 0) && (this.parent.getFocusedLineIndex() > 0)) {
                     int lastLineIndex = this.parent.getFocusedLineIndex();
@@ -498,6 +654,30 @@ public class TextEditorScreen extends Screen {
                     super.deleteChars(i);
                 }
             }
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+
+            if ((mouseButton == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
+                if (!this.parent.isAtLeastOneLineInHighlightMode()) {
+                    this.parent.firstHighlightLine = this;
+                }
+                this.isInMouseHighlightingMode = true;
+                this.setFocus(true);
+                super.mouseClicked(mouseX, mouseY, mouseButton);
+                this.getAsAccessor().setShiftPressedFancyMenu(false);
+                this.setHighlightPos(this.getCursorPosition());
+            } else if ((mouseButton == 0) && !this.isHovered()) {
+                //Clear highlighting when left-clicked in another line, etc.
+                this.setHighlightPos(this.getCursorPosition());
+            }
+
+            if (!this.isInMouseHighlightingMode) {
+                return super.mouseClicked(mouseX, mouseY, mouseButton);
+            }
+            return true;
+
         }
 
     }
