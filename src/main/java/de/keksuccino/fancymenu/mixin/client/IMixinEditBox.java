@@ -25,4 +25,6 @@ public interface IMixinEditBox {
 
     @Accessor("shiftPressed") boolean getShiftPressedFancyMenu();
 
+    @Accessor("highlightPos") int getHighlightPosFancyMenu();
+
 }

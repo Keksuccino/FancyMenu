@@ -1,6 +1,7 @@
 //TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
+import com.mojang.blaze3d.platform.ClipboardManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scrollbar.ScrollBar;
@@ -18,10 +19,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -49,7 +52,9 @@ public class TextEditorScreen extends Screen {
     protected int currentLineWidth;
     protected final int keyPressedListenerId;
     protected int lastTickFocusedLineIndex = -1;
-    protected TextEditorInputBox firstHighlightLine = null;
+    protected TextEditorInputBox startHighlightLine = null;
+    protected int startHighlightLineIndex = -1;
+    protected int endHighlightLineIndex = -1;
 
     public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter) {
         super(name);
@@ -109,16 +114,12 @@ public class TextEditorScreen extends Screen {
 
     protected void tickMouseHighlighting() {
 
-        //TODO wenn CTRL + A -> Alle zeilen markieren
-        //TODO wenn CTRL + C -> Alles kopieren
-        //TODO wenn CTRL + V wenn mouseHighlighting -> hightlighted clearen + leere zeilen löschen + kopiertes einfügen
-
         if (!MouseInput.isLeftMouseDown()) {
-            this.firstHighlightLine = null;
+            this.startHighlightLine = null;
             return;
         }
 
-        TextEditorInputBox first = this.firstHighlightLine;
+        TextEditorInputBox first = this.startHighlightLine;
         TextEditorInputBox hovered = this.getHoveredLine();
         if ((hovered != null) && !hovered.isFocused() && (first != null)) {
 
@@ -169,6 +170,9 @@ public class TextEditorScreen extends Screen {
                 }
                 index++;
             }
+            this.startHighlightLineIndex = startIndex;
+            this.endHighlightLineIndex = endIndex;
+            LOGGER.info("START INDEX: " + this.startHighlightLineIndex + " | END INDEX: " + this.endHighlightLineIndex);
 
             if (first != hovered) {
                 first.getAsAccessor().setShiftPressedFancyMenu(true);
@@ -184,6 +188,11 @@ public class TextEditorScreen extends Screen {
 
         TextEditorInputBox focused = this.getFocusedLine();
         if ((focused != null) && focused.isInMouseHighlightingMode) {
+            if ((this.startHighlightLineIndex == -1) && (this.endHighlightLineIndex == -1)) {
+                this.startHighlightLineIndex = this.getLineIndex(focused);
+                this.endHighlightLineIndex = this.startHighlightLineIndex;
+                LOGGER.info("START INDEX: " + this.startHighlightLineIndex + " | END INDEX: " + this.endHighlightLineIndex);
+            }
             int i = Mth.floor(MouseInput.getMouseX()) - focused.getX();
             if (focused.getAsAccessor().getBorderedFancyMenu()) {
                 i -= 4;
@@ -192,7 +201,14 @@ public class TextEditorScreen extends Screen {
             focused.getAsAccessor().setShiftPressedFancyMenu(true);
             focused.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + focused.getAsAccessor().getDisplayPosFancyMenu());
             focused.getAsAccessor().setShiftPressedFancyMenu(false);
+            if ((focused.getAsAccessor().getHighlightPosFancyMenu() == focused.getCursorPosition()) && (this.startHighlightLineIndex == this.endHighlightLineIndex)) {
+                this.startHighlightLineIndex = -1;
+                this.endHighlightLineIndex = -1;
+                LOGGER.info("RESETTING START END INDEXES!");
+            }
         }
+
+//        LOGGER.info("HIGHLIGHTED: ----------------------------------\n" + this.getHighlightedText());
 
     }
 
@@ -336,7 +352,8 @@ public class TextEditorScreen extends Screen {
     protected List<TextEditorInputBox> getLinesBetweenIndexes(int startIndex, int endIndex) {
         startIndex = Math.min(Math.max(startIndex, 0), this.textFieldLines.size()-1);
         endIndex = Math.min(Math.max(endIndex, 0), this.textFieldLines.size()-1);
-        List<TextEditorInputBox> l = this.textFieldLines.subList(startIndex, endIndex);
+        List<TextEditorInputBox> l = new ArrayList<>();
+        l.addAll(this.textFieldLines.subList(startIndex, endIndex));
         if (!l.isEmpty()) {
             l.remove(0);
         }
@@ -394,6 +411,148 @@ public class TextEditorScreen extends Screen {
         }
     }
 
+    public List<TextEditorInputBox> getCopyOfLines() {
+        List<TextEditorInputBox> l = new ArrayList<>();
+        for (TextEditorInputBox t : this.textFieldLines) {
+            TextEditorInputBox n = new TextEditorInputBox(this.font, 0, 0, 0, 0, true, this.characterFilter, this);
+            n.setValue(t.getValue());
+            n.setFocus(t.isFocused());
+            n.moveCursorTo(t.getCursorPosition());
+            l.add(n);
+        }
+        return l;
+    }
+
+    @NotNull
+    public String getHighlightedText() {
+        LOGGER.info("CALL getHighlightedText");
+        try {
+            if ((this.startHighlightLineIndex != -1) && (this.endHighlightLineIndex != -1)) {
+                List<TextEditorInputBox> lines = new ArrayList<>();
+                lines.add(this.getLine(this.startHighlightLineIndex));
+                if (this.startHighlightLineIndex != this.endHighlightLineIndex) {
+                    lines.addAll(this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex));
+                    lines.add(this.getLine(this.endHighlightLineIndex));
+                }
+                StringBuilder s = new StringBuilder();
+                for (TextEditorInputBox t : lines) {
+                    if (!s.toString().equals("")) {
+                        s.append("\n");
+                    }
+                    s.append(t.getHighlighted());
+                }
+                return s.toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    @NotNull
+    public String cutHighlightedText() {
+        String highlighted = this.getHighlightedText();
+        this.deleteHighlightedText();
+        return highlighted;
+    }
+
+    public void deleteHighlightedText() {
+        try {
+            if ((this.startHighlightLineIndex != -1) && (this.endHighlightLineIndex != -1)) {
+                if (this.startHighlightLineIndex == this.endHighlightLineIndex) {
+                    this.getLine(this.startHighlightLineIndex).insertText("");
+                } else {
+                    this.getLine(this.startHighlightLineIndex).insertText("");
+                    if ((this.endHighlightLineIndex - this.startHighlightLineIndex) > 1) {
+                        this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex).forEach((line) -> {
+                            this.removeLineAtIndex(this.getLineIndex(line));
+                        });
+                    }
+                    this.getLine(this.endHighlightLineIndex).insertText("");
+                    this.setFocusedLine(this.startHighlightLineIndex);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void pasteText(String text) {
+        try {
+            if (this.isLineFocused() && (text != null)) {
+                String[] lines = new String[]{text};
+                if (text.contains("\n")) {
+                    lines = text.split("\n");
+                }
+                if (lines.length == 1) {
+                    this.getFocusedLine().insertText(lines[0]);
+                } else if (lines.length > 1) {
+                    int index = -1;
+                    for (String s : lines) {
+                        if (index == -1) {
+                            index = this.getFocusedLineIndex();
+                        } else {
+                            this.addLineAtIndex(index);
+                        }
+                        this.getLine(index).insertText(s);
+                        index++;
+                    }
+                    this.setFocusedLine(index-1);
+                    this.getLine(index-1).moveCursorToEnd();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keycode, int i1, int i2) {
+
+        //TODO wenn CTRL + V wenn mouseHighlighting -> hightlighted clearen + leere zeilen löschen + kopiertes einfügen
+
+        //TODO key presses (copy, cut, etc.) fixen
+        //TODO key presses (copy, cut, etc.) fixen
+        //TODO key presses (copy, cut, etc.) fixen
+        //TODO key presses (copy, cut, etc.) fixen
+        //TODO key presses (copy, cut, etc.) fixen
+
+        //BACKSPACE
+        if (keycode == InputConstants.KEY_BACKSPACE) {
+            if (!this.getHighlightedText().equals("")) {
+                this.deleteHighlightedText();
+                return true;
+            }
+        }
+        //CTRL + C
+        if (Screen.isCopy(keycode)) {
+            Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
+            return true;
+        }
+        //CTRL + V
+        if (Screen.isPaste(keycode)) {
+            this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
+            return true;
+        }
+        //CTRL + A
+        if (Screen.isSelectAll(keycode)) {
+            for (TextEditorInputBox t : this.textFieldLines) {
+                t.setHighlightPos(0);
+                t.setCursorPosition(t.getValue().length());
+            }
+            this.setFocusedLine(this.getLineCount()-1);
+            return true;
+        }
+        //CTRL + U
+        if (Screen.isCut(keycode)) {
+            Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
+            return true;
+        }
+
+        return super.keyPressed(keycode, i1, i2);
+
+    }
+
     protected void onKeyPress(KeyboardData d) {
 
         if ((Minecraft.getInstance().screen != null) && (Minecraft.getInstance().screen == this)) {
@@ -415,6 +574,16 @@ public class TextEditorScreen extends Screen {
 
         }
 
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if ((button == 0) && !this.horizontalScrollBar.isGrabberHovered() && !this.verticalScrollBar.isGrabberHovered()) {
+            LOGGER.info("RESETTING START END HIGHLIGHT INDEXES!");
+            this.startHighlightLineIndex = -1;
+            this.endHighlightLineIndex = -1;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
@@ -627,9 +796,16 @@ public class TextEditorScreen extends Screen {
         }
 
         @Override
-        public boolean keyPressed(int p_94132_, int p_94133_, int p_94134_) {
-            //TODO if multiline hightlighted, block Screen.isPaste and other stuff and write custom code for it
-            return super.keyPressed(p_94132_, p_94133_, p_94134_);
+        public boolean keyPressed(int keycode, int i1, int i2) {
+            //Handled by the editor
+            if (Screen.isCopy(keycode) || Screen.isPaste(keycode) || Screen.isSelectAll(keycode) || Screen.isCut(keycode)) {
+                return false;
+            }
+            //Text deletion is handled by the editor if text is highlighted
+            if ((keycode == InputConstants.KEY_BACKSPACE) && !this.parent.getHighlightedText().equals("")) {
+                return false;
+            }
+            return super.keyPressed(keycode, i1, i2);
         }
 
         @Override
@@ -661,7 +837,7 @@ public class TextEditorScreen extends Screen {
 
             if ((mouseButton == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
                 if (!this.parent.isAtLeastOneLineInHighlightMode()) {
-                    this.parent.firstHighlightLine = this;
+                    this.parent.startHighlightLine = this;
                 }
                 this.isInMouseHighlightingMode = true;
                 this.setFocus(true);
