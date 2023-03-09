@@ -5,6 +5,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.function.BiFunction;
 
@@ -26,5 +27,7 @@ public interface IMixinEditBox {
     @Accessor("shiftPressed") boolean getShiftPressedFancyMenu();
 
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
+
+    @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i);
 
 }
