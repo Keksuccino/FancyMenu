@@ -8,6 +8,8 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.ScreenEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -16,6 +18,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ScrollBar extends GuiComponent {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected final ScrollBarDirection direction;
     public int grabberWidth;
@@ -174,6 +178,10 @@ public class ScrollBar extends GuiComponent {
 
     public void setScroll(float scroll, boolean informScrollListeners) {
         this.scroll = Math.min(1.0F, Math.max(0.0F, scroll));
+        //TODO remove debug
+        if (this.scroll != 0.0F) {
+            LOGGER.info("ScrollBar: setScroll: setting to: " + this.scroll);
+        }
         if (informScrollListeners) {
             for (Consumer<ScrollBar> listener : this.scrollListeners) {
                 listener.accept(this);

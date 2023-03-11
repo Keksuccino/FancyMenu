@@ -291,6 +291,12 @@ public class TextEditorScreen extends Screen {
     protected TextEditorInputBox addLineAtIndex(int index) {
         TextEditorInputBox f = new TextEditorInputBox(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, true, this.characterFilter, this);
         f.setMaxLength(Integer.MAX_VALUE);
+        if (index > 0) {
+            TextEditorInputBox before = this.getLine(index-1);
+            if (before != null) {
+                f.setY(before.getY() + this.lineHeight);
+            }
+        }
         this.textFieldLines.add(index, f);
         return f;
     }
@@ -421,7 +427,6 @@ public class TextEditorScreen extends Screen {
                 }
             }
         }
-        this.correctYScroll();
     }
 
     protected void goDownLine(boolean isNewLine) {
@@ -441,12 +446,12 @@ public class TextEditorScreen extends Screen {
                     currentLine.setValue(textBeforeCursor);
                     nextLine.setValue(textAfterCursor);
                     nextLine.moveCursorTo(0);
+                    nextLine.setY(currentLine.y + this.lineHeight);
                 } else {
                     nextLine.moveCursorTo(this.lastCursorPosSetByUser);
                 }
             }
         }
-        this.correctYScroll();
     }
 
     public List<TextEditorInputBox> getCopyOfLines() {
@@ -569,6 +574,7 @@ public class TextEditorScreen extends Screen {
                 if (this.isLineFocused()) {
                     this.resetHighlighting();
                     this.goDownLine(true);
+                    this.correctYScroll(true, false);
                 }
             }
             return true;
@@ -578,6 +584,7 @@ public class TextEditorScreen extends Screen {
             if (!this.isInMouseHighlightingMode()) {
                 this.resetHighlighting();
                 this.goUpLine();
+                this.correctYScroll(false, false);
             }
             return true;
         }
@@ -586,6 +593,7 @@ public class TextEditorScreen extends Screen {
             if (!this.isInMouseHighlightingMode()) {
                 this.resetHighlighting();
                 this.goDownLine(false);
+                this.correctYScroll(false, false);
             }
             return true;
         }
@@ -698,20 +706,25 @@ public class TextEditorScreen extends Screen {
     }
 
     public void scrollToLine(int lineIndex, boolean top) {
-        float f = (float)((lineIndex + 1) * this.lineHeight) / (float)this.getTotalLineHeight();
-        if (top) {
-            f += ((float)this.getEditorAreaHeight() / (float)this.getTotalLineHeight());
+        int totalLineHeight = Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
+        float f = (float)Math.max(0, ((lineIndex + 1) * this.lineHeight) - this.lineHeight) / (float)totalLineHeight;
+        if (!top) {
+            f -= ((float)Math.max(0, this.getEditorAreaHeight() - this.lineHeight) / (float)totalLineHeight);
         }
         this.verticalScrollBar.setScroll(f);
     }
 
-    protected void correctYScroll() {
+    public void scrollOneLineUp(int heightOffset) {
+        float f = (float)this.lineHeight / (float)Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
+        this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() - f);
+    }
 
-        //TODO neues y scroll handling fixen !!
-        //TODO neues y scroll handling fixen !!
-        //TODO neues y scroll handling fixen !!
-        //TODO neues y scroll handling fixen !!
-        //TODO neues y scroll handling fixen !!
+    public void scrollOneLineDown(int heightOffset) {
+        float f = (float)this.lineHeight / (float)Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
+        this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() + f);
+    }
+
+    protected void correctYScroll(boolean lineAdded, boolean lineRemoved) {
 
         //Don't fix scroll if in mouse-highlighting mode or no line is focused
         if (this.isInMouseHighlightingMode() || !this.isLineFocused()) {
@@ -722,11 +735,24 @@ public class TextEditorScreen extends Screen {
         int maxY = this.getEditorAreaY() + this.getEditorAreaHeight();
         int currentLineY = this.getFocusedLine().getY();
 
+        LOGGER.info("---------------------------------------------------------------");
+        LOGGER.info("correctYScroll: MIN Y: " + minY);
+        LOGGER.info("correctYScroll: MAX Y: " + maxY);
+        LOGGER.info("correctYScroll: CURRENT LINE Y: " + currentLineY);
+
         if (currentLineY < minY) {
+            LOGGER.info("correctYScroll: LINE Y < MIN Y --------");
             this.scrollToLine(this.getFocusedLineIndex(), true);
-        }
-        if ((currentLineY + this.lineHeight) > maxY) {
+        } else if ((currentLineY + this.lineHeight) > maxY) {
+            LOGGER.info("correctYScroll: LINE Y > MAX Y --------");
             this.scrollToLine(this.getFocusedLineIndex(), false);
+        } else {
+            if (lineAdded) {
+                this.scrollOneLineUp(0);
+            }
+            if (lineRemoved) {
+                this.scrollOneLineDown(this.lineHeight);
+            }
         }
 
         if (this.getTotalLineHeight() <= this.getEditorAreaHeight()) {
@@ -999,6 +1025,7 @@ public class TextEditorScreen extends Screen {
                     this.parent.getFocusedLine().setHighlightPos(this.parent.getFocusedLine().getCursorPosition());
                     if (lastLineIndex > 0) {
                         this.parent.removeLineAtIndex(this.parent.getFocusedLineIndex()+1);
+                        this.parent.correctYScroll(false, true);
                     }
                     this.parent.fixYScrollAfterDeletingLine(yBeforeRemoving);
                 } else {
@@ -1012,6 +1039,11 @@ public class TextEditorScreen extends Screen {
 
             if (!this.parent.isMouseInsideEditorArea()) {
                 return false;
+            }
+
+            //TODO remove debug
+            if (this.parent.getFocusedLine() == this) {
+                LOGGER.info("mouseClicked: focused Line Y: " + this.y);
             }
 
             if ((mouseButton == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
