@@ -277,11 +277,12 @@ public class TextEditorScreen extends Screen {
     }
 
     protected int getLineRenderOffsetX() {
+        //TODO checken, ob logik mit editor area width auch wirklich noch funktioniert
         return -(int)(((float)Math.max(0, this.currentLineWidth - this.getEditorAreaWidth()) / 100.0F) * (this.horizontalScrollBar.getScroll() * 100.0F));
     }
 
     protected int getLineRenderOffsetY() {
-        return -(int)(((float)Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight()) / 100.0F) * (this.verticalScrollBar.getScroll() * 100.0F));
+        return -(int)(((float)this.getTotalScrollHeight() / 100.0F) * (this.verticalScrollBar.getScroll() * 100.0F));
     }
 
     protected int getTotalLineHeight() {
@@ -295,6 +296,7 @@ public class TextEditorScreen extends Screen {
             TextEditorInputBox before = this.getLine(index-1);
             if (before != null) {
                 f.setY(before.getY() + this.lineHeight);
+                LOGGER.info("addLineAtIndex: NEW LINE Y: " + f.getY());
             }
         }
         this.textFieldLines.add(index, f);
@@ -432,7 +434,12 @@ public class TextEditorScreen extends Screen {
     protected void goDownLine(boolean isNewLine) {
         if (this.isLineFocused()) {
             int current = Math.max(0, this.getFocusedLineIndex());
+//            TextEditorInputBox lastLine = this.getLine(this.getLineCount()-1);
+//            int lastLineYBeforeAdding = lastLine.getY();
+            LOGGER.info("goDownLine: OLD LINE Y: " + this.getLine(current).getY());
             if (isNewLine) {
+//                LOGGER.info("goDownLine -----------------------");
+//                LOGGER.info("goDownLine: LAST LINE Y BEFORE ADDING: " + lastLineYBeforeAdding);
                 this.addLineAtIndex(current+1);
             }
             TextEditorInputBox currentLine = this.getLine(current);
@@ -446,11 +453,16 @@ public class TextEditorScreen extends Screen {
                     currentLine.setValue(textBeforeCursor);
                     nextLine.setValue(textAfterCursor);
                     nextLine.moveCursorTo(0);
-                    nextLine.setY(currentLine.y + this.lineHeight);
                 } else {
                     nextLine.moveCursorTo(this.lastCursorPosSetByUser);
                 }
             }
+            //TODO remove debug
+//            if (isNewLine) {
+//                this.updateLines(null);
+//                LOGGER.info("goDownLine: LAST LINE Y AFTER ADDING AND UPDATING: " + lastLine.getY());
+//                LOGGER.info("goDownLine: DIFF BEFORE AND AFTER ADDING: " + (Math.max(lastLineYBeforeAdding, lastLine.getY()) - Math.min(lastLineYBeforeAdding, lastLine.getY())));
+//            }
         }
     }
 
@@ -705,23 +717,36 @@ public class TextEditorScreen extends Screen {
         return 0;
     }
 
-    public void scrollToLine(int lineIndex, boolean top) {
-        int totalLineHeight = Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
+    public void scrollToLine(int lineIndex, boolean bottom) {
+//        int totalLineHeight = this.getTotalScrollHeight();
+//        float f = (float)Math.max(0, ((lineIndex + 1) * this.lineHeight) - this.lineHeight) / (float)totalLineHeight;
+//        if (!top) {
+//            f -= ((float)Math.max(0, this.getEditorAreaHeight() - this.lineHeight) / (float)totalLineHeight);
+//        }
+//        this.verticalScrollBar.setScroll(f);
+        if (bottom) {
+            this.scrollToLine(lineIndex, -Math.max(0, this.getEditorAreaHeight() - this.lineHeight));
+        } else {
+            this.scrollToLine(lineIndex, 0);
+        }
+    }
+
+    public void scrollToLine(int lineIndex, int offset) {
+        int totalLineHeight = this.getTotalScrollHeight();
         float f = (float)Math.max(0, ((lineIndex + 1) * this.lineHeight) - this.lineHeight) / (float)totalLineHeight;
-        if (!top) {
-            f -= ((float)Math.max(0, this.getEditorAreaHeight() - this.lineHeight) / (float)totalLineHeight);
+        if (offset != 0) {
+            if (offset > 0) {
+                f += ((float)offset / (float)totalLineHeight);
+            } else {
+                f -= ((float)Math.abs(offset) / (float)totalLineHeight);
+            }
         }
         this.verticalScrollBar.setScroll(f);
     }
 
-    public void scrollOneLineUp(int heightOffset) {
-        float f = (float)this.lineHeight / (float)Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
-        this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() - f);
-    }
-
-    public void scrollOneLineDown(int heightOffset) {
-        float f = (float)this.lineHeight / (float)Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
-        this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() + f);
+    protected int getTotalScrollHeight() {
+//        return Math.max(0, this.getTotalLineHeight() - this.getEditorAreaHeight());
+        return this.getTotalLineHeight();
     }
 
     protected void correctYScroll(boolean lineAdded, boolean lineRemoved) {
@@ -735,24 +760,30 @@ public class TextEditorScreen extends Screen {
         int maxY = this.getEditorAreaY() + this.getEditorAreaHeight();
         int currentLineY = this.getFocusedLine().getY();
 
-        LOGGER.info("---------------------------------------------------------------");
-        LOGGER.info("correctYScroll: MIN Y: " + minY);
-        LOGGER.info("correctYScroll: MAX Y: " + maxY);
-        LOGGER.info("correctYScroll: CURRENT LINE Y: " + currentLineY);
+//        LOGGER.info("---------------------------------------------------------------");
+//        LOGGER.info("correctYScroll: MIN Y: " + minY);
+//        LOGGER.info("correctYScroll: MAX Y: " + maxY);
+//        LOGGER.info("correctYScroll: CURRENT LINE Y: " + currentLineY);
 
         if (currentLineY < minY) {
-            LOGGER.info("correctYScroll: LINE Y < MIN Y --------");
-            this.scrollToLine(this.getFocusedLineIndex(), true);
-        } else if ((currentLineY + this.lineHeight) > maxY) {
-            LOGGER.info("correctYScroll: LINE Y > MAX Y --------");
+//            LOGGER.info("correctYScroll: LINE Y < MIN Y --------");
             this.scrollToLine(this.getFocusedLineIndex(), false);
-        } else {
+        } else if ((currentLineY + this.lineHeight) > maxY) {
+//            LOGGER.info("correctYScroll: LINE Y > MAX Y --------");
+            this.scrollToLine(this.getFocusedLineIndex(), true);
+        } else if (lineAdded || lineRemoved) {
+//            LOGGER.info("correctYScroll: LINE ADDED/REMOVED");
+            int diffToTop = Math.max(0, currentLineY - this.getEditorAreaY());
             if (lineAdded) {
-                this.scrollOneLineUp(0);
+                //TODO KORREKTUR BEI ADDED FIXEN !!! (removed geht)
+                //TODO KORREKTUR BEI ADDED FIXEN !!! (removed geht)
+                //TODO KORREKTUR BEI ADDED FIXEN !!! (removed geht)
+                //TODO KORREKTUR BEI ADDED FIXEN !!! (removed geht)
+                //TODO KORREKTUR BEI ADDED FIXEN !!! (removed geht)
+                diffToTop = Math.max(0, (currentLineY - this.lineHeight) - this.getEditorAreaY());
             }
-            if (lineRemoved) {
-                this.scrollOneLineDown(this.lineHeight);
-            }
+            this.scrollToLine(this.getFocusedLineIndex(), -diffToTop);
+            this.correctYScroll(false, false);
         }
 
         if (this.getTotalLineHeight() <= this.getEditorAreaHeight()) {
