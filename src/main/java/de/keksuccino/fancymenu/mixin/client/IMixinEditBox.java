@@ -2,6 +2,7 @@
 package de.keksuccino.fancymenu.mixin.client;
 
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -29,5 +30,17 @@ public interface IMixinEditBox {
     @Accessor("highlightPos") int getHighlightPosFancyMenu();
 
     @Invoker("deleteText") void invokeDeleteTextFancyMenu(int i);
+
+    @Accessor("textColor") int getTextColorFancyMenu();
+
+    @Accessor("textColorUneditable") int getTextColorUneditableFancyMenu();
+
+    @Accessor("frame") int getFrameFancyMenu();
+
+    @Accessor("hint") Component getHintFancyMenu();
+
+    @Accessor("suggestion") String getSuggestionFancyMenu();
+
+    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int i1, int i2, int i3, int i4);
 
 }

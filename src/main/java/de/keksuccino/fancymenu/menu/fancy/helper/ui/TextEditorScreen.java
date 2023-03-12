@@ -2,14 +2,18 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.mixin.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
+import de.keksuccino.konkrete.gui.content.handling.AdvancedWidgetsHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -20,15 +24,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class TextEditorScreen extends Screen {
-
-    //TODO scroll bars auf größe von editor area anpassen
-
-    //TODO wenn Leerzeichen an Anfang von Zeile, neu geaddete Zeile gleiche Anzahl Leerzeichen adden
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -44,7 +45,15 @@ public class TextEditorScreen extends Screen {
     public int footerHeight = 50;
     public int borderLeft = 20;
     public int borderRight = 20;
-    public int lineHeight = 20;
+    public int lineHeight = 14;
+    public Color screenBackgroundColor = new Color(60, 63, 65);
+    public Color editorAreaBorderColor = UIBase.getButtonBorderIdleColor();
+    public Color editorAreaBackgroundColor = new Color(43, 43, 43);
+    public Color textColor = new Color(158, 170, 184);
+    public Color focusedLineColor = new Color(50, 50, 50);
+    public Color scrollGrabberIdleColor = new Color(89, 91, 93);
+    public Color scrollGrabberHoverColor = new Color(102, 104, 104);
+    public Color sideBarColor = new Color(49, 51, 53);
     protected int currentLineWidth;
     protected int lastTickFocusedLineIndex = -1;
     protected TextEditorInputBox startHighlightLine = null;
@@ -58,46 +67,66 @@ public class TextEditorScreen extends Screen {
         this.characterFilter = characterFilter;
         this.addLine();
         this.getLine(0).setFocus(true);
+        this.verticalScrollBar.setScrollWheelAllowed(true);
     }
 
     @Override
     protected void init() {
+
         super.init();
-        this.verticalScrollBar.scrollAreaEndX = this.width;
-        this.verticalScrollBar.scrollAreaEndY = this.height-10;
-        this.horizontalScrollBar.scrollAreaEndX = this.width-10;
-        this.horizontalScrollBar.scrollAreaEndY = this.height;
+
+        this.verticalScrollBar.scrollAreaStartX = this.getEditorAreaX() - 1;
+        this.verticalScrollBar.scrollAreaStartY = this.getEditorAreaY() - 1;
+        this.verticalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() + 10;
+        this.verticalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 1;
+
+        this.horizontalScrollBar.scrollAreaStartX = this.getEditorAreaX() - 1;
+        this.horizontalScrollBar.scrollAreaStartY = this.getEditorAreaY() - 1;
+        this.horizontalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() + 1;
+        this.horizontalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 10;
+
     }
 
     @Override
     public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        int editorAreaWidth = (this.width - this.borderRight) - this.borderLeft;
-        int editorAreaHeight = (this.height - this.footerHeight) - this.headerHeight;
+        //Update scroll grabber colors
+        this.verticalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
+        this.verticalScrollBar.hoverBarColor = this.scrollGrabberHoverColor;
+        this.horizontalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
+        this.horizontalScrollBar.hoverBarColor = this.scrollGrabberHoverColor;
 
         //Reset scrolls if content fits editor area
-        //TODO nach correctScrollX methode verschieben
-        if (this.currentLineWidth <= editorAreaWidth) {
+        if (this.currentLineWidth <= this.getEditorAreaWidth()) {
             this.horizontalScrollBar.setScroll(0.0F);
+        }
+        if (this.getTotalLineHeight() <= this.getEditorAreaHeight()) {
+            this.verticalScrollBar.setScroll(0.0F);
         }
 
         this.justSwitchedLineByWordDeletion = false;
 
-        this.renderBackground(matrix);
-
         this.updateCurrentLineWidth();
 
-        //TODO scissors aktivieren
-//        Window win = Minecraft.getInstance().getWindow();
-//        double scale = win.getGuiScale();
-//        int sciBottom = this.height - this.footerHeight;
-//        RenderSystem.enableScissor((int)(this.borderLeft * scale), (int)(win.getHeight() - (sciBottom * scale)), (int)(editorAreaWidth * scale), (int)(editorAreaHeight * scale));
+        //Adjust the scroll wheel speed depending on the amount of lines
+        this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
+        this.renderScreenBackground(matrix);
+
+        this.renderEditorAreaBackground(matrix);
+
+        Window win = Minecraft.getInstance().getWindow();
+        double scale = win.getGuiScale();
+        int sciBottom = this.height - this.footerHeight;
+        //Don't render parts of lines outside of editor area
+        RenderSystem.enableScissor((int)(this.borderLeft * scale), (int)(win.getHeight() - (sciBottom * scale)), (int)(this.getEditorAreaWidth() * scale), (int)(this.getEditorAreaHeight() * scale));
+
+        //Update positions and size of lines and render them
         this.updateLines((line) -> {
             line.render(matrix, mouseX, mouseY, partial);
         });
 
-//        RenderSystem.disableScissor();
+        RenderSystem.disableScissor();
 
         this.verticalScrollBar.render(matrix);
         this.horizontalScrollBar.render(matrix);
@@ -115,13 +144,21 @@ public class TextEditorScreen extends Screen {
 
     protected void renderBorder(PoseStack matrix) {
         //top
-        fill(matrix, this.borderLeft - 1, this.headerHeight - 1, this.width - this.borderRight + 1, this.headerHeight, Color.RED.getRGB());
+        fill(matrix, this.borderLeft - 1, this.headerHeight - 1, this.width - this.borderRight + 1, this.headerHeight, this.editorAreaBorderColor.getRGB());
         //left
-        fill(matrix, this.borderLeft - 1, this.headerHeight, this.borderLeft, this.height - this.footerHeight, Color.RED.getRGB());
+        fill(matrix, this.borderLeft - 1, this.headerHeight, this.borderLeft, this.height - this.footerHeight, this.editorAreaBorderColor.getRGB());
         //right
-        fill(matrix, this.width - this.borderRight, this.headerHeight, this.width - this.borderRight+1, this.height - this.footerHeight, Color.RED.getRGB());
+        fill(matrix, this.width - this.borderRight, this.headerHeight, this.width - this.borderRight+1, this.height - this.footerHeight, this.editorAreaBorderColor.getRGB());
         //down
-        fill(matrix, this.borderLeft - 1, this.height - this.footerHeight, this.width - this.borderRight + 1, this.height - this.footerHeight + 1, Color.RED.getRGB());
+        fill(matrix, this.borderLeft - 1, this.height - this.footerHeight, this.width - this.borderRight + 1, this.height - this.footerHeight + 1, this.editorAreaBorderColor.getRGB());
+    }
+
+    protected void renderEditorAreaBackground(PoseStack matrix) {
+        fill(matrix, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+    }
+
+    protected void renderScreenBackground(PoseStack matrix) {
+        fill(matrix, 0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
     }
 
     protected void tickMouseHighlighting() {
@@ -211,7 +248,6 @@ public class TextEditorScreen extends Screen {
             }
             this.startHighlightLineIndex = startIndex;
             this.endHighlightLineIndex = endIndex;
-            LOGGER.info("START INDEX: " + this.startHighlightLineIndex + " | END INDEX: " + this.endHighlightLineIndex);
 
             if (first != hovered) {
                 first.getAsAccessor().setShiftPressedFancyMenu(true);
@@ -230,7 +266,6 @@ public class TextEditorScreen extends Screen {
             if ((this.startHighlightLineIndex == -1) && (this.endHighlightLineIndex == -1)) {
                 this.startHighlightLineIndex = this.getLineIndex(focused);
                 this.endHighlightLineIndex = this.startHighlightLineIndex;
-                LOGGER.info("START INDEX: " + this.startHighlightLineIndex + " | END INDEX: " + this.endHighlightLineIndex);
             }
             int i = Mth.floor(MouseInput.getMouseX()) - focused.getX();
             if (focused.getAsAccessor().getBorderedFancyMenu()) {
@@ -241,9 +276,7 @@ public class TextEditorScreen extends Screen {
             focused.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + focused.getAsAccessor().getDisplayPosFancyMenu());
             focused.getAsAccessor().setShiftPressedFancyMenu(false);
             if ((focused.getAsAccessor().getHighlightPosFancyMenu() == focused.getCursorPosition()) && (this.startHighlightLineIndex == this.endHighlightLineIndex)) {
-                this.startHighlightLineIndex = -1;
-                this.endHighlightLineIndex = -1;
-                LOGGER.info("RESETTING START END INDEXES!");
+                this.resetHighlighting();
             }
         }
 
@@ -251,14 +284,13 @@ public class TextEditorScreen extends Screen {
 
     protected void updateLines(@Nullable Consumer<TextEditorInputBox> doAfterEachLineUpdate) {
         try {
-            //Update positions and size of lines and render them
             int index = 0;
             for (TextEditorInputBox line : this.textFieldLines) {
                 line.y = this.headerHeight + (this.lineHeight * index) + this.getLineRenderOffsetY();
                 line.x = this.borderLeft + this.getLineRenderOffsetX();
                 line.setWidth(this.currentLineWidth);
                 line.setHeight(this.lineHeight);
-                ((IMixinEditBox)line).setDisplayPosFancyMenu(0);
+                line.getAsAccessor().setDisplayPosFancyMenu(0);
                 if (doAfterEachLineUpdate != null) {
                     doAfterEachLineUpdate.accept(line);
                 }
@@ -300,7 +332,6 @@ public class TextEditorScreen extends Screen {
             TextEditorInputBox before = this.getLine(index-1);
             if (before != null) {
                 f.setY(before.getY() + this.lineHeight);
-                LOGGER.info("addLineAtIndex: NEW LINE Y: " + f.getY());
             }
         }
         this.textFieldLines.add(index, f);
@@ -438,12 +469,7 @@ public class TextEditorScreen extends Screen {
     protected void goDownLine(boolean isNewLine) {
         if (this.isLineFocused()) {
             int current = Math.max(0, this.getFocusedLineIndex());
-//            TextEditorInputBox lastLine = this.getLine(this.getLineCount()-1);
-//            int lastLineYBeforeAdding = lastLine.getY();
-            LOGGER.info("goDownLine: OLD LINE Y: " + this.getLine(current).getY());
             if (isNewLine) {
-//                LOGGER.info("goDownLine -----------------------");
-//                LOGGER.info("goDownLine: LAST LINE Y BEFORE ADDING: " + lastLineYBeforeAdding);
                 this.addLineAtIndex(current+1);
             }
             TextEditorInputBox currentLine = this.getLine(current);
@@ -457,16 +483,23 @@ public class TextEditorScreen extends Screen {
                     currentLine.setValue(textBeforeCursor);
                     nextLine.setValue(textAfterCursor);
                     nextLine.moveCursorTo(0);
+                    //Add amount of spaces of the beginning of the old line to the beginning of the new line
+                    if (textBeforeCursor.startsWith(" ")) {
+                        int spaces = 0;
+                        for (char c : textBeforeCursor.toCharArray()) {
+                            if (String.valueOf(c).equals(" ")) {
+                                spaces++;
+                            } else {
+                                break;
+                            }
+                        }
+                        nextLine.setValue(textBeforeCursor.substring(0, spaces) + nextLine.getValue());
+                        nextLine.moveCursorTo(spaces);
+                    }
                 } else {
                     nextLine.moveCursorTo(this.lastCursorPosSetByUser);
                 }
             }
-            //TODO remove debug
-//            if (isNewLine) {
-//                this.updateLines(null);
-//                LOGGER.info("goDownLine: LAST LINE Y AFTER ADDING AND UPDATING: " + lastLine.getY());
-//                LOGGER.info("goDownLine: DIFF BEFORE AND AFTER ADDING: " + (Math.max(lastLineYBeforeAdding, lastLine.getY()) - Math.min(lastLineYBeforeAdding, lastLine.getY())));
-//            }
         }
     }
 
@@ -482,16 +515,17 @@ public class TextEditorScreen extends Screen {
         return l;
     }
 
+    public boolean isTextHighlighted() {
+        return (this.startHighlightLineIndex != -1) && (this.endHighlightLineIndex != -1);
+    }
+
     @NotNull
     public String getHighlightedText() {
-        LOGGER.info("CALL getHighlightedText");
         try {
             if ((this.startHighlightLineIndex != -1) && (this.endHighlightLineIndex != -1)) {
-                LOGGER.info("----- trigger 1");
                 List<TextEditorInputBox> lines = new ArrayList<>();
                 lines.add(this.getLine(this.startHighlightLineIndex));
                 if (this.startHighlightLineIndex != this.endHighlightLineIndex) {
-                    LOGGER.info("----- trigger 2");
                     lines.addAll(this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex));
                     lines.add(this.getLine(this.endHighlightLineIndex));
                 }
@@ -503,13 +537,11 @@ public class TextEditorScreen extends Screen {
                     s.append(t.getHighlighted());
                 }
                 String ret = s.toString();
-                LOGGER.info("----- trigger 3: " + ret);
                 return ret;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        LOGGER.info("----- trigger 4");
         return "";
     }
 
@@ -521,40 +553,80 @@ public class TextEditorScreen extends Screen {
     }
 
     public void deleteHighlightedText() {
+        int linesRemoved = 0;
         try {
             if ((this.startHighlightLineIndex != -1) && (this.endHighlightLineIndex != -1)) {
                 if (this.startHighlightLineIndex == this.endHighlightLineIndex) {
                     this.getLine(this.startHighlightLineIndex).insertText("");
                 } else {
-                    this.getLine(this.startHighlightLineIndex).insertText("");
+                    TextEditorInputBox start = this.getLine(this.startHighlightLineIndex);
+                    start.insertText("");
                     TextEditorInputBox end = this.getLine(this.endHighlightLineIndex);
                     end.insertText("");
                     if ((this.endHighlightLineIndex - this.startHighlightLineIndex) > 1) {
-                        this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex).forEach((line) -> {
+                        for (TextEditorInputBox line : this.getLinesBetweenIndexes(this.startHighlightLineIndex, this.endHighlightLineIndex)) {
                             this.removeLineAtIndex(this.getLineIndex(line));
-                        });
+                            linesRemoved++;
+                        }
                     }
-                    if (end.getValue().length() == 0) {
-                        this.removeLineAtIndex(this.getLineIndex(end));
-                    }
+                    String oldStartValue = start.getValue();
+                    start.setCursorPosition(start.getValue().length());
+                    start.setHighlightPos(start.getCursorPosition());
+                    start.insertText(end.getValue());
+                    start.setCursorPosition(oldStartValue.length());
+                    start.setHighlightPos(start.getCursorPosition());
+                    this.removeLineAtIndex(this.getLineIndex(end));
+                    linesRemoved++;
                     this.setFocusedLine(this.startHighlightLineIndex);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.correctYScroll(-linesRemoved);
+        this.resetHighlighting();
+    }
+
+    public void resetHighlighting() {
         this.startHighlightLineIndex = -1;
         this.endHighlightLineIndex = -1;
+        for (TextEditorInputBox t : this.textFieldLines) {
+            t.setHighlightPos(t.getCursorPosition());
+        }
+    }
+
+    public boolean isInMouseHighlightingMode() {
+        return MouseInput.isLeftMouseDown() && (this.startHighlightLine != null);
     }
 
     public void pasteText(String text) {
-        //TODO support für ersetzen von markiertem text adden (in input box class blocken)
         try {
-            if (this.isLineFocused() && (text != null)) {
+            if ((text != null) && !text.equals("")) {
+                int addedLinesCount = 0;
+                if (this.isTextHighlighted()) {
+                    this.deleteHighlightedText();
+                }
+                if (!this.isLineFocused()) {
+                    this.setFocusedLine(this.getLineCount()-1);
+                    this.getFocusedLine().moveCursorToEnd();
+                }
+                TextEditorInputBox focusedLine = this.getFocusedLine();
+                //These two strings are for correctly pasting text within a char sequence (if the cursor is not at the end or beginning of the line)
+                String textBeforeCursor = "";
+                String textAfterCursor = "";
+                if (focusedLine.getValue().length() > 0) {
+                    textBeforeCursor = focusedLine.getValue().substring(0, focusedLine.getCursorPosition());
+                    if (focusedLine.getCursorPosition() < focusedLine.getValue().length()) {
+                        textAfterCursor = this.getFocusedLine().getValue().substring(focusedLine.getCursorPosition(), focusedLine.getValue().length());
+                    }
+                }
+                focusedLine.setValue(textBeforeCursor);
+                focusedLine.setCursorPosition(textBeforeCursor.length());
                 String[] lines = new String[]{text};
                 if (text.contains("\n")) {
                     lines = text.split("\n");
                 }
+                Array.set(lines, lines.length-1, lines[lines.length-1] + textAfterCursor);
                 if (lines.length == 1) {
                     this.getFocusedLine().insertText(lines[0]);
                 } else if (lines.length > 1) {
@@ -564,25 +636,25 @@ public class TextEditorScreen extends Screen {
                             index = this.getFocusedLineIndex();
                         } else {
                             this.addLineAtIndex(index);
+                            addedLinesCount++;
                         }
                         this.getLine(index).insertText(s);
                         index++;
                     }
-                    this.setFocusedLine(index-1);
-                    this.getLine(index-1).moveCursorToEnd();
+                    this.setFocusedLine(index - 1);
+                    this.getFocusedLine().setCursorPosition(Math.max(0, this.getFocusedLine().getValue().length() - textAfterCursor.length()));
+                    this.getFocusedLine().setHighlightPos(this.getFocusedLine().getCursorPosition());
                 }
+                this.correctYScroll(addedLinesCount);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.startHighlightLineIndex = -1;
-        this.endHighlightLineIndex = -1;
+        this.resetHighlighting();
     }
 
     @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
-
-        //TODO wenn CTRL + V wenn mouseHighlighting -> hightlighted clearen + leere zeilen löschen + kopiertes einfügen
 
         //ENTER
         if (keycode == 257) {
@@ -590,7 +662,7 @@ public class TextEditorScreen extends Screen {
                 if (this.isLineFocused()) {
                     this.resetHighlighting();
                     this.goDownLine(true);
-                    this.correctYScroll(true, false);
+                    this.correctYScroll(1);
                 }
             }
             return true;
@@ -600,7 +672,7 @@ public class TextEditorScreen extends Screen {
             if (!this.isInMouseHighlightingMode()) {
                 this.resetHighlighting();
                 this.goUpLine();
-                this.correctYScroll(false, false);
+                this.correctYScroll(0);
             }
             return true;
         }
@@ -609,7 +681,7 @@ public class TextEditorScreen extends Screen {
             if (!this.isInMouseHighlightingMode()) {
                 this.resetHighlighting();
                 this.goDownLine(false);
-                this.correctYScroll(false, false);
+                this.correctYScroll(0);
             }
             return true;
         }
@@ -617,7 +689,7 @@ public class TextEditorScreen extends Screen {
         //BACKSPACE
         if (keycode == InputConstants.KEY_BACKSPACE) {
             if (!this.isInMouseHighlightingMode()) {
-                if (!this.getHighlightedText().equals("")) {
+                if (this.isTextHighlighted()) {
                     this.deleteHighlightedText();
                 } else {
                     if (this.isLineFocused()) {
@@ -627,8 +699,7 @@ public class TextEditorScreen extends Screen {
                         focused.getAsAccessor().setShiftPressedFancyMenu(Screen.hasShiftDown());
                     }
                 }
-                this.startHighlightLineIndex = -1;
-                this.endHighlightLineIndex = -1;
+                this.resetHighlighting();
             }
             return true;
         }
@@ -656,12 +727,11 @@ public class TextEditorScreen extends Screen {
         //CTRL + U
         if (Screen.isCut(keycode)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
-            this.startHighlightLineIndex = -1;
-            this.endHighlightLineIndex = -1;
+            this.resetHighlighting();
             return true;
         }
-        //Reset highlighting when pressing left/right arrow keys while NOT in mouse-highlighting mod
-        if (((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) && !this.isInMouseHighlightingMode()) {
+        //Reset highlighting when pressing left/right arrow keys
+        if ((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) {
             this.resetHighlighting();
             return true;
         }
@@ -675,9 +745,19 @@ public class TextEditorScreen extends Screen {
 
         if (this.isMouseInsideEditorArea()) {
             if (button == 0) {
-                LOGGER.info("RESETTING START END HIGHLIGHT INDEXES!");
-                this.startHighlightLineIndex = -1;
-                this.endHighlightLineIndex = -1;
+                this.resetHighlighting();
+                if (this.getHoveredLine() == null) {
+                    TextEditorInputBox focus = this.getLine(this.getLineCount()-1);
+                    for (TextEditorInputBox t : this.textFieldLines) {
+                        if ((MouseInput.getMouseY() >= t.y) && (MouseInput.getMouseY() <= t.y + t.getHeight())) {
+                            focus = t;
+                            break;
+                        }
+                    }
+                    this.setFocusedLine(this.getLineIndex(focus));
+                    this.getFocusedLine().moveCursorToEnd();
+                    this.correctYScroll(0);
+                }
             }
         }
 
@@ -722,12 +802,6 @@ public class TextEditorScreen extends Screen {
     }
 
     public void scrollToLine(int lineIndex, boolean bottom) {
-//        int totalLineHeight = this.getTotalScrollHeight();
-//        float f = (float)Math.max(0, ((lineIndex + 1) * this.lineHeight) - this.lineHeight) / (float)totalLineHeight;
-//        if (!top) {
-//            f -= ((float)Math.max(0, this.getEditorAreaHeight() - this.lineHeight) / (float)totalLineHeight);
-//        }
-//        this.verticalScrollBar.setScroll(f);
         if (bottom) {
             this.scrollToLine(lineIndex, -Math.max(0, this.getEditorAreaHeight() - this.lineHeight));
         } else {
@@ -760,14 +834,7 @@ public class TextEditorScreen extends Screen {
         return this.currentLineWidth;
     }
 
-    protected void correctYScroll(boolean lineAdded, boolean lineRemoved) {
-
-        //TODO callen, wenn Zeilen durch highlighting gelöscht werden (mehrere) + support für removen von mehr als einer Zeile auf einmal adden
-        //TODO callen, wenn Zeilen durch highlighting gelöscht werden (mehrere) + support für removen von mehr als einer Zeile auf einmal adden
-        //TODO callen, wenn Zeilen durch highlighting gelöscht werden (mehrere) + support für removen von mehr als einer Zeile auf einmal adden
-        //TODO callen, wenn Zeilen durch highlighting gelöscht werden (mehrere) + support für removen von mehr als einer Zeile auf einmal adden
-        //TODO callen, wenn Zeilen durch highlighting gelöscht werden (mehrere) + support für removen von mehr als einer Zeile auf einmal adden
-        //TODO callen, wenn Zeilen durch highlighting gelöscht werden (mehrere) + support für removen von mehr als einer Zeile auf einmal adden
+    protected void correctYScroll(int lineCountOffsetAfterRemovingAdding) {
 
         //Don't fix scroll if in mouse-highlighting mode or no line is focused
         if (this.isInMouseHighlightingMode() || !this.isLineFocused()) {
@@ -778,32 +845,23 @@ public class TextEditorScreen extends Screen {
         int maxY = this.getEditorAreaY() + this.getEditorAreaHeight();
         int currentLineY = this.getFocusedLine().getY();
 
-//        LOGGER.info("---------------------------------------------------------------");
-//        LOGGER.info("correctYScroll: MIN Y: " + minY);
-//        LOGGER.info("correctYScroll: MAX Y: " + maxY);
-//        LOGGER.info("correctYScroll: CURRENT LINE Y: " + currentLineY);
-
-        LOGGER.info("correctYScroll: CURRENT LINE Y: " + this.getFocusedLine().getY());
-
         if (currentLineY < minY) {
-//            LOGGER.info("correctYScroll: LINE Y < MIN Y --------");
             this.scrollToLine(this.getFocusedLineIndex(), false);
         } else if ((currentLineY + this.lineHeight) > maxY) {
-//            LOGGER.info("correctYScroll: LINE Y > MAX Y --------");
             this.scrollToLine(this.getFocusedLineIndex(), true);
-        } else if (lineAdded || lineRemoved) {
-//            LOGGER.info("correctYScroll: LINE ADDED/REMOVED");
+        } else if (lineCountOffsetAfterRemovingAdding != 0) {
             this.overriddenTotalScrollHeight = -1;
-            if (lineAdded) {
-                this.overriddenTotalScrollHeight = this.getTotalScrollHeight() - this.lineHeight;
-            } else if (lineRemoved) {
-                this.overriddenTotalScrollHeight = this.getTotalScrollHeight() + this.lineHeight;
+            int removedAddedLineCount = Math.abs(lineCountOffsetAfterRemovingAdding);
+            if (lineCountOffsetAfterRemovingAdding > 0) {
+                this.overriddenTotalScrollHeight = this.getTotalScrollHeight() - (this.lineHeight * removedAddedLineCount);
+            } else if (lineCountOffsetAfterRemovingAdding < 0) {
+                this.overriddenTotalScrollHeight = this.getTotalScrollHeight() + (this.lineHeight * removedAddedLineCount);
             }
             this.updateLines(null);
             this.overriddenTotalScrollHeight = -1;
             int diffToTop = Math.max(0, this.getFocusedLine().getY() - this.getEditorAreaY());
             this.scrollToLine(this.getFocusedLineIndex(), -diffToTop);
-            this.correctYScroll(false, false);
+            this.correctYScroll(0);
         }
 
         if (this.getTotalLineHeight() <= this.getEditorAreaHeight()) {
@@ -812,7 +870,7 @@ public class TextEditorScreen extends Screen {
 
     }
 
-    protected void fixXYScroll(TextEditorInputBox calledIn) {
+    protected void correctXScroll(TextEditorInputBox calledIn) {
 
         //Don't fix scroll if in mouse-highlighting mode
         if (this.isInMouseHighlightingMode()) {
@@ -869,18 +927,6 @@ public class TextEditorScreen extends Screen {
 
     }
 
-    public boolean isInMouseHighlightingMode() {
-        return MouseInput.isLeftMouseDown() && (this.startHighlightLine != null);
-    }
-
-    public void resetHighlighting() {
-        this.startHighlightLineIndex = -1;
-        this.endHighlightLineIndex = -1;
-        for (TextEditorInputBox t : this.textFieldLines) {
-            t.setHighlightPos(t.getCursorPosition());
-        }
-    }
-
     public boolean isMouseInsideEditorArea() {
         int xStart = this.borderLeft;
         int yStart = this.headerHeight;
@@ -913,24 +959,104 @@ public class TextEditorScreen extends Screen {
         protected String lastTickValue = "";
         protected boolean cursorPositionTicked = false;
         public boolean isInMouseHighlightingMode = false;
+        protected final Font font2;
+        protected final boolean handleSelf2;
+
+        protected static boolean leftRightArrowWasDown = false;
 
         public TextEditorInputBox(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
             super(font, x, y, width, height, handleSelf, characterFilter);
             this.parent = parent;
+            this.font2 = font;
+            this.handleSelf2 = handleSelf;
+            this.setBordered(false);
         }
 
         @Override
-        public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-            super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+            super.render(matrix, mouseX, mouseY, partial);
 
             this.lastTickValue = this.getValue();
 
         }
 
+        @Override
+        public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partial) {
+
+            this.setTextColor(this.parent.textColor.getRGB());
+            this.setTextColorUneditable(this.parent.textColor.getRGB());
+
+            if (this.handleSelf2) {
+                AdvancedWidgetsHandler.handleWidget(this);
+            }
+
+            if (this.isVisible()) {
+
+                if (this.isFocused()) {
+                    //Render focused background
+                    fill(matrix, 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
+                }
+
+                int i2 = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
+                int j = this.getCursorPosition() - this.getAsAccessor().getDisplayPosFancyMenu();
+                int k = this.getAsAccessor().getHighlightPosFancyMenu() - this.getAsAccessor().getDisplayPosFancyMenu();
+                String s = this.font2.plainSubstrByWidth(this.getValue().substring(this.getAsAccessor().getDisplayPosFancyMenu()), this.getInnerWidth());
+                boolean flag = j >= 0 && j <= s.length();
+                boolean flag1 = this.isFocused() && this.getAsAccessor().getFrameFancyMenu() / 6 % 2 == 0 && flag;
+                int textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4 : this.getX() + 1;
+                int textY = this.getAsAccessor().getBorderedFancyMenu() ? this.getY() + (this.height - 8) / 2 : (this.getY() + Math.max(0, (this.getHeight() / 2)) - (this.font2.lineHeight / 2));
+                int j1 = textX;
+                if (k > s.length()) {
+                    k = s.length();
+                }
+
+                if (!s.isEmpty()) {
+                    String s1 = flag ? s.substring(0, j) : s;
+                    j1 = this.font2.drawShadow(matrix, this.getAsAccessor().getFormatterFancyMenu().apply(s1, this.getAsAccessor().getDisplayPosFancyMenu()), (float)textX, (float)textY, i2);
+                }
+
+                boolean isCursorAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
+                int k1 = j1;
+                if (!flag) {
+                    k1 = j > 0 ? textX + this.width : textX;
+                } else if (isCursorAtEndOfLine) {
+                    k1 = j1 - 1;
+                    --j1;
+                }
+
+                if (!s.isEmpty() && flag && j < s.length()) {
+                    this.font2.drawShadow(matrix, this.getAsAccessor().getFormatterFancyMenu().apply(s.substring(j), this.getCursorPosition()), (float)j1, (float)textY, i2);
+                }
+
+                if (this.getAsAccessor().getHintFancyMenu() != null && s.isEmpty() && !this.isFocused()) {
+                    this.font2.drawShadow(matrix, this.getAsAccessor().getHintFancyMenu(), (float)j1, (float)textY, i2);
+                }
+
+                if (!isCursorAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
+                    this.font2.drawShadow(matrix, this.getAsAccessor().getSuggestionFancyMenu(), (float)(k1 - 1), (float)textY, -8355712);
+                }
+
+                if (flag1) {
+                    if (isCursorAtEndOfLine) {
+                        GuiComponent.fill(matrix, k1, textY - 1, k1 + 1, textY + 1 + 9, -3092272);
+                    } else {
+                        this.font2.drawShadow(matrix, "_", (float)k1, (float)textY, i2);
+                    }
+                }
+
+                if (k != j) {
+                    int l1 = textX + this.font2.width(s.substring(0, k));
+                    this.getAsAccessor().invokeRenderHighlightFancyMenu(k1, textY - 1, l1 - 1, textY + 1 + 9);
+                }
+
+            }
+
+        }
+
         public int getActualHeight() {
             int h = this.height;
-            if (((IMixinEditBox)this).getBorderedFancyMenu()) {
+            if (this.getAsAccessor().getBorderedFancyMenu()) {
                 h += 2;
             }
             return h;
@@ -950,7 +1076,7 @@ public class TextEditorScreen extends Screen {
                 this.parent.lastCursorPosSetByUser = this.getCursorPosition();
             }
 
-            this.parent.fixXYScroll(this);
+            this.parent.correctXScroll(this);
             this.cursorPositionTicked = true;
 
         }
@@ -965,6 +1091,8 @@ public class TextEditorScreen extends Screen {
             }
 
             super.onTick();
+
+            leftRightArrowWasDown = false;
 
         }
 
@@ -981,6 +1109,34 @@ public class TextEditorScreen extends Screen {
             //Don't move cursor when in mouse-highlighting mode
             if (((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) && this.parent.isInMouseHighlightingMode()) {
                 return false;
+            }
+            //Jump to line above when pressing ARROW LEFT while at start of line
+            if (keycode == InputConstants.KEY_LEFT) {
+                if (!leftRightArrowWasDown) {
+                    if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
+                        leftRightArrowWasDown = true;
+                        this.parent.goUpLine();
+                        this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length());
+                        this.parent.correctYScroll(0);
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+            //Jump to line below when pressing ARROW RIGHT while at end of line
+            if (keycode == InputConstants.KEY_RIGHT) {
+                if (!leftRightArrowWasDown) {
+                    if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
+                        leftRightArrowWasDown = true;
+                        this.parent.goDownLine(false);
+                        this.parent.getFocusedLine().moveCursorTo(0);
+                        this.parent.correctYScroll(0);
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
             }
             return super.keyPressed(keycode, i1, i2);
         }
@@ -1001,7 +1157,7 @@ public class TextEditorScreen extends Screen {
                     this.parent.getFocusedLine().setHighlightPos(this.parent.getFocusedLine().getCursorPosition());
                     if (lastLineIndex > 0) {
                         this.parent.removeLineAtIndex(this.parent.getFocusedLineIndex()+1);
-                        this.parent.correctYScroll(false, true);
+                        this.parent.correctYScroll(-1);
                     }
                 } else {
                     super.deleteChars(i);
@@ -1014,11 +1170,6 @@ public class TextEditorScreen extends Screen {
 
             if (!this.parent.isMouseInsideEditorArea()) {
                 return false;
-            }
-
-            //TODO remove debug
-            if (this.parent.getFocusedLine() == this) {
-                LOGGER.info("mouseClicked: focused Line Y: " + this.y);
             }
 
             if ((mouseButton == 0) && this.isHovered() && !this.isInMouseHighlightingMode && this.isVisible()) {
