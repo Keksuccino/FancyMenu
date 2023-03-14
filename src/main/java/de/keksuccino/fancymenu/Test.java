@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.TextEditorScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;

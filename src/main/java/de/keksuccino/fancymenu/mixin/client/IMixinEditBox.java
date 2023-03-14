@@ -41,6 +41,6 @@ public interface IMixinEditBox {
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
 
-    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int i1, int i2, int i3, int i4);
+    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int xStart, int yStart, int xEnd, int yEnd);
 
 }

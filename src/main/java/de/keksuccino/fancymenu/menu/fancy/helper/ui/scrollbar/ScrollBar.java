@@ -179,9 +179,9 @@ public class ScrollBar extends GuiComponent {
     public void setScroll(float scroll, boolean informScrollListeners) {
         this.scroll = Math.min(1.0F, Math.max(0.0F, scroll));
         //TODO remove debug
-        if (this.scroll != 0.0F) {
-            LOGGER.info("ScrollBar: setScroll: setting to: " + this.scroll);
-        }
+//        if (this.scroll != 0.0F) {
+//            LOGGER.info("ScrollBar: setScroll: setting to: " + this.scroll);
+//        }
         if (informScrollListeners) {
             for (Consumer<ScrollBar> listener : this.scrollListeners) {
                 listener.accept(this);

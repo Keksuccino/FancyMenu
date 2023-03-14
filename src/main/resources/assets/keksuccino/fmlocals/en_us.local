@@ -1260,4 +1260,7 @@ fancymenu.helper.editor.items.playerentity.baby.desc = If the player should be a
 
 fancymenu.guicomponents.cancel = Cancel
 
-
+fancymenu.ui.text_editor.cut = Cut
+fancymenu.ui.text_editor.copy = Copy
+fancymenu.ui.text_editor.paste = Paste
+fancymenu.ui.text_editor.select_all = Select All
