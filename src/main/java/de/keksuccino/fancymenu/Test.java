@@ -7,11 +7,14 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
 
 public class Test {
 
     private AdvancedButton b = new AdvancedButton(20, 20, 100, 20, "Open Text Editor", true, (press) -> {
-        Minecraft.getInstance().setScreen(new TextEditorScreen(Component.literal("Text Editor"), Minecraft.getInstance().screen, null));
+        Minecraft.getInstance().setScreen(new TextEditorScreen(Component.literal("Text Editor"), Minecraft.getInstance().screen, null, (text) -> {
+            LogManager.getLogger().info("CLOSED EDITOR RETURNED: " + text);
+        }));
     });
 
     @SubscribeEvent

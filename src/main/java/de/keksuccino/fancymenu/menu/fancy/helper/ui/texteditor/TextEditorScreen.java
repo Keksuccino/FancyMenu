@@ -21,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,16 +38,19 @@ public class TextEditorScreen extends Screen {
     //TODO bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
     //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
     //TODO formatting rule für placeholder adden, die alle placeholder in verschiedenen farben hervorheben
-    //TODO fixen: manchmal funktioniert multi-line highlighting nicht mehr, nachdem große menge an Text (viele zeilen auf einmal) markiert und dann per mausklick resettet wurden
+    //TODO auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Screen parentScreen;
     public CharacterFilter characterFilter;
+    public Consumer<String> callback;
     public List<TextEditorLine> textFieldLines = new ArrayList<>();
     public ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, 10, 40, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
     public ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, 40, 10, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
     public FMContextMenu rightClickContextMenu;
+    public AdvancedButton cancelButton;
+    public AdvancedButton doneButton;
     public int lastCursorPosSetByUser = 0;
     public boolean justSwitchedLineByWordDeletion = false;
     public boolean triggeredFocusedLineWasTooHighInCursorPosMethod = false;
@@ -75,10 +79,11 @@ public class TextEditorScreen extends Screen {
     public List<TextEditorFormattingRule> formattingRules = new ArrayList<>();
     public int currentRenderCharacterIndexTotal = 0;
 
-    public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter) {
+    public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
         super(name);
         this.parentScreen = parent;
         this.characterFilter = characterFilter;
+        this.callback = callback;
         this.addLine();
         this.getLine(0).setFocus(true);
         this.verticalScrollBar.setScrollWheelAllowed(true);
@@ -100,6 +105,27 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBar.scrollAreaStartY = this.getEditorAreaY() - 1;
         this.horizontalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() + 1;
         this.horizontalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 10;
+
+        int xCenter = this.width / 2;
+
+        this.cancelButton = new AdvancedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
+            this.onClose();
+        });
+        UIBase.colorizeButton(this.cancelButton);
+
+        this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
+            if (this.callback != null) {
+                this.callback.accept(this.getText());
+            }
+            Minecraft.getInstance().setScreen(this.parentScreen);
+        });
+        UIBase.colorizeButton(this.doneButton);
+
+        LOGGER.info("-----------------------------");
+        LOGGER.info("START LINE: " + this.startHighlightLine);
+        LOGGER.info("START INDEX: " + this.startHighlightLineIndex);
+        LOGGER.info("END INDEX: " + this.endHighlightLineIndex);
+        LOGGER.info("IS LINE IN HIGHLIGHT MODE: " + this.isAtLeastOneLineInHighlightMode());
 
     }
 
@@ -215,6 +241,9 @@ public class TextEditorScreen extends Screen {
 
         this.renderBorder(matrix);
 
+        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(matrix, mouseX, mouseY, partial);
+
         UIBase.renderScaledContextMenu(matrix, this.rightClickContextMenu);
 
         this.tickMouseHighlighting();
@@ -254,6 +283,9 @@ public class TextEditorScreen extends Screen {
 
         if (!MouseInput.isLeftMouseDown()) {
             this.startHighlightLine = null;
+            for (TextEditorLine t : this.textFieldLines) {
+                t.isInMouseHighlightingMode = false;
+            }
             return;
         }
 
@@ -991,6 +1023,9 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public void onClose() {
+        if (this.callback != null) {
+            this.callback.accept(null);
+        }
         if (this.parentScreen != null) {
             Minecraft.getInstance().setScreen(this.parentScreen);
         } else {
