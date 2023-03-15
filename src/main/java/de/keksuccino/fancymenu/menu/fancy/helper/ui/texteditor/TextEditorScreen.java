@@ -34,15 +34,18 @@ import java.util.function.Consumer;
 
 public class TextEditorScreen extends Screen {
 
-    //TODO ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
+    //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
 
-    //TODO bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
+    //TODO Bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
 
     //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
 
-    //TODO formatting rule für placeholder adden, die alle placeholder in verschiedenen farben hervorheben
+    //TODO Formatting rule für placeholder adden, die alle placeholder hervorhebt
+    // - Da placeholder immer auf einer Zeile sind, muss sich nur um sichtbaren Zeilen-Bereich gekümmert werden (nicht wie bei brackets)
+    // - Placeholder verändern je nach Tiefe (nesting) ihre Farbe (oberste Ebene immer selbe Farbe, dann nach unten verändern)
+    // - Zeichen wie Klammern und Anführungszeichen werden in anderer Farbe hervorgehoben, als restlicher Placeholder, WECHSELN ABER NICHT DIE FARBE
 
-    //TODO auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
+    //TODO Auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
 
     //TODO placeholder menü adden:
     // - Button links unten, um menü zu öffnen
@@ -50,7 +53,7 @@ public class TextEditorScreen extends Screen {
     // - Menü ist wie folder view aufgebaut (1. Ebene liste mit allen Kategorien, bei klick auf Kategorie 2. Ebene mit Placeholdern)
     // - Bei 2. Menü ebene ganz oben entry, um in 1. Ebene zurück zu gehen
 
-    //TODO one-line mode, wo nicht mehr als eine Zeile geaddet werden kann (in addLine methode einfach check, ob one-line und wenn ja, nix machen)
+    //TODO One-line mode, wo nicht mehr als eine Zeile geaddet werden kann (in addLine methode einfach check, ob one-line und wenn ja, nix machen)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
