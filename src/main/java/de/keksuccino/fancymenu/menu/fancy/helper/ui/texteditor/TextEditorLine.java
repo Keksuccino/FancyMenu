@@ -295,7 +295,7 @@ public class TextEditorLine extends AdvancedTextField {
                 this.parent.startHighlightLine = this;
             }
             this.isInMouseHighlightingMode = true;
-            this.setFocus(true);
+            this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
             super.mouseClicked(mouseX, mouseY, mouseButton);
             this.getAsAccessor().setShiftPressedFancyMenu(false);
             this.setHighlightPos(this.getCursorPosition());

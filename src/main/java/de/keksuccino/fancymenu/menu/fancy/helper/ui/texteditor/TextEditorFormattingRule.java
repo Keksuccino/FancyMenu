@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class TextEditorFormattingRule {
 
-    public abstract void resetRule();
+    public abstract void resetRule(TextEditorScreen editor);
 
     /**
      * - Use Style.EMPTY as base<br>
