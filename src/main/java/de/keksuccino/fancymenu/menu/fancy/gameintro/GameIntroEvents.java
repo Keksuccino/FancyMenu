@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -12,9 +13,10 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 public class GameIntroEvents {
 
 	private static boolean titleScreenDisplayed = false;
-	
+
+	//TODO übernehmen 1.19.4 (event ändern)
 	@SubscribeEvent
-	public void onScreenInitPre(ScreenEvent.Init.Pre e) {
+	public void onScreenInitPre(InitOrResizeScreenEvent.Pre e) {
 		if (e.getScreen() instanceof TitleScreen) {
 			titleScreenDisplayed = true;
 		} else if (titleScreenDisplayed && MenuCustomization.isValidScreen(e.getScreen())) {

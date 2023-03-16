@@ -10,6 +10,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -42,8 +43,12 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ScreenEvent.BackgroundRendered;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.internal.BrandingControl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MainMenuHandler extends MenuHandlerBase {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static final CubeMap PANORAMA_CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
 	private static final ResourceLocation PANORAMA_OVERLAY = new ResourceLocation("textures/gui/title/background/panorama_overlay.png");
@@ -71,8 +76,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 		TitleScreenSplashItem.cachedSplashText = null;
 	}
 
+	//TODO übernehmen 1.19.4 (event ändern)
 	@Override
-	public void onInitPre(ScreenEvent.Init.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				if (e.getScreen() instanceof TitleScreen) {
@@ -85,6 +91,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	@Override
 	public void onButtonsCached(ButtonCachedEvent e) {
+
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 

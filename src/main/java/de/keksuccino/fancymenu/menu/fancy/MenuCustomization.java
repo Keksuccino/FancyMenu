@@ -24,6 +24,8 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.gui.screens.worldselection.ExperimentsScreen;
 import net.minecraftforge.common.MinecraftForge;
 
 public class MenuCustomization {
@@ -311,7 +313,6 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.panoramica.")) {
 			return true;
 		}
-		//TODO übernehmen
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.github.alexthe666.alexsmobs.")) {
 			return true;
 		}

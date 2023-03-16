@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
@@ -46,9 +47,10 @@ public class MenuCustomizationEvents {
 
 	}
 
+	//TODO übernehmen 1.19.4 (event ändern)
 	//I don't fucking know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onInitPrePre(ScreenEvent.Init.Pre e) {
+	public void onInitPrePre(InitOrResizeScreenEvent.Pre e) {
 
 		if (!ButtonCache.isCaching()) {
 			if (MenuCustomization.isValidScreen(e.getScreen())) {
@@ -88,9 +90,10 @@ public class MenuCustomizationEvents {
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
-	
+
+	//TODO übernehmen 1.19.4 (event ändern)
 	@SubscribeEvent
-	public void onInitPre(ScreenEvent.Init.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
 		MenuCustomization.isCurrentScrollable = false;
 		

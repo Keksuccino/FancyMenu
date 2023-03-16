@@ -1,35 +1,40 @@
 package de.keksuccino.fancymenu.mixin.client;
 
-import java.lang.reflect.Field;
-
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraftforge.common.MinecraftForge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
-import com.mojang.blaze3d.systems.RenderSystem;
+import org.spongepowered.asm.mixin.injection.Inject;
 
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
 import net.minecraft.client.gui.GuiComponent;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = ImageButton.class)
+//TODO übernehmen 1.19.4
+@Mixin(ImageButton.class)
 public abstract class MixinImageButton extends GuiComponent {
 
-	@Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ImageButton;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIFFIIII)V"),method = "renderButton")
-	private void redirectBlitInRenderButton(PoseStack poseStack, int x, int y, float texX, float texY, int width, int height, int texWidth, int texHeight) {
+	@Inject(method = "renderWidget", at = @At("HEAD"), cancellable = true)
+	private void beforeRenderWidgetBackground(PoseStack matrix, int p_267992_, int p_267950_, float p_268076_, CallbackInfo info) {
 		try {
-			RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre(poseStack, (AbstractButton)((Object)this), this.getAlpha());
+			RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre(matrix, (AbstractButton)((Object)this), this.getAlpha());
 			MinecraftForge.EVENT_BUS.post(e);
-			if (!e.isCanceled()) {
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha());
-				blit(poseStack, x, y, texX, texY, width, height, texWidth, texHeight);
+			((AbstractWidget)((Object)this)).setAlpha(e.getAlpha());
+			if (e.isCanceled()) {
+				info.cancel();
 			}
-			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post(poseStack, (AbstractButton)((Object)this), e.getAlpha());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Inject(method = "renderWidget", at = @At("TAIL"), cancellable = true)
+	private void afterRenderWidgetBackground(PoseStack matrix, int p_267992_, int p_267950_, float p_268076_, CallbackInfo info) {
+		try {
+			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post(matrix, (AbstractButton)((Object)this), this.getAlpha());
 			MinecraftForge.EVENT_BUS.post(e2);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -37,13 +42,7 @@ public abstract class MixinImageButton extends GuiComponent {
 	}
 	
 	private float getAlpha() {
-		try {
-			Field f = ReflectionHelper.findField(AbstractWidget.class, "f_93625_"); //alpha
-			return f.getFloat(this);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return 1.0F;
+		return ((IMixinAbstractWidget)this).getAlphaFancyMenu();
 	}
 	
 }

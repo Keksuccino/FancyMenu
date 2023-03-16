@@ -3,7 +3,7 @@
   "package": "de.keksuccino.fancymenu.mixin.client",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "MixinWidget",
+    "MixinAbstractWidget",
     "MixinImageButton",
     "MixinAbstractSelectionList",
     "MixinScreen",
@@ -20,7 +20,8 @@
     "IMixinServerList",
     "IMixinTitleScreen",
     "IMixinScreen",
-    "IMixinGridWidget"
+    "IMixinAbstractWidget",
+    "MixinAbstractButton"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -64,7 +64,7 @@ public class ChooseFilePopup extends FMTextInputPopup {
 		
 		this.textField.setX((renderIn.width / 2) - (this.textField.getWidth() / 2));
 		this.textField.setY((renderIn.height  / 2) - (this.textField.getHeight() / 2));
-		this.textField.renderButton(matrix, mouseX, mouseY, Minecraft.getInstance().getFrameTime());
+		this.textField.renderWidget(matrix, mouseX, mouseY, Minecraft.getInstance().getFrameTime());
 		
 		this.doneButton.setX((renderIn.width / 2) - (this.doneButton.getWidth() / 2));
 		this.doneButton.setY(((renderIn.height  / 2) + 100) - this.doneButton.getHeight() - 5);

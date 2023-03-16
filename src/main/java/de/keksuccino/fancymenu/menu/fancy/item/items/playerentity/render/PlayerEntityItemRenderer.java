@@ -263,10 +263,12 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
         int j = (int)(f1 * 255.0F) << 24;
         Font font = this.getFont();
         float f2 = (float)(-font.width(content) / 2);
-        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag, j, p_114502_);
+        //TODO übernehmen 1.19.4
+        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, p_114502_);
         if (flag) {
-            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, false, 0, p_114502_);
+            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, Font.DisplayMode.NORMAL, 0, p_114502_);
         }
+        //------------------
         matrix.popPose();
     }
 

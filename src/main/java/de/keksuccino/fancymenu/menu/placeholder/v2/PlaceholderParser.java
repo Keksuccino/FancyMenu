@@ -26,7 +26,7 @@ public class PlaceholderParser {
 
     @NotNull
     public static String replacePlaceholders(@NotNull String in) {
-        //TODO übernehmen
+        //---
         if (in == null) {
             in = "";
         }

@@ -270,7 +270,7 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
                 this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
                 ((PlaceholderEditBox)this.valueTextField).renderContextMenu = false;
                 this.valueTextField.setCanLoseFocus(true);
-                this.valueTextField.setFocus(false);
+                this.valueTextField.setFocused(false);
                 this.valueTextField.setMaxLength(1000);
                 if (this.valueString != null) {
                     this.valueTextField.setValue(this.valueString);

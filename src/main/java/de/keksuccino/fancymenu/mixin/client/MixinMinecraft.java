@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import net.minecraft.client.Minecraft;
 
+//TODO übernehmen 1.19.4
 @Mixin(value = Minecraft.class)
 public class MixinMinecraft {
 

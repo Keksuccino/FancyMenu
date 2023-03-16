@@ -56,7 +56,9 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
+	//TODO FIXEN: Buttons in neuen screens (create world screen, experiments screen) sind beim resizen des
+	// Menüs kurz an original position, wenn sie ber layout verschoben wurden
+
 	public static final String VERSION = "2.13.3";
 	public static final String MOD_LOADER = "forge";
 

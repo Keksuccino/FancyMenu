@@ -23,10 +23,7 @@ import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -73,6 +70,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.screens.OptionsScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -131,7 +129,6 @@ public class MenuHandlerBase extends GuiComponent {
 	protected String closeAudio;
 	protected String openAudio;
 
-	//TODO übernehmen
 	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
 
 	protected static Screen scaleChangedIn = null;
@@ -181,8 +178,9 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
+	//TODO übernehmen 1.19.4 (event ändern)
 	@SubscribeEvent
-	public void onInitPre(ScreenEvent.Init.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
@@ -242,7 +240,6 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.customMenuTitle = null;
 
-		//TODO übernehmen
 		this.cachedLayoutWideRequirements.clear();
 
 		for (PropertiesSet s : rawLayouts) {
@@ -258,9 +255,7 @@ public class MenuHandlerBase extends GuiComponent {
 			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
 				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 			}.visibilityRequirementContainer;
-			//TODO übernehmen
 			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
-			//---------------
 			if (!globalVisReqContainer.isVisible()) {
 				continue;
 			}
@@ -395,7 +390,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 	}
 
-	protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.Init.Pre e) {
+	//TODO übernehmen 1.19.4 (event ändern)
+	protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
 		
 		String action = sec.getEntryValue("action");
 		if (action != null) {
@@ -632,7 +628,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
-		
+
 		String action = sec.getEntryValue("action");
 		if (action != null) {
 			String identifier = sec.getEntryValue("identifier");
@@ -1256,7 +1252,6 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
-	//TODO übernehmen
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void onRenderPre(ScreenEvent.Render.Pre e) {
 

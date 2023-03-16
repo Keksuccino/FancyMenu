@@ -67,7 +67,7 @@ public class ButtonActionScreen extends ScrollableScreen {
 
         this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, null);
         this.valueTextField.setCanLoseFocus(true);
-        this.valueTextField.setFocus(false);
+        this.valueTextField.setFocused(false);
         this.valueTextField.setMaxLength(1000);
         if (this.parentButton != null) {
             if (this.parentButton.actionContent != null) {

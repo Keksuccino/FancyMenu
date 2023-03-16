@@ -11,11 +11,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import net.minecraftforge.common.MinecraftForge;
 
+//TODO übernehmen 1.19.4
 @SuppressWarnings("rawtypes")
 @Mixin(value = AbstractSelectionList.class)
 public abstract class MixinAbstractSelectionList {
 
-	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderColor(FFFF)V", ordinal = 0, shift = Shift.BEFORE), method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V")
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER), method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V")
 	private void onRenderListBackgroundPre(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		
 		RenderGuiListBackgroundEvent.Pre e = new RenderGuiListBackgroundEvent.Pre(matrix, (AbstractSelectionList) ((Object)this));
@@ -23,7 +24,7 @@ public abstract class MixinAbstractSelectionList {
 		
 	}
 	
-	@Inject(at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/Tesselator;end()V", ordinal = 0, shift = Shift.AFTER), method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V")
+	@Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getRowLeft()I"), method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V")
 	private void onRenderListBackgroundPost(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		
 		RenderGuiListBackgroundEvent.Post e = new RenderGuiListBackgroundEvent.Post(matrix, (AbstractSelectionList) ((Object)this));

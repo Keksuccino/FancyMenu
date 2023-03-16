@@ -7,6 +7,7 @@ import java.util.Map;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -25,9 +26,10 @@ public class VanillaButtonDescriptionHandler {
 	public static void init() {
 		MinecraftForge.EVENT_BUS.register(new VanillaButtonDescriptionHandler());
 	}
-	
+
+	//TODO übernehmen 1.19.4 (event ändern)
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onInitPre(ScreenEvent.Init.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		descriptions.clear();
 	}
 	
