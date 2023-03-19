@@ -1265,4 +1265,5 @@ fancymenu.ui.text_editor.cut = Cut
 fancymenu.ui.text_editor.copy = Copy
 fancymenu.ui.text_editor.paste = Paste
 fancymenu.ui.text_editor.select_all = Select All
-fancymenu.ui.text_editor.placeholders.back_to_categories = §cBACK TO CATEGORIES
+fancymenu.ui.text_editor.error.multiline_support = Multiline text is not supported by the target.
+fancymenu.ui.text_editor.placeholders.back_to_categories = BACK TO CATEGORIES

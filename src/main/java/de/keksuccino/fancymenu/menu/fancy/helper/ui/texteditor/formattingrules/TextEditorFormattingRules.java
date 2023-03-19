@@ -18,10 +18,14 @@ public class TextEditorFormattingRules {
     private static final List<Class<? extends TextEditorFormattingRule>> RULE_CLASSES = new ArrayList<>();
 
     static {
+
+        addRuleAtTop(HighlightPlaceholdersFormattingRule.class);
+
         addRuleAtBottom(HighlightAngleBracketsFormattingRule.class);
         addRuleAtBottom(HighlightCurlyBracketsFormattingRule.class);
         addRuleAtBottom(HighlightRoundBracketsFormattingRule.class);
         addRuleAtBottom(HighlightSquareBracketsFormattingRule.class);
+
     }
 
     public static void addRuleAtTop(Class<? extends TextEditorFormattingRule> rule) {

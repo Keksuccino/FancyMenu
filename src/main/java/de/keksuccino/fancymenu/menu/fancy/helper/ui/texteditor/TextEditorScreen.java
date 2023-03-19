@@ -41,14 +41,7 @@ public class TextEditorScreen extends Screen {
 
     //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
 
-    //TODO Formatting rule für placeholder adden, die alle placeholder hervorhebt
-    // - Da placeholder immer auf einer Zeile sind, muss sich nur um sichtbaren Zeilen-Bereich gekümmert werden (nicht wie bei brackets)
-    // - Placeholder verändern je nach Tiefe (nesting) ihre Farbe (oberste Ebene immer selbe Farbe, dann nach unten verändern)
-    // - Zeichen wie Klammern und Anführungszeichen werden in anderer Farbe hervorgehoben, als restlicher Placeholder, WECHSELN ABER NICHT DIE FARBE
-
     //TODO Auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
-
-    //TODO One-line mode, wo nicht mehr als eine Zeile geaddet werden kann (in addLine methode einfach check, ob one-line und wenn ja, nix machen)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -82,11 +75,13 @@ public class TextEditorScreen extends Screen {
     public Color sideBarColor = new Color(49, 51, 53);
     public Color lineNumberTextColorNormal = new Color(91, 92, 94);
     public Color lineNumberTextColorFocused = new Color(137, 147, 150);
+    public Color multilineNotSupportedNotificationColor = new Color(237, 69, 69);
     public Color placeholderEntryBackgroundColorIdle = new Color(43, 43, 43);
     public Color placeholderEntryBackgroundColorHover = new Color(50, 50, 50);
     public Color placeholderEntryDotColorPlaceholder = new Color(62, 134, 160);
     public Color placeholderEntryDotColorCategory = new Color(173, 108, 121);
     public Color placeholderEntryLabelColor = new Color(158, 170, 184);
+    public Color placeholderEntryBackToCategoriesLabelColor = new Color(170, 130, 63);
     public int currentLineWidth;
     public int lastTickFocusedLineIndex = -1;
     public TextEditorLine startHighlightLine = null;
@@ -98,8 +93,10 @@ public class TextEditorScreen extends Screen {
     public int currentRenderCharacterIndexTotal = 0;
     public static boolean showPlaceholderMenu = false;
     public int placeholderMenuWidth = 120;
-    public int placeholderMenuEntryHeight = 14;
+    public int placeholderMenuEntryHeight = 16;
     public List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
+    public boolean multilineMode = true;
+    public long multilineNotSupportedNotificationDisplayStart = -1L;
 
     public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
         super(name);
@@ -175,7 +172,6 @@ public class TextEditorScreen extends Screen {
         });
         UIBase.colorizeButton(this.placeholderButton);
         if (showPlaceholderMenu) {
-//            this.placeholderButton.setBackgroundColor(this.editorAreaBackgroundColor, UIBase.getButtonHoverColor(), this.editorAreaBackgroundColor, UIBase.getButtonHoverColor(), 1);
             this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
             this.placeholderButton.setHeight(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
         }
@@ -293,13 +289,29 @@ public class TextEditorScreen extends Screen {
         this.cancelButton.render(matrix, mouseX, mouseY, partial);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
+        this.renderMultilineNotSupportedNotification(matrix, mouseX, mouseY, partial);
+
         UIBase.renderScaledContextMenu(matrix, this.rightClickContextMenu);
 
         this.tickMouseHighlighting();
 
     }
 
-    public void renderPlaceholderMenu(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    protected void renderMultilineNotSupportedNotification(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        long now = System.currentTimeMillis();
+        if (!this.multilineMode && (this.multilineNotSupportedNotificationDisplayStart + 3000L >= now)) {
+            int a = 255;
+            int diff = (int) (this.multilineNotSupportedNotificationDisplayStart + 3000L - now);
+            if (diff <= 1000) {
+                float f = (float)diff / 1000F;
+                a = Math.max(10, (int)(255F * f));
+            }
+            Color c = new Color(this.multilineNotSupportedNotificationColor.getRed(), this.multilineNotSupportedNotificationColor.getGreen(), this.multilineNotSupportedNotificationColor.getBlue(), a);
+            this.font.draw(matrix, Locals.localize("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB());
+        }
+    }
+
+    protected void renderPlaceholderMenu(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         if (showPlaceholderMenu) {
 
@@ -373,6 +385,7 @@ public class TextEditorScreen extends Screen {
                     this.updatePlaceholderEntries(s);
                 });
                 entry.dotColor = this.placeholderEntryDotColorCategory;
+                entry.entryLabelColor = this.placeholderEntryLabelColor;
                 this.placeholderMenuEntries.add(entry);
             }
 
@@ -382,6 +395,7 @@ public class TextEditorScreen extends Screen {
                 this.updatePlaceholderEntries(null);
             });
             backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory;
+            backToCategoriesEntry.entryLabelColor = this.placeholderEntryBackToCategoriesLabelColor;
             this.placeholderMenuEntries.add(backToCategoriesEntry);
 
             List<Placeholder> placeholders = this.getPlaceholdersOrderedByCategories().get(category);
@@ -395,6 +409,7 @@ public class TextEditorScreen extends Screen {
                         entry.setDescription(desc.toArray(new String[0]));
                     }
                     entry.dotColor = this.placeholderEntryDotColorPlaceholder;
+                    entry.entryLabelColor = this.placeholderEntryLabelColor;
                     this.placeholderMenuEntries.add(entry);
                 }
             }
@@ -404,7 +419,6 @@ public class TextEditorScreen extends Screen {
         for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
             e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle;
             e.backgroundColorHover = this.placeholderEntryBackgroundColorHover;
-            e.entryLabelColor = this.placeholderEntryLabelColor;
         }
 
         this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
@@ -412,7 +426,7 @@ public class TextEditorScreen extends Screen {
 
     }
 
-    public Map<String, List<Placeholder>> getPlaceholdersOrderedByCategories() {
+    protected Map<String, List<Placeholder>> getPlaceholdersOrderedByCategories() {
         //Build lists of all placeholders ordered by categories
         Map<String, List<Placeholder>> categories = new LinkedHashMap<>();
         for (Placeholder p : PlaceholderRegistry.getPlaceholdersList()) {
@@ -436,17 +450,17 @@ public class TextEditorScreen extends Screen {
         return categories;
     }
 
-    public void renderLineNumberBackground(PoseStack matrix, int width) {
+    protected void renderLineNumberBackground(PoseStack matrix, int width) {
         fill(matrix, this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
     }
 
-    public void renderLineNumber(PoseStack matrix, TextEditorLine line) {
+    protected void renderLineNumber(PoseStack matrix, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
         this.font.draw(matrix, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB());
     }
 
-    public void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+    protected void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
         if (renderTop) {
             fill(matrix, xMin, yMin, xMax, yMin + borderThickness, this.editorAreaBorderColor.getRGB());
         }
@@ -461,15 +475,15 @@ public class TextEditorScreen extends Screen {
         }
     }
 
-    public void renderEditorAreaBackground(PoseStack matrix) {
+    protected void renderEditorAreaBackground(PoseStack matrix) {
         fill(matrix, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
     }
 
-    public void renderScreenBackground(PoseStack matrix) {
+    protected void renderScreenBackground(PoseStack matrix) {
         fill(matrix, 0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
     }
 
-    public void tickMouseHighlighting() {
+    protected void tickMouseHighlighting() {
 
         if (!MouseInput.isLeftMouseDown()) {
             this.startHighlightLine = null;
@@ -637,7 +651,12 @@ public class TextEditorScreen extends Screen {
         return this.lineHeight * this.textFieldLines.size();
     }
 
+    @Nullable
     public TextEditorLine addLineAtIndex(int index) {
+        if (!this.multilineMode && (this.getLineCount() > 0)) {
+            this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
+            return null;
+        }
         TextEditorLine f = new TextEditorLine(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, true, this.characterFilter, this);
         f.setMaxLength(Integer.MAX_VALUE);
         f.lineIndex = index;
@@ -651,6 +670,7 @@ public class TextEditorScreen extends Screen {
         return f;
     }
 
+    @Nullable
     public TextEditorLine addLine() {
         return this.addLineAtIndex(this.getLineCount());
     }
@@ -958,6 +978,10 @@ public class TextEditorScreen extends Screen {
                 if (text.contains("\n")) {
                     lines = text.split("\n", -1);
                 }
+                if (!this.multilineMode && (lines.length > 1)) {
+                    lines = new String[]{lines[0]};
+                    this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
+                }
                 Array.set(lines, lines.length-1, lines[lines.length-1] + textAfterCursor);
                 if (lines.length == 1) {
                     this.getFocusedLine().insertText(lines[0]);
@@ -1077,12 +1101,15 @@ public class TextEditorScreen extends Screen {
 
         //ENTER
         if (keycode == 257) {
-            if (!this.isInMouseHighlightingMode()) {
+            if (!this.isInMouseHighlightingMode() && this.multilineMode) {
                 if (this.isLineFocused()) {
                     this.resetHighlighting();
                     this.goDownLine(true);
                     this.correctYScroll(1);
                 }
+            }
+            if (!this.multilineMode) {
+                this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
             }
             return true;
         }
@@ -1442,7 +1469,7 @@ public class TextEditorScreen extends Screen {
             //Render dot
             fill(matrix, this.x + 5, yCenter - 2, this.x + 5 + 4, yCenter + 2, this.dotColor.getRGB());
             //Render label
-            Minecraft.getInstance().font.draw(matrix, this.label, this.x + 5 + 4 + 3, yCenter - (Minecraft.getInstance().font.lineHeight / 2), this.entryLabelColor.getRGB());
+            this.parent.font.draw(matrix, this.label, this.x + 5 + 4 + 3, yCenter - (Minecraft.getInstance().font.lineHeight / 2), this.entryLabelColor.getRGB());
         }
 
         public int getWidth() {
