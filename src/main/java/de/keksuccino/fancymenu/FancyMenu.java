@@ -147,8 +147,7 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
-				//TODO remove debug
-				MinecraftForge.EVENT_BUS.register(new Test());
+//				MinecraftForge.EVENT_BUS.register(new Test());
 
 //				FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterResourcePacks);
 
@@ -230,6 +229,10 @@ public class FancyMenu {
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
+		//TODO übernehmen (+ add locals files to assets)
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "uk_ua.local"), "uk_ua", f.getPath());
+		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "ru_ru.local"), "ru_ru", f.getPath());
+		//----------------------
 		
 		Locals.getLocalsFromDir(f.getPath());
 	}

@@ -315,6 +315,13 @@ public class TextEditorScreen extends Screen {
 
         if (showPlaceholderMenu) {
 
+            if (this.getTotalPlaceholderEntriesWidth() <= this.placeholderMenuWidth) {
+                this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
+            }
+            if (this.getTotalPlaceholderEntriesHeight() <= this.getEditorAreaHeight()) {
+                this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
+            }
+
             //Render placeholder menu background
             fill(matrix, this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
 
@@ -507,11 +514,9 @@ public class TextEditorScreen extends Screen {
             }
             if (mY < this.headerHeight) {
                 float f = Math.max(0.01F, (float)(this.headerHeight - mY) * speedMult);
-                LOGGER.info(f);
                 this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() - f);
             } else if (mY > (this.height - this.footerHeight)) {
                 float f = Math.max(0.01F, (float)(mY - (this.height - this.footerHeight)) * speedMult);
-                LOGGER.info(f);
                 this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() + f);
             }
         }
@@ -939,7 +944,6 @@ public class TextEditorScreen extends Screen {
     }
 
     public void resetHighlighting() {
-        LOGGER.info("------------ RESET HIGHLIGHTING");
         this.startHighlightLineIndex = -1;
         this.endHighlightLineIndex = -1;
         for (TextEditorLine t : this.textFieldLines) {
