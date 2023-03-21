@@ -65,11 +65,9 @@ public abstract class VisibilityRequirement {
     public abstract String getValuePreset();
 
     /**
-     * The character filter of the value, if it has one.<br>
-     * This limits what characters the user can type into the value input field of the requirement options.<br><br>
-     *
-     * Return NULL here if you want no filter (all chars allowed) or if the requirement has no value.
+     * THIS IS NOT USED ANYMORE! JUST RETURN NULL HERE.
      */
+    @Deprecated
     public abstract CharacterFilter getValueInputFieldFilter();
 
     /**

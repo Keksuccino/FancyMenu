@@ -113,7 +113,8 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			}
 
 			if (this.action.equals("addhoversound")) {
-				if (this.parent.getButton().isHoveredOrFocused() && !hovered && (this.value != null)) {
+				//TODO übernehmen (if)
+				if (this.parent.getButton().isHoveredOrFocused() && this.parent.getButton().active && !hovered && (this.value != null)) {
 					SoundHandler.resetSound(this.value);
 					SoundHandler.playSound(this.value);
 					this.hovered = true;
@@ -126,7 +127,8 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
 					this.parent.hasHoverLabel = true;
-					if (this.parent.getButton().isHoveredOrFocused()) {
+					//TODO übernehmen (if)
+					if (this.parent.getButton().isHoveredOrFocused() && this.parent.getButton().active) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;
 							this.normalLabel = this.parent.getButton().getMessage().getString();

@@ -14,8 +14,10 @@ import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import de.keksuccino.konkrete.localization.Locals;
@@ -314,7 +316,8 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), null, 240, (call) -> {
+			//TODO übernehmen
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					if (call.replace(" ", "").equals("")) {
@@ -327,15 +330,18 @@ public abstract class LayoutElement extends GuiComponent {
 					this.object.orientation = "top-left";
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedPosX != null) {
-				p.setText(this.object.advancedPosX);
+				s.setText(this.object.advancedPosX);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
+			//---------------------
 		});
 		advancedPositioningMenu.addContent(advancedPosXButton);
 
 		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), null, 240, (call) -> {
+			//TODO übernehmen
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					if (call.replace(" ", "").equals("")) {
@@ -348,10 +354,12 @@ public abstract class LayoutElement extends GuiComponent {
 					this.object.orientation = "top-left";
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedPosY != null) {
-				p.setText(this.object.advancedPosY);
+				s.setText(this.object.advancedPosY);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
+			//-------------------
 		});
 		advancedPositioningMenu.addContent(advancedPosYButton);
 
@@ -380,7 +388,8 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), null, 240, (call) -> {
+			//TODO übernehmen
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
 						if ((this.object.advancedWidth != null) || (this.object.width != 50)) {
@@ -402,15 +411,18 @@ public abstract class LayoutElement extends GuiComponent {
 					}
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedWidth != null) {
-				p.setText(this.object.advancedWidth);
+				s.setText(this.object.advancedWidth);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
+			//--------------------------
 		});
 		advancedSizingMenu.addContent(advancedWidthButton);
 
 		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), null, 240, (call) -> {
+			//TODO übernehmen
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
 						if ((this.object.advancedHeight != null) || (this.object.height != 50)) {
@@ -432,10 +444,12 @@ public abstract class LayoutElement extends GuiComponent {
 					}
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedHeight != null) {
-				p.setText(this.object.advancedHeight);
+				s.setText(this.object.advancedHeight);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
+			//--------------------
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
 

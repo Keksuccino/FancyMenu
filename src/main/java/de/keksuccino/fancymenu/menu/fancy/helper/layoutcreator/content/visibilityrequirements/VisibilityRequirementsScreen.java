@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
 import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderEditBox;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -18,6 +19,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -188,7 +190,11 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
         protected AdvancedButton enableRequirementButton;
         protected AdvancedButton showIfButton;
         protected AdvancedButton showIfNotButton;
-        protected AdvancedTextField valueTextField;
+        //TODO übernehmen
+//        protected AdvancedTextField valueTextField;
+        //TODO übernehmen
+        protected AdvancedButton setValueButton;
+        //-----------------
 
         public Requirement(VisibilityRequirementsScreen parent, String name, String desc, @Nullable String valueName, boolean enabled, boolean showIf, Consumer<Boolean> enabledCallback, Consumer<Boolean> showIfCallback, @Nullable Consumer<String> valueCallback, CharacterFilter valueFilter, String valueString) {
             this.parent = parent;
@@ -265,17 +271,25 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
             this.showIfNotButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.showifnot.btn.desc"), "%n%"));
             this.addButton(this.showIfNotButton);
 
+            //TODO übernehmen
             if ((this.valueCallback != null) && (this.valueName != null)) {
                 this.hasValue = true;
-                this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, this.valueFilter);
-                ((PlaceholderEditBox)this.valueTextField).renderContextMenu = false;
-                this.valueTextField.setCanLoseFocus(true);
-                this.valueTextField.setFocus(false);
-                this.valueTextField.setMaxLength(1000);
-                if (this.valueString != null) {
-                    this.valueTextField.setValue(this.valueString);
-                }
+                this.setValueButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.editor.elements.visibilityrequirements.edit_value"), true, (press) -> {
+                    //IMPORTANT: DON'T USE CHARACTER FILTER ANYMORE! (BREAKS PLACEHOLDERS)
+                    TextEditorScreen s = new TextEditorScreen(Component.literal(this.valueName), this.parent, null, (call) -> {
+                        if (call != null) {
+                            this.valueString = call;
+                        }
+                    });
+                    s.multilineMode = false;
+                    if (this.valueString != null) {
+                        s.setText(this.valueString);
+                    }
+                    Minecraft.getInstance().setScreen(s);
+                });
+                this.addButton(this.setValueButton);
             }
+            //-------------------
 
         }
 
@@ -305,18 +319,19 @@ public class VisibilityRequirementsScreen extends ScrollableScreen {
             this.showIfNotButton.y = originY - 40;
             this.showIfButton.active = this.enabled;
 
-            if (this.valueTextField != null) {
+            //TODO übernehmen
+            if (this.setValueButton != null) {
+
                 drawCenteredString(matrix, Minecraft.getInstance().font, this.valueName + ":", originX, originY - 10, -1);
 
-                this.valueTextField.x = originX - (this.valueTextField.getWidth() / 2);
-                this.valueTextField.y = originY + 3;
-                this.valueTextField.render(matrix, mouseX, mouseY, partial);
-                this.parent.contextMenuRenderQueue.add(((PlaceholderEditBox)this.valueTextField));
-                this.valueTextField.active = this.enabled;
-                this.valueTextField.setEditable(this.enabled);
-                this.valueCallback.accept(this.valueTextField.getValue());
-                this.valueString = this.valueTextField.getValue();
+                this.setValueButton.x = originX - (this.setValueButton.getWidth() / 2);
+                this.setValueButton.y = originY + 3;
+                this.setValueButton.active = this.enabled;
+                this.setValueButton.render(matrix, mouseX, mouseY, partial);
+                this.valueCallback.accept((this.valueString != null) ? this.valueString : "");
+
             }
+            //-------------------------
 
             this.renderButtons(matrix, mouseX, mouseY, partial);
 

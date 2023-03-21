@@ -570,8 +570,9 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
-						String baction = sec.getEntryValue("buttonaction");
-						String actionvalue = sec.getEntryValue("value");
+						//TODO übernehmen
+//						String baction = sec.getEntryValue("buttonaction");
+//						String actionvalue = sec.getEntryValue("value");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
 
 						if (onlydisplayin != null) {
@@ -614,15 +615,19 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.setStretchedX(true, false);
 						}
 
-						if (baction == null) {
-							continue;
-						}
-						lb.actionType = baction;
+						//TODO übernehmen
+//						if (baction == null) {
+//							continue;
+//						}
+//						lb.actionType = baction;
+//
+//						if (actionvalue == null) {
+//							actionvalue = "";
+//						}
+//						lb.actionContent = actionvalue;
 
-						if (actionvalue == null) {
-							actionvalue = "";
-						}
-						lb.actionContent = actionvalue;
+						//TODO übernehmen
+						lb.actions = bc.actions;
 
 						String desc = sec.getEntryValue("description");
 						if (desc != null) {
@@ -689,6 +694,13 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						lb.object.orientationElementIdentifier = bc.orientationElementIdentifier;
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
+
+						//TODO übernehmen
+						lb.object.advancedPosX = bc.advancedPosX;
+						lb.object.advancedPosY = bc.advancedPosY;
+						lb.object.advancedWidth = bc.advancedWidth;
+						lb.object.advancedHeight = bc.advancedHeight;
+						//-------------------
 
 						con.add(lb);
 					}

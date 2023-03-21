@@ -6,6 +6,8 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.objecthunter.exp4j.Expression;
 import de.keksuccino.konkrete.objecthunter.exp4j.ExpressionBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,12 +15,15 @@ import java.util.*;
 
 public class CalculatorPlaceholder extends Placeholder {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public CalculatorPlaceholder() {
         super("calc");
     }
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+
         String decimalString = dps.values.get("decimal");
         boolean decimal = true;
         if ((decimalString != null) && decimalString.equalsIgnoreCase("false")) {
@@ -39,6 +44,7 @@ public class CalculatorPlaceholder extends Placeholder {
             }
         }
         return null;
+
     }
 
     @Override

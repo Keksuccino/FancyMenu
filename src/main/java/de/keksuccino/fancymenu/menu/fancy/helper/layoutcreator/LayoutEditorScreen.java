@@ -1513,7 +1513,8 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	public void saveLayoutAs() {
-		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), null, 240, (call) -> {
+		//TODO übernehmen (character filter)
+		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), CharacterFilter.getBasicFilenameCharacterFilter(), 240, (call) -> {
 			try {
 
 				if ((call != null) && (call.length() > 0)) {

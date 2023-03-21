@@ -56,7 +56,7 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen
+	//TODO übernehmen (+ locals)
 	public static final String VERSION = "2.14.0";
 	public static final String MOD_LOADER = "forge";
 
@@ -248,6 +248,8 @@ public class FancyMenu {
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
 			config.registerValue("forcefullscreen", false, "general");
+			//TODO übernehmen
+			config.registerValue("variables_to_reset_on_launch", "", "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");
@@ -256,7 +258,8 @@ public class FancyMenu {
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
-			config.registerValue("loadinganimationcolor", "#ffffffff", "loading");
+			//TODO übernehmen
+//			config.registerValue("loadinganimationcolor", "#ffffffff", "loading");
 			config.registerValue("preloadanimations", false, "loading");
 
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");

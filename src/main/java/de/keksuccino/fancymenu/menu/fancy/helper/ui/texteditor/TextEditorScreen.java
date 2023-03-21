@@ -15,12 +15,14 @@ import de.keksuccino.fancymenu.mixin.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +36,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class TextEditorScreen extends Screen {
+
+    //TODO FIXEN: beim schreiben/löschen in einer Zeile wird X scroll nicht richtig korrigiert (fml)
 
     //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
 
@@ -97,9 +101,16 @@ public class TextEditorScreen extends Screen {
     public List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
     public boolean multilineMode = true;
     public long multilineNotSupportedNotificationDisplayStart = -1L;
+    public boolean boldTitle = true;
 
-    public TextEditorScreen(Component name, @Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
-        super(name);
+    public TextEditorScreen(@Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
+        this(null, parent, characterFilter, callback);
+    }
+
+    public TextEditorScreen(@Nullable Component title, @Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
+        super((title != null) ? title : Component.literal(""));
+        this.minecraft = Minecraft.getInstance();
+        this.font = Minecraft.getInstance().font;
         this.parentScreen = parent;
         this.characterFilter = characterFilter;
         this.callback = callback;
@@ -155,10 +166,10 @@ public class TextEditorScreen extends Screen {
         UIBase.colorizeButton(this.cancelButton);
 
         this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
+            Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.callback != null) {
                 this.callback.accept(this.getText());
             }
-            Minecraft.getInstance().setScreen(this.parentScreen);
         });
         UIBase.colorizeButton(this.doneButton);
 
@@ -170,6 +181,7 @@ public class TextEditorScreen extends Screen {
             }
             this.rebuildWidgets();
         });
+        this.placeholderButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.dynamicvariabletextfield.variables.desc"), "%n%"));
         UIBase.colorizeButton(this.placeholderButton);
         if (showPlaceholderMenu) {
             this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
@@ -294,6 +306,10 @@ public class TextEditorScreen extends Screen {
         UIBase.renderScaledContextMenu(matrix, this.rightClickContextMenu);
 
         this.tickMouseHighlighting();
+
+        MutableComponent t = this.title.copy();
+        t.setStyle(t.getStyle().withBold(this.boldTitle));
+        this.font.draw(matrix, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), -1);
 
     }
 
@@ -1244,13 +1260,13 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (this.callback != null) {
-            this.callback.accept(null);
-        }
         if (this.parentScreen != null) {
             Minecraft.getInstance().setScreen(this.parentScreen);
         } else {
             super.onClose();
+        }
+        if (this.callback != null) {
+            this.callback.accept(null);
         }
     }
 

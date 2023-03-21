@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -98,13 +99,11 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }
                 PopupHandler.displayPopup(p);
             }
+            //TODO übernehmen
             if ((i.sourceMode == TextCustomizationItem.SourceMode.DIRECT) || (i.sourceMode == TextCustomizationItem.SourceMode.WEB_SOURCE)) {
-                String popupTitle = Locals.localize("fancymenu.customization.items.text.set_source.direct");
-                if (i.sourceMode == TextCustomizationItem.SourceMode.WEB_SOURCE) {
-                    popupTitle = Locals.localize("fancymenu.customization.items.text.set_source.web");
-                }
-                PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), popupTitle, null, 240, (call) -> {
+                TextEditorScreen s = new TextEditorScreen(press.getMessage(), this.handler, null, (call) -> {
                     if (call != null) {
+                        call = call.replace("\n", "%n%");
                         if (call.length() == 0) {
                             if (i.source != null) {
                                 this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -119,11 +118,19 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                         i.updateContent();
                     }
                 });
-                if (i.source != null) {
-                    p.setText(i.source);
+                if (i.sourceMode != TextCustomizationItem.SourceMode.DIRECT) {
+                    s.multilineMode = false;
                 }
-                PopupHandler.displayPopup(p);
+                if (i.source != null) {
+                    if (i.sourceMode == TextCustomizationItem.SourceMode.DIRECT) {
+                        s.setText(i.source.replace("%n%", "\n"));
+                    } else {
+                        s.setText(i.source);
+                    }
+                }
+                Minecraft.getInstance().setScreen(s);
             }
+            //-----------------
         }) {
             @Override
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {

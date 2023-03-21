@@ -1,7 +1,7 @@
-package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
+package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
@@ -17,8 +17,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.awt.*;
+import java.util.List;
 
-public class ManageTickerActionsScreen extends ScrollableScreen {
+//TODO übernehmen (ganze klasse übernehmen und alten ManageTickerActionsScreen löschen)
+public class ManageActionsScreen extends ScrollableScreen {
 
     protected static final Color ENTRY_BACK_1 = new Color(0, 0, 0, 50);
     protected static final Color ENTRY_BACK_2 = new Color(0, 0, 0, 90);
@@ -28,28 +30,31 @@ public class ManageTickerActionsScreen extends ScrollableScreen {
     protected AdvancedButton doneButton;
     protected AdvancedButton removeButton;
     protected AdvancedButton editButton;
+    protected AdvancedButton moveUpButton;
+    protected AdvancedButton moveDownButton;
+    protected AdvancedButton addButton;
 
-    protected TickerActionScrollEntry selected;
-    protected TickerLayoutEditorElement tickerElement;
+    protected ActionScrollEntry selected;
+    protected List<ButtonScriptEngine.ActionContainer> actions;
 
-    protected ManageTickerActionsScreen(Screen parent, TickerLayoutEditorElement tickerElement) {
+    public ManageActionsScreen(Screen parent, List<ButtonScriptEngine.ActionContainer> actions) {
 
         super(parent, Locals.localize("fancymenu.customization.items.ticker.manage_actions"));
 
-        this.tickerElement = tickerElement;
+        this.actions = actions;
 
-        this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
+        this.doneButton = new AdvancedButton(0, 0, 60, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
             this.onClose();
         });
         this.doneButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.doneButton);
 
-        this.removeButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.customization.items.ticker.manage_actions.remove"), true, (press) -> {
-            FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0), 240, (call) -> {
+        this.removeButton = new AdvancedButton(0, 0, 60, 20, Locals.localize("fancymenu.customization.items.ticker.manage_actions.remove"), true, (press) -> {
+            FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
                 if (call) {
                     if (this.selected != null) {
-                        ((TickerCustomizationItem)this.tickerElement.object).actions.remove(this.selected.action);
-                        Minecraft.getInstance().setScreen(new ManageTickerActionsScreen(parent, tickerElement));
+                        this.actions.remove(this.selected.action);
+                        Minecraft.getInstance().setScreen(new ManageActionsScreen(this.parent, this.actions));
                     }
                 }
             }, StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.manage_actions.remove.confirm"), "%n%"));
@@ -58,7 +63,7 @@ public class ManageTickerActionsScreen extends ScrollableScreen {
         this.removeButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.removeButton);
 
-        this.editButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.customization.items.ticker.manage_actions.edit"), true, (press) -> {
+        this.editButton = new AdvancedButton(0, 0, 60, 20, Locals.localize("fancymenu.customization.items.ticker.manage_actions.edit"), true, (press) -> {
             if (this.selected != null) {
                 ButtonActionScreen s = new ButtonActionScreen(this, (call) -> {
                     if (call != null) {
@@ -76,13 +81,50 @@ public class ManageTickerActionsScreen extends ScrollableScreen {
         this.editButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.editButton);
 
+        this.moveUpButton = new AdvancedButton(0, 0, 60, 20, Locals.localize("fancymenu.editor.actions.manage.move_up"), true, (press) -> {
+            if (this.selected != null) {
+                int index = this.actions.indexOf(this.selected.action);
+                if (index > 0) {
+                    this.actions.remove(this.selected.action);
+                    this.actions.add(index-1, this.selected.action);
+                    Minecraft.getInstance().setScreen(new ManageActionsScreen(this.parent, this.actions));
+                }
+            }
+        });
+        this.moveUpButton.ignoreLeftMouseDownClickBlock = true;
+        UIBase.colorizeButton(this.moveUpButton);
+
+        this.moveDownButton = new AdvancedButton(0, 0, 60, 20, Locals.localize("fancymenu.editor.actions.manage.move_down"), true, (press) -> {
+            if (this.selected != null) {
+                int index = this.actions.indexOf(this.selected.action);
+                if ((index >= 0) && (index <= this.actions.size()-2)) {
+                    this.actions.remove(this.selected.action);
+                    this.actions.add(index+1, this.selected.action);
+                    Minecraft.getInstance().setScreen(new ManageActionsScreen(this.parent, this.actions));
+                }
+            }
+        });
+        this.moveDownButton.ignoreLeftMouseDownClickBlock = true;
+        UIBase.colorizeButton(this.moveDownButton);
+
+        this.addButton = new AdvancedButton(0, 0, 60, 20, Locals.localize("fancymenu.editor.actions.manage.add"), true, (press) -> {
+            Minecraft.getInstance().setScreen(new ButtonActionScreen(this, (call) -> {
+                if (call != null) {
+                    this.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
+                    Minecraft.getInstance().setScreen(new ManageActionsScreen(this.parent, this.actions));
+                }
+            }));
+        });
+        this.addButton.ignoreLeftMouseDownClickBlock = true;
+        UIBase.colorizeButton(this.addButton);
+
         //Add all actions to the list
-        for (TickerCustomizationItem.ActionContainer c : ((TickerCustomizationItem)tickerElement.object).actions) {
+        for (ButtonScriptEngine.ActionContainer c : this.actions) {
             if (this.entryBackTick == 0) {
-                this.scrollArea.addEntry(new TickerActionScrollEntry(this.scrollArea, this, c, ENTRY_BACK_1));
+                this.scrollArea.addEntry(new ActionScrollEntry(this.scrollArea, this, c, ENTRY_BACK_1));
                 this.entryBackTick = 1;
             } else {
-                this.scrollArea.addEntry(new TickerActionScrollEntry(this.scrollArea, this, c, ENTRY_BACK_2));
+                this.scrollArea.addEntry(new ActionScrollEntry(this.scrollArea, this, c, ENTRY_BACK_2));
                 this.entryBackTick = 0;
             }
         }
@@ -96,23 +138,31 @@ public class ManageTickerActionsScreen extends ScrollableScreen {
 
         int xCenter = this.width / 2;
 
-        this.removeButton.setX(xCenter - (this.removeButton.getWidth() / 2));
-        this.removeButton.setY(this.height - 35);
-        this.removeButton.render(matrix, mouseX, mouseY, partialTicks);
-        if (this.selected != null) {
-            this.removeButton.active = true;
-        } else {
-            this.removeButton.active = false;
-        }
+        // ADD | MOVE UP | MOVE DOWN | EDIT | REMOVE | DONE
 
-        this.editButton.setX(this.removeButton.x - this.editButton.getWidth() - 5);
+        this.moveDownButton.setX(xCenter - this.moveDownButton.getWidth() - 3);
+        this.moveDownButton.setY(this.height - 35);
+        this.moveDownButton.active = this.selected != null;
+        this.moveDownButton.render(matrix, mouseX, mouseY, partialTicks);
+
+        this.moveUpButton.setX(this.moveDownButton.x - this.moveUpButton.getWidth() - 5);
+        this.moveUpButton.setY(this.height - 35);
+        this.moveUpButton.active = this.selected != null;
+        this.moveUpButton.render(matrix, mouseX, mouseY, partialTicks);
+
+        this.addButton.setX(this.moveUpButton.x - this.addButton.getWidth() - 5);
+        this.addButton.setY(this.height - 35);
+        this.addButton.render(matrix, mouseX, mouseY, partialTicks);
+
+        this.editButton.setX(xCenter + 2);
         this.editButton.setY(this.height - 35);
+        this.editButton.active = this.selected != null;
         this.editButton.render(matrix, mouseX, mouseY, partialTicks);
-        if (this.selected != null) {
-            this.editButton.active = true;
-        } else {
-            this.editButton.active = false;
-        }
+
+        this.removeButton.setX(this.editButton.x + this.editButton.getWidth() + 5);
+        this.removeButton.setY(this.height - 35);
+        this.removeButton.active = this.selected != null;
+        this.removeButton.render(matrix, mouseX, mouseY, partialTicks);
 
         this.doneButton.setX(this.removeButton.x + this.removeButton.getWidth() + 5);
         this.doneButton.setY(this.height - 35);
@@ -122,26 +172,30 @@ public class ManageTickerActionsScreen extends ScrollableScreen {
             this.doneButton.active = false;
             this.editButton.active = false;
             this.removeButton.active = false;
+            this.moveUpButton.active = false;
+            this.moveDownButton.active = false;
+            this.addButton.active = false;
         } else {
             this.doneButton.active = true;
+            this.addButton.active = true;
         }
 
     }
 
     @Override
     public boolean isOverlayButtonHovered() {
-        return (this.doneButton.isHoveredOrFocused() || this.removeButton.isHoveredOrFocused() || this.editButton.isHoveredOrFocused());
+        return (this.doneButton.isHoveredOrFocused() || this.removeButton.isHoveredOrFocused() || this.editButton.isHoveredOrFocused() || this.moveUpButton.isHoveredOrFocused() || this.moveDownButton.isHoveredOrFocused());
     }
 
-    public static class TickerActionScrollEntry extends ScrollAreaEntryBase {
+    public static class ActionScrollEntry extends ScrollAreaEntryBase {
 
-        public TickerCustomizationItem.ActionContainer action;
+        public ButtonScriptEngine.ActionContainer action;
 
-        protected ManageTickerActionsScreen parentScreen;
+        protected ManageActionsScreen parentScreen;
         public Color backgroundColor;
         protected boolean leftMouseDown = false;
 
-        public TickerActionScrollEntry(ScrollArea parentScrollArea, ManageTickerActionsScreen parentScreen, TickerCustomizationItem.ActionContainer action, Color backgroundColor) {
+        public ActionScrollEntry(ScrollArea parentScrollArea, ManageActionsScreen parentScreen, ButtonScriptEngine.ActionContainer action, Color backgroundColor) {
             super(parentScrollArea, (call) -> {});
             this.action = action;
             this.backgroundColor = backgroundColor;
@@ -156,7 +210,7 @@ public class ManageTickerActionsScreen extends ScrollableScreen {
 
             int footerHeight = 50;
             if (!this.leftMouseDown && (MouseInput.getMouseY() < (this.parentScreen.height - footerHeight))) {
-                if (this.isHoveredOrFocused() && MouseInput.isLeftMouseDown() && !this.parentScreen.isOverlayButtonHovered()) {
+                if (this.isHoveredOrFocused() && MouseInput.isLeftMouseDown() && !this.parentScreen.isOverlayButtonHovered() && !PopupHandler.isPopupActive()) {
                     this.parentScreen.selected = this;
                 }
             }

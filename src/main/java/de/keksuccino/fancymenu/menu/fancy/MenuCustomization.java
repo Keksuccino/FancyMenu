@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ManageActionsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerEvents;
@@ -319,6 +320,10 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.equals(TextEditorScreen.class.getName())) {
 			return true;
 		}
+		if (menuIdentifierOrPartOfIdentifier.equals(ManageActionsScreen.class.getName())) {
+			return true;
+		}
+		//---------------------
 		return false;
 	}
 

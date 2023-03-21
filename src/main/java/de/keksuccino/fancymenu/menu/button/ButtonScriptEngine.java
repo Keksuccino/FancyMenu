@@ -48,6 +48,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ButtonScriptEngine {
 
@@ -499,6 +501,27 @@ public class ButtonScriptEngine {
 				for (int i = 0; i <= this.actions.size()-1; i++) {
 					runButtonAction(this.actions.get(i), this.values.get(i));
 				}
+			}
+		}
+
+	}
+
+	//TODO übernehmen
+	public static class ActionContainer {
+
+		public volatile String action;
+		public volatile String value;
+
+		public ActionContainer(@NotNull String action, @Nullable String value) {
+			this.action = action;
+			this.value = value;
+		}
+
+		public void execute() {
+			try {
+				ButtonScriptEngine.runButtonAction(this.action, this.value);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 

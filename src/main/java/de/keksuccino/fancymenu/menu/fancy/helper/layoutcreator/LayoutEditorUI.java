@@ -36,6 +36,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.menu.fancy.item.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
@@ -598,7 +599,8 @@ public class LayoutEditorUI extends UIBase {
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
+				//TODO übernehmen
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.edit_menu_title")), this.parent, null, (call) -> {
 					if (call != null) {
 						if (!call.equals(defaultMenuTitle)) {
 							if ((this.parent.customMenuTitle == null) || !this.parent.customMenuTitle.equals(call)) {
@@ -613,12 +615,14 @@ public class LayoutEditorUI extends UIBase {
 						}
 					}
 				});
+				s.multilineMode = false;
 				if (this.parent.customMenuTitle != null) {
-					p.setText(this.parent.customMenuTitle);
+					s.setText(this.parent.customMenuTitle);
 				} else {
-					p.setText(defaultMenuTitle);
+					s.setText(defaultMenuTitle);
 				}
-				PopupHandler.displayPopup(p);
+				Minecraft.getInstance().setScreen(s);
+				//---------------------
 			});
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
@@ -1113,7 +1117,11 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebTexture));
+				//TODO übernehmen
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
+				s.multilineMode = false;
+				Minecraft.getInstance().setScreen(s);
+				//----------------------
 			});
 			this.addContent(webImageButton);
 
@@ -1136,7 +1144,11 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(splashMenu);
 			
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.add.splash.single.desc"), null, 240, this.parent::addSingleSplashText));
+				//TODO übernehmen
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
+				s.multilineMode = false;
+				Minecraft.getInstance().setScreen(s);
+				//--------------------
 			});
 			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
 			splashMenu.addContent(singleSplashButton);
@@ -1167,7 +1179,9 @@ public class LayoutEditorUI extends UIBase {
 			
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this.parent::addButton));
+				//TODO übernehmen
+				this.parent.addButton("New Button");
+				//------------------
 			});
 			this.addContent(buttonButton);
 			

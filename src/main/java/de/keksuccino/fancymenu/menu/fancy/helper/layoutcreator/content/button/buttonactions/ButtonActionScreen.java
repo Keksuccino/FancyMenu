@@ -4,12 +4,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderEditBox;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollAreaEntry;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -27,53 +28,51 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+//TODO übernehmen (ganze klasse)
 public class ButtonActionScreen extends ScrollableScreen {
 
     protected static final Color ENTRY_BACK_1 = new Color(0, 0, 0, 50);
     protected static final Color ENTRY_BACK_2 = new Color(0, 0, 0, 90);
 
-    public LayoutButton parentButton;
-
     protected List<ButtonAction> buttonActions = new ArrayList<>();
     protected int entryBackTick = 0;
     protected AdvancedButton doneButton;
-    protected PlaceholderEditBox valueTextField;
+    protected AdvancedButton cancelButton;
+    protected AdvancedButton setValueButton;
+    protected TextEditorScreen valueEditor;
 
     protected Consumer<List<String>> callback;
 
-    public ButtonActionScreen(Screen parent, LayoutButton parentButton) {
-        this(parent, parentButton, null);
-    }
-
     public ButtonActionScreen(Screen parent, Consumer<List<String>> callback) {
-        this(parent, null, callback);
-    }
-
-    protected ButtonActionScreen(Screen parent, @Nullable LayoutButton parentButton, @Nullable Consumer<List<String>> callback) {
 
         super(parent, Locals.localize("fancymenu.helper.ui.button_action.set"));
 
-        this.parentButton = parentButton;
         this.callback = callback;
 
-        this.doneButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
-            if (!this.valueTextField.variableMenu.isOpen()) {
-                this.onDone();
-                this.onClose();
+        this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
+            if (!PopupHandler.isPopupActive()) {
+                Minecraft.getInstance().setScreen(this.parent);
             }
+            this.onDone();
         });
         this.doneButton.ignoreLeftMouseDownClickBlock = true;
         UIBase.colorizeButton(this.doneButton);
 
-        this.valueTextField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, true, null);
-        this.valueTextField.setCanLoseFocus(true);
-        this.valueTextField.setFocus(false);
-        this.valueTextField.setMaxLength(1000);
-        if (this.parentButton != null) {
-            if (this.parentButton.actionContent != null) {
-                this.valueTextField.setValue(this.parentButton.actionContent);
-            }
-        }
+        this.cancelButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (press) -> {
+            this.onClose();
+        });
+        this.cancelButton.ignoreLeftMouseDownClickBlock = true;
+        UIBase.colorizeButton(this.cancelButton);
+
+        this.valueEditor = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.actions.add.set_action_value.generic")), this, null, (call) -> {});
+        this.valueEditor.init(Minecraft.getInstance(), this.width, this.height);
+        this.valueEditor.multilineMode = false;
+
+        this.setValueButton = new AdvancedButton(0, 0, 200, 20, "", true, (press) -> {
+            Minecraft.getInstance().setScreen(this.valueEditor);
+        });
+        this.setValueButton.ignoreLeftMouseDownClickBlock = true;
+        UIBase.colorizeButton(this.setValueButton);
 
         //LEGACY BUTTON ACTIONS
         LegacyButtonActions.getLegacyActions(this).forEach((action) -> {
@@ -85,16 +84,7 @@ public class ButtonActionScreen extends ScrollableScreen {
             this.addButtonAction(new ButtonAction(this, c.getAction(), c.getActionDescription(), c.hasValue(), c.getValueDescription(), c.getValueExample(), null));
         }
 
-        ButtonAction selectedAction = null;
-        if (this.parentButton != null) {
-            if (this.parentButton.actionType != null) {
-                selectedAction = this.getButtonActionByName(this.parentButton.actionType);
-            }
-        }
-        if (selectedAction == null) {
-            selectedAction = this.buttonActions.get(0);
-        }
-        this.setButtonActionSelected(selectedAction, true);
+        this.setButtonActionSelected(this.buttonActions.get(0), true);
 
     }
 
@@ -106,7 +96,7 @@ public class ButtonActionScreen extends ScrollableScreen {
 
     @Override
     public boolean isOverlayButtonHovered() {
-        return this.doneButton.isHoveredOrFocused();
+        return this.doneButton.isHoveredOrFocused() || this.cancelButton.isHoveredOrFocused() || this.setValueButton.isHoveredOrFocused();
     }
 
     protected void addButtonAction(ButtonAction action) {
@@ -157,14 +147,7 @@ public class ButtonActionScreen extends ScrollableScreen {
         }
         String value = null;
         if (selected.hasValue) {
-            value = this.valueTextField.getValue();
-        }
-        if (this.parentButton != null) {
-            if (!this.parentButton.actionType.equals(selected.name) || !this.parentButton.actionContent.equals(value)) {
-                this.parentButton.handler.history.saveSnapshot(this.parentButton.handler.history.createSnapshot());
-            }
-            this.parentButton.actionType = selected.name;
-            this.parentButton.actionContent = value;
+            value = this.valueEditor.getText();
         }
         if (this.callback != null) {
             List<String> l = new ArrayList<>();
@@ -174,6 +157,14 @@ public class ButtonActionScreen extends ScrollableScreen {
             }
             l.add(value);
             this.callback.accept(l);
+        }
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+        if (this.callback != null) {
+            this.callback.accept(null);
         }
     }
 
@@ -191,27 +182,27 @@ public class ButtonActionScreen extends ScrollableScreen {
         //Draw taller footer
         fill(matrix, 0, this.height - 115, this.width, this.height, HEADER_FOOTER_COLOR.getRGB());
 
-        this.doneButton.setX(xCenter - (this.doneButton.getWidth() / 2));
+        this.cancelButton.setX(xCenter - this.cancelButton.getWidth() - 5);
+        this.cancelButton.setY(this.height - 35);
+        this.cancelButton.render(matrix, mouseX, mouseY, partialTicks);
+
+        this.doneButton.setX(xCenter + 5);
         this.doneButton.setY(this.height - 35);
         this.doneButton.render(matrix, mouseX, mouseY, partialTicks);
 
+        this.setValueButton.active = selected.hasValue;
+
         if (selected.hasValue) {
 
-            //Action Value
-            drawCenteredString(matrix, font, Component.literal(Locals.localize("helper.creator.custombutton.config.actionvalue", selected.valueDesc)), xCenter, this.height - 100, -1);
-
-            //Action Value Text Field
-            this.valueTextField.setX(xCenter - (this.valueTextField.getWidth() / 2));
-            this.valueTextField.setY(this.height - 85);
-            this.valueTextField.setEditable(selected.hasValue);
-            this.valueTextField.active = selected.hasValue;
-            for (AdvancedButton b : this.valueTextField.variableMenu.getContent()) {
-                b.ignoreLeftMouseDownClickBlock = true;
-            }
-            this.valueTextField.render(matrix, mouseX, mouseY, partialTicks);
+            String setValueButtonLabel = Locals.localize("fancymenu.editor.actions.add.set_action_value", selected.valueDesc);
+            this.setValueButton.setWidth(Math.max(190, this.font.width(setValueButtonLabel)) + 10);
+            this.setValueButton.setMessage(setValueButtonLabel);
+            this.setValueButton.setX(xCenter - (this.setValueButton.getWidth() / 2));
+            this.setValueButton.setY(this.height - 90);
+            this.setValueButton.render(matrix, mouseX, mouseY, partialTicks);
 
             //Action Value Example
-            drawCenteredString(matrix, font, Component.literal(Locals.localize("helper.creator.custombutton.config.actionvalue.example", selected.valueExample)), xCenter, this.height - 60, -1);
+            drawCenteredString(matrix, font, Component.literal(Locals.localize("helper.creator.custombutton.config.actionvalue.example", selected.valueExample)), xCenter, this.height - 65, -1);
 
         }
 
@@ -233,7 +224,7 @@ public class ButtonActionScreen extends ScrollableScreen {
     }
 
     public void setValueString(String value) {
-        this.valueTextField.setValue(value);
+        this.valueEditor.setText(value);
     }
 
     public void setButtonAction(String buttonAction) {
@@ -266,9 +257,7 @@ public class ButtonActionScreen extends ScrollableScreen {
             int footerHeight = 115;
             if (!this.leftMouseDown && (MouseInput.getMouseY() < (this.action.parent.height - footerHeight))) {
                 if (this.isHoveredOrFocused() && MouseInput.isLeftMouseDown()) {
-                    if (!this.action.parent.valueTextField.variableMenu.isOpen()) {
-                        this.action.setSelected(true);
-                    }
+                    this.action.setSelected(true);
                 }
             }
             this.leftMouseDown = MouseInput.isLeftMouseDown();

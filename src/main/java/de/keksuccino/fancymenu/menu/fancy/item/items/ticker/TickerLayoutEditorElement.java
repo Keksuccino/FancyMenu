@@ -2,9 +2,12 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ManageActionsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -12,6 +15,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 import java.awt.*;
 
@@ -35,7 +39,8 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
             ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
                 if (call != null) {
                     this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-                    i.actions.add(new TickerCustomizationItem.ActionContainer(call.get(0), call.get(1)));
+                    //TODO übernehmen
+                    i.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
                 }
             });
             Minecraft.getInstance().setScreen(s);
@@ -44,7 +49,8 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
         this.rightclickMenu.addContent(addActionButton);
 
         AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.manage_actions"), (press) -> {
-            ManageTickerActionsScreen s = new ManageTickerActionsScreen(this.handler, this);
+            //TODO übernehmen
+            ManageActionsScreen s = new ManageActionsScreen(this.handler, i.actions);
             Minecraft.getInstance().setScreen(s);
         });
         manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.manage_actions.desc"), "%n%"));
@@ -134,7 +140,8 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
         sec.addEntry("tick_delay", "" + i.tickDelayMs);
         sec.addEntry("tick_mode", "" + i.tickMode.name);
         int index = 0;
-        for (TickerCustomizationItem.ActionContainer c : i.actions) {
+        //TODO übernehmen
+        for (ButtonScriptEngine.ActionContainer c : i.actions) {
             String v = c.value;
             if (v == null) {
                 v = "";

@@ -96,7 +96,11 @@ public class InputFieldCustomizationItem extends CustomizationItem {
                         if (!this.textField.getValue().equals(val)) {
                             this.textField.setValue(val);
                         }
+                    //TODO übernehmen
+                    } else {
+                        this.textField.setValue("");
                     }
+                    //-----------------
                 }
                 this.lastValue = this.textField.getValue();
             }
