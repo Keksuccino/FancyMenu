@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 public class Test {
 
     private AdvancedButton b = new AdvancedButton(20, 20, 100, 20, "Open Text Editor", true, (press) -> {
-        Minecraft.getInstance().setScreen(new TextEditorScreen(Minecraft.getInstance().screen, null, (text) -> {
+        Minecraft.getInstance().setScreen(new TextEditorScreen(Component.literal("Text Editor"), Minecraft.getInstance().screen, null, (text) -> {
             LogManager.getLogger().info("CLOSED EDITOR RETURNED: " + text);
         }));
     });

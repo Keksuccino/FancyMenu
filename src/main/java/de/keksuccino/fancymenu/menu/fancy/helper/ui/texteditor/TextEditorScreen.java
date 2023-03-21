@@ -1037,6 +1037,8 @@ public class TextEditorScreen extends Screen {
         t.setValue("");
         t.moveCursorTo(0);
         this.pasteText(text);
+        this.setFocusedLine(0);
+        t.moveCursorTo(0);
     }
 
     public String getText() {
@@ -1375,10 +1377,23 @@ public class TextEditorScreen extends Screen {
 
         if (this.isLineFocused() && (this.getFocusedLine() == calledIn)) {
 
+            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
+            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
+            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
+            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
+            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
+            // - vllt doch auf handling durch screen umsteigen? lines nicht normal zu widget list adden, aber alle input handling methoden in screen callen, statt selbst handeln lassen
+
+            LOGGER.info("-----------------------------");
+
             int xStart = calledIn.x;
+
+            LOGGER.info("X START: " + xStart);
 
             this.updateCurrentLineWidth();
             this.updateLines(null);
+
+            LOGGER.info("X AFTER UPDATE: " + calledIn.x);
 
             //Make the lines scroll horizontally with the cursor position if the cursor is too far to the left or right
             int cursorWidth = 2;
@@ -1393,10 +1408,11 @@ public class TextEditorScreen extends Screen {
                 cursorX -= cursorWidth + 5;
             }
             int maxToRight = this.getEditorAreaX() + this.getEditorAreaWidth();
-            int maxToLeft = this.borderLeft;
+            int maxToLeft = this.getEditorAreaX();
             float currentScrollX = this.horizontalScrollBar.getScroll();
             int currentLineW = this.getTotalScrollWidth();
             boolean textGotDeleted = calledIn.lastTickValue.length() > calledIn.getValue().length();
+            LOGGER.info("TEXT GOT DELETED: " + textGotDeleted);
             if (cursorX > maxToRight) {
                 float f = (float)(cursorX - maxToRight) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX + f);
@@ -1409,9 +1425,12 @@ public class TextEditorScreen extends Screen {
                 }
                 this.horizontalScrollBar.setScroll(currentScrollX - f);
             } else if ((calledIn.x < 0) && textGotDeleted && (xStart < calledIn.x)) {
+                //TODO check if above (what tf did I do here??)
+                LOGGER.info("TRIGGER 1");
                 float f = (float)(calledIn.x - xStart) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX + f);
             } else if (xStart > calledIn.x) {
+                LOGGER.info("TRIGGER 2");
                 float f = (float)(xStart - calledIn.x) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX - f);
             }
