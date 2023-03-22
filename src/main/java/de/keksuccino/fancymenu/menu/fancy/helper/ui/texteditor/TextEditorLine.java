@@ -5,7 +5,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.gui.content.handling.AdvancedWidgetsHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.Font;
@@ -14,6 +13,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -21,9 +22,10 @@ import java.util.List;
 
 public class TextEditorLine extends AdvancedTextField {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public TextEditorScreen parent;
     protected String lastTickValue = "";
-    protected boolean cursorPositionTicked = false;
     public boolean isInMouseHighlightingMode = false;
     protected final Font font2;
     protected final boolean handleSelf2;
@@ -83,10 +85,6 @@ public class TextEditorLine extends AdvancedTextField {
 
         this.setTextColor(this.parent.textColor.getRGB());
         this.setTextColorUneditable(this.parent.textColor.getRGB());
-
-        if (this.handleSelf2) {
-            AdvancedWidgetsHandler.handleWidget(this);
-        }
 
         if (this.isVisible()) {
 
@@ -186,6 +184,8 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public void setCursorPosition(int newPos) {
 
+        this.textWidth = this.font2.width(this.getValue());
+
         super.setCursorPosition(newPos);
 
         //Caching the last cursor position set by the user, to set it to the new line when changing the line
@@ -194,20 +194,17 @@ public class TextEditorLine extends AdvancedTextField {
         }
 
         this.parent.correctXScroll(this);
-        this.cursorPositionTicked = true;
 
     }
 
     @Override
-    public void onTick() {
-
-        this.cursorPositionTicked = false;
+    public void tick() {
 
         if (!MouseInput.isLeftMouseDown() && this.isInMouseHighlightingMode) {
             this.isInMouseHighlightingMode = false;
         }
 
-        super.onTick();
+        super.tick();
 
         leftRightArrowWasDown = false;
 
@@ -265,7 +262,6 @@ public class TextEditorLine extends AdvancedTextField {
         if (!this.parent.justSwitchedLineByWordDeletion) {
             if ((this.getCursorPosition() == 0) && (this.parent.getFocusedLineIndex() > 0)) {
                 int lastLineIndex = this.parent.getFocusedLineIndex();
-                int yBeforeRemoving = this.parent.getLine(0).y;
                 this.parent.justSwitchedLineByWordDeletion = true;
                 this.parent.goUpLine();
                 this.parent.getFocusedLine().moveCursorToEnd();

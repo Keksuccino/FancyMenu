@@ -37,8 +37,6 @@ import java.util.function.Consumer;
 
 public class TextEditorScreen extends Screen {
 
-    //TODO FIXEN: beim schreiben/löschen in einer Zeile wird X scroll nicht richtig korrigiert (fml)
-
     //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
 
     //TODO Bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
@@ -121,6 +119,7 @@ public class TextEditorScreen extends Screen {
         this.updateRightClickContextMenu();
         this.formattingRules.addAll(TextEditorFormattingRules.getRules());
         this.updatePlaceholderEntries(null);
+        this.updateCurrentLineWidth();
     }
 
     @Override
@@ -633,8 +632,8 @@ public class TextEditorScreen extends Screen {
             int index = 0;
             for (TextEditorLine line : this.textFieldLines) {
                 line.lineIndex = index;
-                line.y = this.headerHeight + (this.lineHeight * index) + this.getLineRenderOffsetY();
-                line.x = this.borderLeft + this.getLineRenderOffsetX();
+                line.setY(this.headerHeight + (this.lineHeight * index) + this.getLineRenderOffsetY());
+                line.setX(this.borderLeft + this.getLineRenderOffsetX());
                 line.setWidth(this.currentLineWidth);
                 line.setHeight(this.lineHeight);
                 line.getAsAccessor().setDisplayPosFancyMenu(0);
@@ -678,7 +677,7 @@ public class TextEditorScreen extends Screen {
             this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
             return null;
         }
-        TextEditorLine f = new TextEditorLine(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, true, this.characterFilter, this);
+        TextEditorLine f = new TextEditorLine(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, false, this.characterFilter, this);
         f.setMaxLength(Integer.MAX_VALUE);
         f.lineIndex = index;
         if (index > 0) {
@@ -861,7 +860,7 @@ public class TextEditorScreen extends Screen {
     public List<TextEditorLine> getCopyOfLines() {
         List<TextEditorLine> l = new ArrayList<>();
         for (TextEditorLine t : this.textFieldLines) {
-            TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, true, this.characterFilter, this);
+            TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, false, this.characterFilter, this);
             n.setValue(t.getValue());
             n.setFocus(t.isFocused());
             n.moveCursorTo(t.getCursorPosition());
@@ -1119,7 +1118,23 @@ public class TextEditorScreen extends Screen {
     }
 
     @Override
+    public boolean charTyped(char character, int modifiers) {
+
+        for (TextEditorLine l : this.textFieldLines) {
+            l.charTyped(character, modifiers);
+        }
+
+        return super.charTyped(character, modifiers);
+
+    }
+
+
+    @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
+
+        for (TextEditorLine l : this.textFieldLines) {
+            l.keyPressed(keycode, i1, i2);
+        }
 
         //ENTER
         if (keycode == 257) {
@@ -1209,7 +1224,22 @@ public class TextEditorScreen extends Screen {
     }
 
     @Override
+    public boolean keyReleased(int i1, int i2, int i3) {
+
+        for (TextEditorLine l : this.textFieldLines) {
+            l.keyReleased(i1, i2, i3);
+        }
+
+        return super.keyReleased(i1, i2, i3);
+
+    }
+
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+        for (TextEditorLine l : this.textFieldLines) {
+            l.mouseClicked(mouseX, mouseY, button);
+        }
 
         if (this.isMouseInsideEditorArea()) {
             if (button == 1) {
@@ -1257,6 +1287,17 @@ public class TextEditorScreen extends Screen {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+
+    }
+
+    @Override
+    public void tick() {
+
+        for (TextEditorLine l : this.textFieldLines) {
+            l.tick();
+        }
+
+        super.tick();
 
     }
 
@@ -1368,40 +1409,31 @@ public class TextEditorScreen extends Screen {
 
     }
 
-    public void correctXScroll(TextEditorLine calledIn) {
+    public void correctXScroll(TextEditorLine line) {
 
         //Don't fix scroll if in mouse-highlighting mode
         if (this.isInMouseHighlightingMode()) {
             return;
         }
 
-        if (this.isLineFocused() && (this.getFocusedLine() == calledIn)) {
+        if (this.isLineFocused() && (this.getFocusedLine() == line)) {
 
-            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
-            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
-            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
-            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
-            //TODO FIX: xStart und X nach update sind identisch (am besten komplettes X scroll handling rewriten..)
-            // - vllt doch auf handling durch screen umsteigen? lines nicht normal zu widget list adden, aber alle input handling methoden in screen callen, statt selbst handeln lassen
-
-            LOGGER.info("-----------------------------");
-
-            int xStart = calledIn.x;
-
-            LOGGER.info("X START: " + xStart);
+            int oldX = line.x;
 
             this.updateCurrentLineWidth();
             this.updateLines(null);
 
-            LOGGER.info("X AFTER UPDATE: " + calledIn.x);
+            int newX = line.x;
+            String oldValue = line.lastTickValue;
+            String newValue = line.getValue();
 
             //Make the lines scroll horizontally with the cursor position if the cursor is too far to the left or right
             int cursorWidth = 2;
-            if (calledIn.getCursorPosition() >= calledIn.getValue().length()) {
+            if (line.getCursorPosition() >= newValue.length()) {
                 cursorWidth = 6;
             }
             int editorAreaCenterX = this.getEditorAreaX() + (this.getEditorAreaWidth() / 2);
-            int cursorX = this.getEditBoxCursorX(calledIn);
+            int cursorX = this.getEditBoxCursorX(line);
             if (cursorX > editorAreaCenterX) {
                 cursorX += cursorWidth + 5;
             } else if (cursorX < editorAreaCenterX) {
@@ -1411,8 +1443,8 @@ public class TextEditorScreen extends Screen {
             int maxToLeft = this.getEditorAreaX();
             float currentScrollX = this.horizontalScrollBar.getScroll();
             int currentLineW = this.getTotalScrollWidth();
-            boolean textGotDeleted = calledIn.lastTickValue.length() > calledIn.getValue().length();
-            LOGGER.info("TEXT GOT DELETED: " + textGotDeleted);
+            boolean textGotDeleted = oldValue.length() > newValue.length();
+            boolean textGotAdded = oldValue.length() < newValue.length();
             if (cursorX > maxToRight) {
                 float f = (float)(cursorX - maxToRight) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX + f);
@@ -1424,17 +1456,14 @@ public class TextEditorScreen extends Screen {
                     f = (float)(maxToRight - maxToLeft) / (float)currentLineW;
                 }
                 this.horizontalScrollBar.setScroll(currentScrollX - f);
-            } else if ((calledIn.x < 0) && textGotDeleted && (xStart < calledIn.x)) {
-                //TODO check if above (what tf did I do here??)
-                LOGGER.info("TRIGGER 1");
-                float f = (float)(calledIn.x - xStart) / (float)currentLineW;
+            } else if (textGotDeleted && (oldX < newX)) {
+                float f = (float)(newX - oldX) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX + f);
-            } else if (xStart > calledIn.x) {
-                LOGGER.info("TRIGGER 2");
-                float f = (float)(xStart - calledIn.x) / (float)currentLineW;
+            } else if (textGotAdded && (oldX > newX)) {
+                float f = (float)(oldX - newX) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX - f);
             }
-            if (calledIn.getCursorPosition() == 0) {
+            if (line.getCursorPosition() == 0) {
                 this.horizontalScrollBar.setScroll(0.0F);
             }
 

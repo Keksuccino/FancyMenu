@@ -147,8 +147,7 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
-				//TODO remove debug
-				MinecraftForge.EVENT_BUS.register(new Test());
+//				MinecraftForge.EVENT_BUS.register(new Test());
 
 //				FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterResourcePacks);
 
