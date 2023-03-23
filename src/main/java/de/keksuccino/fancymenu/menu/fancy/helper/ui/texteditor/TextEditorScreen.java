@@ -7,7 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.scrollbar.ScrollBar;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderRegistry;
@@ -18,6 +18,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -51,10 +52,10 @@ public class TextEditorScreen extends Screen {
     public CharacterFilter characterFilter;
     public Consumer<String> callback;
     public List<TextEditorLine> textFieldLines = new ArrayList<>();
-    public ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, 10, 40, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
-    public ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, 40, 10, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
-    public ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, 10, 40, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
-    public ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, 40, 10, 0, 0, 0, 0, UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor());
+    public ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    public ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    public ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    public ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
     public FMContextMenu rightClickContextMenu;
     public AdvancedButton cancelButton;
     public AdvancedButton doneButton;
@@ -67,23 +68,23 @@ public class TextEditorScreen extends Screen {
     public int borderLeft = 40;
     public int borderRight = 20;
     public int lineHeight = 14;
-    public Color screenBackgroundColor = new Color(60, 63, 65);
-    public Color editorAreaBorderColor = UIBase.getButtonBorderIdleColor();
-    public Color editorAreaBackgroundColor = new Color(43, 43, 43);
-    public Color textColor = new Color(158, 170, 184);
-    public Color focusedLineColor = new Color(50, 50, 50);
-    public Color scrollGrabberIdleColor = new Color(89, 91, 93);
-    public Color scrollGrabberHoverColor = new Color(102, 104, 104);
-    public Color sideBarColor = new Color(49, 51, 53);
-    public Color lineNumberTextColorNormal = new Color(91, 92, 94);
-    public Color lineNumberTextColorFocused = new Color(137, 147, 150);
-    public Color multilineNotSupportedNotificationColor = new Color(237, 69, 69);
-    public Color placeholderEntryBackgroundColorIdle = new Color(43, 43, 43);
-    public Color placeholderEntryBackgroundColorHover = new Color(50, 50, 50);
-    public Color placeholderEntryDotColorPlaceholder = new Color(62, 134, 160);
-    public Color placeholderEntryDotColorCategory = new Color(173, 108, 121);
-    public Color placeholderEntryLabelColor = new Color(158, 170, 184);
-    public Color placeholderEntryBackToCategoriesLabelColor = new Color(170, 130, 63);
+    public Color screenBackgroundColor = UIBase.SCREEN_BACKGROUND_COLOR;
+    public Color editorAreaBorderColor = UIBase.ELEMENT_BORDER_COLOR_IDLE;
+    public Color editorAreaBackgroundColor = UIBase.AREA_BACKGROUND_COLOR;
+    public Color textColor = UIBase.TEXT_COLOR_GRAY_1;
+    public Color focusedLineColor = UIBase.FOCUSED_ENTRY_COLOR;
+    public Color scrollGrabberIdleColor = UIBase.SCROLL_GRABBER_IDLE_COLOR;
+    public Color scrollGrabberHoverColor = UIBase.SCROLL_GRABBER_HOVER_COLOR;
+    public Color sideBarColor = UIBase.SIDE_BAR_COLOR;
+    public Color lineNumberTextColorNormal = UIBase.TEXT_COLOR_GREY_2;
+    public Color lineNumberTextColorFocused = UIBase.TEXT_COLOR_GREY_3;
+    public Color multilineNotSupportedNotificationColor = UIBase.TEXT_COLOR_RED_1;
+    public Color placeholderEntryBackgroundColorIdle = UIBase.AREA_BACKGROUND_COLOR;
+    public Color placeholderEntryBackgroundColorHover = UIBase.FOCUSED_ENTRY_COLOR;
+    public Color placeholderEntryDotColorPlaceholder = UIBase.LISTING_DOT_BLUE;
+    public Color placeholderEntryDotColorCategory = UIBase.LISTING_DOT_RED;
+    public Color placeholderEntryLabelColor = UIBase.TEXT_COLOR_GRAY_1;
+    public Color placeholderEntryBackToCategoriesLabelColor = UIBase.TEXT_COLOR_ORANGE_1;
     public int currentLineWidth;
     public int lastTickFocusedLineIndex = -1;
     public TextEditorLine startHighlightLine = null;
@@ -127,25 +128,28 @@ public class TextEditorScreen extends Screen {
 
         super.init();
 
-        this.verticalScrollBar.scrollAreaStartX = this.getEditorAreaX() - 1;
-        this.verticalScrollBar.scrollAreaStartY = this.getEditorAreaY() - 1;
-        this.verticalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() + 10;
-        this.verticalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 1;
+        this.verticalScrollBar.scrollAreaStartX = this.getEditorAreaX() + 1;
+        this.verticalScrollBar.scrollAreaStartY = this.getEditorAreaY() + 1;
+        this.verticalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() - 2;
+        this.verticalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() - this.horizontalScrollBar.grabberHeight - 2;
 
-        this.horizontalScrollBar.scrollAreaStartX = this.getEditorAreaX() - 1;
-        this.horizontalScrollBar.scrollAreaStartY = this.getEditorAreaY() - 1;
-        this.horizontalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth();
-        this.horizontalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 10 + 1;
+        this.horizontalScrollBar.scrollAreaStartX = this.getEditorAreaX() + 1;
+        this.horizontalScrollBar.scrollAreaStartY = this.getEditorAreaY() + 1;
+        this.horizontalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() - this.verticalScrollBar.grabberWidth - 2;
+        this.horizontalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() - 1;
 
-        this.verticalScrollBarPlaceholderMenu.scrollAreaStartX = this.width - this.borderRight - this.placeholderMenuWidth - 1;
-        this.verticalScrollBarPlaceholderMenu.scrollAreaStartY = this.getEditorAreaY() - 1;
-        this.verticalScrollBarPlaceholderMenu.scrollAreaEndX = this.width - this.borderRight + 10;
-        this.verticalScrollBarPlaceholderMenu.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 1;
+        int placeholderAreaX = this.width - this.borderRight - this.placeholderMenuWidth;
+        int placeholderAreaY = this.getEditorAreaY();
 
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartX = this.width - this.borderRight - this.placeholderMenuWidth - 1;
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartY = this.getEditorAreaY() - 1;
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndX = this.width - this.borderRight;
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() + 10 + 1;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaStartX = placeholderAreaX + 1;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaStartY = placeholderAreaY + 1;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaEndX = placeholderAreaX + this.placeholderMenuWidth - 2;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaEndY = placeholderAreaY + this.getEditorAreaHeight() - this.horizontalScrollBarPlaceholderMenu.grabberHeight - 2;
+
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartX = placeholderAreaX + 1;
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartY = placeholderAreaY + 1;
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndX = placeholderAreaX + this.placeholderMenuWidth - this.verticalScrollBarPlaceholderMenu.grabberWidth - 2;
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndY = placeholderAreaY + this.getEditorAreaHeight() - 1;
 
         //Set scroll grabber colors
         this.verticalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
@@ -162,7 +166,7 @@ public class TextEditorScreen extends Screen {
         this.cancelButton = new AdvancedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
             this.onClose();
         });
-        UIBase.colorizeButton(this.cancelButton);
+        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
         this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -170,7 +174,7 @@ public class TextEditorScreen extends Screen {
                 this.callback.accept(this.getText());
             }
         });
-        UIBase.colorizeButton(this.doneButton);
+        UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.placeholderButton = new AdvancedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, Locals.localize("fancymenu.ui.text_editor.placeholders"), true, (button) -> {
             if (showPlaceholderMenu) {
@@ -181,7 +185,7 @@ public class TextEditorScreen extends Screen {
             this.rebuildWidgets();
         });
         this.placeholderButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.dynamicvariabletextfield.variables.desc"), "%n%"));
-        UIBase.colorizeButton(this.placeholderButton);
+        UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
         if (showPlaceholderMenu) {
             this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
             this.placeholderButton.setHeight(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
@@ -287,13 +291,13 @@ public class TextEditorScreen extends Screen {
         }
         RenderSystem.disableScissor();
 
-        this.verticalScrollBar.render(matrix);
-        this.horizontalScrollBar.render(matrix);
-
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
         this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        this.renderBorder(matrix, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, true, true, true, true);
+        UIBase.renderBorder(matrix, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+
+        this.verticalScrollBar.render(matrix);
+        this.horizontalScrollBar.render(matrix);
 
         this.renderPlaceholderMenu(matrix, mouseX, mouseY, partial);
 
@@ -359,12 +363,12 @@ public class TextEditorScreen extends Screen {
 
             RenderSystem.disableScissor();
 
+            //Render placeholder menu border
+            UIBase.renderBorder(matrix, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+
             //Render placeholder menu scroll bars
             this.verticalScrollBarPlaceholderMenu.render(matrix);
             this.horizontalScrollBarPlaceholderMenu.render(matrix);
-
-            //Render placeholder menu border
-            this.renderBorder(matrix, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, true, true, true, true);
 
         }
 
@@ -480,21 +484,6 @@ public class TextEditorScreen extends Screen {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
         this.font.draw(matrix, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB());
-    }
-
-    protected void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
-        if (renderTop) {
-            fill(matrix, xMin, yMin, xMax, yMin + borderThickness, this.editorAreaBorderColor.getRGB());
-        }
-        if (renderLeft) {
-            fill(matrix, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, this.editorAreaBorderColor.getRGB());
-        }
-        if (renderRight) {
-            fill(matrix, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, this.editorAreaBorderColor.getRGB());
-        }
-        if (renderBottom) {
-            fill(matrix, xMin, yMax - borderThickness, xMax, yMax, this.editorAreaBorderColor.getRGB());
-        }
     }
 
     protected void renderEditorAreaBackground(PoseStack matrix) {
@@ -1038,6 +1027,7 @@ public class TextEditorScreen extends Screen {
         this.pasteText(text);
         this.setFocusedLine(0);
         t.moveCursorTo(0);
+        this.verticalScrollBar.setScroll(0.0F);
     }
 
     public String getText() {
@@ -1237,53 +1227,57 @@ public class TextEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-        for (TextEditorLine l : this.textFieldLines) {
-            l.mouseClicked(mouseX, mouseY, button);
-        }
+        if (!this.isMouseInteractingWithGrabbers()) {
 
-        if (this.isMouseInsideEditorArea()) {
-            if (button == 1) {
-                this.rightClickContextMenu.closeMenu();
+            for (TextEditorLine l : this.textFieldLines) {
+                l.mouseClicked(mouseX, mouseY, button);
             }
-            if ((button == 0) || (button == 1)) {
-                boolean isHighlightedHovered = this.isHighlightedTextHovered();
-                TextEditorLine hoveredLine = this.getHoveredLine();
-                if (!this.rightClickContextMenu.isOpen()) {
-                    if ((button == 0) || !isHighlightedHovered) {
-                        this.resetHighlighting();
-                    }
-                    if (hoveredLine == null) {
-                        TextEditorLine focus = this.getLine(this.getLineCount()-1);
-                        for (TextEditorLine t : this.textFieldLines) {
-                            if ((MouseInput.getMouseY() >= t.y) && (MouseInput.getMouseY() <= t.y + t.getHeight())) {
-                                focus = t;
-                                break;
-                            }
-                        }
-                        this.setFocusedLine(this.getLineIndex(focus));
-                        this.getFocusedLine().moveCursorToEnd();
-                        this.correctYScroll(0);
-                    } else if ((button == 1) && !isHighlightedHovered) {
-                        //Focus line in case it is right-clicked
-                        this.setFocusedLine(this.getLineIndex(hoveredLine));
-                        //Set cursor in case line is right-clicked
-                        String s = this.font.plainSubstrByWidth(hoveredLine.getValue().substring(hoveredLine.getAsAccessor().getDisplayPosFancyMenu()), hoveredLine.getInnerWidth());
-                        hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu());
-                    }
-                }
+
+            if (this.isMouseInsideEditorArea()) {
                 if (button == 1) {
-                    this.updateRightClickContextMenu();
-                    UIBase.openScaledContextMenuAtMouse(this.rightClickContextMenu);
-                } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHoveredOrFocused()) {
                     this.rightClickContextMenu.closeMenu();
-                    //Call mouseClicked of lines after closing the menu, so the focused line and cursor pos gets updated
-                    this.textFieldLines.forEach((line) -> {
-                        line.mouseClicked(mouseX, mouseY, button);
-                    });
-                    //Call mouseClicked of editor again to do everything that would happen when clicked without the context menu opened
-                    this.mouseClicked(mouseX, mouseY, button);
+                }
+                if ((button == 0) || (button == 1)) {
+                    boolean isHighlightedHovered = this.isHighlightedTextHovered();
+                    TextEditorLine hoveredLine = this.getHoveredLine();
+                    if (!this.rightClickContextMenu.isOpen()) {
+                        if ((button == 0) || !isHighlightedHovered) {
+                            this.resetHighlighting();
+                        }
+                        if (hoveredLine == null) {
+                            TextEditorLine focus = this.getLine(this.getLineCount()-1);
+                            for (TextEditorLine t : this.textFieldLines) {
+                                if ((MouseInput.getMouseY() >= t.y) && (MouseInput.getMouseY() <= t.y + t.getHeight())) {
+                                    focus = t;
+                                    break;
+                                }
+                            }
+                            this.setFocusedLine(this.getLineIndex(focus));
+                            this.getFocusedLine().moveCursorToEnd();
+                            this.correctYScroll(0);
+                        } else if ((button == 1) && !isHighlightedHovered) {
+                            //Focus line in case it is right-clicked
+                            this.setFocusedLine(this.getLineIndex(hoveredLine));
+                            //Set cursor in case line is right-clicked
+                            String s = this.font.plainSubstrByWidth(hoveredLine.getValue().substring(hoveredLine.getAsAccessor().getDisplayPosFancyMenu()), hoveredLine.getInnerWidth());
+                            hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu());
+                        }
+                    }
+                    if (button == 1) {
+                        this.updateRightClickContextMenu();
+                        UIBase.openScaledContextMenuAtMouse(this.rightClickContextMenu);
+                    } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHoveredOrFocused()) {
+                        this.rightClickContextMenu.closeMenu();
+                        //Call mouseClicked of lines after closing the menu, so the focused line and cursor pos gets updated
+                        this.textFieldLines.forEach((line) -> {
+                            line.mouseClicked(mouseX, mouseY, button);
+                        });
+                        //Call mouseClicked of editor again to do everything that would happen when clicked without the context menu opened
+                        this.mouseClicked(mouseX, mouseY, button);
+                    }
                 }
             }
+
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -1311,6 +1305,14 @@ public class TextEditorScreen extends Screen {
         if (this.callback != null) {
             this.callback.accept(null);
         }
+    }
+
+    public boolean isMouseInteractingWithGrabbers() {
+        return this.verticalScrollBar.isGrabberGrabbed() || this.verticalScrollBar.isGrabberHovered() || this.horizontalScrollBar.isGrabberGrabbed() || this.horizontalScrollBar.isGrabberHovered();
+    }
+
+    public boolean isMouseInteractingWithPlaceholderGrabbers() {
+        return this.verticalScrollBarPlaceholderMenu.isGrabberGrabbed() || this.verticalScrollBarPlaceholderMenu.isGrabberHovered() || this.horizontalScrollBarPlaceholderMenu.isGrabberGrabbed() || this.horizontalScrollBarPlaceholderMenu.isGrabberHovered();
     }
 
     public int getEditBoxCursorX(EditBox editBox) {
@@ -1484,7 +1486,7 @@ public class TextEditorScreen extends Screen {
     public int getEditorAreaWidth() {
         int i = (this.width - this.borderRight) - this.borderLeft;
         if (showPlaceholderMenu) {
-            i = i - this.placeholderMenuWidth - this.verticalScrollBar.grabberWidth - 5;
+            i = i - this.placeholderMenuWidth - 15;
         }
         return i;
     }
@@ -1501,7 +1503,7 @@ public class TextEditorScreen extends Screen {
         return this.headerHeight;
     }
 
-    public static class PlaceholderMenuEntry extends GuiComponent {
+    public static class PlaceholderMenuEntry extends UIBase {
 
         public TextEditorScreen parent;
         public final Component label;
@@ -1509,35 +1511,58 @@ public class TextEditorScreen extends Screen {
         public int x;
         public int y;
         public final int labelWidth;
-        public Color backgroundColorIdle = new Color(0,0,0,0);
-        public Color backgroundColorHover = new Color(50, 50, 50);
-        public Color dotColor = new Color(62, 134, 160);
-        public Color entryLabelColor = new Color(158, 170, 184);
-        public AdvancedButton button;
+        public Color backgroundColorIdle = Color.GRAY;
+        public Color backgroundColorHover = Color.LIGHT_GRAY;
+        public Color dotColor = Color.BLUE;
+        public Color entryLabelColor = Color.WHITE;
+        public AdvancedButton buttonBase;
+        public Font font = Minecraft.getInstance().font;
 
         public PlaceholderMenuEntry(@NotNull TextEditorScreen parent, @NotNull Component label, @NotNull Runnable clickAction) {
             this.parent = parent;
             this.label = label;
             this.clickAction = clickAction;
-            this.labelWidth = Minecraft.getInstance().font.width(this.label);
-            this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (button) -> {
+            this.labelWidth = this.font.width(this.label);
+            this.buttonBase = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (button) -> {
                 this.clickAction.run();
-            });
+            }) {
+                @Override
+                public boolean isHoveredOrFocused() {
+                    if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
+                        return false;
+                    }
+                    return super.isHoveredOrFocused();
+                }
+                @Override
+                public void onClick(double p_93371_, double p_93372_) {
+                    if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
+                        return;
+                    }
+                    super.onClick(p_93371_, p_93372_);
+                }
+                @Override
+                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                    if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
+                        this.isHovered = false;
+                    }
+                    super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                }
+            };
         }
 
         public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
             //Update the button colors
-            this.button.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
+            this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
             //Update the button pos
-            this.button.x = this.x;
-            this.button.y = this.y;
+            this.buttonBase.x = this.x;
+            this.buttonBase.y = this.y;
             int yCenter = this.y + (this.getHeight() / 2);
             //Render the button
-            this.button.render(matrix, mouseX, mouseY, partial);
+            this.buttonBase.render(matrix, mouseX, mouseY, partial);
             //Render dot
-            fill(matrix, this.x + 5, yCenter - 2, this.x + 5 + 4, yCenter + 2, this.dotColor.getRGB());
+            renderListingDot(matrix, this.x + 5, yCenter - 2, this.dotColor);
             //Render label
-            this.parent.font.draw(matrix, this.label, this.x + 5 + 4 + 3, yCenter - (Minecraft.getInstance().font.lineHeight / 2), this.entryLabelColor.getRGB());
+            this.font.draw(matrix, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB());
         }
 
         public int getWidth() {
@@ -1549,11 +1574,11 @@ public class TextEditorScreen extends Screen {
         }
 
         public boolean isHovered() {
-            return this.button.isHoveredOrFocused();
+            return this.buttonBase.isHoveredOrFocused();
         }
 
         public void setDescription(String... desc) {
-            this.button.setDescription(desc);
+            this.buttonBase.setDescription(desc);
         }
 
     }

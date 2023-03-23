@@ -1,5 +1,5 @@
 //TODO übernehmen
-package de.keksuccino.fancymenu.menu.fancy.helper.ui.scrollbar;
+package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -32,6 +32,7 @@ public class ScrollBar extends GuiComponent {
     public Color hoverBarColor;
     public ResourceLocation idleBarTexture;
     public ResourceLocation hoverBarTexture;
+    public boolean active = true;
     protected boolean allowScrollWheel = false;
     protected float grabberScrollSpeed = 1.0F;
     protected float wheelScrollSpeed = 1.0F;
@@ -46,13 +47,13 @@ public class ScrollBar extends GuiComponent {
     protected volatile long lastTick;
     protected List<Consumer<ScrollBar>> scrollListeners = new ArrayList<>();
 
-    public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, @NotNull Color idleBarColor, @NotNull Color hoverBarColor) {
+    public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, Color idleBarColor, Color hoverBarColor) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
         this.idleBarColor = idleBarColor;
         this.hoverBarColor = hoverBarColor;
     }
 
-    public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, @NotNull ResourceLocation idleBarTexture, @NotNull ResourceLocation hoverBarTexture) {
+    public ScrollBar(@NotNull ScrollBarDirection direction, int grabberWidth, int grabberHeight, int scrollAreaStartX, int scrollAreaStartY, int scrollAreaEndX, int scrollAreaEndY, ResourceLocation idleBarTexture, ResourceLocation hoverBarTexture) {
         this(direction, grabberWidth, grabberHeight, scrollAreaStartX, scrollAreaStartY, scrollAreaEndX, scrollAreaEndY);
         this.idleBarTexture = idleBarTexture;
         this.hoverBarTexture = hoverBarTexture;
@@ -84,11 +85,21 @@ public class ScrollBar extends GuiComponent {
 
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        if ((this.idleBarTexture != null) && (this.hoverBarTexture != null)) {
-            RenderUtils.bindTexture((this.isGrabberHovered() || this.grabbed) ? this.hoverBarTexture : this.idleBarTexture);
-            blit(matrix, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
-        } else if ((this.idleBarColor != null) && (this.hoverBarColor != null)) {
-            fill(matrix, x, y, x + this.grabberWidth, y + this.grabberHeight, (this.isGrabberHovered() || this.grabbed) ? this.hoverBarColor.getRGB() : this.idleBarColor.getRGB());
+
+        if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
+            if (this.hoverBarTexture != null) {
+                RenderUtils.bindTexture(this.hoverBarTexture);
+                blit(matrix, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+            } else if (this.hoverBarColor != null) {
+                fill(matrix, x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
+            }
+        } else {
+            if (this.idleBarTexture != null) {
+                RenderUtils.bindTexture(this.idleBarTexture);
+                blit(matrix, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+            } else if (this.idleBarColor != null) {
+                fill(matrix, x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
+            }
         }
 
         this.handleGrabberScrolling();
@@ -98,6 +109,10 @@ public class ScrollBar extends GuiComponent {
     }
 
     protected void handleGrabberScrolling() {
+
+        if (!this.active) {
+            return;
+        }
 
         int mouseX = MouseInput.getMouseX();
         int mouseY = MouseInput.getMouseY();
@@ -141,7 +156,7 @@ public class ScrollBar extends GuiComponent {
     }
 
     protected void handleWheelScrolling(ScreenEvent.MouseScrolled.Pre e) {
-        if (this.allowScrollWheel && this.isMouseInsideScrollArea() && !this.grabbed) {
+        if (this.active && this.allowScrollWheel && this.isMouseInsideScrollArea(true) && !this.grabbed) {
             float scrollOffset = 0.1F * this.wheelScrollSpeed;
             if (e.getScrollDelta() > 0) {
                 scrollOffset = -(scrollOffset);
@@ -151,6 +166,9 @@ public class ScrollBar extends GuiComponent {
     }
 
     public boolean isGrabberHovered() {
+        if (!this.active) {
+            return false;
+        }
         int x = this.lastGrabberX;
         int y = this.lastGrabberY;
         int mouseX = MouseInput.getMouseX();
@@ -158,7 +176,17 @@ public class ScrollBar extends GuiComponent {
         return ((mouseX >= x) && (mouseX <= (x + this.grabberWidth)) && (mouseY >= y) && (mouseY <= (y + this.grabberHeight)));
     }
 
-    public boolean isMouseInsideScrollArea() {
+    public boolean isGrabberGrabbed() {
+        return this.active && this.grabbed;
+    }
+
+    public boolean isMouseInsideScrollArea(boolean ignoreGrabber) {
+        if (!this.active) {
+            return false;
+        }
+        if (!ignoreGrabber && (this.isGrabberGrabbed() || this.isGrabberHovered())) {
+            return false;
+        }
         int x = this.scrollAreaStartX;
         int y = this.scrollAreaStartY;
         int width = this.scrollAreaEndX - this.scrollAreaStartX;

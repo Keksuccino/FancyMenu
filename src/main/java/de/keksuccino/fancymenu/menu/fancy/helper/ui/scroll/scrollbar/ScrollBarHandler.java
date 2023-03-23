@@ -1,5 +1,5 @@
 //TODO übernehmen
-package de.keksuccino.fancymenu.menu.fancy.helper.ui.scrollbar;
+package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar;
 
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -15,6 +15,7 @@ import java.util.List;
 public class ScrollBarHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
     private static boolean initialized = false;
     private static final List<ScrollBar> scrollBars = Collections.synchronizedList(new ArrayList<>());
 
@@ -27,9 +28,11 @@ public class ScrollBarHandler {
 
     public static void handleScrollBar(ScrollBar scrollBar) {
         init();
-        scrollBar.lastTick = System.currentTimeMillis();
-        if (!scrollBars.contains(scrollBar)) {
-            scrollBars.add(scrollBar);
+        if (scrollBar.active) {
+            scrollBar.lastTick = System.currentTimeMillis();
+            if (!scrollBars.contains(scrollBar)) {
+                scrollBars.add(scrollBar);
+            }
         }
     }
 
