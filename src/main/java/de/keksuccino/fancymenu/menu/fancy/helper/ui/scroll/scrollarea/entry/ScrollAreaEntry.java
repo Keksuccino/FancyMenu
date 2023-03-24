@@ -22,7 +22,7 @@ public abstract class ScrollAreaEntry extends UIBase {
     protected boolean focusable = true;
     protected boolean focused = false;
     protected boolean playClickSound = true;
-    public boolean careAboutOtherEntries = true;
+    public boolean unfocusOtherEntriesOnFocus = true;
     public boolean focusOnClick = true;
     public int index = 0;
 
@@ -133,7 +133,7 @@ public abstract class ScrollAreaEntry extends UIBase {
         if (this.focusable) {
             this.focused = focused;
             this.updateEntry();
-            if (focused && this.careAboutOtherEntries) {
+            if (focused && this.unfocusOtherEntriesOnFocus) {
                 for (ScrollAreaEntry e : this.parent.getEntries()) {
                     e.setFocused(false);
                 }

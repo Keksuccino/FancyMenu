@@ -18,8 +18,6 @@ import java.util.function.Consumer;
 
 public class ScrollArea extends UIBase {
 
-    //TODO correctY methode adden und nach adden/removen von entries callen
-
     //TODO wenn ScrollArea fertig, dann neue Visibility Requirement screens (add + manage) machen
 
     public ScrollBar verticalScrollBar;
@@ -35,6 +33,7 @@ public class ScrollArea extends UIBase {
     protected List<ScrollAreaEntry> entries = new ArrayList<>();
     public int overriddenTotalScrollWidth = -1;
     public int overriddenTotalScrollHeight = -1;
+    public boolean correctYOnAddingRemovingEntries = true;
 
     public ScrollArea(int x, int y, int width, int height) {
         this.x = x;
@@ -94,11 +93,19 @@ public class ScrollArea extends UIBase {
     }
 
     public int getEntryRenderOffsetX() {
-        return -(int)(((float)this.getTotalScrollWidth() / 100.0F) * (this.horizontalScrollBar.getScroll() * 100.0F));
+        return this.getEntryRenderOffsetX(this.getTotalScrollWidth());
     }
 
     public int getEntryRenderOffsetY() {
-        return -(int)(((float)this.getTotalScrollHeight() / 100.0F) * (this.verticalScrollBar.getScroll() * 100.0F));
+        return this.getEntryRenderOffsetY(this.getTotalScrollHeight());
+    }
+
+    public int getEntryRenderOffsetX(float totalScrollWidth) {
+        return -(int)((totalScrollWidth / 100.0F) * (this.horizontalScrollBar.getScroll() * 100.0F));
+    }
+
+    public int getEntryRenderOffsetY(float totalScrollHeight) {
+        return -(int)((totalScrollHeight / 100.0F) * (this.verticalScrollBar.getScroll() * 100.0F));
     }
 
     public int getTotalScrollWidth() {
@@ -166,13 +173,40 @@ public class ScrollArea extends UIBase {
         }
     }
 
+    /**
+     * Corrects the Y scroll after removing or adding entries.
+     * @param removed If TRUE, the entry list will be treated as list of REMOVED entries. If FALSE, the list is treated as ADDED entries.
+     * @param addedOrRemovedEntries List of entries that were added or removed.
+     */
+    public void correctYScrollAfterAddingOrRemovingEntries(boolean removed, ScrollAreaEntry... addedOrRemovedEntries) {
+        if ((addedOrRemovedEntries != null) && (addedOrRemovedEntries.length > 0)) {
+            float oldTotalScrollHeight;
+            int totalHeightRemovedAdded = 0;
+            for (ScrollAreaEntry e : addedOrRemovedEntries) {
+                totalHeightRemovedAdded += e.getHeight();
+            }
+            if (!removed) {
+                oldTotalScrollHeight = this.getTotalScrollHeight() - totalHeightRemovedAdded;
+            } else {
+                oldTotalScrollHeight = this.getTotalScrollHeight() + totalHeightRemovedAdded;
+            }
+            int yOld = this.getEntryRenderOffsetY(oldTotalScrollHeight);
+            int yNew = this.getEntryRenderOffsetY();
+            int yDiff = Math.max(yOld, yNew) - Math.min(yOld, yNew);
+            float scrollDiff = Math.max(0.0F, Math.min(1.0F, (float)yDiff / (float)this.getTotalScrollHeight()));
+            if (!removed) {
+                scrollDiff = -scrollDiff;
+            }
+            this.verticalScrollBar.setScroll(this.verticalScrollBar.getScroll() + scrollDiff);
+        }
+    }
+
     public boolean isMouseInteractingWithGrabbers() {
         return this.verticalScrollBar.isGrabberGrabbed() || this.verticalScrollBar.isGrabberHovered() || this.horizontalScrollBar.isGrabberGrabbed() || this.horizontalScrollBar.isGrabberHovered();
     }
 
     public void setX(int x) {
         this.x = x;
-        this.updateScrollArea();
     }
 
     public int getX() {
@@ -185,7 +219,6 @@ public class ScrollArea extends UIBase {
 
     public void setY(int y) {
         this.y = y;
-        this.updateScrollArea();
     }
 
     public int getY() {
@@ -198,7 +231,6 @@ public class ScrollArea extends UIBase {
 
     public void setWidth(int width) {
         this.width = width;
-        this.updateScrollArea();
     }
 
     public int getWidth() {
@@ -211,7 +243,6 @@ public class ScrollArea extends UIBase {
 
     public void setHeight(int height) {
         this.height = height;
-        this.updateScrollArea();
     }
 
     public int getHeight() {
@@ -224,7 +255,6 @@ public class ScrollArea extends UIBase {
 
     public void setBorderThickness(int borderThickness) {
         this.borderThickness = borderThickness;
-        this.updateScrollArea();
     }
 
     public int getBorderThickness() {
@@ -284,9 +314,20 @@ public class ScrollArea extends UIBase {
         return new ArrayList<>(this.entries);
     }
 
+    @Nullable
+    public ScrollAreaEntry getEntry(int index) {
+        if (index <= this.entries.size()-1) {
+            return this.entries.get(index);
+        }
+        return null;
+    }
+
     public void addEntry(ScrollAreaEntry entry) {
         if (!this.entries.contains(entry)) {
             this.entries.add(entry);
+            if (this.correctYOnAddingRemovingEntries) {
+                this.correctYScrollAfterAddingOrRemovingEntries(false, entry);
+            }
         }
     }
 
@@ -295,24 +336,25 @@ public class ScrollArea extends UIBase {
             index = this.getEntryCount();
         }
         this.entries.add(index, entry);
+        if (this.correctYOnAddingRemovingEntries) {
+            this.correctYScrollAfterAddingOrRemovingEntries(false, entry);
+        }
     }
 
     public void removeEntry(ScrollAreaEntry entry) {
         this.entries.remove(entry);
+        if (this.correctYOnAddingRemovingEntries) {
+            this.correctYScrollAfterAddingOrRemovingEntries(true, entry);
+        }
     }
 
     public void removeEntryAtIndex(int index) {
         if (index <= this.getEntryCount()-1) {
-            this.entries.remove(index);
+            ScrollAreaEntry entry = this.entries.remove(index);
+            if ((entry != null) && this.correctYOnAddingRemovingEntries) {
+                this.correctYScrollAfterAddingOrRemovingEntries(true, entry);
+            }
         }
-    }
-
-    @Nullable
-    public ScrollAreaEntry getEntryAtIndex(int index) {
-        if (index <= this.getEntryCount()-1) {
-            return this.entries.get(index);
-        }
-        return null;
     }
 
     /**
