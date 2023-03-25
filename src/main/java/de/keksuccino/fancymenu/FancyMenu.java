@@ -13,12 +13,13 @@ import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementHandler;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.requirements.VisibilityRequirements;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
@@ -105,6 +106,9 @@ public class FancyMenu {
 				ButtonActions.registerAll();
 
 				VisibilityRequirements.registerAll();
+
+				//TODO übernehmen
+				LoadingRequirements.registerAll();
 
 				Placeholders.registerAll();
 

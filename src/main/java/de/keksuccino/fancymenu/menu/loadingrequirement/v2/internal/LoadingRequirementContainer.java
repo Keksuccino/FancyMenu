@@ -33,8 +33,16 @@ public class LoadingRequirementContainer {
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
     protected final List<LoadingRequirementInstance> instances = new ArrayList<>();
+    public boolean forceRequirementsMet = false;
+    public boolean forceRequirementsNotMet = false;
 
     public boolean requirementsMet() {
+        if (this.forceRequirementsMet) {
+            return true;
+        }
+        if (this.forceRequirementsNotMet) {
+            return false;
+        }
         try {
             for (LoadingRequirementGroup g : this.groups) {
                 if (!g.requirementsMet()) {
@@ -152,6 +160,7 @@ public class LoadingRequirementContainer {
                 }
             }
         }
+        LegacyRequirementConverter.deserializeLegacyAndAddTo(sec, c);
         return c;
     }
 

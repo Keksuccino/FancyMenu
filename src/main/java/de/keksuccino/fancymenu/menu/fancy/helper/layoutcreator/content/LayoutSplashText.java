@@ -245,7 +245,8 @@ public class LayoutSplashText extends LayoutElement {
 		p1.addEntry("bouncing", "" + this.getObject().bounce);
 		p1.addEntry("vanilla-like", "" + this.getObject().vanillaLike);
 
-		this.addVisibilityPropertiesTo(p1);
+		//TODO übernehmen
+		this.addLoadingRequirementPropertiesTo(p1);
 		
 		l.add(p1);
 		

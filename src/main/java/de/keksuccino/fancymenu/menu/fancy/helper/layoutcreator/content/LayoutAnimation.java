@@ -72,7 +72,8 @@ public class LayoutAnimation extends LayoutElement {
 			p1.addEntry("height", "" + this.object.getHeight());
 		}
 
-		this.addVisibilityPropertiesTo(p1);
+		//TODO übernehmen
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

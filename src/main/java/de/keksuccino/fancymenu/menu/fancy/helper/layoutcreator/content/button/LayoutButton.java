@@ -430,7 +430,8 @@ public class LayoutButton extends LayoutElement {
 		}
 		s.addEntry("label", this.object.value);
 
-		this.addVisibilityPropertiesTo(s);
+		//TODO übernehmen
+		this.addLoadingRequirementPropertiesTo(s);
 
 		l.add(s);
 		

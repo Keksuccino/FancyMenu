@@ -32,6 +32,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.*;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -82,9 +83,12 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
-					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-				};
+				//TODO übernehmen
+//				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
+//					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+//				};
+				//TODO übernehmen
+				this.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
 
 				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
 
@@ -596,7 +600,9 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.object.delayAppearanceSec = bc.delayAppearanceSec;
 								this.object.fadeIn = bc.fadeIn;
 								this.object.fadeInSpeed = bc.fadeInSpeed;
-								this.object.visibilityRequirementContainer = bc.visibilityRequirementContainer;
+								//TODO übernehmen
+								this.object.loadingRequirementContainer = bc.loadingRequirementContainer;
+								//-------------------
 								this.object.setActionId(bc.getActionId());
 
 								super.init();
@@ -801,8 +807,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
 									@Override public void render(PoseStack matrix, Screen menu) {}
 								};
-								van.object.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
-								van.customizationContainer.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
+								//TODO übernehmen
+								van.object.loadingRequirementContainer = cusItem.loadingRequirementContainer;
+								van.customizationContainer.loadingRequirementContainer = cusItem.loadingRequirementContainer;
+								//-----------------
 							}
 						}
 					}

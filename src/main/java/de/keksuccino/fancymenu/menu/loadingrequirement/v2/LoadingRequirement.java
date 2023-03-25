@@ -1,9 +1,11 @@
+//TODO übernehmen
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Objects;
@@ -40,9 +42,10 @@ public abstract class LoadingRequirement {
      *
      * <b>For example:</b> If your requirement checks if the window is fullscreen, and it IS currently in fullscreen, then return TRUE here.<br><br>
      *
-     * Keep in mind that the value string will be checked for placeholders, so don't mess with similar JSON-like parsing in it.
+     * Keep in mind that placeholders get replaced in the value string, so don't mess with similar JSON-like parsing in it.<br>
+     * Placeholders got replaced already at this point, so you get the final value string and don't need to care about raw placeholders here.
      *
-     * @param value The value of the requirement, if it has one. This param is NULL if the requirement has no value!
+     * @param value The value of the requirement, if it has one. Placeholders got replaced already. This is NULL if the requirement has no value!
      */
     public abstract boolean isRequirementMet(@Nullable String value);
 
@@ -63,6 +66,13 @@ public abstract class LoadingRequirement {
     public abstract List<String> getDescription();
 
     /**
+     * The name of the category this requirement should be in.<br>
+     * Requirements don't need to be in a category so if you don't want that, return NULL here.
+     */
+    @Nullable
+    public abstract String getCategory();
+
+    /**
      * The display name of the VALUE of the requirement, if it has one.<br>
      * It is shown in the requirement options of the layout editor.<br><br>
      *
@@ -81,6 +91,17 @@ public abstract class LoadingRequirement {
      */
     @Nullable
     public abstract String getValuePreset();
+
+    /**
+     * This returns a list with NEW instances of formatting rules used to format the value string in the {@link de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen}.<br><br>
+     *
+     * Formatting rules are not mandatory, so if you don't want to use them, return NULL here.<br>
+     * Same applies for when the requirement has no value.
+     *
+     * @return A list with formatting rules used for editing the requirement value in the {@link de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen}.
+     */
+    @Nullable
+    public abstract List<TextEditorFormattingRule> getValueFormattingRules();
 
     /**
      * The identifier of the requirement.

@@ -52,7 +52,8 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
@@ -114,7 +115,10 @@ public class MenuHandlerBase extends GuiComponent {
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<AbstractWidget, ButtonCustomizationContainer>();
-	protected Map<AbstractWidget, VisibilityRequirementContainer> vanillaButtonVisibilityRequirementContainers = new HashMap<AbstractWidget, VisibilityRequirementContainer>();
+	//TODO übernehmen
+//	protected Map<AbstractWidget, VisibilityRequirementContainer> vanillaButtonVisibilityRequirementContainers = new HashMap<>();
+	//TODO übernehmen
+	protected Map<AbstractWidget, LoadingRequirementContainer> vanillaButtonLoadingRequirementContainers = new HashMap<>();
 
 	protected volatile Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
 	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<ButtonData, Float>();
@@ -131,7 +135,10 @@ public class MenuHandlerBase extends GuiComponent {
 	protected String closeAudio;
 	protected String openAudio;
 
-	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
+	//TODO übernehmen
+//	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
+	//TODO übernehmen
+	protected Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 
 	protected static Screen scaleChangedIn = null;
 
@@ -241,7 +248,10 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.customMenuTitle = null;
 
-		this.cachedLayoutWideRequirements.clear();
+		//TODO übernehmen
+//		this.cachedLayoutWideRequirements.clear();
+		//TODO übernehmen
+		this.cachedLayoutWideLoadingRequirements.clear();
 
 		for (PropertiesSet s : rawLayouts) {
 			
@@ -253,13 +263,22 @@ public class MenuHandlerBase extends GuiComponent {
 				continue;
 			}
 
-			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
-				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-			}.visibilityRequirementContainer;
-			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
-			if (!globalVisReqContainer.isVisible()) {
+			//TODO übernehmen
+//			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
+//				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
+//			}.visibilityRequirementContainer;
+//			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
+//			if (!globalVisReqContainer.isVisible()) {
+//				continue;
+//			}
+
+			//TODO übernehmen
+			LoadingRequirementContainer layoutWideRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(metas.get(0));
+			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
+			if (!layoutWideRequirementContainer.requirementsMet()) {
 				continue;
 			}
+			//------------
 
 			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
 			if (cusMenuTitle != null) {
@@ -479,7 +498,10 @@ public class MenuHandlerBase extends GuiComponent {
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
 		this.vanillaButtonCustomizations.clear();
-		this.vanillaButtonVisibilityRequirementContainers.clear();
+		//TODO übernehmen
+//		this.vanillaButtonVisibilityRequirementContainers.clear();
+		//TODO übernehmen
+		this.vanillaButtonLoadingRequirementContainers.clear();
 		this.audio.clear();
 		this.frontRenderItems.clear();
 		this.backgroundRenderItems.clear();
@@ -578,7 +600,8 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 
 		//Handle vanilla button visibility requirements
-		for (Map.Entry<AbstractWidget, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
+		//TODO übernehmen (for)
+		for (Map.Entry<AbstractWidget, LoadingRequirementContainer> m : this.vanillaButtonLoadingRequirementContainers.entrySet()) {
 			boolean isBtnHidden = false;
 			for (ButtonData d : this.hidden) {
 				if (d.getButton() == m.getKey()) {
@@ -598,7 +621,9 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 				if (btn != null) {
 					VanillaButtonCustomizationItem i = new VanillaButtonCustomizationItem(dummySec, btn, this);
-					i.visibilityRequirements = m.getValue();
+					//TODO übernehmen
+					i.loadingRequirements = m.getValue();
+					//---------------
 					this.backgroundRenderItems.add(i);
 				}
 			}
@@ -606,7 +631,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
-				if (this.visibilityRequirementsMet(m.getKey().getButton())) {
+				//TODO übernehmen (if)
+				if (this.vanillaButtonLoadingRequirementsMet(m.getKey().getButton())) {
 					this.handleVanillaAppearanceDelayFor(m.getKey());
 				}
 			}
@@ -889,7 +915,9 @@ public class MenuHandlerBase extends GuiComponent {
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 				if (b != null) {
-					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd, this).visibilityRequirementContainer);
+					//TODO übernehmen
+					this.vanillaButtonLoadingRequirementContainers.put(b, LoadingRequirementContainer.deserializeRequirementContainer(sec));
+					//-----------------
 				}
 			}
 
@@ -1185,12 +1213,15 @@ public class MenuHandlerBase extends GuiComponent {
 			boolean fadein = this.fadeInVanilla.containsKey(d);
 			float delaysec = this.delayAppearanceVanilla.get(d);
 
-			VisibilityRequirementContainer vis = this.vanillaButtonVisibilityRequirementContainers.get(d.getButton());
-			
+			//TODO übernehmen
+			LoadingRequirementContainer reqs = this.vanillaButtonLoadingRequirementContainers.get(d.getButton());
+
 			d.getButton().visible = false;
-			if (vis != null) {
-				vis.forceHide = true;
+			//TODO übernehmen
+			if (reqs != null) {
+				reqs.forceRequirementsNotMet = true;
 			}
+			//--------------
 			
 			if (fadein) {
 				d.getButton().setAlpha(0.1F);
@@ -1218,9 +1249,11 @@ public class MenuHandlerBase extends GuiComponent {
 							if (!fade) {
 								if (now >= start + (int)delay) {
 									d.getButton().visible = true;
-									if (vis != null) {
-										vis.forceHide = false;
+									//TODO übernehmen
+									if (reqs != null) {
+										reqs.forceRequirementsNotMet = false;
 									}
+									//-------------
 									if (!fadein) {
 										return;
 									} else {
@@ -1266,8 +1299,10 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 
 		//Re-init screen if layout-wide requirements changed
-		for (Map.Entry<VisibilityRequirementContainer, Boolean> m : this.cachedLayoutWideRequirements.entrySet()) {
-			if (m.getKey().isVisible() != m.getValue()) {
+		//TODO übernehmen (for)
+		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
+			//TODO übernehmen (if)
+			if (m.getKey().requirementsMet() != m.getValue()) {
 				e.getScreen().init(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
 				break;
 			}
@@ -1737,10 +1772,16 @@ public class MenuHandlerBase extends GuiComponent {
 		return null;
 	}
 
-	protected boolean visibilityRequirementsMet(AbstractWidget b) {
-		VisibilityRequirementContainer c = this.vanillaButtonVisibilityRequirementContainers.get(b);
+	//TODO übernehmen
+//	protected boolean visibilityRequirementsMet(AbstractWidget b) {
+//
+//	}
+
+	//TODO übernehmen
+	protected boolean vanillaButtonLoadingRequirementsMet(AbstractWidget b) {
+		LoadingRequirementContainer c = this.vanillaButtonLoadingRequirementContainers.get(b);
 		if (c != null) {
-			return c.isVisible();
+			return c.requirementsMet();
 		}
 		return true;
 	}
@@ -1958,7 +1999,10 @@ public class MenuHandlerBase extends GuiComponent {
 		public String customButtonLabel = null;
 		public String buttonDescription = null;
 		public boolean isButtonHidden = false;
-		public VisibilityRequirementContainer visibilityRequirementContainer = null;
+		//TODO übernehmen
+//		public VisibilityRequirementContainer visibilityRequirementContainer = null;
+		//TODO übernehmen
+		public LoadingRequirementContainer loadingRequirementContainer = null;
 
 		public List<IAnimationRenderer> cachedAnimations = new ArrayList<IAnimationRenderer>();
 		public boolean lastHoverState = false;

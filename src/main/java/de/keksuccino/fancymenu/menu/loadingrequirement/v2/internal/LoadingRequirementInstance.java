@@ -1,8 +1,10 @@
 //TODO übernehmen
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal;
 
+import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,6 +21,7 @@ public class LoadingRequirementInstance {
     @Nullable
     public LoadingRequirementGroup group;
     public RequirementMode mode;
+    public String requirementId = MenuCustomization.generateRandomActionId();
 
     public LoadingRequirementInstance(@NotNull LoadingRequirement requirement, @Nullable String value, @NotNull RequirementMode mode, @NotNull LoadingRequirementContainer parent) {
         this.parent = parent;
@@ -28,7 +31,7 @@ public class LoadingRequirementInstance {
     }
 
     public boolean requirementMet() {
-        boolean met = this.requirement.isRequirementMet(this.value);
+        boolean met = this.requirement.isRequirementMet((this.value != null) ? PlaceholderParser.replacePlaceholders(this.value) : null);
         if (this.mode == RequirementMode.IF_NOT) {
             return !met;
         }
@@ -42,6 +45,7 @@ public class LoadingRequirementInstance {
         if (instance.group != null) {
             key += "[group:" + instance.group.identifier + "]";
         }
+        key += "[req_id:" + instance.requirementId + "]";
         l.add(key);
         if (instance.requirement.hasValue() && (instance.value != null)) {
             l.add(instance.value);
@@ -68,9 +72,13 @@ public class LoadingRequirementInstance {
                         }
                         group = parent.getGroup(groupId);
                     }
-                    LoadingRequirementInstance instance = new LoadingRequirementInstance(req, value, mode, parent);
-                    instance.group = group;
-                    return instance;
+                    if (key.contains("[req_id:")) {
+                        String id = key.split("\\[req_id:", 2)[1].split("\\]", 2)[0];
+                        LoadingRequirementInstance instance = new LoadingRequirementInstance(req, value, mode, parent);
+                        instance.requirementId = id;
+                        instance.group = group;
+                        return instance;
+                    }
                 }
             }
         }

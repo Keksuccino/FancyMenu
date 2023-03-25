@@ -38,7 +38,9 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.button = button;
 		this.object.orientation = "original";
 		this.customizationContainer = customizationContainer;
-		this.object.visibilityRequirementContainer = this.customizationContainer.visibilityRequirementContainer;
+		//TODO übernehmen
+		this.object.loadingRequirementContainer = this.customizationContainer.loadingRequirementContainer;
+		//------------------
 		this.init();
 	}
 
@@ -508,7 +510,8 @@ public class LayoutVanillaButton extends LayoutElement {
 		PropertiesSection visReqs = new PropertiesSection("customization");
 		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
 		visReqs.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-		this.addVisibilityPropertiesTo(visReqs);
+		//TODO übernehmen
+		this.addLoadingRequirementPropertiesTo(visReqs);
 		if (visReqs.getEntries().size() > 2) {
 			l.add(visReqs);
 		}

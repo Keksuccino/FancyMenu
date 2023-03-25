@@ -682,12 +682,12 @@ fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.desc = Check
 fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.valuename = Real Time Second(s) (Separate Values By Comma)
 
 fancymenu.helper.editor.items.visibilityrequirements.windowwidth = Is Window Width
-fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc = Check if the window width is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one width%n%at once.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
-fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename = Window Width(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc = Check if the window width is X.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename = Window Width
 
 fancymenu.helper.editor.items.visibilityrequirements.windowheight = Is Window Height
-fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc = Check if the window height is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one height%n%at once.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
-fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename = Window Height(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc = Check if the window height is X.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
+fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename = Window Height
 
 fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan = Is Window Width Bigger Than
 fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc = Check if the window width is bigger than X.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
@@ -718,8 +718,8 @@ fancymenu.helper.editor.items.visibilityrequirements.oslinux = Is OS Linux
 fancymenu.helper.editor.items.visibilityrequirements.oslinux.desc = Check if the operating system is Linux.
 
 fancymenu.helper.editor.items.visibilityrequirements.modloaded = Is Mod Loaded
-fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc = Check if a specific mod is loaded.%n%%n%You can separate multiple values by comma,%n%to check for more than one mod%n%at once.
-fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename = Mod ID(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc = Check if a specific mod is loaded.%n%%n%You can find the mod ID in the mod menu.%n%This menu is available by default%n%on Forge. On Fabric, download%n%the 'Mod Menu' mod.
+fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename = Mod ID
 
 fancymenu.helper.editor.items.visibilityrequirements.serveronline = Is Server Online
 fancymenu.helper.editor.items.visibilityrequirements.serveronline.desc = Check if a specific server is online.
@@ -866,8 +866,8 @@ fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = 
 fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = the current menu before using the §lButton Info §rtool!
 
 fancymenu.helper.editor.items.visibilityrequirements.guiscale = Is GUI Scale
-fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').%n%%n%You can separate multiple values by comma,%n%to check for more than one scale%n%at once.
-fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Scale Condition(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').
+fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Scale Condition
 
 fancymenu.helper.editor.backgrounds.choose = Choose Background
 
@@ -1289,7 +1289,8 @@ fancymenu.editor.elements.splash.single.enter_text = Enter Splash Text
 
 fancymenu.editor.elements.visibilityrequirements.edit_value = Edit Requirement Value
 
-
-
-
-
+fancymenu.editor.loading_requirement.category.window = Window
+fancymenu.editor.loading_requirement.category.world = World
+fancymenu.editor.loading_requirement.category.gui = GUI
+fancymenu.editor.loading_requirement.category.realtime = Realtime
+fancymenu.editor.loading_requirement.category.system = System

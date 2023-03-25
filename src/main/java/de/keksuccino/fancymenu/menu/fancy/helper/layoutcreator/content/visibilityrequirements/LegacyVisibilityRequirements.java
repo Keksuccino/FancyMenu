@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements;
 
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;

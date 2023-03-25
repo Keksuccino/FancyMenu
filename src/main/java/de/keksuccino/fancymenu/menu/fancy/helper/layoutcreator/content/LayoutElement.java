@@ -11,11 +11,11 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -1378,109 +1378,115 @@ public abstract class LayoutElement extends GuiComponent {
 
 	public abstract List<PropertiesSection> getProperties();
 
-	public void addVisibilityPropertiesTo(PropertiesSection sec) {
-
-		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
-
-		if (c.vrCheckForSingleplayer) {
-			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
-		}
-		if (c.vrCheckForMultiplayer) {
-			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
-		}
-		if (c.vrCheckForWindowWidth) {
-			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
-			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
-		}
-		if (c.vrCheckForWindowHeight) {
-			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
-			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
-		}
-		if (c.vrCheckForWindowWidthBiggerThan) {
-			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
-			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
-		}
-		if (c.vrCheckForWindowHeightBiggerThan) {
-			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
-			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
-		}
-		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
-			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
-			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
-		}
-		if (c.vrCheckForWorldLoaded) {
-			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
-		}
-		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
-			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
-			sec.addEntry("vr:value:language", "" + c.vrLanguage);
-		}
-		if (c.vrCheckForFullscreen) {
-			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
-		}
-		if (c.vrCheckForOsWindows) {
-			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
-		}
-		if (c.vrCheckForOsMac) {
-			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
-		}
-		if (c.vrCheckForOsLinux) {
-			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
-		}
-		if (c.vrCheckForModLoaded) {
-			String val = "";
-			for (String s : c.vrModLoaded) {
-				val += s + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
-				sec.addEntry("vr:value:modloaded", val);
-			}
-		}
-		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
-			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
-			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
-		}
-		if (c.vrCheckForGuiScale) {
-			String val = "";
-			for (String condition : c.vrGuiScale) {
-				if (condition.startsWith("double:")) {
-					String value = condition.replace("double:", "");
-					val += value + ",";
-				} else if (condition.startsWith("biggerthan:")) {
-					String value = condition.replace("biggerthan:", "");
-					val += ">" + value + ",";
-				} else if (condition.startsWith("smallerthan:")) {
-					String value = condition.replace("smallerthan:", "");
-					val += "<" + value + ",";
-				}
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
-				sec.addEntry("vr:value:guiscale", val);
-			}
-		}
-
-		//CUSTOM VISIBILITY REQUIREMENTS (API)
-		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
-
-			VisibilityRequirement v = p.requirement;
-
-			if (p.checkFor) {
-				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
-				if (v.hasValue() && (p.value != null)) {
-					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
-				}
-			}
-
-		}
-
+	//TODO übernehmen
+	public void addLoadingRequirementPropertiesTo(PropertiesSection sec) {
+		this.object.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 	}
+
+	//TODO übernehmen
+//	public void addVisibilityPropertiesTo(PropertiesSection sec) {
+//
+//		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
+//
+//		if (c.vrCheckForSingleplayer) {
+//			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
+//		}
+//		if (c.vrCheckForMultiplayer) {
+//			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
+//		}
+//		if (c.vrCheckForWindowWidth) {
+//			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
+//			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
+//		}
+//		if (c.vrCheckForWindowHeight) {
+//			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
+//			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
+//		}
+//		if (c.vrCheckForWindowWidthBiggerThan) {
+//			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
+//			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
+//		}
+//		if (c.vrCheckForWindowHeightBiggerThan) {
+//			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
+//			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
+//		}
+//		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
+//			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
+//			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
+//		}
+//		if (c.vrCheckForWorldLoaded) {
+//			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
+//		}
+//		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
+//			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
+//			sec.addEntry("vr:value:language", "" + c.vrLanguage);
+//		}
+//		if (c.vrCheckForFullscreen) {
+//			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
+//		}
+//		if (c.vrCheckForOsWindows) {
+//			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
+//		}
+//		if (c.vrCheckForOsMac) {
+//			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
+//		}
+//		if (c.vrCheckForOsLinux) {
+//			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
+//		}
+//		if (c.vrCheckForModLoaded) {
+//			String val = "";
+//			for (String s : c.vrModLoaded) {
+//				val += s + ",";
+//			}
+//			if (val.length() > 0) {
+//				val = val.substring(0, val.length() -1);
+//			}
+//			if (val.length() > 0) {
+//				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
+//				sec.addEntry("vr:value:modloaded", val);
+//			}
+//		}
+//		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
+//			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
+//			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
+//		}
+//		if (c.vrCheckForGuiScale) {
+//			String val = "";
+//			for (String condition : c.vrGuiScale) {
+//				if (condition.startsWith("double:")) {
+//					String value = condition.replace("double:", "");
+//					val += value + ",";
+//				} else if (condition.startsWith("biggerthan:")) {
+//					String value = condition.replace("biggerthan:", "");
+//					val += ">" + value + ",";
+//				} else if (condition.startsWith("smallerthan:")) {
+//					String value = condition.replace("smallerthan:", "");
+//					val += "<" + value + ",";
+//				}
+//			}
+//			if (val.length() > 0) {
+//				val = val.substring(0, val.length() -1);
+//			}
+//			if (val.length() > 0) {
+//				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
+//				sec.addEntry("vr:value:guiscale", val);
+//			}
+//		}
+//
+//		//CUSTOM VISIBILITY REQUIREMENTS (API)
+//		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
+//
+//			VisibilityRequirement v = p.requirement;
+//
+//			if (p.checkFor) {
+//				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
+//				if (v.hasValue() && (p.value != null)) {
+//					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
+//				}
+//			}
+//
+//		}
+//
+//	}
 
 }
