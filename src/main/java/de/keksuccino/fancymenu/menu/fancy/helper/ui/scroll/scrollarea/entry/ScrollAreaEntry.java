@@ -44,21 +44,21 @@ public abstract class ScrollAreaEntry extends UIBase {
             }
             @Override
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers()) {
+                if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     this.isHovered = false;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
             @Override
             public boolean isHoveredOrFocused() {
-                if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers()) {
+                if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     return false;
                 }
                 return super.isHoveredOrFocused();
             }
             @Override
             public void onClick(double p_93371_, double p_93372_) {
-                if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers()) {
+                if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     return;
                 }
                 super.onClick(p_93371_, p_93372_);
@@ -135,7 +135,9 @@ public abstract class ScrollAreaEntry extends UIBase {
             this.updateEntry();
             if (focused && this.unfocusOtherEntriesOnFocus) {
                 for (ScrollAreaEntry e : this.parent.getEntries()) {
-                    e.setFocused(false);
+                    if (e != this) {
+                        e.setFocused(false);
+                    }
                 }
             }
         }

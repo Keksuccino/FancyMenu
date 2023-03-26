@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LoadingRequirementRegistry {
 
@@ -58,6 +59,31 @@ public class LoadingRequirementRegistry {
     @Nullable
     public static LoadingRequirement getRequirement(String requirementIdentifier) {
         return REQUIREMENTS.get(requirementIdentifier);
+    }
+
+    @NotNull
+    public static LinkedHashMap<String, List<LoadingRequirement>> getRequirementsOrderedByCategories() {
+        LinkedHashMap<String, List<LoadingRequirement>> m = new LinkedHashMap<>();
+        for (LoadingRequirement r : getRequirements()) {
+            if (r.getCategory() != null) {
+                if (!m.containsKey(r.getCategory())) {
+                    m.put(r.getCategory(), new ArrayList<>());
+                }
+                m.get(r.getCategory()).add(r);
+            }
+        }
+        return m;
+    }
+
+    @NotNull
+    public static List<LoadingRequirement> getRequirementsWithoutCategory() {
+        List<LoadingRequirement> l = new ArrayList<>();
+        for (LoadingRequirement r : getRequirements()) {
+            if (r.getCategory() == null) {
+                l.add(r);
+            }
+        }
+        return l;
     }
 
 }

@@ -119,7 +119,7 @@ public class TextEditorScreen extends Screen {
         this.verticalScrollBarPlaceholderMenu.setScrollWheelAllowed(true);
         this.updateRightClickContextMenu();
         this.formattingRules.addAll(TextEditorFormattingRules.getRules());
-        this.updatePlaceholderEntries(null);
+        this.updatePlaceholderEntries(null, true, true);
         this.updateCurrentLineWidth();
     }
 
@@ -400,55 +400,71 @@ public class TextEditorScreen extends Screen {
         return -(int)(((float)totalScrollHeight / 100.0F) * (this.verticalScrollBarPlaceholderMenu.getScroll() * 100.0F));
     }
 
-    public void updatePlaceholderEntries(@Nullable String category) {
+    public void updatePlaceholderEntries(@Nullable String category, boolean clearList, boolean addBackButton) {
 
-        this.placeholderMenuEntries.clear();
+        if (clearList) {
+            this.placeholderMenuEntries.clear();
+        }
 
-        if (category == null) {
+        Map<String, List<Placeholder>> categories = this.getPlaceholdersOrderedByCategories();
+        if (!categories.isEmpty()) {
+            List<Placeholder> otherCategory = categories.get(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"));
+            if (otherCategory != null) {
 
-            for (String s : this.getPlaceholdersOrderedByCategories().keySet()) {
-                PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(s), () -> {
-                    this.updatePlaceholderEntries(s);
-                });
-                entry.dotColor = this.placeholderEntryDotColorCategory;
-                entry.entryLabelColor = this.placeholderEntryLabelColor;
-                this.placeholderMenuEntries.add(entry);
-            }
+                if (category == null) {
 
-        } else {
-
-            PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Component.literal(Locals.localize("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
-                this.updatePlaceholderEntries(null);
-            });
-            backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory;
-            backToCategoriesEntry.entryLabelColor = this.placeholderEntryBackToCategoriesLabelColor;
-            this.placeholderMenuEntries.add(backToCategoriesEntry);
-
-            List<Placeholder> placeholders = this.getPlaceholdersOrderedByCategories().get(category);
-            if (placeholders != null) {
-                for (Placeholder p : placeholders) {
-                    PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
-                        this.pasteText(p.getDefaultPlaceholderString().toString());
-                    });
-                    List<String> desc = p.getDescription();
-                    if (desc != null) {
-                        entry.setDescription(desc.toArray(new String[0]));
+                    //Add category entries
+                    for (Map.Entry<String, List<Placeholder>> m : categories.entrySet()) {
+                        if (m.getValue() != otherCategory) {
+                            PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(m.getKey()), () -> {
+                                this.updatePlaceholderEntries(m.getKey(), true, true);
+                            });
+                            entry.dotColor = this.placeholderEntryDotColorCategory;
+                            entry.entryLabelColor = this.placeholderEntryLabelColor;
+                            this.placeholderMenuEntries.add(entry);
+                        }
                     }
-                    entry.dotColor = this.placeholderEntryDotColorPlaceholder;
-                    entry.entryLabelColor = this.placeholderEntryLabelColor;
-                    this.placeholderMenuEntries.add(entry);
+                    //Add placeholder entries of the "Other" category to the end of the categories list (because other = no category)
+                    this.updatePlaceholderEntries(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"), false, false);
+
+                } else {
+
+                    if (addBackButton) {
+                        PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Component.literal(Locals.localize("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
+                            this.updatePlaceholderEntries(null, true, true);
+                        });
+                        backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory;
+                        backToCategoriesEntry.entryLabelColor = this.placeholderEntryBackToCategoriesLabelColor;
+                        this.placeholderMenuEntries.add(backToCategoriesEntry);
+                    }
+
+                    List<Placeholder> placeholders = categories.get(category);
+                    if (placeholders != null) {
+                        for (Placeholder p : placeholders) {
+                            PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
+                                this.pasteText(p.getDefaultPlaceholderString().toString());
+                            });
+                            List<String> desc = p.getDescription();
+                            if (desc != null) {
+                                entry.setDescription(desc.toArray(new String[0]));
+                            }
+                            entry.dotColor = this.placeholderEntryDotColorPlaceholder;
+                            entry.entryLabelColor = this.placeholderEntryLabelColor;
+                            this.placeholderMenuEntries.add(entry);
+                        }
+                    }
+
                 }
+
+                for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
+                    e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle;
+                    e.backgroundColorHover = this.placeholderEntryBackgroundColorHover;
+                }
+
+                this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
+                this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
             }
-
         }
-
-        for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
-            e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle;
-            e.backgroundColorHover = this.placeholderEntryBackgroundColorHover;
-        }
-
-        this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
-        this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
 
     }
 

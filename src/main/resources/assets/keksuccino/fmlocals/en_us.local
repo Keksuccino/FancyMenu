@@ -1266,7 +1266,7 @@ fancymenu.ui.text_editor.copy = Copy
 fancymenu.ui.text_editor.paste = Paste
 fancymenu.ui.text_editor.select_all = Select All
 fancymenu.ui.text_editor.error.multiline_support = Multiline text is not supported by the target.
-fancymenu.ui.text_editor.placeholders.back_to_categories = BACK TO CATEGORIES
+fancymenu.ui.text_editor.placeholders.back_to_categories = BACK
 
 fancymenu.config.variables_to_reset_on_launch = Variables To Reset
 fancymenu.config.variables_to_reset_on_launch.desc = A comma-separated list of variable names%n%that should get reset every time%n%the game gets launched.
@@ -1294,3 +1294,13 @@ fancymenu.editor.loading_requirement.category.world = World
 fancymenu.editor.loading_requirement.category.gui = GUI
 fancymenu.editor.loading_requirement.category.realtime = Realtime
 fancymenu.editor.loading_requirement.category.system = System
+
+fancymenu.editor.loading_requirement.screens.lists.back = BACK
+fancymenu.editor.loading_requirement.screens.build_screen.add_requirement = Add Requirement
+fancymenu.editor.loading_requirement.screens.build_screen.edit_requirement = Edit Requirement
+fancymenu.editor.loading_requirement.screens.build_screen.requirement_description = Requirement Description
+fancymenu.editor.loading_requirement.screens.build_screen.edit_value = Edit Requirement Value
+fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.no_value = §6This requirement has no value.%n%§6You don't need to set one.
+fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.normal = Edit the value of the chosen requirement.
+fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_requirement_selected = §cYou need to select a requirement first!
+fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_value_set = §cYou need to edit the requirement value first!

@@ -1,6 +1,7 @@
 //TODO übernehmen
 package de.keksuccino.fancymenu.api.visibilityrequirements;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry;
 import org.apache.logging.log4j.LogManager;
@@ -86,6 +87,10 @@ public class VisibilityRequirementRegistry {
             public @NotNull List<String> getDescription() {
                 return visReq.getDescription();
             }
+            @Override
+            public @Nullable String getCategory() {
+                return null;
+            }
             @Nullable
             @Override
             public String getValueDisplayName() {
@@ -95,6 +100,10 @@ public class VisibilityRequirementRegistry {
             @Override
             public String getValuePreset() {
                 return visReq.getValuePreset();
+            }
+            @Override
+            public @Nullable List<TextEditorFormattingRule> getValueFormattingRules() {
+                return null;
             }
         };
     }

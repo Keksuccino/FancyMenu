@@ -5,22 +5,23 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
 import java.util.function.Consumer;
 
-public class TextListScrollAreaEntry extends ScrollAreaEntry {
+public class TextScrollAreaEntry extends ScrollAreaEntry {
 
-    public Color listDotColor;
+    private static final Logger LOGGER = LogManager.getLogger();
+
     protected Component text;
     protected int textWidth;
     public Font font = Minecraft.getInstance().font;
-    protected Consumer<TextListScrollAreaEntry> onClickCallback;
+    protected Consumer<TextScrollAreaEntry> onClickCallback;
 
-    public TextListScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull Color listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-        super(parent, 0, 16);
-        this.listDotColor = listDotColor;
+    public TextScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull Consumer<TextScrollAreaEntry> onClick) {
+        super(parent, 0, 14);
         this.onClickCallback = onClick;
         this.setText(text);
     }
@@ -32,21 +33,19 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
 
         int centerY = this.getY() + (this.getHeight() / 2);
 
-        renderListingDot(matrix, this.getX() + 5, centerY - 2, this.listDotColor);
-
-        this.font.draw(matrix, this.text, this.getX() + 5 + 4 + 3, centerY - (this.font.lineHeight / 2.0F), -1);
+        this.font.draw(matrix, this.text, this.getX() + 5, centerY - (this.font.lineHeight / 2.0F), -1);
 
     }
 
     @Override
     public void onClick(ScrollAreaEntry entry) {
-        this.onClickCallback.accept((TextListScrollAreaEntry) entry);
+        this.onClickCallback.accept((TextScrollAreaEntry) entry);
     }
 
     public void setText(@NotNull Component text) {
         this.text = text;
         this.textWidth = this.font.width(this.text);
-        this.setWidth(5 + 4 + 3 + this.textWidth + 5);
+        this.setWidth(5 + this.textWidth + 5);
     }
 
     public Component getText() {

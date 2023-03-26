@@ -323,6 +323,9 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.equals(ManageActionsScreen.class.getName())) {
 			return true;
 		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.")) {
+			return true;
+		}
 		//---------------------
 		return false;
 	}

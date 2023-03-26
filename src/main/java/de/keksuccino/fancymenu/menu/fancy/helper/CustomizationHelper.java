@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -63,11 +62,12 @@ public class CustomizationHelper {
 				if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 					if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
 						if (!(e.getScreen() instanceof ButtonActionScreen)) {
-							if (!(e.getScreen() instanceof VisibilityRequirementsScreen)) {
+							//TODO übernehmen
+//							if (!(e.getScreen() instanceof VisibilityRequirementsScreen)) {
 
 								CustomizationHelperUI.render(e.getPoseStack(), e.getScreen());
 
-							}
+//							}
 						}
 					}
 				}

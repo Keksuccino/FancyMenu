@@ -33,10 +33,10 @@ public class UIBase extends GuiComponent {
 
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
 	public static final float UI_SCALE_BASE = 1.0F;
-	public static final int VERTICAL_SCROLL_BAR_WIDTH = 10;
+	public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
 	public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
 	public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
-	public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 10;
+	public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
 
 	/**
 	 * Applies the default skin to the input button and returns it.

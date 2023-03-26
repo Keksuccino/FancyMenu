@@ -39,8 +39,7 @@ public class ScrollBarHandler {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent e) {
         if (e.phase == TickEvent.Phase.END) {
-            List<ScrollBar> old = new ArrayList<>();
-            old.addAll(scrollBars);
+            List<ScrollBar> old = new ArrayList<>(scrollBars);
             for (ScrollBar b : old) {
                 long now = System.currentTimeMillis();
                 if ((b.lastTick + 3000) < now) {
@@ -52,8 +51,7 @@ public class ScrollBarHandler {
 
     @SubscribeEvent
     public void onMouseScrollPre(ScreenEvent.MouseScrolled.Pre e) {
-        List<ScrollBar> bars = new ArrayList<>();
-        bars.addAll(scrollBars);
+        List<ScrollBar> bars = new ArrayList<>(scrollBars);
         for (ScrollBar b : bars) {
             b.handleWheelScrolling(e);
         }

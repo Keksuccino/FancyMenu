@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar.ScrollBar;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -18,7 +20,7 @@ import java.util.function.Consumer;
 
 public class ScrollArea extends UIBase {
 
-    //TODO wenn ScrollArea fertig, dann neue Visibility Requirement screens (add + manage) machen
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ScrollBar verticalScrollBar;
     public ScrollBar horizontalScrollBar;
@@ -30,6 +32,7 @@ public class ScrollArea extends UIBase {
     public Color borderColor = ELEMENT_BORDER_COLOR_IDLE;
     protected int borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
+    public boolean minimumEntryWidthIsAreaWidth = true;
     protected List<ScrollAreaEntry> entries = new ArrayList<>();
     public int overriddenTotalScrollWidth = -1;
     public int overriddenTotalScrollHeight = -1;
@@ -40,9 +43,9 @@ public class ScrollArea extends UIBase {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, 10, 40, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
+        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
         this.verticalScrollBar.setScrollWheelAllowed(true);
-        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, 40, 10, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
+        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
         this.updateScrollArea();
     }
 
@@ -85,7 +88,17 @@ public class ScrollArea extends UIBase {
         RenderSystem.enableScissor((int)(this.getX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getWidth() * scale), (int)(this.getHeight() * scale));
 
         this.updateEntries((entry) -> {
+            int cachedWidth = -1;
+            if (this.minimumEntryWidthIsAreaWidth) {
+                cachedWidth = entry.getWidth();
+                if (cachedWidth < this.getWidth()) {
+                    entry.setWidth(this.getWidth());
+                }
+            }
             entry.render(matrix, mouseX, mouseY, partial);
+            if (cachedWidth != -1) {
+                entry.setWidth(cachedWidth);
+            }
         });
 
         RenderSystem.disableScissor();
@@ -126,7 +139,8 @@ public class ScrollArea extends UIBase {
         try {
             int index = 0;
             int y = this.getY();
-            for (ScrollAreaEntry e : this.entries) {
+            List<ScrollAreaEntry> l = new ArrayList<>(this.entries);
+            for (ScrollAreaEntry e : l) {
                 e.index = index;
                 e.setX(this.getX() + this.getEntryRenderOffsetX());
                 e.setY(y + this.getEntryRenderOffsetY());
@@ -148,7 +162,7 @@ public class ScrollArea extends UIBase {
 
         this.verticalScrollBar.scrollAreaStartX = this.getX() + 1;
         this.verticalScrollBar.scrollAreaStartY = this.getY() + 1;
-        this.verticalScrollBar.scrollAreaEndX = this.getX() + this.getWidth() - 2;
+        this.verticalScrollBar.scrollAreaEndX = this.getX() + this.getWidth() - 1;
         this.verticalScrollBar.scrollAreaEndY = this.getY() + this.getHeight() - this.horizontalScrollBar.grabberHeight - 2;
 
         this.horizontalScrollBar.scrollAreaStartX = this.getX() + 1;
@@ -193,6 +207,9 @@ public class ScrollArea extends UIBase {
             int yOld = this.getEntryRenderOffsetY(oldTotalScrollHeight);
             int yNew = this.getEntryRenderOffsetY();
             int yDiff = Math.max(yOld, yNew) - Math.min(yOld, yNew);
+            if (this.getTotalScrollHeight() <= 0) {
+                return;
+            }
             float scrollDiff = Math.max(0.0F, Math.min(1.0F, (float)yDiff / (float)this.getTotalScrollHeight()));
             if (!removed) {
                 scrollDiff = -scrollDiff;
@@ -355,6 +372,12 @@ public class ScrollArea extends UIBase {
                 this.correctYScrollAfterAddingOrRemovingEntries(true, entry);
             }
         }
+    }
+
+    public void clearEntries() {
+        this.entries.clear();
+        this.verticalScrollBar.setScroll(0.0F);
+        this.horizontalScrollBar.setScroll(0.0F);
     }
 
     /**

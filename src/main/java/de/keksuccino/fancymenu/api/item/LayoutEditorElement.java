@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * This gets used in the layout editor to handle an item.<br>
- * There's one {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement} per item.<br><br>
+ * There's one {@link LayoutEditorElement} per item.<br><br>
  *
  * Used to <b>serialize the item instance</b> when the layout gets saved,
  * allows the user to <b>customize the item</b> (via the right-click context menu, etc.) and
@@ -24,10 +24,10 @@ public abstract class LayoutEditorElement extends LayoutElement {
 
     /**
      * @param parentContainer The parent {@link CustomizationItemContainer} instance.
-     * @param customizationItemInstance The {@link CustomizationItem} instance this {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement} should handle.
+     * @param customizationItemInstance The {@link CustomizationItem} instance this {@link LayoutEditorElement} should handle.
      * @param destroyable If the element is destroyable using the 'Delete' button in the right-click context menu of the element.
      * @param handler The {@link LayoutEditorScreen} instance that handles this element.
-     * @param doInit If {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement#init()} should be called on construction.
+     * @param doInit If {@link LayoutEditorElement#init()} should be called on construction.
      */
     public LayoutEditorElement(@Nonnull CustomizationItemContainer parentContainer, @Nonnull CustomizationItem customizationItemInstance, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
         super(customizationItemInstance, destroyable, handler, doInit);
@@ -36,7 +36,7 @@ public abstract class LayoutEditorElement extends LayoutElement {
 
     /**
      * @param parentContainer The parent {@link CustomizationItemContainer} instance.
-     * @param customizationItemInstance The {@link CustomizationItem} instance this {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement} should handle.
+     * @param customizationItemInstance The {@link CustomizationItem} instance this {@link LayoutEditorElement} should handle.
      * @param destroyable If the element is destroyable using the 'Delete' button in the right-click context menu of the element.
      * @param handler The {@link LayoutEditorScreen} instance that handles this element.
      */
@@ -62,7 +62,6 @@ public abstract class LayoutEditorElement extends LayoutElement {
      *
      * You don't need to touch this method in most cases.
      *
-     * @param matrix The {@link PoseStack} used to render {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement}s.
      * @param mouseX X position of the mouse.
      * @param mouseY Y position of the mouse.
      */
@@ -136,7 +135,8 @@ public abstract class LayoutEditorElement extends LayoutElement {
             sec.addEntry("y", "" + this.object.posY);
             sec.addEntry("height", "" + this.object.getHeight());
         }
-        this.addVisibilityPropertiesTo(sec);
+        //TODO übernehmen
+        this.addLoadingRequirementPropertiesTo(sec);
         l.add(sec);
         return l;
     }

@@ -21,7 +21,6 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.ActionType;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
@@ -29,7 +28,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutEle
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ChooseFromStringListScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar;
@@ -919,7 +917,8 @@ public class LayoutEditorUI extends UIBase {
 
 			/** VISIBILITY REQUIREMENTS [LAYOUT-WIDE] **/
 			AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.global_visibility_requirements"), (press) -> {
-				Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
+				//TODO OPEN NEW REQ SCREEN HERE
+//				Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
 			});
 			visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.global_visibility_requirements.desc"), "%n%"));
 			this.addContent(visibilityRequirementsButton);

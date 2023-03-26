@@ -113,8 +113,8 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 					if (!this.handler.isVanillaButtonHidden(this.parent.getButton())) {
 						//TODO übernehmen
 						this.loadingRequirementContainer = this.loadingRequirements;
+						this.parent.getButton().visible = this.loadingRequirementsMet();
 						//----------------
-						this.parent.getButton().visible = this.visibilityRequirementsMet();
 					}
 				}
 			}

@@ -62,7 +62,7 @@ public abstract class LoadingRequirement {
      *
      * Every entry in the returned list counts as a text line.
      */
-    @NotNull
+    @Nullable
     public abstract List<String> getDescription();
 
     /**

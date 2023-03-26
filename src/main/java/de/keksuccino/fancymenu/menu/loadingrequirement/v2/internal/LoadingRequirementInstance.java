@@ -23,7 +23,7 @@ public class LoadingRequirementInstance {
     public RequirementMode mode;
     public String requirementId = MenuCustomization.generateRandomActionId();
 
-    public LoadingRequirementInstance(@NotNull LoadingRequirement requirement, @Nullable String value, @NotNull RequirementMode mode, @NotNull LoadingRequirementContainer parent) {
+    public LoadingRequirementInstance(LoadingRequirement requirement, @Nullable String value, RequirementMode mode, LoadingRequirementContainer parent) {
         this.parent = parent;
         this.requirement = requirement;
         this.value = value;
