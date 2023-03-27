@@ -37,17 +37,18 @@ public class BuildRequirementScreen extends Screen {
 
     protected ScrollArea requirementsListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea requirementDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected AdvancedButton requirementModeButton;
     protected AdvancedButton editValueButton;
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public BuildRequirementScreen(Screen parentScreen, @Nullable Component title, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
+    public BuildRequirementScreen(@Nullable Screen parentScreen, @Nullable Component title, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
 
         super((title == null) ? Component.literal("") : title);
 
         this.parentScreen = parentScreen;
         this.parent = parent;
-        this.instance = (instanceToEdit != null) ? instanceToEdit : new LoadingRequirementInstance(null, null, null, parent);
+        this.instance = (instanceToEdit != null) ? instanceToEdit : new LoadingRequirementInstance(null, null, LoadingRequirementInstance.RequirementMode.IF, parent);
         this.callback = callback;
         this.setContentOfRequirementsList(null);
 
@@ -121,6 +122,26 @@ public class BuildRequirementScreen extends Screen {
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
+        this.requirementModeButton = new AdvancedButton(0, 0, 150, 20, "", true, (button) -> {
+            if (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
+                this.instance.mode = LoadingRequirementInstance.RequirementMode.IF_NOT;
+            } else {
+                this.instance.mode = LoadingRequirementInstance.RequirementMode.IF;
+            }
+        }) {
+            @Override
+            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                if (BuildRequirementScreen.this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
+                    this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.normal"));
+                } else {
+                    this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.opposite"));
+                }
+                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+            }
+        };
+        this.requirementModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.desc"), "%n%"));
+        UIBase.applyDefaultButtonSkinTo(this.requirementModeButton);
+
     }
 
     @Override
@@ -146,18 +167,22 @@ public class BuildRequirementScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(matrix, titleComp, 20, 20, -1);
 
-        this.requirementsListScrollArea.setWidth((this.width / 2) - 40);
-        this.requirementsListScrollArea.setHeight(this.height - 70);
-        this.requirementsListScrollArea.setX(20);
-        this.requirementsListScrollArea.setY(50);
+        this.font.draw(matrix, Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, -1);
+
+        this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.requirementsListScrollArea.setHeight(this.height - 85, true);
+        this.requirementsListScrollArea.setX(20, true);
+        this.requirementsListScrollArea.setY(50 + 15, true);
         this.requirementsListScrollArea.render(matrix, mouseX, mouseY, partial);
 
-        this.font.draw(matrix, Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.requirement_description"), (this.width / 2.0F) + 20, 50, -1);
+        String descLabelString = Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.requirement_description");
+        int descLabelWidth = this.font.width(descLabelString);
+        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, -1);
 
-        this.requirementDescriptionScrollArea.setWidth((this.width / 2) - 40);
-        this.requirementDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 15));
-        this.requirementDescriptionScrollArea.setX((this.width / 2) + 20);
-        this.requirementDescriptionScrollArea.setY(50 + 15);
+        this.requirementDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
+        this.requirementDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.requirementDescriptionScrollArea.setX(this.width - 20 - this.requirementDescriptionScrollArea.getWidthWithBorder(), true);
+        this.requirementDescriptionScrollArea.setY(50 + 15, true);
         this.requirementDescriptionScrollArea.render(matrix, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
@@ -171,6 +196,10 @@ public class BuildRequirementScreen extends Screen {
         this.editValueButton.setX(this.width - 20 - this.editValueButton.getWidth());
         this.editValueButton.setY(this.cancelButton.getY() - 15 - 20);
         this.editValueButton.render(matrix, mouseX, mouseY, partial);
+
+        this.requirementModeButton.setX(this.width - 20 - this.cancelButton.getWidth());
+        this.requirementModeButton.setY(this.editValueButton.getY() - 5 - 20);
+        this.requirementModeButton.render(matrix, mouseX, mouseY, partial);
 
         super.render(matrix, mouseX, mouseY, partial);
 

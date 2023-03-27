@@ -39,10 +39,10 @@ public class ScrollArea extends UIBase {
     public boolean correctYOnAddingRemovingEntries = true;
 
     public ScrollArea(int x, int y, int width, int height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
+        this.setX(x, true);
+        this.setY(y, true);
+        this.setWidth(width, true);
+        this.setHeight(height, true);
         this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
         this.verticalScrollBar.setScrollWheelAllowed(true);
         this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
@@ -73,7 +73,7 @@ public class ScrollArea extends UIBase {
     }
 
     public void renderBackground(PoseStack matrix, int mouseX, int mouseY, float partial) {
-        fill(matrix, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColor.getRGB());
+        fill(matrix, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
     public void renderBorder(PoseStack matrix, int mouseX, int mouseY, float partial) {
@@ -84,15 +84,15 @@ public class ScrollArea extends UIBase {
 
         Window win = Minecraft.getInstance().getWindow();
         double scale = win.getGuiScale();
-        int sciBottomY = this.getY() + this.getHeight();
-        RenderSystem.enableScissor((int)(this.getX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getWidth() * scale), (int)(this.getHeight() * scale));
+        int sciBottomY = this.getInnerY() + this.getInnerHeight();
+        RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
 
         this.updateEntries((entry) -> {
             int cachedWidth = -1;
             if (this.minimumEntryWidthIsAreaWidth) {
                 cachedWidth = entry.getWidth();
-                if (cachedWidth < this.getWidth()) {
-                    entry.setWidth(this.getWidth());
+                if (cachedWidth < this.getInnerWidth()) {
+                    entry.setWidth(this.getInnerWidth());
                 }
             }
             entry.render(matrix, mouseX, mouseY, partial);
@@ -125,27 +125,27 @@ public class ScrollArea extends UIBase {
         if (this.overriddenTotalScrollWidth != -1) {
             return this.overriddenTotalScrollWidth;
         }
-        return Math.max(0, this.getTotalEntryWidth() - this.getWidth());
+        return Math.max(0, this.getTotalEntryWidth() - this.getInnerWidth());
     }
 
     public int getTotalScrollHeight() {
         if (this.overriddenTotalScrollHeight != -1) {
             return this.overriddenTotalScrollHeight;
         }
-        return Math.max(0, this.getTotalEntryHeight() - this.getHeight());
+        return Math.max(0, this.getTotalEntryHeight() - this.getInnerHeight());
     }
 
     public void updateEntries(@Nullable Consumer<ScrollAreaEntry> doAfterEachEntryUpdate) {
         try {
             int index = 0;
-            int y = this.getY();
+            int y = this.getInnerY();
             List<ScrollAreaEntry> l = new ArrayList<>(this.entries);
             for (ScrollAreaEntry e : l) {
                 e.index = index;
-                e.setX(this.getX() + this.getEntryRenderOffsetX());
+                e.setX(this.getInnerX() + this.getEntryRenderOffsetX());
                 e.setY(y + this.getEntryRenderOffsetY());
                 if (this.makeEntriesWidthOfArea) {
-                    e.setWidth(this.getWidth());
+                    e.setWidth(this.getInnerWidth());
                 }
                 if (doAfterEachEntryUpdate != null) {
                     doAfterEachEntryUpdate.accept(e);
@@ -160,15 +160,15 @@ public class ScrollArea extends UIBase {
 
     public void updateScrollArea() {
 
-        this.verticalScrollBar.scrollAreaStartX = this.getX() + 1;
-        this.verticalScrollBar.scrollAreaStartY = this.getY() + 1;
-        this.verticalScrollBar.scrollAreaEndX = this.getX() + this.getWidth() - 1;
-        this.verticalScrollBar.scrollAreaEndY = this.getY() + this.getHeight() - this.horizontalScrollBar.grabberHeight - 2;
+        this.verticalScrollBar.scrollAreaStartX = this.getInnerX() + 1;
+        this.verticalScrollBar.scrollAreaStartY = this.getInnerY() + 1;
+        this.verticalScrollBar.scrollAreaEndX = this.getInnerX() + this.getInnerWidth() - 1;
+        this.verticalScrollBar.scrollAreaEndY = this.getInnerY() + this.getInnerHeight() - this.horizontalScrollBar.grabberHeight - 2;
 
-        this.horizontalScrollBar.scrollAreaStartX = this.getX() + 1;
-        this.horizontalScrollBar.scrollAreaStartY = this.getY() + 1;
-        this.horizontalScrollBar.scrollAreaEndX = this.getX() + this.getWidth() - this.verticalScrollBar.grabberWidth - 2;
-        this.horizontalScrollBar.scrollAreaEndY = this.getY() + this.getHeight() - 1;
+        this.horizontalScrollBar.scrollAreaStartX = this.getInnerX() + 1;
+        this.horizontalScrollBar.scrollAreaStartY = this.getInnerY() + 1;
+        this.horizontalScrollBar.scrollAreaEndX = this.getInnerX() + this.getInnerWidth() - this.verticalScrollBar.grabberWidth - 2;
+        this.horizontalScrollBar.scrollAreaEndY = this.getInnerY() + this.getInnerHeight() - 1;
 
     }
 
@@ -179,10 +179,10 @@ public class ScrollArea extends UIBase {
 
     public void resetScrollOnFit() {
         //Reset scrolls if content fits area
-        if (this.getTotalEntryWidth() <= this.getWidth()) {
+        if (this.getTotalEntryWidth() <= this.getInnerWidth()) {
             this.horizontalScrollBar.setScroll(0.0F);
         }
-        if (this.getTotalEntryHeight() <= this.getHeight()) {
+        if (this.getTotalEntryHeight() <= this.getInnerHeight()) {
             this.verticalScrollBar.setScroll(0.0F);
         }
     }
@@ -222,11 +222,18 @@ public class ScrollArea extends UIBase {
         return this.verticalScrollBar.isGrabberGrabbed() || this.verticalScrollBar.isGrabberHovered() || this.horizontalScrollBar.isGrabberGrabbed() || this.horizontalScrollBar.isGrabberHovered();
     }
 
-    public void setX(int x) {
+    public void setX(int x, boolean respectBorder) {
         this.x = x;
+        if (respectBorder) {
+            this.x += this.borderThickness;
+        }
     }
 
-    public int getX() {
+    public void setX(int x) {
+        this.setX(x, true);
+    }
+
+    public int getInnerX() {
         return this.x;
     }
 
@@ -234,11 +241,18 @@ public class ScrollArea extends UIBase {
         return this.x - this.borderThickness;
     }
 
-    public void setY(int y) {
+    public void setY(int y, boolean respectBorder) {
         this.y = y;
+        if (respectBorder) {
+            this.y += this.borderThickness;
+        }
     }
 
-    public int getY() {
+    public void setY(int y) {
+        this.setY(y, true);
+    }
+
+    public int getInnerY() {
         return this.y;
     }
 
@@ -246,11 +260,18 @@ public class ScrollArea extends UIBase {
         return this.y - this.borderThickness;
     }
 
-    public void setWidth(int width) {
+    public void setWidth(int width, boolean respectBorder) {
         this.width = width;
+        if (respectBorder) {
+            this.width -= (this.borderThickness * 2);
+        }
     }
 
-    public int getWidth() {
+    public void setWidth(int width) {
+        this.setWidth(width, true);
+    }
+
+    public int getInnerWidth() {
         return this.width;
     }
 
@@ -258,11 +279,18 @@ public class ScrollArea extends UIBase {
         return this.width + (this.borderThickness * 2);
     }
 
-    public void setHeight(int height) {
+    public void setHeight(int height, boolean respectBorder) {
         this.height = height;
+        if (respectBorder) {
+            this.height -= (this.borderThickness * 2);
+        }
     }
 
-    public int getHeight() {
+    public void setHeight(int height) {
+        this.setHeight(height, true);
+    }
+
+    public int getInnerHeight() {
         return this.height;
     }
 
@@ -281,7 +309,7 @@ public class ScrollArea extends UIBase {
     public boolean isMouseInsideArea() {
         int mX = MouseInput.getMouseX();
         int mY = MouseInput.getMouseY();
-        return (mX >= this.getX()) && (mX <= this.getX() + this.getWidth()) && (mY >= this.getY()) && (mY <= this.getY() + this.getHeight());
+        return (mX >= this.getInnerX()) && (mX <= this.getInnerX() + this.getInnerWidth()) && (mY >= this.getInnerY()) && (mY <= this.getInnerY() + this.getInnerHeight());
     }
 
     public int getEntryCount() {

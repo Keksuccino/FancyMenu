@@ -180,4 +180,8 @@ public abstract class ScrollAreaEntry extends UIBase {
         this.updateEntry();
     }
 
+    public void setTooltip(String... tooltipLines) {
+        this.buttonBase.setDescription(tooltipLines);
+    }
+
 }

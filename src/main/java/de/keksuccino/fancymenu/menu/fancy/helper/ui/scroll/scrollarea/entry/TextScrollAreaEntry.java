@@ -33,7 +33,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
 
         int centerY = this.getY() + (this.getHeight() / 2);
 
-        this.font.draw(matrix, this.text, this.getX() + 5, centerY - (this.font.lineHeight / 2.0F), -1);
+        this.font.draw(matrix, this.text, (float)(this.getX() + 5), (float)(centerY - (this.font.lineHeight / 2)), -1);
 
     }
 

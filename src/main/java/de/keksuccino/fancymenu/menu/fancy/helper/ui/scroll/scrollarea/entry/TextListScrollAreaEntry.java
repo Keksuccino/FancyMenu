@@ -34,7 +34,7 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
 
         renderListingDot(matrix, this.getX() + 5, centerY - 2, this.listDotColor);
 
-        this.font.draw(matrix, this.text, this.getX() + 5 + 4 + 3, centerY - (this.font.lineHeight / 2.0F), -1);
+        this.font.draw(matrix, this.text, (float)(this.getX() + 5 + 4 + 3), (float)(centerY - (this.font.lineHeight / 2)), -1);
 
     }
 
