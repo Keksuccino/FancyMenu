@@ -98,6 +98,18 @@ public class LoadingRequirementContainer {
         return this.getGroup(identifier) != null;
     }
 
+    public boolean removeGroup(LoadingRequirementGroup group) {
+        return this.groups.remove(group);
+    }
+
+    public boolean removeGroupByIdentifier(String identifier) {
+        LoadingRequirementGroup g = this.getGroup(identifier);
+        if (g != null) {
+            return this.groups.remove(g);
+        }
+        return false;
+    }
+
     public boolean addInstance(LoadingRequirementInstance instance) {
         if (!this.instances.contains(instance)) {
             this.instances.add(instance);

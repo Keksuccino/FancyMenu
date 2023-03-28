@@ -74,7 +74,7 @@ public class IsRealTimeDayRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "8, 29";
+        return "8";
     }
 
     @Override

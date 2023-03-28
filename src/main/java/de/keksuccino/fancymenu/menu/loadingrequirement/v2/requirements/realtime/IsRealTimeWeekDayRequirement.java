@@ -74,7 +74,7 @@ public class IsRealTimeWeekDayRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "1, 7";
+        return "2";
     }
 
     @Override

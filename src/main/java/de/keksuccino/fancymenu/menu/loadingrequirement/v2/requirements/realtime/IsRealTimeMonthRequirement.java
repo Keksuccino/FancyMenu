@@ -74,7 +74,7 @@ public class IsRealTimeMonthRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "5, 12";
+        return "5";
     }
 
     @Override

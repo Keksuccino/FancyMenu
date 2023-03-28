@@ -4,6 +4,7 @@ import de.keksuccino.konkrete.localization.Locals;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class LegacyButtonActions {
 
@@ -35,7 +36,9 @@ public class LegacyButtonActions {
             String actionDesc = Locals.localize("helper.creator.custombutton.config.actiontype." + s + ".desc");
             String valueDescKey = "helper.creator.custombutton.config.actiontype." + s + ".desc.value";
             String valueDesc = Locals.localize(valueDescKey);
-            boolean hasValue = (valueDesc != valueDescKey);
+            //TODO übernehmen
+            boolean hasValue = (!Objects.equals(valueDesc, valueDescKey));
+            //--------------
             String valueExample = Locals.localize("helper.creator.custombutton.config.actiontype." + s + ".desc.value.example");
             if (!hasValue) {
                 valueDesc = null;

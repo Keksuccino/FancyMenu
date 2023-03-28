@@ -73,7 +73,7 @@ public class IsRealTimeYearRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "1983, 2012";
+        return "2012";
     }
 
     @Override

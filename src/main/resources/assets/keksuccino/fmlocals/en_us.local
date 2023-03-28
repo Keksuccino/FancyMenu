@@ -1295,11 +1295,21 @@ fancymenu.editor.loading_requirement.category.gui = GUI
 fancymenu.editor.loading_requirement.category.realtime = Realtime
 fancymenu.editor.loading_requirement.category.system = System
 
+fancymenu.editor.loading_requirement.elements.loading_requirements = Loading Requirements
+fancymenu.editor.loading_requirement.elements.loading_requirements.desc = Manage this element's loading requirements.%n%%n%Loading requirements can be used to%n%specify under which circumstances%n%an element should load/be visible.
+
+fancymenu.editor.loading_requirement.layouts.loading_requirements = Loading Requirements [Layout-Wide]
+fancymenu.editor.loading_requirement.layouts.loading_requirements.desc = Manage this layout's loading requirements.%n%%n%Loading requirements can be used to%n%specify under which circumstances%n%a layout should load/be visible.
+
 fancymenu.editor.loading_requirement.screens.lists.back = BACK
 fancymenu.editor.loading_requirement.screens.add_requirement = Add Requirement
+fancymenu.editor.loading_requirement.screens.add_group = Add Group
 fancymenu.editor.loading_requirement.screens.edit_requirement = Edit Requirement
+fancymenu.editor.loading_requirement.screens.edit_group = Edit Group
 fancymenu.editor.loading_requirement.screens.remove_requirement = Remove Requirement
-fancymenu.editor.loading_requirement.screens.remove_requirement.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthis requirement?%n%This action cannot be undone!
+fancymenu.editor.loading_requirement.screens.remove_group = Remove Group
+fancymenu.editor.loading_requirement.screens.remove_requirement.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthe selected requirement?%n%This action cannot be undone!
+fancymenu.editor.loading_requirement.screens.remove_group.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthe selected group?%n%This action cannot be undone!
 fancymenu.editor.loading_requirement.screens.requirement.info.mode = Mode:
 fancymenu.editor.loading_requirement.screens.requirement.info.mode.normal = NORMAL
 fancymenu.editor.loading_requirement.screens.requirement.info.mode.opposite = OPPOSITE
@@ -1319,14 +1329,34 @@ fancymenu.editor.loading_requirement.screens.build_group_screen.mode.and = Group
 fancymenu.editor.loading_requirement.screens.build_group_screen.mode.or = Group Mode: §6OR
 fancymenu.editor.loading_requirement.screens.build_group_screen.mode.desc = The group mode defines how the group%n%should handle its requirements.%n%%n%§6AND §rmeans, ALL requirements need%n%to be TRUE, which basically just%n%means they need to say "Yes, load!".%n%%n%§6OR §rmeans, only ONE requirement%n%needs to be TRUE.
 fancymenu.editor.loading_requirement.screens.build_group_screen.finish.no_requirements_added = §cYou need to add at least one requirement first!
-fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_already_used = §cThe group identifier is already used%n%§cfor another group.
-fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_too_short = §cThe group identifier is too short.
+fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_already_used = §cThe group identifier is already used%n%§cfor another group!
+fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_too_short = §cThe group identifier is too short!
 fancymenu.editor.loading_requirement.screens.build_group_screen.add_requirement.desc = Add a requirement to this group.
 fancymenu.editor.loading_requirement.screens.build_group_screen.edit_requirement.desc = Edit the selected requirement.
 fancymenu.editor.loading_requirement.screens.build_group_screen.remove_requirement.desc = Remove the selected requirement.
-fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected = §cYou need to select a requirement first.
+fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected = §cYou need to select a requirement first!
 fancymenu.editor.loading_requirement.screens.build_group_screen.group_requirements = Group Requirements
 fancymenu.editor.loading_requirement.screens.build_group_screen.group_identifier = Unique Group Identifier
+fancymenu.editor.loading_requirement.screens.manage_screen.manage = Manage Loading Requirements
+fancymenu.editor.loading_requirement.screens.manage_screen.group.info = Group with {} Requirements
+fancymenu.editor.loading_requirement.screens.manage_screen.add_requirement.desc = Add a new requirement.
+fancymenu.editor.loading_requirement.screens.manage_screen.add_group.desc = Add a new requirement group.%n%%n%Requirement groups can hold multiple%n%requirements and basically%n%make them one big requirement.%n%%n%Requirement groups have two modes.%n%In §6AND §rmode, all requirements need%n%to return TRUE (which means "Yes, load!"),%n%but in §6OR §rmode, only one requirement%n%needs to return TRUE.
+fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected = §cYou need to select a group or requirement!
+fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic = Edit
+fancymenu.editor.loading_requirement.screens.manage_screen.edit.desc = Edit the selected group or requirement.
+fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic = Remove
+fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc = Remove the selected group or requirement.
+fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups = Requirements & Groups
+
+fancymenu.editor.action.screens.add_action = Add Action
+fancymenu.editor.action.screens.edit_action = Edit Action
+fancymenu.editor.action.screens.build_screen.edit_value = Edit Action Value
+fancymenu.editor.action.screens.build_screen.edit_value.desc.normal = Edit the value of this action.
+fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value = §6This action has no value.%n%§6You don't need to set one.
+fancymenu.editor.action.screens.build_screen.action_description = Action Description
+fancymenu.editor.action.screens.build_screen.available_actions = Available Actions
+fancymenu.editor.action.screens.build_screen.finish.no_action_selected = §cYou need to select an action first!
+fancymenu.editor.action.screens.build_screen.finish.no_value_set = §cYou need to edit the action value first!
 
 fancymenu.guicomponents.confirm = Confirm
 

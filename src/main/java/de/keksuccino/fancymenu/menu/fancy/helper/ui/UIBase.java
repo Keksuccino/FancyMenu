@@ -21,7 +21,7 @@ public class UIBase extends GuiComponent {
 	public static final Color ELEMENT_BACKGROUND_COLOR_IDLE = new Color(71, 71, 71);
 	public static final Color ELEMENT_BACKGROUND_COLOR_HOVER = new Color(83, 156, 212);
 	public static final Color AREA_BACKGROUND_COLOR = new Color(43, 43, 43);
-	public static final Color FOCUSED_ENTRY_COLOR = new Color(50, 50, 50);
+	public static final Color ENTRY_COLOR_FOCUSED = new Color(50, 50, 50);
 	public static final Color SIDE_BAR_COLOR = new Color(49, 51, 53);
 	public static final Color TEXT_COLOR_RED_1 = new Color(237, 69, 69);
 	public static final Color TEXT_COLOR_ORANGE_1 = new Color(170, 130, 63);
@@ -31,6 +31,7 @@ public class UIBase extends GuiComponent {
 	public static final Color TEXT_COLOR_GREY_4 = new Color(206, 221, 237);
 	public static final Color LISTING_DOT_BLUE = new Color(62, 134, 160);
 	public static final Color LISTING_DOT_RED = new Color(173, 108, 121);
+	public static final Color LISTING_DOT_ORANGE = new Color(170, 130, 63);
 
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
 	public static final float UI_SCALE_BASE = 1.0F;

@@ -18,7 +18,7 @@ public abstract class ScrollAreaEntry extends UIBase {
     protected int height;
     public AdvancedButton buttonBase;
     protected Color backgroundColorIdle = AREA_BACKGROUND_COLOR;
-    protected Color backgroundColorHover = FOCUSED_ENTRY_COLOR;
+    protected Color backgroundColorHover = ENTRY_COLOR_FOCUSED;
     protected boolean focusable = true;
     protected boolean focused = false;
     protected boolean playClickSound = true;

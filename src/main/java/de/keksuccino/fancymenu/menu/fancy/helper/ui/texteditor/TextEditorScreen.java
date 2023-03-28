@@ -19,7 +19,6 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -72,7 +71,7 @@ public class TextEditorScreen extends Screen {
     public Color editorAreaBorderColor = UIBase.ELEMENT_BORDER_COLOR_IDLE;
     public Color editorAreaBackgroundColor = UIBase.AREA_BACKGROUND_COLOR;
     public Color textColor = UIBase.TEXT_COLOR_GRAY_1;
-    public Color focusedLineColor = UIBase.FOCUSED_ENTRY_COLOR;
+    public Color focusedLineColor = UIBase.ENTRY_COLOR_FOCUSED;
     public Color scrollGrabberIdleColor = UIBase.SCROLL_GRABBER_IDLE_COLOR;
     public Color scrollGrabberHoverColor = UIBase.SCROLL_GRABBER_HOVER_COLOR;
     public Color sideBarColor = UIBase.SIDE_BAR_COLOR;
@@ -80,7 +79,7 @@ public class TextEditorScreen extends Screen {
     public Color lineNumberTextColorFocused = UIBase.TEXT_COLOR_GREY_3;
     public Color multilineNotSupportedNotificationColor = UIBase.TEXT_COLOR_RED_1;
     public Color placeholderEntryBackgroundColorIdle = UIBase.AREA_BACKGROUND_COLOR;
-    public Color placeholderEntryBackgroundColorHover = UIBase.FOCUSED_ENTRY_COLOR;
+    public Color placeholderEntryBackgroundColorHover = UIBase.ENTRY_COLOR_FOCUSED;
     public Color placeholderEntryDotColorPlaceholder = UIBase.LISTING_DOT_BLUE;
     public Color placeholderEntryDotColorCategory = UIBase.LISTING_DOT_RED;
     public Color placeholderEntryLabelColor = UIBase.TEXT_COLOR_GRAY_1;

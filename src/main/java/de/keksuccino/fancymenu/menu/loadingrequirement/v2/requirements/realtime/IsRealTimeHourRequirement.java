@@ -74,7 +74,7 @@ public class IsRealTimeHourRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "6, 23";
+        return "23";
     }
 
     @Override

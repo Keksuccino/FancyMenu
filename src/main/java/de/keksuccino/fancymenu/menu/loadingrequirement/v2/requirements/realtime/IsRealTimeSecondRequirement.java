@@ -74,7 +74,7 @@ public class IsRealTimeSecondRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "27, 58";
+        return "58";
     }
 
     @Override

@@ -11,6 +11,7 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
@@ -562,15 +563,17 @@ public abstract class LayoutElement extends GuiComponent {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
 
-		/** VISIBILITY REQUIREMENTS **/
-		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-			//TODO OPEN NEW REQ SCREEN HERE
-//			Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.handler, this.object));
+		//TODO übernehmen
+		/** LOADING REQUIREMENTS **/
+		AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
+			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer);
+			Minecraft.getInstance().setScreen(s);
 		});
-		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
+		loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"), "%n%"));
 		if (this.enableVisibilityRequirements) {
-			this.rightclickMenu.addContent(visibilityRequirementsButton);
+			this.rightclickMenu.addContent(loadingRequirementsButton);
 		}
+		//--------------------------
 		
 		/** COPY **/
 		AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {

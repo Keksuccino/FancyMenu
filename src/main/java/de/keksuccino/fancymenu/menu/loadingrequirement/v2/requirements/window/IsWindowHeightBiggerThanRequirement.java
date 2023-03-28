@@ -27,7 +27,7 @@ public class IsWindowHeightBiggerThanRequirement extends LoadingRequirement {
         if (value != null) {
             value = value.replace(" ", "");
             if (MathUtils.isDouble(value)) {
-                return (int)Double.parseDouble(value) > Minecraft.getInstance().getWindow().getHeight();
+                return Minecraft.getInstance().getWindow().getHeight() > (int)Double.parseDouble(value);
             }
         }
         return false;

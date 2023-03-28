@@ -1,6 +1,6 @@
+//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ConfirmationScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
@@ -15,10 +15,8 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,11 +24,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
 public class BuildRequirementGroupScreen extends Screen {
-
-    //TODO manage requirements/groups screen adden
-    //TODO manage requirements/groups screen adden
-    //TODO manage requirements/groups screen adden
-    //TODO manage requirements/groups screen adden
 
     protected Screen parentScreen;
     protected LoadingRequirementContainer parent;
@@ -58,8 +51,8 @@ public class BuildRequirementGroupScreen extends Screen {
 
         this.groupIdentifierTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, CharacterFilter.getBasicFilenameCharacterFilter()) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+            public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+                super.render(matrix, mouseX, mouseY, partial);
                 BuildRequirementGroupScreen.this.group.identifier = this.getValue();
             }
         };
@@ -75,13 +68,13 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.group.mode == LoadingRequirementGroup.GroupMode.AND) {
                     this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.and"));
                 } else {
                     this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.or"));
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(matrix, mouseX, mouseY, partial);
             }
         };
         this.groupModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.desc"), "%n%"));
@@ -111,7 +104,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected"), "%n%"));
                     this.active = false;
@@ -119,7 +112,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setDescription((String[])null);
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(matrix, mouseX, mouseY, partial);
             }
         };
         this.editRequirementButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.edit_requirement.desc"), "%n%"));
@@ -138,7 +131,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.getSelectedInstance() == null) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected"), "%n%"));
                     this.active = false;
@@ -146,7 +139,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setDescription((String[])null);
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(matrix, mouseX, mouseY, partial);
             }
         };
         this.removeRequirementButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.remove_requirement.desc"), "%n%"));
@@ -186,6 +179,18 @@ public class BuildRequirementGroupScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+        super.init();
+
+    }
+
+    @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(null);
@@ -201,7 +206,7 @@ public class BuildRequirementGroupScreen extends Screen {
 
         this.font.draw(matrix, Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.group_requirements"), 20, 50, -1);
 
-        this.requirementsScrollArea.setWidth((this.width / 2) - 40, true);
+        this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(50 + 15, true);
@@ -246,8 +251,8 @@ public class BuildRequirementGroupScreen extends Screen {
     @Nullable
     protected LoadingRequirementInstance getSelectedInstance() {
         ScrollAreaEntry e = this.requirementsScrollArea.getFocusedEntry();
-        if (e instanceof RequirementInstanceEntry) {
-            return ((RequirementInstanceEntry) e).instance;
+        if (e instanceof ManageRequirementsScreen.RequirementInstanceEntry) {
+            return ((ManageRequirementsScreen.RequirementInstanceEntry) e).instance;
         }
         return null;
     }
@@ -257,78 +262,9 @@ public class BuildRequirementGroupScreen extends Screen {
         this.requirementsScrollArea.clearEntries();
 
         for (LoadingRequirementInstance i : this.group.getInstances()) {
-            RequirementInstanceEntry e = new RequirementInstanceEntry(this.requirementsScrollArea, i, 14);
+            ManageRequirementsScreen.RequirementInstanceEntry e = new ManageRequirementsScreen.RequirementInstanceEntry(this.requirementsScrollArea, i, 14);
             this.requirementsScrollArea.addEntry(e);
         }
-
-    }
-
-    public static class RequirementInstanceEntry extends ScrollAreaEntry {
-
-        public static final int HEADER_FOOTER_HEIGHT = 3;
-
-        public LoadingRequirementInstance instance;
-        public final int lineHeight;
-        public Font font = Minecraft.getInstance().font;
-
-        private MutableComponent displayNameComponent;
-        private MutableComponent modeComponent;
-        private MutableComponent valueComponent;
-
-        public RequirementInstanceEntry(ScrollArea parent, LoadingRequirementInstance instance, int lineHeight) {
-
-            super(parent, 100, 30);
-            this.instance = instance;
-            this.lineHeight = lineHeight;
-
-            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
-            String modeString = (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) ? Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.mode.normal") : Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.mode.opposite");
-            this.modeComponent = Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
-            String valueString = (this.instance.value != null) ? this.instance.value : Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.value.none");
-            this.valueComponent = Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
-
-            this.setWidth(this.calculateWidth());
-            this.setHeight((lineHeight * 3) + (HEADER_FOOTER_HEIGHT * 2));
-
-        }
-
-        @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
-
-            super.render(matrix, mouseX, mouseY, partial);
-
-            int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
-            int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
-            int centerYLine3 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 5);
-
-            RenderSystem.enableBlend();
-
-            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, LISTING_DOT_RED);
-            this.font.draw(matrix, this.displayNameComponent, (float)(this.getX() + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
-
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, LISTING_DOT_BLUE);
-            this.font.draw(matrix, this.modeComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
-
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine3 - 2, LISTING_DOT_BLUE);
-            this.font.draw(matrix, this.valueComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine3 - (this.font.lineHeight / 2)), -1);
-
-        }
-
-        private int calculateWidth() {
-            int w = 5 + 4 + 3 + this.font.width(this.displayNameComponent) + 5;
-            int w2 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.modeComponent) + 5;
-            int w3 = 5 + 4 + 3 + 4 + 3 + this.font.width(this.valueComponent) + 5;
-            if (w2 > w) {
-                w = w2;
-            }
-            if (w3 > w) {
-                w = w3;
-            }
-            return w;
-        }
-
-        @Override
-        public void onClick(ScrollAreaEntry entry) {}
 
     }
 

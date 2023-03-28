@@ -32,7 +32,7 @@ public class BuildRequirementScreen extends Screen {
 
     protected Screen parentScreen;
     protected LoadingRequirementContainer parent;
-    protected LoadingRequirementInstance instance;
+    protected final LoadingRequirementInstance instance;
     protected Consumer<LoadingRequirementInstance> callback;
 
     protected ScrollArea requirementsListScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -69,6 +69,9 @@ public class BuildRequirementScreen extends Screen {
                     this.instance.value = call;
                 }
             });
+            if ((this.instance.requirement != null) && (this.instance.requirement.getValueFormattingRules() != null)) {
+                s.formattingRules.addAll(this.instance.requirement.getValueFormattingRules());
+            }
             s.multilineMode = false;
             if (this.instance.value != null) {
                 s.setText(this.instance.value);
@@ -78,7 +81,7 @@ public class BuildRequirementScreen extends Screen {
             Minecraft.getInstance().setScreen(s);
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 LoadingRequirement r = BuildRequirementScreen.this.instance.requirement;
                 if ((r != null) && !r.hasValue()) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.no_value"), "%n%"));
@@ -130,7 +133,7 @@ public class BuildRequirementScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (BuildRequirementScreen.this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
                     this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.normal"));
                 } else {
@@ -146,6 +149,11 @@ public class BuildRequirementScreen extends Screen {
 
     @Override
     protected void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
         super.init();
 
