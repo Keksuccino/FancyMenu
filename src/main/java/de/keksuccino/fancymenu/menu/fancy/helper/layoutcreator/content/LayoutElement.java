@@ -566,7 +566,8 @@ public abstract class LayoutElement extends GuiComponent {
 		//TODO übernehmen
 		/** LOADING REQUIREMENTS **/
 		AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
-			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer);
+			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer, (call) -> {});
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 			Minecraft.getInstance().setScreen(s);
 		});
 		loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"), "%n%"));

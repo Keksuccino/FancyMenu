@@ -16,7 +16,7 @@ public class Test {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private AdvancedButton b = new AdvancedButton(20, 20, 100, 20, "Fancy Button", true, (press) -> {
-        Minecraft.getInstance().setScreen(new BuildActionScreen(Minecraft.getInstance().screen, Component.literal(Locals.localize("fancymenu.editor.action.screens.add_action")), null, (call) -> {
+        Minecraft.getInstance().setScreen(new BuildActionScreen(Minecraft.getInstance().screen, null, (call) -> {
             LOGGER.info("SCREEN RETURNED: " + call);
         }));
     });

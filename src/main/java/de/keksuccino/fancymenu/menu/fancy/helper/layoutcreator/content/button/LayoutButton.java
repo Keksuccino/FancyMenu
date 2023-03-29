@@ -8,15 +8,15 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.BuildActionScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ManageActionsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -26,6 +26,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
 
 public class LayoutButton extends LayoutElement {
 
@@ -62,25 +63,41 @@ public class LayoutButton extends LayoutElement {
 //		this.rightclickMenu.addContent(b3);
 
 		//TODO übernehmen
-		AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.custom_button.add_action"), (press) -> {
-			ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
+//		AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.add_action"), (press) -> {
+//			ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
+//				if (call != null) {
+//					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+//					this.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
+//				}
+//			});
+//		});
+//		addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.custom_button.add_action.desc"), "%n%"));
+//		this.rightclickMenu.addContent(addActionButton);
+
+		//TODO übernehmen
+		AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
+			List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
+			for (ButtonScriptEngine.ActionContainer c : this.actions) {
+				ButtonActionContainer bac = ButtonActionRegistry.getActionByName(c.action);
+				if (bac != null) {
+					ManageActionsScreen.ActionInstance i = new ManageActionsScreen.ActionInstance(bac, c.value);
+					l.add(i);
+				}
+			}
+			ManageActionsScreen s = new ManageActionsScreen(this.handler, l, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-					this.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
+					this.actions.clear();
+					for (ManageActionsScreen.ActionInstance i : call) {
+						this.actions.add(new ButtonScriptEngine.ActionContainer(i.action.getAction(), i.value));
+					}
 				}
 			});
 			Minecraft.getInstance().setScreen(s);
 		});
-		addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.custom_button.add_action.desc"), "%n%"));
-		this.rightclickMenu.addContent(addActionButton);
-
-		//TODO übernehmen
-		AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.custom_button.manage_actions"), (press) -> {
-			ManageActionsScreen s = new ManageActionsScreen(this.handler, this.actions);
-			Minecraft.getInstance().setScreen(s);
-		});
-		manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.custom_button.manage_actions.desc"), "%n%"));
+		manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.elements.button.manage_actions.desc"), "%n%"));
 		this.rightclickMenu.addContent(manageActionsButton);
+		//----------------------
 
 		this.rightclickMenu.addSeparator();
 

@@ -24,15 +24,10 @@ import java.util.function.Consumer;
 
 public class BuildActionScreen extends Screen {
 
-    //TODO add new ManageActionsScreen
-    //TODO add new ManageActionsScreen
-    //TODO add new ManageActionsScreen
-    //TODO add new ManageActionsScreen
-    //TODO add new ManageActionsScreen
-
     protected Screen parentScreen;
-    protected final ActionInstance instance;
-    protected Consumer<ActionInstance> callback;
+    protected final ManageActionsScreen.ActionInstance instance;
+    protected boolean isEdit;
+    protected Consumer<ManageActionsScreen.ActionInstance> callback;
 
     protected ScrollArea actionsListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea actionDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -40,13 +35,14 @@ public class BuildActionScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public BuildActionScreen(@Nullable Screen parentScreen, @Nullable Component title, @Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
+    public BuildActionScreen(@Nullable Screen parentScreen, @Nullable ManageActionsScreen.ActionInstance instanceToEdit, @NotNull Consumer<ManageActionsScreen.ActionInstance> callback) {
 
-        super((title == null) ? Component.literal("") : title);
+        super((instanceToEdit != null) ? Component.literal(Locals.localize("fancymenu.editor.action.screens.edit_action")) : Component.literal(Locals.localize("fancymenu.editor.action.screens.add_action")));
 
         this.parentScreen = parentScreen;
-        this.instance = (instanceToEdit != null) ? instanceToEdit : new ActionInstance(null, null);
+        this.instance = (instanceToEdit != null) ? instanceToEdit : new ManageActionsScreen.ActionInstance(null, null);
         this.callback = callback;
+        this.isEdit = instanceToEdit != null;
         this.setContentOfActionsList();
 
         //Select correct entry if instance has action
@@ -101,7 +97,7 @@ public class BuildActionScreen extends Screen {
             @Override
             public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 if (BuildActionScreen.this.instance.action == null) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.build_screen.finish.no_action_selected"), "%n%"));
+                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
                     this.active = false;
                 } else if ((BuildActionScreen.this.instance.value == null) && BuildActionScreen.this.instance.action.hasValue()) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.build_screen.finish.no_value_set"), "%n%"));
@@ -117,7 +113,11 @@ public class BuildActionScreen extends Screen {
 
         this.cancelButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
-            this.callback.accept(null);
+            if (this.isEdit) {
+                this.callback.accept(this.instance);
+            } else {
+                this.callback.accept(null);
+            }
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
@@ -140,7 +140,11 @@ public class BuildActionScreen extends Screen {
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
-        this.callback.accept(null);
+        if (this.isEdit) {
+            this.callback.accept(this.instance);
+        } else {
+            this.callback.accept(null);
+        }
     }
 
     @Override
@@ -173,12 +177,16 @@ public class BuildActionScreen extends Screen {
         this.doneButton.setY(this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        if (!this.isEdit) {
+            this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
+            this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+            this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        } else {
+            this.cancelButton.active = false;
+        }
 
         this.editValueButton.setX(this.width - 20 - this.editValueButton.getWidth());
-        this.editValueButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.editValueButton.setY(((this.isEdit) ? this.doneButton.getY() : this.cancelButton.getY()) - 15 - 20);
         this.editValueButton.render(matrix, mouseX, mouseY, partial);
 
         super.render(matrix, mouseX, mouseY, partial);
@@ -222,18 +230,6 @@ public class BuildActionScreen extends Screen {
         public ActionScrollEntry(ScrollArea parent, @NotNull ButtonActionContainer action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, Component.literal(action.getAction()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
             this.action = action;
-        }
-
-    }
-
-    public static class ActionInstance {
-
-        public ButtonActionContainer action;
-        public String value;
-
-        public ActionInstance(ButtonActionContainer action, @Nullable String value) {
-            this.action = action;
-            this.value = value;
         }
 
     }

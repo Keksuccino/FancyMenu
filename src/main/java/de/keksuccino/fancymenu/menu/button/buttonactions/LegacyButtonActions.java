@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class LegacyButtonActions {
 
@@ -62,7 +61,7 @@ public class LegacyButtonActions {
             }
             @Override
             public void execute(String value) {
-                ButtonScriptEngine.runButtonAction(identifier, value);
+//                ButtonScriptEngine.runButtonAction(identifier, value);
             }
             @Override
             public String getActionDescription() {

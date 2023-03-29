@@ -23,12 +23,13 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ManageRequirementsScreen extends Screen {
+import java.util.function.Consumer;
 
-    //TODO scroll area breiter machen (immer selber abstand zu rechter screen seite)
+public class ManageRequirementsScreen extends Screen {
 
     protected Screen parentScreen;
     protected LoadingRequirementContainer container;
+    protected Consumer<LoadingRequirementContainer> callback;
 
     protected ScrollArea requirementsScrollArea = new ScrollArea(0, 0, 0, 0);
     protected AdvancedButton addRequirementButton;
@@ -37,16 +38,17 @@ public class ManageRequirementsScreen extends Screen {
     protected AdvancedButton removeButton;
     protected AdvancedButton doneButton;
 
-    public ManageRequirementsScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer container) {
+    public ManageRequirementsScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
 
         super(Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
 
         this.parentScreen = parentScreen;
         this.container = container;
+        this.callback = callback;
         this.updateRequirementsScrollArea();
 
         this.addRequirementButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.loading_requirement.screens.add_requirement"), true, (button) -> {
-            BuildRequirementScreen s = new BuildRequirementScreen(this, Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.add_requirement")), this.container, null, (call) -> {
+            BuildRequirementScreen s = new BuildRequirementScreen(this, this.container, null, (call) -> {
                 if (call != null) {
                     this.container.addInstance(call);
                     this.updateRequirementsScrollArea();
@@ -58,7 +60,7 @@ public class ManageRequirementsScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.addRequirementButton);
 
         this.addGroupButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.loading_requirement.screens.add_group"), true, (button) -> {
-            BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this, Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.add_group")), this.container, null, (call) -> {
+            BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this, this.container, null, (call) -> {
                 if (call != null) {
                     this.container.addGroup(call);
                     this.updateRequirementsScrollArea();
@@ -72,13 +74,13 @@ public class ManageRequirementsScreen extends Screen {
         this.editButton = new AdvancedButton(0, 0, 150, 20, "", true, (button) -> {
             Screen s = null;
             if (this.isInstanceSelected()) {
-                s = new BuildRequirementScreen(this, Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_requirement")), this.container, this.getSelectedInstance(), (call) -> {
+                s = new BuildRequirementScreen(this, this.container, this.getSelectedInstance(), (call) -> {
                     if (call != null) {
                         this.updateRequirementsScrollArea();
                     }
                 });
             } else if (this.isGroupSelected()) {
-                s = new BuildRequirementGroupScreen(this, Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_group")), this.container, this.getSelectedGroup(), (call) -> {
+                s = new BuildRequirementGroupScreen(this, this.container, this.getSelectedGroup(), (call) -> {
                     if (call != null) {
                         this.updateRequirementsScrollArea();
                     }
@@ -155,6 +157,7 @@ public class ManageRequirementsScreen extends Screen {
 
         this.doneButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
+            this.callback.accept(this.container);
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
@@ -175,6 +178,7 @@ public class ManageRequirementsScreen extends Screen {
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
+        this.callback.accept(this.container);
     }
 
     @Override

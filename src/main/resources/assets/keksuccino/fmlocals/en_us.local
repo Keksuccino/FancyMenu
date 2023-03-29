@@ -1276,10 +1276,6 @@ fancymenu.customization.items.custom_button.add_action.desc = Add a new action t
 fancymenu.customization.items.custom_button.manage_actions = Manage Actions
 fancymenu.customization.items.custom_button.manage_actions.desc = Add, remove and edit actions of this button.
 
-fancymenu.editor.actions.manage.move_up = Move Up
-fancymenu.editor.actions.manage.move_down = Move Down
-fancymenu.editor.actions.manage.add = Add
-
 fancymenu.editor.actions.add.set_action_value = Set Action Value [{}]
 fancymenu.editor.actions.add.set_action_value.generic = Set Action Value
 
@@ -1349,14 +1345,31 @@ fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc = Remove 
 fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups = Requirements & Groups
 
 fancymenu.editor.action.screens.add_action = Add Action
+fancymenu.editor.action.screens.add_action.desc = Add a new action.
 fancymenu.editor.action.screens.edit_action = Edit Action
+fancymenu.editor.action.screens.edit_action.desc = Edit the selected action.
+fancymenu.editor.action.screens.remove_action = Remove Action
+fancymenu.editor.action.screens.remove_action.desc = Remove the selected action.
+fancymenu.editor.action.screens.finish.no_action_selected = §cYou need to select an action first!
+fancymenu.editor.action.screens.remove_action.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthe selected action?%n%This cannot be undone!
 fancymenu.editor.action.screens.build_screen.edit_value = Edit Action Value
 fancymenu.editor.action.screens.build_screen.edit_value.desc.normal = Edit the value of this action.
 fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value = §6This action has no value.%n%§6You don't need to set one.
 fancymenu.editor.action.screens.build_screen.action_description = Action Description
 fancymenu.editor.action.screens.build_screen.available_actions = Available Actions
-fancymenu.editor.action.screens.build_screen.finish.no_action_selected = §cYou need to select an action first!
 fancymenu.editor.action.screens.build_screen.finish.no_value_set = §cYou need to edit the action value first!
+fancymenu.editor.action.screens.manage_screen.info.value = Value:
+fancymenu.editor.action.screens.manage_screen.info.value.none = NONE
+fancymenu.editor.action.screens.manage_screen.manage = Manage Actions
+fancymenu.editor.action.screens.manage_screen.actions = Actions
+fancymenu.editor.action.screens.move_action_up = Move Action Up
+fancymenu.editor.action.screens.move_action_up.desc = Move this action up in the list,%n%so it gets executed earlier.
+fancymenu.editor.action.screens.move_action_down = Move Action Down
+fancymenu.editor.action.screens.move_action_down.desc = Move this action down in the list,%n%so it gets executed later.
+
+fancymenu.editor.elements.button.manage_actions.desc = Manage the actions this button%n%should execute when clicked.
+
+fancymenu.editor.elements.ticker.manage_actions.desc = Manage the actions this ticker%n%should execute.
 
 fancymenu.guicomponents.confirm = Confirm
 

@@ -919,7 +919,8 @@ public class LayoutEditorUI extends UIBase {
 			//TODO übernehmen
 			/** LOADING REQUIREMENTS [LAYOUT-WIDE] **/
 			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (press) -> {
-				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer);
+				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer, (call) -> {});
+				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 				Minecraft.getInstance().setScreen(s);
 			});
 			loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc"), "%n%"));

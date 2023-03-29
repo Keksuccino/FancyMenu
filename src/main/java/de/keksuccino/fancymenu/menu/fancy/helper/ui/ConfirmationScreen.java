@@ -69,6 +69,20 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
+    public boolean keyPressed(int button, int p_96553_, int p_96554_) {
+
+        //ENTER
+        if (button == 257) {
+            Minecraft.getInstance().setScreen(this.parentScreen);
+            this.callback.accept(true);
+            return true;
+        }
+
+        return super.keyPressed(button, p_96553_, p_96554_);
+
+    }
+
+    @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(false);

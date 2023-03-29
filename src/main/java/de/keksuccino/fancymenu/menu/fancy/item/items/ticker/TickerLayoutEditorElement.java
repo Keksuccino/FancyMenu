@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ManageActionsScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -15,9 +15,10 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TickerLayoutEditorElement extends LayoutEditorElement {
 
@@ -35,26 +36,43 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 
         TickerCustomizationItem i = ((TickerCustomizationItem)this.object);
 
-        AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.add_action"), (press) -> {
-            ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
+        //TODO übernehmen
+//        AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.add_action"), (press) -> {
+//            ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
+//                if (call != null) {
+//                    this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+//                    i.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
+//                }
+//            });
+//            Minecraft.getInstance().setScreen(s);
+//        });
+//        addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.add_action.desc"), "%n%"));
+//        this.rightclickMenu.addContent(addActionButton);
+
+        //TODO übernehmen
+        AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
+            List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
+            for (ButtonScriptEngine.ActionContainer c : i.actions) {
+                ButtonActionContainer bac = ButtonActionRegistry.getActionByName(c.action);
+                if (bac != null) {
+                    ManageActionsScreen.ActionInstance i2 = new ManageActionsScreen.ActionInstance(bac, c.value);
+                    l.add(i2);
+                }
+            }
+            ManageActionsScreen s = new ManageActionsScreen(this.handler, l, (call) -> {
                 if (call != null) {
                     this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-                    //TODO übernehmen
-                    i.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
+                    i.actions.clear();
+                    for (ManageActionsScreen.ActionInstance i2 : call) {
+                        i.actions.add(new ButtonScriptEngine.ActionContainer(i2.action.getAction(), i2.value));
+                    }
                 }
             });
             Minecraft.getInstance().setScreen(s);
         });
-        addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.add_action.desc"), "%n%"));
-        this.rightclickMenu.addContent(addActionButton);
-
-        AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.manage_actions"), (press) -> {
-            //TODO übernehmen
-            ManageActionsScreen s = new ManageActionsScreen(this.handler, i.actions);
-            Minecraft.getInstance().setScreen(s);
-        });
-        manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.manage_actions.desc"), "%n%"));
+        manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.elements.ticker.manage_actions.desc"), "%n%"));
         this.rightclickMenu.addContent(manageActionsButton);
+        //----------------------
 
         this.rightclickMenu.addSeparator();
 

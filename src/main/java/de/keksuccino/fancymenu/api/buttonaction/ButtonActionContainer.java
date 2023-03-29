@@ -15,12 +15,18 @@ public abstract class ButtonActionContainer {
 
     private final String actionIdentifier;
 
+    /**
+     * @param uniqueActionIdentifier Deprecated and not really used anymore, so just use the same here as for {@link ButtonActionContainer#getAction()}.
+     */
     public ButtonActionContainer(@Nonnull String uniqueActionIdentifier) {
         this.actionIdentifier = uniqueActionIdentifier;
     }
 
     /**
-     * Returns the name of this action.
+     * Returns the name of this action.<br>
+     * This is used to identify the action.<br><br>
+     *
+     * <b>This should be the same as the action identifier!</b>
      */
     public abstract String getAction();
 

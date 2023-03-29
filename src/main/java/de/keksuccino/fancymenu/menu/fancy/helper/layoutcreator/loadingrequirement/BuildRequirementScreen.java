@@ -33,6 +33,7 @@ public class BuildRequirementScreen extends Screen {
     protected Screen parentScreen;
     protected LoadingRequirementContainer parent;
     protected final LoadingRequirementInstance instance;
+    protected boolean isEdit;
     protected Consumer<LoadingRequirementInstance> callback;
 
     protected ScrollArea requirementsListScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -42,13 +43,14 @@ public class BuildRequirementScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public BuildRequirementScreen(@Nullable Screen parentScreen, @Nullable Component title, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
+    public BuildRequirementScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
 
-        super((title == null) ? Component.literal("") : title);
+        super((instanceToEdit != null) ? Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_requirement")) : Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.add_requirement")));
 
         this.parentScreen = parentScreen;
         this.parent = parent;
         this.instance = (instanceToEdit != null) ? instanceToEdit : new LoadingRequirementInstance(null, null, LoadingRequirementInstance.RequirementMode.IF, parent);
+        this.isEdit = instanceToEdit != null;
         this.callback = callback;
         this.setContentOfRequirementsList(null);
 
@@ -121,7 +123,11 @@ public class BuildRequirementScreen extends Screen {
 
         this.cancelButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
-            this.callback.accept(null);
+            if (this.isEdit) {
+                this.callback.accept(this.instance);
+            } else {
+                this.callback.accept(null);
+            }
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
@@ -164,7 +170,11 @@ public class BuildRequirementScreen extends Screen {
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
-        this.callback.accept(null);
+        if (this.isEdit) {
+            this.callback.accept(this.instance);
+        } else {
+            this.callback.accept(null);
+        }
     }
 
     @Override
@@ -197,12 +207,16 @@ public class BuildRequirementScreen extends Screen {
         this.doneButton.setY(this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        if (!this.isEdit) {
+            this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
+            this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+            this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        } else {
+            this.cancelButton.active = false;
+        }
 
         this.editValueButton.setX(this.width - 20 - this.editValueButton.getWidth());
-        this.editValueButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.editValueButton.setY(((this.isEdit) ? this.doneButton.getY() : this.cancelButton.getY()) - 15 - 20);
         this.editValueButton.render(matrix, mouseX, mouseY, partial);
 
         this.requirementModeButton.setX(this.width - 20 - this.cancelButton.getWidth());

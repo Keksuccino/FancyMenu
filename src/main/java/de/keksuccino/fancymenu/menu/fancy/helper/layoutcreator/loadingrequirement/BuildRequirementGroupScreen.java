@@ -28,6 +28,7 @@ public class BuildRequirementGroupScreen extends Screen {
     protected Screen parentScreen;
     protected LoadingRequirementContainer parent;
     protected LoadingRequirementGroup group;
+    protected boolean isEdit;
     protected Consumer<LoadingRequirementGroup> callback;
 
     protected ScrollArea requirementsScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -39,14 +40,15 @@ public class BuildRequirementGroupScreen extends Screen {
     protected AdvancedButton cancelButton;
     protected AdvancedTextField groupIdentifierTextField;
 
-    public BuildRequirementGroupScreen(@Nullable Screen parentScreen, @Nullable Component title, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementGroup groupToEdit, @NotNull Consumer<LoadingRequirementGroup> callback) {
+    public BuildRequirementGroupScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementGroup groupToEdit, @NotNull Consumer<LoadingRequirementGroup> callback) {
 
-        super((title == null) ? Component.literal("") : title);
+        super((groupToEdit != null) ? Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_group")) : Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.add_group")));
 
         this.parentScreen = parentScreen;
         this.parent = parent;
         this.group = (groupToEdit != null) ? groupToEdit : new LoadingRequirementGroup("group_" + System.currentTimeMillis(), LoadingRequirementGroup.GroupMode.AND, parent);
         this.callback = callback;
+        this.isEdit = groupToEdit != null;
         this.updateRequirementsScrollArea();
 
         this.groupIdentifierTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, CharacterFilter.getBasicFilenameCharacterFilter()) {
@@ -81,7 +83,7 @@ public class BuildRequirementGroupScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.groupModeButton);
 
         this.addRequirementButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.loading_requirement.screens.add_requirement"), true, (button) -> {
-            BuildRequirementScreen s = new BuildRequirementScreen(this, Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.add_requirement")), this.parent, null, (call) -> {
+            BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, null, (call) -> {
                 if (call != null) {
                     this.group.addInstance(call);
                     this.updateRequirementsScrollArea();
@@ -95,7 +97,7 @@ public class BuildRequirementGroupScreen extends Screen {
         this.editRequirementButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.loading_requirement.screens.edit_requirement"), true, (button) -> {
             LoadingRequirementInstance i = this.getSelectedInstance();
             if (i != null) {
-                BuildRequirementScreen s = new BuildRequirementScreen(this, Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_requirement")), this.parent, i, (call) -> {
+                BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, i, (call) -> {
                     if (call != null) {
                         this.updateRequirementsScrollArea();
                     }
@@ -172,7 +174,11 @@ public class BuildRequirementGroupScreen extends Screen {
 
         this.cancelButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
-            this.callback.accept(null);
+            if (this.isEdit) {
+                this.callback.accept(this.group);
+            } else {
+                this.callback.accept(null);
+            }
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
@@ -193,7 +199,11 @@ public class BuildRequirementGroupScreen extends Screen {
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
-        this.callback.accept(null);
+        if (this.isEdit) {
+            this.callback.accept(this.group);
+        } else {
+            this.callback.accept(null);
+        }
     }
 
     @Override
@@ -216,12 +226,16 @@ public class BuildRequirementGroupScreen extends Screen {
         this.doneButton.setY(this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        if (!this.isEdit) {
+            this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
+            this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+            this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        } else {
+            this.cancelButton.active = false;
+        }
 
         this.removeRequirementButton.setX(this.width - 20 - this.removeRequirementButton.getWidth());
-        this.removeRequirementButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.removeRequirementButton.setY(((this.isEdit) ? this.doneButton.getY() : this.cancelButton.getY()) - 15 - 20);
         this.removeRequirementButton.render(matrix, mouseX, mouseY, partial);
 
         this.editRequirementButton.setX(this.width - 20 - this.editRequirementButton.getWidth());
