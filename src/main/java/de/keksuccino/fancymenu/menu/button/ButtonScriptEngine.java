@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.menu.button.buttonactions.LegacyButtonActions;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -48,8 +49,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ButtonScriptEngine {
+
+	private static final List<String> LEGACY_IDENTIFIERS = LegacyButtonActions.getLegacyIdentifiers();
 
 	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
 	private static boolean init = false;
@@ -345,6 +350,10 @@ public class ButtonScriptEngine {
 				}
 			}
 
+			if (LEGACY_IDENTIFIERS.contains(action)) {
+				return;
+			}
+
 			/** CUSTOM ACTIONS **/
 			ButtonActionContainer c = ButtonActionRegistry.getActionByName(action);
 			if (c != null) {
@@ -499,6 +508,26 @@ public class ButtonScriptEngine {
 				for (int i = 0; i <= this.actions.size()-1; i++) {
 					runButtonAction(this.actions.get(i), this.values.get(i));
 				}
+			}
+		}
+
+	}
+
+	public static class ActionContainer {
+
+		public volatile String action;
+		public volatile String value;
+
+		public ActionContainer(@NotNull String action, @Nullable String value) {
+			this.action = action;
+			this.value = value;
+		}
+
+		public void execute() {
+			try {
+				ButtonScriptEngine.runButtonAction(this.action, this.value);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 

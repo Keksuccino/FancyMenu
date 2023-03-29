@@ -15,6 +15,7 @@ public class AnimationHandlerEvents {
 	private Screen lastScreen;
 
 	//TODO übernehmen 1.19.4 (event ändern)
+	//
 	@SubscribeEvent
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		//Stopping audio and resetting to intro (if enabled) for all advanced animations when changing the screen

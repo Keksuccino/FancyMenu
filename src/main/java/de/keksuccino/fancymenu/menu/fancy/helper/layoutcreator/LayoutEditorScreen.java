@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.awt.Color;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,12 +14,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -156,9 +155,7 @@ public class LayoutEditorScreen extends Screen {
 	protected List<String> universalLayoutWhitelist = new ArrayList<>();
 	protected List<String> universalLayoutBlacklist = new ArrayList<>();
 
-	protected CustomizationItemBase globalVisReqDummyItem = new CustomizationItemBase(new PropertiesSection("")) {
-		@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-	};
+	protected LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
 
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	
@@ -303,10 +300,7 @@ public class LayoutEditorScreen extends Screen {
 			meta.addEntry("custom_menu_title", this.customMenuTitle);
 		}
 
-		LayoutElement globalVisReqDummyLayoutElement = new LayoutElement(this.globalVisReqDummyItem, false, this, true) {
-			@Override public List<PropertiesSection> getProperties() { return null; }
-		};
-		globalVisReqDummyLayoutElement.addVisibilityPropertiesTo(meta);
+		this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(meta);
 
 		l.add(meta);
 		
@@ -442,9 +436,7 @@ public class LayoutEditorScreen extends Screen {
 				if (!this.vanillaButtonCustomizationContainers.containsKey(b.getId())) {
 					MenuHandlerBase.ButtonCustomizationContainer cc = new MenuHandlerBase.ButtonCustomizationContainer();
 					PropertiesSection dummySec = new PropertiesSection("customization");
-					cc.visibilityRequirementContainer = new VisibilityRequirementContainer(dummySec, new CustomizationItemBase(dummySec) {
-						@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-					});
+					cc.loadingRequirementContainer = new LoadingRequirementContainer();
 					this.vanillaButtonCustomizationContainers.put(b.getId(), cc);
 				}
 				LayoutVanillaButton v = new LayoutVanillaButton(this.vanillaButtonCustomizationContainers.get(b.getId()), b, this);
@@ -1513,7 +1505,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	public void saveLayoutAs() {
-		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), null, 240, (call) -> {
+		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), CharacterFilter.getBasicFilenameCharacterFilter(), 240, (call) -> {
 			try {
 
 				if ((call != null) && (call.length() > 0)) {
