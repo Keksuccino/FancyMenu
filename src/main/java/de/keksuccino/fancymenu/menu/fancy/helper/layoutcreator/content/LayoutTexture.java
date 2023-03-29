@@ -69,7 +69,7 @@ public class LayoutTexture extends LayoutElement {
 			p1.addEntry("height", "" + this.object.getHeight());
 		}
 
-		this.addVisibilityPropertiesTo(p1);
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

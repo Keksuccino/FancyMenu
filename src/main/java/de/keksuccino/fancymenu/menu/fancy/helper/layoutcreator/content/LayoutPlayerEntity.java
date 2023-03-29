@@ -631,7 +631,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		p1.addEntry("crouching", "" + this.getEntity().crouching);
 		p1.addEntry("showname", "" + this.getEntity().showName);
 
-		this.addVisibilityPropertiesTo(p1);
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

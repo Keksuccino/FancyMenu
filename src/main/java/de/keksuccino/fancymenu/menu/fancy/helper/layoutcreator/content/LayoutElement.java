@@ -11,11 +11,13 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import de.keksuccino.konkrete.localization.Locals;
@@ -41,7 +43,7 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 
 public abstract class LayoutElement extends GuiComponent {
-	
+
 	public CustomizationItemBase object;
 	public LayoutEditorScreen handler;
 	protected boolean hovered = false;
@@ -63,10 +65,8 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean delayable = true;
 	protected boolean fadeable = true;
 	protected boolean resizeable = true;
-	
 	protected boolean supportsAdvancedPositioning = true;
 	protected boolean supportsAdvancedSizing = true;
-	
 	protected boolean resizeableX = true;
 	protected boolean resizeableY = true;
 	protected boolean dragable = true;
@@ -94,7 +94,7 @@ public abstract class LayoutElement extends GuiComponent {
 
 	protected static boolean isShiftPressed = false;
 	private static boolean shiftListener = false;
-	
+
 	private final boolean destroyable;
 	public boolean enableVisibilityRequirements = true;
 
@@ -103,12 +103,10 @@ public abstract class LayoutElement extends GuiComponent {
 
 	private Snapshot cachedSnapshot;
 	private boolean moving = false;
-	
+
 	protected static final long hResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long vResizeCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
 	protected static final long normalCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-
-	
 
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
 		this.handler = handler;
@@ -143,9 +141,9 @@ public abstract class LayoutElement extends GuiComponent {
 	public LayoutElement(@Nonnull CustomizationItemBase object, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
 		this(object, destroyable, handler, true);
 	}
-	
+
 	public void init() {
-		
+
 		this.rightclickMenu = new FMContextMenu();
 		this.rightclickMenu.setAlwaysOnTop(true);
 
@@ -274,7 +272,6 @@ public abstract class LayoutElement extends GuiComponent {
 			});
 			orientationMenu.addContent(o9);
 
-			
 			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
 				orientationMenu.setParentButton((AdvancedButton) press);
 				orientationMenu.openMenuAt(0, press.y);
@@ -291,11 +288,9 @@ public abstract class LayoutElement extends GuiComponent {
 			};
 			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
 			this.rightclickMenu.addContent(orientationButton);
-			
 
 		}
 
-		
 		/** ADVANCED POSITIONING **/
 		FMContextMenu advancedPositioningMenu = new FMContextMenu();
 		advancedPositioningMenu.setAutoclose(true);
@@ -321,7 +316,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					if (call.replace(" ", "").equals("")) {
@@ -334,15 +329,16 @@ public abstract class LayoutElement extends GuiComponent {
 					this.object.orientation = "top-left";
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedPosX != null) {
-				p.setText(this.object.advancedPosX);
+				s.setText(this.object.advancedPosX);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
 		});
 		advancedPositioningMenu.addContent(advancedPosXButton);
 
 		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					if (call.replace(" ", "").equals("")) {
@@ -355,15 +351,14 @@ public abstract class LayoutElement extends GuiComponent {
 					this.object.orientation = "top-left";
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedPosY != null) {
-				p.setText(this.object.advancedPosY);
+				s.setText(this.object.advancedPosY);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
 		});
 		advancedPositioningMenu.addContent(advancedPosYButton);
-		
 
-		
 		/** ADVANCED SIZING **/
 		FMContextMenu advancedSizingMenu = new FMContextMenu();
 		advancedSizingMenu.setAutoclose(true);
@@ -389,7 +384,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
 						if ((this.object.advancedWidth != null) || (this.object.width != 50)) {
@@ -411,15 +406,16 @@ public abstract class LayoutElement extends GuiComponent {
 					}
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedWidth != null) {
-				p.setText(this.object.advancedWidth);
+				s.setText(this.object.advancedWidth);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
 		});
 		advancedSizingMenu.addContent(advancedWidthButton);
 
 		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
 						if ((this.object.advancedHeight != null) || (this.object.height != 50)) {
@@ -441,23 +437,23 @@ public abstract class LayoutElement extends GuiComponent {
 					}
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedHeight != null) {
-				p.setText(this.object.advancedHeight);
+				s.setText(this.object.advancedHeight);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(s);
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
-		
 
 		/** LAYERS **/
 		FMContextMenu layersMenu = new FMContextMenu();
 		layersMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(layersMenu);
-		
+
 		AdvancedButton layersButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.chooselayer"), true, (press) -> {
-			
+
 			layersMenu.getContent().clear();
-			
+
 			for (LayoutElement o : this.hoveredLayers) {
 				String label = o.object.value;
 				if (label == null) {
@@ -473,10 +469,10 @@ public abstract class LayoutElement extends GuiComponent {
 				});
 				layersMenu.addContent(btn);
 			}
-			
+
 			layersMenu.setParentButton((AdvancedButton) press);
 			layersMenu.openMenuAt(0, press.y);
-			
+
 		});
 		this.rightclickMenu.addContent(layersButton);
 
@@ -485,7 +481,6 @@ public abstract class LayoutElement extends GuiComponent {
 		stretchMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(stretchMenu);
 
-		
 		stretchXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
 			if (this.stretchX) {
 				this.setStretchedX(false, true);
@@ -504,9 +499,7 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		};
 		stretchMenu.addContent(stretchXButton);
-		
 
-		
 		stretchYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
 			if (this.stretchY) {
 				this.setStretchedY(false, true);
@@ -525,7 +518,6 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		};
 		stretchMenu.addContent(stretchYButton);
-		
 
 		AdvancedButton stretchButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.stretch"), true, (press) -> {
 			stretchMenu.setParentButton((AdvancedButton) press);
@@ -563,15 +555,17 @@ public abstract class LayoutElement extends GuiComponent {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
 
-		/** VISIBILITY REQUIREMENTS **/
-		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-			Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.handler, this.object));
+		/** LOADING REQUIREMENTS **/
+		AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
+			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer, (call) -> {});
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			Minecraft.getInstance().setScreen(s);
 		});
-		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
+		loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"), "%n%"));
 		if (this.enableVisibilityRequirements) {
-			this.rightclickMenu.addContent(visibilityRequirementsButton);
+			this.rightclickMenu.addContent(loadingRequirementsButton);
 		}
-		
+
 		/** COPY **/
 		AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
 			this.handler.copySelectedElements();
@@ -579,7 +573,7 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.copyable) {
 			this.rightclickMenu.addContent(copyButton);
 		}
-		
+
 		/** DESTROY **/
 		AdvancedButton destroyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delete"), true, (press) -> {
 			this.destroyObject();
@@ -587,12 +581,12 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.destroyable) {
 			this.rightclickMenu.addContent(destroyButton);
 		}
-		
+
 		/** DELAY APPEARANCE **/
 		FMContextMenu delayMenu = new FMContextMenu();
 		delayMenu.setAutoclose(true);
 		this.rightclickMenu.addChild(delayMenu);
-		
+
 		String tdLabel = Locals.localize("helper.creator.items.delay.off");
 		if (this.object.delayAppearance) {
 			tdLabel = Locals.localize("helper.creator.items.delay.everytime");
@@ -617,7 +611,7 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		});
 		delayMenu.addContent(toggleDelayButton);
-		
+
 		AdvancedButton delaySecondsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay.seconds"), true, (press) -> {
 			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + Locals.localize("helper.creator.items.delay.seconds"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 				if (call != null) {
@@ -641,14 +635,14 @@ public abstract class LayoutElement extends GuiComponent {
 				} else {
 					this.active = true;
 				}
-				
+
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		delayMenu.addContent(delaySecondsButton);
-		
+
 		delayMenu.addSeparator();
-		
+
 		String fiLabel = Locals.localize("helper.creator.items.delay.fadein.off");
 		if (this.object.delayAppearance && this.object.fadeIn) {
 			fiLabel = Locals.localize("helper.creator.items.delay.fadein.on");
@@ -669,14 +663,14 @@ public abstract class LayoutElement extends GuiComponent {
 				} else {
 					this.active = true;
 				}
-				
+
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		if (this.fadeable) {
 			delayMenu.addContent(toggleFadeButton);
 		}
-		
+
 		AdvancedButton fadeSpeedButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay.fadein.speed"), true, (press) -> {
 			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + Locals.localize("helper.creator.items.delay.fadein.speed"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 				if (call != null) {
@@ -700,14 +694,14 @@ public abstract class LayoutElement extends GuiComponent {
 				} else {
 					this.active = true;
 				}
-				
+
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		if (this.fadeable) {
 			delayMenu.addContent(fadeSpeedButton);
 		}
-		
+
 		AdvancedButton delayButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay"), true, (press) -> {
 			delayMenu.setParentButton((AdvancedButton) press);
 			delayMenu.openMenuAt(0, press.y);
@@ -715,7 +709,7 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.delayable) {
 			this.rightclickMenu.addContent(delayButton);
 		}
-		
+
 		this.rightclickMenu.addSeparator();
 
 	}
@@ -769,7 +763,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 	}
-	
+
 	protected int orientationMouseX(int mouseX) {
 		if (this.object.orientation.endsWith("-centered")) {
 			return mouseX - (this.handler.width / 2);
@@ -779,7 +773,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 		return mouseX;
 	}
-	
+
 	protected int orientationMouseY(int mouseY) {
 		if (this.object.orientation.startsWith("mid-")) {
 			return mouseY - (this.handler.height / 2);
@@ -913,20 +907,20 @@ public abstract class LayoutElement extends GuiComponent {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void render(PoseStack matrix, int mouseX, int mouseY) {
 		this.updateHovered(mouseX, mouseY);
 
 		//Render the customization item
-        try {
+		try {
 			this.object.render(matrix, handler);
 
 			this.handleStretch();
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        
+
 		// Renders the border around the object if its focused (starts to render one tick after the object got focused)
 		if (this.handler.isFocused(this)) {
 			this.renderBorder(matrix, mouseX, mouseY);
@@ -935,14 +929,13 @@ public abstract class LayoutElement extends GuiComponent {
 				this.renderHighlightBorder(matrix);
 			}
 		}
-		
+
 		//Reset cursor to default
 		if ((this.activeGrabber == -1) && (!MouseInput.isLeftMouseDown() || PopupHandler.isPopupActive())) {
 			GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
 		}
-				
+
 		//Update dragging state
-		
 		if (this.dragable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null)) {
 			if (this.isLeftClicked() && !(this.resizing || this.isGrabberPressed())) {
 				this.dragging = true;
@@ -954,7 +947,7 @@ public abstract class LayoutElement extends GuiComponent {
 		} else {
 			this.dragging = false;
 		}
-		
+
 		//Handles the resizing process
 		if (this.resizeable) {
 			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
@@ -971,8 +964,7 @@ public abstract class LayoutElement extends GuiComponent {
 		} else {
 			this.resizing = false;
 		}
-		
-		
+
 		//Moves the object with the mouse motion if dragged
 		if (this.isDragged() && this.handler.isFocused(this)) {
 			if (this.handler.getFocusedObjects().size() == 1) {
@@ -981,7 +973,7 @@ public abstract class LayoutElement extends GuiComponent {
 				}
 
 				this.moving = true;
-				
+
 				if ((mouseX >= 5) && (mouseX <= this.handler.width -5)) {
 					if (!this.stretchX) {
 						this.object.posX = this.orientationMouseX(mouseX) - this.startDiffX;
@@ -1013,7 +1005,7 @@ public abstract class LayoutElement extends GuiComponent {
 					this.handler.history.saveSnapshot(this.cachedSnapshot);
 				}
 			}
-			
+
 			this.startX = this.object.posX;
 			this.startY = this.object.posY;
 			this.startWidth = this.object.getWidth();
@@ -1022,36 +1014,36 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Handle rightclick context menu
-        if (this.rightclickMenu != null) {
-        	
-        	if (this.isRightClicked() && this.handler.isFocused(this)) {
-            	if (this.handler.getFocusedObjects().size() == 1) {
-            		UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
-                	this.hoveredLayers.clear();
-                	for (LayoutElement o : this.handler.getContent()) {
-                		if (o.isHoveredOrFocused()) {
-                			this.hoveredLayers.add(o);
-                		}
-                	}
-            	}
-            }
+		if (this.rightclickMenu != null) {
 
-        	if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHoveredOrFocused())) {
-        		this.rightclickMenu.closeMenu();
-        	}
-        	if (MouseInput.isRightMouseDown() && !this.isHoveredOrFocused() && !this.rightclickMenu.isHoveredOrFocused()) {
-        		this.rightclickMenu.closeMenu();
-        	}
-        	
-        	if (this.rightclickMenu.isOpen()) {
-        		this.handler.setFocusChangeBlocked(objectId, true);
-        	} else {
-        		this.handler.setFocusChangeBlocked(objectId, false);
-        	}
+			if (this.isRightClicked() && this.handler.isFocused(this)) {
+				if (this.handler.getFocusedObjects().size() == 1) {
+					UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
+					this.hoveredLayers.clear();
+					for (LayoutElement o : this.handler.getContent()) {
+						if (o.isHoveredOrFocused()) {
+							this.hoveredLayers.add(o);
+						}
+					}
+				}
+			}
 
-        }
+			if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHoveredOrFocused())) {
+				this.rightclickMenu.closeMenu();
+			}
+			if (MouseInput.isRightMouseDown() && !this.isHoveredOrFocused() && !this.rightclickMenu.isHoveredOrFocused()) {
+				this.rightclickMenu.closeMenu();
+			}
+
+			if (this.rightclickMenu.isOpen()) {
+				this.handler.setFocusChangeBlocked(objectId, true);
+			} else {
+				this.handler.setFocusChangeBlocked(objectId, false);
+			}
+
+		}
 	}
-	
+
 	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
 		//horizontal line top
 		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
@@ -1068,12 +1060,11 @@ public abstract class LayoutElement extends GuiComponent {
 		int yHorizontal = this.object.getPosY(handler) + (this.object.getHeight() / 2) - (h / 2);
 		int xHorizontalLeft = this.object.getPosX(handler) - (w / 2);
 		int xHorizontalRight = this.object.getPosX(handler) + this.object.getWidth() - (w / 2);
-		
+
 		int xVertical = this.object.getPosX(handler) + (this.object.getWidth() / 2) - (w / 2);
 		int yVerticalTop = this.object.getPosY(handler) - (h / 2);
 		int yVerticalBottom = this.object.getPosY(handler) + this.object.getHeight() - (h / 2);
 
-		
 		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
@@ -1090,7 +1081,6 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Update cursor and active grabber when grabber is hovered
-		
 		if (this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if ((mouseX >= xHorizontalLeft) && (mouseX <= xHorizontalLeft + w) && (mouseY >= yHorizontal) && (mouseY <= yHorizontal + h)) {
 				if (!this.stretchX && this.resizeableX) {
@@ -1132,7 +1122,7 @@ public abstract class LayoutElement extends GuiComponent {
 		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
 		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
 		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
-		
+
 		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
 		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
 		RenderUtils.postScale(matrix);
@@ -1140,7 +1130,7 @@ public abstract class LayoutElement extends GuiComponent {
 
 	protected void renderHighlightBorder(PoseStack matrix) {
 		Color c = new Color(0, 200, 255, 255);
-		
+
 		//horizontal line top
 		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
 		//horizontal line bottom
@@ -1150,21 +1140,21 @@ public abstract class LayoutElement extends GuiComponent {
 		//vertical line right
 		GuiComponent.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 	}
-	
+
 	/**
 	 * <b>Returns:</b><br><br>
-	 * 
+	 *
 	 * -1 if NO grabber is currently pressed<br>
 	 * 0 if the LEFT grabber is pressed<br>
 	 * 1 if the RIGHT grabber is pressed<br>
 	 * 2 if the TOP grabber is pressed<br>
 	 * 3 if the BOTTOM grabber is pressed
-	 * 
+	 *
 	 */
 	public int getActiveResizeGrabber() {
 		return this.activeGrabber;
 	}
-	
+
 	public boolean isGrabberPressed() {
 		return ((this.getActiveResizeGrabber() != -1) && MouseInput.isLeftMouseDown());
 	}
@@ -1178,13 +1168,13 @@ public abstract class LayoutElement extends GuiComponent {
 		double ratio = (double) startW / (double) startH;
 		return (int)(width / ratio);
 	}
-	
+
 	protected void handleResize(int mouseX, int mouseY) {
 
 		int g = this.lastGrabber;
 		int diffX;
 		int diffY;
-		
+
 		//X difference
 		if (mouseX > this.startX) {
 			diffX = Math.abs(mouseX - this.startX);
@@ -1270,7 +1260,7 @@ public abstract class LayoutElement extends GuiComponent {
 			this.hovered = false;
 		}
 	}
-	
+
 	public boolean isDragged() {
 		return this.dragging;
 	}
@@ -1278,40 +1268,40 @@ public abstract class LayoutElement extends GuiComponent {
 	public boolean isGettingResized() {
 		return this.resizing;
 	}
-	
+
 	public boolean isLeftClicked() {
 		return (this.isHoveredOrFocused() && MouseInput.isLeftMouseDown());
 	}
-	
+
 	public boolean isRightClicked() {
 		return (this.isHoveredOrFocused() && MouseInput.isRightMouseDown());
 	}
-	
+
 	public boolean isHoveredOrFocused() {
 		return this.hovered;
 	}
-	
+
 	/**
 	 * Sets the BASE position of this object (NOT the absolute position!)
 	 */
 	public void setX(int x) {
 		this.object.posX = x;
 	}
-	
+
 	/**
 	 * Sets the BASE position of this object (NOT the absolute position!)
 	 */
 	public void setY(int y) {
 		this.object.posY = y;
 	}
-	
+
 	/**
 	 * Returns the ABSOLUTE position of this object (NOT the base position!)
 	 */
 	public int getX() {
 		return this.object.getPosX(handler);
 	}
-	
+
 	/**
 	 * Returns the ABSOLUTE position of this object (NOT the base position!)
 	 */
@@ -1334,7 +1324,7 @@ public abstract class LayoutElement extends GuiComponent {
 	public int getHeight() {
 		return this.object.getHeight();
 	}
-	
+
 	public boolean isDestroyable() {
 		return this.destroyable;
 	}
@@ -1382,113 +1372,8 @@ public abstract class LayoutElement extends GuiComponent {
 
 	public abstract List<PropertiesSection> getProperties();
 
-	public void addVisibilityPropertiesTo(PropertiesSection sec) {
-
-		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
-
-		if (c.vrCheckForSingleplayer) {
-			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
-		}
-		if (c.vrCheckForMultiplayer) {
-			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
-		}
-		if (c.vrCheckForWindowWidth) {
-			
-			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
-			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
-			
-		}
-		if (c.vrCheckForWindowHeight) {
-			
-			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
-			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
-			
-		}
-		if (c.vrCheckForWindowWidthBiggerThan) {
-			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
-			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
-		}
-		if (c.vrCheckForWindowHeightBiggerThan) {
-			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
-			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
-		}
-		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
-			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
-			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
-		}
-		if (c.vrCheckForWorldLoaded) {
-			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
-		}
-		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
-			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
-			sec.addEntry("vr:value:language", "" + c.vrLanguage);
-		}
-		if (c.vrCheckForFullscreen) {
-			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
-		}
-		if (c.vrCheckForOsWindows) {
-			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
-		}
-		if (c.vrCheckForOsMac) {
-			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
-		}
-		if (c.vrCheckForOsLinux) {
-			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
-		}
-		if (c.vrCheckForModLoaded) {
-			String val = "";
-			for (String s : c.vrModLoaded) {
-				val += s + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
-				sec.addEntry("vr:value:modloaded", val);
-			}
-		}
-		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
-			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
-			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
-		}
-		if (c.vrCheckForGuiScale) {
-			String val = "";
-			for (String condition : c.vrGuiScale) {
-				if (condition.startsWith("double:")) {
-					String value = condition.replace("double:", "");
-					val += value + ",";
-				} else if (condition.startsWith("biggerthan:")) {
-					String value = condition.replace("biggerthan:", "");
-					val += ">" + value + ",";
-				} else if (condition.startsWith("smallerthan:")) {
-					String value = condition.replace("smallerthan:", "");
-					val += "<" + value + ",";
-				}
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
-				sec.addEntry("vr:value:guiscale", val);
-			}
-		}
-
-		//CUSTOM VISIBILITY REQUIREMENTS (API)
-		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
-
-			VisibilityRequirement v = p.requirement;
-
-			if (p.checkFor) {
-				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
-				if (v.hasValue() && (p.value != null)) {
-					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
-				}
-			}
-
-		}
-
+	public void addLoadingRequirementPropertiesTo(PropertiesSection sec) {
+		this.object.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 	}
 
 }

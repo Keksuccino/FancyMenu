@@ -1,14 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
@@ -19,7 +17,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutPlayerEntity;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutShape;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSlideshow;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
@@ -31,10 +28,9 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.La
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
-import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.*;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -85,9 +81,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
-					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-				};
+				this.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
 
 				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
 
@@ -355,10 +349,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							int h = Integer.parseInt(height);
 							van.object.setWidth(w);
 							van.object.setHeight(h);
-							
 							van.object.advancedWidth = sec.getEntryValue("advanced_width");
 							van.object.advancedHeight = sec.getEntryValue("advanced_height");
-							
 						}
 					}
 
@@ -374,10 +366,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							van.object.orientation = orientation;
 							van.object.posX = x;
 							van.object.posY = y;
-							
 							van.object.advancedPosX = sec.getEntryValue("advanced_posx");
 							van.object.advancedPosY = sec.getEntryValue("advanced_posy");
-							
 							van.object.orientationElementIdentifier = sec.getEntryValue("orientation_element");
 						}
 					}
@@ -577,8 +567,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
-						String baction = sec.getEntryValue("buttonaction");
-						String actionvalue = sec.getEntryValue("value");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
 
 						if (onlydisplayin != null) {
@@ -602,7 +590,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.object.delayAppearanceSec = bc.delayAppearanceSec;
 								this.object.fadeIn = bc.fadeIn;
 								this.object.fadeInSpeed = bc.fadeInSpeed;
-								this.object.visibilityRequirementContainer = bc.visibilityRequirementContainer;
+								this.object.loadingRequirementContainer = bc.loadingRequirementContainer;
 								this.object.setActionId(bc.getActionId());
 
 								super.init();
@@ -621,15 +609,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.setStretchedX(true, false);
 						}
 
-						if (baction == null) {
-							continue;
-						}
-						lb.actionType = baction;
-
-						if (actionvalue == null) {
-							actionvalue = "";
-						}
-						lb.actionContent = actionvalue;
+						lb.actions = bc.actions;
 
 						String desc = sec.getEntryValue("description");
 						if (desc != null) {
@@ -696,6 +676,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						lb.object.orientationElementIdentifier = bc.orientationElementIdentifier;
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
+
+						lb.object.advancedPosX = bc.advancedPosX;
+						lb.object.advancedPosY = bc.advancedPosY;
+						lb.object.advancedWidth = bc.advancedWidth;
+						lb.object.advancedHeight = bc.advancedHeight;
 
 						con.add(lb);
 					}
@@ -796,42 +781,9 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
 									@Override public void render(PoseStack matrix, Screen menu) {}
 								};
-								van.object.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
-								van.customizationContainer.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
+								van.object.loadingRequirementContainer = cusItem.loadingRequirementContainer;
+								van.customizationContainer.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 							}
-						}
-					}
-
-					if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-						if (action.equalsIgnoreCase("addentity")) {
-							LayoutPlayerEntity o = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(sec), this);
-
-							String playername = sec.getEntryValue("playername");
-							if ((playername != null) && (playername.replace(" ", "").equals("%playername%"))) {
-								o.isCLientPlayerName = true;
-							}
-
-							String capePath = sec.getEntryValue("capepath");
-							if (capePath != null) {
-								o.capePath = capePath;
-							}
-
-							String capeUrl = sec.getEntryValue("capeurl");
-							if (capeUrl != null) {
-								o.capeUrl = capeUrl;
-							}
-
-							String skinPath = sec.getEntryValue("skinpath");
-							if (skinPath != null) {
-								o.skinPath = skinPath;
-							}
-
-							String skinUrl = sec.getEntryValue("skinurl");
-							if (skinUrl != null) {
-								o.skinUrl = skinUrl;
-							}
-
-							con.add(o);
 						}
 					}
 
@@ -920,7 +872,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				}
 			}
 		}
-		
 
 		this.content.addAll(con);
 
@@ -951,18 +902,18 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		System.out.println("[FANCYMENU] ERROR: PRE-LOADED EDITOR: VANILLA BUTTON NOT FOUND!");
 		return null;
 	}
-	
+
 	//render
 	@Override
 	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
-		
+
 		if (!audioInit) {
 			audioInit = true;
 			for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
 				SoundHandler.playSound(m.getKey());
 			}
 		}
-		
+
 		super.render(matrix, mouseX, mouseY, partialTicks);
 	}
 
@@ -978,7 +929,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		String h = sec.getEntryValue("height");
 		String x = sec.getEntryValue("x");
 		String y = sec.getEntryValue("y");
-		
+
 		boolean stretchX = false;
 		if ((w != null) && (x != null)) {
 			if (w.equals("%guiwidth%") && x.equals("0")) {
@@ -991,7 +942,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				stretchY = true;
 			}
 		}
-		
+
 		if (stretchX && stretchY) {
 			return 3;
 		}
@@ -1001,7 +952,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		if (stretchX) {
 			return 1;
 		}
-		
+
 		return 0;
 	}
 
