@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.api.buttonaction;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * A button action container.<br><br>
@@ -12,12 +15,18 @@ public abstract class ButtonActionContainer {
 
     private final String actionIdentifier;
 
+    /**
+     * @param uniqueActionIdentifier Deprecated and not really used anymore, so just use the same here as for {@link ButtonActionContainer#getAction()}.
+     */
     public ButtonActionContainer(@Nonnull String uniqueActionIdentifier) {
         this.actionIdentifier = uniqueActionIdentifier;
     }
 
     /**
-     * Returns the name of this action.
+     * Returns the name of this action.<br>
+     * This is used to identify the action.<br><br>
+     *
+     * <b>This should be the same as the action identifier!</b>
      */
     public abstract String getAction();
 
@@ -48,6 +57,12 @@ public abstract class ButtonActionContainer {
      */
     @Nullable
     public abstract String getValueExample();
+
+    //TODO übernehmenn
+    @Nullable
+    public List<TextEditorFormattingRule> getValueFormattingRules() {
+        return null;
+    }
 
     public String getIdentifier() {
         return this.actionIdentifier;

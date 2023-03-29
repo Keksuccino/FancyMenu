@@ -19,27 +19,23 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    //TODO übernehmen
     protected volatile boolean loaded = false;
     protected volatile int width = 0;
     protected volatile int height = 0;
     protected volatile ResourceLocation location = null;
     protected volatile String url;
     protected volatile NativeImage downloadedTexture = null;
-    //----------------------
 
     public SkinWebTextureResourceLocation(String url) {
         super(url);
         this.url = url;
     }
 
-    //TODO übernehmen
     @Nullable
     public NativeImage getDownloadedTexture() {
         return this.downloadedTexture;
     }
 
-    //TODO übernehmen
     public void downloadTexture() {
         InputStream in = null;
         try {
@@ -101,7 +97,6 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
         }
     }
 
-    //TODO übernehmen
     @Override
     public void loadTexture() {
         if (!this.loaded) {

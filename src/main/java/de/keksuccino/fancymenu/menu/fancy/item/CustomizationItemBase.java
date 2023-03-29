@@ -5,7 +5,8 @@ import java.io.IOException;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -48,7 +49,8 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
 
-	public VisibilityRequirementContainer visibilityRequirementContainer;
+	//TODO übernehmenn
+	public LoadingRequirementContainer loadingRequirementContainer;
 
 	protected String actionId;
 	
@@ -145,7 +147,8 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		this.advancedPosX = item.getEntryValue("advanced_posx");
 		this.advancedPosY = item.getEntryValue("advanced_posy");
 
-		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
+		//TODO übernehmenn
+		this.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(item);
 
 	}
 
@@ -269,9 +272,11 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		if (this.value == null) {
 			return false;
 		}
-		if (!this.visibilityRequirementsMet()) {
+		//TODO übernehmenn
+		if (!this.loadingRequirementsMet()) {
 			return false;
 		}
+		//--------------
 		return this.visible;
 	}
 
@@ -287,11 +292,17 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
 	}
 
-	protected boolean visibilityRequirementsMet() {
+	//TODO übernehmenn
+//	protected boolean visibilityRequirementsMet() {
+//
+//	}
+
+	//TODO übernehmenn
+	protected boolean loadingRequirementsMet() {
 		if (isEditorActive()) {
 			return true;
 		}
-		return this.visibilityRequirementContainer.isVisible();
+		return this.loadingRequirementContainer.requirementsMet();
 	}
 
 	public int getWidth() {

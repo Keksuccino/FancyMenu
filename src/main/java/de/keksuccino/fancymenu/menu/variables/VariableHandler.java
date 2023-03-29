@@ -19,7 +19,20 @@ public class VariableHandler {
     protected static Map<String, String> variables = new HashMap<>();
 
     public static void init() {
+
         readFromFile();
+
+        //TODO übernehmenn
+        String variablesToResetOnLaunch = FancyMenu.config.getOrDefault("variables_to_reset_on_launch", "").replace(" ", "");
+        if (variablesToResetOnLaunch.contains(",")) {
+            for (String s : variablesToResetOnLaunch.split(",")) {
+                if (s.length() > 0) {
+                    removeVariable(s);
+                }
+            }
+        }
+        //--------------------
+
     }
 
     public static List<String> getVariableNames() {
