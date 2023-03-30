@@ -1,26 +1,27 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine.ActionContainer;
+import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
-public class TickerCustomizationItem extends CustomizationItem {
+//TODO übernehmenn (implements)
+public class TickerCustomizationItem extends CustomizationItem implements IActionExecutorItem {
 
+    //TODO übernehmenn (replace with new ButtonScriptEngine.ActionContainer class)
     public volatile List<ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
@@ -142,25 +143,32 @@ public class TickerCustomizationItem extends CustomizationItem {
 
     }
 
-    public static class ActionContainer {
-
-        public volatile String action;
-        public volatile String value;
-
-        public ActionContainer(@NotNull String action, @Nullable String value) {
-            this.action = action;
-            this.value = value;
-        }
-
-        public void execute() {
-            try {
-                ButtonScriptEngine.runButtonAction(this.action, this.value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+    //TODO übernehmenn
+    @Override
+    public List<ActionContainer> getActionList() {
+        return this.actions;
     }
+
+    //TODO übernehmenn
+//    public static class ActionContainer {
+//
+//        public volatile String action;
+//        public volatile String value;
+//
+//        public ActionContainer(@NotNull String action, @Nullable String value) {
+//            this.action = action;
+//            this.value = value;
+//        }
+//
+//        public void execute() {
+//            try {
+//                ButtonScriptEngine.runButtonAction(this.action, this.value);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//    }
 
     public static class TickerItemThreadController {
 
