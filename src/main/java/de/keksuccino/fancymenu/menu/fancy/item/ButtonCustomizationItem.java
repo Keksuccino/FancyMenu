@@ -2,12 +2,14 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -21,7 +23,7 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 
-public class ButtonCustomizationItem extends CustomizationItemBase {
+public class ButtonCustomizationItem extends CustomizationItemBase implements IActionExecutorItem {
 
 	public AdvancedButton button;
 	private String hoverLabel;
@@ -34,7 +36,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	public String hoverLabelRaw;
 	public String labelRaw;
 	public String tooltip;
-	
+	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
+
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
 		
@@ -44,23 +47,13 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			if (this.labelRaw == null) {
 				this.labelRaw = "";
 			}
-			
-			
+
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
-			
-//			String backNormal = item.getEntryValue("backgroundnormal");
-//			String backHover = item.getEntryValue("backgroundhovered");
 
-			if (buttonaction == null) {
-				return;
-			}
 			if (actionvalue == null) {
 				actionvalue = "";
 			}
-//			if (!isEditorActive()) {
-//				actionvalue = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(actionvalue);
-//			}
 
 			this.hoverSound = item.getEntryValue("hoversound");
 			if (this.hoverSound != null) {
@@ -89,10 +82,28 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			String finalAction = actionvalue;
-			
-			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), this.value, true, (press) -> {
-				ButtonScriptEngine.runButtonAction(buttonaction, finalAction);
+			if (buttonaction != null) {
+				if (buttonaction.contains("%btnaction_splitter_fm%")) {
+					for (String s : StringUtils.splitLines(buttonaction, "%btnaction_splitter_fm%")) {
+						if (s.length() > 0) {
+							String action = s;
+							String value = null;
+							if (s.contains(";")) {
+								action = s.split(";", 2)[0];
+								value = s.split(";", 2)[1];
+							}
+							this.actions.add(new ButtonScriptEngine.ActionContainer(action, value));
+						}
+					}
+				} else {
+					this.actions.add(new ButtonScriptEngine.ActionContainer(buttonaction, actionvalue));
+				}
+			}
+
+			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (press) -> {
+				for (ButtonScriptEngine.ActionContainer c : this.actions) {
+					c.execute();
+				}
 			});
 
 			String click = item.getEntryValue("clicksound");
@@ -208,7 +219,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		this.button.setX(x);
 		this.button.setY(y);
 
-		if (this.button.isHovered()) {
+		if (this.button.isHovered() && this.button.active) {
 			if (this.hoverLabel != null) {
 				this.button.setMessage(this.hoverLabel);
 			} else {
@@ -294,6 +305,11 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		}
 		
 		return id;
+	}
+
+	@Override
+	public List<ButtonScriptEngine.ActionContainer> getActionList() {
+		return this.actions;
 	}
 
 }

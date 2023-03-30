@@ -22,7 +22,7 @@ public class PlayerEntityShoulderParrotLayer extends PlayerEntityRenderLayer {
         this.properties = properties;
     }
 
-    public void render(MatrixStack p_117307_, IRenderTypeBuffer p_117308_, int p_117309_, @Nullable Entity entity, float p_117311_, float p_117312_, float p_117313_, float p_117314_, float p_117315_, float p_117316_) {
+    public void render(MatrixStack p_117307_, IRenderTypeBuffer p_117308_, int p_117309_,  Entity entity, float p_117311_, float p_117312_, float p_117313_, float p_117314_, float p_117315_, float p_117316_) {
         if (this.properties.hasParrotOnShoulder) {
             this.render(p_117307_, p_117308_, p_117309_, p_117311_, p_117312_, p_117315_, p_117316_, this.properties.parrotOnLeftShoulder);
         }

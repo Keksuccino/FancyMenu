@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -14,6 +14,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.awt.*;
 import java.io.File;
@@ -56,7 +57,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
         this.rightclickMenu.addContent(copyClientPlayerButton);
 
         AdvancedButton setPlayerNameButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name"), true, (press) -> {
-            PlaceholderInputPopup t = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name"), null, 240, (call) -> {
+            TextEditorScreen s = new TextEditorScreen(new StringTextComponent(Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name")), this.handler, null, (call) -> {
                 if (call != null) {
                     if (!call.equals(item.playerName)) {
                         this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -70,10 +71,11 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                     }
                 }
             });
+            s.multilineMode = false;
             if (item.playerName != null) {
-                t.setText(StringUtils.convertFormatCodes(item.playerName, "§", "&"));
+                s.setText(StringUtils.convertFormatCodes(item.playerName, "§", "&"));
             }
-            PopupHandler.displayPopup(t);
+            Minecraft.getInstance().setScreen(s);
         }) {
             @Override
             public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
@@ -186,7 +188,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
         setSkinMenu.addContent(setLocalSkinButton);
 
         AdvancedButton setWebSkinButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web"), true, (press) -> {
-            PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web"), null, 240, (call) -> {
+            TextEditorScreen s = new TextEditorScreen(new StringTextComponent(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web")), this.handler, null, (call) -> {
                 if (call != null) {
                     if (!call.replace(" ", "").equals("")) {
                         if (!call.equals(item.skinUrl)) {
@@ -196,10 +198,11 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                     }
                 }
             });
+            s.multilineMode = false;
             if (item.skinUrl != null) {
-                p.setText(item.skinUrl);
+                s.setText(item.skinUrl);
             }
-            PopupHandler.displayPopup(p);
+            Minecraft.getInstance().setScreen(s);
         });
         setSkinMenu.addContent(setWebSkinButton);
 
@@ -333,7 +336,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
         setCapeMenu.addContent(setLocalCapeButton);
 
         AdvancedButton setWebCapeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web"), true, (press) -> {
-            PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web"), null, 240, (call) -> {
+            TextEditorScreen s = new TextEditorScreen(new StringTextComponent(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web")), this.handler, null, (call) -> {
                 if (call != null) {
                     if (!call.replace(" ", "").equals("")) {
                         if (!call.equals(item.capeUrl)) {
@@ -343,10 +346,11 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                     }
                 }
             });
+            s.multilineMode = false;
             if (item.capeUrl != null) {
-                p.setText(item.capeUrl);
+                s.setText(item.capeUrl);
             }
-            PopupHandler.displayPopup(p);
+            Minecraft.getInstance().setScreen(s);
         });
         setCapeMenu.addContent(setWebCapeButton);
 
@@ -436,7 +440,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
         };
-        crouchingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.show_name.desc"), "%n%"));
+        crouchingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.crouching.desc"), "%n%"));
         this.rightclickMenu.addContent(crouchingButton);
 
         AdvancedButton showNameButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {

@@ -26,7 +26,7 @@ public class PlayerEntityCapeLayer extends PlayerEntityRenderLayer {
     }
 
     @Override
-    public void render(MatrixStack matrix, IRenderTypeBuffer p_116616_, int p_116617_, @Nullable Entity entity, float p_116619_, float p_116620_, float p_116621_, float p_116622_, float p_116623_, float p_116624_) {
+    public void render(MatrixStack matrix, IRenderTypeBuffer p_116616_, int p_116617_,  Entity entity, float p_116619_, float p_116620_, float p_116621_, float p_116622_, float p_116623_, float p_116624_) {
         if (!this.properties.invisible && this.properties.isModelPartShown(PlayerModelPart.CAPE) && this.properties.getCapeTextureLocation() != null) {
             matrix.pushPose();
             matrix.translate(0.0F, 0.0F, 0.125F);

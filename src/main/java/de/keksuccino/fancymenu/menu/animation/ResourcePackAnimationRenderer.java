@@ -41,7 +41,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     protected boolean sizeSet = false;
 
     /** Renders an animation out of multiple images (frames). **/
-    public ResourcePackAnimationRenderer(@Nullable String resourceNamespace, List<String> frameNames, int fps, boolean loop, int posX, int posY, int width, int height) {
+    public ResourcePackAnimationRenderer( String resourceNamespace, List<String> frameNames, int fps, boolean loop, int posX, int posY, int width, int height) {
         this.fps = fps;
         this.loop = loop;
         this.x = posX;

@@ -23,7 +23,7 @@ public class ExampleVisibilityRequirementWithValue extends VisibilityRequirement
     //Here you return if the requirement is met (using the given requirement value if the requirement has one).
     //Since this requirement has a value, the value parameter will be the value of a requirement in a layout.
     @Override
-    public boolean isRequirementMet(@Nullable String value) {
+    public boolean isRequirementMet( String value) {
 
         //This requirement has a value that can be any string, but the requirement will only be met if the value is "show_me".
         //We return true if the value is "show_me".

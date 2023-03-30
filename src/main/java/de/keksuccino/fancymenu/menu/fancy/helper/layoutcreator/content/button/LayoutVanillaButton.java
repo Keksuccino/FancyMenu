@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import net.minecraft.util.text.StringTextComponent;
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -38,7 +40,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.button = button;
 		this.object.orientation = "original";
 		this.customizationContainer = customizationContainer;
-		this.object.visibilityRequirementContainer = this.customizationContainer.visibilityRequirementContainer;
+		this.object.loadingRequirementContainer = this.customizationContainer.loadingRequirementContainer;
 		this.init();
 	}
 
@@ -70,31 +72,8 @@ public class LayoutVanillaButton extends LayoutElement {
 			});
 		});
 		this.rightclickMenu.addContent(b0);
-
-		
-//		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-//			FMTextInputPopup i = new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel"), null, 240, (call) -> {
-//				if (call != null) {
-//					if ((this.customizationContainer.customButtonLabel == null) || (!this.customizationContainer.customButtonLabel.equals(call))) {
-//						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//					}
-//					this.customizationContainer.customButtonLabel = call;
-//				}
-//			});
-//			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
-//			PopupHandler.displayPopup(i);
-//		});
-//		this.rightclickMenu.addContent(b2);
-//
-//		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.resetlabel"), (press) -> {
-//			this.customizationContainer.customButtonLabel = null;
-//			this.rightclickMenu.closeMenu();
-//		});
-//		this.rightclickMenu.addContent(b3);
-
 		
 		this.rightclickMenu.addSeparator();
-
 		
 		AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), (press) -> {
 			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.handler, this.customizationContainer);
@@ -141,7 +120,7 @@ public class LayoutVanillaButton extends LayoutElement {
 
 		
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			FMTextInputPopup i = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.editlabel"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(new StringTextComponent(Locals.localize("helper.creator.items.button.editlabel")), this.handler, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.customButtonLabel == null) || !this.customizationContainer.customButtonLabel.equals(call)) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -149,8 +128,9 @@ public class LayoutVanillaButton extends LayoutElement {
 					this.customizationContainer.customButtonLabel = call;
 				}
 			});
-			i.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
-			PopupHandler.displayPopup(i);
+			s.multilineMode = false;
+			s.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
+			Minecraft.getInstance().setScreen(s);
 		});
 		this.rightclickMenu.addContent(b2);
 
@@ -169,7 +149,7 @@ public class LayoutVanillaButton extends LayoutElement {
 
 		
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
-			FMTextInputPopup ip = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.button.hoverlabel"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(new StringTextComponent(Locals.localize("helper.creator.items.button.hoverlabel")), this.handler, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
 						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -177,11 +157,11 @@ public class LayoutVanillaButton extends LayoutElement {
 					this.customizationContainer.hoverLabel = StringUtils.convertFormatCodes(call, "&", "§");
 				}
 			});
-
+			s.multilineMode = false;
 			if (this.customizationContainer.hoverLabel != null) {
-				ip.setText(StringUtils.convertFormatCodes(this.customizationContainer.hoverLabel, "§", "&"));
+				s.setText(StringUtils.convertFormatCodes(this.customizationContainer.hoverLabel, "§", "&"));
 			}
-			PopupHandler.displayPopup(ip);
+			Minecraft.getInstance().setScreen(s);
 		});
 		this.rightclickMenu.addContent(b5);
 
@@ -234,17 +214,6 @@ public class LayoutVanillaButton extends LayoutElement {
 		});
 		this.rightclickMenu.addContent(b7);
 
-		
-//		AdvancedButton b8 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), (press) -> {
-//			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//
-//			this.hoverSound = null;
-//			this.handler.setVanillaHoverSound(this, null);
-//			this.rightclickMenu.closeMenu();
-//		});
-//		this.rightclickMenu.addContent(b8);
-
-		
 		AdvancedButton b11 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
 				if (call != null) {
@@ -278,20 +247,8 @@ public class LayoutVanillaButton extends LayoutElement {
 			PopupHandler.displayPopup(cf);
 		});
 		this.rightclickMenu.addContent(b11);
-
-		
-//		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), (press) -> {
-//			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//
-//			this.clicksound = null;
-//			this.handler.setVanillaClickSound(this, null);
-//			this.rightclickMenu.closeMenu();
-//		});
-//		this.rightclickMenu.addContent(b12);
-
 		
 		this.rightclickMenu.addSeparator();
-
 		
 		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.vanillabutton.autoclick"), (press) -> {
 			FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.vanillabutton.autoclick.popup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
@@ -318,8 +275,9 @@ public class LayoutVanillaButton extends LayoutElement {
 
 		
 		AdvancedButton b13 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
-			FMTextInputPopup in = new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.items.button.btndescription"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(new StringTextComponent(Locals.localize("helper.creator.items.button.btndescription")), this.handler, null, (call) -> {
 				if (call != null) {
+					call = call.replace("\n", "%n%");
 					if (!call.replace(" ", "").equals("")) {
 						if ((this.customizationContainer.buttonDescription == null) || !this.customizationContainer.buttonDescription.equals(call)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -333,11 +291,10 @@ public class LayoutVanillaButton extends LayoutElement {
 					}
 				}
 			});
-
 			if (this.customizationContainer.buttonDescription != null) {
-				in.setText(this.customizationContainer.buttonDescription);
+				s.setText(this.customizationContainer.buttonDescription.replace("%n%", "\n"));
 			}
-			PopupHandler.displayPopup(in);
+			Minecraft.getInstance().setScreen(s);
 		});
 		List<String> l = new ArrayList<String>();
 		for (String s : StringUtils.splitLines(Locals.localize("helper.creator.items.button.btndescription.desc"), "%n%")) {
@@ -574,7 +531,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
 		
 		visReqs.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-		this.addVisibilityPropertiesTo(visReqs);
+		this.addLoadingRequirementPropertiesTo(visReqs);
 		if (visReqs.getEntries().size() > 2) {
 			l.add(visReqs);
 		}

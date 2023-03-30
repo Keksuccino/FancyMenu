@@ -215,8 +215,8 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
     }
 
     @Override
-    @Nullable
-    protected RenderType getRenderType(@Nullable AbstractClientPlayerEntity entity, boolean visible, boolean isVisibleToPlayer, boolean glowing) {
+
+    protected RenderType getRenderType( AbstractClientPlayerEntity entity, boolean visible, boolean isVisibleToPlayer, boolean glowing) {
         ResourceLocation resourcelocation = this.getTextureLocation(entity);
         if (isVisibleToPlayer) {
             return RenderType.itemEntityTranslucentCull(resourcelocation);
@@ -228,12 +228,12 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
     }
 
     @Override
-    public ResourceLocation getTextureLocation(@Nullable AbstractClientPlayerEntity entity) {
+    public ResourceLocation getTextureLocation( AbstractClientPlayerEntity entity) {
         return this.properties.getSkinTextureLocation();
     }
     
     @Override
-    protected void renderNameTag(@Nullable AbstractClientPlayerEntity entity, ITextComponent content, MatrixStack matrix, IRenderTypeBuffer bufferSource, int p_114502_) {
+    protected void renderNameTag( AbstractClientPlayerEntity entity, ITextComponent content, MatrixStack matrix, IRenderTypeBuffer bufferSource, int p_114502_) {
         boolean flag = !this.properties.isCrouching();
         float f = this.properties.getDimensions().height + 0.5F;
         int i = 0;

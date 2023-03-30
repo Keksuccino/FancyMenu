@@ -36,7 +36,7 @@ public class DeserializedPlaceholderString {
         }
     }
 
-    public static DeserializedPlaceholderString build(@Nonnull String placeholderId, @Nullable Map<String, String> values) {
+    public static DeserializedPlaceholderString build(@Nonnull String placeholderId,  Map<String, String> values) {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
         dps.placeholder = placeholderId;
         dps.values = values;

@@ -70,7 +70,7 @@ public class LayoutSlideshow extends LayoutElement {
 		}
 
 		
-		this.addVisibilityPropertiesTo(p1);
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

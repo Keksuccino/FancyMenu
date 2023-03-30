@@ -37,7 +37,7 @@ public class ServerVersionPlaceholder extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         List<String> l = new ArrayList<>();
         l.add("ip");
         return l;

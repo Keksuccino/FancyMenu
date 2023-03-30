@@ -33,7 +33,7 @@ public class DeepCustomizationLayerRegistry {
         return l;
     }
 
-    @Nullable
+    
     public static DeepCustomizationLayer getLayerByMenuIdentifier(String menuIdentifier) {
         return layers.get(menuIdentifier);
     }

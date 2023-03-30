@@ -20,7 +20,7 @@ public class TestPlaceholder1 extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         List<String> l = new ArrayList<>();
         l.add("value_1");
         l.add("value_2");
@@ -33,7 +33,7 @@ public class TestPlaceholder1 extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getDescription() {
+    public  List<String> getDescription() {
         return null;
     }
 

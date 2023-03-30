@@ -33,7 +33,7 @@ public class PlaceholderRegistry {
         }
     }
 
-    @Nullable
+    
     public static Placeholder getPlaceholderForIdentifier(String identifier) {
         return placeholders.get(identifier);
     }

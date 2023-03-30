@@ -31,7 +31,7 @@ public class AutoScalingPopup extends FMPopup {
 
     protected Consumer<Boolean> callback = null;
 
-    public AutoScalingPopup(LayoutEditorScreen parent, @Nullable Consumer<Boolean> callback) {
+    public AutoScalingPopup(LayoutEditorScreen parent,  Consumer<Boolean> callback) {
         super(240);
 
         this.callback = callback;

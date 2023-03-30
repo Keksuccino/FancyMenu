@@ -25,13 +25,13 @@ public abstract class Placeholder {
      */
     public abstract String getReplacementFor(DeserializedPlaceholderString dps);
 
-    @Nullable
+    
     public abstract List<String> getValueNames();
 
     @Nonnull
     public abstract String getDisplayName();
 
-    @Nullable
+    
     public abstract List<String> getDescription();
 
     public abstract String getCategory();

@@ -19,7 +19,7 @@ public class TestPlaceholder3 extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         return null;
     }
 
@@ -29,7 +29,7 @@ public class TestPlaceholder3 extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getDescription() {
+    public  List<String> getDescription() {
         return null;
     }
 

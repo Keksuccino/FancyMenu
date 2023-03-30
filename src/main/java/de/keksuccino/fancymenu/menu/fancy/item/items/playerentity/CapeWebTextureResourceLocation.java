@@ -32,7 +32,7 @@ public class CapeWebTextureResourceLocation extends WebTextureResourceLocation {
         this.url = url;
     }
 
-    @Nullable
+    
     public NativeImage getDownloadedTexture() {
         return this.downloadedTexture;
     }

@@ -124,7 +124,7 @@ public class EditHistory {
 		public Snapshot preSnapshotState = null;
 		private Runnable run; 
 		
-		public Snapshot(LayoutEditorScreen editor, @Nullable Runnable onSnapshotRestore) {
+		public Snapshot(LayoutEditorScreen editor,  Runnable onSnapshotRestore) {
 
 			this.run = onSnapshotRestore;
 			

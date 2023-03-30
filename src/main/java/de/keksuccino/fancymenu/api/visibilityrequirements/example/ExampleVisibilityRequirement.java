@@ -24,7 +24,7 @@ public class ExampleVisibilityRequirement extends VisibilityRequirement {
     //Here you return if the requirement is met (using the given requirement value if the requirement has one).
     //We don't use a value in this example, so the parameter will be NULL and we can ignore it.
     @Override
-    public boolean isRequirementMet(@Nullable String value) {
+    public boolean isRequirementMet( String value) {
 
         //In this example, we just check if the window is in fullscreen mode and if it is, then we return true.
         return Minecraft.getInstance().options.fullscreen;

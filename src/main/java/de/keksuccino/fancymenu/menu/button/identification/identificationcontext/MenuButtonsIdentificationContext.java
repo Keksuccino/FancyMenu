@@ -8,7 +8,7 @@ public abstract class MenuButtonsIdentificationContext {
 
     public abstract Class getMenu();
 
-    @Nullable
+    
     protected abstract String getRawCompatibilityIdentifierForButton(ButtonData data);
 
     

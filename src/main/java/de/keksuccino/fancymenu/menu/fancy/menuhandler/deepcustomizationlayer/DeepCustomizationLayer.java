@@ -37,7 +37,7 @@ public class DeepCustomizationLayer {
         return l;
     }
 
-    @Nullable
+    
     public DeepCustomizationElement getElementByIdentifier(String identifier) {
         return this.elements.get(identifier);
     }

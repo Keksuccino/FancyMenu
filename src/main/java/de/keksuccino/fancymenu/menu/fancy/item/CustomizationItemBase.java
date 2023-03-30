@@ -4,10 +4,9 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -50,8 +49,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
 
-	
-	public VisibilityRequirementContainer visibilityRequirementContainer;
+	public LoadingRequirementContainer loadingRequirementContainer;
 
 	protected String actionId;
 
@@ -148,8 +146,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		this.advancedPosX = item.getEntryValue("advanced_posx");
 		this.advancedPosY = item.getEntryValue("advanced_posy");
 
-		
-		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
+		this.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(item);
 
 	}
 
@@ -276,8 +273,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		if (this.value == null) {
 			return false;
 		}
-		
-		if (!this.visibilityRequirementsMet()) {
+		if (!this.loadingRequirementsMet()) {
 			return false;
 		}
 		return this.visible;
@@ -287,25 +283,21 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.actionId;
 	}
 
-	
 	public void setActionId(String id) {
 		this.actionId = id;
 	}
-
 	
 	protected static boolean isEditorActive() {
 		return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
 	}
 
-	
-	protected boolean visibilityRequirementsMet() {
+	protected boolean loadingRequirementsMet() {
 		if (isEditorActive()) {
 			return true;
 		}
-		return this.visibilityRequirementContainer.isVisible();
+		return this.loadingRequirementContainer.requirementsMet();
 	}
 
-	
 	public int getWidth() {
 		if (this.advancedWidth != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
@@ -316,12 +308,10 @@ public abstract class CustomizationItemBase extends AbstractGui {
 		return this.width;
 	}
 
-	
 	public void setWidth(int width) {
 		this.width = width;
 	}
 
-	
 	public int getHeight() {
 		if (this.advancedHeight != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");

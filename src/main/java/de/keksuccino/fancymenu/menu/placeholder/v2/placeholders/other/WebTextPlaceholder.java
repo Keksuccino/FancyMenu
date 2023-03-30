@@ -122,7 +122,7 @@ public class WebTextPlaceholder extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         List<String> l = new ArrayList<>();
         l.add("link");
         return l;

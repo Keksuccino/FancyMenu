@@ -130,7 +130,7 @@ public class PlayerEntityProperties {
         return pose == Pose.SLEEPING ? 0.2F : (entityDimensions.height * 0.85F);
     }
 
-    @Nullable
+    
     public ResourceLocation getCapeTextureLocation() {
         return this.capeLocation;
     }

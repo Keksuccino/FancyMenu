@@ -226,7 +226,7 @@ public class LayoutWebString extends LayoutElement {
 		p1.addEntry("alignment", this.getObject().alignment.key);
 
 		
-		this.addVisibilityPropertiesTo(p1);
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

@@ -24,7 +24,7 @@ public class MinecraftVersionPlaceholder extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         return null;
     }
 

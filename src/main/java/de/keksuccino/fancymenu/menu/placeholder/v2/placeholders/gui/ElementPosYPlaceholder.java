@@ -59,7 +59,7 @@ public class ElementPosYPlaceholder extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         List<String> l = new ArrayList<>();
         l.add("id");
         return l;

@@ -36,7 +36,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	 *
 	 * @throws AnimationNotFoundException If the main animation is null.
 	 */
-	public AdvancedAnimation(@Nullable IAnimationRenderer introAnimation, IAnimationRenderer mainAnimation, @Nullable String introAudioPath, @Nullable String mainAudioPath, boolean replayIntro) throws AnimationNotFoundException {
+	public AdvancedAnimation( IAnimationRenderer introAnimation, IAnimationRenderer mainAnimation,  String introAudioPath,  String mainAudioPath, boolean replayIntro) throws AnimationNotFoundException {
 		if (mainAnimation != null) {
 			this.animationRenderer = mainAnimation;
 		} else {

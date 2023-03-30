@@ -77,7 +77,7 @@ public class CustomGuiLoader {
 		return screens.containsKey(identifier);
 	}
 	
-	public static CustomGuiBase getGui(String identifier, @Nullable Screen parent, @Nullable Screen overrides) {
+	public static CustomGuiBase getGui(String identifier,  Screen parent,  Screen overrides) {
 		if (guiExists(identifier)) {
 			PropertiesSection sec = screens.get(identifier);
 			boolean esc = true;
@@ -89,7 +89,7 @@ public class CustomGuiLoader {
 		return null;
 	}
 	
-	public static CustomGuiBase getGui(String identifier, @Nullable Screen parent, @Nullable Screen overrides, Consumer<CustomGuiBase> onClose) {
+	public static CustomGuiBase getGui(String identifier,  Screen parent,  Screen overrides, Consumer<CustomGuiBase> onClose) {
 		if (guiExists(identifier)) {
 			PropertiesSection sec = screens.get(identifier);
 			boolean esc = true;

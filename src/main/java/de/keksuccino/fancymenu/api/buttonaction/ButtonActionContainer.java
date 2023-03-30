@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.api.buttonaction;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
+
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.List;
 
 /**
  * A button action container.<br><br>
@@ -46,8 +48,12 @@ public abstract class ButtonActionContainer {
      * An example of how the value of this action should look like.<br>
      * Return NULL if this action has no value.
      */
-    @Nullable
+    
     public abstract String getValueExample();
+
+    public List<TextEditorFormattingRule> getValueFormattingRules() {
+        return null;
+    }
 
     public String getIdentifier() {
         return this.actionIdentifier;

@@ -28,7 +28,7 @@ public class UsedRamPlaceholder extends Placeholder {
     }
 
     @Override
-    public @Nullable List<String> getValueNames() {
+    public  List<String> getValueNames() {
         return null;
     }
 

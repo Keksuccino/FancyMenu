@@ -34,7 +34,7 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
     }
 
     //TODO übernehmen
-    @Nullable
+    
     public NativeImage getDownloadedTexture() {
         return this.downloadedTexture;
     }

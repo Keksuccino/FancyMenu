@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
@@ -53,7 +54,6 @@ import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
@@ -114,7 +114,7 @@ public class MenuHandlerBase {
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<Widget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<Widget, ButtonCustomizationContainer>();
-	protected Map<Widget, VisibilityRequirementContainer> vanillaButtonVisibilityRequirementContainers = new HashMap<Widget, VisibilityRequirementContainer>();
+	protected Map<Widget, LoadingRequirementContainer> vanillaButtonLoadingRequirementContainers = new HashMap<>();
 
 	protected Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
 	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<ButtonData, Float>();
@@ -131,7 +131,7 @@ public class MenuHandlerBase {
 	protected String closeAudio;
 	protected String openAudio;
 
-	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
+	protected Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 	
 	protected static Screen scaleChangedIn = null;
 
@@ -241,7 +241,7 @@ public class MenuHandlerBase {
 
 		this.customMenuTitle = null;
 
-		this.cachedLayoutWideRequirements.clear();
+		this.cachedLayoutWideLoadingRequirements.clear();
 
 		for (PropertiesSet s : rawLayouts) {
 			
@@ -253,11 +253,9 @@ public class MenuHandlerBase {
 				continue;
 			}
 
-			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
-				@Override public void render(MatrixStack matrix, Screen menu) throws IOException {}
-			}.visibilityRequirementContainer;
-			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
-			if (!globalVisReqContainer.isVisible()) {
+			LoadingRequirementContainer layoutWideRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(metas.get(0));
+			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
+			if (!layoutWideRequirementContainer.requirementsMet()) {
 				continue;
 			}
 
@@ -480,14 +478,8 @@ public class MenuHandlerBase {
 		this.hidden.clear();
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
-
-//		this.vanillaClickSounds.clear();
-//		this.vanillaIdleTextures.clear();
-//		this.vanillaHoverTextures.clear();
-
 		this.vanillaButtonCustomizations.clear();
-		this.vanillaButtonVisibilityRequirementContainers.clear();
-
+		this.vanillaButtonLoadingRequirementContainers.clear();
 		this.audio.clear();
 		this.frontRenderItems.clear();
 		this.backgroundRenderItems.clear();
@@ -585,7 +577,7 @@ public class MenuHandlerBase {
 
 
 		//Handle vanilla button visibility requirements
-		for (Map.Entry<Widget, VisibilityRequirementContainer> m : this.vanillaButtonVisibilityRequirementContainers.entrySet()) {
+		for (Map.Entry<Widget, LoadingRequirementContainer> m : this.vanillaButtonLoadingRequirementContainers.entrySet()) {
 			boolean isBtnHidden = false;
 			for (ButtonData d : this.hidden) {
 				if (d.getButton() == m.getKey()) {
@@ -605,7 +597,7 @@ public class MenuHandlerBase {
 				}
 				if (btn != null) {
 					VanillaButtonCustomizationItem i = new VanillaButtonCustomizationItem(dummySec, btn, this);
-					i.visibilityRequirements = m.getValue();
+					i.loadingRequirements = m.getValue();
 					this.backgroundRenderItems.add(i);
 				}
 			}
@@ -614,7 +606,7 @@ public class MenuHandlerBase {
 
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
-				if (this.visibilityRequirementsMet(m.getKey().getButton())) {
+				if (this.vanillaButtonLoadingRequirementsMet(m.getKey().getButton())) {
 					this.handleVanillaAppearanceDelayFor(m.getKey());
 				}
 			}
@@ -903,7 +895,7 @@ public class MenuHandlerBase {
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 				if (b != null) {
-					this.vanillaButtonVisibilityRequirementContainers.put(b, new VanillaButtonCustomizationItem(sec, bd, this).visibilityRequirementContainer);
+					this.vanillaButtonLoadingRequirementContainers.put(b, LoadingRequirementContainer.deserializeRequirementContainer(sec));
 				}
 			}
 
@@ -1211,11 +1203,11 @@ public class MenuHandlerBase {
 			boolean fadein = this.fadeInVanilla.containsKey(d);
 			float delaysec = this.delayAppearanceVanilla.get(d);
 
-			VisibilityRequirementContainer vis = this.vanillaButtonVisibilityRequirementContainers.get(d.getButton());
-			
+			LoadingRequirementContainer reqs = this.vanillaButtonLoadingRequirementContainers.get(d.getButton());
+
 			d.getButton().visible = false;
-			if (vis != null) {
-				vis.forceHide = true;
+			if (reqs != null) {
+				reqs.forceRequirementsNotMet = true;
 			}
 			
 			if (fadein) {
@@ -1244,8 +1236,8 @@ public class MenuHandlerBase {
 							if (!fade) {
 								if (now >= start + (int)delay) {
 									d.getButton().visible = true;
-									if (vis != null) {
-										vis.forceHide = false;
+									if (reqs != null) {
+										reqs.forceRequirementsNotMet = false;
 									}
 									if (!fadein) {
 										return;
@@ -1292,8 +1284,8 @@ public class MenuHandlerBase {
 		}
 
 		//Re-init screen if layout-wide requirements changed
-		for (Map.Entry<VisibilityRequirementContainer, Boolean> m : this.cachedLayoutWideRequirements.entrySet()) {
-			if (m.getKey().isVisible() != m.getValue()) {
+		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
+			if (m.getKey().requirementsMet() != m.getValue()) {
 				e.getGui().init(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
 				break;
 			}
@@ -1773,10 +1765,10 @@ public class MenuHandlerBase {
 	}
 
 
-	protected boolean visibilityRequirementsMet(Widget b) {
-		VisibilityRequirementContainer c = this.vanillaButtonVisibilityRequirementContainers.get(b);
+	protected boolean vanillaButtonLoadingRequirementsMet(Widget b) {
+		LoadingRequirementContainer c = this.vanillaButtonLoadingRequirementContainers.get(b);
 		if (c != null) {
-			return c.isVisible();
+			return c.requirementsMet();
 		}
 		return true;
 	}
@@ -1901,7 +1893,7 @@ public class MenuHandlerBase {
 			this.lastLayoutPath = null;
 		}
 		
-		@Nullable
+		
 		public PropertiesSet getRandomLayout() {
 			if (!this.layouts.isEmpty()) {
 				if ((this.onlyFirstTime || !MenuCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
@@ -1988,7 +1980,7 @@ public class MenuHandlerBase {
 		public String customButtonLabel = null;
 		public String buttonDescription = null;
 		public boolean isButtonHidden = false;
-		public VisibilityRequirementContainer visibilityRequirementContainer = null;
+		public LoadingRequirementContainer loadingRequirementContainer = null;
 
 		public List<IAnimationRenderer> cachedAnimations = new ArrayList<IAnimationRenderer>();
 		public boolean lastHoverState = false;
