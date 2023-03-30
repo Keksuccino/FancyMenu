@@ -55,11 +55,6 @@ public class DummyCoreMainHandler extends MainMenuHandler {
 	public void onRenderPost(DrawScreenEvent.Post e) {
 		super.onRenderPost(e);
 	}
-
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		super.onRenderPre(e);
-	}
 	
 	@SubscribeEvent
 	@Override
@@ -83,6 +78,11 @@ public class DummyCoreMainHandler extends MainMenuHandler {
 	@Override
 	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
 		super.onRenderListBackground(e);
+	}
+
+	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+		super.onRenderPre(e);
 	}
 
 }

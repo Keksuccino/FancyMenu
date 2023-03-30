@@ -2,7 +2,8 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers.PlayerEntityCapeLayer;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers.PlayerEntityRenderLayer;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers.PlayerEntityShoulderParrotLayer;
@@ -34,7 +35,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 public class PlayerEntityItemRenderer extends PlayerRenderer {
 
@@ -270,7 +270,7 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
 
     protected void setupRotations(PoseStack matrix, float f11, float f12, float f13) {
         if (!this.properties.hasPose(Pose.SLEEPING)) {
-            matrix.mulPose(Axis.YP.rotationDegrees(180.0F - f12));
+            matrix.mulPose(Vector3f.YP.rotationDegrees(180.0F - f12));
         }
     }
 

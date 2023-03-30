@@ -6,12 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.mixin.client.IMixinGridWidget;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.GridWidget;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -163,77 +161,37 @@ public class ButtonCache {
 
 	public static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
 		caching = true;
-		List<ButtonData> buttonDataList = new ArrayList<ButtonData>();
+		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
 		List<Long> ids = new ArrayList<Long>();
 		try {
-
-			//Reset the button list
+			//Resetting the button list
 			((IMixinScreen)s).getRenderablesFancyMenu().clear();
-
-			//Set all important variables and init screen
+			
+			//Setting all important values for the GuiScreen to be able to initialize itself
 			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
+
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
+
 			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 
-			//Reflecting the buttons list field to cache all buttons of the menu
-			List<AbstractWidget> widgets = new ArrayList<>();
-			for (Renderable r : ((IMixinScreen)s).getRenderablesFancyMenu()) {
-				if (r instanceof GridWidget) {
-					widgets.addAll(((IMixinGridWidget)r).invokeGetContainedChildrenFancyMenu());
-				} else if (r instanceof AbstractWidget) {
-					widgets.add((AbstractWidget)r);
+			for (Widget d : ((IMixinScreen)s).getRenderablesFancyMenu()) {
+				if (d instanceof AbstractWidget) {
+					AbstractWidget w = (AbstractWidget) d;
+					String idRaw = w.x + "" + w.y;
+					long id = 0;
+					if (MathUtils.isLong(idRaw)) {
+						id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
+					}
+					ids.add(id);
+					buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
 				}
 			}
-			for (AbstractWidget w : widgets) {
-				String idRaw = w.x + "" + w.y;
-				long id = 0;
-				if (MathUtils.isLong(idRaw)) {
-					id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
-				}
-				ids.add(id);
-				buttonDataList.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
-			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		caching = false;
-		return buttonDataList;
+		return buttonlist;
 	}
-
-//	public static List<ButtonData> cacheButtons(Screen s, int screenWidth, int screenHeight) {
-//		caching = true;
-//		List<ButtonData> buttonlist = new ArrayList<ButtonData>();
-//		List<Long> ids = new ArrayList<Long>();
-//		try {
-//			//Resetting the button list
-//			((IMixinScreen)s).getRenderablesFancyMenu().clear();
-//
-//			//Setting all important values for the GuiScreen to be able to initialize itself
-//			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
-//
-//			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
-//
-//			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
-//
-//			for (Renderable d : ((IMixinScreen)s).getRenderablesFancyMenu()) {
-//				if (d instanceof AbstractWidget) {
-//					AbstractWidget w = (AbstractWidget) d;
-//					String idRaw = w.x + "" + w.y;
-//					long id = 0;
-//					if (MathUtils.isLong(idRaw)) {
-//						id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
-//					}
-//					ids.add(id);
-//					buttonlist.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
-//				}
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		caching = false;
-//		return buttonlist;
-//	}
 
 	protected static Long getAvailableIdFromBaseId(long baseId, List<Long> ids) {
 		if (ids.contains(baseId)) {

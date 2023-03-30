@@ -2,11 +2,4 @@ accessWidener	v1 named
 
 mutable field net/minecraft/client/gui/screens/Screen title Lnet/minecraft/network/chat/Component;
 accessible field net/minecraft/client/gui/screens/Screen title Lnet/minecraft/network/chat/Component;
-
-accessible field net/minecraft/client/gui/components/AbstractWidget x I
-accessible field net/minecraft/client/gui/components/AbstractWidget y I
-
 accessible field net/minecraft/client/model/PlayerModel cloak Lnet/minecraft/client/model/geom/ModelPart;
-
-mutable field net/minecraft/client/gui/screens/TitleScreen fading Z
-accessible field net/minecraft/client/gui/screens/TitleScreen fading Z

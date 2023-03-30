@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.la
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -129,7 +129,7 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
 
         matrix.pushPose();
         matrix.translate(finalPosX, finalPosY, 0.0F);
-        matrix.mulPose(Axis.ZP.rotationDegrees(this.splashRotation));
+        matrix.mulPose(Vector3f.ZP.rotationDegrees(this.splashRotation));
         float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         f = f * 100.0F / (float) (font.width(this.cachedSplashText) + 32);
         matrix.scale(f, f, f);

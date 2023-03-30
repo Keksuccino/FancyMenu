@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import de.keksuccino.konkrete.gui.content.widget.WidgetUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
@@ -287,7 +285,7 @@ public class MenuBar extends UIBase {
 						int xl = 0;
 						for (AdvancedButton b : this.leftElements.values()) {
 							if (b.visible) {
-								WidgetUtils.setHeight(b, this.height);
+								b.setHeight(this.height);
 								if (!(b instanceof AdvancedImageButton)) {
 									int i = Minecraft.getInstance().font.width(b.getMessageString());
 									b.setWidth(i + 12);
@@ -304,7 +302,7 @@ public class MenuBar extends UIBase {
 						int xr = (int) (width / this.getScale());
 						for (AdvancedButton b : this.rightElements.values()) {
 							if (b.visible) {
-								WidgetUtils.setHeight(b, this.height);
+								b.setHeight(this.height);
 								if (!(b instanceof AdvancedImageButton)) {
 									int i = Minecraft.getInstance().font.width(b.getMessageString());
 									b.setWidth(i + 12);
@@ -323,7 +321,7 @@ public class MenuBar extends UIBase {
 						AdvancedButton right = this.rightElements.get("menubar.default.extendbtn");
 						if (right != null) {
 
-							WidgetUtils.setHeight(right, this.height);
+							right.setHeight(this.height);
 							right.x = (int) ((width / this.getScale()) - right.getWidth());
 							right.y = 0;
 							colorizeButton(right);

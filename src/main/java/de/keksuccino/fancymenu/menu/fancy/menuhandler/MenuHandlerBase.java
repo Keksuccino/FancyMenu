@@ -59,6 +59,7 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
+import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
@@ -972,6 +973,16 @@ public class MenuHandlerBase extends GuiComponent {
 					backgroundRenderItems.add(new SlideshowCustomizationItem(sec));
 				} else {
 					frontRenderItems.add(new SlideshowCustomizationItem(sec));
+				}
+			}
+
+			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				if (action.equalsIgnoreCase("addentity")) {
+					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+						backgroundRenderItems.add(new PlayerEntityCustomizationItem(sec));
+					} else {
+						frontRenderItems.add(new PlayerEntityCustomizationItem(sec));
+					}
 				}
 			}
 

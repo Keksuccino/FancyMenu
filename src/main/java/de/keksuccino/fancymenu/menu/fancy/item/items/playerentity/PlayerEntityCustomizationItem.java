@@ -3,7 +3,8 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -16,6 +17,8 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
+import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -24,13 +27,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joml.Quaternionf;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
 public class PlayerEntityCustomizationItem extends CustomizationItem {
 
-    //TODO übernehmen
     private static final Logger LOGGER = LogManager.getLogger();
 
     public PlayerEntityItemRenderer normalRenderer = new PlayerEntityItemRenderer(false);
@@ -521,26 +523,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
         this.slimRenderer.properties.setCapeTextureLocation(loc);
     }
 
-    //TODO übernehmen
-//    @Nullable
-//    protected ResourceLocation getResourceLocationOfWebResource(String url) {
-//        try {
-//            WebTextureResourceLocation wt = TextureHandler.getWebResource(url, false);
-//            if (wt != null) {
-//                if (!wt.isReady()) {
-//                    wt.loadTexture();
-//                }
-//                ResourceLocation loc = wt.getResourceLocation();
-//                if (loc != null) {
-//                    return loc;
-//                }
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
     public PlayerEntityItemRenderer getActiveRenderer() {
         if (this.slim) {
             return this.slimRenderer;
@@ -613,11 +595,11 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
         PoseStack innerMatrix = new PoseStack();
         innerMatrix.translate(0.0F, 0.0F, 1000.0F);
         innerMatrix.scale((float)scale, (float)scale, (float)scale);
-        Quaternionf quat1;
-        Quaternionf quat2;
+        Quaternion quat1;
+        Quaternion quat2;
         if (this.followMouse) {
-            quat1 = (new Quaternionf()).rotateZ((float)Math.PI);
-            quat2 = (new Quaternionf()).rotateX(angleY * 20.0F * ((float)Math.PI / 180F));
+            quat1 = Vector3f.ZP.rotationDegrees(180.0F);
+            quat2 = Vector3f.XP.rotationDegrees(angleY * 20.0F);
             quat1.mul(quat2);
             innerMatrix.mulPose(quat1);
             props.yBodyRot = 180.0F + angleX * 20.0F;
@@ -626,8 +608,8 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
             props.yHeadRot = props.yRot;
             props.yHeadRotO = props.yRot;
         } else {
-            quat1 = Axis.ZP.rotationDegrees(180.0F);
-            quat2 = Axis.XP.rotationDegrees(this.bodyRotationY);
+            quat1 = Vector3f.ZP.rotationDegrees(180.0F);
+            quat2 = Vector3f.XP.rotationDegrees(this.bodyRotationY);
             quat1.mul(quat2);
             innerMatrix.mulPose(quat1);
             props.yBodyRot = 180.0F + this.bodyRotationX;
@@ -637,7 +619,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
         }
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        quat2.conjugate();
+        quat2.conj();
         dispatcher.overrideCameraOrientation(quat2);
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();

@@ -371,7 +371,7 @@ public class FancyMenu implements ModInitializer {
 	}
 
 	public static String getMinecraftVersion() {
-		return SharedConstants.getCurrentVersion().getName();
+		return SharedConstants.getCurrentVersion().getReleaseTarget();
 	}
 
 	public static File getGameDirectory() {

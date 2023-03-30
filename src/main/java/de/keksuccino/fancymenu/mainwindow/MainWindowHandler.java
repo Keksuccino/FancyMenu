@@ -9,7 +9,6 @@ import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.FancyMenu;
-import net.minecraft.server.packs.resources.IoSupplier;
 
 public class MainWindowHandler {
 
@@ -39,7 +38,7 @@ public class MainWindowHandler {
 			e.printStackTrace();
 		}
 	}
-
+	
 	public static void updateWindowIcon() {
 		if (FancyMenu.config.getOrDefault("customwindowicon", false)) {
 			try {
@@ -52,16 +51,18 @@ public class MainWindowHandler {
 				//Yes, I need to do this to get the image size.
 				BufferedImage i16buff = ImageIO.read(i16);
 				if ((i16buff.getHeight() != 16) || (i16buff.getWidth() != 16)) {
-					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon16x16.png' not 16x16!");
+					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon16x16.png' is not 16x16 pixels!");
 					return;
 				}
 				BufferedImage i32buff = ImageIO.read(i32);
 				if ((i32buff.getHeight() != 32) || (i32buff.getWidth() != 32)) {
-					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon32x32.png' not 32x32!");
+					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon32x32.png' is not 32x32 pixels!");
 					return;
 				}
-
-				Minecraft.getInstance().getWindow().setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
+				InputStream icon16 = new FileInputStream(i16);
+				InputStream icon32 = new FileInputStream(i32);
+				
+				Minecraft.getInstance().getWindow().setIcon(icon16, icon32);
 				System.out.println("[FANCYMENU] Custom minecraft icon successfully loaded!");
 			} catch (Exception e) {
 				e.printStackTrace();

@@ -35,6 +35,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snaps
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorUI.LayoutPropertiesContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutAnimation;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutPlayerEntity;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutShape;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSlideshow;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
@@ -50,6 +51,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.menu.fancy.item.playerentity.PlayerEntityCustomizationItem;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
@@ -1255,6 +1257,18 @@ public class LayoutEditorScreen extends Screen {
 
 		} else {
 			displayNotification("§c§l" + Locals.localize("helper.creator.texttooshort.title"), "", Locals.localize("helper.creator.texttooshort.desc"), "", "", "", "");
+		}
+	}
+
+	protected void addPlayerEntity() {
+		if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+			PropertiesSection s = new PropertiesSection("customization");
+			s.addEntry("action", "addentity");
+			LayoutPlayerEntity e = new LayoutPlayerEntity(new PlayerEntityCustomizationItem(s), this);
+			e.setX(e.getWidth());
+			e.setY(e.getHeight());
+			this.history.saveSnapshot(this.history.createSnapshot());
+			this.addContent(e);
 		}
 	}
 

@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderRegistry;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.gui.content.widget.WidgetUtils;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -104,7 +103,7 @@ public class PlaceholderEditBox extends AdvancedTextField {
 		if (this.variableButton != null) {
 
 			this.variableButton.setWidth(this.height);
-			WidgetUtils.setHeight(this.variableButton, this.height);
+			this.variableButton.setHeight(this.height);
 
 			super.renderButton(matrix, mouseX, mouseY, partialTicks);
 

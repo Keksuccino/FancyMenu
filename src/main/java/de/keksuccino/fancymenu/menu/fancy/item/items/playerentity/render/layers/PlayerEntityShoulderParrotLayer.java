@@ -11,7 +11,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ParrotRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.Parrot;
 import org.jetbrains.annotations.Nullable;
 
 public class PlayerEntityShoulderParrotLayer extends PlayerEntityRenderLayer {
@@ -34,8 +33,7 @@ public class PlayerEntityShoulderParrotLayer extends PlayerEntityRenderLayer {
     private void render(PoseStack p_117318_, MultiBufferSource p_117319_, int p_117320_, float p_117322_, float p_117323_, float p_117324_, float p_117325_, boolean onLeftShoulder) {
         p_117318_.pushPose();
         p_117318_.translate(onLeftShoulder ? 0.4F : -0.4F, this.properties.isCrouching() ? -1.3F : -1.5F, 0.0F);
-        Parrot.Variant parrot$variant = Parrot.Variant.byId(this.properties.shoulderParrotVariant);
-        VertexConsumer vertexconsumer = p_117319_.getBuffer(this.model.renderType(ParrotRenderer.getVariantTexture(parrot$variant)));
+        VertexConsumer vertexconsumer = p_117319_.getBuffer(this.model.renderType(ParrotRenderer.PARROT_LOCATIONS[this.properties.shoulderParrotVariant]));
         this.model.renderOnShoulder(p_117318_, vertexconsumer, p_117320_, OverlayTexture.NO_OVERLAY, p_117322_, p_117323_, p_117324_, p_117325_, this.properties.tickCount);
         p_117318_.popPose();
     }

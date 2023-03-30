@@ -39,4 +39,5 @@ public class RangeSliderButton extends AdvancedSliderButton {
     public void setSelectedRangeValue(double rangeValue) {
         this.setValue(((Mth.clamp(rangeValue, this.minValue, this.maxValue) - this.minValue) / (this.maxValue - this.minValue)));
     }
+
 }

@@ -103,16 +103,20 @@ public class PlayerEntityRotationScreen extends Screen {
         int yCenter = this.height / 2;
         int sliderX = xCenter - 100;
 
-        this.bodyXSlider.setPosition(sliderX, yCenter - 5 - 20 - 5 - 20);
+        this.bodyXSlider.x = sliderX;
+        this.bodyXSlider.y = yCenter - 5 - 20 - 5 - 20;
         this.bodyXSlider.render(matrix, mouseX, mouseY, partialTicks);
 
-        this.bodyYSlider.setPosition(sliderX, yCenter - 5 - 20);
+        this.bodyYSlider.x = sliderX;
+        this.bodyYSlider.y = yCenter - 5 - 20;
         this.bodyYSlider.render(matrix, mouseX, mouseY, partialTicks);
 
-        this.headXSlider.setPosition(sliderX, yCenter);
+        this.headXSlider.x = sliderX;
+        this.headXSlider.y = yCenter;
         this.headXSlider.render(matrix, mouseX, mouseY, partialTicks);
 
-        this.headYSlider.setPosition(sliderX, yCenter + 20 + 5);
+        this.headYSlider.x = sliderX;
+        this.headYSlider.y = yCenter + 20 + 5;
         this.headYSlider.render(matrix, mouseX, mouseY, partialTicks);
 
         this.doneButton.setX(xCenter - this.doneButton.getWidth() - 5);
