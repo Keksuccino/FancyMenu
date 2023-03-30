@@ -123,7 +123,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }
                 if (i.source != null) {
                     if (i.sourceMode == TextCustomizationItem.SourceMode.DIRECT) {
-                        s.setText(i.source.replace("%n%", "\n"));
+                        s.setText(i.source.replace("%n%", "\n").replace("\\n", "\n"));
                     } else {
                         s.setText(i.source);
                     }

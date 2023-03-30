@@ -2,9 +2,7 @@
 package de.keksuccino.fancymenu.menu.button.buttonactions;
 
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
-import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.konkrete.localization.Locals;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,13 +41,13 @@ public class LegacyButtonActions {
         for (String s : actionIdentifiers) {
             String actionDescKey = "helper.creator.custombutton.config.actiontype." + s + ".desc";
             String valueDescKey = "helper.creator.custombutton.config.actiontype." + s + ".desc.value";
-            String valueExample = Locals.localizeTo("helper.creator.custombutton.config.actiontype." + s + ".desc.value.example", "en_us");
-            actions.add(buildContainer(s, actionDescKey, valueDescKey, valueExample));
+            String valueExampleKey = "helper.creator.custombutton.config.actiontype." + s + ".desc.value.example";
+            actions.add(buildContainer(s, actionDescKey, valueDescKey, valueExampleKey));
         }
         return actions;
     }
 
-    private static ButtonActionContainer buildContainer(String identifier, String descLocalizationKey, String valueDescLocalizationKey, String valueExample) {
+    private static ButtonActionContainer buildContainer(String identifier, String descLocalizationKey, String valueDescLocalizationKey, String valueExampleKey) {
         return new ButtonActionContainer(identifier) {
             @Override
             public String getAction() {
@@ -77,10 +75,9 @@ public class LegacyButtonActions {
                 }
                 return null;
             }
-            @Nullable
             @Override
             public String getValueExample() {
-                return valueExample;
+                return Locals.localize(valueExampleKey);
             }
         };
     }
