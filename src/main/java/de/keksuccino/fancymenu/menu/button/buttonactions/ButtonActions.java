@@ -1,6 +1,7 @@
 
 package de.keksuccino.fancymenu.menu.button.buttonactions;
 
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.menu.button.buttonactions.layout.DisableLayoutButtonAction;
 import de.keksuccino.fancymenu.menu.button.buttonactions.layout.EnableLayoutButtonAction;
@@ -20,6 +21,10 @@ public class ButtonActions {
         ButtonActionRegistry.registerButtonAction(new ToggleLayoutButtonAction());
         ButtonActionRegistry.registerButtonAction(new EnableLayoutButtonAction());
         ButtonActionRegistry.registerButtonAction(new DisableLayoutButtonAction());
+
+        for (ButtonActionContainer b : LegacyButtonActions.buildLegacyActionContainers()) {
+            ButtonActionRegistry.registerButtonAction(b);
+        }
 
     }
 

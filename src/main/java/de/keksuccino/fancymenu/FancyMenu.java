@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
@@ -23,8 +24,6 @@ import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementHandler;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.requirements.VisibilityRequirements;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
@@ -52,20 +51,19 @@ import org.apache.logging.log4j.Logger;
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.6.0,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
 public class FancyMenu {
 
-	
-	public static final String VERSION = "2.13.3";
+	//TODO CHANGE BEFORE PUBLISHING!!!!
+	public static final boolean IS_DEV_ENVIRONMENT = false;
+
+	public static final String VERSION = "2.14.0";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
 
-	
 	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
 	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
-	
-
 	
 	private static File animationsPath = new File(MOD_DIR, "/animations");
 	private static File customizationPath = new File(MOD_DIR, "/customization");
@@ -73,8 +71,7 @@ public class FancyMenu {
 	private static File buttonscriptPath = new File(MOD_DIR, "/buttonscripts");
 	private static File panoramaPath = new File(MOD_DIR, "/panoramas");
 	private static File slideshowPath = new File(MOD_DIR, "/slideshows");
-	
-	
+
 	public FancyMenu() {
 		try {
 
@@ -103,7 +100,7 @@ public class FancyMenu {
 
 				ButtonActions.registerAll();
 
-				VisibilityRequirements.registerAll();
+				LoadingRequirements.registerAll();
 
 				Placeholders.registerAll();
 
@@ -125,8 +122,6 @@ public class FancyMenu {
 	    		CustomGuiLoader.loadCustomGuis();
 	    		
 	    		GameIntroHandler.init();
-
-				VisibilityRequirementHandler.init();
 	    		
 	        	MenuCustomization.init();
 
@@ -223,11 +218,17 @@ public class FancyMenu {
 			f.mkdirs();
 		}
 		
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "en_us.local"), "en_us", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
+		if (!IS_DEV_ENVIRONMENT) {
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "en_us.local"), "en_us", f.getPath());
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "uk_ua.local"), "uk_ua", f.getPath());
+			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "ru_ru.local"), "ru_ru", f.getPath());
+		} else {
+			Locals.getLocalsFromFile(new File("../src/main/resources/assets/keksuccino/fmlocals/en_us.local"));
+		}
 		
 		Locals.getLocalsFromDir(f.getPath());
 	}
@@ -245,6 +246,7 @@ public class FancyMenu {
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
 			config.registerValue("forcefullscreen", false, "general");
+			config.registerValue("variables_to_reset_on_launch", "", "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
 			config.registerValue("advancedmode", false, "customization");
@@ -256,7 +258,6 @@ public class FancyMenu {
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
-			config.registerValue("loadinganimationcolor", "#E22837", "loading");
 			config.registerValue("preloadanimations", true, "loading");
 			
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");

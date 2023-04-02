@@ -19,7 +19,6 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.WindowSizePopup.ActionType;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
@@ -27,13 +26,15 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutEle
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ChooseFromStringListScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.MenuBar;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.component.Component;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.menu.fancy.item.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
@@ -847,12 +848,14 @@ public class LayoutEditorUI extends UIBase {
 			
 			this.addSeparator();
 
-			/** VISIBILITY REQUIREMENTS [LAYOUT-WIDE] **/
-			AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.global_visibility_requirements"), (press) -> {
-				Minecraft.getMinecraft().displayGuiScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
+			/** LOADING REQUIREMENTS [LAYOUT-WIDE] **/
+			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (press) -> {
+				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer, (call) -> {});
+				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+				Minecraft.getMinecraft().displayGuiScreen(s);
 			});
-			visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.global_visibility_requirements.desc"), "%n%"));
-			this.addContent(visibilityRequirementsButton);
+			loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc"), "%n%"));
+			this.addContent(loadingRequirementsButton);
 			
 			/** WINDOW SIZE RESTRICTIONS **/
 			FMContextMenu windowSizeMenu = new FMContextMenu();
@@ -1047,29 +1050,25 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebTexture));
+				//TODO übernehmenn
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
+				s.multilineMode = false;
+				Minecraft.getMinecraft().displayGuiScreen(s);
+				//----------------------
 			});
 			this.addContent(webImageButton);
-			
-//			/** TEXT **/
-//			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
-//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
-//			});
-//			this.addContent(textButton);
-//
-//			/** WEB TEXT **/
-//			AdvancedButton webTextButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webtext"), (press) -> {
-//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebText));
-//			});
-//			this.addContent(webTextButton);
 			
 			/** SPLASH TEXT **/
 			FMContextMenu splashMenu = new FMContextMenu();
 			splashMenu.setAutoclose(true);
 			this.addChild(splashMenu);
-			
+
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.add.splash.single.desc"), null, 240, this.parent::addSingleSplashText));
+				//TODO übernehmenn
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
+				s.multilineMode = false;
+				Minecraft.getMinecraft().displayGuiScreen(s);
+				//--------------------
 			});
 			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
 			splashMenu.addContent(singleSplashButton);
@@ -1097,10 +1096,12 @@ public class LayoutEditorUI extends UIBase {
 				splashMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(splashButton);
-			
+
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this.parent::addButton));
+				//TODO übernehmenn
+				this.parent.addButton("New Button");
+				//------------------
 			});
 			this.addContent(buttonButton);
 			

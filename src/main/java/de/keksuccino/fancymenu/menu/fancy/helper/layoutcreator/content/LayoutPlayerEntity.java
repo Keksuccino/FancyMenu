@@ -5,10 +5,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.component.Component;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
@@ -104,14 +104,12 @@ public class LayoutPlayerEntity extends LayoutElement {
 		playernamePopup.addContent(autoPlayernameB);
 
 		AdvancedButton setPlayernameB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.playerentity.playername.setname"), true, (press) -> {
-
-			FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.playername.setname") + ":", null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.playerentity.playername.setname")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
 						if ((call != this.getObject().playerName) || (this.isCLientPlayerName != false)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
 						this.isCLientPlayerName = false;
 						this.getObject().playerName = call;
 						this.reloadEntity();
@@ -119,21 +117,17 @@ public class LayoutPlayerEntity extends LayoutElement {
 						if (this.getObject().playerName != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						
 						this.isCLientPlayerName = false;
 						this.getObject().playerName = null;
 						this.reloadEntity();
 					}
 				}
-				
 			});
-			
+			s.multilineMode = false;
 			if (this.getObject().playerName != null) {
-				t.setText(StringUtils.convertFormatCodes(this.getObject().playerName, "§", "&"));
+				s.setText(StringUtils.convertFormatCodes(this.getObject().playerName, "§", "&"));
 			}
-			
-			PopupHandler.displayPopup(t);
-			
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		setPlayernameB.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.playerentity.playername.setname.btndesc"), "%n%"));
 		playernamePopup.addContent(setPlayernameB);
@@ -204,46 +198,36 @@ public class LayoutPlayerEntity extends LayoutElement {
 		skinPopup.addContent(localSkinB);
 		
 		AdvancedButton urlSkinB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.playerentity.texture.url"), true, (press) -> {
-
-			FMTextInputPopup t = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.playerentity.texture.url")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
 						String finalURL = null;
 						call = WebUtils.filterURL(call);
 						finalURL = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(call);
-
 						if (WebUtils.isValidUrl(finalURL)) {
 							if (this.skinUrl != call) {
 								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 							}
-
 							this.skinPath = null;
 							this.skinUrl = call;
 							this.reloadEntity();
-
 						} else {
 							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
 						}
-
 					} else {
-
 						if (this.skinUrl != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-
 						this.skinUrl = null;
 						this.reloadEntity();
-
 					}
 				}
 			});
-			
+			s.multilineMode = false;
 			if (this.skinUrl != null) {
-				t.setText(this.skinUrl);
+				s.setText(this.skinUrl);
 			}
-			
-			PopupHandler.displayPopup(t);
-			
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		skinPopup.addContent(urlSkinB);
 
@@ -313,46 +297,36 @@ public class LayoutPlayerEntity extends LayoutElement {
 		capePopup.addContent(localCapeB);
 		
 		AdvancedButton urlCapeB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.playerentity.texture.url"), true, (press) -> {
-
-			FMTextInputPopup t = new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.playerentity.texture.url") + ":", null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (!call.equals("")) {
 						String finalURL = null;
 						call = WebUtils.filterURL(call);
 						finalURL = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(call);
-
 						if (WebUtils.isValidUrl(finalURL)) {
 							if (this.capeUrl != call) {
 								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 							}
-
 							this.capePath = null;
 							this.capeUrl = call;
 							this.reloadEntity();
-
 						} else {
 							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.web.invalidurl"), "", "", "", "", "", "");
 						}
-
 					} else {
-
 						if (this.capeUrl != null) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-
 						this.capeUrl = null;
 						this.reloadEntity();
-
 					}
 				}
 			});
-			
+			s.multilineMode = false;
 			if (this.capeUrl != null) {
-				t.setText(this.capeUrl);
+				s.setText(this.capeUrl);
 			}
-			
-			PopupHandler.displayPopup(t);
-			
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		capePopup.addContent(urlCapeB);
 
@@ -627,7 +601,7 @@ public class LayoutPlayerEntity extends LayoutElement {
 		p1.addEntry("crouching", "" + this.getEntity().crouching);
 		p1.addEntry("showname", "" + this.getEntity().showName);
 
-		this.addVisibilityPropertiesTo(p1);
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

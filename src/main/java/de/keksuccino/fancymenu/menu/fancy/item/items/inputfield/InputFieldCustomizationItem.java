@@ -94,6 +94,8 @@ public class InputFieldCustomizationItem extends CustomizationItem {
                         if (!this.textField.getText().equals(val)) {
                             this.textField.setText(val);
                         }
+                    } else {
+                        this.textField.setText("");
                     }
                 }
                 this.lastValue = this.textField.getText();

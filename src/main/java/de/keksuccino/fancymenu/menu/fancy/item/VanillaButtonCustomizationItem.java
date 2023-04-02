@@ -4,10 +4,9 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.fancymenu.menu.button.ButtonData;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -26,7 +25,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	protected boolean normalLabelCached = false;
 
 	public MenuHandlerBase handler;
-	public VisibilityRequirementContainer visibilityRequirements = null;
+	public LoadingRequirementContainer loadingRequirements = null;
 	
 	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent, MenuHandlerBase handler) {
 		super(item);
@@ -104,16 +103,18 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			this.updateValues();
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-				if (this.visibilityRequirements != null) {
+				if (this.loadingRequirements != null) {
 					if (!this.handler.isVanillaButtonHidden(this.parent.getButton())) {
-						this.visibilityRequirementContainer = this.visibilityRequirements;
-						this.parent.getButton().visible = this.visibilityRequirementsMet();
+						//TODO übernehmenn
+						this.loadingRequirementContainer = this.loadingRequirements;
+						this.parent.getButton().visible = this.loadingRequirementsMet();
+						//----------------
 					}
 				}
 			}
 
 			if (this.action.equals("addhoversound")) {
-				if (this.parent.getButton().isMouseOver() && !hovered && (this.value != null)) {
+				if (this.parent.getButton().isMouseOver() && this.parent.getButton().enabled && !hovered && (this.value != null)) {
 					SoundHandler.resetSound(this.value);
 					SoundHandler.playSound(this.value);
 					this.hovered = true;
@@ -126,7 +127,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
 					this.parent.hasHoverLabel = true;
-					if (this.parent.getButton().isMouseOver()) {
+					if (this.parent.getButton().isMouseOver() && this.parent.getButton().enabled) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;
 							this.normalLabel = this.parent.getButton().displayString;

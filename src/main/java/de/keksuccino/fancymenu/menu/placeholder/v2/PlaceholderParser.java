@@ -25,8 +25,7 @@ public class PlaceholderParser {
 
     private static Map<String, Long> logCooldown = new HashMap<>();
 
-    @Nonnull
-    public static String replacePlaceholders(@Nonnull String in) {
+    public static String replacePlaceholders(String in) {
         if (in == null) {
             in = "";
         }
@@ -34,20 +33,21 @@ public class PlaceholderParser {
         //TODO remove in a later release
         in = DynamicValueHelper.convertFromRaw(in);
         in = StringUtils.convertFormatCodes(in, "&", "§");
-        String ori = in;
-        String rep = null;
+        String original = in;
+        String replaced = null;
         //Replace placeholders and cover placeholders added by other placeholders (like when getting content from elsewhere containing a placeholder that wasn't part of the original string)
-        while ((rep == null) || !rep.equals(ori)) {
-            if (rep != null) {
-                ori = rep;
+        while ((replaced == null) || !replaced.equals(original)) {
+            if (replaced != null) {
+                original = replaced;
             }
-            rep = innerReplacePlaceholders(ori);
-            if (rep == null) {
+            replaced = innerReplacePlaceholders(original);
+            if (replaced == null) {
                 break;
             }
         }
-        if (rep != null) {
-            return rep.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
+        if (replaced != null) {
+            replaced = StringUtils.convertFormatCodes(replaced, "&", "§");
+            return replaced.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
         }
         return in;
     }

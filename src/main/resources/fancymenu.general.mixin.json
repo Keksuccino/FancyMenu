@@ -4,23 +4,27 @@
   "compatibilityLevel": "JAVA_8",
   "minVersion": "0.8",
   "client": [
+    "IMixinChatScreen",
+    "IMixinGuiTextField",
+    "IMixinServerList",
+    "MixinConnectScreen",
     "MixinGuiButton",
     "MixinGuiButtonImage",
-    "MixinGuiSlot",
-    "MixinGuiScreen",
     "MixinGuiButtonLanguage",
-    "MixinMinecraft",
-    "MixinScaledResolution",
+    "MixinGuiScreen",
     "MixinGuiScreenResourcePacks",
+    "MixinGuiSlot",
+    "MixinMinecraft",
     "MixinOnlineServerEntry",
-    "MixinWorldListEntry",
-    "MixinConnectScreen",
-    "IMixinChatScreen",
-    "IMixinServerList"
+    "MixinScaledResolution",
+    "MixinWorldListEntry"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "refmap": "fancymenu.general.mixin-refmap.json",
-  "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin"
+  "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
+  "mixins": [
+    "IMixinStyle"
+  ]
 }

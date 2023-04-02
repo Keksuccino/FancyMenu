@@ -18,8 +18,6 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -64,13 +62,9 @@ public class CustomizationHelper {
 		if (!MenuCustomization.isBlacklistedMenu(e.getGui().getClass().getName())) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
-					if (!(e.getGui() instanceof ButtonActionScreen)) {
-						if (!(e.getGui() instanceof VisibilityRequirementsScreen)) {
 
-							CustomizationHelperUI.render(e.getGui());
+					CustomizationHelperUI.render(e.getGui());
 
-						}
-					}
 				}
 			}
 		}

@@ -67,7 +67,7 @@ public class LayoutSlideshow extends LayoutElement {
 			p1.addEntry("height", "" + this.object.height);
 		}
 
-		this.addVisibilityPropertiesTo(p1);
+		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);
 		

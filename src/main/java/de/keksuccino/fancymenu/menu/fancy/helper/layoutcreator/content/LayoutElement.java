@@ -10,19 +10,18 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.component.Component;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.menu.fancy.item.visibilityrequirements.VisibilityRequirementContainer;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -309,7 +308,7 @@ public abstract class LayoutElement extends Gui {
 		}
 
 		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					if (call.replace(" ", "").equals("")) {
@@ -322,15 +321,16 @@ public abstract class LayoutElement extends Gui {
 					this.object.orientation = "top-left";
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedPosX != null) {
-				p.setText(this.object.advancedPosX);
+				s.setText(this.object.advancedPosX);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		advancedPositioningMenu.addContent(advancedPosXButton);
 
 		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 					if (call.replace(" ", "").equals("")) {
@@ -343,10 +343,11 @@ public abstract class LayoutElement extends Gui {
 					this.object.orientation = "top-left";
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedPosY != null) {
-				p.setText(this.object.advancedPosY);
+				s.setText(this.object.advancedPosY);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		advancedPositioningMenu.addContent(advancedPosYButton);
 
@@ -375,19 +376,19 @@ public abstract class LayoutElement extends Gui {
 		}
 
 		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
-						if ((this.object.advancedWidth != null) || (this.object.getWidth() != 50)) {
+						if ((this.object.advancedWidth != null) || (this.object.width != 50)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						this.object.setWidth(50);
+						this.object.width = 50;
 						this.object.advancedWidth = null;
 					} else {
-						if ((this.object.advancedWidth == null) || !call.equals(this.object.advancedWidth) || (this.object.getWidth() != 50)) {
+						if ((this.object.advancedWidth == null) || !call.equals(this.object.advancedWidth) || (this.object.width != 50)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						this.object.setWidth(50);
+						this.object.width = 50;
 						this.object.advancedWidth = call;
 						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
 							this.object.orientation = "top-left";
@@ -397,27 +398,28 @@ public abstract class LayoutElement extends Gui {
 					}
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedWidth != null) {
-				p.setText(this.object.advancedWidth);
+				s.setText(this.object.advancedWidth);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		advancedSizingMenu.addContent(advancedWidthButton);
 
 		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-			PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), null, 240, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
-						if ((this.object.advancedHeight != null) || (this.object.getHeight() != 50)) {
+						if ((this.object.advancedHeight != null) || (this.object.height != 50)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						this.object.setHeight(50);
+						this.object.height = 50;
 						this.object.advancedHeight = null;
 					} else {
-						if ((this.object.advancedHeight == null) || !call.equals(this.object.advancedHeight) || (this.object.getHeight() != 50)) {
+						if ((this.object.advancedHeight == null) || !call.equals(this.object.advancedHeight) || (this.object.height != 50)) {
 							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
 						}
-						this.object.setHeight(50);
+						this.object.height = 50;
 						this.object.advancedHeight = call;
 						if ((this instanceof LayoutVanillaButton) && (this.object.orientation.equals("original"))) {
 							this.object.orientation = "top-left";
@@ -427,10 +429,11 @@ public abstract class LayoutElement extends Gui {
 					}
 				}
 			});
+			s.multilineMode = false;
 			if (this.object.advancedHeight != null) {
-				p.setText(this.object.advancedHeight);
+				s.setText(this.object.advancedHeight);
 			}
-			PopupHandler.displayPopup(p);
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
 
@@ -544,13 +547,15 @@ public abstract class LayoutElement extends Gui {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
 
-		/** VISIBILITY REQUIREMENTS **/
-		AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.visibilityrequirements"), (press) -> {
-			Minecraft.getMinecraft().displayGuiScreen(new VisibilityRequirementsScreen(this.handler, this.object));
+		/** LOADING REQUIREMENTS **/
+		AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
+			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer, (call) -> {});
+			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			Minecraft.getMinecraft().displayGuiScreen(s);
 		});
-		visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.btn.desc", ""), "%n%"));
+		loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"), "%n%"));
 		if (this.enableVisibilityRequirements) {
-			this.rightclickMenu.addContent(visibilityRequirementsButton);
+			this.rightclickMenu.addContent(loadingRequirementsButton);
 		}
 		
 		/** COPY **/
@@ -1359,109 +1364,8 @@ public abstract class LayoutElement extends Gui {
 	
 	public abstract List<PropertiesSection> getProperties();
 
-	public void addVisibilityPropertiesTo(PropertiesSection sec) {
-
-		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
-
-		if (c.vrCheckForSingleplayer) {
-			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
-		}
-		if (c.vrCheckForMultiplayer) {
-			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
-		}
-		if (c.vrCheckForWindowWidth) {
-			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
-			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
-		}
-		if (c.vrCheckForWindowHeight) {
-			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
-			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
-		}
-		if (c.vrCheckForWindowWidthBiggerThan) {
-			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
-			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
-		}
-		if (c.vrCheckForWindowHeightBiggerThan) {
-			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
-			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
-		}
-		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
-			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
-			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
-		}
-		if (c.vrCheckForWorldLoaded) {
-			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
-		}
-		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
-			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
-			sec.addEntry("vr:value:language", "" + c.vrLanguage);
-		}
-		if (c.vrCheckForFullscreen) {
-			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
-		}
-		if (c.vrCheckForOsWindows) {
-			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
-		}
-		if (c.vrCheckForOsMac) {
-			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
-		}
-		if (c.vrCheckForOsLinux) {
-			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
-		}
-		if (c.vrCheckForModLoaded) {
-			String val = "";
-			for (String s : c.vrModLoaded) {
-				val += s + ",";
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
-				sec.addEntry("vr:value:modloaded", val);
-			}
-		}
-		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
-			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
-			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
-		}
-		if (c.vrCheckForGuiScale) {
-			String val = "";
-			for (String condition : c.vrGuiScale) {
-				if (condition.startsWith("double:")) {
-					String value = condition.replace("double:", "");
-					val += value + ",";
-				} else if (condition.startsWith("biggerthan:")) {
-					String value = condition.replace("biggerthan:", "");
-					val += ">" + value + ",";
-				} else if (condition.startsWith("smallerthan:")) {
-					String value = condition.replace("smallerthan:", "");
-					val += "<" + value + ",";
-				}
-			}
-			if (val.length() > 0) {
-				val = val.substring(0, val.length() -1);
-			}
-			if (val.length() > 0) {
-				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
-				sec.addEntry("vr:value:guiscale", val);
-			}
-		}
-
-		//CUSTOM VISIBILITY REQUIREMENTS (API)
-		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
-
-			VisibilityRequirement v = p.requirement;
-
-			if (p.checkFor) {
-				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
-				if (v.hasValue() && (p.value != null)) {
-					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
-				}
-			}
-
-		}
-
+	public void addLoadingRequirementPropertiesTo(PropertiesSection sec) {
+		this.object.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 	}
 
 }

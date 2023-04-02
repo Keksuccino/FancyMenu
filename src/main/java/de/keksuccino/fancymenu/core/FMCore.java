@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.core;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.mixin.Mixins;
@@ -12,10 +13,10 @@ public class FMCore implements IFMLLoadingPlugin {
 
     public FMCore() {
 
-        //TODO REMOVE DEBUG
-//        MixinBootstrap.init();
-//        Mixins.addConfiguration("fancymenu.general.mixin.json");
-        
+        if (FancyMenu.IS_DEV_ENVIRONMENT) {
+            MixinBootstrap.init();
+            Mixins.addConfiguration("fancymenu.general.mixin.json");
+        }
 
     }
 

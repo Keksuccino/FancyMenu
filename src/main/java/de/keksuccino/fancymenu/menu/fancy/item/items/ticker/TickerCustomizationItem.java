@@ -4,6 +4,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -16,9 +17,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.*;
 
-public class TickerCustomizationItem extends CustomizationItem {
+public class TickerCustomizationItem extends CustomizationItem implements IActionExecutorItem {
 
-    public volatile List<ActionContainer> actions = new ArrayList<>();
+    public volatile List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
@@ -32,7 +33,7 @@ public class TickerCustomizationItem extends CustomizationItem {
 
         super(parentContainer, item);
 
-        Map<Integer, ActionContainer> tempActions = new HashMap<>();
+        Map<Integer, ButtonScriptEngine.ActionContainer> tempActions = new HashMap<>();
         for (Map.Entry<String, String> m : item.getEntries().entrySet()) {
             //tickeraction_<index>_ACTION
             if (m.getKey().startsWith("tickeraction_")) {
@@ -40,7 +41,7 @@ public class TickerCustomizationItem extends CustomizationItem {
                 String tickerAction = m.getKey().split("_", 3)[2];
                 String actionValue = m.getValue();
                 if (MathUtils.isInteger(index)) {
-                    tempActions.put(Integer.parseInt(index), new ActionContainer(tickerAction, actionValue));
+                    tempActions.put(Integer.parseInt(index), new ButtonScriptEngine.ActionContainer(tickerAction, actionValue));
                 }
             }
         }
@@ -91,7 +92,7 @@ public class TickerCustomizationItem extends CustomizationItem {
             if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
-                for (ActionContainer a : this.actions) {
+                for (ButtonScriptEngine.ActionContainer a : this.actions) {
                     a.execute();
                 }
             }
@@ -139,24 +140,9 @@ public class TickerCustomizationItem extends CustomizationItem {
 
     }
 
-    public static class ActionContainer {
-
-        public volatile String action;
-        public volatile String value;
-
-        public ActionContainer(String action, String value) {
-            this.action = action;
-            this.value = value;
-        }
-
-        public void execute() {
-            try {
-                ButtonScriptEngine.runButtonAction(this.action, this.value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+    @Override
+    public List<ButtonScriptEngine.ActionContainer> getActionList() {
+        return this.actions;
     }
 
     public static class TickerItemThreadController {
