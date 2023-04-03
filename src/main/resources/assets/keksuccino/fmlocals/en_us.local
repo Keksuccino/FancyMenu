@@ -258,7 +258,7 @@ helper.creator.backgroundoptions.panoramas.clear = Clear
 helper.creator.backgroundoptions.panoramas.clear.desc = Removes the currently%n%active background panorama.
 
 helper.creator.items.button.btndescription = Tooltip
-helper.creator.items.button.btndescription.desc = Tooltip to display%n%when the button is getting hovered.%n%%n%Use format code '#n#' for a new line.
+helper.creator.items.button.btndescription.desc = Tooltip to display%n%when the button is getting hovered.
 
 helper.buttons.customization.onoff.btndesc = Toggle customizations%n%for the current menu.%n%%n%§cThis needs to be enabled for%n%§clayouts to work!
 helper.buttons.customization.overridewith.btndesc = Override the current menu%n%with one of your own custom GUIs.%n%%n%§cIMPORTANT:%n%Shouldn't be used if you%n%just want to edit the look%n%of an existing menu.%n%%n%To edit a menu, create%n%a layout instead!
@@ -682,12 +682,12 @@ fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.desc = Check
 fancymenu.helper.editor.items.visibilityrequirements.realtimesecond.valuename = Real Time Second(s) (Separate Values By Comma)
 
 fancymenu.helper.editor.items.visibilityrequirements.windowwidth = Is Window Width
-fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc = Check if the window width is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one width%n%at once.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
-fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename = Window Width(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth.desc = Check if the window width is X.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
+fancymenu.helper.editor.items.visibilityrequirements.windowwidth.valuename = Window Width
 
 fancymenu.helper.editor.items.visibilityrequirements.windowheight = Is Window Height
-fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc = Check if the window height is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one height%n%at once.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
-fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename = Window Height(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.windowheight.desc = Check if the window height is X.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
+fancymenu.helper.editor.items.visibilityrequirements.windowheight.valuename = Window Height
 
 fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan = Is Window Width Bigger Than
 fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan.desc = Check if the window width is bigger than X.%n%%n%§cCurrent Width: {}%n%§cCurrent Height: {}
@@ -718,8 +718,8 @@ fancymenu.helper.editor.items.visibilityrequirements.oslinux = Is OS Linux
 fancymenu.helper.editor.items.visibilityrequirements.oslinux.desc = Check if the operating system is Linux.
 
 fancymenu.helper.editor.items.visibilityrequirements.modloaded = Is Mod Loaded
-fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc = Check if a specific mod is loaded.%n%%n%You can separate multiple values by comma,%n%to check for more than one mod%n%at once.
-fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename = Mod ID(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc = Check if a specific mod is loaded.%n%%n%You can find the mod ID in the mod menu.%n%This menu is available by default%n%on Forge. On Fabric, download%n%the 'Mod Menu' mod.
+fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename = Mod ID
 
 fancymenu.helper.editor.items.visibilityrequirements.serveronline = Is Server Online
 fancymenu.helper.editor.items.visibilityrequirements.serveronline.desc = Check if a specific server is online.
@@ -866,8 +866,8 @@ fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = 
 fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = the current menu before using the §lButton Info §rtool!
 
 fancymenu.helper.editor.items.visibilityrequirements.guiscale = Is GUI Scale
-fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').%n%%n%You can separate multiple values by comma,%n%to check for more than one scale%n%at once.
-fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Scale Condition(s) (Separate Values By Comma)
+fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').
+fancymenu.helper.editor.items.visibilityrequirements.guiscale.valuename = GUI Scale Condition
 
 fancymenu.helper.editor.backgrounds.choose = Choose Background
 
@@ -1083,7 +1083,7 @@ fancymenu.customization.items.text.source_mode.mode.web = Source Mode: §6Web So
 fancymenu.customization.items.text.source_mode.mode.local = Source Mode: §6Local Source
 fancymenu.customization.items.text.source_mode.desc = §6Direct Text:%n%Directly input a text to render.%n%%n%§6Local Source:%n%Use a TXT file as source.%n%%n%§6Web Source:%n%Use the plain text content%n%of a website as source.%n%%n%§cChanging the source mode will%n%§creset the text content!%n%%n%§cYou can undo source changing%n%§cby pressing §lCTRL + Z§r§c!
 fancymenu.customization.items.text.set_source.direct = Set Text Content
-fancymenu.customization.items.text.set_source.direct.desc = Set direct text content to render.%n%%n%§cSupports multiline!%n%§cUse §l<line_break_code> §r§cas line-break code!
+fancymenu.customization.items.text.set_source.direct.desc = Set direct text content to render.
 fancymenu.customization.items.text.set_source.web = Set Web Source
 fancymenu.customization.items.text.set_source.web.desc = Get the plain web text content%n%of a website as text.
 fancymenu.customization.items.text.set_source.local = Set Local Source
@@ -1172,12 +1172,12 @@ fancymenu.customization.items.ticker.desc = Allows you to execute actions%n%ever
 fancymenu.customization.items.ticker.add_action = Add Action
 fancymenu.customization.items.ticker.add_action.desc = Add a new action to the list of%n%actions this ticker should execute.
 fancymenu.customization.items.ticker.manage_actions = Manage Actions
-fancymenu.customization.items.ticker.manage_actions.desc = Edit or remove actions of this ticker.
+fancymenu.customization.items.ticker.manage_actions.desc = Add, remove and edit actions of this ticker.
 fancymenu.customization.items.ticker.manage_actions.action = §lAction: §r{}
 fancymenu.customization.items.ticker.manage_actions.value = §lValue: §r{}
-fancymenu.customization.items.ticker.manage_actions.remove = Remove Action
+fancymenu.customization.items.ticker.manage_actions.remove = Remove
 fancymenu.customization.items.ticker.manage_actions.remove.confirm = §c§lAre you sure?%n%%n%Do you really want to remove this action?%n% %n% %n% %n%
-fancymenu.customization.items.ticker.manage_actions.edit = Edit Action
+fancymenu.customization.items.ticker.manage_actions.edit = Edit
 fancymenu.customization.items.ticker.tick_delay = Tick Delay [ms]
 fancymenu.customization.items.ticker.tick_delay.desc = Set the delay between ticks in milliseconds.
 fancymenu.customization.items.ticker.async.on = Async: §aOn
@@ -1259,5 +1259,121 @@ fancymenu.helper.editor.items.playerentity.baby.on = Is Baby: §aOn
 fancymenu.helper.editor.items.playerentity.baby.desc = If the player should be a baby.
 
 fancymenu.guicomponents.cancel = Cancel
+
+fancymenu.ui.text_editor.placeholders = Placeholders
+fancymenu.ui.text_editor.cut = Cut
+fancymenu.ui.text_editor.copy = Copy
+fancymenu.ui.text_editor.paste = Paste
+fancymenu.ui.text_editor.select_all = Select All
+fancymenu.ui.text_editor.error.multiline_support = Multiline text is not supported by the target.
+fancymenu.ui.text_editor.placeholders.back_to_categories = BACK
+
+fancymenu.config.variables_to_reset_on_launch = Variables To Reset
+fancymenu.config.variables_to_reset_on_launch.desc = A comma-separated list of variable names%n%that should get reset every time%n%the game gets launched.
+
+fancymenu.customization.items.custom_button.add_action = Add Action
+fancymenu.customization.items.custom_button.add_action.desc = Add a new action to the list of%n%actions this button should execute.
+fancymenu.customization.items.custom_button.manage_actions = Manage Actions
+fancymenu.customization.items.custom_button.manage_actions.desc = Add, remove and edit actions of this button.
+
+fancymenu.editor.actions.add.set_action_value = Set Action Value [{}]
+fancymenu.editor.actions.add.set_action_value.generic = Set Action Value
+
+fancymenu.editor.elements.web_image.enter_url = Enter Image URL
+
+fancymenu.editor.elements.splash.single.enter_text = Enter Splash Text
+
+fancymenu.editor.elements.visibilityrequirements.edit_value = Edit Requirement Value
+
+fancymenu.editor.loading_requirement.category.window = Window
+fancymenu.editor.loading_requirement.category.world = World
+fancymenu.editor.loading_requirement.category.gui = GUI
+fancymenu.editor.loading_requirement.category.realtime = Realtime
+fancymenu.editor.loading_requirement.category.system = System
+
+fancymenu.editor.loading_requirement.elements.loading_requirements = Loading Requirements
+fancymenu.editor.loading_requirement.elements.loading_requirements.desc = Manage this element's loading requirements.%n%%n%Loading requirements can be used to%n%specify under which circumstances%n%an element should load/be visible.
+
+fancymenu.editor.loading_requirement.layouts.loading_requirements = Loading Requirements [Layout-Wide]
+fancymenu.editor.loading_requirement.layouts.loading_requirements.desc = Manage this layout's loading requirements.%n%%n%Loading requirements can be used to%n%specify under which circumstances%n%a layout should load/be visible.
+
+fancymenu.editor.loading_requirement.screens.lists.back = BACK
+fancymenu.editor.loading_requirement.screens.add_requirement = Add Requirement
+fancymenu.editor.loading_requirement.screens.add_group = Add Group
+fancymenu.editor.loading_requirement.screens.edit_requirement = Edit Requirement
+fancymenu.editor.loading_requirement.screens.edit_group = Edit Group
+fancymenu.editor.loading_requirement.screens.remove_requirement = Remove Requirement
+fancymenu.editor.loading_requirement.screens.remove_group = Remove Group
+fancymenu.editor.loading_requirement.screens.remove_requirement.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthe selected requirement?%n%This action cannot be undone!
+fancymenu.editor.loading_requirement.screens.remove_group.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthe selected group?%n%This action cannot be undone!
+fancymenu.editor.loading_requirement.screens.requirement.info.mode = Mode:
+fancymenu.editor.loading_requirement.screens.requirement.info.mode.normal = NORMAL
+fancymenu.editor.loading_requirement.screens.requirement.info.mode.opposite = OPPOSITE
+fancymenu.editor.loading_requirement.screens.requirement.info.value = Value:
+fancymenu.editor.loading_requirement.screens.requirement.info.value.none = NONE
+fancymenu.editor.loading_requirement.screens.build_screen.requirement_description = Requirement Description
+fancymenu.editor.loading_requirement.screens.build_screen.available_requirements = Available Requirements
+fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.normal = Requirement Mode: §6NORMAL
+fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.opposite = Requirement Mode: §6OPPOSITE
+fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.desc = The requirement mode defines, what%n%the requirement should tell its parent%n%when its condition is met.%n%%n%§6NORMAL §rmeans, it returns TRUE ("Yes, load!")%n%when its condition is met.%n%%n%§6OPPOSITE §rmeans, it returns TRUE when%n%its condition is NOT met.
+fancymenu.editor.loading_requirement.screens.build_screen.edit_value = Edit Requirement Value
+fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.no_value = §6This requirement has no value.%n%§6You don't need to set one.
+fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.normal = Edit the value of the chosen requirement.
+fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_requirement_selected = §cYou need to select a requirement first!
+fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_value_set = §cYou need to edit the requirement value first!
+fancymenu.editor.loading_requirement.screens.build_group_screen.mode.and = Group Mode: §6AND
+fancymenu.editor.loading_requirement.screens.build_group_screen.mode.or = Group Mode: §6OR
+fancymenu.editor.loading_requirement.screens.build_group_screen.mode.desc = The group mode defines how the group%n%should handle its requirements.%n%%n%§6AND §rmeans, ALL requirements need%n%to be TRUE, which basically just%n%means they need to say "Yes, load!".%n%%n%§6OR §rmeans, only ONE requirement%n%needs to be TRUE.
+fancymenu.editor.loading_requirement.screens.build_group_screen.finish.no_requirements_added = §cYou need to add at least one requirement first!
+fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_already_used = §cThe group identifier is already used%n%§cfor another group!
+fancymenu.editor.loading_requirement.screens.build_group_screen.finish.identifier_too_short = §cThe group identifier is too short!
+fancymenu.editor.loading_requirement.screens.build_group_screen.add_requirement.desc = Add a requirement to this group.
+fancymenu.editor.loading_requirement.screens.build_group_screen.edit_requirement.desc = Edit the selected requirement.
+fancymenu.editor.loading_requirement.screens.build_group_screen.remove_requirement.desc = Remove the selected requirement.
+fancymenu.editor.loading_requirement.screens.build_group_screen.no_requirement_selected = §cYou need to select a requirement first!
+fancymenu.editor.loading_requirement.screens.build_group_screen.group_requirements = Group Requirements
+fancymenu.editor.loading_requirement.screens.build_group_screen.group_identifier = Unique Group Identifier
+fancymenu.editor.loading_requirement.screens.manage_screen.manage = Manage Loading Requirements
+fancymenu.editor.loading_requirement.screens.manage_screen.group.info = Group with {} Requirements
+fancymenu.editor.loading_requirement.screens.manage_screen.add_requirement.desc = Add a new requirement.
+fancymenu.editor.loading_requirement.screens.manage_screen.add_group.desc = Add a new requirement group.%n%%n%Requirement groups can hold multiple%n%requirements and basically%n%make them one big requirement.%n%%n%Requirement groups have two modes.%n%In §6AND §rmode, all requirements need%n%to return TRUE (which means "Yes, load!"),%n%but in §6OR §rmode, only one requirement%n%needs to return TRUE.
+fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected = §cYou need to select a group or requirement!
+fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic = Edit
+fancymenu.editor.loading_requirement.screens.manage_screen.edit.desc = Edit the selected group or requirement.
+fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic = Remove
+fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc = Remove the selected group or requirement.
+fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups = Requirements & Groups
+
+fancymenu.editor.action.screens.add_action = Add Action
+fancymenu.editor.action.screens.add_action.desc = Add a new action.
+fancymenu.editor.action.screens.edit_action = Edit Action
+fancymenu.editor.action.screens.edit_action.desc = Edit the selected action.
+fancymenu.editor.action.screens.remove_action = Remove Action
+fancymenu.editor.action.screens.remove_action.desc = Remove the selected action.
+fancymenu.editor.action.screens.finish.no_action_selected = §cYou need to select an action first!
+fancymenu.editor.action.screens.remove_action.confirm = §c§lAre you sure?%n%%n%Do you really want to §cremove §rthe selected action?%n%This cannot be undone!
+fancymenu.editor.action.screens.build_screen.edit_value = Edit Action Value
+fancymenu.editor.action.screens.build_screen.edit_value.desc.normal = Edit the value of this action.
+fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value = §6This action has no value.%n%§6You don't need to set one.
+fancymenu.editor.action.screens.build_screen.action_description = Action Description
+fancymenu.editor.action.screens.build_screen.available_actions = Available Actions
+fancymenu.editor.action.screens.build_screen.finish.no_value_set = §cYou need to edit the action value first!
+fancymenu.editor.action.screens.manage_screen.info.value = Value:
+fancymenu.editor.action.screens.manage_screen.info.value.none = NONE
+fancymenu.editor.action.screens.manage_screen.manage = Manage Actions
+fancymenu.editor.action.screens.manage_screen.actions = Actions
+fancymenu.editor.action.screens.move_action_up = Move Action Up
+fancymenu.editor.action.screens.move_action_up.desc = Move this action up in the list,%n%so it gets executed earlier.
+fancymenu.editor.action.screens.move_action_down = Move Action Down
+fancymenu.editor.action.screens.move_action_down.desc = Move this action down in the list,%n%so it gets executed later.
+
+fancymenu.editor.elements.button.manage_actions.desc = Manage the actions this button%n%should execute when clicked.
+
+fancymenu.editor.elements.ticker.manage_actions.desc = Manage the actions this ticker%n%should execute.
+
+fancymenu.guicomponents.confirm = Confirm
+
+
+
 
 

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.menu.button.buttonactions.LegacyButtonActions;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.client.IMixinServerList;
@@ -45,8 +46,12 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ButtonScriptEngine {
+
+	private static final List<String> LEGACY_IDENTIFIERS = LegacyButtonActions.getLegacyIdentifiers();
 
 	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
 	private static boolean init = false;
@@ -343,6 +348,10 @@ public class ButtonScriptEngine {
 				}
 			}
 
+			if (LEGACY_IDENTIFIERS.contains(action)) {
+				return;
+			}
+
 			/** CUSTOM ACTIONS **/
 			ButtonActionContainer c = ButtonActionRegistry.getActionByName(action);
 			if (c != null) {
@@ -497,6 +506,26 @@ public class ButtonScriptEngine {
 				for (int i = 0; i <= this.actions.size()-1; i++) {
 					runButtonAction(this.actions.get(i), this.values.get(i));
 				}
+			}
+		}
+
+	}
+
+	public static class ActionContainer {
+
+		public volatile String action;
+		public volatile String value;
+
+		public ActionContainer(@NotNull String action, @Nullable String value) {
+			this.action = action;
+			this.value = value;
+		}
+
+		public void execute() {
+			try {
+				ButtonScriptEngine.runButtonAction(this.action, this.value);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 

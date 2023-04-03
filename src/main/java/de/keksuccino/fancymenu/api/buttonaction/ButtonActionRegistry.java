@@ -1,10 +1,14 @@
 package de.keksuccino.fancymenu.api.buttonaction;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public class ButtonActionRegistry {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static Map<String, ButtonActionContainer> actions = new LinkedHashMap<>();
 
@@ -15,11 +19,16 @@ public class ButtonActionRegistry {
         if (action != null) {
             if (action.getIdentifier() != null) {
                 if (actions.containsKey(action.getIdentifier())) {
-                    FancyMenu.LOGGER.warn("[FANCYMENU] WARNING! A button action with the identifier '" + action.getIdentifier() + "' is already registered! Overriding action!");
+                    LOGGER.warn("[FANCYMENU] An action with the identifier '" + action.getIdentifier() + "' is already registered! Overriding action!");
+                }
+                ButtonActionContainer c = getActionByName(action.getAction());
+                if (c != null) {
+                    LOGGER.warn("[FANCYMENU] An action with the name '" + action.getAction() + "' is already registered! Overriding action!");
+                    unregisterButtonAction(c.getIdentifier());
                 }
                 actions.put(action.getIdentifier(), action);
             } else {
-                FancyMenu.LOGGER.error("[FANCYMENU] ERROR! Action identifier cannot be null for ButtonActionContainers!");
+                LOGGER.error("[FANCYMENU] Action identifier cannot be null for ButtonActionContainers!");
             }
         }
     }

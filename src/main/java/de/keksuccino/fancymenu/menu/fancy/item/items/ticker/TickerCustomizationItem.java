@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -13,15 +14,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine.ActionContainer;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.*;
 
-public class TickerCustomizationItem extends CustomizationItem {
+public class TickerCustomizationItem extends CustomizationItem implements IActionExecutorItem {
 
-    public volatile List<ActionContainer> actions = new ArrayList<>();
+    //TODO übernehmenn (replace with new ButtonScriptEngine.ActionContainer class)
+    public volatile List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
@@ -142,24 +145,9 @@ public class TickerCustomizationItem extends CustomizationItem {
 
     }
 
-    public static class ActionContainer {
-
-        public volatile String action;
-        public volatile String value;
-
-        public ActionContainer(@NotNull String action, @Nullable String value) {
-            this.action = action;
-            this.value = value;
-        }
-
-        public void execute() {
-            try {
-                ButtonScriptEngine.runButtonAction(this.action, this.value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
+    @Override
+    public List<ButtonScriptEngine.ActionContainer> getActionList() {
+        return this.actions;
     }
 
     public static class TickerItemThreadController {

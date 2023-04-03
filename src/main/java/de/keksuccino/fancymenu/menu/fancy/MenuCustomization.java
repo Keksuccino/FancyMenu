@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.ConfirmationScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -312,6 +314,18 @@ public class MenuCustomization {
 			return true;
 		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.github.alexthe666.alexsmobs.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.equals(TextEditorScreen.class.getName())) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.equals(ConfirmationScreen.class.getName())) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.")) {
 			return true;
 		}
 		return false;

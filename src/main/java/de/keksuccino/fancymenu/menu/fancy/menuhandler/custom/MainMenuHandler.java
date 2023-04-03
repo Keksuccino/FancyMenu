@@ -133,20 +133,26 @@ public class MainMenuHandler extends MenuHandlerBase {
 					if (element != null) {
 						DeepCustomizationItem i = element.constructCustomizedItemInstance(sec);
 						if (i != null) {
-
 							if (elementId.equals("title_screen_branding")) {
-								this.showBranding = !(i.hidden);
+								if (this.showBranding) {
+									this.showBranding = !(i.hidden);
+								}
 							}
 							if (elementId.equals("title_screen_logo")) {
-								this.showLogo = !(i.hidden);
+								if (this.showLogo) {
+									this.showLogo = !(i.hidden);
+								}
 							}
 							if (elementId.equals("title_screen_splash")) {
-								this.splashItem = (TitleScreenSplashItem) i;
+								if ((this.splashItem == null) || !this.splashItem.hidden) {
+									this.splashItem = (TitleScreenSplashItem) i;
+								}
 							}
 							if (elementId.equals("title_screen_realms_notification")) {
-								this.showRealmsNotification = !(i.hidden);
+								if (this.showRealmsNotification) {
+									this.showRealmsNotification = !(i.hidden);
+								}
 							}
-
 						}
 					}
 				}

@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.buttonactions.ButtonActionScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ITextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -65,13 +63,9 @@ public class CustomizationHelper {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 					if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
-						if (!(e.getGui() instanceof ButtonActionScreen)) {
-							if (!(e.getGui() instanceof VisibilityRequirementsScreen)) {
 
-								CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+						CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
 
-							}
-						}
 					}
 				}
 			}

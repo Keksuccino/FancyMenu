@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
+import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
@@ -22,6 +23,7 @@ import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.Mth;
 
 import java.awt.*;
 import java.io.BufferedReader;
@@ -326,7 +328,7 @@ public class TextCustomizationItem extends CustomizationItem {
                 this.lines.put(s, sc);
             }
 
-            this.updateScrollArea();
+            CustomizationHelper.runTaskInMainThread(this::updateScrollArea);
 
             updating = false;
 
@@ -491,16 +493,10 @@ public class TextCustomizationItem extends CustomizationItem {
                 textY += (int) ((entry.parentItem.lineSpacing / scale) * line);
             }
 
-//            System.out.println("--------------------");
-//            System.out.println("TEXT: " + s);
-//            System.out.println("BASE TEXT Y: " + y);
-//            System.out.println("FINAL TEXT Y: " + textY);
-//            System.out.println("LINE: " + line);
-
             if (entry.parentItem.shadow) {
-                font.drawShadow(render.matrix, s, x, textY, color);
+                font.drawShadow(render.matrix, s, x, textY, color | Mth.ceil(entry.parentItem.opacity * 255.0F) << 24);
             } else {
-                font.draw(render.matrix, s, x, textY, color);
+                font.draw(render.matrix, s, x, textY, color | Mth.ceil(entry.parentItem.opacity * 255.0F) << 24);
             }
 
             render.matrix.popPose();

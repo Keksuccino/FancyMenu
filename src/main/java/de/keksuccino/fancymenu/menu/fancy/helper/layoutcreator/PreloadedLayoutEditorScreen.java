@@ -9,6 +9,7 @@ import java.util.Map;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.*;
+import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -84,9 +85,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
-					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-				};
+				this.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
 
 				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
 
@@ -572,8 +571,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
-						String baction = sec.getEntryValue("buttonaction");
-						String actionvalue = sec.getEntryValue("value");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
 
 						if (onlydisplayin != null) {
@@ -597,7 +594,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.object.delayAppearanceSec = bc.delayAppearanceSec;
 								this.object.fadeIn = bc.fadeIn;
 								this.object.fadeInSpeed = bc.fadeInSpeed;
-								this.object.visibilityRequirementContainer = bc.visibilityRequirementContainer;
+								this.object.loadingRequirementContainer = bc.loadingRequirementContainer;
 								this.object.setActionId(bc.getActionId());
 
 								super.init();
@@ -616,15 +613,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.setStretchedX(true, false);
 						}
 
-						if (baction == null) {
-							continue;
-						}
-						lb.actionType = baction;
-
-						if (actionvalue == null) {
-							actionvalue = "";
-						}
-						lb.actionContent = actionvalue;
+						lb.actions = bc.actions;
 
 						String desc = sec.getEntryValue("description");
 						if (desc != null) {
@@ -691,6 +680,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						lb.object.orientationElementIdentifier = bc.orientationElementIdentifier;
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
+
+						lb.object.advancedPosX = bc.advancedPosX;
+						lb.object.advancedPosY = bc.advancedPosY;
+						lb.object.advancedWidth = bc.advancedWidth;
+						lb.object.advancedHeight = bc.advancedHeight;
 
 						con.add(lb);
 					}
@@ -791,8 +785,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
 									@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
 								};
-								van.object.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
-								van.customizationContainer.visibilityRequirementContainer = cusItem.visibilityRequirementContainer;
+								van.object.loadingRequirementContainer = cusItem.loadingRequirementContainer;
+								van.customizationContainer.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 							}
 						}
 					}
