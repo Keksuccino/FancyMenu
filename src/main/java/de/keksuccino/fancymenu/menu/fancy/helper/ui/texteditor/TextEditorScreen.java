@@ -116,7 +116,7 @@ public class TextEditorScreen extends Screen {
         this.characterFilter = characterFilter;
         this.callback = callback;
         this.addLine();
-        this.getLine(0).setFocus(true);
+        this.getLine(0).setFocused(true);
         this.verticalScrollBar.setScrollWheelAllowed(true);
         this.verticalScrollBarPlaceholderMenu.setScrollWheelAllowed(true);
         this.updateRightClickContextMenu();
@@ -732,9 +732,9 @@ public class TextEditorScreen extends Screen {
     public void setFocusedLine(int index) {
         if (index <= this.getLineCount()-1) {
             for (TextEditorLine f : this.textFieldLines) {
-                f.setFocus(false);
+                f.setFocused(false);
             }
-            this.getLine(index).setFocus(true);
+            this.getLine(index).setFocused(true);
         }
     }
 
@@ -874,7 +874,7 @@ public class TextEditorScreen extends Screen {
         for (TextEditorLine t : this.textFieldLines) {
             TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, false, this.characterFilter, this);
             n.setValue(t.getValue());
-            n.setFocus(t.isFocused());
+            n.setFocused(t.isFocused());
             n.moveCursorTo(t.getCursorPosition());
             l.add(n);
         }

@@ -5,12 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.mixin.client.IMixinGridWidget;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.GridWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
@@ -35,10 +34,10 @@ public class ButtonCache {
 	private static Map<String, AbstractWidget> customButtons = new HashMap<String, AbstractWidget>();
 	
 	@SubscribeEvent
-	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
+	public void updateCache(InitOrResizeScreenEvent.Post e) {
 		if (!caching) {
 			cached = false;
-			current = e.getGui();
+			current = e.getScreen();
 		}
 	}
 	
@@ -168,19 +167,19 @@ public class ButtonCache {
 		try {
 
 			//Reset the button list
-			((IMixinScreen)s).getRenderablesFancyMenu().clear();
+//			((IMixinScreen)s).getRenderablesFancyMenu().clear();
 
 			//Set all important variables and init screen
 			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
-			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+
+//			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+			s.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 
 			//Reflecting the buttons list field to cache all buttons of the menu
 			List<AbstractWidget> widgets = new ArrayList<>();
 			for (Renderable r : ((IMixinScreen)s).getRenderablesFancyMenu()) {
-				if (r instanceof GridWidget) {
-					widgets.addAll(((IMixinGridWidget)r).invokeGetContainedChildrenFancyMenu());
-				} else if (r instanceof AbstractWidget) {
+				if (r instanceof AbstractWidget) {
 					widgets.add((AbstractWidget)r);
 				}
 			}

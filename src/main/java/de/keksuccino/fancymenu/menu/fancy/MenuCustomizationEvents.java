@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy;
 import java.io.File;
 import java.io.IOException;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -47,9 +48,9 @@ public class MenuCustomizationEvents {
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onInitPrePre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPrePre(InitOrResizeScreenEvent.Pre e) {
 		if (!ButtonCache.isCaching()) {
-			if (MenuCustomization.isValidScreen(e.getGui())) {
+			if (MenuCustomization.isValidScreen(e.getScreen())) {
 				Screen current = Minecraft.getInstance().screen;
 				if (current != null) {
 					if (this.lastScreen != null) {
@@ -87,14 +88,14 @@ public class MenuCustomizationEvents {
 	}
 	
 	@SubscribeEvent
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		
 		MenuCustomization.isCurrentScrollable = false;
 		
-		if (MenuCustomization.isValidScreen(e.getGui()) && !LayoutEditorScreen.isActive) {
+		if (MenuCustomization.isValidScreen(e.getScreen()) && !LayoutEditorScreen.isActive) {
 			this.idle = false;
 		}
-		if (MenuCustomization.isValidScreen(e.getGui()) && !MenuCustomization.isMenuCustomizable(e.getGui()) && !(e.getGui() instanceof LayoutEditorScreen)) {
+		if (MenuCustomization.isValidScreen(e.getScreen()) && !MenuCustomization.isMenuCustomizable(e.getScreen()) && !(e.getScreen() instanceof LayoutEditorScreen)) {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 		}

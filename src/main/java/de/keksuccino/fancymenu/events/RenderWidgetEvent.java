@@ -2,15 +2,15 @@ package de.keksuccino.fancymenu.events;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 
 public class RenderWidgetEvent extends EventBase {
 	
-	protected AbstractButton widget;
+	protected AbstractWidget widget;
 	protected float alpha;
 	protected PoseStack matrix;
 	
-	public RenderWidgetEvent(PoseStack matrix, AbstractButton widget, float alpha) {
+	public RenderWidgetEvent(PoseStack matrix, AbstractWidget widget, float alpha) {
 		this.widget = widget;
 		this.alpha = alpha;
 		this.matrix = matrix;
@@ -21,7 +21,7 @@ public class RenderWidgetEvent extends EventBase {
 		return true;
 	}
 	
-	public AbstractButton getWidget() {
+	public AbstractWidget getWidget() {
 		return this.widget;
 	}
 	
@@ -35,7 +35,7 @@ public class RenderWidgetEvent extends EventBase {
 	
 	public static class Pre extends RenderWidgetEvent {
 
-		public Pre(PoseStack matrix, AbstractButton widget, float alpha) {
+		public Pre(PoseStack matrix, AbstractWidget widget, float alpha) {
 			super(matrix, widget, alpha);
 		}
 		
@@ -47,7 +47,7 @@ public class RenderWidgetEvent extends EventBase {
 	
 	public static class Post extends RenderWidgetEvent {
 
-		public Post(PoseStack matrix, AbstractButton widget, float alpha) {
+		public Post(PoseStack matrix, AbstractWidget widget, float alpha) {
 			super(matrix, widget, alpha);
 		}
 		

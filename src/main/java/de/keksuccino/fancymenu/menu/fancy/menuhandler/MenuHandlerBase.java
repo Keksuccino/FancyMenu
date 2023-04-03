@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.events.EventPriority;
@@ -30,10 +31,6 @@ import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -41,6 +38,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
+import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -175,7 +173,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@SubscribeEvent
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
@@ -184,23 +182,23 @@ public class MenuHandlerBase extends GuiComponent {
 
 		int mcscale = Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode());
 
-		if (e.getGui() != Minecraft.getInstance().screen) {
+		if (e.getScreen() != Minecraft.getInstance().screen) {
 			return;
 		}
 
 		//Resetting scale to the normal value if it was changed in another screen
-		if ((scaleChangedIn != null) && (scaleChangedIn != e.getGui())) {
+		if ((scaleChangedIn != null) && (scaleChangedIn != e.getScreen())) {
 			scaleChangedIn = null;
 			Window m = Minecraft.getInstance().getWindow();
 			m.setGuiScale((double)mcscale);
-			e.getGui().width = m.getGuiScaledWidth();
-			e.getGui().height = m.getGuiScaledHeight();
+			e.getScreen().width = m.getGuiScaledWidth();
+			e.getScreen().height = m.getGuiScaledHeight();
 		}
 
-		if (!MenuCustomization.isValidScreen(e.getGui())) {
+		if (!MenuCustomization.isValidScreen(e.getScreen())) {
 			return;
 		}
-		if (!this.shouldCustomize(e.getGui())) {
+		if (!this.shouldCustomize(e.getScreen())) {
 			return;
 		}
 		if (!AnimationHandler.isReady()) {
@@ -215,7 +213,7 @@ public class MenuHandlerBase extends GuiComponent {
 		if (ButtonCache.isCaching()) {
 			return;
 		}
-		if (!MenuCustomization.isMenuCustomizable(e.getGui())) {
+		if (!MenuCustomization.isMenuCustomizable(e.getScreen())) {
 			return;
 		}
 
@@ -256,7 +254,7 @@ public class MenuHandlerBase extends GuiComponent {
 			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
 			if (cusMenuTitle != null) {
 				this.customMenuTitle = cusMenuTitle;
-				e.getGui().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
+				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
 			}
 
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -358,16 +356,16 @@ public class MenuHandlerBase extends GuiComponent {
 				scaleChangedIn = null;
 				Window m = Minecraft.getInstance().getWindow();
 				m.setGuiScale((double)mcscale);
-				e.getGui().width = m.getGuiScaledWidth();
-				e.getGui().height = m.getGuiScaledHeight();
+				e.getScreen().width = m.getGuiScaledWidth();
+				e.getScreen().height = m.getGuiScaledHeight();
 			}
 		}
 
 		//Handle auto scaling
 		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
 			Window m = Minecraft.getInstance().getWindow();
-			double guiWidth = e.getGui().width * m.getGuiScale();
-			double guiHeight = e.getGui().height * m.getGuiScale();
+			double guiWidth = e.getScreen().width * m.getGuiScale();
+			double guiHeight = e.getScreen().height * m.getGuiScale();
 			double percentX = (guiWidth / (double)this.sharedLayoutProps.autoScaleBaseWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.sharedLayoutProps.autoScaleBaseHeight) * 100.0D;
 			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
@@ -375,15 +373,15 @@ public class MenuHandlerBase extends GuiComponent {
 			double newScale = Math.min(newScaleX, newScaleY);
 
 			m.setGuiScale(newScale);
-			e.getGui().width = m.getGuiScaledWidth();
-			e.getGui().height = m.getGuiScaledHeight();
+			e.getScreen().width = m.getGuiScaledWidth();
+			e.getScreen().height = m.getGuiScaledHeight();
 			this.sharedLayoutProps.scaled = true;
-			scaleChangedIn = e.getGui();
+			scaleChangedIn = e.getScreen();
 		}
 
 	}
 
-	protected void applyLayoutPre(PropertiesSection sec, GuiScreenEvent.InitGuiEvent.Pre e) {
+	protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
 
 		String action = sec.getEntryValue("action");
 		if (action != null) {
@@ -391,8 +389,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 			if (action.equalsIgnoreCase("overridemenu")) {
 				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
-					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getGui(), (onClose) -> {
-						e.getGui().removed();
+					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getScreen(), (onClose) -> {
+						e.getScreen().removed();
 					});
 					Minecraft.getInstance().setScreen(cus);
 				}
@@ -401,15 +399,15 @@ public class MenuHandlerBase extends GuiComponent {
 			if (action.contentEquals("setscale")) {
 				String scale = sec.getEntryValue("scale");
 				if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
-					scaleChangedIn = e.getGui();
+					scaleChangedIn = e.getScreen();
 					int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
 					if (newscale <= 0) {
 						newscale = 1;
 					}
 					Window m = Minecraft.getInstance().getWindow();
 					m.setGuiScale((double)newscale);
-					e.getGui().width = m.getGuiScaledWidth();
-					e.getGui().height = m.getGuiScaledHeight();
+					e.getScreen().width = m.getGuiScaledWidth();
+					e.getScreen().height = m.getGuiScaledHeight();
 					this.sharedLayoutProps.scaled = true;
 				}
 			}
@@ -463,7 +461,8 @@ public class MenuHandlerBase extends GuiComponent {
 			System.out.println("Menu Handler: " + this.getClass().getName());
 			System.out.println("This probably happened because a mod has overridden a menu with this one.");
 			System.out.println("#####################################################");
-			e.getGui().init(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
+			//TODO übernehmen 1.19.4-2
+			e.getGui().resize(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
 			return;
 		}
 
@@ -1178,6 +1177,7 @@ public class MenuHandlerBase extends GuiComponent {
 			LoadingRequirementContainer reqs = this.vanillaButtonLoadingRequirementContainers.get(d.getButton());
 
 			d.getButton().visible = false;
+			//TODO übernehmenn
 			if (reqs != null) {
 				reqs.forceRequirementsNotMet = true;
 			}
@@ -1258,7 +1258,7 @@ public class MenuHandlerBase extends GuiComponent {
 		//Re-init screen if layout-wide requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
-				e.getGui().init(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
+				e.getGui().resize(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
 				break;
 			}
 		}

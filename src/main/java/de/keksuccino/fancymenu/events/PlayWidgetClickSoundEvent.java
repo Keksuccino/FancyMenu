@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.events;
 
 import de.keksuccino.konkrete.events.EventBase;
-import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractWidget;
 
 public class PlayWidgetClickSoundEvent extends EventBase {
 	
-	private AbstractButton widget;
+	private AbstractWidget widget;
 	
-	public PlayWidgetClickSoundEvent(AbstractButton widget) {
+	public PlayWidgetClickSoundEvent(AbstractWidget widget) {
 		this.widget = widget;
 	}
 	
@@ -16,13 +16,13 @@ public class PlayWidgetClickSoundEvent extends EventBase {
 		return true;
 	}
 	
-	public AbstractButton getWidget() {
+	public AbstractWidget getWidget() {
 		return this.widget;
 	}
 	
 	public static class Pre extends PlayWidgetClickSoundEvent {
 
-		public Pre(AbstractButton widget) {
+		public Pre(AbstractWidget widget) {
 			super(widget);
 		}
 		
@@ -30,7 +30,7 @@ public class PlayWidgetClickSoundEvent extends EventBase {
 	
 	public static class Post extends PlayWidgetClickSoundEvent {
 
-		public Post(AbstractButton widget) {
+		public Post(AbstractWidget widget) {
 			super(widget);
 		}
 		

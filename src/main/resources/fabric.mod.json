@@ -26,7 +26,7 @@
     "fabricloader": ">=0.13.3",
     "fabric": ">=0.58.0",
     "konkrete": ">=1.6.0",
-	"minecraft": ">=1.19.0",
+	"minecraft": ">=1.19.4",
     "java": ">=17"
   },
   "accessWidener": "fancymenu.accessWidener"

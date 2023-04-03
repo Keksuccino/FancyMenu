@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render;
 
+import de.keksuccino.fancymenu.mixin.client.IMixinPlayerModel;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -21,12 +22,13 @@ public class PlayerEntityModel extends PlayerModel {
         this.leftSleeve.copyFrom(this.leftArm);
         this.rightSleeve.copyFrom(this.rightArm);
         this.jacket.copyFrom(this.body);
+        ModelPart cloak = ((IMixinPlayerModel)this).getCloakFancyMenu();
         if (this.properties.isCrouching()) {
-            this.cloak.z = 1.4F;
-            this.cloak.y = 1.85F;
+            cloak.z = 1.4F;
+            cloak.y = 1.85F;
         } else {
-            this.cloak.z = 0.0F;
-            this.cloak.y = 0.0F;
+            cloak.z = 0.0F;
+            cloak.y = 0.0F;
         }
     }
 

@@ -6,7 +6,7 @@ accessible field net/minecraft/client/gui/screens/Screen title Lnet/minecraft/ne
 accessible field net/minecraft/client/gui/components/AbstractWidget x I
 accessible field net/minecraft/client/gui/components/AbstractWidget y I
 
-accessible field net/minecraft/client/model/PlayerModel cloak Lnet/minecraft/client/model/geom/ModelPart;
+#accessible field net/minecraft/client/model/PlayerModel cloak Lnet/minecraft/client/model/geom/ModelPart;
 
 mutable field net/minecraft/client/gui/screens/TitleScreen fading Z
 accessible field net/minecraft/client/gui/screens/TitleScreen fading Z

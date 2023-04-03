@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Random;
 
@@ -8,10 +7,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -31,7 +27,6 @@ import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.SharedConstants;
@@ -82,11 +77,11 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	@SubscribeEvent
 	@Override
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				if (e.getGui() instanceof TitleScreen) {
-					setShowFadeInAnimation(false, (TitleScreen) e.getGui());
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
+		if (this.shouldCustomize(e.getScreen())) {
+			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
+				if (e.getScreen() instanceof TitleScreen) {
+					setShowFadeInAnimation(false, (TitleScreen) e.getScreen());
 				}
 			}
 		}
@@ -196,9 +191,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			PoseStack matrix = CurrentScreenHandler.getMatrixStack();
-			
+
 			RenderSystem.enableBlend();
-			
+
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
 				this.panorama.render(Minecraft.getInstance().getDeltaFrameTime(), 1.0F);
@@ -241,14 +236,14 @@ public class MainMenuHandler extends MenuHandlerBase {
 				if (Minecraft.checkModStatus().shouldReportAsModified()) {
 					string = string + I18n.get("menu.modded");
 				}
-				
+
 				drawString(e.getMatrixStack(), font, string, 2, e.getGui().height - 10, -1);
 			}
 
 			if (!PopupHandler.isPopupActive()) {
 				this.renderButtons(e, mouseX, mouseY);
 			}
-			
+
 			//Draw notification indicators to the "Realms" button if not disabled in the config
 			if (this.showRealmsNotification) {
 				this.drawRealmsNotification(matrix, e.getGui());

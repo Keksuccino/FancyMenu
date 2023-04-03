@@ -1,9 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.events.EventPriority;
@@ -11,7 +8,6 @@ import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.InitGuiEvent.Pre;
 
 public class MoreRefinedStorageMainHandler extends MainMenuHandler {
 	
@@ -29,7 +25,7 @@ public class MoreRefinedStorageMainHandler extends MainMenuHandler {
 	
 	@SubscribeEvent
 	@Override
-	public void onInitPre(Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		super.onInitPre(e);
 	}
 

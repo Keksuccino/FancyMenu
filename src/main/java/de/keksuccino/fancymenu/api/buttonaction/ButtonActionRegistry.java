@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.api.buttonaction;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

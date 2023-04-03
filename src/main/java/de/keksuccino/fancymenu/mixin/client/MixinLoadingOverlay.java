@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = LoadingOverlay.class)
-public abstract class MixinSplashScreen extends GuiComponent {
+public abstract class MixinLoadingOverlay extends GuiComponent {
 
 	protected Minecraft mc = Minecraft.getInstance();
 

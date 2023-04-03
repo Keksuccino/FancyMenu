@@ -105,7 +105,7 @@ public class BuildRequirementScreen extends Screen {
             this.callback.accept(this.instance);
         }) {
             @Override
-            public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 if (BuildRequirementScreen.this.instance.requirement == null) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_requirement_selected"), "%n%"));
                     this.active = false;
@@ -116,7 +116,7 @@ public class BuildRequirementScreen extends Screen {
                     this.setDescription((String[])null);
                     this.active = true;
                 }
-                super.renderButton(matrix, mouseX, mouseY, partialTicks);
+                super.renderWidget(matrix, mouseX, mouseY, partialTicks);
             }
         };
         UIBase.applyDefaultButtonSkinTo(this.doneButton);

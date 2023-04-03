@@ -100,13 +100,13 @@ public class PlaceholderEditBox extends AdvancedTextField {
 	}
 
 	@Override
-	public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
 		if (this.variableButton != null) {
 
 			this.variableButton.setWidth(this.height);
 			WidgetUtils.setHeight(this.variableButton, this.height);
 
-			super.renderButton(matrix, mouseX, mouseY, partialTicks);
+			super.renderWidget(matrix, mouseX, mouseY, partialTicks);
 
 			this.variableButton.setX(this.x + this.width + 5);
 			this.variableButton.setY(this.y);

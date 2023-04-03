@@ -493,12 +493,6 @@ public class TextCustomizationItem extends CustomizationItem {
                 textY += (int) ((entry.parentItem.lineSpacing / scale) * line);
             }
 
-//            System.out.println("--------------------");
-//            System.out.println("TEXT: " + s);
-//            System.out.println("BASE TEXT Y: " + y);
-//            System.out.println("FINAL TEXT Y: " + textY);
-//            System.out.println("LINE: " + line);
-
             if (entry.parentItem.shadow) {
                 font.drawShadow(render.matrix, s, x, textY, color | Mth.ceil(entry.parentItem.opacity * 255.0F) << 24);
             } else {

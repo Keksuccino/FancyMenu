@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.menu.button;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
+
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -11,7 +13,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -25,7 +26,7 @@ public class VanillaButtonDescriptionHandler {
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		descriptions.clear();
 	}
 	

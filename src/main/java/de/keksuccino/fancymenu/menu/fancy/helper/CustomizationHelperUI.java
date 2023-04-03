@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -967,10 +968,10 @@ public class CustomizationHelperUI extends UIBase {
 	}
 	
 	@SubscribeEvent
-	public void onInitScreen(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitScreen(InitOrResizeScreenEvent.Pre e) {
 		try {
 			
-			if (e.getGui() != null) {
+			if (e.getScreen() != null) {
 				if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 					
 					updateUI();

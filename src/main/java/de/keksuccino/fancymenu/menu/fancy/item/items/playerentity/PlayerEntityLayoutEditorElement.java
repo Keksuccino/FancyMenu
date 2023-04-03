@@ -31,7 +31,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
 
         this.fadeable = false;
         this.supportsAdvancedSizing = false;
-        
+
         super.init();
 
         PlayerEntityCustomizationItem item = ((PlayerEntityCustomizationItem)this.object);
