@@ -2,25 +2,27 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
+import de.keksuccino.fancymenu.menu.fancy.item.items.IActionExecutorItem;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
-public class ButtonCustomizationItem extends CustomizationItemBase {
+//TODO übernehmenn (implements)
+public class ButtonCustomizationItem extends CustomizationItemBase implements IActionExecutorItem {
 
 	public AdvancedButton button;
 	private String hoverLabel;
@@ -33,6 +35,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 	public String hoverLabelRaw;
 	public String labelRaw;
 	public String tooltip;
+	//TODO übernehmenn
+	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
 
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -46,15 +50,13 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
 
-			if (buttonaction == null) {
-				return;
-			}
+			//TODO übernehmenn
+//			if (buttonaction == null) {
+//				return;
+//			}
 			if (actionvalue == null) {
 				actionvalue = "";
 			}
-//			if (!isEditorActive()) {
-//				actionvalue = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(actionvalue);
-//			}
 
 			this.hoverSound = item.getEntryValue("hoversound");
 			if (this.hoverSound != null) {
@@ -82,10 +84,33 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 				}
 			}
 
-			String finalAction = actionvalue;
-			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), this.value, true, (press) -> {
-				ButtonScriptEngine.runButtonAction(buttonaction, finalAction);
+			//TODO übernehmenn
+			if (buttonaction != null) {
+				if (buttonaction.contains("%btnaction_splitter_fm%")) {
+					for (String s : StringUtils.splitLines(buttonaction, "%btnaction_splitter_fm%")) {
+						if (s.length() > 0) {
+							String action = s;
+							String value = null;
+							if (s.contains(";")) {
+								action = s.split(";", 2)[0];
+								value = s.split(";", 2)[1];
+							}
+							this.actions.add(new ButtonScriptEngine.ActionContainer(action, value));
+						}
+					}
+				} else {
+					this.actions.add(new ButtonScriptEngine.ActionContainer(buttonaction, actionvalue));
+				}
+			}
+			//----------------------
+
+			//TODO übernehmenn
+			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (press) -> {
+				for (ButtonScriptEngine.ActionContainer c : this.actions) {
+					c.execute();
+				}
 			});
+			//-------------------
 
 			String click = item.getEntryValue("clicksound");
 			if (click != null) {
@@ -199,7 +224,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		this.button.setX(x);
 		this.button.setY(y);
 
-		if (this.button.isHoveredOrFocused()) {
+		//TODO übernehmenn (if)
+		if (this.button.isHoveredOrFocused() && this.button.active) {
 			if (this.hoverLabel != null) {
 				this.button.setMessage(this.hoverLabel);
 			} else {
@@ -252,37 +278,10 @@ public class ButtonCustomizationItem extends CustomizationItemBase {
 		return this.button;
 	}
 
-	public Long getId() {
-		int ori = 0;
-		if (this.orientation.equalsIgnoreCase("original")) {
-			ori = 1;
-		} else if (this.orientation.equalsIgnoreCase("top-left")) {
-			ori = 2;
-		} else if (this.orientation.equalsIgnoreCase("mid-left")) {
-			ori = 3;
-		} else if (this.orientation.equalsIgnoreCase("bottom-left")) {
-			ori = 4;
-		} else if (this.orientation.equalsIgnoreCase("top-centered")) {
-			ori = 5;
-		} else if (this.orientation.equalsIgnoreCase("mid-centered")) {
-			ori = 6;
-		} else if (this.orientation.equalsIgnoreCase("bottom-centered")) {
-			ori = 7;
-		} else if (this.orientation.equalsIgnoreCase("top-right")) {
-			ori = 8;
-		} else if (this.orientation.equalsIgnoreCase("mid-right")) {
-			ori = 9;
-		} else if (this.orientation.equalsIgnoreCase("bottom-right")) {
-			ori = 10;
-		}
-
-		String idRaw = "00" + ori + "" + Math.abs(this.posX) + "" + Math.abs(this.posY) + "" + Math.abs(this.getWidth());
-		long id = 0;
-		if (MathUtils.isLong(idRaw)) {
-			id = Long.parseLong(idRaw);
-		}
-
-		return id;
+	//TODO übernehmenn
+	@Override
+	public List<ButtonScriptEngine.ActionContainer> getActionList() {
+		return this.actions;
 	}
 
 }

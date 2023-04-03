@@ -10,8 +10,9 @@ import java.util.function.Consumer;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutSplashText;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.visibilityrequirements.VisibilityRequirementsScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ChooseFromStringListScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import net.minecraft.client.Minecraft;
@@ -599,7 +600,7 @@ public class LayoutEditorUI extends UIBase {
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				PlaceholderInputPopup p = new PlaceholderInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.edit_menu_title"), null, 240, (call) -> {
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.edit_menu_title")), this.parent, null, (call) -> {
 					if (call != null) {
 						if (!call.equals(defaultMenuTitle)) {
 							if ((this.parent.customMenuTitle == null) || !this.parent.customMenuTitle.equals(call)) {
@@ -614,12 +615,13 @@ public class LayoutEditorUI extends UIBase {
 						}
 					}
 				});
+				s.multilineMode = false;
 				if (this.parent.customMenuTitle != null) {
-					p.setText(this.parent.customMenuTitle);
+					s.setText(this.parent.customMenuTitle);
 				} else {
-					p.setText(defaultMenuTitle);
+					s.setText(defaultMenuTitle);
 				}
-				PopupHandler.displayPopup(p);
+				Minecraft.getInstance().setScreen(s);
 			});
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
@@ -916,12 +918,14 @@ public class LayoutEditorUI extends UIBase {
 
 			this.addSeparator();
 
-			/** VISIBILITY REQUIREMENTS [LAYOUT-WIDE] **/
-			AdvancedButton visibilityRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.global_visibility_requirements"), (press) -> {
-				Minecraft.getInstance().setScreen(new VisibilityRequirementsScreen(this.parent, this.parent.globalVisReqDummyItem));
+			/** LOADING REQUIREMENTS [LAYOUT-WIDE] **/
+			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (press) -> {
+				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer, (call) -> {});
+				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+				Minecraft.getInstance().setScreen(s);
 			});
-			visibilityRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.global_visibility_requirements.desc"), "%n%"));
-			this.addContent(visibilityRequirementsButton);
+			loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc"), "%n%"));
+			this.addContent(loadingRequirementsButton);
 
 			/** WINDOW SIZE RESTRICTIONS **/
 			FMContextMenu windowSizeMenu = new FMContextMenu();
@@ -1116,21 +1120,13 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebTexture));
+				//TODO übernehmenn
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
+				s.multilineMode = false;
+				Minecraft.getInstance().setScreen(s);
+				//----------------------
 			});
 			this.addContent(webImageButton);
-
-//			/** TEXT **/
-//			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
-//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
-//			});
-//			this.addContent(textButton);
-//
-//			/** WEB TEXT **/
-//			AdvancedButton webTextButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webtext"), (press) -> {
-//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebText));
-//			});
-//			this.addContent(webTextButton);
 
 			/** SPLASH TEXT **/
 			FMContextMenu splashMenu = new FMContextMenu();
@@ -1138,7 +1134,11 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(splashMenu);
 
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.add.splash.single.desc"), null, 240, this.parent::addSingleSplashText));
+				//TODO übernehmenn
+				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
+				s.multilineMode = false;
+				Minecraft.getInstance().setScreen(s);
+				//--------------------
 			});
 			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
 			splashMenu.addContent(singleSplashButton);
@@ -1169,17 +1169,11 @@ public class LayoutEditorUI extends UIBase {
 
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				PopupHandler.displayPopup(new PlaceholderInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.button.label") + ":", null, 240, this.parent::addButton));
+				//TODO übernehmenn
+				this.parent.addButton("New Button");
+				//------------------
 			});
 			this.addContent(buttonButton);
-
-//			/** PLAYER ENTITY **/
-//			if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
-//				AdvancedButton playerEntityButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.playerentity"), (press) -> {
-//					this.parent.addPlayerEntity();
-//				});
-//				this.addContent(playerEntityButton);
-//			}
 
 			/** ANIMATION **/
 			FMContextMenu animationMenu = new FMContextMenu();

@@ -134,7 +134,7 @@ public abstract class LayoutEditorElement extends LayoutElement {
             sec.addEntry("y", "" + this.object.posY);
             sec.addEntry("height", "" + this.object.getHeight());
         }
-        this.addVisibilityPropertiesTo(sec);
+        this.addLoadingRequirementPropertiesTo(sec);
         l.add(sec);
         return l;
     }
