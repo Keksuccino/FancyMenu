@@ -205,7 +205,6 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
             sec.addEntry("height", "" + this.object.getHeight());
         }
         sec.addEntry("hidden", "" + this.getDeepCustomizationItem().hidden);
-        //TODO übernehmen
         this.addLoadingRequirementPropertiesTo(sec);
         l.add(sec);
         return l;

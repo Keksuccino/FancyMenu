@@ -18,8 +18,6 @@ import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
 import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementHandler;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v1.requirements.VisibilityRequirements;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
@@ -57,8 +55,8 @@ import org.apache.logging.log4j.Logger;
 @Mod("fancymenu")
 public class FancyMenu {
 
-	//TODO übernehmen (+ locals)
-	public static final String VERSION = "2.14.0";
+	//TODO übernehmen
+	public static final String VERSION = "2.14.4";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -105,9 +103,6 @@ public class FancyMenu {
 
 				ButtonActions.registerAll();
 
-				VisibilityRequirements.registerAll();
-
-				//TODO übernehmen
 				LoadingRequirements.registerAll();
 
 				Placeholders.registerAll();
@@ -130,8 +125,6 @@ public class FancyMenu {
 	    		CustomGuiLoader.loadCustomGuis();
 	    		
 	    		GameIntroHandler.init();
-
-				VisibilityRequirementHandler.init();
 	    		
 	        	MenuCustomization.init();
 
@@ -151,8 +144,7 @@ public class FancyMenu {
 
 	        	Konkrete.addPostLoadingEvent("fancymenu", this::onClientSetup);
 
-				//TODO remove debug
-				MinecraftForge.EVENT_BUS.register(new Test());
+//				MinecraftForge.EVENT_BUS.register(new Test());
 
 //				FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onRegisterResourcePacks);
 
@@ -178,11 +170,6 @@ public class FancyMenu {
 			e.printStackTrace();
 		}
 	}
-
-//	private void onRegisterResourcePacks(AddPackFindersEvent e) {
-//		e.addRepositorySource(new AnimationRepositorySource(new File(FancyMenu.getAnimationPath().getPath())));
-//		LOGGER.info("[FancyMenu] Animation packs registered!");
-//	}
 
 	@SubscribeEvent
 	public void onRegisterCommands(RegisterClientCommandsEvent e) {
@@ -234,10 +221,8 @@ public class FancyMenu {
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
-		//TODO übernehmen (+ add locals files to assets)
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "uk_ua.local"), "uk_ua", f.getPath());
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "ru_ru.local"), "ru_ru", f.getPath());
-		//----------------------
 		
 		Locals.getLocalsFromDir(f.getPath());
 	}
@@ -253,7 +238,6 @@ public class FancyMenu {
     		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
     		config.registerValue("showdebugwarnings", true, "general");
 			config.registerValue("forcefullscreen", false, "general");
-			//TODO übernehmen
 			config.registerValue("variables_to_reset_on_launch", "", "general");
     		
     		config.registerValue("showcustomizationbuttons", true, "customization");
@@ -263,8 +247,6 @@ public class FancyMenu {
 			config.registerValue("showanimationloadingstatus", true, "loading");
 			config.registerValue("allowgameintroskip", true, "loading");
 			config.registerValue("customgameintroskiptext", "", "loading");
-			//TODO übernehmen
-//			config.registerValue("loadinganimationcolor", "#ffffffff", "loading");
 			config.registerValue("preloadanimations", false, "loading");
 
 			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");

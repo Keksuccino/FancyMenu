@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.mixin.client.IMixinPauseScreen;
@@ -21,8 +22,9 @@ public class PauseScreenHandler extends MenuHandlerBase {
         }
     }
 
+    
     @Override
-    protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.Init.Pre e) {
+    protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
         if (this.customizePauseScreen(e.getScreen())) {
             super.applyLayoutPre(sec, e);
         }

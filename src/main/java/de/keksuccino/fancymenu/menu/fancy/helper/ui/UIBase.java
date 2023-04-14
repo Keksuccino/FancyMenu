@@ -10,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
 
-//TODO übernehmen (ganze klasse)
 public class UIBase extends GuiComponent {
 
 	public static final Color SCROLL_GRABBER_IDLE_COLOR = new Color(89, 91, 93, 100);
@@ -49,17 +48,16 @@ public class UIBase extends GuiComponent {
 		button.setBackgroundColor(ELEMENT_BACKGROUND_COLOR_IDLE, ELEMENT_BACKGROUND_COLOR_HOVER, ELEMENT_BORDER_COLOR_IDLE, ELEMENT_BORDER_COLOR_HOVER, ELEMENT_BORDER_THICKNESS);
 		return button;
 	}
-	
+
 	public static float getUIScale() {
 
 		float uiScale = FancyMenu.config.getOrDefault("uiscale", 1.0F);
 		double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
 
 		return (float) ((((double)UI_SCALE_BASE) * (((double)UI_SCALE_BASE) / mcScale)) * uiScale);
-		
+
 	}
 
-	//TODO nichts geändert
 	public static void openScaledContextMenuAt(FMContextMenu menu, int x, int y) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
@@ -67,29 +65,27 @@ public class UIBase extends GuiComponent {
 		}
 	}
 
-	//TODO nichts geändert
 	public static void openScaledContextMenuAtMouse(FMContextMenu menu) {
 		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 
-	//TODO nichts geändert
 	public static void renderScaledContextMenu(PoseStack matrix, FMContextMenu menu) {
 		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {
-			
+
 			matrix.pushPose();
-			
+
 			matrix.scale(UIBase.getUIScale(), UIBase.getUIScale(), UIBase.getUIScale());
-			
+
 			MouseInput.setRenderScale(UIBase.getUIScale());
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			MouseInput.resetRenderScale();
-			
+
 			menu.render(matrix, mouseX, mouseY, (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
-			
+
 			matrix.popPose();
-			
+
 		}
 	}
 

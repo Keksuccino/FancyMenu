@@ -24,7 +24,7 @@ public class PlaceholderInputPopup extends FMTextInputPopup {
 		
 		this.textField = new PlaceholderEditBox(Minecraft.getInstance().font, 0, 0, 200, 20, true, filter);
 		this.textField.setCanLoseFocus(true);
-		this.textField.setFocus(false);
+		this.textField.setFocused(false);
 		this.textField.setMaxLength(1000);
 		
 	}

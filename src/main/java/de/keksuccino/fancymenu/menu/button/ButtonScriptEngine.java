@@ -41,6 +41,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
@@ -49,12 +50,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class ButtonScriptEngine {
 
-	//TODO übernehmen
+	private static final Logger LOGGER = LogManager.getLogger();
+
 	private static final List<String> LEGACY_IDENTIFIERS = LegacyButtonActions.getLegacyIdentifiers();
 
 	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
@@ -188,8 +192,16 @@ public class ButtonScriptEngine {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
-			if (action.equalsIgnoreCase("opengui")) {
-				if (value.equals(CreateWorldScreen.class.getName())) {
+			if (action.equalsIgnoreCase("opengui") && (value != null)) {
+				if (MenuCustomization.getValidMenuIdentifierFor(value).equals(PackSelectionScreen.class.getName())) {
+					Screen parent = Minecraft.getInstance().screen;
+					PackSelectionScreen s = new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
+						Minecraft.getInstance().options.updateResourcePacks(repo);
+						Minecraft.getInstance().setScreen(parent);
+					}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"));
+					Minecraft.getInstance().setScreen(s);
+				}
+				else if (value.equals(CreateWorldScreen.class.getName())) {
 					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
 				} else {
 					try {
@@ -351,7 +363,6 @@ public class ButtonScriptEngine {
 				}
 			}
 
-			//TODO übernehmen
 			if (LEGACY_IDENTIFIERS.contains(action)) {
 				return;
 			}
@@ -515,7 +526,6 @@ public class ButtonScriptEngine {
 
 	}
 
-	//TODO übernehmen
 	public static class ActionContainer {
 
 		public volatile String action;

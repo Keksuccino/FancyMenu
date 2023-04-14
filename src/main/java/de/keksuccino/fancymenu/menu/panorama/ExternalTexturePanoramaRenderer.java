@@ -32,6 +32,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	private double fov = 85.0D;
 	private float angle = 25.0F;
 	private Minecraft mc = Minecraft.getInstance();
+	//TODO übernehmen
+	public float opacity = 1.0F;
 
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -149,7 +151,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 			poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+			//TODO übernehmen
+			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
 			RenderSystem.enableBlend();
 			RenderSystem.disableCull();
 			RenderSystem.depthMask(false);
@@ -231,7 +234,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					this.overlay_texture.loadTexture();
 				}
 				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+				//TODO übernehmen
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
 				blit(CurrentScreenHandler.getPoseStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);

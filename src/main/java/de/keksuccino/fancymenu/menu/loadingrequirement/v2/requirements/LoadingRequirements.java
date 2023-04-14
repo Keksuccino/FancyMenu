@@ -1,4 +1,4 @@
-//TODO übernehmen (alle klassen aus loadingrequirement.v2)
+
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements;
 
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry;

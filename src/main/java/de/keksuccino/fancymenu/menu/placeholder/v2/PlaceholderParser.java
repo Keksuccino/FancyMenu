@@ -24,7 +24,6 @@ public class PlaceholderParser {
 
     private static Map<String, Long> logCooldown = new HashMap<>();
 
-    //TODO übernehmen (ganze methode)
     @NotNull
     public static String replacePlaceholders(@NotNull String in) {
         if (in == null) {

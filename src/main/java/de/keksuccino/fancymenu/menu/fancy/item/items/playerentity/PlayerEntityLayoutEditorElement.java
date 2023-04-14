@@ -58,7 +58,6 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
         this.rightclickMenu.addContent(copyClientPlayerButton);
 
         AdvancedButton setPlayerNameButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name"), true, (press) -> {
-            //TODO übernehmen
             TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name")), this.handler, null, (call) -> {
                 if (call != null) {
                     if (!call.equals(item.playerName)) {
@@ -78,7 +77,6 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                 s.setText(StringUtils.convertFormatCodes(item.playerName, "§", "&"));
             }
             Minecraft.getInstance().setScreen(s);
-            //----------------
         }) {
             @Override
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
@@ -191,7 +189,6 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
         setSkinMenu.addContent(setLocalSkinButton);
 
         AdvancedButton setWebSkinButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web"), true, (press) -> {
-            //TODO übernehmen
             TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web")), this.handler, null, (call) -> {
                 if (call != null) {
                     if (!call.replace(" ", "").equals("")) {
@@ -207,7 +204,6 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                 s.setText(item.skinUrl);
             }
             Minecraft.getInstance().setScreen(s);
-            //----------------
         });
         setSkinMenu.addContent(setWebSkinButton);
 
@@ -341,7 +337,6 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
         setCapeMenu.addContent(setLocalCapeButton);
 
         AdvancedButton setWebCapeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web"), true, (press) -> {
-            //TODO übernehmen
             TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web")), this.handler, null, (call) -> {
                 if (call != null) {
                     if (!call.replace(" ", "").equals("")) {
@@ -357,7 +352,6 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                 s.setText(item.capeUrl);
             }
             Minecraft.getInstance().setScreen(s);
-            //--------------------
         });
         setCapeMenu.addContent(setWebCapeButton);
 
@@ -447,9 +441,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
         };
-        //TODO übernehmen
         crouchingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.crouching.desc"), "%n%"));
-        //------------------
         this.rightclickMenu.addContent(crouchingButton);
 
         AdvancedButton showNameButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {

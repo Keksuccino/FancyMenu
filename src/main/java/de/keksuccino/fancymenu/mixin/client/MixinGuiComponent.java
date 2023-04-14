@@ -14,30 +14,31 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(GuiComponent.class)
 public abstract class MixinGuiComponent {
 
-    @OptifineFix
-    @ModifyVariable(at = @At("HEAD"), method = "fill(Lcom/mojang/blaze3d/vertex/PoseStack;IIIII)V", argsOnly = true, index = 5)
-    private static int modifyColor(int color) {
-        if (FancyMenu.config == null) {
-            return color;
-        }
-        if (Minecraft.getInstance().getOverlay() == null) {
-            MixinCache.isSplashScreenRendering = false;
-        }
-        if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().getOverlay() != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
-            int backColor = color;
-            int alpha = MixinCache.currentSplashAlpha;
-
-            Screen current = Minecraft.getInstance().screen;
-            if ((current != null) && (MenuCustomization.isMenuCustomizable(current) || FancyMenu.config.getOrDefault("preloadanimations", true))) {
-                alpha = 255;
-            }
-            return withAlpha(backColor, alpha);
-        }
-        return color;
-    }
-
-    private static int withAlpha(int color, int alpha) {
-        return color & 16777215 | alpha << 24;
-    }
+    //TODO übernehmen
+//    @OptifineFix
+//    @ModifyVariable(at = @At("HEAD"), method = "fill(Lcom/mojang/blaze3d/vertex/PoseStack;IIIII)V", argsOnly = true, index = 5)
+//    private static int modifyColor(int color) {
+//        if (FancyMenu.config == null) {
+//            return color;
+//        }
+//        if (Minecraft.getInstance().getOverlay() == null) {
+//            MixinCache.isSplashScreenRendering = false;
+//        }
+//        if (MixinCache.isSplashScreenRendering || ((Minecraft.getInstance().getOverlay() != null) && FancyMenu.isOptifineCompatibilityMode() && !FancyMenu.isDrippyLoadingScreenLoaded())) {
+//            int backColor = color;
+//            int alpha = MixinCache.currentSplashAlpha;
+//
+//            Screen current = Minecraft.getInstance().screen;
+//            if ((current != null) && (MenuCustomization.isMenuCustomizable(current) || FancyMenu.config.getOrDefault("preloadanimations", true))) {
+//                alpha = 255;
+//            }
+//            return withAlpha(backColor, alpha);
+//        }
+//        return color;
+//    }
+//
+//    private static int withAlpha(int color, int alpha) {
+//        return color & 16777215 | alpha << 24;
+//    }
 
 }

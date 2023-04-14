@@ -83,11 +83,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				//TODO übernehmen
-//				this.globalVisReqDummyItem = new CustomizationItemBase(meta) {
-//					@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-//				};
-				//TODO übernehmen
 				this.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
 
 				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
@@ -574,9 +569,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
-						//TODO übernehmen
-//						String baction = sec.getEntryValue("buttonaction");
-//						String actionvalue = sec.getEntryValue("value");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
 
 						if (onlydisplayin != null) {
@@ -600,9 +592,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.object.delayAppearanceSec = bc.delayAppearanceSec;
 								this.object.fadeIn = bc.fadeIn;
 								this.object.fadeInSpeed = bc.fadeInSpeed;
-								//TODO übernehmen
 								this.object.loadingRequirementContainer = bc.loadingRequirementContainer;
-								//-------------------
 								this.object.setActionId(bc.getActionId());
 
 								super.init();
@@ -621,18 +611,6 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.setStretchedX(true, false);
 						}
 
-						//TODO übernehmen
-//						if (baction == null) {
-//							continue;
-//						}
-//						lb.actionType = baction;
-//
-//						if (actionvalue == null) {
-//							actionvalue = "";
-//						}
-//						lb.actionContent = actionvalue;
-
-						//TODO übernehmen
 						lb.actions = bc.actions;
 
 						String desc = sec.getEntryValue("description");
@@ -701,12 +679,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
 
-						//TODO übernehmen
 						lb.object.advancedPosX = bc.advancedPosX;
 						lb.object.advancedPosY = bc.advancedPosY;
 						lb.object.advancedWidth = bc.advancedWidth;
 						lb.object.advancedHeight = bc.advancedHeight;
-						//-------------------
 
 						con.add(lb);
 					}
@@ -807,10 +783,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
 									@Override public void render(PoseStack matrix, Screen menu) {}
 								};
-								//TODO übernehmen
 								van.object.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 								van.customizationContainer.loadingRequirementContainer = cusItem.loadingRequirementContainer;
-								//-----------------
 							}
 						}
 					}
@@ -930,18 +904,18 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		System.out.println("[FANCYMENU] ERROR: PRE-LOADED EDITOR: VANILLA BUTTON NOT FOUND!");
 		return null;
 	}
-	
+
 	//render
 	@Override
 	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
-		
+
 		if (!audioInit) {
 			audioInit = true;
 			for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
 				SoundHandler.playSound(m.getKey());
 			}
 		}
-		
+
 		super.render(matrix, mouseX, mouseY, partialTicks);
 	}
 
@@ -957,7 +931,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		String h = sec.getEntryValue("height");
 		String x = sec.getEntryValue("x");
 		String y = sec.getEntryValue("y");
-		
+
 		boolean stretchX = false;
 		if ((w != null) && (x != null)) {
 			if (w.equals("%guiwidth%") && x.equals("0")) {
@@ -970,7 +944,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				stretchY = true;
 			}
 		}
-		
+
 		if (stretchX && stretchY) {
 			return 3;
 		}
@@ -980,7 +954,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		if (stretchX) {
 			return 1;
 		}
-		
+
 		return 0;
 	}
 

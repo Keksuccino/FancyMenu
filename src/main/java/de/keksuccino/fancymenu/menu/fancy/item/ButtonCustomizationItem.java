@@ -21,7 +21,7 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
-//TODO übernehmen (implements)
+
 public class ButtonCustomizationItem extends CustomizationItemBase implements IActionExecutorItem {
 
 	public AdvancedButton button;
@@ -35,22 +35,22 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 	public String hoverLabelRaw;
 	public String labelRaw;
 	public String tooltip;
-	//TODO übernehmen
+	
 	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
 
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
-		
+
 		if ((this.action != null) && this.action.equalsIgnoreCase("addbutton")) {
 			this.labelRaw = item.getEntryValue("label");
 			if (this.labelRaw == null) {
 				this.labelRaw = "";
 			}
-			
+
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
 
-			//TODO übernehmen
+			
 //			if (buttonaction == null) {
 //				return;
 //			}
@@ -84,7 +84,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 				}
 			}
 
-			//TODO übernehmen
+			
 			if (buttonaction != null) {
 				if (buttonaction.contains("%btnaction_splitter_fm%")) {
 					for (String s : StringUtils.splitLines(buttonaction, "%btnaction_splitter_fm%")) {
@@ -102,15 +102,15 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 					this.actions.add(new ButtonScriptEngine.ActionContainer(buttonaction, actionvalue));
 				}
 			}
-			//----------------------
+			
 
-			//TODO übernehmen
+			
 			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (press) -> {
 				for (ButtonScriptEngine.ActionContainer c : this.actions) {
 					c.execute();
 				}
 			});
-			//-------------------
+			
 
 			String click = item.getEntryValue("clicksound");
 			if (click != null) {
@@ -217,14 +217,14 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 		}
 
 		this.button.setAlpha(this.opacity);
-		
+
 		int x = this.getPosX(menu);
 		int y = this.getPosY(menu);
-		
+
 		this.button.setX(x);
 		this.button.setY(y);
 
-		//TODO übernehmen (if)
+		
 		if (this.button.isHoveredOrFocused() && this.button.active) {
 			if (this.hoverLabel != null) {
 				this.button.setMessage(this.hoverLabel);
@@ -240,7 +240,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 			this.button.setMessage(this.value);
 			this.hover = false;
 		}
-		
+
 		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
 	}
 
@@ -265,7 +265,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 		}
 
 	}
-	
+
 	@Override
 	public boolean shouldRender() {
 		if (this.button == null) {
@@ -273,12 +273,12 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 		}
 		return super.shouldRender();
 	}
-	
+
 	public AdvancedButton getButton() {
 		return this.button;
 	}
 
-	//TODO übernehmen
+	
 	@Override
 	public List<ButtonScriptEngine.ActionContainer> getActionList() {
 		return this.actions;

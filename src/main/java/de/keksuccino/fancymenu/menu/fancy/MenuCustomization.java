@@ -41,7 +41,11 @@ public class MenuCustomization {
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
 
-	public static boolean isLoadingScreen = true;
+	//TODO übernehmen
+	public static boolean allowScreenCustomization = false;
+
+	//TODO übernehmen
+	//public static boolean isLoadingScreen = true;
 	
 	public static void init() {
 		if (!initDone) {
@@ -147,6 +151,11 @@ public class MenuCustomization {
 	}
 
 	public static boolean isMenuCustomizable(Screen menu) {
+		//TODO übernehmen
+		if (!allowScreenCustomization) {
+			return false;
+		}
+		//------------------------
 		if (menu != null) {
 			if (menu instanceof CustomGuiBase) {
 				return true;
@@ -316,7 +325,6 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.startsWith("com.github.alexthe666.alexsmobs.")) {
 			return true;
 		}
-		//TODO übernehmen
 		if (menuIdentifierOrPartOfIdentifier.equals(TextEditorScreen.class.getName())) {
 			return true;
 		}
@@ -329,7 +337,9 @@ public class MenuCustomization {
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.")) {
 			return true;
 		}
-		//---------------------
+		if (menuIdentifierOrPartOfIdentifier.startsWith("io.github.lgatodu47.screenshot_viewer.")) {
+			return true;
+		}
 		return false;
 	}
 

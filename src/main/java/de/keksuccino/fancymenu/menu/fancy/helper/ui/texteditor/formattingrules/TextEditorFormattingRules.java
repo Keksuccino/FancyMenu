@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.formattingrules;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;

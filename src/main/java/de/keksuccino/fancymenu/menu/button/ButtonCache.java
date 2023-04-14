@@ -7,21 +7,19 @@ import java.util.Map;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.GuiInitCompletedEvent;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.mixin.client.IMixinGridWidget;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.GridWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
-import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -35,7 +33,7 @@ public class ButtonCache {
 	private static Map<String, AbstractWidget> customButtons = new HashMap<String, AbstractWidget>();
 
 	@SubscribeEvent
-	public void updateCache(ScreenEvent.Init.Post e) {
+	public void updateCache(InitOrResizeScreenEvent.Post e) {
 		if (!caching) {
 			cached = false;
 			current = e.getScreen();
@@ -165,19 +163,22 @@ public class ButtonCache {
 		try {
 
 			//Reset the button list
-			s.renderables.clear();
+			//TODO EXPERIMENTAL
+//			s.renderables.clear();
 
 			//Set all important variables and init screen
 			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
-			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+
+			//TODO EXPERIMENTAL
+//			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
+			s.resize(Minecraft.getInstance(), screenWidth, screenHeight);
+			
 
 			//Reflecting the buttons list field to cache all buttons of the menu
 			List<AbstractWidget> widgets = new ArrayList<>();
 			for (Renderable r : s.renderables) {
-				if (r instanceof GridWidget) {
-					widgets.addAll(((IMixinGridWidget)r).invokeGetContainedChildrenFancyMenu());
-				} else if (r instanceof AbstractWidget) {
+				if (r instanceof AbstractWidget) {
 					widgets.add((AbstractWidget)r);
 				}
 			}

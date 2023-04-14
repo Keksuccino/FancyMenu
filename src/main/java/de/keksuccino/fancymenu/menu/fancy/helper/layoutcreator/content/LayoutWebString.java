@@ -224,7 +224,6 @@ public class LayoutWebString extends LayoutElement {
 		p1.addEntry("multiline", "" + this.getObject().multiline);
 		p1.addEntry("alignment", this.getObject().alignment.key);
 
-		//TODO übernehmen
 		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);

@@ -5,7 +5,6 @@ import java.io.IOException;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -49,9 +48,6 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
 
-	//TODO übernehmen
-//	public VisibilityRequirementContainer visibilityRequirementContainer;
-	//TODO übernehmen
 	public LoadingRequirementContainer loadingRequirementContainer;
 
 	protected String actionId;
@@ -149,9 +145,6 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		this.advancedPosX = item.getEntryValue("advanced_posx");
 		this.advancedPosY = item.getEntryValue("advanced_posy");
 
-		//TODO übernehmen
-//		this.visibilityRequirementContainer = new VisibilityRequirementContainer(item, this);
-		//TODO übernehmen
 		this.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(item);
 
 	}
@@ -276,11 +269,9 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		if (this.value == null) {
 			return false;
 		}
-		//TODO übernehmen
 		if (!this.loadingRequirementsMet()) {
 			return false;
 		}
-		//--------------
 		return this.visible;
 	}
 
@@ -296,12 +287,6 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
 	}
 
-	//TODO übernehmen
-//	protected boolean visibilityRequirementsMet() {
-//
-//	}
-
-	//TODO übernehmen
 	protected boolean loadingRequirementsMet() {
 		if (isEditorActive()) {
 			return true;

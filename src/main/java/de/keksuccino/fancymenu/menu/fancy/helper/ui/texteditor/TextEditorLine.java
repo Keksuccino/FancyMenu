@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -79,7 +79,7 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     @Override
-    public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         this.currentCharacterRenderIndex = 0;
 
@@ -147,7 +147,7 @@ public class TextEditorLine extends AdvancedTextField {
             if (highlightPos != cursorPos) {
                 this.currentHighlightPosXStart = cursorPosRender;
                 this.currentHighlightPosXEnd = textX + this.font2.width(text.substring(0, highlightPos)) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
+                this.getAsAccessor().invokeRenderHighlightFancyMenu(matrix, this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;

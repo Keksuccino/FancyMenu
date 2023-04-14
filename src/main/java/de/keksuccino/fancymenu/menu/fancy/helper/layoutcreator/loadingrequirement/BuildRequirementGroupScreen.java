@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -152,7 +152,7 @@ public class BuildRequirementGroupScreen extends Screen {
             this.callback.accept(this.group);
         }) {
             @Override
-            public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 BuildRequirementGroupScreen s = BuildRequirementGroupScreen.this;
                 if (s.group.getInstances().isEmpty()) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.build_group_screen.finish.no_requirements_added"), "%n%"));
@@ -167,7 +167,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setDescription((String[])null);
                     this.active = true;
                 }
-                super.renderButton(matrix, mouseX, mouseY, partialTicks);
+                super.renderWidget(matrix, mouseX, mouseY, partialTicks);
             }
         };
         UIBase.applyDefaultButtonSkinTo(this.doneButton);

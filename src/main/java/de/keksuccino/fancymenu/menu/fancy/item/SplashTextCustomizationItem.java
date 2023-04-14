@@ -11,6 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -224,9 +225,10 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 
 	}
+
 	
 	@SubscribeEvent
-	public static void onInitScreenPre(ScreenEvent.Init.Pre e) {
+	public static void onInitScreenPre(InitOrResizeScreenEvent.Pre e) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if ((lastScreen == null) || !lastScreen.getClass().getName().equals(s.getClass().getName())) {

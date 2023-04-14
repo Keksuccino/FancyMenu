@@ -23,10 +23,7 @@ import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -52,14 +49,13 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -107,18 +103,18 @@ public class MenuHandlerBase extends GuiComponent {
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
 	protected String customMenuTitle = null;
+	protected boolean forceDisableCustomMenuTitle = false;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected MenuBackground customMenuBackground = null;
+	//TODO übernehmen
+	public float backgroundOpacity = 1.0F;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<AbstractWidget, ButtonCustomizationContainer>();
-	//TODO übernehmen
-//	protected Map<AbstractWidget, VisibilityRequirementContainer> vanillaButtonVisibilityRequirementContainers = new HashMap<>();
-	//TODO übernehmen
 	protected Map<AbstractWidget, LoadingRequirementContainer> vanillaButtonLoadingRequirementContainers = new HashMap<>();
 
 	protected volatile Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
@@ -136,9 +132,6 @@ public class MenuHandlerBase extends GuiComponent {
 	protected String closeAudio;
 	protected String openAudio;
 
-	//TODO übernehmen
-//	protected Map<VisibilityRequirementContainer, Boolean> cachedLayoutWideRequirements = new HashMap<>();
-	//TODO übernehmen
 	protected Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 
 	protected static Screen scaleChangedIn = null;
@@ -188,8 +181,9 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
+	
 	@SubscribeEvent
-	public void onInitPre(ScreenEvent.Init.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
@@ -249,9 +243,6 @@ public class MenuHandlerBase extends GuiComponent {
 
 		this.customMenuTitle = null;
 
-		//TODO übernehmen
-//		this.cachedLayoutWideRequirements.clear();
-		//TODO übernehmen
 		this.cachedLayoutWideLoadingRequirements.clear();
 
 		for (PropertiesSet s : rawLayouts) {
@@ -264,27 +255,18 @@ public class MenuHandlerBase extends GuiComponent {
 				continue;
 			}
 
-			//TODO übernehmen
-//			VisibilityRequirementContainer globalVisReqContainer = new CustomizationItemBase(metas.get(0)) {
-//				@Override public void render(PoseStack matrix, Screen menu) throws IOException {}
-//			}.visibilityRequirementContainer;
-//			this.cachedLayoutWideRequirements.put(globalVisReqContainer, globalVisReqContainer.isVisible());
-//			if (!globalVisReqContainer.isVisible()) {
-//				continue;
-//			}
-
-			//TODO übernehmen
 			LoadingRequirementContainer layoutWideRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(metas.get(0));
 			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
 			if (!layoutWideRequirementContainer.requirementsMet()) {
 				continue;
 			}
-			//---------------
 
-			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
-			if (cusMenuTitle != null) {
-				this.customMenuTitle = cusMenuTitle;
-				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
+			if (!this.forceDisableCustomMenuTitle) {
+				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+				if (cusMenuTitle != null) {
+					this.customMenuTitle = cusMenuTitle;
+					ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
+				}
 			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -411,7 +393,8 @@ public class MenuHandlerBase extends GuiComponent {
 
 	}
 
-	protected void applyLayoutPre(PropertiesSection sec, ScreenEvent.Init.Pre e) {
+	
+	protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
 		
 		String action = sec.getEntryValue("action");
 		if (action != null) {
@@ -491,7 +474,7 @@ public class MenuHandlerBase extends GuiComponent {
 			System.out.println("Menu Handler: " + this.getClass().getName());
 			System.out.println("This probably happened because a mod has overridden a menu with this one.");
 			System.out.println("#####################################################");
-			e.getScreen().init(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
+			e.getScreen().resize(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
 			return;
 		}
 
@@ -499,9 +482,6 @@ public class MenuHandlerBase extends GuiComponent {
 		this.delayAppearanceVanilla.clear();
 		this.fadeInVanilla.clear();
 		this.vanillaButtonCustomizations.clear();
-		//TODO übernehmen
-//		this.vanillaButtonVisibilityRequirementContainers.clear();
-		//TODO übernehmen
 		this.vanillaButtonLoadingRequirementContainers.clear();
 		this.audio.clear();
 		this.frontRenderItems.clear();
@@ -509,6 +489,8 @@ public class MenuHandlerBase extends GuiComponent {
 		this.panoramacube = null;
 		this.slideshow = null;
 		this.customMenuBackground = null;
+		//TODO übernehmen
+		this.backgroundOpacity = 1.0F;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -601,7 +583,6 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 
 		//Handle vanilla button visibility requirements
-		//TODO übernehmen (for)
 		for (Map.Entry<AbstractWidget, LoadingRequirementContainer> m : this.vanillaButtonLoadingRequirementContainers.entrySet()) {
 			boolean isBtnHidden = false;
 			for (ButtonData d : this.hidden) {
@@ -622,9 +603,7 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 				if (btn != null) {
 					VanillaButtonCustomizationItem i = new VanillaButtonCustomizationItem(dummySec, btn, this);
-					//TODO übernehmen
 					i.loadingRequirements = m.getValue();
-					//---------------
 					this.backgroundRenderItems.add(i);
 				}
 			}
@@ -632,7 +611,6 @@ public class MenuHandlerBase extends GuiComponent {
 
 		for (Map.Entry<ButtonData, Float> m : this.delayAppearanceVanilla.entrySet()) {
 			if (!hidden.contains(m.getKey())) {
-				//TODO übernehmen (if)
 				if (this.vanillaButtonLoadingRequirementsMet(m.getKey().getButton())) {
 					this.handleVanillaAppearanceDelayFor(m.getKey());
 				}
@@ -655,7 +633,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
-		
+
 		String action = sec.getEntryValue("action");
 		if (action != null) {
 			String identifier = sec.getEntryValue("identifier");
@@ -916,9 +894,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
 				if (b != null) {
-					//TODO übernehmen
 					this.vanillaButtonLoadingRequirementContainers.put(b, LoadingRequirementContainer.deserializeRequirementContainer(sec));
-					//-----------------
 				}
 			}
 
@@ -1214,15 +1190,12 @@ public class MenuHandlerBase extends GuiComponent {
 			boolean fadein = this.fadeInVanilla.containsKey(d);
 			float delaysec = this.delayAppearanceVanilla.get(d);
 
-			//TODO übernehmen
 			LoadingRequirementContainer reqs = this.vanillaButtonLoadingRequirementContainers.get(d.getButton());
 
 			d.getButton().visible = false;
-			//TODO übernehmen
 			if (reqs != null) {
 				reqs.forceRequirementsNotMet = true;
 			}
-			//--------------
 			
 			if (fadein) {
 				d.getButton().setAlpha(0.1F);
@@ -1250,11 +1223,9 @@ public class MenuHandlerBase extends GuiComponent {
 							if (!fade) {
 								if (now >= start + (int)delay) {
 									d.getButton().visible = true;
-									//TODO übernehmen
 									if (reqs != null) {
 										reqs.forceRequirementsNotMet = false;
 									}
-									//-------------
 									if (!fadein) {
 										return;
 									} else {
@@ -1300,11 +1271,10 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 
 		//Re-init screen if layout-wide requirements changed
-		//TODO übernehmen (for)
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
-			//TODO übernehmen (if)
+			
 			if (m.getKey().requirementsMet() != m.getValue()) {
-				e.getScreen().init(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
+				e.getScreen().resize(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
 				break;
 			}
 		}
@@ -1323,8 +1293,8 @@ public class MenuHandlerBase extends GuiComponent {
 			return;
 		}
 
-		if (this.customMenuTitle != null) {
-			e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle));
+		if ((this.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
+			ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle)));
 		}
 
 		if (!this.backgroundDrawable) {
@@ -1388,16 +1358,21 @@ public class MenuHandlerBase extends GuiComponent {
 							this.backgroundAnimation.setPosY(0);
 						}
 					}
+					//TODO übernehmen
+					this.backgroundAnimation.setOpacity(this.backgroundOpacity);
 					this.backgroundAnimation.render(CurrentScreenHandler.getPoseStack());
 					this.backgroundAnimation.setWidth(wOri);
 					this.backgroundAnimation.setHeight(hOri);
 					this.backgroundAnimation.setPosX(xOri);
 					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
+					//TODO übernehmen
+					this.backgroundAnimation.setOpacity(1.0F);
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
 					RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-
+					//TODO übernehmen
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
 					if (!this.panoramaback) {
 						if (!this.keepBackgroundAspectRatio) {
 							GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
@@ -1469,16 +1444,25 @@ public class MenuHandlerBase extends GuiComponent {
 					}
 
 					RenderSystem.disableBlend();
+					//TODO übernehmen
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
 				} else if (this.panoramacube != null) {
-					
+
+					//TODO übernehmen
+					float opacity = this.panoramacube.opacity;
+					this.panoramacube.opacity = this.backgroundOpacity;
 					this.panoramacube.render();
+					this.panoramacube.opacity = opacity;
+					//-----------------
 
 				} else if (this.slideshow != null) {
 					int sw = this.slideshow.width;
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
+					//TODO übernehmen
+					float opacity = this.slideshow.slideshowOpacity;
 
 					if (!this.keepBackgroundAspectRatio) {
 						this.slideshow.width = s.width + 1;
@@ -1499,6 +1483,8 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 					}
 					this.slideshow.y = 0;
+					//TODO übernehmen
+					this.slideshow.slideshowOpacity = this.backgroundOpacity;
 
 					this.slideshow.render(matrix);
 					
@@ -1506,9 +1492,15 @@ public class MenuHandlerBase extends GuiComponent {
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
+					//TODO übernehmen
+					this.slideshow.slideshowOpacity = opacity;
 				} else if (this.customMenuBackground != null) {
 
+					//TODO übernehmen
+					this.customMenuBackground.opacity = this.backgroundOpacity;
 					this.customMenuBackground.render(matrix, s, this.keepBackgroundAspectRatio);
+					this.customMenuBackground.opacity = 1.0F;
+					//-------------------
 
 				}
 			}
@@ -1773,12 +1765,6 @@ public class MenuHandlerBase extends GuiComponent {
 		return null;
 	}
 
-	//TODO übernehmen
-//	protected boolean visibilityRequirementsMet(AbstractWidget b) {
-//
-//	}
-
-	//TODO übernehmen
 	protected boolean vanillaButtonLoadingRequirementsMet(AbstractWidget b) {
 		LoadingRequirementContainer c = this.vanillaButtonLoadingRequirementContainers.get(b);
 		if (c != null) {
@@ -2000,9 +1986,6 @@ public class MenuHandlerBase extends GuiComponent {
 		public String customButtonLabel = null;
 		public String buttonDescription = null;
 		public boolean isButtonHidden = false;
-		//TODO übernehmen
-//		public VisibilityRequirementContainer visibilityRequirementContainer = null;
-		//TODO übernehmen
 		public LoadingRequirementContainer loadingRequirementContainer = null;
 
 		public List<IAnimationRenderer> cachedAnimations = new ArrayList<IAnimationRenderer>();

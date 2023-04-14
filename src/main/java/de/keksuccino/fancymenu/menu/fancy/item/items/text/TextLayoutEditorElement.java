@@ -99,7 +99,6 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }
                 PopupHandler.displayPopup(p);
             }
-            //TODO übernehmen
             if ((i.sourceMode == TextCustomizationItem.SourceMode.DIRECT) || (i.sourceMode == TextCustomizationItem.SourceMode.WEB_SOURCE)) {
                 TextEditorScreen s = new TextEditorScreen(press.getMessage(), this.handler, null, (call) -> {
                     if (call != null) {
@@ -123,14 +122,13 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
                 }
                 if (i.source != null) {
                     if (i.sourceMode == TextCustomizationItem.SourceMode.DIRECT) {
-                        s.setText(i.source.replace("%n%", "\n"));
+                        s.setText(i.source.replace("%n%", "\n").replace("\\n", "\n"));
                     } else {
                         s.setText(i.source);
                     }
                 }
                 Minecraft.getInstance().setScreen(s);
             }
-            //-----------------
         }) {
             @Override
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {

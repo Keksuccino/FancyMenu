@@ -14,6 +14,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -955,7 +956,7 @@ public class CustomizationHelperUI extends UIBase {
 	}
 
 	@SubscribeEvent
-	public void onInitScreen(ScreenEvent.Init.Pre e) {
+	public void onInitScreen(InitOrResizeScreenEvent.Pre e) {
 		try {
 
 			if (e.getScreen() != null) {

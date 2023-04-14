@@ -11,8 +11,6 @@ import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,8 +19,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ElementHeightPlaceholder extends Placeholder {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     public ElementHeightPlaceholder() {
         super("elementheight");

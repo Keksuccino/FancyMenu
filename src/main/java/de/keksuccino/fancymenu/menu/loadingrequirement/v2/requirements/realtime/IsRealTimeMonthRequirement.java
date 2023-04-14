@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.realtime
 
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
-import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;

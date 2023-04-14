@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -39,6 +39,18 @@ public class ConfirmationScreen extends Screen {
             this.callback.accept(false);
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+
+    }
+
+    @Override
+    protected void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+        super.init();
 
     }
 

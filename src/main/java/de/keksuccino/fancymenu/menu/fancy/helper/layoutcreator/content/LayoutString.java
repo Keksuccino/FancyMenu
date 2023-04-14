@@ -289,7 +289,6 @@ public class LayoutString extends LayoutElement {
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("alignment", "" + this.getObject().alignment.key);
 
-		//TODO übernehmen
 		this.addLoadingRequirementPropertiesTo(p1);
 
 		l.add(p1);

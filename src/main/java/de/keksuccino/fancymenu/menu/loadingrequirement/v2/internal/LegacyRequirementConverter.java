@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal;
 
 import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
@@ -10,7 +10,15 @@ public class LegacyRequirementConverter {
 
     public static void deserializeLegacyAndAddTo(PropertiesSection sec, LoadingRequirementContainer addTo) {
 
-        VisibilityRequirementContainer con = new VisibilityRequirementContainer(sec);
+        VisibilityRequirementContainer con = null;
+        try {
+            con = new VisibilityRequirementContainer(sec);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (con == null) {
+            return;
+        }
 
         if (con.vrCheckForSingleplayer) {
             LoadingRequirement r = LoadingRequirementRegistry.getRequirement("fancymenu_loading_requirement_is_singpleplayer");
@@ -125,7 +133,10 @@ public class LegacyRequirementConverter {
         }
 
         for (VisibilityRequirementContainer.RequirementPackage p : con.customRequirements.values()) {
-            addTo.addInstance(new LoadingRequirementInstance(p.requirement, p.value, getMode(p.showIf), addTo));
+            LoadingRequirement lr = LoadingRequirementRegistry.getRequirement(p.requirement.getIdentifier());
+            if (lr != null) {
+                addTo.addInstance(new LoadingRequirementInstance(lr, p.value, getMode(p.showIf), addTo));
+            }
         }
 
     }

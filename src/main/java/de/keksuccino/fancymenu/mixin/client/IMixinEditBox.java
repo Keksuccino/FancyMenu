@@ -1,6 +1,7 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.mixin.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -41,6 +42,6 @@ public interface IMixinEditBox {
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
 
-    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int xStart, int yStart, int xEnd, int yEnd);
+    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(PoseStack matrix, int xStart, int yStart, int xEnd, int yEnd);
 
 }

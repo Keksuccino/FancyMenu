@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -31,8 +30,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class TextEditorScreen extends Screen {
@@ -44,6 +45,10 @@ public class TextEditorScreen extends Screen {
     //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
 
     //TODO Auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
+
+    //TODO fixen: bei korrigieren von Y scroll scrollt es ab und zu nach unten (vermutlich Rundungsfehler in Offset Berechnung)
+
+    //TODO zum korrigieren nicht mehr unnötig zeilen updaten, sondern stattdessen checken, wie yOffset mit alter Zeilenanzahl und neuer Zeilenanzahl ist, dann Differenz berechnen
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -113,7 +118,7 @@ public class TextEditorScreen extends Screen {
         this.characterFilter = characterFilter;
         this.callback = callback;
         this.addLine();
-        this.getLine(0).setFocus(true);
+        this.getLine(0).setFocused(true);
         this.verticalScrollBar.setScrollWheelAllowed(true);
         this.verticalScrollBarPlaceholderMenu.setScrollWheelAllowed(true);
         this.updateRightClickContextMenu();
@@ -124,6 +129,11 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
         super.init();
 
@@ -724,9 +734,9 @@ public class TextEditorScreen extends Screen {
     public void setFocusedLine(int index) {
         if (index <= this.getLineCount()-1) {
             for (TextEditorLine f : this.textFieldLines) {
-                f.setFocus(false);
+                f.setFocused(false);
             }
-            this.getLine(index).setFocus(true);
+            this.getLine(index).setFocused(true);
         }
     }
 
@@ -866,7 +876,7 @@ public class TextEditorScreen extends Screen {
         for (TextEditorLine t : this.textFieldLines) {
             TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, false, this.characterFilter, this);
             n.setValue(t.getValue());
-            n.setFocus(t.isFocused());
+            n.setFocused(t.isFocused());
             n.moveCursorTo(t.getCursorPosition());
             l.add(n);
         }

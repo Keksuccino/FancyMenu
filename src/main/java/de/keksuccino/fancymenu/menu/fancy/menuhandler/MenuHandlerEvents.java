@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
 import com.mojang.blaze3d.platform.Window;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.konkrete.sound.SoundHandler;
@@ -20,9 +21,10 @@ public class MenuHandlerEvents {
 	public void onOpenGui(ScreenEvent.Opening e) {
 		this.initHandler(e.getScreen());
 	}
+
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onScreenInitPre(ScreenEvent.Init.Pre e) {
+	public void onScreenInitPre(InitOrResizeScreenEvent.Pre e) {
 		
 		//Second try to register the menu handler, if onOpenGui failed because of changing the menu by another mod
 		this.initHandler(e.getScreen());

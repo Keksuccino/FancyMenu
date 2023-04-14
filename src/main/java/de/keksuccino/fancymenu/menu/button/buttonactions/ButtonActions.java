@@ -21,7 +21,6 @@ public class ButtonActions {
         ButtonActionRegistry.registerButtonAction(new EnableLayoutButtonAction());
         ButtonActionRegistry.registerButtonAction(new DisableLayoutButtonAction());
 
-        //TODO übernehmen
         for (ButtonActionContainer b : LegacyButtonActions.buildLegacyActionContainers()) {
             ButtonActionRegistry.registerButtonAction(b);
         }

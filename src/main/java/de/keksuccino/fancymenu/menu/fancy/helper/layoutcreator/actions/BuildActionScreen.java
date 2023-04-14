@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -95,7 +95,7 @@ public class BuildActionScreen extends Screen {
             this.callback.accept(this.instance);
         }) {
             @Override
-            public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 if (BuildActionScreen.this.instance.action == null) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
                     this.active = false;
@@ -106,7 +106,7 @@ public class BuildActionScreen extends Screen {
                     this.setDescription((String[])null);
                     this.active = true;
                 }
-                super.renderButton(matrix, mouseX, mouseY, partialTicks);
+                super.renderWidget(matrix, mouseX, mouseY, partialTicks);
             }
         };
         UIBase.applyDefaultButtonSkinTo(this.doneButton);

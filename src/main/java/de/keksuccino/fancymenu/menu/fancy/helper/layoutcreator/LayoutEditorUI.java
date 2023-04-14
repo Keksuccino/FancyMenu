@@ -58,35 +58,35 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 public class LayoutEditorUI extends UIBase {
-	
+
 	public MenuBar bar;
 	public LayoutEditorScreen parent;
 
 	protected int tick = 0;
-	
+
 	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
-	
+
 	public LayoutEditorUI(LayoutEditorScreen parent) {
 		this.parent = parent;
 		this.updateUI();
 	}
-	
+
 	public void updateUI() {
 		try {
-			
+
 			boolean extended = true;
 			if (bar != null) {
 				extended = bar.isExtended();
 			}
-			
+
 			bar = new MenuBar();
 			bar.setExtended(extended);
-			
+
 			/** LAYOUT TAB **/
 			FMContextMenu layoutMenu = new FMContextMenu();
 			layoutMenu.setAutoclose(true);
 			bar.addChild(layoutMenu, "fm.editor.ui.tab.layout", ElementAlignment.LEFT);
-			
+
 			AdvancedButton newLayoutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.new"), true, (press) -> {
 				this.displayUnsavedWarning((call) -> {
 					if (call) {
@@ -97,53 +97,53 @@ public class LayoutEditorUI extends UIBase {
 				});
 			});
 			layoutMenu.addContent(newLayoutButton);
-			
+
 			OpenLayoutContextMenu openLayoutMenu = new OpenLayoutContextMenu(this);
 			openLayoutMenu.setAutoclose(true);
 			layoutMenu.addChild(openLayoutMenu);
-			
+
 			AdvancedButton openLayoutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.open"), true, (press) -> {
 				openLayoutMenu.setParentButton((AdvancedButton) press);
 				openLayoutMenu.openMenuAt(0, press.y);
 			});
 			layoutMenu.addContent(openLayoutButton);
-			
+
 			AdvancedButton layoutSaveButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.save"), true, (press) -> {
 				this.parent.saveLayout();
 			});
 			layoutMenu.addContent(layoutSaveButton);
-			
+
 			AdvancedButton layoutSaveAsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.saveas"), true, (press) -> {
 				this.parent.saveLayoutAs();
 			});
 			layoutMenu.addContent(layoutSaveAsButton);
-			
+
 			LayoutPropertiesContextMenu layoutPropertiesMenu = new LayoutPropertiesContextMenu(this.parent, false);
 			layoutPropertiesMenu.setAutoclose(true);
 			layoutMenu.addChild(layoutPropertiesMenu);
-			
+
 			AdvancedButton layoutPropertiesButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.properties"), true, (press) -> {
 				layoutPropertiesMenu.setParentButton((AdvancedButton) press);
 				layoutPropertiesMenu.openMenuAt(0, press.y);
 			});
 			layoutMenu.addContent(layoutPropertiesButton);
-			
+
 			AdvancedButton exitButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.exit"), true, (press) -> {
 				this.closeEditor();
 			});
 			layoutMenu.addContent(exitButton);
-			
+
 			CustomizationButton layoutTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout"), true, (press) -> {
 				layoutMenu.setParentButton((AdvancedButton) press);
 				layoutMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
 			bar.addElement(layoutTab, "fm.editor.ui.tab.layout", ElementAlignment.LEFT, false);
-			
+
 			/** EDIT TAB **/
 			FMContextMenu editMenu = new FMContextMenu();
 			editMenu.setAutoclose(true);
 			bar.addChild(editMenu, "fm.editor.ui.tab.edit", ElementAlignment.LEFT);
-			
+
 			AdvancedButton undoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.undo"), true, (press) -> {
 				this.parent.history.stepBack();
 				try {
@@ -153,7 +153,7 @@ public class LayoutEditorUI extends UIBase {
 				}
 			});
 			editMenu.addContent(undoButton);
-			
+
 			AdvancedButton redoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.redo"), true, (press) -> {
 				this.parent.history.stepForward();
 				try {
@@ -163,40 +163,40 @@ public class LayoutEditorUI extends UIBase {
 				}
 			});
 			editMenu.addContent(redoButton);
-			
+
 			editMenu.addSeparator();
-			
+
 			AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), true, (press) -> {
 				this.parent.copySelectedElements();
 			});
 			editMenu.addContent(copyButton);
-			
+
 			AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.paste"), true, (press) -> {
 				this.parent.pasteElements();
 			});
 			editMenu.addContent(pasteButton);
-			
+
 			CustomizationButton editTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit"), true, (press) -> {
 				editMenu.setParentButton((AdvancedButton) press);
 				editMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
 			bar.addElement(editTab, "fm.editor.ui.tab.edit", ElementAlignment.LEFT, false);
-			
+
 			/** ELEMENT TAB **/
 			FMContextMenu elementMenu = new FMContextMenu();
 			elementMenu.setAutoclose(true);
 			bar.addChild(elementMenu, "fm.editor.ui.tab.element", ElementAlignment.LEFT);
-			
+
 			NewElementContextMenu newElementMenu = new NewElementContextMenu(this.parent);
 			newElementMenu.setAutoclose(true);
 			elementMenu.addChild(newElementMenu);
-			
+
 			AdvancedButton newElementButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element.new"), true, (press) -> {
 				newElementMenu.setParentButton((AdvancedButton) press);
 				newElementMenu.openMenuAt(0, press.y);
 			});
 			elementMenu.addContent(newElementButton);
-			
+
 			ManageAudioContextMenu manageAudioMenu = new ManageAudioContextMenu(this.parent);
 			manageAudioMenu.setAutoclose(true);
 			elementMenu.addChild(manageAudioMenu);
@@ -207,7 +207,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			manageAudioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc"), "%n%"));
 			elementMenu.addContent(manageAudioButton);
-			
+
 			HiddenVanillaButtonContextMenu hiddenVanillaMenu = new HiddenVanillaButtonContextMenu(this.parent);
 			hiddenVanillaMenu.setAutoclose(true);
 			elementMenu.addChild(hiddenVanillaMenu);
@@ -218,13 +218,13 @@ public class LayoutEditorUI extends UIBase {
 			});
 			hiddenVanillaButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc"), "%n%"));
 			elementMenu.addContent(hiddenVanillaButton);
-			
+
 			CustomizationButton elementTab = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element"), true, (press) -> {
 				elementMenu.setParentButton((AdvancedButton) press);
 				elementMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
 			bar.addElement(elementTab, "fm.editor.ui.tab.element", ElementAlignment.LEFT, false);
-			
+
 			/** CLOSE GUI BUTTON TAB **/
 			AdvancedImageButton exitEditorButtonTab = new AdvancedImageButton(20, 20, 0, 0, CLOSE_BUTTON_TEXTURE, true, (press) -> {
 				this.closeEditor();
@@ -240,12 +240,12 @@ public class LayoutEditorUI extends UIBase {
 			exitEditorButtonTab.enableRightclick = true;
 			exitEditorButtonTab.setDescription(StringUtils.splitLines(Locals.localize("helper.editor.ui.exit.desc"), "%n%"));
 			bar.addElement(exitEditorButtonTab, "fm.editor.ui.tab.exit", ElementAlignment.RIGHT, false);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void render(PoseStack matrix, Screen screen) {
 		try {
 
@@ -263,11 +263,11 @@ public class LayoutEditorUI extends UIBase {
 			e.printStackTrace();
 		}
 	}
-	
+
 	protected void displayUnsavedWarning(Consumer<Boolean> callback) {
 		PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, callback, Locals.localize("helper.editor.ui.unsavedwarning")));
 	}
-	
+
 	public void closeEditor() {
 		this.displayUnsavedWarning((call) -> {
 			if (call) {
@@ -300,21 +300,21 @@ public class LayoutEditorUI extends UIBase {
 	private static class OpenLayoutContextMenu extends FMContextMenu {
 
 		private LayoutEditorUI ui;
-		
+
 		public OpenLayoutContextMenu(LayoutEditorUI ui) {
 			this.ui = ui;
 		}
-		
+
 		@Override
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-			
+
 			this.content.clear();
 
 			String identifier = this.ui.parent.screen.getClass().getName();
 			if (this.ui.parent.screen instanceof CustomGuiBase) {
 				identifier = ((CustomGuiBase) this.ui.parent.screen).getIdentifier();
 			}
-			
+
 			List<PropertiesSet> enabled = MenuCustomizationProperties.getPropertiesWithIdentifier(identifier);
 			if (!enabled.isEmpty()) {
 				for (PropertiesSet s : enabled) {
@@ -328,7 +328,7 @@ public class LayoutEditorUI extends UIBase {
 						File f = new File(meta.getEntryValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
-							
+
 							int totalactions = s.getProperties().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
@@ -341,7 +341,7 @@ public class LayoutEditorUI extends UIBase {
 					}
 				}
 			}
-			
+
 			List<PropertiesSet> disabled = MenuCustomizationProperties.getDisabledPropertiesWithIdentifier(identifier);
 			if (!disabled.isEmpty()) {
 				for (PropertiesSet s : disabled) {
@@ -355,7 +355,7 @@ public class LayoutEditorUI extends UIBase {
 						File f = new File(meta.getEntryValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
-							
+
 							int totalactions = s.getProperties().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
@@ -368,34 +368,34 @@ public class LayoutEditorUI extends UIBase {
 					}
 				}
 			}
-			
+
 			if (enabled.isEmpty() && disabled.isEmpty()) {
 				AdvancedButton emptyBtn = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), (press) -> {});
 				this.addContent(emptyBtn);
 			}
-			
+
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}
-		
+
 	}
-	
+
 	public static class LayoutPropertiesContextMenu extends FMContextMenu {
-		
+
 		private LayoutEditorScreen parent;
-		
+
 		private AdvancedButton renderingOrderBackgroundButton;
 		private AdvancedButton renderingOrderForegroundButton;
-		
+
 		private boolean isRightclickOpened;
-		
+
 		public LayoutPropertiesContextMenu(LayoutEditorScreen parent, boolean openedByRightclick) {
 			this.parent = parent;
 			this.isRightclickOpened = openedByRightclick;
 		}
-		
+
 		@Override
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-			
+
 			this.content.clear();
 
 			if (this.parent.isUniversalLayout()) {
@@ -588,7 +588,7 @@ public class LayoutEditorUI extends UIBase {
 			};
 			restartOnLoadButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.desc"), "%n%"));
 			this.addContent(restartOnLoadButton);
-			
+
 			this.addSeparator();
 
 			/** EDIT MENU TITLE **/
@@ -598,7 +598,7 @@ public class LayoutEditorUI extends UIBase {
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				//TODO übernehmen
+				
 				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.edit_menu_title")), this.parent, null, (call) -> {
 					if (call != null) {
 						if (!call.equals(defaultMenuTitle)) {
@@ -621,7 +621,7 @@ public class LayoutEditorUI extends UIBase {
 					s.setText(defaultMenuTitle);
 				}
 				Minecraft.getInstance().setScreen(s);
-				//---------------------
+				
 			});
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
@@ -654,7 +654,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			randomModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.btn.desc"), "%n%"));
 			this.addContent(randomModeButton);
-			
+
 			AdvancedButton randomModeGroupButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), true, (press) -> {
 				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 					if (call != null) {
@@ -684,7 +684,7 @@ public class LayoutEditorUI extends UIBase {
 			};
 			randomModeGroupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc"), "%n%"));
 			this.addContent(randomModeGroupButton);
-			
+
 			String randomModeFirstTimeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on");
 			if (!this.parent.randomOnlyFirstTime) {
 				randomModeFirstTimeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off");
@@ -717,34 +717,34 @@ public class LayoutEditorUI extends UIBase {
 			FMContextMenu renderingOrderMenu = new FMContextMenu();
 			renderingOrderMenu.setAutoclose(true);
 			this.addChild(renderingOrderMenu);
-			
+
 			this.renderingOrderBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder.background"), true, (press) -> {
 				((AdvancedButton)press).setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));
 				this.renderingOrderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
 				if (!this.parent.renderorder.equals("background")) {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 				}
-				
+
 				this.parent.renderorder = "background";
 			});
 			renderingOrderMenu.addContent(renderingOrderBackgroundButton);
-			
+
 			this.renderingOrderForegroundButton = new AdvancedButton(0, 0, 0, 16, "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"), true, (press) -> {
 				((AdvancedButton)press).setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
 				this.renderingOrderBackgroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.background"));
 				if (!this.parent.renderorder.equals("foreground")) {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 				}
-				
+
 				this.parent.renderorder = "foreground";
 			});
 			renderingOrderMenu.addContent(renderingOrderForegroundButton);
-			
+
 			if (this.parent.renderorder.equals("background")) {
 				renderingOrderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
 				renderingOrderBackgroundButton.setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));
 			}
-			
+
 			AdvancedButton renderingOrderButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder"), true, (press) -> {
 				renderingOrderMenu.setParentButton((AdvancedButton) press);
 				renderingOrderMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
@@ -809,12 +809,12 @@ public class LayoutEditorUI extends UIBase {
 			});
 			menuScaleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.scale.btn.desc"), "%n%"));
 			this.addContent(menuScaleButton);
-			
+
 			/** OPEN/CLOSE SOUND **/
 			FMContextMenu openCloseSoundMenu = new FMContextMenu();
 			openCloseSoundMenu.setAutoclose(true);
 			this.addChild(openCloseSoundMenu);
-			
+
 			AdvancedButton openSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.openaudio"), true, (press) -> {
 				ChooseFilePopup p = new ChooseFilePopup((call) -> {
 					if (call != null) {
@@ -851,7 +851,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			openSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.openaudio.desc"), "%n%"));
 			openCloseSoundMenu.addContent(openSoundBtn);
-			
+
 			AdvancedButton resetOpenBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.openaudio.reset"), true, (press) -> {
 				if (this.parent.openAudio != null) {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -860,7 +860,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			resetOpenBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.opencloseaudio.reset.desc"), "%n%"));
 			openCloseSoundMenu.addContent(resetOpenBtn);
-			
+
 			AdvancedButton closeSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.closeaudio"), true, (press) -> {
 				ChooseFilePopup p = new ChooseFilePopup((call) -> {
 					if (call != null) {
@@ -897,7 +897,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 			closeSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.closeaudio.desc"), "%n%"));
 			openCloseSoundMenu.addContent(closeSoundBtn);
-			
+
 			AdvancedButton resetCloseBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.closeaudio.reset"), true, (press) -> {
 				if (this.parent.closeAudio != null) {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
@@ -906,17 +906,17 @@ public class LayoutEditorUI extends UIBase {
 			});
 			resetCloseBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.opencloseaudio.reset.desc"), "%n%"));
 			openCloseSoundMenu.addContent(resetCloseBtn);
-			
+
 			AdvancedButton openCloseSoundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.opencloseaudio"), true, (press) -> {
 				openCloseSoundMenu.setParentButton((AdvancedButton) press);
 				openCloseSoundMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			openCloseSoundButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.opencloseaudio.desc"), "%n%"));
 			this.addContent(openCloseSoundButton);
-			
+
 			this.addSeparator();
 
-			//TODO übernehmen
+			
 			/** LOADING REQUIREMENTS [LAYOUT-WIDE] **/
 			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (press) -> {
 				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer, (call) -> {});
@@ -925,23 +925,23 @@ public class LayoutEditorUI extends UIBase {
 			});
 			loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc"), "%n%"));
 			this.addContent(loadingRequirementsButton);
-			//----------------------
 			
+
 			/** WINDOW SIZE RESTRICTIONS **/
 			FMContextMenu windowSizeMenu = new FMContextMenu();
 			windowSizeMenu.setAutoclose(true);
 			this.addChild(windowSizeMenu);
-			
+
 			AdvancedButton biggerThanButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.biggerthan"), true, (press) -> {
 				PopupHandler.displayPopup(new WindowSizePopup(this.parent, ActionType.BIGGERTHAN));
 			});
 			windowSizeMenu.addContent(biggerThanButton);
-			
+
 			AdvancedButton smallerThanButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.smallerthan"), true, (press) -> {
 				PopupHandler.displayPopup(new WindowSizePopup(this.parent, ActionType.SMALLERTHAN));
 			});
 			windowSizeMenu.addContent(smallerThanButton);
-			
+
 			AdvancedButton windowSizeButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.windowsize"), true, (press) -> {
 				windowSizeMenu.setParentButton((AdvancedButton) press);
 				windowSizeMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
@@ -959,7 +959,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(resetWindowSizeRestrictionsButton);
 
 			this.addSeparator();
-			
+
 			/** REQUIRED MODS **/
 			AdvancedButton requiredModsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.requiredmods"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.requiredmods.desc"), null, 240, (call) -> {
@@ -967,7 +967,7 @@ public class LayoutEditorUI extends UIBase {
 						if (this.parent.requiredmods != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						}
-						
+
 						this.parent.requiredmods = call;
 					}
 				});
@@ -977,19 +977,19 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(p);
 			});
 			this.addContent(requiredModsButton);
-			
+
 			/** MC VERSION **/
 			FMContextMenu mcVersionMenu = new FMContextMenu();
 			mcVersionMenu.setAutoclose(true);
 			this.addChild(mcVersionMenu);
-			
+
 			AdvancedButton minMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.minimumMC != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						}
-						
+
 						this.parent.minimumMC = call;
 					}
 				});
@@ -999,14 +999,14 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(p);
 			});
 			mcVersionMenu.addContent(minMcVersionButton);
-			
+
 			AdvancedButton maxMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.maximumMC != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						}
-						
+
 						this.parent.maximumMC = call;
 					}
 				});
@@ -1016,25 +1016,25 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(p);
 			});
 			mcVersionMenu.addContent(maxMcVersionButton);
-			
+
 			AdvancedButton mcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.mc"), true, (press) -> {
 				mcVersionMenu.setParentButton((AdvancedButton) press);
 				mcVersionMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(mcVersionButton);
-			
+
 			/** FM VERSION **/
 			FMContextMenu fmVersionMenu = new FMContextMenu();
 			fmVersionMenu.setAutoclose(true);
 			this.addChild(fmVersionMenu);
-			
+
 			AdvancedButton minFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.minimumFM != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						}
-						
+
 						this.parent.minimumFM = call;
 					}
 				});
@@ -1044,14 +1044,14 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(p);
 			});
 			fmVersionMenu.addContent(minFmVersionButton);
-			
+
 			AdvancedButton maxFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
 					if (call != null) {
 						if (this.parent.maximumFM != call) {
 							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						}
-						
+
 						this.parent.maximumFM = call;
 					}
 				});
@@ -1061,17 +1061,17 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(p);
 			});
 			fmVersionMenu.addContent(maxFmVersionButton);
-			
+
 			AdvancedButton fmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.fm"), true, (press) -> {
 				fmVersionMenu.setParentButton((AdvancedButton) press);
 				fmVersionMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(fmVersionButton);
-			
+
 			if (this.isRightclickOpened) {
 				this.addSeparator();
 			}
-			
+
 			/** PASTE **/
 			AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.edit.paste"), (press) -> {
 				this.parent.pasteElements();
@@ -1079,12 +1079,12 @@ public class LayoutEditorUI extends UIBase {
 			if (this.isRightclickOpened) {
 				this.addContent(pasteButton);
 			}
-			
+
 			/** NEW ELEMENT **/
 			NewElementContextMenu newElementMenu = new NewElementContextMenu(this.parent);
 			newElementMenu.setAutoclose(true);
 			this.addChild(newElementMenu);
-			
+
 			AdvancedButton newElementButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.layoutproperties.newelement"), (press) -> {
 				newElementMenu.setParentButton((AdvancedButton) press);
 				newElementMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
@@ -1092,26 +1092,26 @@ public class LayoutEditorUI extends UIBase {
 			if (this.isRightclickOpened) {
 				this.addContent(newElementButton);
 			}
-			
-			
+
+
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}
-		
+
 	}
-	
+
 	public static class NewElementContextMenu extends FMContextMenu {
-		
+
 		private LayoutEditorScreen parent;
-		
+
 		public NewElementContextMenu(LayoutEditorScreen parent) {
 			this.parent = parent;
 		}
-		
+
 		@Override
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-			
+
 			this.content.clear();
-			
+
 			/** IMAGE **/
 			AdvancedButton imageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.image"), (press) -> {
 				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addTexture, "jpg", "jpeg", "png", "gif"));
@@ -1120,15 +1120,15 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				//TODO übernehmen
+				
 				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
-				//----------------------
+				
 			});
 			this.addContent(webImageButton);
 
-			
+
 //			/** TEXT **/
 //			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
 //				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
@@ -1140,22 +1140,22 @@ public class LayoutEditorUI extends UIBase {
 //				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebText));
 //			});
 //			this.addContent(webTextButton);
-			
+
 			/** SPLASH TEXT **/
 			FMContextMenu splashMenu = new FMContextMenu();
 			splashMenu.setAutoclose(true);
 			this.addChild(splashMenu);
-			
+
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				//TODO übernehmen
+				
 				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
-				//--------------------
+				
 			});
 			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
 			splashMenu.addContent(singleSplashButton);
-			
+
 			AdvancedButton multiSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.multi"), true, (press) -> {
 				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addMultiSplashText, "txt"));
 			});
@@ -1173,40 +1173,40 @@ public class LayoutEditorUI extends UIBase {
 			});
 			vanillaLikeSplashButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like.desc"), "%n%"));
 			splashMenu.addContent(vanillaLikeSplashButton);
-			
+
 			AdvancedButton splashButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.splash"), (press) -> {
 				splashMenu.setParentButton((AdvancedButton) press);
 				splashMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 			});
 			this.addContent(splashButton);
-			
+
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				//TODO übernehmen
+				
 				this.parent.addButton("New Button");
-				//------------------
+				
 			});
 			this.addContent(buttonButton);
-			
+
 			/** ANIMATION **/
 			FMContextMenu animationMenu = new FMContextMenu();
 			animationMenu.setAutoclose(true);
 			this.addChild(animationMenu);
-			
+
 			AdvancedButton inputAnimationButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation.entername"), true, (press) -> {
 				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.animation.entername.title") + ":", null, 240, this.parent::addAnimation));
 			});
 			animationMenu.addContent(inputAnimationButton);
-			
+
 			animationMenu.addSeparator();
-			
+
 			for (String s : AnimationHandler.getCustomAnimationNames()) {
 				AdvancedButton aniB = new AdvancedButton(0, 0, 0, 20, s, true, (press) -> {
 					this.parent.addAnimation(s);
 				});
 				animationMenu.addContent(aniB);
 			}
-			
+
 			AdvancedButton animationButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation"), (press) -> {
 				animationMenu.setParentButton((AdvancedButton) press);
 				animationMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
@@ -1222,15 +1222,15 @@ public class LayoutEditorUI extends UIBase {
 				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.slideshow.entername.title") + ":", null, 240, this.parent::addSlideshow));
 			});
 			slideshowMenu.addContent(inputSlideshowButton);
-			
+
 			slideshowMenu.addSeparator();
-			
+
 			for (String s : SlideshowHandler.getSlideshowNames()) {
 				String name = s;
 				if (Minecraft.getInstance().font.width(name) > 90) {
 					name = Minecraft.getInstance().font.plainSubstrByWidth(name, 90) + "..";
 				}
-				
+
 				AdvancedButton slideshowB = new AdvancedButton(0, 0, 0, 20, name, true, (press) -> {
 					if (SlideshowHandler.slideshowExists(s)) {
 						this.parent.addSlideshow(s);
@@ -1254,7 +1254,7 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.addShape(Shape.RECTANGLE);
 			});
 			shapesMenu.addContent(addRectangleButton);
-			
+
 			AdvancedButton shapesButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.shapes"), (press) -> {
 				shapesMenu.setParentButton((AdvancedButton) press);
 				shapesMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
@@ -1283,43 +1283,43 @@ public class LayoutEditorUI extends UIBase {
 				this.addContent(cusItemButton);
 
 			}
-			
+
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}
-		
+
 	}
-	
+
 	public static class ManageAudioContextMenu extends FMContextMenu {
-		
+
 		private LayoutEditorScreen parent;
-		
+
 		public ManageAudioContextMenu(LayoutEditorScreen parent) {
 			this.parent = parent;
 		}
-		
+
 		@Override
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-			
+
 			this.content.clear();
-			
+
 			if (this.parent.audio.isEmpty()) {
-				
+
 				AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
 				this.addContent(bt);
-				
+
 			} else {
-				
+
 				for (Map.Entry<String, Boolean> m : this.parent.audio.entrySet()) {
-					
+
 					String label = new File(m.getKey()).getName();
 					if (Minecraft.getInstance().font.width(label) > 200) {
 						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
 					}
-					
+
 					FMContextMenu actionsMenu = new FMContextMenu();
 					actionsMenu.setAutoclose(true);
 					this.addChild(actionsMenu);
-					
+
 					AdvancedButton deleteButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.audio.delete"), true, (press2) -> {
 						this.closeMenu();
 						PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
@@ -1331,7 +1331,7 @@ public class LayoutEditorUI extends UIBase {
 						}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", "", Locals.localize("helper.creator.audio.delete.msg"), "", ""));
 					});
 					actionsMenu.addContent(deleteButton);
-					
+
 					String lab = Locals.localize("helper.editor.ui.element.manageaudio.loop.off");
 					if (m.getValue()) {
 						lab = Locals.localize("helper.editor.ui.element.manageaudio.loop.on");
@@ -1348,20 +1348,20 @@ public class LayoutEditorUI extends UIBase {
 						}
 					});
 					actionsMenu.addContent(toggleLoopButton);
-					
+
 					AdvancedButton actionsButton = new AdvancedButton(0, 0, 0, 16, label, true, (press) -> {
 						actionsMenu.setParentButton((AdvancedButton) press);
 						actionsMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 					});
 					this.addContent(actionsButton);
-					
+
 				}
 			}
-			
-			
+
+
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}
-		
+
 	}
 
 	public static class MultiselectContextMenu extends FMContextMenu {
@@ -1371,26 +1371,26 @@ public class LayoutEditorUI extends UIBase {
 		public MultiselectContextMenu(LayoutEditorScreen parent) {
 			this.parent = parent;
 		}
-		
+
 		@Override
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-			
+
 			this.content.clear();
-			
+
 			if (this.parent.isObjectFocused()) {
 
 				this.parent.focusedObjectsCache = this.parent.getFocusedObjects();
-				
+
 				this.parent.multiselectStretchedX = false;
 				this.parent.multiselectStretchedY = false;
-				
+
 				/** DELETE ALL **/
 				AdvancedButton deleteBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.object.deleteall"), true, (press) -> {
 					this.parent.deleteFocusedObjects();
 				});
 				deleteBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.object.deleteall.btndesc"), "%n%"));
 				this.addContent(deleteBtn);
-				
+
 				/** STRETCH ALL **/
 				FMContextMenu stretchMenu = new FMContextMenu();
 				stretchMenu.setAutoclose(true);
@@ -1398,15 +1398,15 @@ public class LayoutEditorUI extends UIBase {
 
 				AdvancedButton stretchXBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-					
+
 					for (LayoutElement o : this.parent.focusedObjectsCache) {
 						if (o.isStretchable()) {
 							o.setStretchedX(!this.parent.multiselectStretchedX, false);
 						}
 					}
-					
+
 					this.parent.multiselectStretchedX = !this.parent.multiselectStretchedX;
-					
+
 					if (!this.parent.multiselectStretchedX) {
 						press.setMessage(Component.literal(Locals.localize("helper.creator.object.stretch.x")));
 					} else {
@@ -1415,40 +1415,40 @@ public class LayoutEditorUI extends UIBase {
 
 				});
 				stretchMenu.addContent(stretchXBtn);
-				
+
 				AdvancedButton stretchYBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-					
+
 					for (LayoutElement o : this.parent.focusedObjectsCache) {
 						if (o.isStretchable()) {
 							o.setStretchedY(!this.parent.multiselectStretchedY, false);
 						}
 					}
-					
+
 					this.parent.multiselectStretchedY = !this.parent.multiselectStretchedY;
-					
+
 					if (!this.parent.multiselectStretchedY) {
 						press.setMessage(Component.literal(Locals.localize("helper.creator.object.stretch.y")));
 					} else {
 						press.setMessage(Component.literal("§a" + Locals.localize("helper.creator.object.stretch.y")));
 					}
-					
+
 				});
 				stretchMenu.addContent(stretchYBtn);
-				
+
 				AdvancedButton stretchBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.object.stretchall"), true, (press) -> {
 					stretchMenu.setParentButton((AdvancedButton) press);
 					stretchMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
 				});
 				stretchBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.object.stretchall.btndesc"), "%n%"));
 				this.addContent(stretchBtn);
-				
+
 				/** COPY **/
 				AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
 					this.parent.copySelectedElements();
 				});
 				this.addContent(copyButton);
-				
+
 				/** PASTE **/
 				AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.edit.paste"), (press) -> {
 					this.parent.pasteElements();
@@ -1469,13 +1469,13 @@ public class LayoutEditorUI extends UIBase {
 					allVanillaBtns = false;
 					allBtns = false;
 				}
-				
+
 				if (allVanillaBtns) {
-					
+
 					/** VANILLA: RESET ORIENTATION **/
 					AdvancedButton resetOriBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation"), true, (press) -> {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						
+
 						for (LayoutElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
@@ -1496,25 +1496,25 @@ public class LayoutEditorUI extends UIBase {
 					AdvancedButton hideAllBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.vanillabutton.hideall"), true, (press) -> {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
-						
+
 						for (LayoutElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
 								this.parent.hideVanillaButton(vb);
 							}
 						}
-						
+
 						this.parent.focusedObjects.clear();
 						this.parent.focusedObjectsCache.clear();
 						this.parent.multiselectRightclickMenu.closeMenu();
-						
+
 						this.parent.history.setPreventSnapshotSaving(false);
 					});
 					hideAllBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.vanillabutton.hideall.btndesc"), "%n%"));
 					this.addContent(hideAllBtn);
-					
+
 				}
-				
+
 				if (allBtns) {
 
 					/** BUTTONS: BACKGROUND **/
@@ -1545,7 +1545,7 @@ public class LayoutEditorUI extends UIBase {
 											lb.customizationContainer.clickSound = call;
 										}
 									}
-									
+
 									this.parent.history.setPreventSnapshotSaving(false);
 								} else {
 									LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
@@ -1560,7 +1560,7 @@ public class LayoutEditorUI extends UIBase {
 
 					/** BUTTONS: RESET CLICK SOUND **/
 					AdvancedButton resetClickSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), true, (press) -> {
-						
+
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
@@ -1573,13 +1573,13 @@ public class LayoutEditorUI extends UIBase {
 								lb.customizationContainer.clickSound = null;
 							}
 						}
-						
+
 						this.parent.history.setPreventSnapshotSaving(false);
-						
+
 					});
 					resetClickSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.clicksound.reset.btndesc"), "%n%"));
 					this.addContent(resetClickSoundBtn);
-					
+
 					/** BUTTONS: HOVER SOUND **/
 					AdvancedButton hoverSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound"), true, (press) -> {
 						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
@@ -1601,7 +1601,7 @@ public class LayoutEditorUI extends UIBase {
 											lb.customizationContainer.hoverSound = call;
 										}
 									}
-									
+
 									this.parent.history.setPreventSnapshotSaving(false);
 								} else {
 									LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
@@ -1616,7 +1616,7 @@ public class LayoutEditorUI extends UIBase {
 
 					/** BUTTONS: RESET HOVERSOUND **/
 					AdvancedButton resetHoverSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), true, (press) -> {
-						
+
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
@@ -1629,22 +1629,22 @@ public class LayoutEditorUI extends UIBase {
 								lb.customizationContainer.hoverSound = null;
 							}
 						}
-						
+
 						this.parent.history.setPreventSnapshotSaving(false);
-						
+
 					});
 					resetHoverSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.hoversound.reset.btndesc"), "%n%"));
 					this.addContent(resetHoverSoundBtn);
 				}
-				
+
 			}
-			
-			
+
+
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}
 
 	}
-	
+
 	public static class HiddenVanillaButtonContextMenu extends FMContextMenu {
 
 		private LayoutEditorScreen parent;
@@ -1652,10 +1652,10 @@ public class LayoutEditorUI extends UIBase {
 		public HiddenVanillaButtonContextMenu(LayoutEditorScreen parent) {
 			this.parent = parent;
 		}
-		
+
 		@Override
 		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-			
+
 			this.content.clear();
 			this.separators.clear();
 
@@ -1692,7 +1692,7 @@ public class LayoutEditorUI extends UIBase {
 				AdvancedButton emptyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
 				this.addContent(emptyButton);
 			}
-			
+
 			super.openMenuAt(x, y, screenWidth, screenHeight);
 		}
 

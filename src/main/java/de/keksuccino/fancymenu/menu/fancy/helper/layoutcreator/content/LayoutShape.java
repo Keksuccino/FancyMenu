@@ -115,7 +115,6 @@ public class LayoutShape extends LayoutElement {
 				s.addEntry("height", "" + this.object.getHeight());
 			}
 
-			//TODO übernehmen
 			this.addLoadingRequirementPropertiesTo(s);
 			
 			l.add(s);

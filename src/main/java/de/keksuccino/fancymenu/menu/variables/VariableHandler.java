@@ -22,7 +22,6 @@ public class VariableHandler {
 
         readFromFile();
 
-        //TODO übernehmen
         String variablesToResetOnLaunch = FancyMenu.config.getOrDefault("variables_to_reset_on_launch", "").replace(" ", "");
         if (variablesToResetOnLaunch.contains(",")) {
             for (String s : variablesToResetOnLaunch.split(",")) {
@@ -31,7 +30,6 @@ public class VariableHandler {
                 }
             }
         }
-        //--------------------
 
     }
 

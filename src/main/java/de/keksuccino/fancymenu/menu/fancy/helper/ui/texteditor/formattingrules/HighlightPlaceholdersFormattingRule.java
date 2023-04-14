@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.formattingrules;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
@@ -8,8 +8,10 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRule {
 

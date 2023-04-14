@@ -36,20 +36,6 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 
         TickerCustomizationItem i = ((TickerCustomizationItem)this.object);
 
-        //TODO übernehmen
-//        AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.add_action"), (press) -> {
-//            ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
-//                if (call != null) {
-//                    this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
-//                    i.actions.add(new ButtonScriptEngine.ActionContainer(call.get(0), call.get(1)));
-//                }
-//            });
-//            Minecraft.getInstance().setScreen(s);
-//        });
-//        addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.add_action.desc"), "%n%"));
-//        this.rightclickMenu.addContent(addActionButton);
-
-        //TODO übernehmen
         AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
             List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
             for (ButtonScriptEngine.ActionContainer c : i.actions) {
@@ -72,9 +58,6 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
         });
         manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.elements.ticker.manage_actions.desc"), "%n%"));
         this.rightclickMenu.addContent(manageActionsButton);
-        //----------------------
-
-        this.rightclickMenu.addSeparator();
 
         AdvancedButton tickDelayButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.tick_delay"), (press) -> {
             FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0), Locals.localize("fancymenu.customization.items.ticker.tick_delay"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
@@ -158,7 +141,6 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
         sec.addEntry("tick_delay", "" + i.tickDelayMs);
         sec.addEntry("tick_mode", "" + i.tickMode.name);
         int index = 0;
-        //TODO übernehmen
         for (ButtonScriptEngine.ActionContainer c : i.actions) {
             String v = c.value;
             if (v == null) {

@@ -14,7 +14,6 @@ public class ButtonActionRegistry {
     /**
      * Register your custom button actions here.
      */
-    //TODO übernehmen
     public static void registerButtonAction(ButtonActionContainer action) {
         if (action != null) {
             if (action.getIdentifier() != null) {
@@ -32,7 +31,6 @@ public class ButtonActionRegistry {
             }
         }
     }
-    //---------------------------
 
     /**
      * Unregister a previously added button action.
