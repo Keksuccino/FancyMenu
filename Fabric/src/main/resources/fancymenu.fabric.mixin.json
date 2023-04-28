@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "de.keksuccino.fancymenu.mixin.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+  ],
+  "client": [
+    "client.MixinFabricExample"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+  
