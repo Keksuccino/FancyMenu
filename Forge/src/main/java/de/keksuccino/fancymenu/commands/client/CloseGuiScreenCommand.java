@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
-import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

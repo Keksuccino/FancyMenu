@@ -9,7 +9,9 @@ import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import de.keksuccino.fancymenu.networking.Packets;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
+import net.minecraft.client.KeyMapping;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -34,20 +36,26 @@ public class FancyMenuForge {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterClientCommandsEvent e) {
-
         OpenGuiScreenCommand.register(e.getDispatcher());
         CloseGuiScreenCommand.register(e.getDispatcher());
         VariableCommand.register(e.getDispatcher());
-
     }
 
     @SubscribeEvent
     public void onRegisterServerCommands(RegisterCommandsEvent e) {
-
         ServerOpenGuiScreenCommand.register(e.getDispatcher());
         ServerCloseGuiScreenCommand.register(e.getDispatcher());
         ServerVariableCommand.register(e.getDispatcher());
+    }
 
+    @SubscribeEvent
+    public void registerKeyMappings(RegisterKeyMappingsEvent e) {
+        if (FancyMenu.getConfig().getOrDefault("enablehotkeys", true)) {
+            for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
+                e.register(m);
+            }
+            KeyMappings.init();
+        }
     }
 
 }

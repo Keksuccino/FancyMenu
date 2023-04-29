@@ -3,13 +3,13 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,21 +18,17 @@ import java.util.Map;
 
 public class PlayerEntityCustomizationItemContainer extends CustomizationItemContainer {
 
-    
     private static final Logger LOGGER = LogManager.getLogger();
 
-    
     public static final Map<String, PlayerEntityCustomizationItem> ELEMENT_CACHE = new HashMap<>();
 
     public PlayerEntityCustomizationItemContainer() {
         super("fancymenu_customization_player_entity");
-        
-        MinecraftForge.EVENT_BUS.register(this);
+        EventHandler.INSTANCE.registerListenersOf(this);
     }
-
     
     @SubscribeEvent
-    public void onMenuReload(MenuReloadedEvent e) {
+    public void onMenuReload(MenuReloadEvent e) {
         ELEMENT_CACHE.clear();
         LOGGER.info("[FANCYMENU] PlayerEntity element cache cleared!");
     }

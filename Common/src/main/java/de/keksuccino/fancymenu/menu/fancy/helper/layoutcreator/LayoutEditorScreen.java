@@ -20,7 +20,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
+import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -61,7 +61,6 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -85,21 +84,21 @@ public class LayoutEditorScreen extends Screen {
 	
 	public EditHistory history = new EditHistory(this);
 	
-	public List<Runnable> postRenderTasks = new ArrayList<Runnable>();
+	public List<Runnable> postRenderTasks = new ArrayList<>();
 	
 	public final Screen screen;
-	protected List<LayoutElement> content = new ArrayList<LayoutElement>();
+	protected List<LayoutElement> content = new ArrayList<>();
 	protected List<LayoutElement> newContentMove;
-	protected List<LayoutElement> newContentPaste = new ArrayList<LayoutElement>();
-	public List<LayoutElement> deleteContentQueue = new ArrayList<LayoutElement>();
-	protected List<LayoutElement> vanillaButtonContent = new ArrayList<LayoutElement>();
-	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
-	public Map<Long, MenuHandlerBase.ButtonCustomizationContainer> vanillaButtonCustomizationContainers = new HashMap<Long, MenuHandlerBase.ButtonCustomizationContainer>();
-	public Map<Long, Float> vanillaDelayAppearance = new HashMap<Long, Float>();
-	public Map<Long, Boolean> vanillaDelayAppearanceFirstTime = new HashMap<Long, Boolean>();
-	public Map<Long, Float> vanillaFadeIn = new HashMap<Long, Float>();
-	protected List<LayoutElement> focusedObjects = new ArrayList<LayoutElement>();
-	protected List<LayoutElement> focusedObjectsCache = new ArrayList<LayoutElement>();
+	protected List<LayoutElement> newContentPaste = new ArrayList<>();
+	public List<LayoutElement> deleteContentQueue = new ArrayList<>();
+	protected List<LayoutElement> vanillaButtonContent = new ArrayList<>();
+	protected Map<String, Boolean> audio = new HashMap<>();
+	public Map<Long, MenuHandlerBase.ButtonCustomizationContainer> vanillaButtonCustomizationContainers = new HashMap<>();
+	public Map<Long, Float> vanillaDelayAppearance = new HashMap<>();
+	public Map<Long, Boolean> vanillaDelayAppearanceFirstTime = new HashMap<>();
+	public Map<Long, Float> vanillaFadeIn = new HashMap<>();
+	protected List<LayoutElement> focusedObjects = new ArrayList<>();
+	protected List<LayoutElement> focusedObjectsCache = new ArrayList<>();
 	
 	protected FMContextMenu multiselectRightclickMenu;
 	protected LayoutPropertiesContextMenu propertiesRightclickMenu;
@@ -111,7 +110,7 @@ public class LayoutEditorScreen extends Screen {
 	public ExternalTextureSlideshowRenderer backgroundSlideshow;
 	public MenuBackground customMenuBackground;
 	public String customMenuBackgroundInputString;
-	public List<String> backgroundAnimationNames = new ArrayList<String>();
+	public List<String> backgroundAnimationNames = new ArrayList<>();
 	public boolean randomBackgroundAnimation = false;
 	public boolean panorama = false;
 	protected int panoTick = 0;
@@ -149,7 +148,7 @@ public class LayoutEditorScreen extends Screen {
 
 	protected boolean multiselectStretchedX = false;
 	protected boolean multiselectStretchedY = false;
-	protected List<ContextMenu> multiselectChilds = new ArrayList<ContextMenu>();
+	protected List<ContextMenu> multiselectChilds = new ArrayList<>();
 
 	protected LayoutElement topObject;
 
@@ -167,7 +166,7 @@ public class LayoutEditorScreen extends Screen {
 		this.screen = screenToCustomize;
 		Component cachedOriTitle = MenuHandlerBase.cachedOriginalMenuTitles.get(this.screen.getClass());
 		if (cachedOriTitle != null) {
-			ScreenTitleHandler.setScreenTitle(this.screen, cachedOriTitle);
+			ScreenTitleUtils.setScreenTitle(this.screen, cachedOriTitle);
 		}
 
 		if (!initDone) {
@@ -242,13 +241,10 @@ public class LayoutEditorScreen extends Screen {
 	public boolean shouldCloseOnEsc() {
 		return false;
 	}
-	
-	public boolean isLayoutEmpty() {
-		return this.getAllProperties().isEmpty();
-	}
 
 	protected List<PropertiesSection> getAllProperties() {
-		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
+
+		List<PropertiesSection> l = new ArrayList<>();
 		
 		PropertiesSection meta = new PropertiesSection("customization-meta");
 		meta.addEntry("identifier", this.getScreenToCustomizeIdentifier());
@@ -418,7 +414,7 @@ public class LayoutEditorScreen extends Screen {
 	 * The positions of all UNMODIFIED vanilla buttons will be updated to keep them at the correct position when the screen is getting resized.
 	 */
 	protected void updateContent() {
-		List<LayoutElement> l = new ArrayList<LayoutElement>();
+		List<LayoutElement> l = new ArrayList<>();
 		for (LayoutElement o : this.content) {
 			if (!(o instanceof LayoutVanillaButton)) {
 				l.add(o);
@@ -498,7 +494,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	public List<LayoutVanillaButton> getHiddenButtons() {
-		List<LayoutVanillaButton> l = new ArrayList<LayoutVanillaButton>();
+		List<LayoutVanillaButton> l = new ArrayList<>();
 		for (LayoutElement e : this.vanillaButtonContent) {
 			if (e instanceof LayoutVanillaButton) {
 				if (((LayoutVanillaButton) e).customizationContainer.isButtonHidden) {
@@ -507,12 +503,6 @@ public class LayoutEditorScreen extends Screen {
 			}
 		}
 		return l;
-	}
-
-	protected void closeMultiselectChildMenus() {
-		for (ContextMenu m : this.multiselectChilds) {
-			m.closeMenu();
-		}
 	}
 
 	public void hideVanillaButton(LayoutVanillaButton b) {
@@ -563,7 +553,7 @@ public class LayoutEditorScreen extends Screen {
 		//Handle object focus and update the top hovered object
 		if (!MouseInput.isVanillaInputBlocked()) {
 			if (!KeyboardHandler.isCtrlPressed() && !this.focusedObjects.isEmpty() && !this.isFocusedHovered() && !this.isFocusedDragged() && !this.isFocusedGrabberPressed() && !this.isFocusedGettingResized() && (MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown())) {
-				if (((this.multiselectRightclickMenu == null) || !this.multiselectRightclickMenu.isHoveredOrFocused()) && ((this.propertiesRightclickMenu == null) || !this.propertiesRightclickMenu.isHoveredOrFocused()) && !this.isFocusChangeBlocked() && !this.ui.bar.isHoveredOrFocused() && !this.ui.bar.isChildOpen()) {
+				if (((this.multiselectRightclickMenu == null) || !this.multiselectRightclickMenu.isHovered()) && ((this.propertiesRightclickMenu == null) || !this.propertiesRightclickMenu.isHovered()) && !this.isFocusChangeBlocked() && !this.ui.bar.isHoveredOrFocused() && !this.ui.bar.isChildOpen()) {
 					this.focusedObjects.clear();
 				}
 			}
@@ -637,7 +627,7 @@ public class LayoutEditorScreen extends Screen {
 				this.multiselectRightclickMenu.closeMenu();
 			}
 
-			if (MouseInput.isLeftMouseDown() && !this.multiselectRightclickMenu.isHoveredOrFocused()) {
+			if (MouseInput.isLeftMouseDown() && !this.multiselectRightclickMenu.isHovered()) {
 				this.multiselectRightclickMenu.closeMenu();
 			}
 
@@ -656,7 +646,7 @@ public class LayoutEditorScreen extends Screen {
 				this.propertiesRightclickMenu.closeMenu();
 			}
 
-			if (MouseInput.isLeftMouseDown() && !this.propertiesRightclickMenu.isHoveredOrFocused()) {
+			if (MouseInput.isLeftMouseDown() && !this.propertiesRightclickMenu.isHovered()) {
 				this.propertiesRightclickMenu.closeMenu();
 			}
 
@@ -773,27 +763,27 @@ public class LayoutEditorScreen extends Screen {
 			
 			if (!this.panorama) {
 				if (!this.keepBackgroundAspectRatio) {
-					blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					blit(matrix, 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					int w = this.backgroundTexture.getWidth();
 					int h = this.backgroundTexture.getHeight();
 					double ratio = (double) w / (double) h;
-					int wfinal = (int)(this.height * ratio);
+					int wFinal = (int)(this.height * ratio);
 					int screenCenterX = this.width / 2;
-					if (wfinal < this.width) {
-						blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					if (wFinal < this.width) {
+						blit(matrix, 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 					} else {
-						blit(CurrentScreenHandler.getPoseStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, this.height + 1, wfinal + 1, this.height + 1);
+						blit(matrix, screenCenterX - (wFinal / 2), 0, 1.0F, 1.0F, wFinal + 1, this.height + 1, wFinal + 1, this.height + 1);
 					}
 				}
 			} else {
 				int w = this.backgroundTexture.getWidth();
 				int h = this.backgroundTexture.getHeight();
 				double ratio = (double) w / (double) h;
-				int wfinal = (int)(this.height * ratio);
+				int wFinal = (int)(this.height * ratio);
 
 				//Check if the panorama background should move to the left side or to the right side
-				if ((panoPos + (wfinal - this.width)) <= 0) {
+				if ((panoPos + (wFinal - this.width)) <= 0) {
 					panoMoveBack = true;
 				}
 				if (panoPos >= 0) {
@@ -801,8 +791,8 @@ public class LayoutEditorScreen extends Screen {
 				}
 
 				//Fix pos after resizing
-				if (panoPos + (wfinal - this.width) < 0) {
-					panoPos = 0 - (wfinal - this.width);
+				if (panoPos + (wFinal - this.width) < 0) {
+					panoPos = -(wFinal - this.width);
 				}
 				if (panoPos > 0) {
 					panoPos = 0;
@@ -817,7 +807,7 @@ public class LayoutEditorScreen extends Screen {
 							panoPos = panoPos - 0.5;
 						}
 						
-						if (panoPos + (wfinal - this.width) == 0) {
+						if (panoPos + (wFinal - this.width) == 0) {
 							panoStop = true;
 						}
 						if (panoPos == 0) {
@@ -834,10 +824,10 @@ public class LayoutEditorScreen extends Screen {
 						panoTick++;
 					}
 				}
-				if (wfinal <= this.width) {
+				if (wFinal <= this.width) {
 					blit(matrix, 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
-					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height + 1);
+					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wFinal, this.height + 1);
 				}
 			}
 		}
@@ -864,7 +854,7 @@ public class LayoutEditorScreen extends Screen {
 					this.backgroundAnimation.setPosY(0);
 				}
 			}
-			this.backgroundAnimation.render(CurrentScreenHandler.getPoseStack());
+			this.backgroundAnimation.render(matrix);
 			this.backgroundAnimation.setWidth(wOri);
 			this.backgroundAnimation.setHeight(hOri);
 			this.backgroundAnimation.setPosX(xOri);
@@ -873,7 +863,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 
 		if (this.backgroundPanorama != null) {
-			this.backgroundPanorama.render();
+			this.backgroundPanorama.render(matrix);
 		}
 
 		if (this.backgroundSlideshow != null) {
@@ -902,7 +892,7 @@ public class LayoutEditorScreen extends Screen {
 			}
 			this.backgroundSlideshow.y = 0;
 			
-			this.backgroundSlideshow.render(CurrentScreenHandler.getPoseStack());
+			this.backgroundSlideshow.render(matrix);
 			
 			this.backgroundSlideshow.width = sw;
 			this.backgroundSlideshow.height = sh;
@@ -935,9 +925,7 @@ public class LayoutEditorScreen extends Screen {
 				this.focusedObjects.add(object);
 			}
 		} else {
-			if (this.focusedObjects.contains(object)) {
-				this.focusedObjects.remove(object);
-			}
+			this.focusedObjects.remove(object);
 		}
 	}
 
@@ -985,9 +973,7 @@ public class LayoutEditorScreen extends Screen {
 	 * Returns a copy of the focused objects list.
 	 */
 	public List<LayoutElement> getFocusedObjects() {
-		List<LayoutElement> l = new ArrayList<LayoutElement>();
-		l.addAll(this.focusedObjects);
-		return l;
+		return new ArrayList<>(this.focusedObjects);
 	}
 
 	public void clearFocusedObjects() {
@@ -1396,7 +1382,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected void deleteFocusedObjects() {
-		List<LayoutElement> l = new ArrayList<LayoutElement>();
+		List<LayoutElement> l = new ArrayList<>();
 		l.addAll(this.focusedObjects);
 		
 		if (!l.isEmpty()) {
@@ -1558,12 +1544,11 @@ public class LayoutEditorScreen extends Screen {
 			List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 			l.add(set);
 
-			//Init dummy preloaded editor to use it's customization action serializer for building the copied elements
+			//Init dummy preloaded editor to use its customization action serializer for building the copied elements
 			PreloadedLayoutEditorScreen pe = new PreloadedLayoutEditorScreen(new CustomGuiBase("", "", false, null, null), l);
 			pe.init();
 
 			for (LayoutElement e : pe.content) {
-//				e.object.setActionId(MenuCustomization.generateRandomActionId());
 
 				e.handler = this;
 				//Change the element position a bit to better see that the element was successfully pasted
@@ -1572,14 +1557,11 @@ public class LayoutEditorScreen extends Screen {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			this.newContentPaste.addAll(pe.content);
 			
-			this.postRenderTasks.add(new Runnable() {
-				@Override
-				public void run() {
-					LayoutEditorScreen.this.init();
-					LayoutEditorScreen.this.focusedObjects.clear();
-					LayoutEditorScreen.this.focusedObjectsCache.clear();
-					LayoutEditorScreen.this.focusedObjects.addAll(pe.content);
-				}
+			this.postRenderTasks.add(() -> {
+				LayoutEditorScreen.this.init();
+				LayoutEditorScreen.this.focusedObjects.clear();
+				LayoutEditorScreen.this.focusedObjectsCache.clear();
+				LayoutEditorScreen.this.focusedObjects.addAll(pe.content);
 			});
 
 		}
@@ -1596,7 +1578,7 @@ public class LayoutEditorScreen extends Screen {
 
 		if (this.activeElementContextMenu != null) {
 			//Close active element menu when mouse is clicked while menu is not hovered
-			if ((MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) && !this.activeElementContextMenu.isHoveredOrFocused()) {
+			if ((MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) && !this.activeElementContextMenu.isHovered()) {
 				this.activeElementContextMenu.closeMenu();
 				this.activeElementContextMenu = null;
 			}

@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.client;
 
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +40,7 @@ public class TotalModsPlaceholder extends Placeholder {
             if (Konkrete.isOptifineLoaded) {
                 i++;
             }
-            return ModList.get().getMods().size() + i;
+            return Services.PLATFORM.getLoadedModIds().size() + i;
         } catch (Exception e) {
             e.printStackTrace();
         }

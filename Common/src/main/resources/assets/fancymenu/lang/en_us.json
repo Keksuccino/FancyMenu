@@ -1,0 +1,5 @@
+{
+  "fancymenu.keybinding.category": "FancyMenu",
+  "fancymenu.keybinding.keybind.reload_mod": "Reload FancyMenu | CTRL + ALT + ",
+  "fancymenu.keybinding.keybind.toggle_overlay": "Toggle Overlay | CTRL + ALT + "
+}

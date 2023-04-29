@@ -3,11 +3,13 @@ package de.keksuccino.fancymenu.menu.placeholder.v1;
 import java.io.File;
 import java.util.*;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextRegistry;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.servers.ServerCache;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -16,9 +18,6 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.versions.mcp.MCPVersion;
 
 @Deprecated
 public class DynamicValueHelper {
@@ -34,7 +33,7 @@ public class DynamicValueHelper {
 		int height = 0;
 		String playername = Minecraft.getInstance().getUser().getName();
 		String playeruuid = Minecraft.getInstance().getUser().getUuid();
-		String mcversion = MCPVersion.getMCVersion();
+		String mcversion = FancyMenu.getMinecraftVersion();
 		if (Minecraft.getInstance().screen != null) {
 			width = Minecraft.getInstance().screen.width;
 			height = Minecraft.getInstance().screen.height;
@@ -403,13 +402,8 @@ public class DynamicValueHelper {
 				if (s.contains(":")) {
 					String blank = s.substring(1, s.length()-1);
 					String mod = blank.split(":", 2)[1];
-					if (ModList.get().isLoaded(mod)) {
-						Optional<? extends ModContainer> o = ModList.get().getModContainerById(mod);
-						if (o.isPresent()) {
-							ModContainer c = o.get();
-							String version = c.getModInfo().getVersion().toString();
-							in = in.replace(s, version);
-						}
+					if (Services.PLATFORM.isModLoaded(mod)) {
+						in = in.replace(s, Services.PLATFORM.getModVersion(mod));
 					}
 				}
 			}
@@ -470,7 +464,7 @@ public class DynamicValueHelper {
 			if (Konkrete.isOptifineLoaded) {
 				i++;
 			}
-			return ModList.get().getMods().size() + i;
+			return Services.PLATFORM.getLoadedModIds().size() + i;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

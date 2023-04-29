@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -82,7 +83,7 @@ public class InputFieldCustomizationItem extends CustomizationItem {
             this.textField.x = this.getPosX(menu);
             this.textField.y = this.getPosY(menu);
             this.textField.setWidth(this.getWidth());
-            this.textField.setHeight(this.getHeight());
+            ((IMixinAbstractWidget)this.textField).setHeightFancyMenu(this.getHeight());
             this.textField.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change

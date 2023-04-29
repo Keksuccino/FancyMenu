@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
                             return false;
                         }
                     } else {
-                        if (!ModList.get().isLoaded(s)) {
+                        if (!Services.PLATFORM.isModLoaded(s)) {
                             return false;
                         }
                     }

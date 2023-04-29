@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 public class TitleScreenButtonsIdentificationContext extends MenuButtonsIdentificationContext {
 
     @Override
-    public Class getMenu() {
+    public Class<?> getMenu() {
         return TitleScreen.class;
     }
 

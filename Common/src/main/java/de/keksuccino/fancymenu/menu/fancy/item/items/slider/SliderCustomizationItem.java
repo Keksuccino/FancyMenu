@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.slider.AdvancedSliderButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.slider.ListSliderButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.slider.RangeSliderButton;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -137,7 +138,7 @@ public class SliderCustomizationItem extends CustomizationItem {
             this.slider.x = this.getPosX(menu);
             this.slider.y = this.getPosY(menu);
             this.slider.setWidth(this.getWidth());
-            this.slider.setHeight(this.getHeight());
+            ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getHeight());
             this.slider.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change

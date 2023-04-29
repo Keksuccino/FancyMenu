@@ -4,6 +4,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.sounds.SoundManager;
 
@@ -81,7 +82,7 @@ public abstract class ScrollAreaEntry extends UIBase {
         this.buttonBase.setX(this.x);
         this.buttonBase.setY(this.y);
         this.buttonBase.setWidth(this.width);
-        this.buttonBase.setHeight(this.height);
+        ((IMixinAbstractWidget)this.buttonBase).setHeightFancyMenu(this.height);
         if (!this.isFocused()) {
             this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
         } else {

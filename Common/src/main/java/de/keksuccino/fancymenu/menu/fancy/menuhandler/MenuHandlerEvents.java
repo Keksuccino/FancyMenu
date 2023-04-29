@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.events.acara.EventPriority;
 import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
-import de.keksuccino.fancymenu.events.game.ClientTickEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.OpenScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;

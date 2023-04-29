@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -24,9 +25,9 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.forgespi.language.IModInfo;
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.io.File;
@@ -36,6 +37,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class SetupSharingEngine {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
     public static final File FM_SETUPS_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/exported_setups");
@@ -256,7 +259,7 @@ public class SetupSharingEngine {
                 backupsCount--;
             }
             for (File f : delete) {
-                FancyMenu.LOGGER.info("[FANCYMENU] Deleting old setup backup: " + f.getPath());
+                LOGGER.info("[FANCYMENU] Deleting old setup backup: " + f.getPath());
                 FileUtils.deleteDirectory(f);
             }
         } catch (Exception e) {
@@ -557,8 +560,7 @@ public class SetupSharingEngine {
 
             PropertiesSection mods = new PropertiesSection("mod-list");
             int i = 1;
-            for (IModInfo info : ModList.get().getMods()) {
-                String id = info.getModId();
+            for (String id : Services.PLATFORM.getLoadedModIds()) {
                 if (!id.equals("fancymenu") && !id.equals("konkrete") && !id.equals("loadmyresources") && !id.equals("forge") && !id.equals("mcp") && !id.equals("minecraft") && !id.equals("fml")) {
                     mods.addEntry("" + i, id);
                 }
@@ -910,7 +912,7 @@ public class SetupSharingEngine {
                                                 FileUtils.copyDirectory(this.setupInstancePath, targetDir);
                                                 importSuccessful = true;
                                                 finish(false);
-                                                FancyMenu.LOGGER.info("[FANCYMENU] Setup successfully imported!");
+                                                LOGGER.info("[FANCYMENU] Setup successfully imported!");
                                             }
                                         }
                                     } catch (Exception e2) {
@@ -1016,9 +1018,9 @@ public class SetupSharingEngine {
                                     meta.removeEntry("identifier");
                                     meta.addEntry("identifier", fixedIdentifier);
                                     PropertiesSerializer.writeProperties(m.getValue(), m.getKey());
-                                    FancyMenu.LOGGER.info("[FANCYMENU] SETUP IMPORT: Identifier fixed: " + identifier + " -> " + fixedIdentifier);
+                                    LOGGER.info("[FANCYMENU] SETUP IMPORT: Identifier fixed: " + identifier + " -> " + fixedIdentifier);
                                 } else {
-                                    FancyMenu.LOGGER.warn("[FANCYMENU] SETUP IMPORT: Unable to fix identifier: " + identifier);
+                                    LOGGER.warn("[FANCYMENU] SETUP IMPORT: Unable to fix identifier: " + identifier);
                                 }
                             }
                         }
@@ -1037,10 +1039,10 @@ public class SetupSharingEngine {
                                     PropertiesSection newSec = new PropertiesSection(fixedIdentifier);
                                     newMenus.addProperties(newSec);
                                     fixed++;
-                                    FancyMenu.LOGGER.info("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Identifier fixed: " + sec.getSectionType() + " -> " + fixedIdentifier);
+                                    LOGGER.info("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Identifier fixed: " + sec.getSectionType() + " -> " + fixedIdentifier);
                                 } else {
                                     newMenus.addProperties(sec);
-                                    FancyMenu.LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Unable to fix identifier: " + sec.getSectionType());
+                                    LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Unable to fix identifier: " + sec.getSectionType());
                                 }
                             } else {
                                 newMenus.addProperties(sec);
@@ -1048,7 +1050,7 @@ public class SetupSharingEngine {
                         }
                         if (fixed > 0) {
                             PropertiesSerializer.writeProperties(newMenus, customizableMenusFile.getPath());
-                            FancyMenu.LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Fixed identifiers successfully written to file!");
+                            LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Fixed identifiers successfully written to file!");
                         }
                     }
                 }

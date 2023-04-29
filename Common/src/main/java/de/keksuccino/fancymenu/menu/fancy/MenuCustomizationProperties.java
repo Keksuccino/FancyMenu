@@ -5,14 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.versions.mcp.MCPVersion;
 
 public class MenuCustomizationProperties {
 	
@@ -56,7 +55,7 @@ public class MenuCustomizationProperties {
 						if (!isVersionCompatible(s4, s5, FancyMenu.VERSION)) {
 							continue;
 						}
-						if (!isVersionCompatible(s6, s7, MCPVersion.getMCVersion())) {
+						if (!isVersionCompatible(s6, s7, FancyMenu.getMinecraftVersion())) {
 							continue;
 						}
 						if (!allRequiredModsLoaded(s3)) {
@@ -139,7 +138,7 @@ public class MenuCustomizationProperties {
 					return false;
 				}
 			} else {
-				if (!ModList.get().isLoaded(s)) {
+				if (!Services.PLATFORM.isModLoaded(s)) {
 					return false;
 				}
 			}

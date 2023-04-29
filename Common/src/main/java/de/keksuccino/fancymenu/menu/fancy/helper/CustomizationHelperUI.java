@@ -14,11 +14,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
-import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
@@ -56,9 +58,6 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CustomizationHelperUI extends UIBase {
 
@@ -75,7 +74,7 @@ public class CustomizationHelperUI extends UIBase {
 
 	public static void init() {
 
-		MinecraftForge.EVENT_BUS.register(new CustomizationHelperUI());
+		EventHandler.INSTANCE.registerListenersOf(new CustomizationHelperUI());
 
 	}
 
@@ -952,7 +951,7 @@ public class CustomizationHelperUI extends UIBase {
 	}
 
 	@SubscribeEvent
-	public void onButtonsCached(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCacheUpdatedEvent e) {
 		buttons = e.getButtonDataList();
 	}
 
@@ -1231,17 +1230,17 @@ public class CustomizationHelperUI extends UIBase {
 
 		@Override
 		public void closeMenu() {
-			if (!this.manageSubPopup.isHoveredOrFocused()) {
+			if (!this.manageSubPopup.isHovered()) {
 				super.closeMenu();
 			}
 		}
 
 		@Override
-		public boolean isHoveredOrFocused() {
-			if (this.manageSubPopup.isOpen() && this.manageSubPopup.isHoveredOrFocused()) {
+		public boolean isHovered() {
+			if (this.manageSubPopup.isOpen() && this.manageSubPopup.isHovered()) {
 				return true;
 			} else {
-				return super.isHoveredOrFocused();
+				return super.isHovered();
 			}
 		}
 

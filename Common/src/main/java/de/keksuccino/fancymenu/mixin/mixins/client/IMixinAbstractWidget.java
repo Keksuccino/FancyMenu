@@ -10,4 +10,8 @@ public interface IMixinAbstractWidget {
 
     @Accessor("alpha") float getAlphaFancyMenu();
 
+    @Accessor("height") int getHeightFancyMenu();
+
+    @Accessor("height") void setHeightFancyMenu(int height);
+
 }

@@ -7,11 +7,11 @@ import javax.annotation.Nullable;
 
 public class ButtonData {
 
-	private long id;
+	private final long id;
 	protected String compatibilityId;
-	private String key;
+	private final String key;
 	private AbstractWidget button;
-	private Screen screen;
+	private final Screen screen;
 	private boolean replaced = false;
 	
 	public String label;

@@ -134,7 +134,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
     protected SetupEntry getHoveredEntry() {
         for (ScrollAreaEntry e : this.scroll.getEntries()) {
-            if (e.isHoveredOrFocused()) {
+            if (e.isHovered()) {
                 return (SetupEntry) e;
             }
         }
@@ -248,7 +248,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
         @Override
         public void render(PoseStack matrix) {
-            if (this.isHoveredOrFocused() && this.isVisible() && MouseInput.isLeftMouseDown()) {
+            if (this.isHovered() && this.isVisible() && MouseInput.isLeftMouseDown()) {
                 this.focused = true;
                 this.chooser.focused = this;
                 if (!this.click) {
@@ -257,7 +257,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
                 }
             }
 
-            if (!this.isHoveredOrFocused() && MouseInput.isLeftMouseDown()) {
+            if (!this.isHovered() && MouseInput.isLeftMouseDown()) {
                 this.focused = false;
             }
 
@@ -296,7 +296,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
                     this.clickTick = 0;
                 }
 
-                if (MouseInput.isLeftMouseDown() && this.isHoveredOrFocused()) {
+                if (MouseInput.isLeftMouseDown() && this.isHovered()) {
                     this.onClick();
                     this.click = false;
                     this.clickTick = 0;

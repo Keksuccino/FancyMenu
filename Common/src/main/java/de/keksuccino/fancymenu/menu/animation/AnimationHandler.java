@@ -4,9 +4,9 @@ import java.io.File;
 import java.util.*;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
-import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -17,32 +17,35 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.common.MinecraftForge;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AnimationHandler {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
-	private static Map<String, AnimationData> animations = new HashMap<String, AnimationData>();
-	private static List<String> custom = new ArrayList<String>();
+	private static final Map<String, AnimationData> ANIMATIONS = new HashMap<>();
+	private static final List<String> CUSTOM = new ArrayList<>();
 	protected static boolean ready = false;
 
 	public static void init() {
-		MinecraftForge.EVENT_BUS.register(new AnimationHandlerEvents());
+		EventHandler.INSTANCE.registerListenersOf(new AnimationHandlerEvents());
 	}
 	
 	public static void registerAnimation(IAnimationRenderer animation, String name, Type type) {
-		if (!animations.containsKey(name)) {
-			animations.put(name, new AnimationData(animation, name, type));
+		if (!ANIMATIONS.containsKey(name)) {
+			ANIMATIONS.put(name, new AnimationData(animation, name, type));
 			if (type == Type.EXTERNAL) {
-				custom.add(name);
+				CUSTOM.add(name);
 			}
 		} else {
-			FancyMenu.LOGGER.error("[FANCYMENU] AnimationHandler: ERROR: Duplicate animation name: " + name);
+			LOGGER.error("[FANCYMENU] AnimationHandler: Duplicate animation name: " + name);
 		}
 	}
 	
 	public static void unregisterAnimation(IAnimationRenderer animation) {
 		AnimationData d = null;
-		for (AnimationData a : animations.values()) {
+		for (AnimationData a : ANIMATIONS.values()) {
 			if (a.animation == animation) {
 				d = a;
 				break;
@@ -55,9 +58,9 @@ public class AnimationHandler {
 	
 	public static void unregisterAnimation(String name) {
 		if (animationExists(name)) {
-			animations.remove(name);
-			if (custom.contains(name)) {
-				custom.remove(name);
+			ANIMATIONS.remove(name);
+			if (CUSTOM.contains(name)) {
+				CUSTOM.remove(name);
 			}
 		}
 	}
@@ -72,19 +75,15 @@ public class AnimationHandler {
 		clearCustomAnimations();
 		
 		for (File a : f.listFiles()) {
-			String name = null;
+			String name;
 			String mainAudio = null;
 			String introAudio = null;
 			int fps = 0;
 			boolean loop = true;
-			int width = 0;
-			int height = 0;
-			int x = 0;
-			int y = 0;
 			boolean replayIntro = false;
-			List<String> frameNamesMain = new ArrayList<String>();
-			List<String> frameNamesIntro = new ArrayList<String>();
-			String resourceNamespace = null;
+			List<String> frameNamesMain = new ArrayList<>();
+			List<String> frameNamesIntro = new ArrayList<>();
+			String resourceNamespace;
 			
 			if (a.isDirectory()) {
 
@@ -98,7 +97,7 @@ public class AnimationHandler {
 					continue;
 				}
 
-				/** ANIMATION META **/
+				// ANIMATION META
 				List<PropertiesSection> metas = props.getPropertiesOfType("animation-meta");
 				if (metas.isEmpty()) {
 					continue;
@@ -130,43 +129,41 @@ public class AnimationHandler {
 					continue;
 				}
 
-				/** MAIN FRAME NAMES **/
+				// MAIN FRAME NAMES
 				List<PropertiesSection> mainFrameSecs = props.getPropertiesOfType("frames-main");
 				if (mainFrameSecs.isEmpty()) {
 					continue;
 				}
 				PropertiesSection mainFrames = mainFrameSecs.get(0);
 				Map<String, String> mainFramesMap = mainFrames.getEntries();
-				List<String> mainFrameKeys = new ArrayList<String>();
+				List<String> mainFrameKeys = new ArrayList<>();
 				for(Map.Entry<String, String> me : mainFramesMap.entrySet()) {
 					if (me.getKey().startsWith("frame_")) {
-						String frameNumber = me.getKey().split("[_]", 2)[1];
+						String frameNumber = me.getKey().split("_", 2)[1];
 						if (MathUtils.isInteger(frameNumber)) {
 							mainFrameKeys.add(me.getKey());
 						}
 					}
 				}
-				Collections.sort(mainFrameKeys, new Comparator<String>() {
-					public int compare(String o1, String o2) {
-						String n1 = o1.split("[_]", 2)[1];
-						String n2 = o2.split("[_]", 2)[1];
-						int i1 = Integer.parseInt(n1);
-						int i2 = Integer.parseInt(n2);
+				Collections.sort(mainFrameKeys, (o1, o2) -> {
+					String n1 = o1.split("_", 2)[1];
+					String n2 = o2.split("_", 2)[1];
+					int i1 = Integer.parseInt(n1);
+					int i2 = Integer.parseInt(n2);
 
-						if (i1 > i2) {
-							return 1;
-						}
-						if (i1 < i2) {
-							return -1;
-						}
-						return 0;
+					if (i1 > i2) {
+						return 1;
 					}
+					if (i1 < i2) {
+						return -1;
+					}
+					return 0;
 				});
 				for (String s : mainFrameKeys) {
 					frameNamesMain.add("frames_main/" + mainFramesMap.get(s));
 				}
 
-				/** INTRO FRAME NAMES **/
+				// INTRO FRAME NAMES
 				List<PropertiesSection> introFrameSecs = props.getPropertiesOfType("frames-intro");
 				if (!introFrameSecs.isEmpty()) {
 					PropertiesSection introFrames = introFrameSecs.get(0);
@@ -180,21 +177,19 @@ public class AnimationHandler {
 							}
 						}
 					}
-					Collections.sort(introFrameKeys, new Comparator<String>() {
-						public int compare(String o1, String o2) {
-							String n1 = o1.split("[_]", 2)[1];
-							String n2 = o2.split("[_]", 2)[1];
-							int i1 = Integer.parseInt(n1);
-							int i2 = Integer.parseInt(n2);
+					Collections.sort(introFrameKeys, (o1, o2) -> {
+						String n1 = o1.split("_", 2)[1];
+						String n2 = o2.split("_", 2)[1];
+						int i1 = Integer.parseInt(n1);
+						int i2 = Integer.parseInt(n2);
 
-							if (i1 > i2) {
-								return 1;
-							}
-							if (i1 < i2) {
-								return -1;
-							}
-							return 0;
+						if (i1 > i2) {
+							return 1;
 						}
+						if (i1 < i2) {
+							return -1;
+						}
+						return 0;
 					});
 					for (String s : introFrameKeys) {
 						frameNamesIntro.add("frames_intro/" + introFramesMap.get(s));
@@ -212,8 +207,6 @@ public class AnimationHandler {
 				}
 
 				if (name != null) {
-					File gifIntro = new File(a.getPath() + "/intro.gif");
-					File gifAni = new File(a.getPath() + "/animation.gif");
 					IAnimationRenderer in = null;
 					IAnimationRenderer an = null;
 
@@ -230,15 +223,15 @@ public class AnimationHandler {
 							ani.propertiesPath = a.getPath();
 							registerAnimation(ani, name, Type.EXTERNAL);
 							ani.prepareAnimation();
-							FancyMenu.LOGGER.info("[FANCYMENU] AnimationHandler: Animation registered: " + name + "");
+							LOGGER.info("[FANCYMENU] AnimationHandler: Animation registered: " + name + "");
 						} else if (an != null) {
 							AdvancedAnimation ani = new AdvancedAnimation(null, an, introAudio, mainAudio, false);
 							ani.propertiesPath = a.getPath();
 							registerAnimation(ani, name, Type.EXTERNAL);
 							ani.prepareAnimation();
-							FancyMenu.LOGGER.info("[FANCYMENU] AnimationHandler: Animation registered: " + name + "");
+							LOGGER.info("[FANCYMENU] AnimationHandler: Animation registered: " + name + "");
 						} else {
-							FancyMenu.LOGGER.error("[FANCYMENU] AnimationHandler: ERROR: This is not a valid animation: " + name);
+							LOGGER.error("[FANCYMENU] AnimationHandler: This is not a valid animation: " + name);
 						}
 					} catch (AnimationNotFoundException e) {
 						e.printStackTrace();
@@ -249,56 +242,24 @@ public class AnimationHandler {
 	}
 	
 	public static List<String> getCustomAnimationNames() {
-		List<String> l = new ArrayList<String>();
-		l.addAll(custom);
-		return l;
-	}
-	
-	private static String getIntroPath(String path) {
-		File f = new File(path + "/intro");
-		if (f.exists() && f.isDirectory()) {
-			return f.getPath();
-		}
-		return null;
-	}
-	
-	private static String getAnimationPath(String path) {
-		File f = new File(path + "/animation");
-		if (f.exists() && f.isDirectory()) {
-			return f.getPath();
-		}
-		return null;
+		return new ArrayList<>(CUSTOM);
 	}
 	
 	private static void clearCustomAnimations() {
-		for (String s : custom) {
-			if (animations.containsKey(s)) {
-				animations.remove(s);
+		for (String s : CUSTOM) {
+			if (ANIMATIONS.containsKey(s)) {
+				ANIMATIONS.remove(s);
 			}
 		}
-	}
-	
-	private static Map<String, String> parseProperties(File prop) {
-		Map<String, String> m = new HashMap<String, String>();
-		if (prop.exists() && prop.isFile()) {
-			for (String s : FileUtils.getFileLines(prop)) {
-				if (s.contains("=")) {
-					String name = s.split("[=]", 2)[0].replace(" ", "");
-					String value = s.split("[=]", 2)[1].replace(" ", "");
-					m.put(name, value);
-				}
-			}
-		}
-		return m;
 	}
 	
 	public static boolean animationExists(String name) {
-		return animations.containsKey(name);
+		return ANIMATIONS.containsKey(name);
 	}
 	
 	public static List<IAnimationRenderer> getAnimations() {
 		List<IAnimationRenderer> renderers = new ArrayList<IAnimationRenderer>();
-		for (Map.Entry<String, AnimationData> m : animations.entrySet()) {
+		for (Map.Entry<String, AnimationData> m : ANIMATIONS.entrySet()) {
 			renderers.add(m.getValue().animation);
 		}
 		return renderers;
@@ -306,19 +267,19 @@ public class AnimationHandler {
 	
 	public static IAnimationRenderer getAnimation(String name) {
 		if (animationExists(name)) {
-			return animations.get(name).animation;
+			return ANIMATIONS.get(name).animation;
 		}
 		return null;
 	}
 
 	public static void resetAnimations() {
-		for (AnimationData d : animations.values()) {
+		for (AnimationData d : ANIMATIONS.values()) {
 			d.animation.resetAnimation();
 		}
 	}
 
 	public static void resetAnimationSounds() {
-		for (AnimationData d : animations.values()) {
+		for (AnimationData d : ANIMATIONS.values()) {
 			if (d.animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation)d.animation).resetAudio();
 			}
@@ -326,7 +287,7 @@ public class AnimationHandler {
 	}
 
 	public static void stopAnimationSounds() {
-		for (AnimationData d : animations.values()) {
+		for (AnimationData d : ANIMATIONS.values()) {
 			if (d.animation instanceof AdvancedAnimation) {
 				((AdvancedAnimation)d.animation).stopAudio();
 			}
@@ -337,7 +298,6 @@ public class AnimationHandler {
 		return ready;
 	}
 
-	
 	public static void setReady(boolean ready) {
 		AnimationHandler.ready = ready;
 	}
@@ -348,11 +308,11 @@ public class AnimationHandler {
 				((ResourcePackAnimationRenderer) a).setupAnimationSize();
 			} else if (a instanceof AdvancedAnimation) {
 				IAnimationRenderer main = ((AdvancedAnimation) a).getMainAnimationRenderer();
-				if ((main != null) && (main instanceof ResourcePackAnimationRenderer)) {
+				if (main instanceof ResourcePackAnimationRenderer) {
 					((ResourcePackAnimationRenderer) main).setupAnimationSize();
 				}
 				IAnimationRenderer intro = ((AdvancedAnimation) a).getIntroAnimationRenderer();
-				if ((intro != null) && (intro instanceof ResourcePackAnimationRenderer)) {
+				if (intro instanceof ResourcePackAnimationRenderer) {
 					((ResourcePackAnimationRenderer) intro).setupAnimationSize();
 				}
 			}
@@ -361,7 +321,7 @@ public class AnimationHandler {
 
 	public static void preloadAnimations() {
 
-		FancyMenu.LOGGER.info("[FANCYMENU] Updating animation sizes..");
+		LOGGER.info("[FANCYMENU] Updating animation sizes..");
 		AnimationHandler.setupAnimationSizes();
 
 		boolean errors = false;
@@ -369,17 +329,17 @@ public class AnimationHandler {
 		//Pre-load animation frames to prevent them from lagging when rendered for the first time
 		if (FancyMenu.getConfig().getOrDefault("preloadanimations", true)) {
 			if (!ready) {
-				FancyMenu.LOGGER.info("[FANCYMENU] LOADING ANIMATION TEXTURES! THIS CAUSES THE LOADING SCREEN TO FREEZE FOR A WHILE!");
+				LOGGER.info("[FANCYMENU] LOADING ANIMATION TEXTURES! THIS CAUSES THE LOADING SCREEN TO FREEZE FOR A WHILE!");
 				try {
 					List<ResourcePackAnimationRenderer> l = new ArrayList<ResourcePackAnimationRenderer>();
 					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 						if (r instanceof AdvancedAnimation) {
 							IAnimationRenderer main = ((AdvancedAnimation) r).getMainAnimationRenderer();
 							IAnimationRenderer intro = ((AdvancedAnimation) r).getIntroAnimationRenderer();
-							if ((main != null) && (main instanceof ResourcePackAnimationRenderer)) {
+							if (main instanceof ResourcePackAnimationRenderer) {
 								l.add((ResourcePackAnimationRenderer) main);
 							}
-							if ((intro != null) && (intro instanceof  ResourcePackAnimationRenderer)) {
+							if (intro instanceof ResourcePackAnimationRenderer) {
 								l.add((ResourcePackAnimationRenderer) intro);
 							}
 						} else if (r instanceof ResourcePackAnimationRenderer) {
@@ -401,9 +361,9 @@ public class AnimationHandler {
 					errors = true;
 				}
 				if (!errors) {
-					FancyMenu.LOGGER.info("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES!");
+					LOGGER.info("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES!");
 				} else {
-					FancyMenu.LOGGER.warn("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES WITH ERRORS! PLEASE CHECK YOUR AIMATIONS!");
+					LOGGER.warn("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES WITH ERRORS! PLEASE CHECK YOUR ANIMATIONS!");
 				}
 				ready = true;
 			}

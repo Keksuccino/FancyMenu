@@ -17,13 +17,15 @@ import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
-import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
+import de.keksuccino.fancymenu.utils.LocalPlayerUtils;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
-import de.keksuccino.fancymenu.menu.button.buttonactions.LegacyButtonActions;
+import de.keksuccino.fancymenu.menu.action.LegacyActions;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
@@ -47,9 +49,6 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -59,41 +58,39 @@ public class ButtonScriptEngine {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	private static final List<String> LEGACY_IDENTIFIERS = LegacyButtonActions.getLegacyIdentifiers();
+	private static final List<String> LEGACY_IDENTIFIERS = LegacyActions.getLegacyIdentifiers();
+	private static final Map<String, ButtonScript> SCRIPTS = new HashMap<>();
 
-	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
 	private static boolean init = false;
 	
 	public static void init() {
 		if (!init) {
 			init = true;
-			MinecraftForge.EVENT_BUS.register(new ButtonScriptEngine());
+			EventHandler.INSTANCE.registerListenersOf(new ButtonScriptEngine());
 			updateButtonScripts();
 		}
 	}
 	
 	public static void updateButtonScripts() {
-		scripts.clear();
-
+		SCRIPTS.clear();
 		if (!FancyMenu.getButtonScriptPath().exists()) {
 			FancyMenu.getButtonScriptPath().mkdirs();
 		}
-
 		for (File f : FancyMenu.getButtonScriptPath().listFiles()) {
 			if (f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
-				scripts.put(Files.getNameWithoutExtension(f.getPath()), new ButtonScript(f));
+				SCRIPTS.put(Files.getNameWithoutExtension(f.getPath()), new ButtonScript(f));
 			}
 		}
 	}
 	
 	public static void runButtonScript(String name) {
-		if (scripts.containsKey(name)) {
-			scripts.get(name).runScript();
+		if (SCRIPTS.containsKey(name)) {
+			SCRIPTS.get(name).runScript();
 		}
 	}
 	
 	public static Map<String, ButtonScript> getButtonScripts() {
-		return scripts;
+		return SCRIPTS;
 	}
 	
 	public static void runButtonAction(String action, String value) {
@@ -106,13 +103,11 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("sendmessage")) {
 				if (Minecraft.getInstance().level != null) {
-					if (!EventHandler.INSTANCE.postEvent(new ClientChatEvent(value))) {
-						if ((value != null) && value.startsWith("/")) {
-							value = value.substring(1);
-							MinecraftCompatibilityUtils.sendPlayerCommand(Minecraft.getInstance().player, value);
-						} else {
-							MinecraftCompatibilityUtils.sendPlayerChatMessage(Minecraft.getInstance().player, value);
-						}
+					if ((value != null) && value.startsWith("/")) {
+						value = value.substring(1);
+						LocalPlayerUtils.sendPlayerCommand(Minecraft.getInstance().player, value);
+					} else {
+						LocalPlayerUtils.sendPlayerChatMessage(Minecraft.getInstance().player, value);
 					}
 				}
 			}
@@ -223,8 +218,8 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("movefile")) {
 				if (value.contains(";")) {
-					String from = cleanPath(value.split("[;]", 2)[0]);
-					String to = cleanPath(value.split("[;]", 2)[1]);
+					String from = cleanPath(value.split(";", 2)[0]);
+					String to = cleanPath(value.split(";", 2)[1]);
 					File toFile = new File(to);
 					File fromFile = new File(from);
 					
@@ -233,8 +228,8 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("copyfile")) {
 				if (value.contains(";")) {
-					String from = cleanPath(value.split("[;]", 2)[0]);
-					String to = cleanPath(value.split("[;]", 2)[1]);
+					String from = cleanPath(value.split(";", 2)[0]);
+					String to = cleanPath(value.split(";", 2)[1]);
 					File toFile = new File(to);
 					File fromFile = new File(from);
 					
@@ -255,8 +250,8 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("renamefile")) {
 				if (value.contains(";")) {
-					String path = cleanPath(value.split("[;]", 2)[0]);
-					String name = value.split("[;]", 2)[1];
+					String path = cleanPath(value.split(";", 2)[0]);
+					String name = value.split(";", 2)[1];
 					File f = new File(path);
 					if (f.exists()) {
 						String parent = f.getParent();
@@ -270,8 +265,8 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("downloadfile")) {
 				if (value.contains(";")) {
-					String url = StringUtils.convertFormatCodes(cleanPath(value.split("[;]", 2)[0]), "§", "&");
-					String path = cleanPath(value.split("[;]", 2)[1]);
+					String url = StringUtils.convertFormatCodes(cleanPath(value.split(";", 2)[0]), "§", "&");
+					String path = cleanPath(value.split(";", 2)[1]);
 					File f = new File(path);
 					if (!f.exists()) {
 						f.mkdirs();
@@ -282,8 +277,8 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("unpackzip")) {
 				if (value.contains(";")) {
-					String zipPath = cleanPath(value.split("[;]", 2)[0]);
-					String outputDir = cleanPath(value.split("[;]", 2)[1]);
+					String zipPath = cleanPath(value.split(";", 2)[0]);
+					String outputDir = cleanPath(value.split(";", 2)[1]);
 					FileUtils.unpackZip(zipPath, outputDir);
 				}
 			}
@@ -291,7 +286,7 @@ public class ButtonScriptEngine {
 				CustomizationHelper.reloadSystemAndMenu();
 			}
 			if (action.equalsIgnoreCase("runscript")) {
-				if(scripts.containsKey(value)) {
+				if(SCRIPTS.containsKey(value)) {
 					runButtonScript(value);
 				}
 			}
@@ -338,8 +333,8 @@ public class ButtonScriptEngine {
 						String ip = ipRaw;
 						int port = 25565;
 						if (ip.contains(":")) {
-							String portString = ip.split("[:]", 2)[1];
-							ip = ip.split("[:]", 2)[0];
+							String portString = ip.split(":", 2)[1];
+							ip = ip.split(":", 2)[0];
 							if (MathUtils.isInteger(portString)) {
 								port = Integer.parseInt(portString);
 							}
@@ -367,7 +362,7 @@ public class ButtonScriptEngine {
 				return;
 			}
 
-			/** CUSTOM ACTIONS **/
+			// CUSTOM ACTIONS
 			ButtonActionContainer c = ButtonActionRegistry.getActionByName(action);
 			if (c != null) {
 				if (c.hasValue()) {
@@ -378,11 +373,11 @@ public class ButtonScriptEngine {
 			}
 
 		} catch (Exception e) {
-			System.out.println("################ ERROR [FANCYMENU] ################");
-			System.out.println("An error happened while trying to execute a button action!");
-			System.out.println("Action: " + action);
-			System.out.println("Value: " + value);
-			System.out.println("###################################################");
+			LOGGER.error("################################");
+			LOGGER.error("[FANCYMENU] An error happened while trying to execute a button action!");
+			LOGGER.error("[FANCYMENU] Action: " + action);
+			LOGGER.error("[FANCYMENU] Value: " + value);
+			LOGGER.error("################################");
 			e.printStackTrace();
 		}
 	}
@@ -475,7 +470,7 @@ public class ButtonScriptEngine {
 	private static String cleanPath(String path) {
 		int i = 0;
 		for (char c : path.toCharArray()) {
-			if (c == " ".charAt(0)) {
+			if (c == ' ') {
 				i++;
 			} else {
 				break;
@@ -489,7 +484,7 @@ public class ButtonScriptEngine {
 	}
 	
 	@SubscribeEvent
-	public void onMenuReload(MenuReloadedEvent e) {
+	public void onMenuReload(MenuReloadEvent e) {
 		updateButtonScripts();
 	}
 
@@ -506,8 +501,8 @@ public class ButtonScriptEngine {
 				String action = "";
 				String value = "";
 				if (s.contains(":")) {
-					action = s.split("[:]", 2)[0].replace(" ", "");
-					value = s.split("[:]", 2)[1];
+					action = s.split(":", 2)[0].replace(" ", "");
+					value = s.split(":", 2)[1];
 				} else {
 					action = s.replace(" ", "");
 				}

@@ -1,13 +1,16 @@
 package de.keksuccino.fancymenu.api.background;
 
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public class MenuBackgroundTypeRegistry {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static Map<String, MenuBackgroundType> backgroundTypes = new LinkedHashMap<>();
 
@@ -15,7 +18,7 @@ public class MenuBackgroundTypeRegistry {
 
     public static void init() {
         if (!initialized) {
-            MinecraftForge.EVENT_BUS.register(new MenuBackgroundTypeRegistry());
+            EventHandler.INSTANCE.registerListenersOf(new MenuBackgroundTypeRegistry());
             initialized = true;
         }
     }
@@ -27,20 +30,20 @@ public class MenuBackgroundTypeRegistry {
         if (type != null) {
             if (type.getIdentifier() != null) {
                 if (backgroundTypes.containsKey(type.getIdentifier())) {
-                    FancyMenu.LOGGER.warn("[FANCYMENU] WARNING! A menu background type with the identifier '" + type.getIdentifier() + "' is already registered! Overriding type!");
+                    LOGGER.warn("[FANCYMENU] Menu background with the identifier '" + type.getIdentifier() + "' is already registered! Overriding background!");
                 }
                 backgroundTypes.put(type.getIdentifier(), type);
                 type.loadBackgrounds();
             } else {
-                FancyMenu.LOGGER.error("[FANCYMENU] ERROR! Identifier cannot be null for MenuBackgroundTypes!");
+                LOGGER.error("[FANCYMENU] Failed to register menu background! Identifier cannot be NULL!");
             }
         } else {
-            FancyMenu.LOGGER.error("[FANCYMENU] ERROR: registerBackgroundType: Menu background type cannot be null!");
+            LOGGER.error("[FANCYMENU] Failed to register menu background! Menu background type cannot be NULL!");
         }
     }
 
     /**
-     * Unregister a previously added menu background type.
+     * Unregister a menu background type.
      */
     public static void unregisterBackgroundType(String typeIdentifier) {
         backgroundTypes.remove(typeIdentifier);
@@ -64,7 +67,7 @@ public class MenuBackgroundTypeRegistry {
     }
 
     @SubscribeEvent
-    public void onReload(MenuReloadedEvent e) {
+    public void onReload(MenuReloadEvent e) {
         for (MenuBackgroundType t : backgroundTypes.values()) {
             t.loadBackgrounds();
         }

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -156,7 +157,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 
 			if (action.equalsIgnoreCase("resizebutton")) {
 				this.parent.getButton().setWidth(this.getWidth());
-				this.parent.getButton().setHeight(this.getHeight());
+				((IMixinAbstractWidget)this.parent.getButton()).setHeightFancyMenu(this.getHeight());
 			}
 
 		}

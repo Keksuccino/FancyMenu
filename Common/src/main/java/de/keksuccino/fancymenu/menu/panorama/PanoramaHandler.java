@@ -7,69 +7,90 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class PanoramaHandler {
-	
-	private static Map<String, ExternalTexturePanoramaRenderer> panoramas = new HashMap<String, ExternalTexturePanoramaRenderer>();
+
+	private static final Logger LOGGER = LogManager.getLogger();
+
+	private static final Map<String, ExternalTexturePanoramaRenderer> PANORAMAS = new HashMap<>();
 	
 	public static void init() {
 		updatePanoramas();
-		
-		MinecraftForge.EVENT_BUS.register(new PanoramaHandler());
+		EventHandler.INSTANCE.registerListenersOf(new PanoramaHandler());
 	}
 	
 	public static void updatePanoramas() {
 		File f = FancyMenu.getPanoramaDirectory();
-		if (!f.exists()) {
-			f.mkdirs();
-		}
-		
-		panoramas.clear();
+		PANORAMAS.clear();
 		for (File f2 : f.listFiles()) {
 			if (f2.isDirectory()) {
 				File f3 = new File(f2.getPath() + "/properties.txt");
+				if (!f3.exists()) {
+					f3 = new File(f2.getPath() + "/properties.txt.txt");
+				}
 				File f4 = new File(f2.getPath() + "/panorama");
 				if (f3.exists() && f4.exists()) {
 					ExternalTexturePanoramaRenderer render = new ExternalTexturePanoramaRenderer(f2.getPath());
 					String name = render.getName();
 					if (name != null) {
 						render.preparePanorama();
-						panoramas.put(name, render);
+						PANORAMAS.put(name, render);
 					} else {
-						System.out.println("############## ERROR [FANCYMENU] ##############");
-						System.out.println("Invalid panorama found: " + f2.getPath());
-						System.out.println("###############################################");
+						LOGGER.error(buildErrorMessage(f2, false, false, false) + " (name is empty/NULL)");
 					}
+				} else {
+					LOGGER.error(buildErrorMessage(f2, true, f3.exists(), f4.exists()));
 				}
+			} else {
+				LOGGER.error(buildErrorMessage(f2, false, false, false) + " (not a directory)");
 			}
 		}
 	}
+
+	private static String buildErrorMessage(File f, boolean addDetails, boolean propertiesFileFound, boolean imageDirFound) {
+		String msg = "[FANCYMENU] Invalid panorama found: " + f.getName();
+		if (addDetails) {
+			String details = "";
+			if (!propertiesFileFound) {
+				details += "Missing \"properties.txt\" file";
+			}
+			if (!details.isEmpty()) {
+				details += "; ";
+			}
+			if (!imageDirFound) {
+				details += "Missing \"panorama\" directory for images";
+			}
+			if (!details.isEmpty()) {
+				msg += " (" + details + ")";
+			}
+		}
+		return msg;
+	}
 	
 	public static ExternalTexturePanoramaRenderer getPanorama(String name) {
-		return panoramas.get(name);
+		return PANORAMAS.get(name);
 	}
 	
 	public static List<ExternalTexturePanoramaRenderer> getPanoramas() {
-		List<ExternalTexturePanoramaRenderer> l = new ArrayList<ExternalTexturePanoramaRenderer>();
-		l.addAll(panoramas.values());
-		return l;
+		return new ArrayList<>(PANORAMAS.values());
 	}
 	
 	public static List<String> getPanoramaNames() {
-		List<String> l = new ArrayList<String>();
-		l.addAll(panoramas.keySet());
-		return l;
+		return new ArrayList<>(PANORAMAS.keySet());
 	}
 	
 	public static boolean panoramaExists(String name) {
-		return panoramas.containsKey(name);
+		return PANORAMAS.containsKey(name);
 	}
 	
 	@SubscribeEvent
-	public void onMenuReload(MenuReloadedEvent e) {
+	public void onMenuReload(MenuReloadEvent e) {
+		LOGGER.info("[FANCYMENU] Reloading panoramas..");
 		updatePanoramas();
 	}
 

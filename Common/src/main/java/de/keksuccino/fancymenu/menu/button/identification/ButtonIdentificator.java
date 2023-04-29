@@ -19,9 +19,9 @@ import java.util.Map;
 
 public class ButtonIdentificator {
 
-    private static final Logger LOGGER = LogManager.getLogger("fancymenu/ButtonIdentificator");
+    private static final Logger LOGGER = LogManager.getLogger();
 
-    private static Map<Class, MenuButtonsIdentificationContext> contexts = new HashMap<>();
+    private static final Map<Class<?>, MenuButtonsIdentificationContext> CONTEXTS = new HashMap<>();
 
     public static void init() {
 
@@ -32,18 +32,16 @@ public class ButtonIdentificator {
     }
 
     public static void registerContext(MenuButtonsIdentificationContext context) {
-        contexts.put(context.getMenu(), context);
+        CONTEXTS.put(context.getMenu(), context);
     }
 
     public static String getCompatibilityIdentifierForButton(ButtonData data) {
         try {
             Screen s = data.getScreen();
             if (s != null) {
-                MenuButtonsIdentificationContext c = contexts.get(s.getClass());
+                MenuButtonsIdentificationContext c = CONTEXTS.get(s.getClass());
                 if (c != null) {
                     return c.getCompatibilityIdentifierForButton(data);
-                } else {
-//                    LOGGER.warn("WARNING: No identification context found for menu: " + s.getClass().getName());
                 }
             }
         } catch (Exception e) {

@@ -4,22 +4,22 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.acara.EventPriority;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.event.TickEvent.ClientTickEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,7 +37,7 @@ public class MenuCustomizationEvents {
 	protected boolean fixedSelectWorldScreen = false;
 
 	@SubscribeEvent
-	public void onRenderScreenPost(ScreenEvent.Render.Post e) {
+	public void onRenderScreenPost(RenderScreenEvent.Post e) {
 
 		//Fix bugged Singleplayer menu in 1.19
 		if ((e.getScreen() instanceof SelectWorldScreen) && !this.fixedSelectWorldScreen) {
@@ -48,7 +48,7 @@ public class MenuCustomizationEvents {
 	}
 
 	
-	//I don't fucking know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
+	//I don't frickin know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onInitPrePre(InitOrResizeScreenEvent.Pre e) {
 
@@ -78,7 +78,7 @@ public class MenuCustomizationEvents {
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onMenuReloaded(MenuReloadedEvent e) {
+	public void onMenuReloaded(MenuReloadEvent e) {
 		ButtonMimeHandler.clearCache();
 		MenuCustomization.isNewMenu = true;
 		this.lastScreen = null;
@@ -115,7 +115,7 @@ public class MenuCustomizationEvents {
 	}
 
 	@SubscribeEvent
-	public void onTick(ClientTickEvent e) {
+	public void onTick(ClientTickEvent.Pre e) {
 
 		if (Minecraft.getInstance().screen == null) {
 			this.lastScreen = null;
@@ -137,7 +137,7 @@ public class MenuCustomizationEvents {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
-				MainWindowHandler.updateWindowIcon();
+				WindowHandler.updateWindowIcon();
 				this.iconSetAfterFullscreen = true;
 			}
 		}

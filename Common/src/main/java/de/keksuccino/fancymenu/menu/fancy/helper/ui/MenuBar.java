@@ -11,6 +11,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
@@ -290,7 +292,7 @@ public class MenuBar extends UIBase {
 						int xl = 0;
 						for (AdvancedButton b : this.leftElements.values()) {
 							if (b.visible) {
-								b.setHeight(this.height);
+								((IMixinAbstractWidget)b).setHeightFancyMenu(this.height);
 								if (!(b instanceof AdvancedImageButton)) {
 									int i = Minecraft.getInstance().font.width(b.getMessageString());
 									b.setWidth(i + 12);
@@ -307,7 +309,7 @@ public class MenuBar extends UIBase {
 						int xr = (int) (width / this.getScale());
 						for (AdvancedButton b : this.rightElements.values()) {
 							if (b.visible) {
-								b.setHeight(this.height);
+								((IMixinAbstractWidget)b).setHeightFancyMenu(this.height);
 								if (!(b instanceof AdvancedImageButton)) {
 									int i = Minecraft.getInstance().font.width(b.getMessageString());
 									b.setWidth(i + 12);
@@ -326,7 +328,7 @@ public class MenuBar extends UIBase {
 						AdvancedButton right = this.rightElements.get("menubar.default.extendbtn");
 						if (right != null) {
 
-							right.setHeight(this.height);
+							((IMixinAbstractWidget)right).setHeightFancyMenu(this.height);
 							right.x = (int) ((width / this.getScale()) - right.getWidth());
 							right.y = 0;
 							colorizeButton(right);
@@ -357,21 +359,16 @@ public class MenuBar extends UIBase {
 		if (Minecraft.getInstance().screen == null) {
 			return false;
 		}
-		
 		MouseInput.setRenderScale(this.getScale());
-		
 		int width = Minecraft.getInstance().screen.width;
 		int mX = MouseInput.getMouseX();
 		int mY = MouseInput.getMouseY();
-		
 		MouseInput.resetRenderScale();
-		
 		for (ContextMenu m : this.childs.values()) {
-			if (m.isOpen() && m.isHoveredOrFocused()) {
+			if (m.isOpen() && m.isHovered()) {
 				return true;
 			}
 		}
-		
 		return ((mX <= width) && (mX >= 0) && (mY <= this.height) && (mY >= 0));
 	}
 	

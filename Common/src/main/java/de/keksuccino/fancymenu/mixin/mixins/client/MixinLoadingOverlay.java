@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -44,7 +45,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 	private void beforeRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 			//Manually call onRenderPre of the screen's menu handler, because it doesn't get called automatically in the loading screen
-			this.menuHandler.onRenderPre(new ScreenEvent.Render.Pre(Minecraft.getInstance().screen, matrix, mouseX, mouseY, partial));
+			this.menuHandler.onRenderPre(new RenderScreenEvent.Pre(Minecraft.getInstance().screen, matrix, mouseX, mouseY, partial));
 		}
 	}
 
@@ -56,7 +57,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 				Minecraft.getInstance().screen.renderBackground(matrix);
 			}
 			//Manually call onRenderPost of the screen's menu handler, because it doesn't get called automatically in the loading screen
-			this.menuHandler.onRenderPost(new ScreenEvent.Render.Post(Minecraft.getInstance().screen, matrix, mouseX, mouseY, partial));
+			this.menuHandler.onRenderPost(new RenderScreenEvent.Post(Minecraft.getInstance().screen, matrix, mouseX, mouseY, partial));
 		}
 	}
 

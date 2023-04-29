@@ -18,13 +18,13 @@ import net.minecraft.server.packs.resources.Resource;
 
 public class AdvancedAnimation implements IAnimationRenderer {
 	
-	private IAnimationRenderer introRenderer;
-	private IAnimationRenderer animationRenderer;
+	private final IAnimationRenderer introRenderer;
+	private final IAnimationRenderer animationRenderer;
 	private boolean started = false;
-	private String mainAudioPath;
-	private String introAudioPath;
+	private final String mainAudioPath;
+	private final String introAudioPath;
 	private boolean muted = false;
-	private boolean replayIntro;
+	private final boolean replayIntro;
 
 	public String propertiesPath = null;
 

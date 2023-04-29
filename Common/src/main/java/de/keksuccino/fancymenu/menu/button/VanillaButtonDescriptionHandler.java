@@ -7,35 +7,33 @@ import java.util.Map;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.EventPriority;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.client.event.ScreenEvent.Render;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class VanillaButtonDescriptionHandler {
 	
-	private static Map<AbstractWidget, String> descriptions = new HashMap<AbstractWidget , String>();
+	private static final Map<AbstractWidget, String> DESCRIPTIONS = new HashMap<>();
 	
 	public static void init() {
-		MinecraftForge.EVENT_BUS.register(new VanillaButtonDescriptionHandler());
+		EventHandler.INSTANCE.registerListenersOf(new VanillaButtonDescriptionHandler());
 	}
 
-	
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	@SubscribeEvent(priority = EventPriority.HIGHER)
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
-		descriptions.clear();
+		DESCRIPTIONS.clear();
 	}
 	
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onDrawScreen(Render.Post e) {
-		for (Map.Entry<AbstractWidget , String> m : descriptions.entrySet()) {
+	@SubscribeEvent(priority = -100)
+	public void onDrawScreen(RenderScreenEvent.Post e) {
+		for (Map.Entry<AbstractWidget , String> m : DESCRIPTIONS.entrySet()) {
 			if (m.getKey().isHoveredOrFocused()) {
 				renderDescription(e.getPoseStack(), e.getMouseX(), e.getMouseY(), m.getValue());
 				break;
@@ -44,7 +42,7 @@ public class VanillaButtonDescriptionHandler {
 	}
 	
 	public static void setDescriptionFor(AbstractWidget w, String desc) {
-		descriptions.put(w, desc);
+		DESCRIPTIONS.put(w, desc);
 	}
 	
 	private static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
@@ -52,48 +50,49 @@ public class VanillaButtonDescriptionHandler {
 	}
 	
 	private static void renderDescription(PoseStack matrix, int mouseX, int mouseY, String desc) {
-		if (desc != null) {
-			int width = 10;
-			int height = 10;
 
-			String[] descArray = StringUtils.splitLines(desc, "%n%");
-			
-			//Getting the longest string from the list to render the background with the correct width
-			for (String s : descArray) {
-				int i = Minecraft.getInstance().font.width(s) + 10;
-				if (i > width) {
-					width = i;
-				}
-				height += 10;
+		if (desc == null) return;
+
+		int width = 10;
+		int height = 10;
+
+		String[] descArray = StringUtils.splitLines(desc, "%n%");
+
+		//Getting the longest string from the list to render the background with the correct width
+		for (String s : descArray) {
+			int i = Minecraft.getInstance().font.width(s) + 10;
+			if (i > width) {
+				width = i;
 			}
-
-			mouseX += 5;
-			mouseY += 5;
-			
-			if (Minecraft.getInstance().screen.width < mouseX + width) {
-				mouseX -= width + 10;
-			}
-			
-			if (Minecraft.getInstance().screen.height < mouseY + height) {
-				mouseY -= height + 10;
-			}
-
-			RenderUtils.setZLevelPre(matrix, 600);
-			
-			renderDescriptionBackground(matrix, mouseX, mouseY, width, height);
-
-			RenderSystem.enableBlend();
-
-			int i2 = 5;
-			for (String s : descArray) {
-				GuiComponent.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
-				i2 += 10;
-			}
-
-			RenderUtils.setZLevelPost(matrix);
-			
-			RenderSystem.disableBlend();
+			height += 10;
 		}
+
+		mouseX += 5;
+		mouseY += 5;
+
+		if (Minecraft.getInstance().screen.width < mouseX + width) {
+			mouseX -= width + 10;
+		}
+
+		if (Minecraft.getInstance().screen.height < mouseY + height) {
+			mouseY -= height + 10;
+		}
+
+		RenderUtils.setZLevelPre(matrix, 600);
+
+		renderDescriptionBackground(matrix, mouseX, mouseY, width, height);
+
+		RenderSystem.enableBlend();
+
+		int i2 = 5;
+		for (String s : descArray) {
+			GuiComponent.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+			i2 += 10;
+		}
+
+		RenderUtils.setZLevelPost(matrix);
+		RenderSystem.disableBlend();
+
 	}
 	
 }

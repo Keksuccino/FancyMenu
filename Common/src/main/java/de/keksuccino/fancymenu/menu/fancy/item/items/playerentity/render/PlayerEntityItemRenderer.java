@@ -32,12 +32,9 @@ import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
-@OnlyIn(Dist.CLIENT)
 public class PlayerEntityItemRenderer extends PlayerRenderer {
 
     private static final EntityModelSet ENTITY_MODEL_SET = Minecraft.getInstance().getEntityModels();

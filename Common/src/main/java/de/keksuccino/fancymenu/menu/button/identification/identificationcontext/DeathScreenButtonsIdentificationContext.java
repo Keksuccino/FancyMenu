@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.DeathScreen;
 public class DeathScreenButtonsIdentificationContext extends MenuButtonsIdentificationContext {
 
     @Override
-    public Class getMenu() {
+    public Class<?> getMenu() {
         return DeathScreen.class;
     }
 

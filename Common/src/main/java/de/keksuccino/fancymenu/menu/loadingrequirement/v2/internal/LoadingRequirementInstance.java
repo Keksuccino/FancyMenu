@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal;
 
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;

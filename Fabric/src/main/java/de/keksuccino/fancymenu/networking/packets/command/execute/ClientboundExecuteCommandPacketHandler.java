@@ -1,7 +1,7 @@
 
 package de.keksuccino.fancymenu.networking.packets.command.execute;
 
-import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
+import de.keksuccino.fancymenu.utils.LocalPlayerUtils;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
@@ -21,7 +21,7 @@ public class ClientboundExecuteCommandPacketHandler {
             if ((msg.command != null) && msg.command.startsWith("/")) {
                 msg.command = msg.command.substring(1);
             }
-            MinecraftCompatibilityUtils.sendPlayerCommand(Minecraft.getInstance().player, msg.command);
+            LocalPlayerUtils.sendPlayerCommand(Minecraft.getInstance().player, msg.command);
         });
 
     }

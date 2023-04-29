@@ -14,7 +14,7 @@ public class AnimationData {
 		this.animation = animation;
 	}
 	
-	public static enum Type {
+	public enum Type {
 		INTERNAL,
 		EXTERNAL;
 	}

@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.Backgroun
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class MenuBackgroundType {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final String typeIdentifier;
 
@@ -57,7 +61,7 @@ public abstract class MenuBackgroundType {
     public void addBackground(MenuBackground background) {
         if (background != null) {
             if (this.backgrounds.containsKey(background.getIdentifier())) {
-                FancyMenu.LOGGER.warn("[FANCYMENU] WARNING! A menu background with the identifier '" + background.getIdentifier() + "' is already registered for the '" + this.getIdentifier() + "' background type! Overriding background!");
+                LOGGER.warn("[FANCYMENU] Menu background with the identifier '" + background.getIdentifier() + "' is already registered for the '" + this.getIdentifier() + "' background type! Overriding background!");
             }
             this.backgrounds.put(background.getIdentifier(), background);
         }
@@ -140,7 +144,6 @@ public abstract class MenuBackgroundType {
      * @param optionsPopup The active background options popup.
      */
     public void onInputStringButtonPress(LayoutEditorScreen handler, BackgroundOptionsPopup optionsPopup) {
-
         ChooseFilePopup cf = new ChooseFilePopup((call) -> {
             if (call != null) {
                 handler.history.saveSnapshot(handler.history.createSnapshot());
@@ -154,7 +157,6 @@ public abstract class MenuBackgroundType {
             cf.setText(handler.customMenuBackgroundInputString);
         }
         PopupHandler.displayPopup(cf);
-
     }
 
     /**

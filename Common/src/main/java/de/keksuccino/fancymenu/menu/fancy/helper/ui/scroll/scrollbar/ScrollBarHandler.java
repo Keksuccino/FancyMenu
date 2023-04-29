@@ -1,10 +1,10 @@
 
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar;
 
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
+import de.keksuccino.fancymenu.events.screen.MouseScrollScreenEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +21,7 @@ public class ScrollBarHandler {
 
     protected static void init() {
         if (!initialized) {
-            MinecraftForge.EVENT_BUS.register(new ScrollBarHandler());
+            EventHandler.INSTANCE.registerListenersOf(new ScrollBarHandler());
             initialized = true;
         }
     }
@@ -37,20 +37,18 @@ public class ScrollBarHandler {
     }
 
     @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent e) {
-        if (e.phase == TickEvent.Phase.END) {
-            List<ScrollBar> old = new ArrayList<>(scrollBars);
-            for (ScrollBar b : old) {
-                long now = System.currentTimeMillis();
-                if ((b.lastTick + 3000) < now) {
-                    scrollBars.remove(b);
-                }
+    public void onClientTick(ClientTickEvent.Post e) {
+        List<ScrollBar> old = new ArrayList<>(scrollBars);
+        for (ScrollBar b : old) {
+            long now = System.currentTimeMillis();
+            if ((b.lastTick + 3000) < now) {
+                scrollBars.remove(b);
             }
         }
     }
 
     @SubscribeEvent
-    public void onMouseScrollPre(ScreenEvent.MouseScrolled.Pre e) {
+    public void onMouseScrollPre(MouseScrollScreenEvent.Pre e) {
         List<ScrollBar> bars = new ArrayList<>(scrollBars);
         for (ScrollBar b : bars) {
             b.handleWheelScrolling(e);

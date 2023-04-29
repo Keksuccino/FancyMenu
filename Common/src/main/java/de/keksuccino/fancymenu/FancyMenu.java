@@ -4,8 +4,8 @@ import java.io.File;
 
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
-import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
+import de.keksuccino.fancymenu.window.WindowHandler;
+import de.keksuccino.fancymenu.menu.action.actions.Actions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
@@ -20,14 +20,12 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 
-import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.menu.fancy.music.GameMusicHandler;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
@@ -38,15 +36,11 @@ import de.keksuccino.konkrete.localization.Locals;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-// Completed Event Implementations:
-//  - InitOrResizeScreen
-//  - InitOrResizeScreenCompleted
-//  - RenderScreen
-//  - RenderScreenBackground
-//  - OpenScreen
-//  - ClientTickEvent
-//  -
+//TODO Rename isHoveredOrFocused() in Forge Konkrete:
+// - ScrollAreaEntry
+// - ContextMenu
 
+//TODO FIX: Main Menu not rendering correctly (check event system)
 
 public class FancyMenu {
 
@@ -94,7 +88,7 @@ public class FancyMenu {
 
 				DeepCustomizationLayers.registerAll();
 
-				ButtonActions.registerAll();
+				Actions.registerAll();
 
 				LoadingRequirements.registerAll();
 
@@ -122,7 +116,7 @@ public class FancyMenu {
 	        	MenuCustomization.init();
 
 				if (config.getOrDefault("enablehotkeys", true)) {
-					Keybinding.init();
+					KeyMappings.init();
 				}
 
 	        	ButtonScriptEngine.init();
@@ -131,11 +125,11 @@ public class FancyMenu {
 
 	        	VanillaButtonDescriptionHandler.init();
 
-				MainWindowHandler.handleForceFullscreen();
+				WindowHandler.handleForceFullscreen();
 
 				MenuBackgroundTypeRegistry.init();
 
-//				MinecraftForge.EVENT_BUS.register(new Test());
+//				EventHandler.INSTANCE.registerListenersOf(new Test());
 
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] OptiFine compatibility mode enabled!");
@@ -166,8 +160,6 @@ public class FancyMenu {
 			SetupSharingEngine.init();
 
 			CustomLocalsHandler.loadLocalizations();
-			
-	    	GameMusicHandler.init();
 
         	GuiConstructor.init();
 

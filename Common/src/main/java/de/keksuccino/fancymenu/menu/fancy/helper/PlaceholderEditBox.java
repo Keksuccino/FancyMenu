@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderRegistry;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -99,7 +100,7 @@ public class PlaceholderEditBox extends AdvancedTextField {
 		if (this.variableButton != null) {
 
 			this.variableButton.setWidth(this.height);
-			this.variableButton.setHeight(this.height);
+			((IMixinAbstractWidget)this.variableButton).setHeightFancyMenu(this.height);
 
 			super.renderWidget(matrix, mouseX, mouseY, partialTicks);
 

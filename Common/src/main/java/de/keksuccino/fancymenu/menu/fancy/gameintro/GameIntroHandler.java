@@ -1,16 +1,16 @@
 package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraftforge.common.MinecraftForge;
 
 public class GameIntroHandler {
 
 	public static boolean introDisplayed = false;
 	
 	public static void init() {
-		MinecraftForge.EVENT_BUS.register(new GameIntroEvents());
+		EventHandler.INSTANCE.registerListenersOf(new GameIntroEvents());
 	}
 	
 	/**

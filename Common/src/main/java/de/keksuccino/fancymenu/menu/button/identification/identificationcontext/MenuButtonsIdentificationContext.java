@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class MenuButtonsIdentificationContext {
 
-    public abstract Class getMenu();
+    public abstract Class<?> getMenu();
 
     @Nullable
     protected abstract String getRawCompatibilityIdentifierForButton(ButtonData data);

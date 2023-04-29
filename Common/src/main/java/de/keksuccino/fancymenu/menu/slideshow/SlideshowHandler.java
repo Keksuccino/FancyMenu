@@ -7,66 +7,94 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SlideshowHandler {
-	
-	private static Map<String, ExternalTextureSlideshowRenderer> slideshows = new HashMap<String, ExternalTextureSlideshowRenderer>();
+
+	private static final Logger LOGGER = LogManager.getLogger();
+
+	private static final Map<String, ExternalTextureSlideshowRenderer> SLIDESHOWS = new HashMap<>();
 	
 	public static void init() {
 		updateSlideshows();
-		
-		MinecraftForge.EVENT_BUS.register(new SlideshowHandler());
+		EventHandler.INSTANCE.registerListenersOf(new SlideshowHandler());
 	}
 	
 	public static void updateSlideshows() {
 		File f = FancyMenu.getSlideshowDirectory();
-		
-		slideshows.clear();
+		SLIDESHOWS.clear();
 		for (File f2 : f.listFiles()) {
 			if (f2.isDirectory()) {
 				File f3 = new File(f2.getPath() + "/properties.txt");
+				if (!f3.exists()) {
+					new File(f2.getPath() + "/properties.txt.txt");
+				}
 				File f4 = new File(f2.getPath() + "/images");
 				if (f3.exists() && f4.exists()) {
 					ExternalTextureSlideshowRenderer render = new ExternalTextureSlideshowRenderer(f2.getPath());
 					String name = render.getName();
 					if (name != null) {
 						render.prepareSlideshow();
-						slideshows.put(name, render);
+						SLIDESHOWS.put(name, render);
 					} else {
-						System.out.println("############## ERROR [FANCYMENU] ##############");
-						System.out.println("Invalid slideshow found: " + f2.getPath());
-						System.out.println("###############################################");
+						LOGGER.error(buildErrorMessage(f2, false, false, false) + " (name is empty/NULL)");
 					}
+				} else {
+					LOGGER.error(buildErrorMessage(f2, true, f3.exists(), f4.exists()));
 				}
+			} else {
+				LOGGER.error(buildErrorMessage(f2, false, false, false) + " (not a directory)");
 			}
 		}
 	}
+
+	private static String buildErrorMessage(File f, boolean addDetails, boolean propertiesFileFound, boolean imageDirFound) {
+		String msg = "[FANCYMENU] Invalid slideshow found: " + f.getName();
+		if (addDetails) {
+			String details = "";
+			if (!propertiesFileFound) {
+				details += "Missing \"properties.txt\" file";
+			}
+			if (!details.isEmpty()) {
+				details += "; ";
+			}
+			if (!imageDirFound) {
+				details += "Missing \"images\" directory";
+			}
+			if (!details.isEmpty()) {
+				msg += " (" + details + ")";
+			}
+		}
+		return msg;
+	}
 	
 	public static ExternalTextureSlideshowRenderer getSlideshow(String name) {
-		return slideshows.get(name);
+		return SLIDESHOWS.get(name);
 	}
 	
 	public static List<ExternalTextureSlideshowRenderer> getSlideshows() {
 		List<ExternalTextureSlideshowRenderer> l = new ArrayList<ExternalTextureSlideshowRenderer>();
-		l.addAll(slideshows.values());
+		l.addAll(SLIDESHOWS.values());
 		return l;
 	}
 	
 	public static List<String> getSlideshowNames() {
 		List<String> l = new ArrayList<String>();
-		l.addAll(slideshows.keySet());
+		l.addAll(SLIDESHOWS.keySet());
 		return l;
 	}
 	
 	public static boolean slideshowExists(String name) {
-		return slideshows.containsKey(name);
+		return SLIDESHOWS.containsKey(name);
 	}
 	
 	@SubscribeEvent
-	public void onMenuReload(MenuReloadedEvent e) {
+	public void onMenuReload(MenuReloadEvent e) {
+		LOGGER.info("[FANCYMENU] Reloading slideshows..");
 		updateSlideshows();
 	}
 

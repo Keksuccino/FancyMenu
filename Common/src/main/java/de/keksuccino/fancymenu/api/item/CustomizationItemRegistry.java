@@ -1,10 +1,13 @@
 package de.keksuccino.fancymenu.api.item;
 
-import de.keksuccino.fancymenu.FancyMenu;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 public class CustomizationItemRegistry {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static Map<String, CustomizationItemContainer> customizationItems = new LinkedHashMap<>();
 
@@ -15,11 +18,11 @@ public class CustomizationItemRegistry {
         if (item != null) {
             if (item.getIdentifier() != null) {
                 if (customizationItems.containsKey(item.getIdentifier())) {
-                    FancyMenu.LOGGER.warn("[FANCYMENU] WARNING! A customization item with the identifier '" + item.getIdentifier() + "' is already registered! Overriding item!");
+                    LOGGER.warn("[FANCYMENU] Customization item with identifier '" + item.getIdentifier() + "' is already registered! Overriding item!");
                 }
                 customizationItems.put(item.getIdentifier(), item);
             } else {
-                FancyMenu.LOGGER.error("[FANCYMENU] ERROR! Item identifier cannot be null for CustomizationItemContainers!");
+                LOGGER.error("[FANCYMENU] Item identifier cannot be NULL for CustomizationItemContainers!");
             }
         }
     }

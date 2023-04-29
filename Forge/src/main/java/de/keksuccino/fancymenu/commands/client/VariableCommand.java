@@ -6,7 +6,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
-import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -14,7 +14,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -28,7 +27,7 @@ public class VariableCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         if (!initialized) {
-            MinecraftForge.EVENT_BUS.register(new VariableCommand());
+            EventHandler.INSTANCE.registerListenersOf(new VariableCommand());
             initialized = true;
         }
         d.register(Commands.literal("fmvariable")

@@ -11,8 +11,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -22,9 +24,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class SplashTextCustomizationItem extends CustomizationItemBase {
 
@@ -54,7 +53,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		super(item);
 		
 		if (!init) {
-			MinecraftForge.EVENT_BUS.register(SplashTextCustomizationItem.class);
+			EventHandler.INSTANCE.registerListenersOf(SplashTextCustomizationItem.class);
 			init = true;
 		}
 		
@@ -239,7 +238,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	}
 	
 	@SubscribeEvent
-	public static void onMenuReloaded(MenuReloadedEvent e) {
+	public static void onMenuReloaded(MenuReloadEvent e) {
 		splashCache.clear();
 	}
 

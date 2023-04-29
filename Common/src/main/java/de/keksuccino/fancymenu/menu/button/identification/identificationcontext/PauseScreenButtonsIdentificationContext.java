@@ -4,12 +4,11 @@ import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.PauseScreen;
-import net.minecraft.network.chat.Component;
 
 public class PauseScreenButtonsIdentificationContext extends MenuButtonsIdentificationContext {
 
     @Override
-    public Class getMenu() {
+    public Class<?> getMenu() {
         return PauseScreen.class;
     }
 

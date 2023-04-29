@@ -93,7 +93,7 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
 
             int center = this.x + (this.getWidth() / 2);
 
-            if (!this.isHoveredOrFocused()) {
+            if (!this.isHovered()) {
                 fill(matrix, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), ENTRY_BACKGROUND_COLOR.getRGB());
             } else {
                 fill(matrix, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), ENTRY_BACKGROUND_COLOR.brighter().brighter().getRGB());
@@ -116,7 +116,7 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
 
             if (!PopupHandler.isPopupActive() && !this.parentScreen.backButton.isHoveredOrFocused()) {
                 if (MouseInput.isLeftMouseDown() && !this.isMouseDown) {
-                    if (this.isHoveredOrFocused()) {
+                    if (this.isHovered()) {
                         if (this.parentScreen.callback != null) {
                             this.parentScreen.callback.accept(this.entryValue);
                         }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -16,7 +17,7 @@ public class FMContextMenu extends ContextMenu {
 	protected int cachedScreenWidth = 0;
 	protected int cachedScreenHeight = 0;
 	
-	protected List<Integer> separators = new ArrayList<Integer>();
+	protected List<Integer> separators = new ArrayList<>();
 	
 	public FMContextMenu() {
 		super(20, 20, 0);
@@ -146,15 +147,15 @@ public class FMContextMenu extends ContextMenu {
 	public int getY() {
 		return this.y;
 	}
-	
+
 	@Override
-	public boolean isHoveredOrFocused() {
+	public boolean isHovered() {
 		for (ContextMenu c : this.children) {
-			if (c.isHoveredOrFocused()) {
+			if (c.isHovered()) {
 				return true;
 			}
 		}
-		return super.isHoveredOrFocused();
+		return super.isHovered();
 	}
 	
 }

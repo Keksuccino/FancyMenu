@@ -35,8 +35,8 @@ minecraft {
 //            property 'mixin.env.remapRefMap', 'true'
 //            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces', 'konkrete'
-            arg "-mixin.config=${mod_id}.mixin.json"
-            //arg "-mixin.config=${mod_id}.forge.mixin.json"
+//            arg "-mixin.config=${mod_id}.mixin.json"
+//            arg "-mixin.config=${mod_id}.forge.mixin.json"
             mods {
                 modClientRun {
                     source sourceSets.main
@@ -51,8 +51,8 @@ minecraft {
 //            property 'mixin.env.remapRefMap', 'true'
 //            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces', 'konkrete'
-            arg "-mixin.config=${mod_id}.mixin.json"
-            //arg "-mixin.config=${mod_id}.forge.mixin.json"
+//            arg "-mixin.config=${mod_id}.mixin.json"
+//            arg "-mixin.config=${mod_id}.forge.mixin.json"
             mods {
                 modServerRun {
                     source sourceSets.main
@@ -87,7 +87,7 @@ dependencies {
 mixin {
     add sourceSets.main, "${mod_id}.mixin-refmap.json"
     config "${mod_id}.mixin.json"
-    //config "${mod_id}.forge.mixin.json"
+    config "${mod_id}.forge.mixin.json"
 }
 
 tasks.withType(JavaCompile) {

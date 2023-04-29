@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.other;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.web.WebUtils;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -29,17 +29,17 @@ public class WebTextPlaceholder extends Placeholder {
     public WebTextPlaceholder() {
         super("webtext");
         if (!eventsRegistered) {
-            MinecraftForge.EVENT_BUS.register(WebTextPlaceholder.class);
+            EventHandler.INSTANCE.registerListenersOf(WebTextPlaceholder.class);
             eventsRegistered = true;
         }
     }
 
     @SubscribeEvent
-    public static void onReload(MenuReloadedEvent e) {
+    public static void onReload(MenuReloadEvent e) {
         try {
             cachedPlaceholders.clear();
             invalidWebPlaceholderLinks.clear();
-            LOGGER.info("V2 WebTextPlaceholder cache successfully cleared!");
+            LOGGER.info("[FANCYMENU] V2 WebTextPlaceholder cache successfully cleared!");
         } catch (Exception ex) {
             ex.printStackTrace();
         }

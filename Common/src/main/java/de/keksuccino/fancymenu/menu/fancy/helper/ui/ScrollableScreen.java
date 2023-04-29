@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
@@ -179,7 +180,7 @@ public class ScrollableScreen extends Screen {
         }
 
         public boolean isOverlayButtonHoveredAndOverlapsArea() {
-            return (this.isOverlayButtonHovered && this.isHoveredOrFocused());
+            return (this.isOverlayButtonHovered && this.isHovered());
         }
 
         public void setDescription(List<String> desc) {
@@ -215,7 +216,7 @@ public class ScrollableScreen extends Screen {
                     this.button.active = false;
                 }
                 this.button.setWidth(200);
-                this.button.setHeight(20);
+                ((IMixinAbstractWidget)this.button).setHeightFancyMenu(20);
                 this.button.setX(xCenter - (this.button.getWidth() / 2));
                 this.button.setY(render.entry.y + 2);
                 this.button.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
@@ -241,7 +242,7 @@ public class ScrollableScreen extends Screen {
                     this.textField.active = false;
                 }
                 this.textField.setWidth(200);
-                this.textField.setHeight(20);
+                ((IMixinAbstractWidget)this.textField).setHeightFancyMenu(20);
                 this.textField.setX(xCenter - (this.textField.getWidth() / 2));
                 this.textField.setY(render.entry.y + 2);
                 this.textField.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());

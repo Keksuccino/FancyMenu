@@ -1,5 +1,10 @@
 package de.keksuccino.fancymenu.platform.services;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.KeyMapping;
+
+import java.util.List;
+
 public interface IPlatformHelper {
 
     /**
@@ -17,6 +22,12 @@ public interface IPlatformHelper {
      */
     boolean isModLoaded(String modId);
 
+    /** Get the version of a mod. **/
+    String getModVersion(String modId);
+
+    /** A list with mod IDs of all loaded mods. **/
+    List<String> getLoadedModIds();
+
     /**
      * Check if the game is currently in a development environment.
      *
@@ -24,10 +35,11 @@ public interface IPlatformHelper {
      */
     boolean isDevelopmentEnvironment();
 
-    /**
-     * If the mod is loaded client-side.
-     **/
+    /** If the mod is loaded client-side. **/
     boolean isOnClient();
+
+    /** Get the key of a {@link KeyMapping}. **/
+    InputConstants.Key getKeyMappingKey(KeyMapping keyMapping);
 
     /**
      * Gets the name of the environment type as a string.

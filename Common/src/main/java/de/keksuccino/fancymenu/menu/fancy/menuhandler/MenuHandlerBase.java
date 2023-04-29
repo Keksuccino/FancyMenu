@@ -32,11 +32,11 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.events.widget.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.widget.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
-import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -44,7 +44,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.ButtonCustomizationItem;
@@ -63,7 +63,7 @@ import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
-import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
+import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -171,7 +171,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@SubscribeEvent
-	public void onMenuReloaded(MenuReloadedEvent e) {
+	public void onMenuReloaded(MenuReloadEvent e) {
 		this.delayAppearanceFirstTimeVanilla.clear();
 		this.delayAppearanceFirstTime.clear();
 		this.delayAppearanceVanilla.clear();
@@ -269,7 +269,7 @@ public class MenuHandlerBase extends GuiComponent {
 				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
 				if (cusMenuTitle != null) {
 					this.customMenuTitle = cusMenuTitle;
-					ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
+					ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
 				}
 			}
 			
@@ -278,7 +278,7 @@ public class MenuHandlerBase extends GuiComponent {
 				biggerthanwidth = biggerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanwidth)) {
 					int i = Integer.parseInt(biggerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() < i) {
+					if (WindowHandler.getWindowGuiWidth() < i) {
 						continue;
 					}
 				}
@@ -288,7 +288,7 @@ public class MenuHandlerBase extends GuiComponent {
 				biggerthanheight = biggerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanheight)) {
 					int i = Integer.parseInt(biggerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() < i) {
+					if (WindowHandler.getWindowGuiHeight() < i) {
 						continue;
 					}
 				}
@@ -298,7 +298,7 @@ public class MenuHandlerBase extends GuiComponent {
 				smallerthanwidth = smallerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanwidth)) {
 					int i = Integer.parseInt(smallerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() > i) {
+					if (WindowHandler.getWindowGuiWidth() > i) {
 						continue;
 					}
 				}
@@ -308,7 +308,7 @@ public class MenuHandlerBase extends GuiComponent {
 				smallerthanheight = smallerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanheight)) {
 					int i = Integer.parseInt(smallerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() > i) {
+					if (WindowHandler.getWindowGuiHeight() > i) {
 						continue;
 					}
 				}
@@ -444,7 +444,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@SubscribeEvent
-	public void onButtonsCached(ButtonCachedEvent e) {
+	public void onButtonsCached(ButtonCacheUpdatedEvent e) {
 
 		if (e.getScreen() != Minecraft.getInstance().screen) {
 			return;
@@ -621,22 +621,9 @@ public class MenuHandlerBase extends GuiComponent {
 			}
 		}
 
-		//Cache custom buttons
-		ButtonCache.clearCustomButtonCache();
-		for (CustomizationItemBase c : this.backgroundRenderItems) {
-			if (c instanceof ButtonCustomizationItem) {
-				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
-			}
-		}
-		for (CustomizationItemBase c : this.frontRenderItems) {
-			if (c instanceof ButtonCustomizationItem) {
-				ButtonCache.cacheCustomButton(c.getActionId(), ((ButtonCustomizationItem) c).button);
-			}
-		}
-
 	}
 
-	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
+	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCacheUpdatedEvent e) {
 
 		String action = sec.getEntryValue("action");
 		if (action != null) {
@@ -1276,7 +1263,7 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 
 		if ((this.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
-			ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle)));
+			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle)));
 		}
 
 		if (!this.backgroundDrawable) {
@@ -1433,7 +1420,7 @@ public class MenuHandlerBase extends GuiComponent {
 					
 					float opacity = this.panoramacube.opacity;
 					this.panoramacube.opacity = this.backgroundOpacity;
-					this.panoramacube.render();
+					this.panoramacube.render(matrix);
 					this.panoramacube.opacity = opacity;
 					//-----------------
 

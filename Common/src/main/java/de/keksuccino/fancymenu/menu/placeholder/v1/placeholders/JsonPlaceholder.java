@@ -2,14 +2,14 @@
 package de.keksuccino.fancymenu.menu.placeholder.v1.placeholders;
 
 import de.keksuccino.fancymenu.api.placeholder.PlaceholderTextContainer;
-import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,17 +36,17 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
     public JsonPlaceholder() {
         super("fancymenu_placeholder_json");
         if (!eventsRegistered) {
-            MinecraftForge.EVENT_BUS.register(JsonPlaceholder.class);
+            EventHandler.INSTANCE.registerListenersOf(JsonPlaceholder.class);
             eventsRegistered = true;
         }
     }
 
     @SubscribeEvent
-    public static void onReload(MenuReloadedEvent e) {
+    public static void onReload(MenuReloadEvent e) {
         try {
             cachedPlaceholders.clear();
             invalidWebPlaceholderLinks.clear();
-            LOGGER.info("JsonPlaceholder cache successfully cleared!");
+            LOGGER.info("[FANCYMENU] JsonPlaceholder cache successfully cleared!");
         } catch (Exception ex) {
             ex.printStackTrace();
         }

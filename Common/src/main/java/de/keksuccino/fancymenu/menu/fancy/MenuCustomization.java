@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
@@ -26,7 +27,6 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.common.MinecraftForge;
 
 public class MenuCustomization {
 
@@ -50,7 +50,7 @@ public class MenuCustomization {
 	public static void init() {
 		if (!initDone) {
 			//Registering (base) events for the MenuCustomization system
-			MinecraftForge.EVENT_BUS.register(eventsInstance);
+			EventHandler.INSTANCE.registerListenersOf(eventsInstance);
 			
 			//Registering all custom menu handlers
 			MenuHandlerRegistry.registerHandler(new MainMenuHandler());
@@ -60,12 +60,12 @@ public class MenuCustomization {
 			MenuHandlerRegistry.registerHandler(new PauseScreenHandler());
 			
 			//Registering event to automatically register handlers for all menus (its necessary to do this AFTER registering custom handlers!)
-			MinecraftForge.EVENT_BUS.register(new MenuHandlerEvents());
+			EventHandler.INSTANCE.registerListenersOf(new MenuHandlerEvents());
 			
 			CustomizationHelper.init();
 			
 			//Registering the update event for the button cache
-			MinecraftForge.EVENT_BUS.register(new ButtonCache());
+			EventHandler.INSTANCE.registerListenersOf(new ButtonCache());
 			
 			//Caching menu customization properties from config/fancymain/customization
 			MenuCustomizationProperties.loadProperties();

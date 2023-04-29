@@ -2,13 +2,13 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.events.acara.EventHandler;
-import de.keksuccino.fancymenu.events.game.ClientTickEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.OpenScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 
 @Mixin(value = Minecraft.class)
@@ -74,14 +74,14 @@ public class MixinMinecraft {
 
 		if (FancyMenu.getConfig() != null) {
 			if (!customWindowInit) {
-				MainWindowHandler.init();
-				MainWindowHandler.updateWindowIcon();
-				MainWindowHandler.updateWindowTitle();
+				WindowHandler.init();
+				WindowHandler.updateWindowIcon();
+				WindowHandler.updateWindowTitle();
 				customWindowInit = true;
 			}
 		}
 		
-		String title = MainWindowHandler.getCustomWindowTitle();
+		String title = WindowHandler.getCustomWindowTitle();
 		if (title != null) {
 			info.setReturnValue(title);
 		}

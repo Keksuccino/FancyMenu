@@ -1,24 +1,27 @@
 package de.keksuccino.fancymenu.api.placeholder;
 
-import de.keksuccino.fancymenu.FancyMenu;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
 @Deprecated
 public class PlaceholderTextRegistry {
 
-    private static Map<String, PlaceholderTextContainer> placeholders = new LinkedHashMap<>();
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final Map<String, PlaceholderTextContainer> PLACEHOLDERS = new LinkedHashMap<>();
 
     @Deprecated
     public static void registerPlaceholder(PlaceholderTextContainer placeholder) {
         if (placeholder != null) {
             if (placeholder.getIdentifier() != null) {
-                if (placeholders.containsKey(placeholder.getIdentifier())) {
-                    FancyMenu.LOGGER.warn("[FANCYMENU] WARNING! A placeholder text with the identifier '" + placeholder.getIdentifier() + "' is already registered! Overriding item!");
+                if (PLACEHOLDERS.containsKey(placeholder.getIdentifier())) {
+                    LOGGER.warn("[FANCYMENU] Placeholder text with identifier '" + placeholder.getIdentifier() + "' is already registered! Overriding item!");
                 }
-                placeholders.put(placeholder.getIdentifier(), placeholder);
+                PLACEHOLDERS.put(placeholder.getIdentifier(), placeholder);
             } else {
-                FancyMenu.LOGGER.error("[FANCYMENU] ERROR! Placeholder identifier cannot be null for PlaceholderTextContainers!");
+                LOGGER.error("[FANCYMENU] Placeholder identifier cannot be NULL for PlaceholderTextContainers!");
             }
         }
     }
@@ -28,7 +31,7 @@ public class PlaceholderTextRegistry {
      */
     @Deprecated
     public static void unregisterPlaceholder(String placeholderIdentifier) {
-        placeholders.remove(placeholderIdentifier);
+        PLACEHOLDERS.remove(placeholderIdentifier);
     }
 
     /**
@@ -37,7 +40,7 @@ public class PlaceholderTextRegistry {
     @Deprecated
     public static List<PlaceholderTextContainer> getPlaceholders() {
         List<PlaceholderTextContainer> l = new ArrayList<>();
-        l.addAll(placeholders.values());
+        l.addAll(PLACEHOLDERS.values());
         return l;
     }
 
@@ -46,7 +49,7 @@ public class PlaceholderTextRegistry {
      */
     @Deprecated
     public static PlaceholderTextContainer getPlaceholder(String placeholderIdentifier) {
-        return placeholders.get(placeholderIdentifier);
+        return PLACEHOLDERS.get(placeholderIdentifier);
     }
 
 }

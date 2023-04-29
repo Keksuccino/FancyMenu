@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal;
 
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -10,22 +9,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-//TODO Neues Loading Requirement UI:
-// - Loading Requirement entry in element context menu
-//   - Öffnet Manage Requirement Screen
-//     - Links von Screen: ScrollArea Liste, die oben Gruppen und unten einzelne Requirements beinhaltet
-//       - Liste passt sich an Breite von linker Screen Hälfte an
-//       - Requirements haben andere Entry Farbe als Groups
-//     - Rechts von Screen: Controls für List Entries
-//       - Add Requirement (Öffnet Add Requirement screen)
-//         - Links liste mit allen requirements
-//         - Rechts oben box mit beschreibung von requirement, wenn eins ausgewählt
-//         - Rechts unten controls für Set Value, Done, etc.
-//       - Add Group (Öffnet Add Group screen, in dem Identifier, Mode und children verwaltet werden)
-//       - Edit (Öffnet je nach focused entry Add Group oder Add Requirement Screen; beide screens sind ausgefüllt mit Daten von Entry)
-//       - Remove (löscht je nach Entry Typ die ausgewählte Gruppe oder das Requirement)
-//       - Done (schließt menü)
 
 public class LoadingRequirementContainer {
 

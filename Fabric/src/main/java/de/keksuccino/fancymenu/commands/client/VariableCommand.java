@@ -7,7 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.ServerboundVariableCommandSuggestionsPacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
-import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.command.CommandUtils;
 import de.keksuccino.konkrete.events.SubscribeEvent;

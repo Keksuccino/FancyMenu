@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.menu.fancy.gameintro;
 
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class GameIntroEvents {
 
@@ -33,7 +32,7 @@ public class GameIntroEvents {
 	}
 
 	@SubscribeEvent
-	public void onClientTick(TickEvent.ClientTickEvent e) {
+	public void onClientTick(ClientTickEvent.Pre e) {
 		if (!GameIntroHandler.introDisplayed && (Minecraft.getInstance().level != null)) {
 			GameIntroHandler.introDisplayed = true;
 		}

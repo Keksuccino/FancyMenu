@@ -27,11 +27,11 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	private String name = null;
 	public String dir;
 	private boolean prepared = false;
-	private List<ExternalTextureResourceLocation> pano = new ArrayList<ExternalTextureResourceLocation>();
+	private final List<ExternalTextureResourceLocation> panoramaImageLocations = new ArrayList<>();
 	private float speed = 1.0F;
 	private double fov = 85.0D;
 	private float angle = 25.0F;
-	private Minecraft mc = Minecraft.getInstance();
+	private final Minecraft mc = Minecraft.getInstance();
 	
 	public float opacity = 1.0F;
 
@@ -99,7 +99,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					File f = new File(this.dir + "/panorama/panorama_" + i + ".png");
 					if (f.exists() && f.isFile()) {
 						ExternalTextureResourceLocation r = new ExternalTextureResourceLocation(f.getPath());
-						this.pano.add(r);
+						this.panoramaImageLocations.add(r);
 
 					} else {
 						System.out.println("############## ERROR [FANCYMENU] ##############");
@@ -122,17 +122,16 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 		}
 	}
 
-	public void render() {
+	public void render(PoseStack matrix) {
 		try {
 			
-			this.renderRaw(this.opacity);
+			this.renderRaw(matrix, this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	@SuppressWarnings("resource")
-	public void renderRaw(float panoramaAlpha) {
+	public void renderRaw(PoseStack matrix, float panoramaAlpha) {
 		if (this.prepared) {
 
 			this.time += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
@@ -168,7 +167,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
 				RenderSystem.applyModelViewMatrix();
 				for (int n = 0; n < 6; ++n) {
-					ExternalTextureResourceLocation r = this.pano.get(n);
+					ExternalTextureResourceLocation r = this.panoramaImageLocations.get(n);
 					if (r != null) {
 						if (!r.isReady()) {
 							r.loadTexture();
@@ -235,11 +234,10 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					this.overlay_texture.loadTexture();
 				}
 				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
-				blit(CurrentScreenHandler.getPoseStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+				blit(matrix, 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}

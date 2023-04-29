@@ -8,6 +8,11 @@ import java.util.*;
 import com.google.common.io.Files;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.events.acara.EventPriority;
+import de.keksuccino.fancymenu.events.acara.SubscribeEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -16,7 +21,7 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
-import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
@@ -26,23 +31,19 @@ import de.keksuccino.konkrete.resources.ITextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CustomizationHelper {
 	
 	public static void init() {
 		
-		MinecraftForge.EVENT_BUS.register(new CustomizationHelper());
+		EventHandler.INSTANCE.registerListenersOf(new CustomizationHelper());
 
 		CustomizationHelperUI.init();
 		
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOW)
-	public void onRenderPost(ScreenEvent.Render.Post e) {
+	public void onRenderPost(RenderScreenEvent.Post e) {
 
 		if (!MenuCustomization.isBlacklistedMenu(e.getScreen().getClass().getName())) {
 			if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
@@ -80,7 +81,7 @@ public class CustomizationHelper {
 			CustomizationHelperUI.showMenuInfo = false;
 		}
 
-		EventHandler.INSTANCE.postEvent(new MenuReloadedEvent(Minecraft.getInstance().screen));
+		EventHandler.INSTANCE.postEvent(new MenuReloadEvent(Minecraft.getInstance().screen));
 		
 		try {
 			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);

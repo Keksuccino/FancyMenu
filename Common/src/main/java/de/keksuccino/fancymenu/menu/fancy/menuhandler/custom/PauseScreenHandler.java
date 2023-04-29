@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
+import de.keksuccino.fancymenu.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinPauseScreen;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.client.event.ScreenEvent;
 
 public class PauseScreenHandler extends MenuHandlerBase {
 
@@ -16,13 +15,12 @@ public class PauseScreenHandler extends MenuHandlerBase {
     }
 
     @Override
-    protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCachedEvent e) {
+    protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCacheUpdatedEvent e) {
         if (this.customizePauseScreen(e.getScreen())) {
             super.applyLayout(sec, renderOrder, e);
         }
     }
 
-    
     @Override
     protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
         if (this.customizePauseScreen(e.getScreen())) {

@@ -21,8 +21,12 @@ import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class WebTextureCustomizationItem extends CustomizationItemBase {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static Map<String, WebTextureResourceLocation> cachedWebImages = new HashMap<>();
 
@@ -91,7 +95,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 								if ((this.texture != null) && (texture.getResourceLocation() == null)) {
 									this.texture = null;
-									FancyMenu.LOGGER.error("[FANCYMENU] Web texture loaded but resource location was still null! Unable to use web texture!");
+									LOGGER.error("[FANCYMENU] Web texture loaded but resource location was NULL! Unable to use web texture!");
 								}
 
 								this.calculateAspectRatio();

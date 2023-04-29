@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
 import de.keksuccino.konkrete.properties.PropertiesSection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -19,6 +21,8 @@ import java.util.List;
  * renders the {@link CustomizationItem} instance to the editor.
  */
 public abstract class LayoutEditorElement extends LayoutElement {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public final CustomizationItemContainer parentItemContainer;
 
@@ -90,7 +94,7 @@ public abstract class LayoutEditorElement extends LayoutElement {
             sec = new SimplePropertiesSection();
         }
         if (sec.hasEntry("action")) {
-            FancyMenu.LOGGER.warn("[FANCYMENU] WARNING! Entry key 'action' for serialized customization item instances is reserved by the system. Overriding entry!");
+            LOGGER.warn("[FANCYMENU] Entry key 'action' for serialized customization item instances is reserved by the system. Overriding entry!");
             sec.removeEntry("action");
         }
         sec.addEntry("action", "custom_layout_element:" + this.parentItemContainer.getIdentifier());

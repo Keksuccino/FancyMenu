@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.utils.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -231,13 +232,12 @@ public class TextCustomizationItem extends CustomizationItem {
                     RenderSystem.enableBlend();
 
                     if (this.scrollArea != null) {
-                        
                         this.scrollArea.customGuiScale = this.customGuiScale;
                         this.scrollArea.setX(this.getPosX(menu), true);
                         this.scrollArea.setY(this.getPosY(menu), true);
                         this.scrollArea.setWidth(this.getWidth(), true);
                         this.scrollArea.setHeight(this.getHeight(), true);
-                        this.scrollArea.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getPartialTick());
+                        this.scrollArea.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick());
                     }
 
                 } else if (isEditorActive()) {

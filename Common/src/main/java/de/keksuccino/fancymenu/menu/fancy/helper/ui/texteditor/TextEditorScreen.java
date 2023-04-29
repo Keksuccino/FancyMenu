@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderRegistry;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -197,7 +198,7 @@ public class TextEditorScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
         if (showPlaceholderMenu) {
             this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
-            this.placeholderButton.setHeight(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
+            ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
         }
 
     }
@@ -649,7 +650,7 @@ public class TextEditorScreen extends Screen {
                 line.setY(this.headerHeight + (this.lineHeight * index) + this.getLineRenderOffsetY());
                 line.setX(this.borderLeft + this.getLineRenderOffsetX());
                 line.setWidth(this.currentLineWidth);
-                line.setHeight(this.lineHeight);
+                ((IMixinAbstractWidget)line).setHeightFancyMenu(this.lineHeight);
                 line.getAsAccessor().setDisplayPosFancyMenu(0);
                 if (doAfterEachLineUpdate != null) {
                     doAfterEachLineUpdate.accept(line);
@@ -1291,7 +1292,7 @@ public class TextEditorScreen extends Screen {
                     if (button == 1) {
                         this.updateRightClickContextMenu();
                         UIBase.openScaledContextMenuAtMouse(this.rightClickContextMenu);
-                    } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHoveredOrFocused()) {
+                    } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHovered()) {
                         this.rightClickContextMenu.closeMenu();
                         //Call mouseClicked of lines after closing the menu, so the focused line and cursor pos gets updated
                         this.textFieldLines.forEach((line) -> {

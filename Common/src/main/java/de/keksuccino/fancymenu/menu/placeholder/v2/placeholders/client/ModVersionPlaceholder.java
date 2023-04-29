@@ -2,10 +2,9 @@ package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.client;
 
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,14 +25,7 @@ public class ModVersionPlaceholder extends Placeholder {
     }
 
     private String getModVersion(String modid) {
-        if (ModList.get().isLoaded(modid)) {
-            Optional<? extends ModContainer> o = ModList.get().getModContainerById(modid);
-            if (o.isPresent()) {
-                ModContainer c = o.get();
-                return c.getModInfo().getVersion().toString();
-            }
-        }
-        return null;
+        return Services.PLATFORM.getModVersion(modid);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.client;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraftforge.versions.mcp.MCPVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +19,7 @@ public class MinecraftVersionPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return MCPVersion.getMCVersion();
+        return FancyMenu.getMinecraftVersion();
     }
 
     @Override

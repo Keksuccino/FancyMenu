@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.menu.button;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
@@ -18,7 +17,7 @@ import java.util.Map;
 
 public class ButtonMimeHandler {
 
-    private static Logger LOGGER = LogManager.getLogger("fancymenu/ButtonMimeHandler");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static Map<String, ButtonPackage> cachedButtons = new HashMap<>();
 
@@ -64,9 +63,9 @@ public class ButtonMimeHandler {
 
     public static ButtonData getButton(String buttonLocator) {
         if (buttonLocator.contains(":")) {
-            String menuIdentifier = buttonLocator.split("[:]", 2)[0];
+            String menuIdentifier = buttonLocator.split(":", 2)[0];
             menuIdentifier = MenuCustomization.getValidMenuIdentifierFor(menuIdentifier);
-            String buttonId = buttonLocator.split("[:]", 2)[1];
+            String buttonId = buttonLocator.split(":", 2)[1];
             if (MathUtils.isLong(buttonId) || (buttonId.startsWith("button_compatibility_id:"))) {
                 Screen current = Minecraft.getInstance().screen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
