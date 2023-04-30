@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.api.item;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
+import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.elements.LayoutElement;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

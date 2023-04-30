@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "client.MixinForgeGameRenderer"
   ],
   "injectors": {
     "defaultRequire": 1

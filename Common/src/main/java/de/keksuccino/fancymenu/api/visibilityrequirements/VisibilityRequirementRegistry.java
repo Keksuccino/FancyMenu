@@ -1,9 +1,9 @@
 
 package de.keksuccino.fancymenu.api.visibilityrequirements;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry;
+import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 /**
- * DEPRECATED! Use {@link de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry} instead!
+ * DEPRECATED! Use {@link de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry} instead!
  */
 @Deprecated
 public class VisibilityRequirementRegistry {
@@ -22,7 +22,7 @@ public class VisibilityRequirementRegistry {
     protected static LinkedHashMap<String, VisibilityRequirement> requirements = new LinkedHashMap<>();
 
     /**
-     * DEPRECATED! Use {@link de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry} instead!
+     * DEPRECATED! Use {@link de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry} instead!
      */
     @Deprecated
     public static void registerRequirement(VisibilityRequirement requirement) {
@@ -41,7 +41,7 @@ public class VisibilityRequirementRegistry {
     }
 
     /**
-     * DEPRECATED! Use {@link de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry} instead!
+     * DEPRECATED! Use {@link de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry} instead!
      */
     @Deprecated
     public static void unregisterRequirement(String requirementIdentifier) {
@@ -50,7 +50,7 @@ public class VisibilityRequirementRegistry {
     }
 
     /**
-     * DEPRECATED! Use {@link de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry} instead!
+     * DEPRECATED! Use {@link de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry} instead!
      */
     @Deprecated
     public static List<VisibilityRequirement> getRequirements() {
@@ -62,7 +62,7 @@ public class VisibilityRequirementRegistry {
     }
 
     /**
-     * DEPRECATED! Use {@link de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry} instead!
+     * DEPRECATED! Use {@link de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry} instead!
      */
     @Deprecated
     public static VisibilityRequirement getRequirement(String requirementIdentifier) {

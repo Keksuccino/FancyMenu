@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.events.acara.EventHandler;
+import de.keksuccino.fancymenu.event.acara.EventHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.sounds.SoundManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,8 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import de.keksuccino.fancymenu.events.widget.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.widget.RenderWidgetEvent;
+import de.keksuccino.fancymenu.event.events.widget.PlayWidgetClickSoundEvent;
+import de.keksuccino.fancymenu.event.events.widget.RenderWidgetEvent;
 import net.minecraft.client.gui.GuiComponent;
 
 @Mixin(value = AbstractWidget.class)

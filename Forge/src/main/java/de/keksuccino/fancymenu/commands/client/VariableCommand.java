@@ -3,7 +3,10 @@ package de.keksuccino.fancymenu.commands.client;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.menu.variables.VariableHandler;
+import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.event.acara.SubscribeEvent;
+import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
@@ -14,8 +17,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -106,7 +107,7 @@ public class VariableCommand {
     }
 
     @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent e) {
+    public void onClientTick(ClientTickEvent.Post e) {
 
         Screen s = Minecraft.getInstance().screen;
         if ((s instanceof ChatScreen) && ((lastScreen == null) || (lastScreen != s))) {

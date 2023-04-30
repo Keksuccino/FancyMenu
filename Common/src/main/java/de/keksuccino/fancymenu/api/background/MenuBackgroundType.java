@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.api.background;
 
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
+import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.elements.BackgroundOptionsPopup;
+import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.elements.ChooseFilePopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
 import org.apache.logging.log4j.LogManager;

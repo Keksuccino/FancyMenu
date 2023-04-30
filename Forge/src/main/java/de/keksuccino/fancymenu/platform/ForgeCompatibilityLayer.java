@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.TitleScreenLayer;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.forge.copyright.TitleScreenForgeCopyrightElement;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.forge.top.TitleScreenForgeTopElement;
+import de.keksuccino.fancymenu.customization.menuhandler.deepcustomizationlayer.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.forge.copyright.TitleScreenForgeCopyrightElement;
+import de.keksuccino.fancymenu.customization.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.forge.top.TitleScreenForgeTopElement;
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -16,6 +16,9 @@ import net.minecraftforge.internal.BrandingControl;
 import java.util.function.Consumer;
 
 public class ForgeCompatibilityLayer implements IPlatformCompatibilityLayer {
+
+    private int deepCusBrandingWidth;
+    private int deepCusBrandingHeight;
 
     @Override
     public void renderTitleScreenOverlay(PoseStack matrix, Font font, Screen screen, boolean showBranding, boolean showForgeNotificationTop, boolean showForgeNotificationCopyright) {
@@ -35,15 +38,19 @@ public class ForgeCompatibilityLayer implements IPlatformCompatibilityLayer {
     }
 
     @Override
-    public void renderCustomTitleScreenBrandingLines(PoseStack matrix, Font font, Screen screen, final int lastWidth, final int lastHeight, Consumer<Integer> lastWidthSetter, Consumer<Integer> lastHeightSetter) {
+    public void renderTitleScreenDeepCustomizationBranding(PoseStack matrix, Font font, Screen screen, final int lastWidth, final int lastHeight, Consumer<Integer> lastWidthSetter, Consumer<Integer> lastHeightSetter) {
+        this.deepCusBrandingWidth = lastWidth;
+        this.deepCusBrandingHeight = lastHeight;
         BrandingControl.forEachLine(true, true, (brdline, brd) -> {
             GuiComponent.drawString(matrix, font, brd, 2, screen.height - ( 10 + brdline * (font.lineHeight + 1)), 16777215);
             int w = font.width(brd);
-            if (lastWidth < w) {
-                lastWidthSetter.accept(w);
+            if (this.deepCusBrandingWidth < w) {
+                this.deepCusBrandingWidth = w;
             }
-            lastHeightSetter.accept(lastHeight + font.lineHeight + 1);
+            this.deepCusBrandingHeight += font.lineHeight + 1;
         });
+        lastWidthSetter.accept(this.deepCusBrandingWidth);
+        lastHeightSetter.accept(this.deepCusBrandingHeight);
     }
 
     @Override

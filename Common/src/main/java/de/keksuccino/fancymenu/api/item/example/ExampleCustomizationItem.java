@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -67,7 +66,7 @@ public class ExampleCustomizationItem extends CustomizationItem {
                 //but they should look like placeholders in the editor, so we only convert them when not in the editor.
                 String text;
                 if (!isEditorActive()) {
-                    text = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(this.displayText);
+                    text = de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser.replacePlaceholders(this.displayText);
                 } else {
                     text = StringUtils.convertFormatCodes(this.displayText, "&", "§");
                 }

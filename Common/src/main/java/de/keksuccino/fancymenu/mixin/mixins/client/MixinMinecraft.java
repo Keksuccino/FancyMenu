@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.platform.Window;
-import de.keksuccino.fancymenu.events.acara.EventHandler;
-import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.events.screen.OpenScreenEvent;
-import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.event.events.screen.OpenScreenEvent;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;

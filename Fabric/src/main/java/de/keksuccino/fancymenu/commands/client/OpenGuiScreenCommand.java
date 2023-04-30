@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
 import de.keksuccino.konkrete.localization.Locals;

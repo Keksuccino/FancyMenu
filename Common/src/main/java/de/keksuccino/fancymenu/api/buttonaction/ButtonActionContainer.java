@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.buttonaction;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

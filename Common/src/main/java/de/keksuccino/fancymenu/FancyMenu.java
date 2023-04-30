@@ -5,30 +5,30 @@ import java.io.File;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.window.WindowHandler;
-import de.keksuccino.fancymenu.menu.action.actions.Actions;
-import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.LoadingRequirements;
-import de.keksuccino.fancymenu.menu.placeholder.v1.placeholders.Placeholders;
-import de.keksuccino.fancymenu.menu.fancy.customlocals.CustomLocalsHandler;
-import de.keksuccino.fancymenu.menu.fancy.helper.SetupSharingEngine;
-import de.keksuccino.fancymenu.menu.fancy.item.items.CustomizationItems;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
-import de.keksuccino.fancymenu.menu.servers.ServerCache;
-import de.keksuccino.fancymenu.menu.variables.VariableHandler;
-import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.customization.action.actions.Actions;
+import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.requirements.LoadingRequirements;
+import de.keksuccino.fancymenu.customization.placeholder.v1.placeholders.Placeholders;
+import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
+import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingEngine;
+import de.keksuccino.fancymenu.customization.item.v2.items.CustomizationItems;
+import de.keksuccino.fancymenu.customization.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
+import de.keksuccino.fancymenu.customization.server.ServerCache;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 
-import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
-import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
-import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.menu.guiconstruction.GuiConstructor;
-import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
-import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.customization.button.VanillaButtonDescriptionHandler;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -36,13 +36,10 @@ import de.keksuccino.konkrete.localization.Locals;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-//TODO Rename isHoveredOrFocused() in Forge Konkrete:
-// - ScrollAreaEntry
-// - ContextMenu
-
-//TODO FIX: Main Menu not rendering correctly (check event system)
-
 public class FancyMenu {
+
+	//TODO Neue Widget Tooltip Engine
+	//TODO Altes Tooltip rendering fixen (am besten mit neuer engine ersetzen)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -69,6 +66,8 @@ public class FancyMenu {
 
 	    	if (Services.PLATFORM.isOnClient()) {
 
+				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
+
 				if (!MOD_DIR.isDirectory()) {
 					MOD_DIR.mkdirs();
 				}
@@ -83,8 +82,6 @@ public class FancyMenu {
 	    		BUTTONSCRIPT_DIR.mkdirs();
 	    		PANORAMA_DIR.mkdirs();
 	    		SLIDESHOW_DIR.mkdirs();
-				
-	    		initConfig();
 
 				DeepCustomizationLayers.registerAll();
 
@@ -94,7 +91,7 @@ public class FancyMenu {
 
 				Placeholders.registerAll();
 
-				de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.Placeholders.registerAll();
+				de.keksuccino.fancymenu.customization.placeholder.v2.placeholders.Placeholders.registerAll();
 
 				CustomizationItems.registerAll();
 
@@ -115,10 +112,6 @@ public class FancyMenu {
 	    		
 	        	MenuCustomization.init();
 
-				if (config.getOrDefault("enablehotkeys", true)) {
-					KeyMappings.init();
-				}
-
 	        	ButtonScriptEngine.init();
 
 				LastWorldHandler.init();
@@ -134,8 +127,6 @@ public class FancyMenu {
 				if (isOptifineCompatibilityMode()) {
 					LOGGER.info("[FANCYMENU] OptiFine compatibility mode enabled!");
 				}
-
-				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
 
 				if (FancyMenu.getConfig().getOrDefault("allow_level_registry_interactions", false)) {
 					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
@@ -205,7 +196,7 @@ public class FancyMenu {
 	public static void updateConfig() {
     	try {
 
-    		config = new Config(MOD_DIR.getPath() + "/config.txt");
+    		config = new Config(MOD_DIR.getAbsolutePath().replace("\\", "/") + "/config.txt");
 
     		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
     		config.registerValue("playmenumusic", true, "general");

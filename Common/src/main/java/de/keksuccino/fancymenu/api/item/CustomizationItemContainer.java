@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.item;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.LayoutEditorScreen;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
 import javax.annotation.Nonnull;

@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.placeholder;
 
-import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
+import de.keksuccino.fancymenu.customization.customizationgui.PlaceholderInputPopup;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
