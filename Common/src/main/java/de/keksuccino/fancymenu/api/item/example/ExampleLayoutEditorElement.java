@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.api.item.example;
 
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
-import de.keksuccino.fancymenu.customization.customizationgui.PlaceholderInputPopup;
-import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.frontend.PlaceholderInputPopup;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;

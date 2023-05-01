@@ -2,7 +2,7 @@
 package de.keksuccino.fancymenu.rendering.ui.scroll.scrollbar;
 
 import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.SubscribeEvent;
+import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.MouseScrollScreenEvent;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +36,7 @@ public class ScrollBarHandler {
         }
     }
 
-    @SubscribeEvent
+    @EventListener
     public void onClientTick(ClientTickEvent.Post e) {
         List<ScrollBar> old = new ArrayList<>(scrollBars);
         for (ScrollBar b : old) {
@@ -47,7 +47,7 @@ public class ScrollBarHandler {
         }
     }
 
-    @SubscribeEvent
+    @EventListener
     public void onMouseScrollPre(MouseScrollScreenEvent.Pre e) {
         List<ScrollBar> bars = new ArrayList<>(scrollBars);
         for (ScrollBar b : bars) {

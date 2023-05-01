@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.item;
 
-import de.keksuccino.fancymenu.customization.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
 public abstract class CustomizationItem extends CustomizationItemBase {

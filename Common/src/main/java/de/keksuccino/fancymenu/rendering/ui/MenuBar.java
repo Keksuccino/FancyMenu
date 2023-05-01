@@ -10,7 +10,7 @@ import java.util.Map;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
@@ -70,7 +70,7 @@ public class MenuBar extends UIBase {
 				((AdvancedImageButton)press).setImage(EXPAND_BTN_TEXTURE);
 				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
 			}
-			//-----------------------
+			
 		}) {
 			@Override
 			public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.menuhandler.deepcustomizationlayer.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.titlescreen.TitleScreenLayer;
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;

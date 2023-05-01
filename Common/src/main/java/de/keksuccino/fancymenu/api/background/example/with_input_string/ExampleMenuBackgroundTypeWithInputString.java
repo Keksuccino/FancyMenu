@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.api.background.example.with_input_string;
 
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
-import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.elements.BackgroundOptionsPopup;
-import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.elements.ChooseFilePopup;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.BackgroundOptionsPopup;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.ChooseFilePopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 
 import java.util.ArrayList;

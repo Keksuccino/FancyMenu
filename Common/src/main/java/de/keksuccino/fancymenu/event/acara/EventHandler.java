@@ -1,7 +1,7 @@
 
 //Acara - Simple Java Event System
 
-//Copyright (c) 2020-2023 Keksuccino.
+//Copyright (c) 2023 Keksuccino.
 //Acara is licensed under MIT.
 
 package de.keksuccino.fancymenu.event.acara;
@@ -16,18 +16,20 @@ import java.util.*;
 import java.util.function.Consumer;
 
 /**
- * This class handles all events and event listeners of your project.<br>
- * You should only create ONE instance per project.
+ * This class handles all events that get posted to it and all event listeners that are registered to it.<br>
  **/
 @SuppressWarnings("unchecked")
 public class EventHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	private final Map<String, List<ListenerContainer>> events = new HashMap<>();
-
-	/** FancyMenu's default EventHandler instance. **/
+	/**
+	 * The default instance. It is recommended to create new {@link EventHandler} instances for your projects.<br>
+	 * This instance should only get used for debugging and testing.
+	 **/
 	public static final EventHandler INSTANCE = new EventHandler();
+
+	private final Map<Class<? extends EventBase>, List<ListenerContainer>> events = new HashMap<>();
 
 	/**
 	 * Call this when all registered event listeners for the given event type should get invoked/notified.<br><br>
@@ -41,7 +43,7 @@ public class EventHandler {
 	 */
 	public void postEvent(EventBase event) {
 		if (eventsRegisteredForType(event.getClass())) {
-			List<ListenerContainer> l = new ArrayList<>(events.get(event.getClass().getName()));
+			List<ListenerContainer> l = new ArrayList<>(events.get(event.getClass()));
 			l.sort((o1, o2) -> {
 				if (o1.priority < o2.priority) {
 					return -1;
@@ -51,19 +53,19 @@ public class EventHandler {
 				return 0;
 			});
 			for (ListenerContainer c : l) {
-				c.noticeListener(event);
+				c.notifyListener(event);
 			}
 		}
 	}
 
 	/**
-	 * This will register all public static event listener methods of the given class annotated with {@link SubscribeEvent}.<br>
+	 * This will register all public static event listener methods of the given class annotated with {@link EventListener}.<br>
 	 * Event listener methods need to have only ONE parameter and this parameter has to be the event type (subclass of {@link EventBase}).<br><br>
 	 *
 	 * <b>Example of a valid event listener method:</b>
 	 *
 	 * <pre>
-	 * {@code @SubscribeEvent(priority = EventPriority.NORMAL)}
+	 * {@code @EventListener(priority = EventPriority.NORMAL)}
 	 * {@code public static void onEvent(EventBase event)} {
 	 *    //do something with the event object
 	 * }
@@ -74,13 +76,13 @@ public class EventHandler {
 	}
 
 	/**
-	 * This will register all public non-static event listener methods of the given object annotated with {@link SubscribeEvent}.<br>
+	 * This will register all public non-static event listener methods of the given object annotated with {@link EventListener}.<br>
 	 * Event listener methods need to have only ONE parameter and this parameter has to be the event type (subclass of {@link EventBase}).<br><br>
 	 *
 	 * <b>Example of a valid event listener method:</b>
 	 *
 	 * <pre>
-	 * {@code @SubscribeEvent(priority = EventPriority.NORMAL)}
+	 * {@code @EventListener(priority = EventPriority.NORMAL)}
 	 * {@code public void onEvent(EventBase event)} {
 	 *    //do something with the event object
 	 * }
@@ -99,7 +101,7 @@ public class EventHandler {
 					throw new RuntimeException(e);
 				}
 			};
-			ListenerContainer container = new ListenerContainer(m.eventType.getName(), listener, m.priority);
+			ListenerContainer container = new ListenerContainer(m.eventType, listener, m.priority);
 			container.listenerParentClassName = m.parentClass.getName();
 			container.listenerMethodName = m.method.getName();
 			this.registerListener(container);
@@ -129,60 +131,53 @@ public class EventHandler {
 		return l;
 	}
 
-	public void registerListener(Consumer<EventBase> listener, Class<? extends EventBase> eventClass) {
-		this.registerListener(listener, eventClass, 0);
+	public void registerListener(Consumer<EventBase> listener, Class<? extends EventBase> eventType) {
+		this.registerListener(listener, eventType, 0);
 	}
 
-	public void registerListener(Consumer<EventBase> listener, Class<? extends EventBase> eventClass, int priority) {
-		this.registerListener(new ListenerContainer(eventClass.getName(), listener, priority));
+	public void registerListener(Consumer<EventBase> listener, Class<? extends EventBase> eventType, int priority) {
+		this.registerListener(new ListenerContainer(eventType, listener, priority));
 	}
 
 	protected void registerListener(ListenerContainer listenerContainer) {
 		try {
-			if (!eventsRegisteredForIdentifier(listenerContainer.eventIdentifier)) {
-				events.put(listenerContainer.eventIdentifier, new ArrayList<>());
+			if (!eventsRegisteredForType(listenerContainer.eventType)) {
+				events.put(listenerContainer.eventType, new ArrayList<>());
 			}
-			events.get(listenerContainer.eventIdentifier).add(listenerContainer);
+			events.get(listenerContainer.eventType).add(listenerContainer);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public boolean eventsRegisteredForType(Class<? extends EventBase> listenerType) {
-		if (listenerType == null) {
+	public boolean eventsRegisteredForType(Class<? extends EventBase> eventType) {
+		if (eventType == null) {
 			return false;
 		}
-		return this.eventsRegisteredForIdentifier(listenerType.getName());
+		return this.events.containsKey(eventType);
 	}
 
-	public boolean eventsRegisteredForIdentifier(String identifier) {
-		if (identifier == null) {
-			return false;
-		}
-		return (events.get(identifier) != null);
-	}
+	protected static class ListenerContainer {
 
-	public static class ListenerContainer {
+		protected final Consumer<EventBase> listener;
+		protected final Class<? extends EventBase> eventType;
+		protected final int priority;
+		protected String listenerParentClassName = "[unknown]";
+		protected String listenerMethodName = "[unknown]";
 
-		public final Consumer<EventBase> listener;
-		public final String eventIdentifier;
-		public final int priority;
-		public String listenerParentClassName = "[unknown]";
-		public String listenerMethodName = "[unknown]";
-
-		public ListenerContainer(String eventIdentifier, Consumer<EventBase> listener, int priority) {
+		protected ListenerContainer(Class<? extends EventBase> eventType, Consumer<EventBase> listener, int priority) {
 			this.listener = listener;
-			this.eventIdentifier = eventIdentifier;
+			this.eventType = eventType;
 			this.priority = priority;
 		}
 
-		public void noticeListener(EventBase event) {
+		protected void notifyListener(EventBase event) {
 			try {
 				this.listener.accept(event);
 			} catch (Exception e) {
 				LOGGER.error("##################################");
 				LOGGER.error("[ACARA] Failed to notify event listener!");
-				LOGGER.error("[ACARA] Event Name: " + this.eventIdentifier);
+				LOGGER.error("[ACARA] Event Type: " + this.eventType.getName());
 				LOGGER.error("[ACARA] Listener Parent Class Name: " + this.listenerParentClassName);
 				LOGGER.error("[ACARA] Listener Method Name In Parent Class: " + this.listenerMethodName);
 				LOGGER.error("##################################");
@@ -195,15 +190,15 @@ public class EventHandler {
 	protected static class AnalyzedMethod {
 
 		/** The actual method. **/
-		public Method method;
+		protected Method method;
 		/** The object this method is part of. It's possible that this is the parent class. **/
-		public Object parentObject;
+		protected Object parentObject;
 		/** The class this method is part of. **/
-		public Class<?> parentClass;
+		protected Class<?> parentClass;
 		/** If the method is static. **/
-		public boolean isStatic;
-		/** All annotations of the method. This includes annotations of methods in superclasses. **/
-		public List<Annotation> annotations = new ArrayList<>();
+		protected boolean isStatic;
+		/** All annotations of the method. This includes annotations of superclass methods. **/
+		protected List<Annotation> annotations = new ArrayList<>();
 
 		protected AnalyzedMethod() {
 		}
@@ -225,7 +220,7 @@ public class EventHandler {
 
 		protected static void collectMethodAnnotations(Class<?> c, Method m, List<Annotation> addToList) {
 			try {
-				addToList.addAll(List.of(m.getAnnotations()));
+				addToList.addAll(Arrays.asList(m.getAnnotations()));
 				if (!Modifier.isStatic(m.getModifiers()) && (c != null)) {
 					Class<?> sc = c.getSuperclass();
 					if (sc != null) {
@@ -243,9 +238,9 @@ public class EventHandler {
 	protected static class EventMethod extends AnalyzedMethod {
 
 		/** The event priority. **/
-		public final int priority;
+		protected final int priority;
 		/** The event type. **/
-		public final Class<? extends EventBase> eventType;
+		protected final Class<? extends EventBase> eventType;
 
 		/** Will return the created EventMethod instance or NULL if the AnalyzedMethod was not a valid event method. **/
 		protected static EventMethod tryCreateFrom(AnalyzedMethod method) {
@@ -287,8 +282,8 @@ public class EventHandler {
 		protected int tryGetPriority() {
 			try {
 				for (Annotation a : this.annotations) {
-					if (a instanceof SubscribeEvent) {
-						return ((SubscribeEvent) a).priority();
+					if (a instanceof EventListener) {
+						return ((EventListener) a).priority();
 					}
 				}
 			} catch (Exception e) {

@@ -1,18 +1,13 @@
 
 //Acara - Simple Java Event System
 
-//Copyright (c) 2020-2023 Keksuccino.
+//Copyright (c) 2023 Keksuccino.
 //Acara is licensed under MIT.
 
 package de.keksuccino.fancymenu.event.acara;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 /** The base class for events. **/
 public abstract class EventBase {
-
-	private static final Logger LOGGER = LogManager.getLogger();
 
 	private boolean canceled = false;
 

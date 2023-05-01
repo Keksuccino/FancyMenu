@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.event.acara.EventBase;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 

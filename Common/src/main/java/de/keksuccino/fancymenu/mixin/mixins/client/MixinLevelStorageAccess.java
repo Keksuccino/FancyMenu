@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
-import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
+import de.keksuccino.fancymenu.customization.backend.world.LastWorldHandler;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

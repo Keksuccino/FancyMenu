@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.api.item.example;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
-import de.keksuccino.fancymenu.customization.customizationgui.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
 //This needs to be registered to the CustomizationItemRegistry at mod init

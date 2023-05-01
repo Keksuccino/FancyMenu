@@ -4,9 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.SubscribeEvent;
+import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.backend.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
@@ -106,7 +106,7 @@ public class VariableCommand {
         return 1;
     }
 
-    @SubscribeEvent
+    @EventListener
     public void onClientTick(ClientTickEvent.Post e) {
 
         Screen s = Minecraft.getInstance().screen;

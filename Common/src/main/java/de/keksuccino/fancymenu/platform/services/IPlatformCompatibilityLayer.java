@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.platform.services;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.menuhandler.deepcustomizationlayer.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.titlescreen.TitleScreenLayer;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 

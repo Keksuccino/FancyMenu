@@ -1,34 +1,17 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
-
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.window.WindowHandler;
-import de.keksuccino.fancymenu.customization.action.actions.Actions;
-import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.requirements.LoadingRequirements;
-import de.keksuccino.fancymenu.customization.placeholder.v1.placeholders.Placeholders;
-import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
-import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingEngine;
-import de.keksuccino.fancymenu.customization.item.v2.items.CustomizationItems;
-import de.keksuccino.fancymenu.customization.menuhandler.deepcustomizationlayer.layers.DeepCustomizationLayers;
-import de.keksuccino.fancymenu.customization.server.ServerCache;
-import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
+import de.keksuccino.fancymenu.customization.backend.customlocals.CustomLocalsHandler;
+import de.keksuccino.fancymenu.customization.backend.setupsharing.SetupSharingEngine;
+import de.keksuccino.fancymenu.customization.backend.server.ServerCache;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.customization.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
-import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
-import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.backend.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -82,41 +65,8 @@ public class FancyMenu {
 	    		BUTTONSCRIPT_DIR.mkdirs();
 	    		PANORAMA_DIR.mkdirs();
 	    		SLIDESHOW_DIR.mkdirs();
-
-				DeepCustomizationLayers.registerAll();
-
-				Actions.registerAll();
-
-				LoadingRequirements.registerAll();
-
-				Placeholders.registerAll();
-
-				de.keksuccino.fancymenu.customization.placeholder.v2.placeholders.Placeholders.registerAll();
-
-				CustomizationItems.registerAll();
-
-				VariableHandler.init();
-
-				ButtonIdentificator.init();
-
-	    		AnimationHandler.init();
-	    		AnimationHandler.loadCustomAnimations();
-
-	    		PanoramaHandler.init();
-
-	    		SlideshowHandler.init();
-	    		
-	    		CustomGuiLoader.loadCustomGuis();
-	    		
-	    		GameIntroHandler.init();
 	    		
 	        	MenuCustomization.init();
-
-	        	ButtonScriptEngine.init();
-
-				LastWorldHandler.init();
-
-	        	VanillaButtonDescriptionHandler.init();
 
 				WindowHandler.handleForceFullscreen();
 
@@ -320,7 +270,7 @@ public class FancyMenu {
 		try {
 			Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
 			return true;
-		} catch (Exception e) {}
+		} catch (Exception ignored) {}
 		return false;
 	}
 
