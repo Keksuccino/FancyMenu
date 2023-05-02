@@ -9,16 +9,15 @@ import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderP
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.utils.RenderingUtils;
+import de.keksuccino.fancymenu.utils.RenderUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -107,7 +106,7 @@ public class TextCustomizationItem extends CustomizationItem {
 
         String baseColorString = item.getEntryValue("base_color");
         if (baseColorString != null) {
-            Color c = RenderUtils.getColorFromHexString(baseColorString);
+            Color c = de.keksuccino.konkrete.rendering.RenderUtils.getColorFromHexString(baseColorString);
             if (c != null) {
                 this.baseColorHex = baseColorString;
             }
@@ -166,14 +165,14 @@ public class TextCustomizationItem extends CustomizationItem {
         this.scrollArea.horizontalScrollBar.active = false;
 
         if (this.scrollGrabberColorHexNormal != null) {
-            Color c = RenderUtils.getColorFromHexString(this.scrollGrabberColorHexNormal);
+            Color c = de.keksuccino.konkrete.rendering.RenderUtils.getColorFromHexString(this.scrollGrabberColorHexNormal);
             if (c != null) {
                 this.scrollArea.verticalScrollBar.idleBarColor = c;
                 this.scrollArea.horizontalScrollBar.idleBarColor = c;
             }
         }
         if (this.scrollGrabberColorHexHover != null) {
-            Color c = RenderUtils.getColorFromHexString(this.scrollGrabberColorHexHover);
+            Color c = de.keksuccino.konkrete.rendering.RenderUtils.getColorFromHexString(this.scrollGrabberColorHexHover);
             if (c != null) {
                 this.scrollArea.verticalScrollBar.hoverBarColor = c;
                 this.scrollArea.horizontalScrollBar.hoverBarColor = c;
@@ -181,14 +180,14 @@ public class TextCustomizationItem extends CustomizationItem {
         }
 
         if (this.scrollGrabberTextureNormal != null) {
-            ExternalTextureResourceLocation r = TextureHandler.getResource(this.scrollGrabberTextureNormal);
+            ExternalTextureResourceLocation r = ExternalTextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
                 this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
         }
         if (this.scrollGrabberTextureHover != null) {
-            ExternalTextureResourceLocation r = TextureHandler.getResource(this.scrollGrabberTextureHover);
+            ExternalTextureResourceLocation r = ExternalTextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
                 this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
@@ -211,7 +210,7 @@ public class TextCustomizationItem extends CustomizationItem {
 
     public Color getBaseColor() {
         if (this.baseColorHex != null) {
-            return RenderUtils.getColorFromHexString(this.baseColorHex);
+            return de.keksuccino.konkrete.rendering.RenderUtils.getColorFromHexString(this.baseColorHex);
         }
         return null;
     }
@@ -237,7 +236,7 @@ public class TextCustomizationItem extends CustomizationItem {
                         this.scrollArea.setY(this.getPosY(menu), true);
                         this.scrollArea.setWidth(this.getWidth(), true);
                         this.scrollArea.setHeight(this.getHeight(), true);
-                        this.scrollArea.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick());
+                        this.scrollArea.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderUtils.getPartialTick());
                     }
 
                 } else if (isEditorActive()) {

@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonCache;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.backend.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;

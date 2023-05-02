@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenBackgroundEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.DeepCustomizationLayer;

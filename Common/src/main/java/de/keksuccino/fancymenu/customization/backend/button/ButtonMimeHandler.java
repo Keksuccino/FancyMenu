@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.backend.button;
 
 import de.keksuccino.fancymenu.customization.backend.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;

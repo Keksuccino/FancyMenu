@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.frontend.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;

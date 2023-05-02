@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;

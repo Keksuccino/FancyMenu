@@ -46,9 +46,9 @@ public class EventHandler {
 			List<ListenerContainer> l = new ArrayList<>(events.get(event.getClass()));
 			l.sort((o1, o2) -> {
 				if (o1.priority < o2.priority) {
-					return -1;
-				} else if (o1.priority > o2.priority) {
 					return 1;
+				} else if (o1.priority > o2.priority) {
+					return -1;
 				}
 				return 0;
 			});

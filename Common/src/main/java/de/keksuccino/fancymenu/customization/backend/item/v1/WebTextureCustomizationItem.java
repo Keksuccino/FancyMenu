@@ -17,7 +17,7 @@ import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -66,7 +66,7 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 
 							if (isValidUrl(this.value)) {
 
-								this.texture = TextureHandler.getWebResource(this.value, false);
+								this.texture = ExternalTextureHandler.INSTANCE.getWebTexture(this.value, false);
 								MainThreadTaskExecutor.executeInMainThread(() -> {
 									try {
 										texture.loadTexture();

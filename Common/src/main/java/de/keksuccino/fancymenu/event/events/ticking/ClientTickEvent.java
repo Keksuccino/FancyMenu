@@ -1,9 +1,7 @@
 package de.keksuccino.fancymenu.event.events.ticking;
 
 import de.keksuccino.fancymenu.event.acara.EventBase;
-import org.jetbrains.annotations.ApiStatus;
 
-@ApiStatus.Internal
 public class ClientTickEvent extends EventBase {
 
     protected ClientTickEvent() {

@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;

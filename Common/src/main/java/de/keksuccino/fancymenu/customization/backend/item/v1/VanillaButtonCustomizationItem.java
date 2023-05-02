@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;

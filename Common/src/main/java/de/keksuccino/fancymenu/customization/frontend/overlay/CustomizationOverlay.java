@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 
 public class CustomizationOverlay {
 	

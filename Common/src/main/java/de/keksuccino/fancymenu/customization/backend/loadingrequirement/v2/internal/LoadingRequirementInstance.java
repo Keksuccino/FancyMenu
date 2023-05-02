@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal;
 
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderParser;

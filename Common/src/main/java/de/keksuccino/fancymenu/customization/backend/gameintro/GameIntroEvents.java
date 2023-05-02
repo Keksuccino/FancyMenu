@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.TitleScreen;

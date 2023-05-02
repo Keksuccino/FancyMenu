@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.frontend.CustomizationButton;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutSplashText;

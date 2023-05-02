@@ -10,20 +10,25 @@ import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonScriptEngine;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.customization.backend.item.v2.items.IActionExecutorItem;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ButtonCustomizationItem extends CustomizationItemBase implements IActionExecutorItem {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public AdvancedButton button;
 	private String hoverLabel;
@@ -128,7 +133,8 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 
 			this.tooltip = item.getEntryValue("description");
 			if (this.tooltip != null) {
-				this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
+//				this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
+				TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
 			}
 
 			String backNormal = fixBackslashPath(item.getEntryValue("backgroundnormal"));
@@ -152,9 +158,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 					}
 					if (f.isFile()) {
 						if (f.getPath().toLowerCase().endsWith(".gif")) {
-							this.button.setBackgroundNormal(TextureHandler.getGifResource(f.getPath()));
+							this.button.setBackgroundNormal(ExternalTextureHandler.INSTANCE.getGif(f.getPath()));
 						} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-							ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+							ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
 							if (back != null) {
 								if (!back.isReady()) {
 									back.loadTexture();
@@ -175,9 +181,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 					}
 					if (f.isFile()) {
 						if (f.getPath().toLowerCase().endsWith(".gif")) {
-							this.button.setBackgroundHover(TextureHandler.getGifResource(f.getPath()));
+							this.button.setBackgroundHover(ExternalTextureHandler.INSTANCE.getGif(f.getPath()));
 						} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-							ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+							ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
 							if (back != null) {
 								if (!back.isReady()) {
 									back.loadTexture();
@@ -243,12 +249,14 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 		}
 
 		this.button.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
+
 	}
 
 	protected void updateValues() {
 
 		if (this.tooltip != null) {
-			this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
+//			this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
+			TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
 		}
 		if (this.labelRaw != null) {
 			if (!isEditorActive()) {

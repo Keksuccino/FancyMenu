@@ -11,7 +11,7 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
@@ -42,13 +42,13 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 					    double ratio;
 
 						if (f.getName().endsWith(".gif")) {
-							this.gif = TextureHandler.getGifResource(finalValue);
+							this.gif = ExternalTextureHandler.INSTANCE.getGif(finalValue);
 							if (this.gif != null) {
 								w = this.gif.getWidth();
 								h = this.gif.getHeight();
 							}
 						} else {
-							this.texture = TextureHandler.getResource(finalValue);
+							this.texture = ExternalTextureHandler.INSTANCE.getTexture(finalValue);
 							if (this.texture != null) {
 								w = this.texture.getWidth();
 								h = this.texture.getHeight();

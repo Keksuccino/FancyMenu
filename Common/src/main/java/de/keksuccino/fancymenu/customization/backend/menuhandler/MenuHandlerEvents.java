@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.screen.OpenScreenEvent;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -43,6 +43,7 @@ public class MenuHandlerEvents {
 			MenuHandlerRegistry.setActiveHandler(null);
 		}
 
+		//TODO nach Mixin in setScreen() -> removed() verschieben
 		//Play menu close audio on menu close/switch
 		if (this.lastScreen != Minecraft.getInstance().screen) {
 			if (this.lastScreen != null) {

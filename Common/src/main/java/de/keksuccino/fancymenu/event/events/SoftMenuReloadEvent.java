@@ -9,10 +9,14 @@ import net.minecraft.client.gui.screens.Screen;
  */
 public class SoftMenuReloadEvent extends EventBase {
 
-    public final Screen screen;
+    private final Screen screen;
 
     public SoftMenuReloadEvent(Screen screen) {
         this.screen = screen;
+    }
+
+    public Screen getScreen() {
+        return screen;
     }
 
     @Override

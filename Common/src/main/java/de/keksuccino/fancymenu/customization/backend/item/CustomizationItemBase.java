@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.backend.item;
 import java.io.IOException;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;

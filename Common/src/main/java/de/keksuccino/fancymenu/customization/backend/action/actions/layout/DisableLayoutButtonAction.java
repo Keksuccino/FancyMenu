@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.backend.action.actions.layout;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.konkrete.localization.Locals;
 

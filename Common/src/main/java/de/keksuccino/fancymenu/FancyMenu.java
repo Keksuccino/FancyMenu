@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.customization.backend.server.ServerCache;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
@@ -24,9 +24,13 @@ public class FancyMenu {
 	//TODO Neue Widget Tooltip Engine
 	//TODO Altes Tooltip rendering fixen (am besten mit neuer engine ersetzen)
 
+	//TODO MenuHandlerEvents -> close audio handling: nach Mixin in setScreen() -> removed() verschieben
+
+	//TODO Alle dirs aus FancyMenu class nach MenuCustomization verschieben
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "2.14.7";
+	public static final String VERSION = "3.0.0";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 

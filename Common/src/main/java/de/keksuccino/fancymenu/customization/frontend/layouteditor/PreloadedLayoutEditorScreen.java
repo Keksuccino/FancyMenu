@@ -37,7 +37,7 @@ import de.keksuccino.fancymenu.customization.backend.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -239,7 +239,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								f = new File(valueFinal);
 							}
 							if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-								this.backgroundTexture = TextureHandler.getResource(valueFinal);
+								this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(valueFinal);
 								this.backgroundTexturePath = value;
 								if ((pano != null) && pano.equalsIgnoreCase("true")) {
 									this.panorama = true;

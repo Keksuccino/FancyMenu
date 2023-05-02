@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.guiconstruction.instance.GuiInstance;
 import de.keksuccino.fancymenu.customization.backend.guiconstruction.instance.ResourcePacksScreenInstance;
 import net.minecraft.client.Minecraft;

@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinLevelLoadingScreen;
 import net.minecraft.Util;

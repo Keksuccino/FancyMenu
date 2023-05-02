@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -27,7 +27,7 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
         //Check if the image exists and has the correct file type, then load it.
         File imageFile = new File(imagePath);
         if (imageFile.exists() && (imageFile.getPath().toLowerCase().endsWith(".jpg") || imageFile.getPath().toLowerCase().endsWith(".jpeg") || imageFile.getPath().toLowerCase().endsWith(".png"))) {
-            this.imageLocation = TextureHandler.getResource(imageFile.getPath());
+            this.imageLocation = ExternalTextureHandler.INSTANCE.getTexture(imageFile.getPath());
             if (this.imageLocation != null) {
                 this.imageLocation.loadTexture();
             }

@@ -27,7 +27,7 @@ import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorUI.LayoutPropertiesContextMenu;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutAnimation;
@@ -62,7 +62,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -1358,7 +1358,7 @@ public class LayoutEditorScreen extends Screen {
 				if (filename.equals(f.getName())) {
 					this.history.saveSnapshot(this.history.createSnapshot());
 
-					this.backgroundTexture = TextureHandler.getResource(Minecraft.getInstance().gameDirectory.getPath() + "/" + path);
+					this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(Minecraft.getInstance().gameDirectory.getPath() + "/" + path);
 					this.backgroundTexturePath = path;
 					if (this.backgroundAnimation != null) {
 						((AdvancedAnimation)this.backgroundAnimation).stopAudio();

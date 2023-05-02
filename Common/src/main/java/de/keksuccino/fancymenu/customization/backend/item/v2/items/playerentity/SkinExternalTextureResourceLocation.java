@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.backend.item.v2.items.playerentity
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.IOUtils;
@@ -41,7 +41,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
                     return;
                 }
 
-                ExternalTextureResourceLocation exRL = TextureHandler.getResource(this.path);
+                ExternalTextureResourceLocation exRL = ExternalTextureHandler.INSTANCE.getTexture(this.path);
                 if (exRL != null) {
                     ResourceLocation loc = exRL.getResourceLocation();
                     if (loc != null) {

@@ -40,7 +40,7 @@ import de.keksuccino.fancymenu.customization.backend.button.ButtonCache;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
 import de.keksuccino.fancymenu.customization.backend.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.backend.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
@@ -72,7 +72,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -155,7 +155,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 	@EventListener
 	public void onSoftReload(SoftMenuReloadEvent e) {
-		if (this.shouldCustomize(e.screen)) {
+		if (this.shouldCustomize(e.getScreen())) {
 			this.delayAppearanceFirstTimeVanilla.clear();
 			this.delayAppearanceFirstTime.clear();
 			this.delayAppearanceVanilla.clear();
@@ -676,7 +676,7 @@ public class MenuHandlerBase extends GuiComponent {
 					}
 					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
 						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
-							this.backgroundTexture = TextureHandler.getResource(value);
+							this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(value);
 						}
 						this.panoramaback = (pano != null) && pano.equalsIgnoreCase("true");
 						this.sharedLayoutProps.backgroundTextureSet = true;
@@ -1610,7 +1610,7 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 						if (f.isFile()) {
 							if (f.getPath().toLowerCase().endsWith(".gif")) {
-								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+								IAnimationRenderer a =  ExternalTextureHandler.INSTANCE.getGif(f.getPath());
 								if (restartAnimationBackground) {
 									a.resetAnimation();
 								}
@@ -1620,7 +1620,7 @@ public class MenuHandlerBase extends GuiComponent {
 								}
 								return true;
 							} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-								ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+								ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
 								if (back != null) {
 									RenderUtils.bindTexture(back.getResourceLocation());
 									RenderSystem.enableBlend();

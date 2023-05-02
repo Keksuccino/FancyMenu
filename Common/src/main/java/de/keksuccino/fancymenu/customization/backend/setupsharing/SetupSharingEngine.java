@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.animation.ResourcePackAnimationRenderer;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;

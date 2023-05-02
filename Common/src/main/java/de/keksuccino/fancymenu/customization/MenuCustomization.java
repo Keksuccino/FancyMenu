@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.backend;
+package de.keksuccino.fancymenu.customization;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -7,6 +7,7 @@ import java.util.*;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.backend.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
@@ -37,6 +38,7 @@ import de.keksuccino.fancymenu.customization.frontend.overlay.CustomizationOverl
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.event.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -46,7 +48,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ITextureResourceLocation;
-import de.keksuccino.konkrete.resources.TextureHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -307,7 +309,7 @@ public class MenuCustomization {
 
 	public static void reloadFancyMenu() {
 		FancyMenu.updateConfig();
-		clearKonkreteTextureCache();
+		ExternalTextureHandler.INSTANCE.clearResources();
 		resetSounds();
 		stopSounds();
 		AnimationHandler.resetAnimations();
@@ -333,25 +335,6 @@ public class MenuCustomization {
 			updateCustomizableMenuCache();
 			//Resets itself automatically and can be used for both loading and reloading
 			LayoutHandler.reloadLayouts();
-		}
-	}
-
-	public static void clearKonkreteTextureCache() {
-		try {
-			Field texturesField = TextureHandler.class.getDeclaredField("textures");
-			texturesField.setAccessible(true);
-			Map<String, ITextureResourceLocation> textures = (Map<String, ITextureResourceLocation>) texturesField.get(TextureHandler.class);
-			textures.clear();
-			Field gifsField = TextureHandler.class.getDeclaredField("gifs");
-			gifsField.setAccessible(true);
-			Map<String, ExternalGifAnimationRenderer> gifs = (Map<String, ExternalGifAnimationRenderer>) gifsField.get(TextureHandler.class);
-			for (ExternalGifAnimationRenderer g : gifs.values()) {
-				g.setLooped(false);
-				g.resetAnimation();
-			}
-			gifs.clear();
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 

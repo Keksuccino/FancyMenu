@@ -6,7 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.StringUtils;

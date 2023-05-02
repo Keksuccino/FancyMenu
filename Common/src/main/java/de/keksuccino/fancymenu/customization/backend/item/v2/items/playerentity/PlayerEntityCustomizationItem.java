@@ -6,7 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.item.v2.items.playerentity.render.PlayerEntityItemRenderer;
 import de.keksuccino.fancymenu.customization.backend.item.v2.items.playerentity.render.PlayerEntityProperties;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderParser;
@@ -525,7 +525,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
 //    @Nullable
 //    protected ResourceLocation getResourceLocationOfWebResource(String url) {
 //        try {
-//            WebTextureResourceLocation wt = TextureHandler.getWebResource(url, false);
+//            WebTextureResourceLocation wt = ExternalTextureHandler.INSTANCE.getWebResource(url, false);
 //            if (wt != null) {
 //                if (!wt.isReady()) {
 //                    wt.loadTexture();

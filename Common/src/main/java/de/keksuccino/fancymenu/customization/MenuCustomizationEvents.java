@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.backend;
+package de.keksuccino.fancymenu.customization;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,11 +51,7 @@ public class MenuCustomizationEvents {
 				Screen current = Minecraft.getInstance().screen;
 				if (current != null) {
 					if (this.lastScreen != null) {
-						if (!this.lastScreen.getClass().getName().equals(current.getClass().getName())) {
-							MenuCustomization.isNewMenu = true;
-						} else {
-							MenuCustomization.isNewMenu = false;
-						}
+						MenuCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(current.getClass().getName());
 					} else {
 						MenuCustomization.isNewMenu = true;
 					}

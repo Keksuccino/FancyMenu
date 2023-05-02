@@ -26,7 +26,7 @@ import de.keksuccino.fancymenu.customization.backend.world.LastWorldHandler;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.utils.LocalPlayerUtils;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.customization.backend.guiconstruction.GuiConstructor;

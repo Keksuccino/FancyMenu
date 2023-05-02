@@ -1,14 +1,14 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
-import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.screen.OpenScreenEvent;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.backend.MenuCustomization;
+import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.utils.RenderUtils;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,8 +30,7 @@ public class MixinMinecraft {
 	private void beforeSetScreenFancyMenu(Screen screen, CallbackInfo info) {
 
 		//Reset GUI scale in case some layout changed it
-		Window m = Minecraft.getInstance().getWindow();
-		m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));
+		RenderUtils.resetGuiScale();
 
 		if (screen != null) {
 			EventHandler.INSTANCE.postEvent(new OpenScreenEvent.Pre(screen));
@@ -103,8 +102,13 @@ public class MixinMinecraft {
 
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;resize(Lnet/minecraft/client/Minecraft;II)V"))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
+
+		//Reset GUI scale in case some layout changed it
+		RenderUtils.resetGuiScale();
+
 		InitOrResizeScreenEvent.Pre e = new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen);
 		EventHandler.INSTANCE.postEvent(e);
+
 	}
 
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;resize(Lnet/minecraft/client/Minecraft;II)V", shift = At.Shift.AFTER))
