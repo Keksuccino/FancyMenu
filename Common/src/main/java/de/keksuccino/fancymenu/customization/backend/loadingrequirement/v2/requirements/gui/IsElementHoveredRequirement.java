@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.LoadingRequirement;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -36,7 +36,7 @@ public class IsElementHoveredRequirement extends LoadingRequirement {
         if (value != null) {
             Screen s = Minecraft.getInstance().screen;
             if (s != null) {
-                MenuHandlerBase handler = MenuHandlerRegistry.getHandlerFor(s);
+                ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
                 if (handler != null) {
                     CustomizationItemBase i = handler.getItemByActionId(value);
                     if (i != null) {

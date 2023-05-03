@@ -10,7 +10,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -26,9 +26,9 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 
-	protected MenuHandlerBase.ButtonCustomizationContainer button;
+	protected ScreenCustomizationLayer.ButtonCustomizationContainer button;
 
-	public LayoutButtonDummyCustomizationItem(MenuHandlerBase.ButtonCustomizationContainer button, String label, int width, int height, int x, int y) {
+	public LayoutButtonDummyCustomizationItem(ScreenCustomizationLayer.ButtonCustomizationContainer button, String label, int width, int height, int x, int y) {
 		super(new PropertiesSection("customization"));
 		this.value = label;
 		this.action = "handlelayoutbutton";

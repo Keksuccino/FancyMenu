@@ -67,7 +67,7 @@ public class ButtonCache {
 				return;
 			}
 
-			//Don't cache video settings if Optifine is active
+			//Don't cache video settings if OptiFine is active
 			if ((s instanceof VideoSettingsScreen) && FancyMenu.isOptifineLoaded()) {
 				BUTTONS.clear();
 				EventHandler.INSTANCE.postEvent(new ButtonCacheUpdatedEvent(s, new ArrayList<>(), false));

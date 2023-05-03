@@ -1,16 +1,16 @@
-package de.keksuccino.fancymenu.customization.backend.menuhandler.custom;
+package de.keksuccino.fancymenu.customization.backend.layer.layers;
 
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinPauseScreen;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 
-public class PauseScreenHandler extends MenuHandlerBase {
+public class PauseScreenLayer extends ScreenCustomizationLayer {
 
-    public PauseScreenHandler() {
+    public PauseScreenLayer() {
         super(PauseScreen.class.getName());
     }
 

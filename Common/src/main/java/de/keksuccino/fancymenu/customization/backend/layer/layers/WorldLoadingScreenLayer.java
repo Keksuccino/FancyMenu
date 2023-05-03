@@ -1,11 +1,11 @@
-package de.keksuccino.fancymenu.customization.backend.menuhandler.custom;
+package de.keksuccino.fancymenu.customization.backend.layer.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinLevelLoadingScreen;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -16,11 +16,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.util.Mth;
 
-public class WorldLoadingScreenHandler extends MenuHandlerBase {
+public class WorldLoadingScreenLayer extends ScreenCustomizationLayer {
 
 	private long lastNarratorUpdateTime = -1L;
 	 
-	public WorldLoadingScreenHandler() {
+	public WorldLoadingScreenLayer() {
 		super(LevelLoadingScreen.class.getName());
 	}
 	

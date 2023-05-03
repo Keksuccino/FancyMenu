@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.backend.menuhandler.custom;
+package de.keksuccino.fancymenu.customization.backend.layer.layers;
 
 import java.util.List;
 import java.util.Random;
@@ -15,11 +15,11 @@ import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.ti
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenBackgroundEvent;
+import de.keksuccino.fancymenu.event.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.DeepCustomizationLayer;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinTitleScreen;
@@ -39,7 +39,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MainMenuHandler extends MenuHandlerBase {
+public class TitleScreenLayer extends ScreenCustomizationLayer {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	
@@ -58,7 +58,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	protected boolean showRealmsNotification = true;
 	protected TitleScreenSplashItem splashItem = null;
 
-	public MainMenuHandler() {
+	public TitleScreenLayer() {
 		super(TitleScreen.class.getName());
 	}
 
@@ -90,7 +90,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 				showForgeNotificationCopyright = true;
 				showForgeNotificationTop = true;
 				showRealmsNotification = true;
-				DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getMenuIdentifier());
+				DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getIdentifier());
 				if (layer != null) {
 					TitleScreenSplashElement element = (TitleScreenSplashElement) layer.getElementByIdentifier("title_screen_splash");
 					if (element != null) {
@@ -107,7 +107,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 		super.applyLayout(sec, renderOrder, e);
 
-		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getMenuIdentifier());
+		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getIdentifier());
 		if (layer != null) {
 
 			String action = sec.getEntryValue("action");
@@ -174,7 +174,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	 * Mimic the original main menu to be able to customize it easier
 	 */
 	@Override
-	public void drawToBackground(RenderScreenBackgroundEvent.Post e) {
+	public void drawToBackground(RenderedScreenBackgroundEvent e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			Font font = Minecraft.getInstance().font;
 			int width = e.getScreen().width;
@@ -242,7 +242,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	}
 
-	private void renderButtons(RenderScreenBackgroundEvent.Post e, int mouseX, int mouseY) {
+	private void renderButtons(RenderedScreenBackgroundEvent e, int mouseX, int mouseY) {
 		List<Renderable> buttons = ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu();
 		float partial = Minecraft.getInstance().getFrameTime();
 		if (buttons != null) {

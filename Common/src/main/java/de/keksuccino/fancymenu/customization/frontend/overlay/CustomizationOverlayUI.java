@@ -67,7 +67,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	public static boolean showButtonInfo = false;
 	public static boolean showMenuInfo = false;
-	protected static List<ButtonData> buttons = new ArrayList<ButtonData>();
+	protected static List<ButtonData> buttons = new ArrayList<>();
 	protected static int tick = 0;
 	protected static long lastButtonInfoRightClick = 0;
 
@@ -184,7 +184,7 @@ public class CustomizationOverlayUI extends UIBase {
 						}
 						PropertiesSet props2 = new PropertiesSet(props.getPropertiesType());
 						List<PropertiesSection> l = props.getProperties();
-						List<PropertiesSection> l2 = new ArrayList<PropertiesSection>();
+						List<PropertiesSection> l2 = new ArrayList<>();
 						boolean b = false;
 
 						List<PropertiesSection> metas = props.getPropertiesOfType("customization-meta");
@@ -726,16 +726,9 @@ public class CustomizationOverlayUI extends UIBase {
 					if (d.getCompatibilityId() != null) {
 						idString = d.getCompatibilityId();
 					}
-					String key = ButtonCache.getKeyForButton(d.getButton());
-					if (key == null) {
-						key = Locals.localize("helper.buttoninfo.keynotfound");
-					}
-
-					List<String> info = new ArrayList<String>();
+					List<String> info = new ArrayList<>();
 					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
-
 					long now = System.currentTimeMillis();
-
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().getWidth());
 					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().getHeight());
@@ -746,54 +739,40 @@ public class CustomizationOverlayUI extends UIBase {
 					} else {
 						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator.copied"));
 					}
-
 					if (MouseInput.isRightMouseDown()) {
 						Screen current = Minecraft.getInstance().screen;
 						String locator = current.getClass().getName() + ":" + idString;
 						Minecraft.getInstance().keyboardHandler.setClipboard(locator);
 						lastButtonInfoRightClick = now;
 					}
-
 					for (String s : info) {
 						int i = Minecraft.getInstance().font.width(s) + 10;
 						if (i > width) {
 							width = i;
 						}
 					}
-
 					matrix.pushPose();
-
 					matrix.scale(getUIScale(), getUIScale(), getUIScale());
-
 					MouseInput.setRenderScale(getUIScale());
-
 					int x = MouseInput.getMouseX();
 					if ((screen.width / getUIScale()) < x + width + 10) {
 						x -= width + 10;
 					}
-
 					int y = MouseInput.getMouseY();
 					if ((screen.height / getUIScale()) < y + 80) {
 						y -= 90;
 					}
-
 					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
-
 					RenderSystem.enableBlend();
 					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
-
 					int i2 = 20;
 					for (String s : info) {
 						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
-
 					MouseInput.resetRenderScale();
-
 					matrix.popPose();
-
 					RenderSystem.disableBlend();
-
 					break;
 				}
 			}
@@ -805,7 +784,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	protected static void renderButtonInfoWarning(PoseStack matrix, Screen screen) {
 		if (showButtonInfo && !MenuCustomization.isMenuCustomizable(screen)) {
-			List<String> info = new ArrayList<String>();
+			List<String> info = new ArrayList<>();
 			int width = Minecraft.getInstance().font.width(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
 
 			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2"));
@@ -1280,7 +1259,7 @@ public class CustomizationOverlayUI extends UIBase {
 						s = new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null);
 					}
 				}
-				MenuCustomization.editLayout(s, layout);
+				LayoutHandler.editLayout(s, layout);
 			});
 			editLayoutBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.edit.desc"), "%n%"));
 			this.addContent(editLayoutBtn);

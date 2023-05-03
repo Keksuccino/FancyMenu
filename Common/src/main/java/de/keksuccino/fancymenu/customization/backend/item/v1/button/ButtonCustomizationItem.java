@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.backend.item.v1;
+package de.keksuccino.fancymenu.customization.backend.item.v1.button;
 
 import java.io.File;
 import java.io.IOException;
@@ -133,7 +133,6 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 
 			this.tooltip = item.getEntryValue("description");
 			if (this.tooltip != null) {
-//				this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
 				TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
 			}
 
@@ -255,8 +254,9 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 	protected void updateValues() {
 
 		if (this.tooltip != null) {
-//			this.button.setDescription(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%"));
-			TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
+			if (this.button.isHoveredOrFocused()) {
+				TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
+			}
 		}
 		if (this.labelRaw != null) {
 			if (!isEditorActive()) {

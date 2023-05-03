@@ -163,6 +163,9 @@ public class Tooltip extends GuiComponent implements Renderable {
         }
         mouseX += this.mouseOffset;
         int w = this.getWidth();
+        if (this.vanillaLike) {
+            w += 4;
+        }
         if ((mouseX + w) > screen.width) {
             return mouseX - ((mouseX + w) - screen.width);
         }
@@ -175,6 +178,9 @@ public class Tooltip extends GuiComponent implements Renderable {
         }
         mouseY += this.mouseOffset;
         int h = this.getHeight();
+        if (this.vanillaLike) {
+            h += 4;
+        }
         if ((mouseY + h) > screen.height) {
             return mouseY - ((mouseY + h) - screen.height);
         }

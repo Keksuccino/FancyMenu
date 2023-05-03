@@ -7,7 +7,8 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 
 public class GameIntroHandler {
 
-	public static boolean introDisplayed = false;
+	//TODO change this !!!!!!!!!!!
+	public static boolean introDisplayed = true;
 	
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new GameIntroEvents());

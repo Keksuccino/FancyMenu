@@ -330,7 +330,7 @@ public class LayoutEditorUI extends UIBase {
 							int totalactions = s.getProperties().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
-									MenuCustomization.editLayout(this.ui.parent.screen, f);
+									LayoutHandler.editLayout(this.ui.parent.screen, f);
 								});
 							});
 							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.enabled"), "" + totalactions), "%n%"));
@@ -357,7 +357,7 @@ public class LayoutEditorUI extends UIBase {
 							int totalactions = s.getProperties().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
-									MenuCustomization.editLayout(this.ui.parent.screen, f);
+									LayoutHandler.editLayout(this.ui.parent.screen, f);
 								});
 							});
 							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.disabled"), "" + totalactions), "%n%"));

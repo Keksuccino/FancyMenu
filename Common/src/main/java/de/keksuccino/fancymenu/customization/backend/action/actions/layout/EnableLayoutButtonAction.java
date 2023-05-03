@@ -35,7 +35,7 @@ public class EnableLayoutButtonAction extends ButtonActionContainer {
                 if (l.path != null) {
                     String name = Files.getNameWithoutExtension(l.path);
                     if (name.equals(value)) {
-                        MenuCustomization.enableLayout(l);
+                        LayoutHandler.enableLayout(l);
                         return;
                     }
                 }

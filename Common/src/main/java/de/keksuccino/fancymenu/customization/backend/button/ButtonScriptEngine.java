@@ -20,8 +20,8 @@ import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.customization.backend.action.LegacyActions;
 import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.backend.world.LastWorldHandler;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
@@ -154,7 +154,7 @@ public class ButtonScriptEngine {
 				}
 			}
 			if (action.equalsIgnoreCase("prevbackground")) {
-				MenuHandlerBase handler = MenuHandlerRegistry.getLastActiveHandler();
+				ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getActiveLayer();
 				if (handler != null) {
 					int cur = handler.getCurrentBackgroundAnimationId();
 					if (cur > 0) {
@@ -168,7 +168,7 @@ public class ButtonScriptEngine {
 				}
 			}
 			if (action.equalsIgnoreCase("nextbackground")) {
-				MenuHandlerBase handler = MenuHandlerRegistry.getLastActiveHandler();
+				ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getActiveLayer();
 				if (handler != null) {
 					int cur = handler.getCurrentBackgroundAnimationId();
 					if (cur < handler.backgroundAnimations().size()-1) {

@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.customization.backend.placeholder.v2.placeholders.gui;
 
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.Placeholder;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.item.v1.VanillaButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.item.v1.button.VanillaButtonCustomizationItem;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
@@ -42,7 +42,7 @@ public class ElementHeightPlaceholder extends Placeholder {
     private CustomizationItemBase findCustomizationItemForId(String id) {
         if (Minecraft.getInstance().screen != null) {
             if (!(Minecraft.getInstance().screen instanceof LayoutEditorScreen)) {
-                MenuHandlerBase mh = MenuHandlerRegistry.getHandlerFor(Minecraft.getInstance().screen);
+                ScreenCustomizationLayer mh = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
                 if (mh != null) {
                     return mh.getItemByActionId(id);
                 }

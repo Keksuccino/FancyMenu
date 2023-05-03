@@ -35,7 +35,7 @@ public class DisableLayoutButtonAction extends ButtonActionContainer {
                 if (l.path != null) {
                     String name = Files.getNameWithoutExtension(l.path);
                     if (name.equals(value)) {
-                        MenuCustomization.disableLayout(l);
+                        LayoutHandler.disableLayout(l);
                         return;
                     }
                 }

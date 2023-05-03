@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.backend.item.v1.VanillaButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.item.v1.button.VanillaButtonCustomizationItem;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;

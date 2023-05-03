@@ -21,12 +21,34 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
 
-	//TODO Neue Widget Tooltip Engine
+	//TODO TextBox class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
+
+	//TODO ScreenCustomizationLayer komplett reworken/rewriten
+
+	//TODO Vanilla Button Customization reworken
+	// - Alles in ein CusItem
+	// - Nur eine props section pro button
+	// - Alte button CusSections in layouts beim laden konvertieren
+
+	//TODO GameIntro stuff komplett reworken/rewriten
+
 	//TODO Altes Tooltip rendering fixen (am besten mit neuer engine ersetzen)
 
 	//TODO MenuHandlerEvents -> close audio handling: nach Mixin in setScreen() -> removed() verschieben
 
+	//TODO Layout handle stuff von MenuCustomization nach LayoutHandler verschieben
+
 	//TODO Alle dirs aus FancyMenu class nach MenuCustomization verschieben
+
+	//TODO API package stuff nach customization.backend aufteilen
+
+	//TODO APIs verbessern
+
+	//TODO Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
+	// - Items & Elements
+	// - Placeholder
+	// - Menu Background Types
+	// - Visibility Requirements (v1 stuff zu loading requirements machen)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

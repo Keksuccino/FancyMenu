@@ -36,7 +36,7 @@ public class ToggleLayoutButtonAction extends ButtonActionContainer {
                 if (l.path != null) {
                     String name = Files.getNameWithoutExtension(l.path);
                     if (name.equals(value)) {
-                        MenuCustomization.disableLayout(l);
+                        LayoutHandler.disableLayout(l);
                         return;
                     }
                 }
@@ -46,7 +46,7 @@ public class ToggleLayoutButtonAction extends ButtonActionContainer {
                 if (l.path != null) {
                     String name = Files.getNameWithoutExtension(l.path);
                     if (name.equals(value)) {
-                        MenuCustomization.enableLayout(l);
+                        LayoutHandler.enableLayout(l);
                         return;
                     }
                 }

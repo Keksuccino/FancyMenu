@@ -9,8 +9,8 @@ import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -38,11 +38,11 @@ public class TickerCustomizationItemContainer extends CustomizationItemContainer
     public void onClientTick(ClientTickEvent.Post e) {
         List<TickerCustomizationItem.TickerItemThreadController> activeControllers = new ArrayList<>();
         if (Minecraft.getInstance().screen != null) {
-            MenuHandlerBase m = MenuHandlerRegistry.getHandlerFor(Minecraft.getInstance().screen);
+            ScreenCustomizationLayer m = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
             if (m != null) {
                 List<CustomizationItemBase> items = new ArrayList<>();
-                items.addAll(m.backgroundRenderItems);
-                items.addAll(m.frontRenderItems);
+                items.addAll(m.backgroundElements);
+                items.addAll(m.foregroundElements);
                 for (CustomizationItemBase i : items) {
                     if (i instanceof TickerCustomizationItem) {
                         if (((TickerCustomizationItem)i).asyncThreadController != null) {

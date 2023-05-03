@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
@@ -30,9 +30,9 @@ import net.minecraft.client.Minecraft;
 public class LayoutVanillaButton extends LayoutElement {
 
 	public final ButtonData button;
-	public final MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
+	public final ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer;
 
-	public LayoutVanillaButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, ButtonData button, LayoutEditorScreen handler) {
+	public LayoutVanillaButton(ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer, ButtonData button, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, button.label, button.width, button.height, button.x, button.y), true, handler, false);
 		this.button = button;
 		this.object.orientation = "original";

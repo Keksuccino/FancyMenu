@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.*;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.customization.backend.item.v1.*;
+import de.keksuccino.fancymenu.customization.backend.item.v1.button.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutAnimation;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutShape;
@@ -30,7 +31,7 @@ import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.Layo
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.backend.item.v1.ShapeCustomizationItem.Shape;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.backend.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.backend.slideshow.SlideshowHandler;
@@ -582,7 +583,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							}
 						}
 
-						LayoutButton lb = new LayoutButton(new MenuHandlerBase.ButtonCustomizationContainer(), bc.getWidth(), bc.getHeight(), bc.value, onlydisplayin, this) {
+						LayoutButton lb = new LayoutButton(new ScreenCustomizationLayer.ButtonCustomizationContainer(), bc.getWidth(), bc.getHeight(), bc.value, onlydisplayin, this) {
 							@Override
 							public void init() {
 
@@ -890,7 +891,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 	}
 
 	protected LayoutVanillaButton getVanillaButton(ButtonData b) {
-		MenuHandlerBase.ButtonCustomizationContainer cc = this.vanillaButtonCustomizationContainers.get(b.getId());
+		ScreenCustomizationLayer.ButtonCustomizationContainer cc = this.vanillaButtonCustomizationContainers.get(b.getId());
 		if (cc != null) {
 			for (LayoutElement e : this.vanillaButtonContent) {
 				if (e instanceof LayoutVanillaButton) {

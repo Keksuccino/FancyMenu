@@ -10,9 +10,8 @@ public class ButtonData {
 	private final long id;
 	protected String compatibilityId;
 	private final String key;
-	private AbstractWidget button;
+	private final AbstractWidget button;
 	private final Screen screen;
-	private boolean replaced = false;
 	
 	public String label;
 	public int x;
@@ -35,15 +34,6 @@ public class ButtonData {
 	
 	public AbstractWidget getButton() {
 		return button;
-	}
-
-	public void replaceButton(AbstractWidget w) {
-		this.button = w;
-		this.replaced = true;
-	}
-
-	public boolean isReplaced() {
-		return this.replaced;
 	}
 	
 	public Screen getScreen() {

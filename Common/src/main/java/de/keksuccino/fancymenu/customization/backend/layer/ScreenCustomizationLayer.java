@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.backend.menuhandler;
+package de.keksuccino.fancymenu.customization.backend.layer;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,11 +24,13 @@ import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.event.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenBackgroundEvent;
+import de.keksuccino.fancymenu.event.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.event.events.widget.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
@@ -39,7 +41,6 @@ import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonCache;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
-import de.keksuccino.fancymenu.customization.backend.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.backend.gameintro.GameIntroHandler;
@@ -47,14 +48,14 @@ import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
 import de.keksuccino.fancymenu.customization.backend.item.v1.AnimationCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.ButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.item.v1.button.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
 import de.keksuccino.fancymenu.customization.backend.item.v1.ShapeCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.v1.SlideshowCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.v1.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.v1.StringCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.v1.TextureCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.VanillaButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.item.v1.button.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.v1.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.item.v1.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
@@ -85,17 +86,17 @@ import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MenuHandlerBase extends GuiComponent {
+public class ScreenCustomizationLayer extends GuiComponent {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
-	public List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
+	public List<CustomizationItemBase> foregroundElements = new ArrayList<>();
+	public List<CustomizationItemBase> backgroundElements = new ArrayList<>();
 	
-	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
+	protected Map<String, Boolean> audio = new HashMap<>();
 	protected IAnimationRenderer backgroundAnimation = null;
 	protected IAnimationRenderer lastBackgroundAnimation = null;
-	protected List<IAnimationRenderer> backgroundAnimations = new ArrayList<IAnimationRenderer>();
+	protected List<IAnimationRenderer> backgroundAnimations = new ArrayList<>();
 	protected int backgroundAnimationId = 0;
 	protected ExternalTextureResourceLocation backgroundTexture = null;
 	protected String identifier;
@@ -109,28 +110,27 @@ public class MenuHandlerBase extends GuiComponent {
 	protected String customMenuTitle = null;
 	protected boolean forceDisableCustomMenuTitle = false;
 
-	protected ExternalTexturePanoramaRenderer panoramacube;
+	protected ExternalTexturePanoramaRenderer panoramaCube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected MenuBackground customMenuBackground = null;
-	
 	public float backgroundOpacity = 1.0F;
 
-	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
-	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<AbstractWidget, ButtonCustomizationContainer>();
+	protected List<ButtonData> hidden = new ArrayList<>();
+	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<>();
 	protected Map<AbstractWidget, LoadingRequirementContainer> vanillaButtonLoadingRequirementContainers = new HashMap<>();
 
-	protected volatile Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
-	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<ButtonData, Float>();
-	protected List<String> delayAppearanceFirstTime = new ArrayList<String>();
-	protected List<Long> delayAppearanceFirstTimeVanilla = new ArrayList<Long>();
-	protected List<ThreadCaller> delayThreads = new ArrayList<ThreadCaller>();
+	protected volatile Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<>();
+	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<>();
+	protected List<String> delayAppearanceFirstTime = new ArrayList<>();
+	protected List<Long> delayAppearanceFirstTimeVanilla = new ArrayList<>();
+	protected List<ThreadCaller> delayThreads = new ArrayList<>();
 
-	protected boolean preinit = false;
+	protected boolean preInitialized = false;
 
-	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<String, RandomLayoutContainer>();
-	protected List<PropertiesSet> normalLayouts = new ArrayList<PropertiesSet>();
+	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
+	protected List<PropertiesSet> normalLayouts = new ArrayList<>();
 	protected SharedLayoutProperties sharedLayoutProps = new SharedLayoutProperties();
 
 	protected String closeAudio;
@@ -138,18 +138,17 @@ public class MenuHandlerBase extends GuiComponent {
 
 	protected Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 
-	protected static Screen scaleChangedIn = null;
-
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
 
 	/**
-	 * @param identifier Has to be the valid and full class name of the GUI screen.
+	 * @param identifier Has to be the full class path of the menu screen.
 	 */
-	public MenuHandlerBase(@Nonnull String identifier) {
+	public ScreenCustomizationLayer(@Nonnull String identifier) {
 		this.identifier = identifier;
+		EventHandler.INSTANCE.registerListenersOf(this);
 	}
 
-	public String getMenuIdentifier() {
+	public String getIdentifier() {
 		return this.identifier;
 	}
 
@@ -185,55 +184,60 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
-	
+	@EventListener
+	public void onCloseScreen(CloseScreenEvent e) {
+
+		if (!this.shouldCustomize(e.getScreen())) return;
+
+		if (this.closeAudio != null) {
+			SoundHandler.resetSound(this.closeAudio);
+			SoundHandler.playSound(this.closeAudio);
+		}
+
+	}
+
 	@EventListener
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
+
+		LOGGER.info("###################### ON INIT PRE: " + this.getIdentifier());
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
 		}
 		this.delayThreads.clear();
 
-		int mcscale = Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode());
-
-		if (e.getScreen() != Minecraft.getInstance().screen) {
-			return;
-		}
-
-		//Resetting scale to the normal value if it was changed in another screen
-		if ((scaleChangedIn != null) && (scaleChangedIn != e.getScreen())) {
-			scaleChangedIn = null;
-			Window m = Minecraft.getInstance().getWindow();
-			m.setGuiScale((double)mcscale);
-			e.getScreen().width = m.getGuiScaledWidth();
-			e.getScreen().height = m.getGuiScaledHeight();
-		}
-
 		if (!MenuCustomization.isValidScreen(e.getScreen())) {
 			return;
 		}
+		LOGGER.info("###################### 2 ON INIT PRE: " + this.getIdentifier());
 		if (!this.shouldCustomize(e.getScreen())) {
 			return;
 		}
+		LOGGER.info("###################### 3 ON INIT PRE: " + this.getIdentifier());
 		if (!AnimationHandler.isReady()) {
 			return;
 		}
+		LOGGER.info("###################### 4 ON INIT PRE: " + this.getIdentifier());
 		if (!GameIntroHandler.introDisplayed) {
 			return;
 		}
+		LOGGER.info("###################### 5 ON INIT PRE: " + this.getIdentifier());
 		if (LayoutEditorScreen.isActive) {
 			return;
 		}
+		LOGGER.info("###################### 6 ON INIT PRE: " + this.getIdentifier());
 		if (ButtonCache.isCaching()) {
 			return;
 		}
+		LOGGER.info("###################### 7 ON INIT PRE: " + this.getIdentifier());
 		if (!MenuCustomization.isMenuCustomizable(e.getScreen())) {
 			return;
 		}
+		LOGGER.info("###################### 8 ON INIT PRE: " + this.getIdentifier());
 
-		preinit = true;
+		preInitialized = true;
 
-		List<PropertiesSet> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getMenuIdentifier());
+		List<PropertiesSet> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getIdentifier());
 		String defaultGroup = "-100397";
 
 		this.normalLayouts.clear();
@@ -366,17 +370,6 @@ public class MenuHandlerBase extends GuiComponent {
 			}
 		}
 
-		//Resetting scale in the same menu when scale customization action was removed
-		if (!this.sharedLayoutProps.scaled) {
-			if (scaleChangedIn != null) {
-				scaleChangedIn = null;
-				Window m = Minecraft.getInstance().getWindow();
-				m.setGuiScale((double)mcscale);
-				e.getScreen().width = m.getGuiScaledWidth();
-				e.getScreen().height = m.getGuiScaledHeight();
-			}
-		}
-
 		//Handle auto scaling
 		if ((this.sharedLayoutProps.autoScaleBaseWidth != 0) && (this.sharedLayoutProps.autoScaleBaseHeight != 0)) {
 			Window m = Minecraft.getInstance().getWindow();
@@ -392,7 +385,6 @@ public class MenuHandlerBase extends GuiComponent {
 			e.getScreen().width = m.getGuiScaledWidth();
 			e.getScreen().height = m.getGuiScaledHeight();
 			this.sharedLayoutProps.scaled = true;
-			scaleChangedIn = e.getScreen();
 		}
 
 	}
@@ -406,7 +398,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 			if (action.equalsIgnoreCase("overridemenu")) {
 				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
-					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, (Screen)null, e.getScreen(), (onClose) -> {
+					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, null, e.getScreen(), (onClose) -> {
 						e.getScreen().removed();
 					});
 					Minecraft.getInstance().setScreen(cus);
@@ -416,13 +408,12 @@ public class MenuHandlerBase extends GuiComponent {
 			if (action.contentEquals("setscale")) {
 				String scale = sec.getEntryValue("scale");
 				if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
-					scaleChangedIn = e.getScreen();
 					int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
 					if (newscale <= 0) {
 						newscale = 1;
 					}
 					Window m = Minecraft.getInstance().getWindow();
-					m.setGuiScale((double)newscale);
+					m.setGuiScale(newscale);
 					e.getScreen().width = m.getGuiScaledWidth();
 					e.getScreen().height = m.getGuiScaledHeight();
 					this.sharedLayoutProps.scaled = true;
@@ -471,7 +462,7 @@ public class MenuHandlerBase extends GuiComponent {
 			return;
 		}
 
-		if (!this.preinit) {
+		if (!this.preInitialized) {
 			System.out.println("################ WARNING [FANCYMENU] ################");
 			System.out.println("MenuHandler pre-init skipped! Trying to re-initialize menu!");
 			System.out.println("Menu Type: " + e.getScreen().getClass().getName());
@@ -488,9 +479,9 @@ public class MenuHandlerBase extends GuiComponent {
 		this.vanillaButtonCustomizations.clear();
 		this.vanillaButtonLoadingRequirementContainers.clear();
 		this.audio.clear();
-		this.frontRenderItems.clear();
-		this.backgroundRenderItems.clear();
-		this.panoramacube = null;
+		this.foregroundElements.clear();
+		this.backgroundElements.clear();
+		this.panoramaCube = null;
 		this.slideshow = null;
 		this.customMenuBackground = null;
 		
@@ -523,17 +514,6 @@ public class MenuHandlerBase extends GuiComponent {
 				for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
 					this.applyLayout(sec, renderOrder, e);
 				}
-			}
-		}
-
-		MenuHandlerRegistry.setActiveHandler(this.getMenuIdentifier());
-
-
-
-		for (Map.Entry<ButtonData, String> m : this.sharedLayoutProps.descriptions.entrySet()) {
-			AbstractWidget w = m.getKey().getButton();
-			if (w != null) {
-				VanillaButtonDescriptionHandler.setDescriptionFor(w, m.getValue());
 			}
 		}
 		
@@ -569,7 +549,7 @@ public class MenuHandlerBase extends GuiComponent {
 			d.getButton().visible = false;
 		}
 
-		for (CustomizationItemBase i : this.frontRenderItems) {
+		for (CustomizationItemBase i : this.foregroundElements) {
 			if (MenuCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
@@ -577,7 +557,7 @@ public class MenuHandlerBase extends GuiComponent {
 				i.orientationElement = this.getItemByActionId(i.orientationElementIdentifier);
 			}
 		}
-		for (CustomizationItemBase i : this.backgroundRenderItems) {
+		for (CustomizationItemBase i : this.backgroundElements) {
 			if (MenuCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
@@ -608,7 +588,7 @@ public class MenuHandlerBase extends GuiComponent {
 				if (btn != null) {
 					VanillaButtonCustomizationItem i = new VanillaButtonCustomizationItem(dummySec, btn, this);
 					i.loadingRequirements = m.getValue();
-					this.backgroundRenderItems.add(i);
+					this.backgroundElements.add(i);
 				}
 			}
 		}
@@ -657,7 +637,7 @@ public class MenuHandlerBase extends GuiComponent {
 				String name = sec.getEntryValue("name");
 				if (name != null) {
 					if (PanoramaHandler.panoramaExists(name)) {
-						this.panoramacube = PanoramaHandler.getPanorama(name);
+						this.panoramaCube = PanoramaHandler.getPanorama(name);
 					}
 				}
 			}
@@ -817,19 +797,19 @@ public class MenuHandlerBase extends GuiComponent {
 
 			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
 				if (b != null) {
-					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 
 			if (action.equalsIgnoreCase("resizebutton")) {
 				if (b != null) {
-					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 
 			if (action.equalsIgnoreCase("movebutton")) {
 				if (b != null) {
-					backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 
@@ -882,9 +862,9 @@ public class MenuHandlerBase extends GuiComponent {
 			if (action.equalsIgnoreCase("addhoversound")) {
 				if (b != null) {
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+						backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					} else {
-						frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+						foregroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					}
 				}
 			}
@@ -892,9 +872,9 @@ public class MenuHandlerBase extends GuiComponent {
 			if (action.equalsIgnoreCase("sethoverlabel")) {
 				if (b != null) {
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+						backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					} else {
-						frontRenderItems.add(new VanillaButtonCustomizationItem(sec, bd, this));
+						foregroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 					}
 				}
 			}
@@ -910,61 +890,61 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 			
-			/** CUSTOM ITEMS **/
+			// CUSTOM ITEMS
 
 			if (action.equalsIgnoreCase("addtext")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new StringCustomizationItem(sec));
+					backgroundElements.add(new StringCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new StringCustomizationItem(sec));
+					foregroundElements.add(new StringCustomizationItem(sec));
 				}
 			}
 
 			if (action.equalsIgnoreCase("addwebtext")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new WebStringCustomizationItem(sec));
+					backgroundElements.add(new WebStringCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new WebStringCustomizationItem(sec));
+					foregroundElements.add(new WebStringCustomizationItem(sec));
 				}
 			}
 
 			if (action.equalsIgnoreCase("addtexture")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new TextureCustomizationItem(sec));
+					backgroundElements.add(new TextureCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new TextureCustomizationItem(sec));
+					foregroundElements.add(new TextureCustomizationItem(sec));
 				}
 			}
 
 			if (action.equalsIgnoreCase("addwebtexture")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new WebTextureCustomizationItem(sec));
+					backgroundElements.add(new WebTextureCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new WebTextureCustomizationItem(sec));
+					foregroundElements.add(new WebTextureCustomizationItem(sec));
 				}
 			}
 
 			if (action.equalsIgnoreCase("addanimation")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new AnimationCustomizationItem(sec));
+					backgroundElements.add(new AnimationCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new AnimationCustomizationItem(sec));
+					foregroundElements.add(new AnimationCustomizationItem(sec));
 				}
 			}
 
 			if (action.equalsIgnoreCase("addshape")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new ShapeCustomizationItem(sec));
+					backgroundElements.add(new ShapeCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new ShapeCustomizationItem(sec));
+					foregroundElements.add(new ShapeCustomizationItem(sec));
 				}
 			}
 
 			if (action.equalsIgnoreCase("addslideshow")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(new SlideshowCustomizationItem(sec));
+					backgroundElements.add(new SlideshowCustomizationItem(sec));
 				} else {
-					frontRenderItems.add(new SlideshowCustomizationItem(sec));
+					foregroundElements.add(new SlideshowCustomizationItem(sec));
 				}
 			}
 
@@ -972,9 +952,9 @@ public class MenuHandlerBase extends GuiComponent {
 				ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
 
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundRenderItems.add(i);
+					backgroundElements.add(i);
 				} else {
-					frontRenderItems.add(i);
+					foregroundElements.add(i);
 				}
 			}
 
@@ -1054,10 +1034,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 			if (action.equalsIgnoreCase("setbuttondescription")) {
 				if (b != null) {
-					String desc = sec.getEntryValue("description");
-					if (desc != null) {
-						this.sharedLayoutProps.descriptions.put(bd, PlaceholderParser.replacePlaceholders(desc));
-					}
+					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
 				}
 			}
 			
@@ -1069,9 +1046,9 @@ public class MenuHandlerBase extends GuiComponent {
 					SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
 					
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(i);
+						backgroundElements.add(i);
 					} else {
-						frontRenderItems.add(i);
+						foregroundElements.add(i);
 					}
 					
 				}
@@ -1084,9 +1061,9 @@ public class MenuHandlerBase extends GuiComponent {
 				if (cusItem != null) {
 					CustomizationItem cusItemInstance = cusItem.constructCustomizedItemInstance(sec);
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-						backgroundRenderItems.add(cusItemInstance);
+						backgroundElements.add(cusItemInstance);
 					} else {
-						frontRenderItems.add(cusItemInstance);
+						foregroundElements.add(cusItemInstance);
 					}
 				}
 			}
@@ -1267,7 +1244,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 		if (!this.backgroundDrawable) {
 			//Rendering all items that SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
-			List<CustomizationItemBase> backItems = new ArrayList<>(this.backgroundRenderItems);
+			List<CustomizationItemBase> backItems = new ArrayList<>(this.backgroundElements);
 			for (CustomizationItemBase i : backItems) {
 				try {
 					i.render(e.getPoseStack(), e.getScreen());
@@ -1278,7 +1255,7 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 
 		//Rendering all items that should be rendered in the foreground
-		List<CustomizationItemBase> frontItems = new ArrayList<>(this.frontRenderItems);
+		List<CustomizationItemBase> frontItems = new ArrayList<>(this.foregroundElements);
 		for (CustomizationItemBase i : frontItems) {
 			try {
 				i.render(e.getPoseStack(), e.getScreen());
@@ -1289,7 +1266,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	@EventListener
-	public void drawToBackground(RenderScreenBackgroundEvent.Post e) {
+	public void drawToBackground(RenderedScreenBackgroundEvent e) {
 		if (!MenuCustomization.isCurrentMenuScrollable()) {
 			this.renderBackground(e.getPoseStack(), e.getScreen());
 		}
@@ -1414,13 +1391,13 @@ public class MenuHandlerBase extends GuiComponent {
 					
 					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-				} else if (this.panoramacube != null) {
+				} else if (this.panoramaCube != null) {
 
 					
-					float opacity = this.panoramacube.opacity;
-					this.panoramacube.opacity = this.backgroundOpacity;
-					this.panoramacube.render(matrix);
-					this.panoramacube.opacity = opacity;
+					float opacity = this.panoramaCube.opacity;
+					this.panoramaCube.opacity = this.backgroundOpacity;
+					this.panoramaCube.render(matrix);
+					this.panoramaCube.opacity = opacity;
 					
 
 				} else if (this.slideshow != null) {
@@ -1477,7 +1454,7 @@ public class MenuHandlerBase extends GuiComponent {
 			}
 
 			//Rendering all items which should be rendered in the background
-			List<CustomizationItemBase> backItems = new ArrayList<>(this.backgroundRenderItems);
+			List<CustomizationItemBase> backItems = new ArrayList<>(this.backgroundElements);
 			for (CustomizationItemBase i : backItems) {
 				try {
 					i.render(matrix, s);
@@ -1687,7 +1664,7 @@ public class MenuHandlerBase extends GuiComponent {
 	}
 
 	public CustomizationItemBase getItemByActionId(String actionId) {
-		for (CustomizationItemBase c : this.backgroundRenderItems) {
+		for (CustomizationItemBase c : this.backgroundElements) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
@@ -1699,7 +1676,7 @@ public class MenuHandlerBase extends GuiComponent {
 				}
 			}
 		}
-		for (CustomizationItemBase c : this.frontRenderItems) {
+		for (CustomizationItemBase c : this.foregroundElements) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
@@ -1777,14 +1754,14 @@ public class MenuHandlerBase extends GuiComponent {
 		if (menu == null) {
 			return false;
 		}
-		if (getMenuIdentifier() != null) {
-			return this.getMenuIdentifier().equals(menu.getClass().getName());
+		if (getIdentifier() != null) {
+			return this.getIdentifier().equals(menu.getClass().getName());
 		}
 		return true;
 	}
 
 	public boolean canRenderBackground() {
-		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramacube != null) || (this.slideshow != null) || (this.customMenuBackground != null));
+		return ((this.backgroundAnimation != null) || (this.backgroundTexture != null) || (this.panoramaCube != null) || (this.slideshow != null) || (this.customMenuBackground != null));
 	}
 
 	public boolean setBackgroundAnimation(int id) {
@@ -1816,9 +1793,9 @@ public class MenuHandlerBase extends GuiComponent {
 		protected boolean onlyFirstTime = false;
 		protected String lastLayoutPath = null;
 		
-		public MenuHandlerBase parent;
+		public ScreenCustomizationLayer parent;
 		
-		public RandomLayoutContainer(String id, MenuHandlerBase parent) {
+		public RandomLayoutContainer(String id, ScreenCustomizationLayer parent) {
 			this.id = id;
 			this.parent = parent;
 		}
@@ -1927,7 +1904,6 @@ public class MenuHandlerBase extends GuiComponent {
 		public boolean backgroundTextureSet = false;
 		public boolean openAudioSet = false;
 		public boolean closeAudioSet = false;
-		public Map<ButtonData, String> descriptions = new HashMap<ButtonData, String>();
 		
 	}
 

@@ -38,7 +38,7 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        LOGGER.warn("tryCache: Failed to cache buttons of screen!");
+        LOGGER.warn("[FANCYMENU] ButtonMimeHandler#tryCache: Failed to cache buttons of screen!");
         return false;
     }
 
@@ -57,7 +57,7 @@ public class ButtonMimeHandler {
         if (cachedButtons.containsKey(menuIdentifier)) {
             return true;
         }
-        LOGGER.warn("cacheFromInstance: Failed to cache buttons of screen!");
+        LOGGER.warn("[FANCYMENU] ButtonMimeHandler#cacheFromInstance: Failed to cache buttons of screen!");
         return false;
     }
 
@@ -107,7 +107,7 @@ public class ButtonMimeHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        LOGGER.warn("Failed to execute button click action!");
+        LOGGER.warn("[FANCYMENU] ButtonMimeHandler: Failed to execute button click action!");
         return false;
     }
 
@@ -133,7 +133,7 @@ public class ButtonMimeHandler {
                 }
                 return true;
             } else {
-                LOGGER.error("Failed to setup ButtonPackage instance! Screen is null!");
+                LOGGER.error("[FANCYMENU] ButtonMimeHandler: Failed to setup ButtonPackage instance! Screen was NULL!");
             }
             return false;
         }

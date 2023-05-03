@@ -1,18 +1,18 @@
-package de.keksuccino.fancymenu.customization.backend.menuhandler;
+package de.keksuccino.fancymenu.customization.backend.layer;
 
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
 import net.minecraft.client.gui.screens.Screen;
 
-public class CustomGuiMenuHandlerBase  extends MenuHandlerBase {
+public class CustomGuiCustomizationLayer extends ScreenCustomizationLayer {
 
-	public CustomGuiMenuHandlerBase(String identifier) {
+	public CustomGuiCustomizationLayer(String identifier) {
 		super(identifier);
 	}
 
 	@Override
 	protected boolean shouldCustomize(Screen menu) {
 		if (menu instanceof CustomGuiBase) {
-			if (((CustomGuiBase) menu).getIdentifier().equals(this.getMenuIdentifier())) {
+			if (((CustomGuiBase) menu).getIdentifier().equals(this.getIdentifier())) {
 				return true;
 			}
 		}

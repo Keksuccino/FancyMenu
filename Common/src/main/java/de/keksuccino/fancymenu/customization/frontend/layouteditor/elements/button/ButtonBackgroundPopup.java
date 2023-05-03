@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
@@ -28,7 +28,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class ButtonBackgroundPopup extends FMPopup {
 
     protected LayoutEditorScreen handler;
-    protected MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
+    protected ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer;
 
     protected HorizontalSwitcher normalBackgroundTypeSwitcher;
     protected HorizontalSwitcher hoverBackgroundTypeSwitcher;
@@ -48,7 +48,7 @@ public class ButtonBackgroundPopup extends FMPopup {
     protected Runnable onClose = null;
     public boolean saveSnapshots = true;
 
-    public ButtonBackgroundPopup(LayoutEditorScreen handler, MenuHandlerBase.ButtonCustomizationContainer customizationContainer) {
+    public ButtonBackgroundPopup(LayoutEditorScreen handler, ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer) {
         super(240);
         this.handler = handler;
         this.customizationContainer = customizationContainer;
@@ -236,7 +236,7 @@ public class ButtonBackgroundPopup extends FMPopup {
 
     }
 
-    public ButtonBackgroundPopup(LayoutEditorScreen handler, MenuHandlerBase.ButtonCustomizationContainer customizationContainer, Runnable onClose) {
+    public ButtonBackgroundPopup(LayoutEditorScreen handler, ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer, Runnable onClose) {
         this(handler, customizationContainer);
         this.onClose = onClose;
     }

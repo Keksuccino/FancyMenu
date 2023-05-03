@@ -29,7 +29,7 @@ minecraft {
 
     runs {
         client {
-            workingDirectory project.file('run')
+            workingDirectory project.file('../run_client')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Client'
 //            property 'mixin.env.remapRefMap', 'true'
@@ -45,7 +45,7 @@ minecraft {
             }
         }
         server {
-            workingDirectory project.file('run')
+            workingDirectory project.file('../run_server')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Server'
 //            property 'mixin.env.remapRefMap', 'true'

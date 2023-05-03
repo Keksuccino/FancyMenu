@@ -1,19 +1,15 @@
 package de.keksuccino.fancymenu.customization;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.*;
 
-import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.backend.action.actions.Actions;
-import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.customization.backend.button.VanillaButtonDescriptionHandler;
 import de.keksuccino.fancymenu.customization.backend.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.customization.backend.gameintro.GameIntroHandler;
@@ -22,17 +18,14 @@ import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.backend.item.v2.items.CustomizationItems;
 import de.keksuccino.fancymenu.customization.backend.item.v2.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.requirements.LoadingRequirements;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerEvents;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerRegistry;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.custom.*;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.backend.layer.layers.*;
 import de.keksuccino.fancymenu.customization.backend.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.customization.backend.setupsharing.SetupSharingEngine;
 import de.keksuccino.fancymenu.customization.backend.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.customization.backend.variables.VariableHandler;
 import de.keksuccino.fancymenu.customization.backend.world.LastWorldHandler;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.PreloadedLayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.frontend.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.frontend.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
@@ -41,14 +34,9 @@ import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import de.keksuccino.konkrete.resources.ITextureResourceLocation;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -74,6 +62,9 @@ public class MenuCustomization {
 		}
 
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
+
+		ScreenCustomizationLayerHandler.init();
+		ScreenCustomizationLayers.registerAll();
 
 		DeepCustomizationLayers.registerAll();
 
@@ -102,11 +93,6 @@ public class MenuCustomization {
 
 		GameIntroHandler.init();
 
-		CustomMenuHandlers.registerAll();
-
-		//This is so the mod automatically registers generic MenuHandlerBases for all menus (needs to be done AFTER registering custom menu handlers!)
-		EventHandler.INSTANCE.registerListenersOf(new MenuHandlerEvents());
-
 		CustomizationOverlay.init();
 
 		ButtonCache.init();
@@ -118,8 +104,6 @@ public class MenuCustomization {
 		ButtonScriptEngine.init();
 
 		LastWorldHandler.init();
-
-		VanillaButtonDescriptionHandler.init();
 
 		initialized = true;
 
@@ -315,8 +299,7 @@ public class MenuCustomization {
 		AnimationHandler.resetAnimations();
 		AnimationHandler.resetAnimationSounds();
 		AnimationHandler.stopAnimationSounds();
-		reloadLayouts();
-		MenuHandlerRegistry.setActiveHandler(null);
+		LayoutHandler.reloadLayouts();
 		CustomGuiLoader.loadCustomGuis();
 		if (!FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
 			CustomizationOverlayUI.showButtonInfo = false;
@@ -328,113 +311,6 @@ public class MenuCustomization {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	public static void reloadLayouts() {
-		if (initialized) {
-			updateCustomizableMenuCache();
-			//Resets itself automatically and can be used for both loading and reloading
-			LayoutHandler.reloadLayouts();
-		}
-	}
-
-	public static void enableLayout(String path) {
-		try {
-			File f = new File(path);
-			String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(path), "txt");
-			FileUtils.copyFile(f, new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name));
-			f.delete();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		reloadFancyMenu();
-	}
-
-	public static void enableLayout(LayoutHandler.LayoutProperties layout) {
-		if (layout.path != null) {
-			enableLayout(layout.path);
-		}
-	}
-
-	public static void disableLayout(String path) {
-		try {
-			File f = new File(path);
-			String disPath = FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled";
-			String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(path), "txt");
-			FileUtils.copyFile(f, new File(disPath + "/" + name));
-			f.delete();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		reloadFancyMenu();
-	}
-
-	public static void disableLayout(LayoutHandler.LayoutProperties layout) {
-		if (layout.path != null) {
-			disableLayout(layout.path);
-		}
-	}
-
-	public static void editLayout(Screen current, File layout) {
-		try {
-			if ((layout != null) && (current != null) && (layout.exists()) && (layout.isFile())) {
-				List<PropertiesSet> l = new ArrayList<>();
-				PropertiesSet set = PropertiesSerializer.getProperties(layout.getPath());
-				l.add(set);
-				List<PropertiesSection> meta = set.getPropertiesOfType("customization-meta");
-				if (meta.isEmpty()) {
-					meta = set.getPropertiesOfType("type-meta");
-				}
-				if (!meta.isEmpty()) {
-					meta.get(0).addEntry("path", layout.getPath());
-					LayoutEditorScreen.isActive = true;
-					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
-					MenuCustomization.stopSounds();
-					MenuCustomization.resetSounds();
-					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-						if (r instanceof AdvancedAnimation) {
-							((AdvancedAnimation)r).stopAudio();
-							if (((AdvancedAnimation)r).replayIntro()) {
-								r.resetAnimation();
-							}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Will save the layout as layout file.
-	 *
-	 * @param to Full file path with file name + extension.
-	 */
-	public static boolean saveLayoutTo(PropertiesSet layout, String to) {
-		File f = new File(to);
-		String s = Files.getFileExtension(to);
-		if (!s.equals("")) {
-			if (f.exists() && f.isFile()) {
-				f.delete();
-			}
-			PropertiesSerializer.writeProperties(layout, f.getPath());
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Will save the layout as layout file.
-	 *
-	 * @param to Full file path with file name + extension.
-	 */
-	public static boolean saveLayoutTo(List<PropertiesSection> layout, String to) {
-		PropertiesSet props = new PropertiesSet("menu");
-		for (PropertiesSection sec : layout) {
-			props.addProperties(sec);
-		}
-		return saveLayoutTo(props, to);
 	}
 
 	public static boolean isScreenOverridden(Screen current) {

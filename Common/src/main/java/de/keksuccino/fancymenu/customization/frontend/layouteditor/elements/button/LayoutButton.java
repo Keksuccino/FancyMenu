@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonScriptEngine;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.ChooseFilePopup;
@@ -27,7 +27,7 @@ import net.minecraft.network.chat.Component;
 
 public class LayoutButton extends LayoutElement {
 
-	public MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
+	public ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer;
 	
 //	public String actionContent = "";
 //	public String actionType = "openlink";
@@ -38,7 +38,7 @@ public class LayoutButton extends LayoutElement {
 	
 	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
 
-	public LayoutButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
+	public LayoutButton(ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, label, width, height, 0, 0), true, handler, false);
 		this.onlydisplayin = onlydisplayin;
 		this.customizationContainer = customizationContainer;

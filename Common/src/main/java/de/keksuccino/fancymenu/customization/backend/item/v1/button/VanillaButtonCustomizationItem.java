@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.backend.item.v1;
+package de.keksuccino.fancymenu.customization.backend.item.v1.button;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,10 +7,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
 import de.keksuccino.fancymenu.customization.MenuCustomization;
 import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -28,10 +30,12 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	public String hoverLabelRaw;
 	public String labelRaw;
 	protected boolean normalLabelCached = false;
-	public MenuHandlerBase handler;
+	public ScreenCustomizationLayer handler;
 	public LoadingRequirementContainer loadingRequirements = null;
+	public String tooltip = null;
 
-	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent, MenuHandlerBase handler) {
+	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent, ScreenCustomizationLayer handler) {
+
 		super(item);
 		this.parent = parent;
 		this.handler = handler;
@@ -95,6 +99,10 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 					this.orientationElementIdentifier = oe;
 				}
 
+			}
+
+			if (this.action.equalsIgnoreCase("setbuttondescription")) {
+				this.tooltip = item.getEntryValue("description");
 			}
 			
 		}
@@ -166,6 +174,12 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	}
 
 	protected void updateValues() {
+
+		if (this.action.equalsIgnoreCase("setbuttondescription") && (this.tooltip != null)) {
+			if (this.parent.getButton().isHoveredOrFocused()) {
+				TooltipHandler.INSTANCE.addWidgetTooltip(this.parent.getButton(), Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
+			}
+		}
 
 		if (this.action.equalsIgnoreCase("renamebutton") || this.action.equalsIgnoreCase("setbuttonlabel")) {
 			if (this.labelRaw != null) {

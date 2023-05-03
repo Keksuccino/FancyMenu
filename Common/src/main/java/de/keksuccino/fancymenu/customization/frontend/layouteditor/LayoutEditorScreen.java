@@ -12,9 +12,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.backend.LayoutHandler;
 import de.keksuccino.fancymenu.customization.backend.item.v1.*;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.ButtonBackgroundPopup;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.DeepCustomizationElement;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.DeepCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.DeepCustomizationLayerRegistry;
@@ -91,7 +92,7 @@ public class LayoutEditorScreen extends Screen {
 	public List<LayoutElement> deleteContentQueue = new ArrayList<>();
 	protected List<LayoutElement> vanillaButtonContent = new ArrayList<>();
 	protected Map<String, Boolean> audio = new HashMap<>();
-	public Map<Long, MenuHandlerBase.ButtonCustomizationContainer> vanillaButtonCustomizationContainers = new HashMap<>();
+	public Map<Long, ScreenCustomizationLayer.ButtonCustomizationContainer> vanillaButtonCustomizationContainers = new HashMap<>();
 	public Map<Long, Float> vanillaDelayAppearance = new HashMap<>();
 	public Map<Long, Boolean> vanillaDelayAppearanceFirstTime = new HashMap<>();
 	public Map<Long, Float> vanillaFadeIn = new HashMap<>();
@@ -162,7 +163,7 @@ public class LayoutEditorScreen extends Screen {
 	public LayoutEditorScreen(Screen screenToCustomize) {
 		super(Component.literal(""));
 		this.screen = screenToCustomize;
-		Component cachedOriTitle = MenuHandlerBase.cachedOriginalMenuTitles.get(this.screen.getClass());
+		Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.screen.getClass());
 		if (cachedOriTitle != null) {
 			ScreenTitleUtils.setScreenTitle(this.screen, cachedOriTitle);
 		}
@@ -431,7 +432,7 @@ public class LayoutEditorScreen extends Screen {
 		for (ButtonData b : ButtonCache.getButtons()) {
 			if (!this.containsVanillaButton(l, b)) {
 				if (!this.vanillaButtonCustomizationContainers.containsKey(b.getId())) {
-					MenuHandlerBase.ButtonCustomizationContainer cc = new MenuHandlerBase.ButtonCustomizationContainer();
+					ScreenCustomizationLayer.ButtonCustomizationContainer cc = new ScreenCustomizationLayer.ButtonCustomizationContainer();
 					PropertiesSection dummySec = new PropertiesSection("customization");
 					cc.loadingRequirementContainer = new LoadingRequirementContainer();
 					this.vanillaButtonCustomizationContainers.put(b.getId(), cc);
@@ -1056,7 +1057,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	protected void setButtonTexturesForFocusedObjects() {
-		MenuHandlerBase.ButtonCustomizationContainer cc = new MenuHandlerBase.ButtonCustomizationContainer();
+		ScreenCustomizationLayer.ButtonCustomizationContainer cc = new ScreenCustomizationLayer.ButtonCustomizationContainer();
 		ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this, cc, () -> {
 
 			this.history.saveSnapshot(this.history.createSnapshot());
@@ -1252,7 +1253,7 @@ public class LayoutEditorScreen extends Screen {
 		if (Minecraft.getInstance().font.width(label) + 10 > w) {
 			w = Minecraft.getInstance().font.width(label) + 10;
 		}
-		LayoutButton b = new LayoutButton(new MenuHandlerBase.ButtonCustomizationContainer(), w, 20, label, null, this);
+		LayoutButton b = new LayoutButton(new ScreenCustomizationLayer.ButtonCustomizationContainer(), w, 20, label, null, this);
 		b.object.posY = (int)(this.ui.bar.getHeight() * UIBase.getUIScale());
 		this.addContent(b);
 	}
@@ -1458,7 +1459,7 @@ public class LayoutEditorScreen extends Screen {
 
 		if ((this instanceof PreloadedLayoutEditorScreen) && (((PreloadedLayoutEditorScreen)this).single != null)) {
 
-			if (!MenuCustomization.saveLayoutTo(this.getAllProperties(), ((PreloadedLayoutEditorScreen)this).single)) {
+			if (!LayoutHandler.saveLayout(this.getAllProperties(), ((PreloadedLayoutEditorScreen)this).single)) {
 				this.saveLayoutAs();
 			} else {
 				LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();
@@ -1489,7 +1490,7 @@ public class LayoutEditorScreen extends Screen {
 					String file = FancyMenu.getCustomizationsDirectory().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
 					File f = new File(file);
 					if (!f.exists()) {
-						if (!MenuCustomization.saveLayoutTo(this.getAllProperties(), file)) {
+						if (!LayoutHandler.saveLayout(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
 						} else {
 							LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();

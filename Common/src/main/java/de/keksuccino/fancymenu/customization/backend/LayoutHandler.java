@@ -4,15 +4,24 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.MenuCustomization;
+import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.frontend.layouteditor.PreloadedLayoutEditorScreen;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
+import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 
 public class LayoutHandler {
 	
@@ -24,10 +33,9 @@ public class LayoutHandler {
 	}
 
 	public static void reloadLayouts() {
-		File f = FancyMenu.getCustomizationsDirectory();
-		enabledLayouts = deserializeLayoutFilesInDir(f);
-		File f3 = new File(FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled");
-		disabledLayouts = deserializeLayoutFilesInDir(f3);
+		MenuCustomization.updateCustomizableMenuCache();
+		enabledLayouts = deserializeLayoutFilesInDir(FancyMenu.getCustomizationsDirectory());
+		disabledLayouts = deserializeLayoutFilesInDir(new File(FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled"));
 	}
 
 	public static List<PropertiesSet> deserializeLayoutFilesInDir(File dir) {
@@ -221,6 +229,105 @@ public class LayoutHandler {
 		List<LayoutProperties> l = new ArrayList<>();
 		propsList.forEach((props) -> l.add(new LayoutProperties(props)));
 		return l;
+	}
+
+	public static void enableLayout(String path) {
+		try {
+			File f = new File(path);
+			String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(path), "txt");
+			FileUtils.copyFile(f, new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name));
+			f.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		MenuCustomization.reloadFancyMenu();
+	}
+
+	public static void enableLayout(LayoutHandler.LayoutProperties layout) {
+		if (layout.path != null) {
+			enableLayout(layout.path);
+		}
+	}
+
+	public static void disableLayout(String path) {
+		try {
+			File f = new File(path);
+			String disPath = FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled";
+			String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(path), "txt");
+			FileUtils.copyFile(f, new File(disPath + "/" + name));
+			f.delete();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		MenuCustomization.reloadFancyMenu();
+	}
+
+	public static void disableLayout(LayoutHandler.LayoutProperties layout) {
+		if (layout.path != null) {
+			disableLayout(layout.path);
+		}
+	}
+
+	public static void editLayout(Screen current, File layout) {
+		try {
+			if ((layout != null) && (current != null) && (layout.exists()) && (layout.isFile())) {
+				List<PropertiesSet> l = new ArrayList<>();
+				PropertiesSet set = PropertiesSerializer.getProperties(layout.getPath());
+				l.add(set);
+				List<PropertiesSection> meta = set.getPropertiesOfType("customization-meta");
+				if (meta.isEmpty()) {
+					meta = set.getPropertiesOfType("type-meta");
+				}
+				if (!meta.isEmpty()) {
+					meta.get(0).addEntry("path", layout.getPath());
+					LayoutEditorScreen.isActive = true;
+					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
+					MenuCustomization.stopSounds();
+					MenuCustomization.resetSounds();
+					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+						if (r instanceof AdvancedAnimation) {
+							((AdvancedAnimation)r).stopAudio();
+							if (((AdvancedAnimation)r).replayIntro()) {
+								r.resetAnimation();
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Will save the layout as layout file.
+	 *
+	 * @param saveTo Full file path with file name + extension.
+	 */
+	public static boolean saveLayout(PropertiesSet layout, String saveTo) {
+		File f = new File(saveTo);
+		String s = Files.getFileExtension(saveTo);
+		if (!s.equals("")) {
+			if (f.exists() && f.isFile()) {
+				f.delete();
+			}
+			PropertiesSerializer.writeProperties(layout, f.getPath());
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Will save the layout as layout file.
+	 *
+	 * @param saveTo Full file path with file name + extension.
+	 */
+	public static boolean saveLayout(List<PropertiesSection> layout, String saveTo) {
+		PropertiesSet props = new PropertiesSet("menu");
+		for (PropertiesSection sec : layout) {
+			props.addProperties(sec);
+		}
+		return saveLayout(props, saveTo);
 	}
 
 	public static class LayoutProperties {

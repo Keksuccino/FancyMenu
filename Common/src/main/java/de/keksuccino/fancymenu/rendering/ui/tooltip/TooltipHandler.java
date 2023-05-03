@@ -30,13 +30,17 @@ public class TooltipHandler {
 
     @EventListener(priority = -1000)
     public void onScreenRenderPost(RenderScreenEvent.Post e) {
+        HandledTooltip renderTooltip = null;
         for (HandledTooltip t : new ArrayList<>(this.tooltips)) {
             if (t.shouldRender.getAsBoolean()) {
-                t.tooltip.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+                renderTooltip = t;
             }
             if (t.removeAfterScreenRender) {
                 t.remove();
             }
+        }
+        if (renderTooltip != null) {
+            renderTooltip.tooltip.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
         }
     }
 

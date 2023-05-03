@@ -6,9 +6,9 @@ import de.keksuccino.fancymenu.event.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.MenuHandlerRegistry;
-import de.keksuccino.fancymenu.customization.backend.menuhandler.custom.MainMenuHandler;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.backend.layer.layers.TitleScreenLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.LoadingOverlay;
@@ -29,7 +29,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 
 	private static boolean animationsLoaded = false;
 	private static boolean firstScreenInit = true;
-	private MenuHandlerBase menuHandler = null;
+	private ScreenCustomizationLayer menuHandler = null;
 
 	@Inject(method = "<init>", at = @At(value = "RETURN"))
 	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer consumer, boolean b, CallbackInfo info) {
@@ -53,7 +53,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 	private void afterRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 			//This is to correctly render the title menu
-			if (this.menuHandler instanceof MainMenuHandler) {
+			if (this.menuHandler instanceof TitleScreenLayer) {
 				Minecraft.getInstance().screen.renderBackground(matrix);
 			}
 			//Manually call onRenderPost of the screen's menu handler, because it doesn't get called automatically in the loading screen
@@ -68,7 +68,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 			AnimationHandler.setReady(true);
 			MenuCustomization.allowScreenCustomization = true;
 			//Cache the menu handler of the screen to be able to call some of its render events
-			this.menuHandler = MenuHandlerRegistry.getHandlerFor(Minecraft.getInstance().screen);
+			this.menuHandler = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
 			//If it's the first time a screen gets initialized, soft-reload the screen's handler, so first-time stuff works when fading to the Title menu
 			if ((this.menuHandler != null) && firstScreenInit) {
 				this.menuHandler.onSoftReload(new SoftMenuReloadEvent(Minecraft.getInstance().screen));
