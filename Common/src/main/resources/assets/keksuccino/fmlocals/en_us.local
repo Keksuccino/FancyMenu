@@ -231,7 +231,6 @@ helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale val
 
 helper.creator.items.button.resetlabel = Reset Label
 
-
 helper.creator.items.custombutton.onlydisplayin = Only Display In
 helper.creator.items.custombutton.onlydisplayin.outgame = Outgame
 helper.creator.items.custombutton.onlydisplayin.singleplayer = Singleplayer
@@ -244,9 +243,12 @@ helper.creator.items.button.clicksound.reset = Reset Clicksound
 helper.popup.togglecustomization.enable = Customization: §cOff
 helper.popup.togglecustomization.disable = Customization: §aOn
 
-helper.creator.object.stretch = Stretch
-helper.creator.object.stretch.x = To Screen Width
-helper.creator.object.stretch.y = To Screen Height
+helper.creator.object.stretch.x.on = Stretch Horizontally: §aOn
+helper.creator.object.stretch.x.off = Stretch Horizontally: §cOff
+helper.creator.object.stretch.x.desc = Will stretch the element to the%n%width of the screen.
+helper.creator.object.stretch.y.on = Stretch Vertically: §aOn
+helper.creator.object.stretch.y.off = Stretch Vertically: §cOff
+helper.creator.object.stretch.y.desc = Will stretch the element to the%n%height of the screen.
 
 helper.creator.object.stretch.unsupportedorientation = §c§lUnsupported Orientation!%n%%n%%n%The current orientation of this element is not supported by this stretch action.%n%%n%§lSupported Orientations: {}
 

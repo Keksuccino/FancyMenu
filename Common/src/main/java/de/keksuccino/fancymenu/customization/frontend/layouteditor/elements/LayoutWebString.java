@@ -4,12 +4,13 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.customization.backend.item.v1.WebStringCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase.Alignment;
+import de.keksuccino.fancymenu.customization.backend.element.v1.WebStringCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement.Alignment;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -18,7 +19,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
 @Deprecated
-public class LayoutWebString extends LayoutElement {
+public class LayoutWebString extends AbstractEditorElement {
 	
 	protected AdvancedButton alignmentLeftBtn;
 	protected AdvancedButton alignmentRightBtn;
@@ -37,7 +38,7 @@ public class LayoutWebString extends LayoutElement {
 		AdvancedButton scaleB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.string.setscale"), true, (press) -> {
 			PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.string.setscale") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, this::setScaleCallback));
 		});
-		this.rightclickMenu.addContent(scaleB);
+		this.rightClickContextMenu.addContent(scaleB);
 		
 		String sLabel = Locals.localize("helper.creator.items.string.setshadow");
 		if (this.getObject().shadow) {
@@ -46,21 +47,21 @@ public class LayoutWebString extends LayoutElement {
 		AdvancedButton shadowB = new AdvancedButton(0, 0, 0, 16, sLabel, true, (press) -> {
 			if (this.getObject().shadow) {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setshadow"));
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				
 				this.getObject().shadow = false;
 			} else {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				
 				this.getObject().shadow = true;
 			}
 		});
-		this.rightclickMenu.addContent(shadowB);
+		this.rightClickContextMenu.addContent(shadowB);
 
 		FMContextMenu alignmentMenu = new FMContextMenu();
 		alignmentMenu.setAutoclose(true);
-		this.rightclickMenu.addChild(alignmentMenu);
+		this.rightClickContextMenu.addChild(alignmentMenu);
 
 		String al = Locals.localize("helper.creator.items.string.alignment.left");
 		if (this.getObject().alignment == Alignment.LEFT) {
@@ -103,7 +104,7 @@ public class LayoutWebString extends LayoutElement {
 			alignmentMenu.openMenuAt(0, press.y);
 		});
 		alignmentBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.string.alignment.desc"), "%n%"));
-		this.rightclickMenu.addContent(alignmentBtn);
+		this.rightClickContextMenu.addContent(alignmentBtn);
 		
 		String mLabel = Locals.localize("helper.creator.webstring.multiline");
 		if (this.getObject().multiline) {
@@ -112,28 +113,28 @@ public class LayoutWebString extends LayoutElement {
 		AdvancedButton multilineB = new AdvancedButton(0, 0, 0, 16, mLabel, true, (press) -> {
 			if (this.getObject().multiline) {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.webstring.multiline"));
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				
 				this.getObject().multiline = false;
 				this.getObject().updateContent(this.getObject().value);
 			} else {
 				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.webstring.nomultiline"));
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				
 				this.getObject().multiline = true;
 				this.getObject().updateContent(this.getObject().value);
 			}
 		});
-		this.rightclickMenu.addContent(multilineB);
+		this.rightClickContextMenu.addContent(multilineB);
 		
 	}
 	
 	private float getStringScale() {
-		return ((WebStringCustomizationItem)this.object).scale;
+		return ((WebStringCustomizationItem)this.element).scale;
 	}
 	
 	private WebStringCustomizationItem getObject() {
-		return ((WebStringCustomizationItem)this.object);
+		return ((WebStringCustomizationItem)this.element);
 	}
 	
 	@Override
@@ -150,35 +151,35 @@ public class LayoutWebString extends LayoutElement {
 	protected void setOrientation(String pos) {
 		super.setOrientation(pos);
 		if (this.getObject().alignment == Alignment.CENTERED) {
-			if (this.object.orientation.endsWith("-right")) {
-				this.object.posX += this.object.getWidth();
+			if (this.element.orientation.endsWith("-right")) {
+				this.element.rawX += this.element.getWidth();
 			}
-			if (this.object.orientation.endsWith("-centered")) {
-				this.object.posX += this.object.getWidth() / 2;
+			if (this.element.orientation.endsWith("-centered")) {
+				this.element.rawX += this.element.getWidth() / 2;
 			}
 		} else if (this.getObject().alignment == Alignment.RIGHT) {
-			if (this.object.orientation.endsWith("-right")) {
-				this.object.posX += this.object.getWidth();
+			if (this.element.orientation.endsWith("-right")) {
+				this.element.rawX += this.element.getWidth();
 			}
-			if (this.object.orientation.endsWith("-left")) {
-				this.object.posX += this.object.getWidth();
+			if (this.element.orientation.endsWith("-left")) {
+				this.element.rawX += this.element.getWidth();
 			}
-			if (this.object.orientation.endsWith("-centered")) {
-				this.object.posX += this.object.getWidth() / 2;
+			if (this.element.orientation.endsWith("-centered")) {
+				this.element.rawX += this.element.getWidth() / 2;
 			}
 		} else if (this.getObject().alignment == Alignment.LEFT) {
-			if (this.object.orientation.endsWith("-centered")) {
-				this.object.posX += this.object.getWidth() / 2;
+			if (this.element.orientation.endsWith("-centered")) {
+				this.element.rawX += this.element.getWidth() / 2;
 			}
 		}
 	}
 	
 	public void setScale(float scale) {
 		if (this.getObject().scale != scale) {
-			this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 		}
 		
-		((WebStringCustomizationItem)this.object).scale = scale;
+		((WebStringCustomizationItem)this.element).scale = scale;
 	}
 
 	public void updateContent(String url) {
@@ -202,29 +203,29 @@ public class LayoutWebString extends LayoutElement {
 		
 		PropertiesSection p1 = new PropertiesSection("customization");
 		p1.addEntry("action", "addwebtext");
-		p1.addEntry("actionid", this.object.getActionId());
-		if (this.object.delayAppearance) {
+		p1.addEntry("actionid", this.element.getInstanceIdentifier());
+		if (this.element.delayAppearance) {
 			p1.addEntry("delayappearance", "true");
-			p1.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);
-			p1.addEntry("delayappearanceseconds", "" + this.object.delayAppearanceSec);
-			if (this.object.fadeIn) {
+			p1.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+			p1.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+			if (this.element.fadeIn) {
 				p1.addEntry("fadein", "true");
-				p1.addEntry("fadeinspeed", "" + this.object.fadeInSpeed);
+				p1.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
 			}
 		}
-		p1.addEntry("url", ((WebStringCustomizationItem)this.object).rawURL);
-		p1.addEntry("x", "" + this.object.posX);
-		p1.addEntry("y", "" + this.object.posY);
-		p1.addEntry("orientation", this.object.orientation);
-		if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
-			p1.addEntry("orientation_element", this.object.orientationElementIdentifier);
+		p1.addEntry("url", ((WebStringCustomizationItem)this.element).rawURL);
+		p1.addEntry("x", "" + this.element.rawX);
+		p1.addEntry("y", "" + this.element.rawY);
+		p1.addEntry("orientation", this.element.orientation);
+		if (this.element.orientation.equals("element") && (this.element.orientationElementIdentifier != null)) {
+			p1.addEntry("orientation_element", this.element.orientationElementIdentifier);
 		}
 		p1.addEntry("scale", "" + this.getObject().scale);
 		p1.addEntry("shadow", "" + this.getObject().shadow);
 		p1.addEntry("multiline", "" + this.getObject().multiline);
 		p1.addEntry("alignment", this.getObject().alignment.key);
 
-		this.addLoadingRequirementPropertiesTo(p1);
+		this.serializeLoadingRequirementsTo(p1);
 
 		l.add(p1);
 		

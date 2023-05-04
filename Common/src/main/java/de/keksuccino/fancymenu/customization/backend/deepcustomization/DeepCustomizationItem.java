@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.backend.deepcustomization;
 
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
-public abstract class DeepCustomizationItem extends CustomizationItemBase {
+public abstract class DeepCustomizationItem extends AbstractElement {
 
     public DeepCustomizationElement parentElement;
 

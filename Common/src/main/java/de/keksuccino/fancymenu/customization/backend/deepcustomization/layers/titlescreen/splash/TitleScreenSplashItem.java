@@ -56,13 +56,13 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
 
     //Only used in editor
     @Override
-    public int getPosX(Screen menu) {
+    public int getPosX(Screen screen) {
         return this.lastSplashPosX - (this.getWidth() / 2);
     }
 
     //Only used in editor
     @Override
-    public int getPosY(Screen menu) {
+    public int getPosY(Screen screen) {
         return this.lastSplashPosY - (this.getHeight() / 2);
     }
 
@@ -114,8 +114,8 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
             originY = s.height;
         }
 
-        finalPosX = originX + posX;
-        finalPosY = originY + posY;
+        finalPosX = originX + rawX;
+        finalPosY = originY + rawY;
 
         this.lastSplashPosX = (int) finalPosX;
         this.lastSplashPosY = (int) finalPosY;

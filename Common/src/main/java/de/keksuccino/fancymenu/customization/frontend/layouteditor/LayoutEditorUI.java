@@ -11,8 +11,8 @@ import com.google.common.io.Files;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
+import de.keksuccino.fancymenu.customization.backend.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.backend.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.backend.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonScriptEngine;
@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.Layo
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.loadingrequirements.ManageRequirementsScreen;
@@ -34,8 +34,8 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.customization.backend.item.v1.ShapeCustomizationItem.Shape;
-import de.keksuccino.fancymenu.customization.backend.item.v1.SplashTextCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.customization.backend.element.v1.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.customization.backend.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar.ElementAlignment;
@@ -1269,10 +1269,10 @@ public class LayoutEditorUI extends UIBase {
 			}
 
 			/** CUSTOM ITEMS (API) **/
-			for (CustomizationItemContainer c : CustomizationItemRegistry.getItems()) {
+			for (ElementBuilder c : ElementRegistry.getBuilders()) {
 
 				AdvancedButton cusItemButton = new AdvancedButton(0, 0, 0, 20, c.getDisplayName(), (press) -> {
-					this.parent.addContent(c.constructEditorElementInstance(c.constructDefaultItemInstance(), this.parent));
+					this.parent.addContent(c.buildEditorElementInstance(c.buildDefaultInstance(), this.parent));
 				});
 				String[] desc = c.getDescription();
 				if ((desc != null) && (desc.length > 0)) {
@@ -1397,7 +1397,7 @@ public class LayoutEditorUI extends UIBase {
 				AdvancedButton stretchXBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 
-					for (LayoutElement o : this.parent.focusedObjectsCache) {
+					for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 						if (o.isStretchable()) {
 							o.setStretchedX(!this.parent.multiselectStretchedX, false);
 						}
@@ -1417,7 +1417,7 @@ public class LayoutEditorUI extends UIBase {
 				AdvancedButton stretchYBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
 					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 
-					for (LayoutElement o : this.parent.focusedObjectsCache) {
+					for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 						if (o.isStretchable()) {
 							o.setStretchedY(!this.parent.multiselectStretchedY, false);
 						}
@@ -1455,7 +1455,7 @@ public class LayoutEditorUI extends UIBase {
 
 				boolean allVanillaBtns = true;
 				boolean allBtns = true;
-				for (LayoutElement o : this.parent.focusedObjectsCache) {
+				for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 					if (!(o instanceof LayoutVanillaButton)) {
 						allVanillaBtns = false;
 					}
@@ -1474,14 +1474,14 @@ public class LayoutEditorUI extends UIBase {
 					AdvancedButton resetOriBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation"), true, (press) -> {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 
-						for (LayoutElement o : this.parent.focusedObjectsCache) {
+						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
-								vb.object.orientation = "original";
-								vb.object.posX = vb.button.x;
-								vb.object.posY = vb.button.y;
-								vb.object.setWidth(vb.button.width);
-								vb.object.setHeight(vb.button.height);
+								vb.element.orientation = "original";
+								vb.element.rawX = vb.button.x;
+								vb.element.rawY = vb.button.y;
+								vb.element.setWidth(vb.button.width);
+								vb.element.setHeight(vb.button.height);
 							}
 						}
 						this.closeMenu();
@@ -1495,7 +1495,7 @@ public class LayoutEditorUI extends UIBase {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
-						for (LayoutElement o : this.parent.focusedObjectsCache) {
+						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
 								this.parent.hideVanillaButton(vb);
@@ -1534,7 +1534,7 @@ public class LayoutEditorUI extends UIBase {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 									this.parent.history.setPreventSnapshotSaving(true);
 
-									for (LayoutElement o : this.parent.focusedObjectsCache) {
+									for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 										if (o instanceof LayoutVanillaButton) {
 											LayoutVanillaButton vb = (LayoutVanillaButton) o;
 											vb.customizationContainer.clickSound = call;
@@ -1562,7 +1562,7 @@ public class LayoutEditorUI extends UIBase {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
-						for (LayoutElement o : this.parent.focusedObjectsCache) {
+						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
 								vb.customizationContainer.clickSound = null;
@@ -1590,7 +1590,7 @@ public class LayoutEditorUI extends UIBase {
 									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 									this.parent.history.setPreventSnapshotSaving(true);
 
-									for (LayoutElement o : this.parent.focusedObjectsCache) {
+									for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 										if (o instanceof LayoutVanillaButton) {
 											LayoutVanillaButton vb = (LayoutVanillaButton) o;
 											vb.customizationContainer.hoverSound = call;
@@ -1618,7 +1618,7 @@ public class LayoutEditorUI extends UIBase {
 						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
 						this.parent.history.setPreventSnapshotSaving(true);
 
-						for (LayoutElement o : this.parent.focusedObjectsCache) {
+						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
 							if (o instanceof LayoutVanillaButton) {
 								LayoutVanillaButton vb = (LayoutVanillaButton) o;
 								vb.customizationContainer.hoverSound = null;
@@ -1658,7 +1658,7 @@ public class LayoutEditorUI extends UIBase {
 			this.separators.clear();
 
 			boolean containsHiddenDeeps = false;
-			for (LayoutElement e : this.parent.content) {
+			for (AbstractEditorElement e : this.parent.content) {
 				if (e instanceof DeepCustomizationLayoutEditorElement) {
 					if (((DeepCustomizationLayoutEditorElement)e).getDeepCustomizationItem().hidden) {
 						String name = ((DeepCustomizationLayoutEditorElement) e).parentDeepCustomizationElement.getDisplayName();

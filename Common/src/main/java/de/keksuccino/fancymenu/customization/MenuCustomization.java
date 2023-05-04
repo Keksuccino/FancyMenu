@@ -15,8 +15,8 @@ import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.De
 import de.keksuccino.fancymenu.customization.backend.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.customization.backend.item.v2.items.CustomizationItems;
-import de.keksuccino.fancymenu.customization.backend.item.v2.items.playerentity.PlayerEntityRotationScreen;
+import de.keksuccino.fancymenu.customization.backend.element.elements.Elements;
+import de.keksuccino.fancymenu.customization.backend.element.elements.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.backend.layer.layers.*;
@@ -76,7 +76,7 @@ public class MenuCustomization {
 
 		de.keksuccino.fancymenu.customization.backend.placeholder.v2.placeholders.Placeholders.registerAll();
 
-		CustomizationItems.registerAll();
+		Elements.registerAll();
 
 		VariableHandler.init();
 
@@ -264,7 +264,7 @@ public class MenuCustomization {
 		return isCurrentScrollable;
 	}
 
-	public static String generateRandomActionId() {
+	public static String generateUniqueIdentifier() {
 		long ms = System.currentTimeMillis();
 		String s = UUID.randomUUID().toString();
 		return s + ms;

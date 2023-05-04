@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.Loadi
 import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -38,12 +38,12 @@ public class IsElementHoveredRequirement extends LoadingRequirement {
             if (s != null) {
                 ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
                 if (handler != null) {
-                    CustomizationItemBase i = handler.getItemByActionId(value);
+                    AbstractElement i = handler.getItemByActionId(value);
                     if (i != null) {
                         int mX = MouseInput.getMouseX();
                         int mY = MouseInput.getMouseY();
-                        int iX = i.getPosX(s);
-                        int iY = i.getPosY(s);
+                        int iX = i.getX(s);
+                        int iY = i.getY(s);
                         int iW = i.getWidth();
                         int iH = i.getHeight();
                         if ((mX >= iX) && (mX <= (iX + iW)) && (mY >= iY) && (mY <= (iY + iH))) {

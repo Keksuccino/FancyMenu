@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.customization.backend.placeholder.v2.placeholder
 import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.item.v1.button.VanillaButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.backend.element.v1.button.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.backend.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -28,7 +28,7 @@ public class ElementWidthPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String id = dps.values.get("id");
         if (id != null) {
-            CustomizationItemBase element = findCustomizationItemForId(id);
+            AbstractElement element = findCustomizationItemForId(id);
             if (element != null) {
                 if (element instanceof VanillaButtonCustomizationItem) {
                     return "" + ((VanillaButtonCustomizationItem) element).parent.getButton().getWidth();
@@ -39,7 +39,7 @@ public class ElementWidthPlaceholder extends Placeholder {
         return null;
     }
 
-    private CustomizationItemBase findCustomizationItemForId(String id) {
+    private AbstractElement findCustomizationItemForId(String id) {
         if (Minecraft.getInstance().screen != null) {
             if (!(Minecraft.getInstance().screen instanceof LayoutEditorScreen)) {
                 ScreenCustomizationLayer mh = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
@@ -48,9 +48,9 @@ public class ElementWidthPlaceholder extends Placeholder {
                 }
             } else {
                 LayoutEditorScreen editor = ((LayoutEditorScreen)Minecraft.getInstance().screen);
-                LayoutElement e = editor.getElementByActionId(id);
+                AbstractEditorElement e = editor.getElementByActionId(id);
                 if (e != null) {
-                    return e.object;
+                    return e.element;
                 }
             }
         }

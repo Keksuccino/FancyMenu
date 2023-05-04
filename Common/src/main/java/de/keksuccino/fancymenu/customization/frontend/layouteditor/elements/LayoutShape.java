@@ -4,10 +4,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.item.v1.ShapeCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.backend.element.v1.ShapeCustomizationItem;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -15,9 +16,9 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 
-public class LayoutShape extends LayoutElement {
+public class LayoutShape extends AbstractEditorElement {
 
-	public LayoutShape(CustomizationItemBase object, LayoutEditorScreen handler) {
+	public LayoutShape(AbstractElement object, LayoutEditorScreen handler) {
 		super(object, true, handler);
 	}
 
@@ -26,7 +27,7 @@ public class LayoutShape extends LayoutElement {
 		this.stretchable = true;
 		super.init();
 		
-		this.rightclickMenu.setAutoclose(true);
+		this.rightClickContextMenu.setAutoclose(true);
 		
 		AdvancedButton colorB = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.shape.color"), true, (press) -> {
 
@@ -37,7 +38,7 @@ public class LayoutShape extends LayoutElement {
 						if (c != null) {
 							
 							if (!this.getObject().getColorString().equalsIgnoreCase(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
 							
 							this.getObject().setColor(call);
@@ -45,7 +46,7 @@ public class LayoutShape extends LayoutElement {
 						}
 					} else {
 						if (!this.getObject().getColorString().equalsIgnoreCase("#ffffff")) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						
 						this.getObject().setColor("#ffffff");
@@ -60,7 +61,7 @@ public class LayoutShape extends LayoutElement {
 			
 		});
 		colorB.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.shape.color.btndesc"), "%n%"));
-		this.rightclickMenu.addContent(colorB);
+		this.rightClickContextMenu.addContent(colorB);
 		
 	}
 	
@@ -72,50 +73,50 @@ public class LayoutShape extends LayoutElement {
 		if (this.getObject().shape != null) {
 			
 			s.addEntry("action", "addshape");
-			s.addEntry("actionid", this.object.getActionId());
-			if (this.object.advancedPosX != null) {
-				s.addEntry("advanced_posx", this.object.advancedPosX);
+			s.addEntry("actionid", this.element.getInstanceIdentifier());
+			if (this.element.advancedX != null) {
+				s.addEntry("advanced_posx", this.element.advancedX);
 			}
-			if (this.object.advancedPosY != null) {
-				s.addEntry("advanced_posy", this.object.advancedPosY);
+			if (this.element.advancedY != null) {
+				s.addEntry("advanced_posy", this.element.advancedY);
 			}
-			if (this.object.advancedWidth != null) {
-				s.addEntry("advanced_width", this.object.advancedWidth);
+			if (this.element.advancedWidth != null) {
+				s.addEntry("advanced_width", this.element.advancedWidth);
 			}
-			if (this.object.advancedHeight != null) {
-				s.addEntry("advanced_height", this.object.advancedHeight);
+			if (this.element.advancedHeight != null) {
+				s.addEntry("advanced_height", this.element.advancedHeight);
 			}
-			if (this.object.delayAppearance) {
+			if (this.element.delayAppearance) {
 				s.addEntry("delayappearance", "true");
-				s.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);
-				s.addEntry("delayappearanceseconds", "" + this.object.delayAppearanceSec);
-				if (this.object.fadeIn) {
+				s.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+				s.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+				if (this.element.fadeIn) {
 					s.addEntry("fadein", "true");
-					s.addEntry("fadeinspeed", "" + this.object.fadeInSpeed);
+					s.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
 				}
 			}
 			s.addEntry("shape", this.getObject().shape.name);
 			s.addEntry("color", this.getObject().getColorString());
-			s.addEntry("orientation", this.object.orientation);
-			if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
-				s.addEntry("orientation_element", this.object.orientationElementIdentifier);
+			s.addEntry("orientation", this.element.orientation);
+			if (this.element.orientation.equals("element") && (this.element.orientationElementIdentifier != null)) {
+				s.addEntry("orientation_element", this.element.orientationElementIdentifier);
 			}
 			if (this.stretchX) {
 				s.addEntry("x", "0");
 				s.addEntry("width", "%guiwidth%");
 			} else {
-				s.addEntry("x", "" + this.object.posX);
-				s.addEntry("width", "" + this.object.getWidth());
+				s.addEntry("x", "" + this.element.rawX);
+				s.addEntry("width", "" + this.element.getWidth());
 			}
 			if (this.stretchY) {
 				s.addEntry("y", "0");
 				s.addEntry("height", "%guiheight%");
 			} else {
-				s.addEntry("y", "" + this.object.posY);
-				s.addEntry("height", "" + this.object.getHeight());
+				s.addEntry("y", "" + this.element.rawY);
+				s.addEntry("height", "" + this.element.getHeight());
 			}
 
-			this.addLoadingRequirementPropertiesTo(s);
+			this.serializeLoadingRequirementsTo(s);
 			
 			l.add(s);
 		}
@@ -124,7 +125,7 @@ public class LayoutShape extends LayoutElement {
 	}
 	
 	protected ShapeCustomizationItem getObject() {
-		return (ShapeCustomizationItem) this.object;
+		return (ShapeCustomizationItem) this.element;
 	}
 
 }

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.backend.deepcustomization;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -18,7 +18,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement {
+public abstract class DeepCustomizationLayoutEditorElement extends AbstractEditorElement {
 
     private static final Logger LOGGER = LogManager.getLogger("fancymenu/DeepCustomizationLayoutEditorElement");
 
@@ -64,12 +64,12 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
         if (!this.getDeepCustomizationItem().hidden) {
             super.render(matrix, mouseX, mouseY);
         } else {
-            if (this.handler.isFocused(this)) {
-                this.handler.setObjectFocused(this, false, true);
+            if (this.editor.isFocused(this)) {
+                this.editor.setObjectFocused(this, false, true);
             }
             this.hovered = false;
-            if (this.rightclickMenu.isOpen()) {
-                this.rightclickMenu.closeMenu();
+            if (this.rightClickContextMenu.isOpen()) {
+                this.rightClickContextMenu.closeMenu();
             }
         }
 
@@ -79,7 +79,7 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
 
     protected void handleMoveWarning() {
         if (!this.dragable) {
-            if (MouseInput.isLeftMouseDown() && this.handler.isFocused(this) && this.hovered) {
+            if (MouseInput.isLeftMouseDown() && this.editor.isFocused(this) && this.hovered) {
                 int mX = MouseInput.getMouseX();
                 int mY = MouseInput.getMouseY();
                 if ((this.dragMouseX == -1000) && (this.dragMouseY == -1000)) {
@@ -132,32 +132,32 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
 
     @Override
     protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
-        String cachedOri = this.object.orientation;
+        String cachedOri = this.element.orientation;
         if (!this.orientationCanBeChanged) {
-            this.object.orientation = "original";
+            this.element.orientation = "original";
         }
         super.renderBorder(matrix, mouseX, mouseY);
-        this.object.orientation = cachedOri;
+        this.element.orientation = cachedOri;
     }
 
     @Override
-    public void destroyObject() {
+    public void destroyElement() {
         if (this.isDestroyable()) {
             if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
                 FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
                 PopupHandler.displayPopup(pop);
             }
             if (!this.getDeepCustomizationItem().hidden) {
-                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
             }
             this.getDeepCustomizationItem().hidden = true;
-            this.handler.setObjectFocused(this, false, true);
-            this.resetObjectStates();
+            this.editor.setObjectFocused(this, false, true);
+            this.resetElementStates();
         }
     }
 
     public DeepCustomizationItem getDeepCustomizationItem() {
-        return (DeepCustomizationItem) this.object;
+        return (DeepCustomizationItem) this.element;
     }
 
     public abstract SimplePropertiesSection serializeItem();
@@ -174,38 +174,38 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
             sec.removeEntry("action");
         }
         sec.addEntry("action", "deep_customization_element:" + this.parentDeepCustomizationElement.getIdentifier());
-        sec.addEntry("actionid", this.object.getActionId());
-        if (this.object.delayAppearance) {
+        sec.addEntry("actionid", this.element.getInstanceIdentifier());
+        if (this.element.delayAppearance) {
             sec.addEntry("delayappearance", "true");
-            sec.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);
-            sec.addEntry("delayappearanceseconds", "" + this.object.delayAppearanceSec);
-            if (this.object.fadeIn) {
+            sec.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+            sec.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+            if (this.element.fadeIn) {
                 sec.addEntry("fadein", "true");
-                sec.addEntry("fadeinspeed", "" + this.object.fadeInSpeed);
+                sec.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
             }
         }
-        sec.addEntry("x", "" + this.object.posX);
-        sec.addEntry("y", "" + this.object.posY);
-        sec.addEntry("orientation", this.object.orientation);
-        if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
-            sec.addEntry("orientation_element", this.object.orientationElementIdentifier);
+        sec.addEntry("x", "" + this.element.rawX);
+        sec.addEntry("y", "" + this.element.rawY);
+        sec.addEntry("orientation", this.element.orientation);
+        if (this.element.orientation.equals("element") && (this.element.orientationElementIdentifier != null)) {
+            sec.addEntry("orientation_element", this.element.orientationElementIdentifier);
         }
         if (this.stretchX) {
             sec.addEntry("x", "0");
             sec.addEntry("width", "%guiwidth%");
         } else {
-            sec.addEntry("x", "" + this.object.posX);
-            sec.addEntry("width", "" + this.object.getWidth());
+            sec.addEntry("x", "" + this.element.rawX);
+            sec.addEntry("width", "" + this.element.getWidth());
         }
         if (this.stretchY) {
             sec.addEntry("y", "0");
             sec.addEntry("height", "%guiheight%");
         } else {
-            sec.addEntry("y", "" + this.object.posY);
-            sec.addEntry("height", "" + this.object.getHeight());
+            sec.addEntry("y", "" + this.element.rawY);
+            sec.addEntry("height", "" + this.element.getHeight());
         }
         sec.addEntry("hidden", "" + this.getDeepCustomizationItem().hidden);
-        this.addLoadingRequirementPropertiesTo(sec);
+        this.serializeLoadingRequirementsTo(sec);
         l.add(sec);
         return l;
     }

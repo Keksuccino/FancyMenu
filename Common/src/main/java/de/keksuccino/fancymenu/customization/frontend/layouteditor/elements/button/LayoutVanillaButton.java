@@ -17,7 +17,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -27,7 +27,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 
-public class LayoutVanillaButton extends LayoutElement {
+public class LayoutVanillaButton extends AbstractEditorElement {
 
 	public final ButtonData button;
 	public final ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer;
@@ -35,10 +35,10 @@ public class LayoutVanillaButton extends LayoutElement {
 	public LayoutVanillaButton(ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer, ButtonData button, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, button.label, button.width, button.height, button.x, button.y), true, handler, false);
 		this.button = button;
-		this.object.orientation = "original";
+		this.element.orientation = "original";
 		this.customizationContainer = customizationContainer;
 		
-		this.object.loadingRequirementContainer = this.customizationContainer.loadingRequirementContainer;
+		this.element.loadingRequirementContainer = this.customizationContainer.loadingRequirementContainer;
 		
 		this.init();
 	}
@@ -51,32 +51,32 @@ public class LayoutVanillaButton extends LayoutElement {
 		super.init();
 
 		AdvancedButton b0 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.vanillabutton.resetorientation"), (press) -> {
-			if (!this.object.orientation.equals("original")) {
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+			if (!this.element.orientation.equals("original")) {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 			}
 
-			this.object.orientation = "original";
-			this.object.posX = this.button.x;
-			this.object.posY = this.button.y;
-			this.object.setWidth(this.button.width);
-			this.object.setHeight(this.button.height);
-			this.rightclickMenu.closeMenu();
-			this.handler.postRenderTasks.add(new Runnable() {
+			this.element.orientation = "original";
+			this.element.rawX = this.button.x;
+			this.element.rawY = this.button.y;
+			this.element.setWidth(this.button.width);
+			this.element.setHeight(this.button.height);
+			this.rightClickContextMenu.closeMenu();
+			this.editor.postRenderTasks.add(new Runnable() {
 				@Override
 				public void run() {
-					Minecraft.getInstance().setScreen(LayoutVanillaButton.this.handler);
+					Minecraft.getInstance().setScreen(LayoutVanillaButton.this.editor);
 				}
 			});
 		});
-		this.rightclickMenu.addContent(b0);
+		this.rightClickContextMenu.addContent(b0);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), (press) -> {
-			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.handler, this.customizationContainer);
+			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.editor, this.customizationContainer);
 			PopupHandler.displayPopup(pop);
 		});
-		this.rightclickMenu.addContent(buttonBackgroundButton);
+		this.rightClickContextMenu.addContent(buttonBackgroundButton);
 
 		String loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on");
 		if (!this.customizationContainer.loopAnimation) {
@@ -92,7 +92,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 		});
 		loopBackgroundAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc"), "%n%"));
-		this.rightclickMenu.addContent(loopBackgroundAnimationButton);
+		this.rightClickContextMenu.addContent(loopBackgroundAnimationButton);
 
 		String restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on");
 		if (!this.customizationContainer.restartAnimationOnHover) {
@@ -108,44 +108,44 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 		});
 		restartAnimationOnHoverButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc"), "%n%"));
-		this.rightclickMenu.addContent(restartAnimationOnHoverButton);
+		this.rightClickContextMenu.addContent(restartAnimationOnHoverButton);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
 			
-			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.editlabel")), this.handler, null, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.editlabel")), this.editor, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.customButtonLabel == null) || !this.customizationContainer.customButtonLabel.equals(call)) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					}
 					this.customizationContainer.customButtonLabel = call;
 				}
 			});
 			s.multilineMode = false;
-			s.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
+			s.setText(StringUtils.convertFormatCodes(this.element.value, "§", "&"));
 			Minecraft.getInstance().setScreen(s);
 			
 		});
-		this.rightclickMenu.addContent(b2);
+		this.rightClickContextMenu.addContent(b2);
 
 		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.resetlabel"), (press) -> {
 			if (this.customizationContainer.customButtonLabel != null) {
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 			}
 			this.customizationContainer.customButtonLabel = null;
-			this.rightclickMenu.closeMenu();
+			this.rightClickContextMenu.closeMenu();
 		});
-		this.rightclickMenu.addContent(b3);
+		this.rightClickContextMenu.addContent(b3);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
 			
-			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.hoverlabel")), this.handler, null, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.hoverlabel")), this.editor, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					}
 					this.customizationContainer.hoverLabel = StringUtils.convertFormatCodes(call, "&", "§");
 				}
@@ -157,19 +157,19 @@ public class LayoutVanillaButton extends LayoutElement {
 			Minecraft.getInstance().setScreen(s);
 			
 		});
-		this.rightclickMenu.addContent(b5);
+		this.rightClickContextMenu.addContent(b5);
 
 		AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel.reset"), (press) -> {
 			if (this.customizationContainer.hoverLabel != null) {
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 			}
 			this.customizationContainer.hoverLabel = null;
-			this.rightclickMenu.closeMenu();
-			this.rightclickMenu.closeMenu();
+			this.rightClickContextMenu.closeMenu();
+			this.rightClickContextMenu.closeMenu();
 		});
-		this.rightclickMenu.addContent(b6);
+		this.rightClickContextMenu.addContent(b6);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b7 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
@@ -181,7 +181,7 @@ public class LayoutVanillaButton extends LayoutElement {
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 							if ((this.customizationContainer.hoverSound == null) || !this.customizationContainer.hoverSound.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
 
 							this.customizationContainer.hoverSound = call;
@@ -190,10 +190,10 @@ public class LayoutVanillaButton extends LayoutElement {
 						}
 					} else {
 						if (this.customizationContainer.hoverSound != null) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.hoverSound = null;
-						this.rightclickMenu.closeMenu();
+						this.rightClickContextMenu.closeMenu();
 					}
 				}
 			}, "wav");
@@ -203,7 +203,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 			PopupHandler.displayPopup(cf);
 		});
-		this.rightclickMenu.addContent(b7);
+		this.rightClickContextMenu.addContent(b7);
 
 		AdvancedButton b11 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
@@ -215,7 +215,7 @@ public class LayoutVanillaButton extends LayoutElement {
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 							if ((this.customizationContainer.clickSound == null) || !this.customizationContainer.clickSound.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
 
 							this.customizationContainer.clickSound = call;
@@ -224,10 +224,10 @@ public class LayoutVanillaButton extends LayoutElement {
 						}
 					} else {
 						if (this.customizationContainer.clickSound != null) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.clickSound = null;
-						this.rightclickMenu.closeMenu();
+						this.rightClickContextMenu.closeMenu();
 					}
 				}
 			}, "wav");
@@ -237,22 +237,22 @@ public class LayoutVanillaButton extends LayoutElement {
 			}
 			PopupHandler.displayPopup(cf);
 		});
-		this.rightclickMenu.addContent(b11);
+		this.rightClickContextMenu.addContent(b11);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b9 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.vanillabutton.autoclick"), (press) -> {
 			FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.vanillabutton.autoclick.popup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("") || !MathUtils.isInteger(call)) {
 						if (this.customizationContainer.autoButtonClicks != 0) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 
 						this.customizationContainer.autoButtonClicks = 0;
 					} else {
 						if (this.customizationContainer.autoButtonClicks != Integer.parseInt(call)) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 
 						this.customizationContainer.autoButtonClicks = Integer.parseInt(call);
@@ -262,21 +262,21 @@ public class LayoutVanillaButton extends LayoutElement {
 			pop.setText("" + this.customizationContainer.autoButtonClicks);
 			PopupHandler.displayPopup(pop);
 		});
-		this.rightclickMenu.addContent(b9);
+		this.rightClickContextMenu.addContent(b9);
 
 		AdvancedButton b13 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			
-			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.btndescription")), this.handler, null, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.btndescription")), this.editor, null, (call) -> {
 				if (call != null) {
 					call = call.replace("\n", "%n%");
 					if (!call.replace(" ", "").equals("")) {
 						if ((this.customizationContainer.buttonDescription == null) || !this.customizationContainer.buttonDescription.equals(call)) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.buttonDescription = call;
 					} else {
 						if (this.customizationContainer.buttonDescription != null) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.buttonDescription = null;
 					}
@@ -293,7 +293,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			l.add(s.replace("#n#", "%n%"));
 		}
 		b13.setDescription(l.toArray(new String[0]));
-		this.rightclickMenu.addContent(b13);
+		this.rightClickContextMenu.addContent(b13);
 
 	}
 
@@ -301,34 +301,34 @@ public class LayoutVanillaButton extends LayoutElement {
 	public void render(PoseStack matrix, int mouseX, int mouseY) {
 
 		if (this.customizationContainer.customButtonLabel != null) {
-			this.object.value = StringUtils.convertFormatCodes(this.customizationContainer.customButtonLabel, "&", "§");
+			this.element.value = StringUtils.convertFormatCodes(this.customizationContainer.customButtonLabel, "&", "§");
 		} else {
-			this.object.value = button.label;
+			this.element.value = button.label;
 		}
 
 		if (!this.canBeModified()) {
 			//Cancel dragging
-			if (this.isDragged() && this.handler.isFocused(this) && ((this.startX != this.object.posX) || (this.startY != this.object.posY))) {
-				this.handler.setObjectFocused(this, false, true);
+			if (this.isDragged() && this.editor.isFocused(this) && ((this.startX != this.element.rawX) || (this.startY != this.element.rawY))) {
+				this.editor.setObjectFocused(this, false, true);
 				this.dragging = false;
-				this.object.posX = this.button.x;
-				this.object.posY = this.button.y;
-				this.object.setWidth(this.button.width);
-				this.object.setHeight(this.button.height);
-				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
+				this.element.rawX = this.button.x;
+				this.element.rawY = this.button.y;
+				this.element.setWidth(this.button.width);
+				this.element.setHeight(this.button.height);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), CURSOR_NORMAL);
 				this.displaySetOrientationNotification();
 				return;
 			}
 			//Cancel resize
-			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.handler.isFocused(this)) {
+			if ((this.isGrabberPressed() || this.resizing) && !this.isDragged() && this.editor.isFocused(this)) {
 				this.resizing = false;
 				this.dragging = false;
-				this.object.posX = this.button.x;
-				this.object.posY = this.button.y;
-				this.object.setWidth(this.button.width);
-				this.object.setHeight(this.button.height);
-				this.handler.setObjectFocused(this, false, true);
-				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), normalCursor);
+				this.element.rawX = this.button.x;
+				this.element.rawY = this.button.y;
+				this.element.setWidth(this.button.width);
+				this.element.setHeight(this.button.height);
+				this.editor.setObjectFocused(this, false, true);
+				GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), CURSOR_NORMAL);
 				this.displaySetOrientationNotification();
 				return;
 			}
@@ -336,20 +336,20 @@ public class LayoutVanillaButton extends LayoutElement {
 
 		super.render(matrix, mouseX, mouseY);
 
-		if (this.object.delayAppearance) {
-			this.handler.vanillaDelayAppearance.put(this.button.getId(), this.object.delayAppearanceSec);
+		if (this.element.delayAppearance) {
+			this.editor.vanillaDelayAppearance.put(this.button.getId(), this.element.delayAppearanceSec);
 		} else {
-			this.handler.vanillaDelayAppearance.remove(this.button.getId());
+			this.editor.vanillaDelayAppearance.remove(this.button.getId());
 		}
-		if (!this.object.delayAppearanceEverytime) {
-			this.handler.vanillaDelayAppearanceFirstTime.put(this.button.getId(), true);
+		if (!this.element.delayAppearanceEverytime) {
+			this.editor.vanillaDelayAppearanceFirstTime.put(this.button.getId(), true);
 		} else {
-			this.handler.vanillaDelayAppearanceFirstTime.put(this.button.getId(), false);
+			this.editor.vanillaDelayAppearanceFirstTime.put(this.button.getId(), false);
 		}
-		if (this.object.fadeIn) {
-			this.handler.vanillaFadeIn.put(this.button.getId(), this.object.fadeInSpeed);
+		if (this.element.fadeIn) {
+			this.editor.vanillaFadeIn.put(this.button.getId(), this.element.fadeInSpeed);
 		} else {
-			this.handler.vanillaFadeIn.remove(this.button.getId());
+			this.editor.vanillaFadeIn.remove(this.button.getId());
 		}
 
 	}
@@ -385,33 +385,33 @@ public class LayoutVanillaButton extends LayoutElement {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "movebutton");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("orientation", this.object.orientation);
-			if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
-				s.addEntry("orientation_element", this.object.orientationElementIdentifier);
+			s.addEntry("orientation", this.element.orientation);
+			if (this.element.orientation.equals("element") && (this.element.orientationElementIdentifier != null)) {
+				s.addEntry("orientation_element", this.element.orientationElementIdentifier);
 			}
-			s.addEntry("x", "" + this.object.posX);
-			s.addEntry("y", "" + this.object.posY);
-			if (this.object.advancedPosX != null) {
-				s.addEntry("advanced_posx", this.object.advancedPosX);
+			s.addEntry("x", "" + this.element.rawX);
+			s.addEntry("y", "" + this.element.rawY);
+			if (this.element.advancedX != null) {
+				s.addEntry("advanced_posx", this.element.advancedX);
 			}
-			if (this.object.advancedPosY != null) {
-				s.addEntry("advanced_posy", this.object.advancedPosY);
+			if (this.element.advancedY != null) {
+				s.addEntry("advanced_posy", this.element.advancedY);
 			}
 			l.add(s);
 		}
 
 		// resizebutton
-		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height) || (this.object.advancedHeight != null) || (this.object.advancedWidth != null))) {
+		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height) || (this.element.advancedHeight != null) || (this.element.advancedWidth != null))) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "resizebutton");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("width", "" + this.object.width);
-			s.addEntry("height", "" + this.object.height);
-			if (this.object.advancedWidth != null) {
-				s.addEntry("advanced_width", this.object.advancedWidth);
+			s.addEntry("width", "" + this.element.width);
+			s.addEntry("height", "" + this.element.height);
+			if (this.element.advancedWidth != null) {
+				s.addEntry("advanced_width", this.element.advancedWidth);
 			}
-			if (this.object.advancedHeight != null) {
-				s.addEntry("advanced_height", this.object.advancedHeight);
+			if (this.element.advancedHeight != null) {
+				s.addEntry("advanced_height", this.element.advancedHeight);
 			}
 			l.add(s);
 		}
@@ -476,15 +476,15 @@ public class LayoutVanillaButton extends LayoutElement {
 			l.add(s);
 		}
 		//hidebuttonfor
-		if (this.object.delayAppearance) {
+		if (this.element.delayAppearance) {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "hidebuttonfor");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("seconds", "" + this.object.delayAppearanceSec);
-			s.addEntry("onlyfirsttime", "" + !this.object.delayAppearanceEverytime);
-			if (this.object.fadeIn) {
+			s.addEntry("seconds", "" + this.element.delayAppearanceSec);
+			s.addEntry("onlyfirsttime", "" + !this.element.delayAppearanceEverytime);
+			if (this.element.fadeIn) {
 				s.addEntry("fadein", "true");
-				s.addEntry("fadeinspeed", "" + this.object.fadeInSpeed);
+				s.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
 			}
 			l.add(s);
 		}
@@ -510,7 +510,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
 		visReqs.addEntry("identifier", "%id=" + this.getButtonId() + "%");
 		
-		this.addLoadingRequirementPropertiesTo(visReqs);
+		this.serializeLoadingRequirementsTo(visReqs);
 		if (visReqs.getEntries().size() > 2) {
 			l.add(visReqs);
 		}
@@ -526,16 +526,16 @@ public class LayoutVanillaButton extends LayoutElement {
 	}
 
 	private boolean canBeModified() {
-		return !this.object.orientation.equals("original");
+		return !this.element.orientation.equals("original");
 	}
 
 	@Override
-	public void destroyObject() {
+	public void destroyElement() {
 		if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
 			FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
 			PopupHandler.displayPopup(pop);
 		}
-		this.handler.hideVanillaButton(this);
+		this.editor.hideVanillaButton(this);
 	}
 
 }

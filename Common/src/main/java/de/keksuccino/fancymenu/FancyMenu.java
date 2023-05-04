@@ -44,6 +44,8 @@ public class FancyMenu {
 
 	//TODO APIs verbessern
 
+	//TODO Konkrete Locals zu I18n porten (nur noch mit I18n arbeiten)
+
 	//TODO Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
 	// - Items & Elements
 	// - Placeholder

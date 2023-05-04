@@ -20,7 +20,7 @@ public class LoadingRequirementInstance {
     @Nullable
     public LoadingRequirementGroup group;
     public RequirementMode mode;
-    public String requirementId = MenuCustomization.generateRandomActionId();
+    public String requirementId = MenuCustomization.generateUniqueIdentifier();
 
     public LoadingRequirementInstance(LoadingRequirement requirement, @Nullable String value, RequirementMode mode, LoadingRequirementContainer parent) {
         this.parent = parent;

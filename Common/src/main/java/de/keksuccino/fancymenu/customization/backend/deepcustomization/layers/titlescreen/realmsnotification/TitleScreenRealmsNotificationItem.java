@@ -44,8 +44,8 @@ public class TitleScreenRealmsNotificationItem extends DeepCustomizationItem {
 
         this.width = 13;
         this.height = 13;
-        this.posX = realmsButtonX + realmsButtonWidth + xOffset - 17;
-        this.posY = realmsButtonY + 4;
+        this.rawX = realmsButtonX + realmsButtonWidth + xOffset - 17;
+        this.rawY = realmsButtonY + 4;
 
     }
 

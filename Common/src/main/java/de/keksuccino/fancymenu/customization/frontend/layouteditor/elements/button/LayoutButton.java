@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLa
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -25,7 +25,7 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
-public class LayoutButton extends LayoutElement {
+public class LayoutButton extends AbstractEditorElement {
 
 	public ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer;
 	
@@ -81,9 +81,9 @@ public class LayoutButton extends LayoutElement {
 					l.add(i);
 				}
 			}
-			ManageActionsScreen s = new ManageActionsScreen(this.handler, l, (call) -> {
+			ManageActionsScreen s = new ManageActionsScreen(this.editor, l, (call) -> {
 				if (call != null) {
-					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					this.actions.clear();
 					for (ManageActionsScreen.ActionInstance i : call) {
 						this.actions.add(new ButtonScriptEngine.ActionContainer(i.action.getAction(), i.value));
@@ -93,16 +93,16 @@ public class LayoutButton extends LayoutElement {
 			Minecraft.getInstance().setScreen(s);
 		});
 		manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.elements.button.manage_actions.desc"), "%n%"));
-		this.rightclickMenu.addContent(manageActionsButton);
+		this.rightClickContextMenu.addContent(manageActionsButton);
 		
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), (press) -> {
-			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.handler, this.customizationContainer);
+			ButtonBackgroundPopup pop = new ButtonBackgroundPopup(this.editor, this.customizationContainer);
 			PopupHandler.displayPopup(pop);
 		});
-		this.rightclickMenu.addContent(buttonBackgroundButton);
+		this.rightClickContextMenu.addContent(buttonBackgroundButton);
 
 		String loopAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.on");
 		if (!this.customizationContainer.loopAnimation) {
@@ -118,7 +118,7 @@ public class LayoutButton extends LayoutElement {
 			}
 		});
 		loopBackgroundAnimationButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation.btn.desc"), "%n%"));
-		this.rightclickMenu.addContent(loopBackgroundAnimationButton);
+		this.rightClickContextMenu.addContent(loopBackgroundAnimationButton);
 
 		String restartAniLabel = Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.on");
 		if (!this.customizationContainer.restartAnimationOnHover) {
@@ -134,35 +134,35 @@ public class LayoutButton extends LayoutElement {
 			}
 		});
 		restartAnimationOnHoverButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover.btn.desc"), "%n%"));
-		this.rightclickMenu.addContent(restartAnimationOnHoverButton);
+		this.rightClickContextMenu.addContent(restartAnimationOnHoverButton);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
 			
-			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.editlabel")), this.handler, null, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.editlabel")), this.editor, null, (call) -> {
 				if (call != null) {
-					if (!this.object.value.equals(call)) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+					if (!this.element.value.equals(call)) {
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					}
-					this.object.value = call;
+					this.element.value = call;
 				}
 			});
 			s.multilineMode = false;
-			s.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
+			s.setText(StringUtils.convertFormatCodes(this.element.value, "§", "&"));
 			Minecraft.getInstance().setScreen(s);
 			
 		});
-		this.rightclickMenu.addContent(b2);
+		this.rightClickContextMenu.addContent(b2);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
 			
-			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.hoverlabel")), this.handler, null, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.hoverlabel")), this.editor, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(call)) {
-						this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					}
 
 					this.customizationContainer.hoverLabel = call;
@@ -175,18 +175,18 @@ public class LayoutButton extends LayoutElement {
 			Minecraft.getInstance().setScreen(s);
 			
 		});
-		this.rightclickMenu.addContent(b5);
+		this.rightClickContextMenu.addContent(b5);
 
 		AdvancedButton b6 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel.reset"), (press) -> {
 			if (this.customizationContainer.hoverLabel != null) {
-				this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 			}
 			this.customizationContainer.hoverLabel = null;
-			this.rightclickMenu.closeMenu();
+			this.rightClickContextMenu.closeMenu();
 		});
-		this.rightclickMenu.addContent(b6);
+		this.rightClickContextMenu.addContent(b6);
 
-		this.rightclickMenu.addSeparator();
+		this.rightClickContextMenu.addSeparator();
 
 		AdvancedButton b7 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
@@ -198,7 +198,7 @@ public class LayoutButton extends LayoutElement {
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 							if ((this.customizationContainer.hoverSound == null) || !this.customizationContainer.hoverSound.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
 
 							this.customizationContainer.hoverSound = call;
@@ -207,10 +207,10 @@ public class LayoutButton extends LayoutElement {
 						}
 					} else {
 						if (this.customizationContainer.hoverSound != null) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.hoverSound = null;
-						this.rightclickMenu.closeMenu();
+						this.rightClickContextMenu.closeMenu();
 					}
 				}
 			}, "wav");
@@ -220,7 +220,7 @@ public class LayoutButton extends LayoutElement {
 			}
 			PopupHandler.displayPopup(cf);
 		});
-		this.rightclickMenu.addContent(b7);
+		this.rightClickContextMenu.addContent(b7);
 
 		AdvancedButton b10 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), (press) -> {
 			ChooseFilePopup cf = new ChooseFilePopup((call) -> {
@@ -232,7 +232,7 @@ public class LayoutButton extends LayoutElement {
 						}
 						if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
 							if ((this.customizationContainer.clickSound == null) || !this.customizationContainer.clickSound.equals(call)) {
-								this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
 							this.customizationContainer.clickSound = call;
 						} else {
@@ -240,10 +240,10 @@ public class LayoutButton extends LayoutElement {
 						}
 					} else {
 						if (this.customizationContainer.clickSound != null) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.clickSound = null;
-						this.rightclickMenu.closeMenu();
+						this.rightClickContextMenu.closeMenu();
 					}
 				}
 			}, "wav");
@@ -253,21 +253,21 @@ public class LayoutButton extends LayoutElement {
 			}
 			PopupHandler.displayPopup(cf);
 		});
-		this.rightclickMenu.addContent(b10);
+		this.rightClickContextMenu.addContent(b10);
 
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
 			
-			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.btndescription")), this.handler, null, (call) -> {
+			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.btndescription")), this.editor, null, (call) -> {
 				if (call != null) {
 					call = call.replace("\n", "%n%");
 					if (!call.replace(" ", "").equals("")) {
 						if ((this.customizationContainer.buttonDescription == null) || !this.customizationContainer.buttonDescription.equals(call)) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.buttonDescription = call;
 					} else {
 						if (this.customizationContainer.buttonDescription != null) {
-							this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
 						this.customizationContainer.buttonDescription = null;
 					}
@@ -284,13 +284,13 @@ public class LayoutButton extends LayoutElement {
 			l.add(s.replace("#n#", "%n%"));
 		}
 		b12.setDescription(l.toArray(new String[0]));
-		this.rightclickMenu.addContent(b12);
+		this.rightClickContextMenu.addContent(b12);
 
 	}
 
 	private void initOnlyDisplayInMenu() {
 		FMContextMenu onlyDisplayInMenu = new FMContextMenu();
-		this.rightclickMenu.addChild(onlyDisplayInMenu);
+		this.rightClickContextMenu.addChild(onlyDisplayInMenu);
 
 		String outgame = Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame");
 		if ((this.onlydisplayin != null) && this.onlydisplayin.equals("outgame")) {
@@ -340,7 +340,7 @@ public class LayoutButton extends LayoutElement {
 			onlyDisplayInMenu.setParentButton((AdvancedButton) press);
 			onlyDisplayInMenu.openMenuAt(0, press.y);
 		});
-		this.rightclickMenu.addContent(b10);
+		this.rightClickContextMenu.addContent(b10);
 	}
 
 	
@@ -351,28 +351,28 @@ public class LayoutButton extends LayoutElement {
 		PropertiesSection s = new PropertiesSection("customization");
 
 		s.addEntry("action", "addbutton");
-		s.addEntry("actionid", this.object.getActionId());
+		s.addEntry("actionid", this.element.getInstanceIdentifier());
 
-		if (this.object.advancedPosX != null) {
-			s.addEntry("advanced_posx", this.object.advancedPosX);
+		if (this.element.advancedX != null) {
+			s.addEntry("advanced_posx", this.element.advancedX);
 		}
-		if (this.object.advancedPosY != null) {
-			s.addEntry("advanced_posy", this.object.advancedPosY);
+		if (this.element.advancedY != null) {
+			s.addEntry("advanced_posy", this.element.advancedY);
 		}
-		if (this.object.advancedWidth != null) {
-			s.addEntry("advanced_width", this.object.advancedWidth);
+		if (this.element.advancedWidth != null) {
+			s.addEntry("advanced_width", this.element.advancedWidth);
 		}
-		if (this.object.advancedHeight != null) {
-			s.addEntry("advanced_height", this.object.advancedHeight);
+		if (this.element.advancedHeight != null) {
+			s.addEntry("advanced_height", this.element.advancedHeight);
 		}
 
-		if (this.object.delayAppearance) {
+		if (this.element.delayAppearance) {
 			s.addEntry("delayappearance", "true");
-			s.addEntry("delayappearanceeverytime", "" + this.object.delayAppearanceEverytime);
-			s.addEntry("delayappearanceseconds", "" + this.object.delayAppearanceSec);
-			if (this.object.fadeIn) {
+			s.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+			s.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+			if (this.element.fadeIn) {
 				s.addEntry("fadein", "true");
-				s.addEntry("fadeinspeed", "" + this.object.fadeInSpeed);
+				s.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
 			}
 		}
 
@@ -380,19 +380,19 @@ public class LayoutButton extends LayoutElement {
 			s.addEntry("x", "0");
 			s.addEntry("width", "%guiwidth%");
 		} else {
-			s.addEntry("x", "" + this.object.posX);
-			s.addEntry("width", "" + this.object.getWidth());
+			s.addEntry("x", "" + this.element.rawX);
+			s.addEntry("width", "" + this.element.getWidth());
 		}
 		if (this.stretchY) {
 			s.addEntry("y", "0");
 			s.addEntry("height", "%guiheight%");
 		} else {
-			s.addEntry("y", "" + this.object.posY);
-			s.addEntry("height", "" + this.object.getHeight());
+			s.addEntry("y", "" + this.element.rawY);
+			s.addEntry("height", "" + this.element.getHeight());
 		}
-		s.addEntry("orientation", this.object.orientation);
-		if (this.object.orientation.equals("element") && (this.object.orientationElementIdentifier != null)) {
-			s.addEntry("orientation_element", this.object.orientationElementIdentifier);
+		s.addEntry("orientation", this.element.orientation);
+		if (this.element.orientation.equals("element") && (this.element.orientationElementIdentifier != null)) {
+			s.addEntry("orientation_element", this.element.orientationElementIdentifier);
 		}
 
 		if (!this.actions.isEmpty()) {
@@ -442,10 +442,10 @@ public class LayoutButton extends LayoutElement {
 		if (this.customizationContainer.buttonDescription != null) {
 			s.addEntry("description", this.customizationContainer.buttonDescription);
 		}
-		s.addEntry("label", this.object.value);
+		s.addEntry("label", this.element.value);
 
 		
-		this.addLoadingRequirementPropertiesTo(s);
+		this.serializeLoadingRequirementsTo(s);
 
 		l.add(s);
 

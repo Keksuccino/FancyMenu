@@ -21,8 +21,8 @@ import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
-import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
+import de.keksuccino.fancymenu.customization.backend.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.backend.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
@@ -47,17 +47,17 @@ import de.keksuccino.fancymenu.customization.backend.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
-import de.keksuccino.fancymenu.customization.backend.item.v1.AnimationCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.button.ButtonCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.item.v1.ShapeCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.SlideshowCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.SplashTextCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.StringCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.TextureCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.button.VanillaButtonCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.WebStringCustomizationItem;
-import de.keksuccino.fancymenu.customization.backend.item.v1.WebTextureCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.AnimationCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.button.ButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.backend.element.v1.ShapeCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.SlideshowCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.SplashTextCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.StringCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.TextureCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.button.VanillaButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.WebStringCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.v1.WebTextureCustomizationItem;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.backend.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.backend.panorama.PanoramaHandler;
@@ -90,8 +90,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public List<CustomizationItemBase> foregroundElements = new ArrayList<>();
-	public List<CustomizationItemBase> backgroundElements = new ArrayList<>();
+	public List<AbstractElement> foregroundElements = new ArrayList<>();
+	public List<AbstractElement> backgroundElements = new ArrayList<>();
 	
 	protected Map<String, Boolean> audio = new HashMap<>();
 	protected IAnimationRenderer backgroundAnimation = null;
@@ -549,7 +549,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			d.getButton().visible = false;
 		}
 
-		for (CustomizationItemBase i : this.foregroundElements) {
+		for (AbstractElement i : this.foregroundElements) {
 			if (MenuCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
@@ -557,7 +557,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 				i.orientationElement = this.getItemByActionId(i.orientationElementIdentifier);
 			}
 		}
-		for (CustomizationItemBase i : this.backgroundElements) {
+		for (AbstractElement i : this.backgroundElements) {
 			if (MenuCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
@@ -643,7 +643,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			}
 			
 			if (action.equalsIgnoreCase("texturizebackground")) {
-				String value = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
+				String value = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
 				String pano = sec.getEntryValue("wideformat");
 				if (pano == null) {
 					pano = sec.getEntryValue("panorama");
@@ -823,8 +823,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
 						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
 					}
-					String backNormal = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("backgroundnormal"));
-					String backHover = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("backgroundhovered"));
+					String backNormal = AbstractElement.fixBackslashPath(sec.getEntryValue("backgroundnormal"));
+					String backHover = AbstractElement.fixBackslashPath(sec.getEntryValue("backgroundhovered"));
 					if (backNormal != null) {
 						this.getContainerForVanillaButton(b).normalBackground = backNormal;
 					} else {
@@ -846,7 +846,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 			if (action.equalsIgnoreCase("setbuttonclicksound")) {
 				if (b != null) {
-					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
+					String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
 					if (path != null) {
 						this.getContainerForVanillaButton(b).clickSound = path;
 					}
@@ -961,7 +961,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			if (action.equalsIgnoreCase("addaudio")) {
 				if (FancyMenu.getConfig().getOrDefault("playbackgroundsounds", true)) {
 					if ((Minecraft.getInstance().level == null) || FancyMenu.getConfig().getOrDefault("playbackgroundsoundsinworld", false)) {
-						String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
+						String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
 						String loopString = sec.getEntryValue("loop");
 
 						boolean loop = (loopString != null) && loopString.equalsIgnoreCase("true");
@@ -986,7 +986,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			}
 			
 			if (action.equalsIgnoreCase("setcloseaudio")) {
-				String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
+				String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
 
 				if (path != null) {
 					File f = new File(path);
@@ -1009,7 +1009,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 			if (action.equalsIgnoreCase("setopenaudio")) {
 				if (MenuCustomization.isNewMenu()) {
-					String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
+					String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
 					if (path != null) {
 						File f = new File(path);
 						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -1039,7 +1039,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			}
 			
 			if (action.equalsIgnoreCase("addsplash")) {
-				String file = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("splashfilepath"));
+				String file = AbstractElement.fixBackslashPath(sec.getEntryValue("splashfilepath"));
 				String text = sec.getEntryValue("text");
 				if ((file != null) || (text != null)) {
 					
@@ -1057,9 +1057,9 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			// CUSTOM ITEMS (API)
 			if (action.startsWith("custom_layout_element:")) {
 				String cusId = action.split(":", 2)[1];
-				CustomizationItemContainer cusItem = CustomizationItemRegistry.getItem(cusId);
+				ElementBuilder cusItem = ElementRegistry.getBuilder(cusId);
 				if (cusItem != null) {
-					CustomizationItem cusItemInstance = cusItem.constructCustomizedItemInstance(sec);
+					CustomizationItem cusItemInstance = cusItem.deserializeElement(sec);
 					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
 						backgroundElements.add(cusItemInstance);
 					} else {
@@ -1072,18 +1072,18 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		
 	}
 
-	protected void handleAppearanceDelayFor(CustomizationItemBase i) {
+	protected void handleAppearanceDelayFor(AbstractElement i) {
 		if (!(i instanceof VanillaButtonCustomizationItem)) {
 			if (i.delayAppearance) {
-				if (i.getActionId() == null) {
+				if (i.getInstanceIdentifier() == null) {
 					return;
 				}
-				if (!i.delayAppearanceEverytime && delayAppearanceFirstTime.contains(i.getActionId())) {
+				if (!i.delayAppearanceEverytime && delayAppearanceFirstTime.contains(i.getInstanceIdentifier())) {
 					return;
 				}
 				if (!i.delayAppearanceEverytime) {
-					if (!this.delayAppearanceFirstTime.contains(i.getActionId())) {
-						delayAppearanceFirstTime.add(i.getActionId());
+					if (!this.delayAppearanceFirstTime.contains(i.getInstanceIdentifier())) {
+						delayAppearanceFirstTime.add(i.getInstanceIdentifier());
 					}
 				}
 				
@@ -1244,8 +1244,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 		if (!this.backgroundDrawable) {
 			//Rendering all items that SHOULD be rendered in the background IF it's not possible to render them in the background (In this case, they will be forced to render in the foreground)
-			List<CustomizationItemBase> backItems = new ArrayList<>(this.backgroundElements);
-			for (CustomizationItemBase i : backItems) {
+			List<AbstractElement> backItems = new ArrayList<>(this.backgroundElements);
+			for (AbstractElement i : backItems) {
 				try {
 					i.render(e.getPoseStack(), e.getScreen());
 				} catch (IOException e1) {
@@ -1255,8 +1255,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		}
 
 		//Rendering all items that should be rendered in the foreground
-		List<CustomizationItemBase> frontItems = new ArrayList<>(this.foregroundElements);
-		for (CustomizationItemBase i : frontItems) {
+		List<AbstractElement> frontItems = new ArrayList<>(this.foregroundElements);
+		for (AbstractElement i : frontItems) {
 			try {
 				i.render(e.getPoseStack(), e.getScreen());
 			} catch (IOException e1) {
@@ -1454,8 +1454,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			}
 
 			//Rendering all items which should be rendered in the background
-			List<CustomizationItemBase> backItems = new ArrayList<>(this.backgroundElements);
-			for (CustomizationItemBase i : backItems) {
+			List<AbstractElement> backItems = new ArrayList<>(this.backgroundElements);
+			for (AbstractElement i : backItems) {
 				try {
 					i.render(matrix, s);
 				} catch (IOException e1) {
@@ -1663,27 +1663,27 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		return this.vanillaButtonCustomizations.get(w);
 	}
 
-	public CustomizationItemBase getItemByActionId(String actionId) {
-		for (CustomizationItemBase c : this.backgroundElements) {
+	public AbstractElement getItemByActionId(String actionId) {
+		for (AbstractElement c : this.backgroundElements) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
 					return c;
 				}
 			} else {
-				if (c.getActionId().equals(actionId)) {
+				if (c.getInstanceIdentifier().equals(actionId)) {
 					return c;
 				}
 			}
 		}
-		for (CustomizationItemBase c : this.foregroundElements) {
+		for (AbstractElement c : this.foregroundElements) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
 				if (id.equals(actionId)) {
 					return c;
 				}
 			} else {
-				if (c.getActionId().equals(actionId)) {
+				if (c.getInstanceIdentifier().equals(actionId)) {
 					return c;
 				}
 			}
@@ -1699,8 +1699,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			if ((d != null) && (d.getButton() != null)) {
 				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
 				vb.orientation = "top-left";
-				vb.posX = d.getButton().x;
-				vb.posY = d.getButton().y;
+				vb.rawX = d.getButton().x;
+				vb.rawY = d.getButton().y;
 				vb.width = d.getButton().getWidth();
 				vb.height = d.getButton().getHeight();
 				return vb;

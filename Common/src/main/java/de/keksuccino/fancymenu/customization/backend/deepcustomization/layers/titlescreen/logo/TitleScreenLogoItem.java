@@ -25,8 +25,8 @@ public class TitleScreenLogoItem extends DeepCustomizationItem {
 
         int j = menu.width / 2 - 137;
 
-        this.posX = j;
-        this.posY = 30;
+        this.rawX = j;
+        this.rawY = 30;
         this.width = 155 + 119;
         this.height = 52;
 

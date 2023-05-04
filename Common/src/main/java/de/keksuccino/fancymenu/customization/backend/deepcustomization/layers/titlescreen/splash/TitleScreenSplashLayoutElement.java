@@ -38,15 +38,15 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
 
         AdvancedButton resetOrientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.orientation.reset"), true, (press) -> {
             if (!this.getSplashItem().orientation.equals("original")) {
-                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
             }
             this.getSplashItem().orientation = "original";
-            this.getSplashItem().posX = 0;
-            this.getSplashItem().posY = 0;
+            this.getSplashItem().rawX = 0;
+            this.getSplashItem().rawY = 0;
         });
-        this.rightclickMenu.addContent(resetOrientationButton);
+        this.rightClickContextMenu.addContent(resetOrientationButton);
 
-        this.rightclickMenu.addSeparator();
+        this.rightClickContextMenu.addSeparator();
 
         AdvancedButton setSplashFileButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.splash_file.set"), true, (press) -> {
             ChooseFilePopup p = new ChooseFilePopup((call) -> {
@@ -55,14 +55,14 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
                         File f = new File(call);
                         if (f.exists() && f.getAbsolutePath().replace("\\", "/").toLowerCase().endsWith(".txt")) {
                             if ((this.getSplashItem().splashTextFilePath == null) || !this.getSplashItem().splashTextFilePath.equals(call)) {
-                                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                             }
                             this.getSplashItem().splashTextFilePath = call;
                             TitleScreenSplashItem.cachedSplashText = null;
                         }
                     } else {
                         if (this.getSplashItem().splashTextFilePath != null) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                         }
                         this.getSplashItem().splashTextFilePath = null;
                         TitleScreenSplashItem.cachedSplashText = null;
@@ -74,18 +74,18 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
             }
             PopupHandler.displayPopup(p);
         });
-        this.rightclickMenu.addContent(setSplashFileButton);
+        this.rightClickContextMenu.addContent(setSplashFileButton);
 
         AdvancedButton resetSplashFileButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.splash_file.reset"), true, (press) -> {
             if (this.getSplashItem().splashTextFilePath != null) {
-                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
             }
             this.getSplashItem().splashTextFilePath = null;
             TitleScreenSplashItem.cachedSplashText = null;
         });
-        this.rightclickMenu.addContent(resetSplashFileButton);
+        this.rightClickContextMenu.addContent(resetSplashFileButton);
 
-        this.rightclickMenu.addSeparator();
+        this.rightClickContextMenu.addSeparator();
 
         AdvancedButton setRotationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.rotation.set"), true, (press) -> {
             FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.rotation.set"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
@@ -93,12 +93,12 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
                     if (!call.replace(" ", "").equals("") && MathUtils.isInteger(call)) {
                         int i = Integer.parseInt(call);
                         if (this.getSplashItem().splashRotation != i) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                         }
                         this.getSplashItem().splashRotation = i;
                     } else {
                         if (this.getSplashItem().splashRotation != -20) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                         }
                         this.getSplashItem().splashRotation = -20;
                     }
@@ -107,17 +107,17 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
             p.setText("" + this.getSplashItem().splashRotation);
             PopupHandler.displayPopup(p);
         });
-        this.rightclickMenu.addContent(setRotationButton);
+        this.rightClickContextMenu.addContent(setRotationButton);
 
         AdvancedButton resetRotationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.rotation.reset"), true, (press) -> {
             if (this.getSplashItem().splashRotation != -20) {
-                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
             }
             this.getSplashItem().splashRotation = -20;
         });
-        this.rightclickMenu.addContent(resetRotationButton);
+        this.rightClickContextMenu.addContent(resetRotationButton);
 
-        this.rightclickMenu.addSeparator();
+        this.rightClickContextMenu.addSeparator();
 
         AdvancedButton setColorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.color.set"), true, (press) -> {
             FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.color.set"), null, 240, (call) -> {
@@ -126,14 +126,14 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
                         Color c = RenderUtils.getColorFromHexString(call);
                         if (c != null) {
                             if (!this.getSplashItem().splashColorHEX.equals(call)) {
-                                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                             }
                             this.getSplashItem().splashColor = c;
                             this.getSplashItem().splashColorHEX = call;
                         }
                     } else {
                         if (!this.getSplashItem().splashColorHEX.equals("#ffff00")) {
-                            this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                         }
                         this.getSplashItem().splashColorHEX = "#ffff00";
                         this.getSplashItem().splashColor = new Color(255, 255, 0);
@@ -143,35 +143,35 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
             p.setText(this.getSplashItem().splashColorHEX);
             PopupHandler.displayPopup(p);
         });
-        this.rightclickMenu.addContent(setColorButton);
+        this.rightClickContextMenu.addContent(setColorButton);
 
         AdvancedButton resetColorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash.color.reset"), true, (press) -> {
             if (!this.getSplashItem().splashColorHEX.equals("#ffff00")) {
-                this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
+                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
             }
             this.getSplashItem().splashColorHEX = "#ffff00";
             this.getSplashItem().splashColor = new Color(255, 255, 0);
         });
-        this.rightclickMenu.addContent(resetColorButton);
+        this.rightClickContextMenu.addContent(resetColorButton);
 
     }
 
     protected TitleScreenSplashItem getSplashItem() {
-        return (TitleScreenSplashItem) this.object;
+        return (TitleScreenSplashItem) this.element;
     }
 
     @Override
     protected void setOrientation(String pos) {
         super.setOrientation(pos);
         if (!pos.equals("original")) {
-            this.object.posX += (this.object.width / 2);
-            this.object.posY += (this.object.height / 2);
+            this.element.rawX += (this.element.width / 2);
+            this.element.rawY += (this.element.height / 2);
         }
     }
 
     @Override
     public void render(PoseStack matrix, int mouseX, int mouseY) {
-        if (this.object.orientation.equals("original")) {
+        if (this.element.orientation.equals("original")) {
             this.dragable = false;
         } else {
             this.dragable = true;

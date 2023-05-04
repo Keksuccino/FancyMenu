@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -108,7 +108,7 @@ public class SetupSharingEngine {
 
     protected static void importSetupWithPathRaw(String setupPath) {
         if (setupPath != null) {
-            setupPath = CustomizationItemBase.fixBackslashPath(setupPath);
+            setupPath = AbstractElement.fixBackslashPath(setupPath);
             try {
                 File appData = getFancyMenuAppData();
                 if (appData != null) {
@@ -617,7 +617,7 @@ public class SetupSharingEngine {
                     if (action.equalsIgnoreCase("addbutton") && (m.getKey() != null) && m.getKey().equals("value")) {
                         continue;
                     }
-                    String shortPath = CustomizationItemBase.fixBackslashPath(getShortPath(CustomizationItemBase.fixBackslashPath(m.getValue())));
+                    String shortPath = AbstractElement.fixBackslashPath(getShortPath(AbstractElement.fixBackslashPath(m.getValue())));
                     if (shortPath != null) {
                         File f = new File(shortPath);
                         if ((!m.getValue().replace(" ", "").equals("")) && f.exists()) {
@@ -636,7 +636,7 @@ public class SetupSharingEngine {
         if (path == null) {
             return null;
         }
-        path = CustomizationItemBase.fixBackslashPath(path);
+        path = AbstractElement.fixBackslashPath(path);
         File pathRaw = new File(path);
         if (!pathRaw.exists()) {
             return null;
@@ -648,7 +648,7 @@ public class SetupSharingEngine {
                 path = path.substring(1);
             }
         }
-        return CustomizationItemBase.fixBackslashPath(path);
+        return AbstractElement.fixBackslashPath(path);
     }
 
     protected static List<AdvancedAnimationMeta> getAnimationMetas() {

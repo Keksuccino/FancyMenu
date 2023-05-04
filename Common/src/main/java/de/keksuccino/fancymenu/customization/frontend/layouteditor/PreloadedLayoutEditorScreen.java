@@ -10,17 +10,17 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
-import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
-import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
+import de.keksuccino.fancymenu.customization.backend.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.backend.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.backend.button.ButtonData;
 import de.keksuccino.fancymenu.customization.backend.deepcustomization.*;
-import de.keksuccino.fancymenu.customization.backend.item.CustomizationItemBase;
-import de.keksuccino.fancymenu.customization.backend.item.v1.*;
-import de.keksuccino.fancymenu.customization.backend.item.v1.button.ButtonCustomizationItem;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.backend.element.v1.*;
+import de.keksuccino.fancymenu.customization.backend.element.v1.button.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutAnimation;
-import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutElement;
+import de.keksuccino.fancymenu.customization.backend.element.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutShape;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutSlideshow;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutSplashText;
@@ -30,7 +30,7 @@ import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.Layo
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.LayoutWebTexture;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.frontend.layouteditor.elements.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.customization.backend.item.v1.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.customization.backend.element.v1.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.backend.panorama.PanoramaHandler;
@@ -67,7 +67,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 	protected void initPreLoaded() {
 
-		List<LayoutElement> con = new ArrayList<LayoutElement>();
+		List<AbstractEditorElement> con = new ArrayList<AbstractEditorElement>();
 
 		if (this.cachedProperties.size() == 1) {
 			List<PropertiesSection> l = this.cachedProperties.get(0).getPropertiesOfType("customization-meta");
@@ -349,10 +349,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							LayoutVanillaButton van = this.getVanillaButton(b);
 							int w = Integer.parseInt(width);
 							int h = Integer.parseInt(height);
-							van.object.setWidth(w);
-							van.object.setHeight(h);
-							van.object.advancedWidth = sec.getEntryValue("advanced_width");
-							van.object.advancedHeight = sec.getEntryValue("advanced_height");
+							van.element.setWidth(w);
+							van.element.setHeight(h);
+							van.element.advancedWidth = sec.getEntryValue("advanced_width");
+							van.element.advancedHeight = sec.getEntryValue("advanced_height");
 						}
 					}
 
@@ -365,12 +365,12 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							LayoutVanillaButton van = this.getVanillaButton(b);
 							int x = Integer.parseInt(posX);
 							int y = Integer.parseInt(posY);
-							van.object.orientation = orientation;
-							van.object.posX = x;
-							van.object.posY = y;
-							van.object.advancedPosX = sec.getEntryValue("advanced_posx");
-							van.object.advancedPosY = sec.getEntryValue("advanced_posy");
-							van.object.orientationElementIdentifier = sec.getEntryValue("orientation_element");
+							van.element.orientation = orientation;
+							van.element.rawX = x;
+							van.element.rawY = y;
+							van.element.advancedX = sec.getEntryValue("advanced_posx");
+							van.element.advancedY = sec.getEntryValue("advanced_posy");
+							van.element.orientationElementIdentifier = sec.getEntryValue("orientation_element");
 						}
 					}
 
@@ -482,17 +482,17 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							if ((seconds != null) && (MathUtils.isFloat(seconds))) {
 								LayoutVanillaButton van = this.getVanillaButton(b);
 
-								van.object.delayAppearance = true;
+								van.element.delayAppearance = true;
 
 								float ds = Float.parseFloat(seconds);
-								van.object.delayAppearanceSec = ds;
+								van.element.delayAppearanceSec = ds;
 								this.vanillaDelayAppearance.put(b.getId(), ds);
 
 								if ((firsttime != null) && firsttime.equalsIgnoreCase("true")) {
-									van.object.delayAppearanceEverytime = false;
+									van.element.delayAppearanceEverytime = false;
 									this.vanillaDelayAppearanceFirstTime.put(b.getId(), true);
 								} else {
-									van.object.delayAppearanceEverytime = true;
+									van.element.delayAppearanceEverytime = true;
 									this.vanillaDelayAppearanceFirstTime.put(b.getId(), false);
 								}
 
@@ -501,8 +501,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 									if ((fadespeed != null) && MathUtils.isFloat(fadespeed)) {
 										fs = Float.parseFloat(fadespeed);
 									}
-									van.object.fadeIn = true;
-									van.object.fadeInSpeed = fs;
+									van.element.fadeIn = true;
+									van.element.fadeInSpeed = fs;
 									this.vanillaFadeIn.put(b.getId(), fs);
 								}
 
@@ -587,13 +587,13 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							@Override
 							public void init() {
 
-								this.object.delayAppearance = bc.delayAppearance;
-								this.object.delayAppearanceEverytime = bc.delayAppearanceEverytime;
-								this.object.delayAppearanceSec = bc.delayAppearanceSec;
-								this.object.fadeIn = bc.fadeIn;
-								this.object.fadeInSpeed = bc.fadeInSpeed;
-								this.object.loadingRequirementContainer = bc.loadingRequirementContainer;
-								this.object.setActionId(bc.getActionId());
+								this.element.delayAppearance = bc.delayAppearance;
+								this.element.delayAppearanceEverytime = bc.delayAppearanceEverytime;
+								this.element.delayAppearanceSec = bc.delayAppearanceSec;
+								this.element.fadeIn = bc.fadeIn;
+								this.element.fadeInSpeed = bc.fadeInSpeed;
+								this.element.loadingRequirementContainer = bc.loadingRequirementContainer;
+								this.element.setInstanceIdentifier(bc.getInstanceIdentifier());
 
 								super.init();
 							}
@@ -674,15 +674,15 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.customizationContainer.clickSound = clicksound.replace("\\", "/");
 						}
 
-						lb.object.orientation = bc.orientation;
-						lb.object.orientationElementIdentifier = bc.orientationElementIdentifier;
-						lb.object.posX = bc.posX;
-						lb.object.posY = bc.posY;
+						lb.element.orientation = bc.orientation;
+						lb.element.orientationElementIdentifier = bc.orientationElementIdentifier;
+						lb.element.rawX = bc.rawX;
+						lb.element.rawY = bc.rawY;
 
-						lb.object.advancedPosX = bc.advancedPosX;
-						lb.object.advancedPosY = bc.advancedPosY;
-						lb.object.advancedWidth = bc.advancedWidth;
-						lb.object.advancedHeight = bc.advancedHeight;
+						lb.element.advancedX = bc.advancedX;
+						lb.element.advancedY = bc.advancedY;
+						lb.element.advancedWidth = bc.advancedWidth;
+						lb.element.advancedHeight = bc.advancedHeight;
 
 						con.add(lb);
 					}
@@ -780,10 +780,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						if (b != null) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
 							if (van != null) {
-								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
+								AbstractElement cusItem = new AbstractElement(sec) {
 									@Override public void render(PoseStack matrix, Screen menu) {}
 								};
-								van.object.loadingRequirementContainer = cusItem.loadingRequirementContainer;
+								van.element.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 								van.customizationContainer.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 							}
 						}
@@ -843,10 +843,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					/** CUSTOM ITEMS (API) **/
 					if (action.startsWith("custom_layout_element:")) {
 						String cusId = action.split("[:]", 2)[1];
-						CustomizationItemContainer cusItem = CustomizationItemRegistry.getItem(cusId);
+						ElementBuilder cusItem = ElementRegistry.getBuilder(cusId);
 						if (cusItem != null) {
-							CustomizationItem cusItemInstance = cusItem.constructCustomizedItemInstance(sec);
-							con.add(cusItem.constructEditorElementInstance(cusItemInstance, this));
+							CustomizationItem cusItemInstance = cusItem.deserializeElement(sec);
+							con.add(cusItem.buildEditorElementInstance(cusItemInstance, this));
 						}
 					}
 
@@ -877,11 +877,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 		this.content.addAll(con);
 
-		for (LayoutElement e : this.content) {
-			if (e.object.orientationElementIdentifier != null) {
-				LayoutElement oe = this.getElementByActionId(e.object.orientationElementIdentifier);
+		for (AbstractEditorElement e : this.content) {
+			if (e.element.orientationElementIdentifier != null) {
+				AbstractEditorElement oe = this.getElementByActionId(e.element.orientationElementIdentifier);
 				if (oe != null) {
-					e.object.orientationElement = oe.object;
+					e.element.orientationElement = oe.element;
 				}
 			}
 		}
@@ -893,7 +893,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 	protected LayoutVanillaButton getVanillaButton(ButtonData b) {
 		ScreenCustomizationLayer.ButtonCustomizationContainer cc = this.vanillaButtonCustomizationContainers.get(b.getId());
 		if (cc != null) {
-			for (LayoutElement e : this.vanillaButtonContent) {
+			for (AbstractEditorElement e : this.vanillaButtonContent) {
 				if (e instanceof LayoutVanillaButton) {
 					if (((LayoutVanillaButton) e).customizationContainer == cc) {
 						return (LayoutVanillaButton) e;
