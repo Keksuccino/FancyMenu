@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.background;
 
-import de.keksuccino.fancymenu.event.events.MenuReloadEvent;
+import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import org.apache.logging.log4j.LogManager;
@@ -67,7 +67,7 @@ public class MenuBackgroundTypeRegistry {
     }
 
     @EventListener
-    public void onReload(MenuReloadEvent e) {
+    public void onReload(ModReloadEvent e) {
         for (MenuBackgroundType t : backgroundTypes.values()) {
             t.loadBackgrounds();
         }

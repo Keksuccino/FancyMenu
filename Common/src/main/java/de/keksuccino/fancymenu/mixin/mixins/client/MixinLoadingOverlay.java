@@ -2,13 +2,13 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.event.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.customization.backend.layer.layers.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.layer.layers.TitleScreenLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.LoadingOverlay;
@@ -43,7 +43,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
 	private void beforeRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
+		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
 			//Manually call onRenderPre of the screen's menu handler, because it doesn't get called automatically in the loading screen
 			this.menuHandler.onRenderPre(new RenderScreenEvent.Pre(Minecraft.getInstance().screen, matrix, mouseX, mouseY, partial));
 		}
@@ -51,7 +51,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))
 	private void afterRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
+		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
 			//This is to correctly render the title menu
 			if (this.menuHandler instanceof TitleScreenLayer) {
 				Minecraft.getInstance().screen.renderBackground(matrix);
@@ -66,16 +66,16 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 		if (Minecraft.getInstance().screen != null) {
 			//Enable animation engine and customization engine before screen init to not block the customization engine
 			AnimationHandler.setReady(true);
-			MenuCustomization.allowScreenCustomization = true;
+			ScreenCustomization.allowScreenCustomization = true;
 			//Cache the menu handler of the screen to be able to call some of its render events
 			this.menuHandler = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
 			//If it's the first time a screen gets initialized, soft-reload the screen's handler, so first-time stuff works when fading to the Title menu
 			if ((this.menuHandler != null) && firstScreenInit) {
-				this.menuHandler.onSoftReload(new SoftMenuReloadEvent(Minecraft.getInstance().screen));
+				this.menuHandler.onSoftReload(new ScreenReloadEvent(Minecraft.getInstance().screen));
 			}
 			firstScreenInit = false;
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly, because the menu got initialized already (this is after screen init)
-			MenuCustomization.setIsNewMenu(true);
+			ScreenCustomization.setIsNewMenu(true);
 			//Set the screen again to cover all customization init stages
 			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
 		}

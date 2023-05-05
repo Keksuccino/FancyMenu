@@ -4,14 +4,14 @@ import java.io.File;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.window.WindowHandler;
-import de.keksuccino.fancymenu.customization.backend.customlocals.CustomLocalsHandler;
-import de.keksuccino.fancymenu.customization.backend.setupsharing.SetupSharingEngine;
-import de.keksuccino.fancymenu.customization.backend.server.ServerCache;
+import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
+import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
+import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.backend.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
@@ -51,6 +51,8 @@ public class FancyMenu {
 	// - Placeholder
 	// - Menu Background Types
 	// - Visibility Requirements (v1 stuff zu loading requirements machen)
+
+	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -94,7 +96,7 @@ public class FancyMenu {
 	    		PANORAMA_DIR.mkdirs();
 	    		SLIDESHOW_DIR.mkdirs();
 	    		
-	        	MenuCustomization.init();
+	        	ScreenCustomization.init();
 
 				WindowHandler.handleForceFullscreen();
 
@@ -126,7 +128,7 @@ public class FancyMenu {
 
 			initLocals();
 
-			SetupSharingEngine.init();
+			SetupSharingHandler.init();
 
 			CustomLocalsHandler.loadLocalizations();
 

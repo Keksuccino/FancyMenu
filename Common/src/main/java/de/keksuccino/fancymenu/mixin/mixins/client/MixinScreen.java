@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.customization.backend.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;

@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.backend.guicreator.CustomGuiLoader;
-import de.keksuccino.fancymenu.customization.backend.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -41,7 +41,7 @@ public class OpenGuiScreenCommand {
                     Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null));
                 }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             } else {
-                Screen s = GuiConstructor.tryToConstruct(MenuCustomization.getValidMenuIdentifierFor(menuIdentifierOrCustomGuiName));
+                Screen s = GuiConstructor.tryToConstruct(ScreenCustomization.findValidMenuIdentifierFor(menuIdentifierOrCustomGuiName));
                 if (s != null) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         Minecraft.getInstance().setScreen(s);

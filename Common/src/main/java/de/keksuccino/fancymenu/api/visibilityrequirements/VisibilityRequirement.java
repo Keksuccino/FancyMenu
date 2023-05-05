@@ -1,7 +1,7 @@
 
 package de.keksuccino.fancymenu.api.visibilityrequirements;
 
-import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.LoadingRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirement;
 import de.keksuccino.konkrete.input.CharacterFilter;
 
 import javax.annotation.Nullable;

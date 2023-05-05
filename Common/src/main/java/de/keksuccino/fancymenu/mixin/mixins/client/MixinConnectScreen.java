@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
-import de.keksuccino.fancymenu.customization.backend.world.LastWorldHandler;
+import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;

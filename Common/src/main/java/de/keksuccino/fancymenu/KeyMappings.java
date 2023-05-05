@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.customization.MenuCustomization;
-import de.keksuccino.fancymenu.customization.frontend.overlay.CustomizationOverlay;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import de.keksuccino.konkrete.input.KeyboardHandler;
@@ -45,7 +45,7 @@ public class KeyMappings {
 		//It's not possible in GUIs to check for keypresses via Keybinding.isPressed(), so I'm doing it on my own
 		KeyboardHandler.addKeyPressedListener((c) -> {
 			if ((Services.PLATFORM.getKeyMappingKey(KEY_MAPPING_RELOAD_MENU).getValue() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
-				MenuCustomization.reloadFancyMenu();
+				ScreenCustomization.reloadFancyMenu();
 			}
 			if ((Services.PLATFORM.getKeyMappingKey(KEY_MAPPING_TOGGLE_OVERLAY).getValue() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
 				try {

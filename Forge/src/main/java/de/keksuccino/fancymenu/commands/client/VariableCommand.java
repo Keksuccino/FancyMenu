@@ -6,7 +6,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.customization.backend.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;

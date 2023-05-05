@@ -2,8 +2,8 @@
 package de.keksuccino.fancymenu.api.visibilityrequirements;
 
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.LoadingRequirement;
-import de.keksuccino.fancymenu.customization.backend.loadingrequirement.v2.LoadingRequirementRegistry;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;

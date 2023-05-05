@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.titlescreen.TitleScreenLayer;
-import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.titlescreen.forge.copyright.TitleScreenForgeCopyrightElement;
-import de.keksuccino.fancymenu.customization.backend.deepcustomization.layers.titlescreen.forge.top.TitleScreenForgeTopElement;
+import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.forge.copyright.TitleScreenForgeCopyrightElement;
+import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.forge.top.TitleScreenForgeTopElement;
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.events.screen.*;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.customization.backend.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.MenuCustomization;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.utils.RenderUtils;
 import net.minecraft.client.gui.screens.Overlay;
@@ -70,11 +70,11 @@ public class MixinMinecraft {
 		if (overlay == null) {
 			//Second attempt on enabling the animation engine and customization engine when loading screen is done (in case something goes wrong in the actual loading screen)
 			AnimationHandler.setReady(true);
-			MenuCustomization.allowScreenCustomization = true;
+			ScreenCustomization.allowScreenCustomization = true;
 		} else {
 			//Disable animation engine and customization engine in loading screen to not load the current screen's customizations too early
 			AnimationHandler.setReady(false);
-			MenuCustomization.allowScreenCustomization = false;
+			ScreenCustomization.allowScreenCustomization = false;
 		}
 	}
 

@@ -77,7 +77,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 

@@ -243,6 +243,7 @@ helper.creator.items.button.clicksound.reset = Reset Clicksound
 helper.popup.togglecustomization.enable = Customization: §cOff
 helper.popup.togglecustomization.disable = Customization: §aOn
 
+helper.creator.object.stretch.not_supported = You currently can't do that,%n%because the positioning or%n%sizing of this element does not%n%support stretching.%n%%n%Try to change the orientation%n%and disable advanced sizing.
 helper.creator.object.stretch.x.on = Stretch Horizontally: §aOn
 helper.creator.object.stretch.x.off = Stretch Horizontally: §cOff
 helper.creator.object.stretch.x.desc = Will stretch the element to the%n%width of the screen.

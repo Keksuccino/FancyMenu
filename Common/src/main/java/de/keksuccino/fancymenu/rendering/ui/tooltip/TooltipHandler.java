@@ -19,6 +19,7 @@ public class TooltipHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    /** Default instance. **/
     public static final TooltipHandler INSTANCE = new TooltipHandler();
 
     private final List<HandledTooltip> tooltips = new ArrayList<>();
