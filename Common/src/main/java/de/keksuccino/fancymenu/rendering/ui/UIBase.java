@@ -4,6 +4,7 @@ import java.awt.Color;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
@@ -58,18 +59,18 @@ public class UIBase extends GuiComponent {
 
 	}
 
-	public static void openScaledContextMenuAt(FMContextMenu menu, int x, int y) {
+	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			menu.openMenuAt((int) (x / UIBase.getUIScale()), (int) (y / UIBase.getUIScale()), (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
 		}
 	}
 
-	public static void openScaledContextMenuAtMouse(FMContextMenu menu) {
+	public static void openScaledContextMenuAtMouse(ContextMenu menu) {
 		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 
-	public static void renderScaledContextMenu(PoseStack matrix, FMContextMenu menu) {
+	public static void renderScaledContextMenu(PoseStack matrix, ContextMenu menu) {
 		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {
 

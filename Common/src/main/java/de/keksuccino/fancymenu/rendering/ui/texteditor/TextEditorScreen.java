@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.formattingrules.TextEditorFormattingRules;
@@ -61,7 +61,7 @@ public class TextEditorScreen extends Screen {
     public ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
     public ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
     public ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    public FMContextMenu rightClickContextMenu;
+    public ContextMenu rightClickContextMenu;
     public AdvancedButton cancelButton;
     public AdvancedButton doneButton;
     public AdvancedButton placeholderButton;
@@ -210,7 +210,7 @@ public class TextEditorScreen extends Screen {
         if (this.rightClickContextMenu != null) {
             this.rightClickContextMenu.closeMenu();
         }
-        this.rightClickContextMenu = new FMContextMenu();
+        this.rightClickContextMenu = new ContextMenu();
 
         AdvancedButton cutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.ui.text_editor.cut"), true, (press) -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());

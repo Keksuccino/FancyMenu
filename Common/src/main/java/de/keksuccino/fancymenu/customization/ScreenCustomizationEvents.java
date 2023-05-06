@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
@@ -61,32 +62,30 @@ public class ScreenCustomizationEvents {
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
 		if (!ButtonCache.isCaching()) {
-			if (ScreenCustomization.isValidScreen(e.getScreen())) {
-				Screen current = Minecraft.getInstance().screen;
-				if (current != null) {
-					if (this.lastScreen != null) {
-						ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(current.getClass().getName());
-					} else {
-						ScreenCustomization.isNewMenu = true;
-					}
+			Screen current = Minecraft.getInstance().screen;
+			if (current != null) {
+				if (this.lastScreen != null) {
+					ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(current.getClass().getName());
 				} else {
 					ScreenCustomization.isNewMenu = true;
 				}
-				this.lastScreen = current;
-				if (ScreenCustomization.isNewMenu) {
-					ButtonMimeHandler.clearCache();
-				}
+			} else {
+				ScreenCustomization.isNewMenu = true;
+			}
+			this.lastScreen = current;
+			if (ScreenCustomization.isNewMenu) {
+				ButtonMimeHandler.clearCache();
 			}
 		}
 
 		ScreenCustomization.isCurrentScrollable = false;
 
-		if (ScreenCustomization.isValidScreen(e.getScreen()) && !LayoutEditorScreen.isActive) {
+		if (!LayoutEditorScreen.isActive) {
 			this.idle = false;
 		}
-		if (ScreenCustomization.isValidScreen(e.getScreen()) && !ScreenCustomization.isCustomizationEnabledForScreen(e.getScreen()) && !(e.getScreen() instanceof LayoutEditorScreen)) {
-			ScreenCustomization.stopSounds();
-			ScreenCustomization.resetSounds();
+		if (!ScreenCustomization.isCustomizationEnabledForScreen(e.getScreen()) && !(e.getScreen() instanceof LayoutEditorScreen)) {
+			SoundRegistry.stopSounds();
+			SoundRegistry.resetSounds();
 		}
 
 		//Stopping menu music when deactivated in config
@@ -107,8 +106,8 @@ public class ScreenCustomizationEvents {
 
 		//Stopping audio for all menu handlers if no screen is being displayed
 		if ((Minecraft.getInstance().screen == null) && !this.idle) {
-			ScreenCustomization.stopSounds();
-			ScreenCustomization.resetSounds();
+			SoundRegistry.stopSounds();
+			SoundRegistry.resetSounds();
 			this.idle = true;
 		}
 

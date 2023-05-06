@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element;
 
 import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;

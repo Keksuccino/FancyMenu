@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.text;
 
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;

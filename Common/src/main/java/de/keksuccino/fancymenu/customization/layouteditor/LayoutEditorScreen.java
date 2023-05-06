@@ -32,7 +32,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorUI.LayoutPropertiesContextMenu;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutAnimation;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutShape;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutSlideshow;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutSplashText;
@@ -42,7 +42,7 @@ import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutWebStri
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutWebTexture;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
@@ -51,7 +51,6 @@ import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.S
 import de.keksuccino.fancymenu.customization.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
-import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.KeyboardData;
@@ -99,7 +98,7 @@ public class LayoutEditorScreen extends Screen {
 	protected List<AbstractEditorElement> focusedObjects = new ArrayList<>();
 	protected List<AbstractEditorElement> focusedObjectsCache = new ArrayList<>();
 	
-	protected FMContextMenu multiselectRightclickMenu;
+	protected ContextMenu multiselectRightclickMenu;
 	protected LayoutPropertiesContextMenu propertiesRightclickMenu;
 	
 	protected IAnimationRenderer backgroundAnimation;
@@ -147,7 +146,7 @@ public class LayoutEditorScreen extends Screen {
 
 	protected boolean multiselectStretchedX = false;
 	protected boolean multiselectStretchedY = false;
-	protected List<ContextMenu> multiselectChilds = new ArrayList<>();
+	protected List<de.keksuccino.konkrete.gui.content.ContextMenu> multiselectChilds = new ArrayList<>();
 
 	protected AbstractEditorElement topObject;
 
@@ -156,7 +155,7 @@ public class LayoutEditorScreen extends Screen {
 
 	protected LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
 
-	protected FMContextMenu activeElementContextMenu = null;
+	protected ContextMenu activeElementContextMenu = null;
 
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	
@@ -1299,7 +1298,7 @@ public class LayoutEditorScreen extends Screen {
 				if (!this.audio.containsKey(path)) {
 					this.history.saveSnapshot(this.history.createSnapshot());
 
-					ScreenCustomization.registerSound(path, path);
+					SoundHandler.registerSound(path, path);
 					SoundHandler.playSound(path);
 					this.audio.put(path, false);
 				} else {
@@ -1435,7 +1434,7 @@ public class LayoutEditorScreen extends Screen {
 		return this.topObject;
 	}
 
-	public AbstractEditorElement getElementByActionId(String actionId) {
+	public AbstractEditorElement getElementByInstanceIdentifier(String instanceIdentifier) {
 		for (AbstractEditorElement e : this.content) {
 			if (e instanceof LayoutVanillaButton) {
 				String id = "vanillabtn:" + ((LayoutVanillaButton)e).button.getId();
@@ -1443,11 +1442,11 @@ public class LayoutEditorScreen extends Screen {
 				if (((LayoutVanillaButton)e).button.getCompatibilityId() != null) {
 					compId = "vanillabtn:" + ((LayoutVanillaButton)e).button.getCompatibilityId();
 				}
-				if (id.equals(actionId) || ((compId != null) && compId.equals(actionId))) {
+				if (id.equals(instanceIdentifier) || ((compId != null) && compId.equals(instanceIdentifier))) {
 					return e;
 				}
 			} else {
-				if (e.element.getInstanceIdentifier().equals(actionId)) {
+				if (e.element.getInstanceIdentifier().equals(instanceIdentifier)) {
 					return e;
 				}
 			}
@@ -1613,7 +1612,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	@Nullable
-	public FMContextMenu getActiveElementContextMenu() {
+	public ContextMenu getActiveElementContextMenu() {
 		return this.activeElementContextMenu;
 	}
 

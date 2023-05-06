@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -123,7 +123,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
         };
         this.rightClickContextMenu.addContent(autoSkinButton);
 
-        FMContextMenu setSkinMenu = new FMContextMenu();
+        ContextMenu setSkinMenu = new ContextMenu();
         this.rightClickContextMenu.addChild(setSkinMenu);
         AdvancedButton setSkinButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set"), true, (press) -> {
             setSkinMenu.setParentButton((AdvancedButton) press);
@@ -271,7 +271,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
         };
         this.rightClickContextMenu.addContent(autoCapeButton);
 
-        FMContextMenu setCapeMenu = new FMContextMenu();
+        ContextMenu setCapeMenu = new ContextMenu();
         this.rightClickContextMenu.addChild(setCapeMenu);
         AdvancedButton setCapeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set"), true, (press) -> {
             setCapeMenu.setParentButton((AdvancedButton) press);

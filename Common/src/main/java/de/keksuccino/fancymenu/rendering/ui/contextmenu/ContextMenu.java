@@ -1,16 +1,16 @@
-package de.keksuccino.fancymenu.rendering.ui;
+package de.keksuccino.fancymenu.rendering.ui.contextmenu;
 
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 
-public class FMContextMenu extends ContextMenu {
+public class ContextMenu extends de.keksuccino.konkrete.gui.content.ContextMenu {
 
 	protected boolean resetParentButtonOnClose = false;
 	protected int cachedScreenWidth = 0;
@@ -18,7 +18,7 @@ public class FMContextMenu extends ContextMenu {
 	
 	protected List<Integer> separators = new ArrayList<>();
 	
-	public FMContextMenu() {
+	public ContextMenu() {
 		super(20, 20, 0);
 	}
 	
@@ -49,9 +49,9 @@ public class FMContextMenu extends ContextMenu {
 		this.cachedScreenHeight = screenHeight;
 		
 		if (this.parent != null) {
-			if (this.parent instanceof FMContextMenu) {
-				screenWidth = ((FMContextMenu) this.parent).cachedScreenWidth;
-				screenHeight = ((FMContextMenu) this.parent).cachedScreenHeight;
+			if (this.parent instanceof ContextMenu) {
+				screenWidth = ((ContextMenu) this.parent).cachedScreenWidth;
+				screenHeight = ((ContextMenu) this.parent).cachedScreenHeight;
 			}
 		}
 		
@@ -75,9 +75,9 @@ public class FMContextMenu extends ContextMenu {
 	public void render(PoseStack matrix, int mouseX, int mouseY, int screenWidth, int screenHeight) {
 		
 		if (this.parent != null) {
-			if (this.parent instanceof FMContextMenu) {
-				screenWidth = ((FMContextMenu) this.parent).cachedScreenWidth;
-				screenHeight = ((FMContextMenu) this.parent).cachedScreenHeight;
+			if (this.parent instanceof ContextMenu) {
+				screenWidth = ((ContextMenu) this.parent).cachedScreenWidth;
+				screenHeight = ((ContextMenu) this.parent).cachedScreenHeight;
 			}
 		}
 		
@@ -149,7 +149,7 @@ public class FMContextMenu extends ContextMenu {
 
 	@Override
 	public boolean isHovered() {
-		for (ContextMenu c : this.children) {
+		for (de.keksuccino.konkrete.gui.content.ContextMenu c : this.children) {
 			if (c.isHovered()) {
 				return true;
 			}

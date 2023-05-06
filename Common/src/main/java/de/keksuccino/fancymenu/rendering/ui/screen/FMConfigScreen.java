@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.rendering.ui;
+package de.keksuccino.fancymenu.rendering.ui.screen;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.config.ConfigEntry;

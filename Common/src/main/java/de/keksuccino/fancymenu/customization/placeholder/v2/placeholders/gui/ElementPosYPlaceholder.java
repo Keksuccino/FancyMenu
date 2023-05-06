@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.v2.Placeholder;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.v1.button.VanillaButtonCustomizationItem;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -44,11 +44,11 @@ public class ElementPosYPlaceholder extends Placeholder {
             if (!(Minecraft.getInstance().screen instanceof LayoutEditorScreen)) {
                 ScreenCustomizationLayer mh = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
                 if (mh != null) {
-                    return mh.getItemByActionId(id);
+                    return mh.getElementByInstanceIdentifier(id);
                 }
             } else {
                 LayoutEditorScreen editor = ((LayoutEditorScreen)Minecraft.getInstance().screen);
-                AbstractEditorElement e = editor.getElementByActionId(id);
+                AbstractEditorElement e = editor.getElementByInstanceIdentifier(id);
                 if (e != null) {
                     return e.element;
                 }

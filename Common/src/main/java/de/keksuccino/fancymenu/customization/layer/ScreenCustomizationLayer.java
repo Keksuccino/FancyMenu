@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -20,7 +17,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
-import de.keksuccino.fancymenu.api.item.CustomizationItem;
+import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.customization.element.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
@@ -85,6 +83,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ScreenCustomizationLayer extends GuiComponent {
 
@@ -143,7 +143,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	/**
 	 * @param identifier Has to be the full class path of the menu screen.
 	 */
-	public ScreenCustomizationLayer(@Nonnull String identifier) {
+	public ScreenCustomizationLayer(@NotNull String identifier) {
 		this.identifier = identifier;
 		EventHandler.INSTANCE.registerListenersOf(this);
 	}
@@ -199,41 +199,29 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	@EventListener
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
-		LOGGER.info("###################### ON INIT PRE: " + this.getIdentifier());
-
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
 		}
 		this.delayThreads.clear();
 
-		if (!ScreenCustomization.isValidScreen(e.getScreen())) {
-			return;
-		}
-		LOGGER.info("###################### 2 ON INIT PRE: " + this.getIdentifier());
 		if (!this.shouldCustomize(e.getScreen())) {
 			return;
 		}
-		LOGGER.info("###################### 3 ON INIT PRE: " + this.getIdentifier());
 		if (!AnimationHandler.isReady()) {
 			return;
 		}
-		LOGGER.info("###################### 4 ON INIT PRE: " + this.getIdentifier());
 		if (!GameIntroHandler.introDisplayed) {
 			return;
 		}
-		LOGGER.info("###################### 5 ON INIT PRE: " + this.getIdentifier());
 		if (LayoutEditorScreen.isActive) {
 			return;
 		}
-		LOGGER.info("###################### 6 ON INIT PRE: " + this.getIdentifier());
 		if (ButtonCache.isCaching()) {
 			return;
 		}
-		LOGGER.info("###################### 7 ON INIT PRE: " + this.getIdentifier());
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(e.getScreen())) {
 			return;
 		}
-		LOGGER.info("###################### 8 ON INIT PRE: " + this.getIdentifier());
 
 		preInitialized = true;
 
@@ -440,9 +428,6 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		if (e.getScreen() != Minecraft.getInstance().screen) {
 			return;
 		}
-		if (!ScreenCustomization.isValidScreen(e.getScreen())) {
-			return;
-		}
 		if (!this.shouldCustomize(e.getScreen())) {
 			return;
 		}
@@ -517,7 +502,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			}
 		}
 		
-		for (String s : ScreenCustomization.getSounds()) {
+		for (String s : SoundRegistry.getSounds()) {
 			if (!this.audio.containsKey(s) && !s.equals(this.openAudio) && !s.equals(this.closeAudio)) {
 				SoundHandler.stopSound(s);
 				SoundHandler.resetSound(s);
@@ -525,12 +510,12 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		}
 
 		if (!this.sharedLayoutProps.closeAudioSet && (this.closeAudio != null)) {
-			ScreenCustomization.unregisterSound(this.closeAudio);
+			SoundRegistry.unregisterSound(this.closeAudio);
 			this.closeAudio = null;
 		}
 
 		if (!this.sharedLayoutProps.openAudioSet && (this.openAudio != null)) {
-			ScreenCustomization.unregisterSound(this.openAudio);
+			SoundRegistry.unregisterSound(this.openAudio);
 			this.openAudio = null;
 		}
 
@@ -553,16 +538,10 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			if (ScreenCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
-			if (i.anchorPoint.equals("element") && (i.anchorPointElementIdentifier != null)) {
-				i.anchorPointElement = this.getItemByActionId(i.anchorPointElementIdentifier);
-			}
 		}
 		for (AbstractElement i : this.backgroundElements) {
 			if (ScreenCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
-			}
-			if (i.anchorPoint.equals("element") && (i.anchorPointElementIdentifier != null)) {
-				i.anchorPointElement = this.getItemByActionId(i.anchorPointElementIdentifier);
 			}
 		}
 
@@ -974,7 +953,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 								try {
 									String name = path + Files.size(f.toPath());
-									ScreenCustomization.registerSound(name, path);
+									SoundRegistry.registerSound(name, path);
 									this.audio.put(name, loop);
 								} catch (Exception ex) {
 									ex.printStackTrace();
@@ -997,7 +976,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 						try {
 							String name = "closesound_" + path + Files.size(f.toPath());
-							ScreenCustomization.registerSound(name, path);
+							SoundRegistry.registerSound(name, path);
 							this.closeAudio = name;
 							this.sharedLayoutProps.closeAudioSet = true;
 						} catch (Exception ex) {
@@ -1019,7 +998,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
 							try {
 								String name = "opensound_" + path + Files.size(f.toPath());
-								ScreenCustomization.registerSound(name, path);
+								SoundRegistry.registerSound(name, path);
 								SoundHandler.resetSound(name);
 								SoundHandler.playSound(name);
 								this.openAudio = name;
@@ -1663,15 +1642,16 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		return this.vanillaButtonCustomizations.get(w);
 	}
 
-	public AbstractElement getItemByActionId(String actionId) {
+	@Nullable
+	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
 		for (AbstractElement c : this.backgroundElements) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
-				if (id.equals(actionId)) {
+				if (id.equals(instanceIdentifier)) {
 					return c;
 				}
 			} else {
-				if (c.getInstanceIdentifier().equals(actionId)) {
+				if (c.getInstanceIdentifier().equals(instanceIdentifier)) {
 					return c;
 				}
 			}
@@ -1679,17 +1659,17 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		for (AbstractElement c : this.foregroundElements) {
 			if (c instanceof VanillaButtonCustomizationItem) {
 				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)c).getButtonId();
-				if (id.equals(actionId)) {
+				if (id.equals(instanceIdentifier)) {
 					return c;
 				}
 			} else {
-				if (c.getInstanceIdentifier().equals(actionId)) {
+				if (c.getInstanceIdentifier().equals(instanceIdentifier)) {
 					return c;
 				}
 			}
 		}
-		if (actionId.startsWith("vanillabtn:")) {
-			String idRaw = actionId.split(":", 2)[1];
+		if (instanceIdentifier.startsWith("vanillabtn:")) {
+			String idRaw = instanceIdentifier.split(":", 2)[1];
 			ButtonData d;
 			if (MathUtils.isLong(idRaw)) {
 				d = ButtonCache.getButtonForId(Long.parseLong(idRaw));
@@ -1698,7 +1678,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			}
 			if ((d != null) && (d.getButton() != null)) {
 				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
-				vb.anchorPoint = "top-left";
+				vb.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 				vb.rawX = d.getButton().x;
 				vb.rawY = d.getButton().y;
 				vb.width = d.getButton().getWidth();
@@ -1852,8 +1832,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 							}
 						}
 					} else {
-						ScreenCustomization.stopSounds();
-						ScreenCustomization.resetSounds();
+						SoundRegistry.stopSounds();
+						SoundRegistry.resetSounds();
 						AnimationHandler.resetAnimations();
 						AnimationHandler.resetAnimationSounds();
 						AnimationHandler.stopAnimationSounds();
@@ -1922,7 +1902,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		public boolean isButtonHidden = false;
 		public LoadingRequirementContainer loadingRequirementContainer = null;
 
-		public List<IAnimationRenderer> cachedAnimations = new ArrayList<IAnimationRenderer>();
+		public List<IAnimationRenderer> cachedAnimations = new ArrayList<>();
 		public boolean lastHoverState = false;
 
 	}

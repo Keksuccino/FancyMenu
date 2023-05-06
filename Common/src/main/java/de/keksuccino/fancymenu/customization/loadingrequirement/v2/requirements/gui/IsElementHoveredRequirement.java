@@ -38,7 +38,7 @@ public class IsElementHoveredRequirement extends LoadingRequirement {
             if (s != null) {
                 ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
                 if (handler != null) {
-                    AbstractElement i = handler.getItemByActionId(value);
+                    AbstractElement i = handler.getElementByInstanceIdentifier(value);
                     if (i != null) {
                         int mX = MouseInput.getMouseX();
                         int mY = MouseInput.getMouseY();

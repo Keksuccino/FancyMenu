@@ -1,5 +1,17 @@
 {
   "fancymenu.keybinding.category": "FancyMenu",
   "fancymenu.keybinding.keybind.reload_mod": "Reload FancyMenu | CTRL + ALT + ",
-  "fancymenu.keybinding.keybind.toggle_overlay": "Toggle Overlay | CTRL + ALT + "
+  "fancymenu.keybinding.keybind.toggle_overlay": "Toggle Overlay | CTRL + ALT + ",
+  "fancymenu.element.anchor_point": "Anchor Point",
+  "fancymenu.element.anchor_point.vanilla": "Vanilla (Original)",
+  "fancymenu.element.anchor_point.element": "Other Element",
+  "fancymenu.element.anchor_point.top_left": "Top-Left Screen Corner",
+  "fancymenu.element.anchor_point.mid_left": "Center of Left Edge",
+  "fancymenu.element.anchor_point.bottom_left": "Bottom-Left Corner",
+  "fancymenu.element.anchor_point.top_centered": "Center of Top Edge",
+  "fancymenu.element.anchor_point.mid_centered": "Center of Screen",
+  "fancymenu.element.anchor_point.bottom_centered": "Center of Bottom Edge",
+  "fancymenu.element.anchor_point.top_right": "Top-Right Corner",
+  "fancymenu.element.anchor_point.mid_right": "Center of Right Edge",
+  "fancymenu.element.anchor_point.bottom_right": "Bottom-Right Corner"
 }

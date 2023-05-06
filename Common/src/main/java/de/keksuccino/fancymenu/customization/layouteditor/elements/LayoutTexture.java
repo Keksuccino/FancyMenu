@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layouteditor.elements;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.v1.TextureCustomizationItem;
 import de.keksuccino.konkrete.properties.PropertiesSection;

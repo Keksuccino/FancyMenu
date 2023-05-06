@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenStartingEvent;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +20,6 @@ public class ScreenCustomizationLayerHandler {
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected static final Map<String, ScreenCustomizationLayer> LAYERS = new HashMap<>();
-	protected static ScreenCustomizationLayer activeLayer;
 
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new ScreenCustomizationLayerHandler());
@@ -41,7 +41,7 @@ public class ScreenCustomizationLayerHandler {
 
 	public static void registerLayer(@NotNull ScreenCustomizationLayer layer) {
 		if (layer.getIdentifier() == null) {
-			LOGGER.error("[FANCYMENU] Unable to register ScreenCustomizationLayer! Menu identifier was NULL!");
+			LOGGER.error("[FANCYMENU] Unable to register ScreenCustomizationLayer! Identifier was NULL!");
 			return;
 		}
 		registerLayer(layer.getIdentifier(), layer);
@@ -59,24 +59,14 @@ public class ScreenCustomizationLayerHandler {
 	public static boolean isLayerRegistered(@NotNull String identifier) {
 		return LAYERS.containsKey(identifier);
 	}
-	
+
+	@Nullable
 	public static ScreenCustomizationLayer getActiveLayer() {
-		return activeLayer;
-	}
-
-	public static void setActiveLayerByIdentifier(@NotNull String identifier) {
-		try {
-			ScreenCustomizationLayer layer = LAYERS.get(identifier);
-			if (layer != null) {
-				activeLayer = layer;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		Screen s = Minecraft.getInstance().screen;
+		if ((s != null) && !ScreenCustomization.isScreenBlacklisted(s)) {
+			return getLayerOfScreen(s);
 		}
-	}
-
-	public static void setActiveLayer(@Nullable ScreenCustomizationLayer layer) {
-		activeLayer = layer;
+		return null;
 	}
 
 	@Nullable
@@ -99,12 +89,11 @@ public class ScreenCustomizationLayerHandler {
 	@EventListener
 	public void onScreenInitOrResizeStarting(InitOrResizeScreenStartingEvent e) {
 		this.autoRegisterScreenLayer(e.getScreen());
-		this.autoSetActiveLayer(e.getScreen());
 	}
 
 	protected void autoRegisterScreenLayer(Screen screen) {
 		if (screen != null) {
-			if (ScreenCustomization.isScreenBlacklisted(screen.getClass().getName())) {
+			if (ScreenCustomization.isScreenBlacklisted(screen)) {
 				return;
 			}
 			if (screen instanceof CustomGuiBase) {
@@ -114,18 +103,6 @@ public class ScreenCustomizationLayerHandler {
 			} else {
 				registerScreen(screen);
 			}
-		}
-	}
-
-	protected void autoSetActiveLayer(Screen screen) {
-		if (screen != null) {
-			ScreenCustomizationLayer layer;
-			if (screen instanceof CustomGuiBase) {
-				layer = getLayer(((CustomGuiBase) screen).getIdentifier());
-			} else {
-				layer = getLayerOfScreen(screen);
-			}
-			setActiveLayer(layer);
 		}
 	}
 

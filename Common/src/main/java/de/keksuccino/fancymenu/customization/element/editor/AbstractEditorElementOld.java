@@ -1,18 +1,30 @@
-package de.keksuccino.fancymenu.customization.element;
-
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nonnull;
+package de.keksuccino.fancymenu.customization.element.editor;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.layouteditor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -23,23 +35,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.KeyboardHandler;
-import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.Minecraft;
+import javax.annotation.Nonnull;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public abstract class AbstractEditorElement extends GuiComponent implements Renderable, GuiEventListener {
+public abstract class AbstractEditorElementOld extends GuiComponent implements Renderable, GuiEventListener {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -67,25 +68,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected int startHeight;
 	private boolean moving = false;
 
-	public List<AbstractEditorElement> hoveredLayers = new ArrayList<>();
+	public List<AbstractEditorElementOld> hoveredLayers = new ArrayList<>();
 
-	public FMContextMenu rightClickContextMenu;
-
-	protected AdvancedButton orientationElementButton;
-	protected AdvancedButton orientationTopLeftButton;
-	protected AdvancedButton orientationMidLeftButton;
-	protected AdvancedButton orientationBottomLeftButton;
-	protected AdvancedButton orientationTopCenteredButton;
-	protected AdvancedButton orientationMidCenteredButton;
-	protected AdvancedButton orientationBottomCenteredButton;
-	protected AdvancedButton orientationTopRightButton;
-	protected AdvancedButton orientationMidRightButton;
-	protected AdvancedButton orientationBottomRightButton;
+	public ContextMenu rightClickContextMenu;
 
 	protected static boolean isShiftPressed = false;
 	private static boolean shiftListener = false;
 
-	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
+	public AbstractEditorElementOld(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
 		this.settings.editorElement = this;
 		this.editor = editor;
@@ -106,13 +96,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.init();
 	}
 
-	public AbstractEditorElement(@Nonnull AbstractElement element, @Nonnull LayoutEditorScreen editor) {
+	public AbstractEditorElementOld(@Nonnull AbstractElement element, @Nonnull LayoutEditorScreen editor) {
 		this(element, editor, new EditorElementSettings());
 	}
 	
 	public void init() {
 		
-		this.rightClickContextMenu = new FMContextMenu();
+		this.rightClickContextMenu = new ContextMenu();
 		this.rightClickContextMenu.setAlwaysOnTop(true);
 
 		if (this.settings.isElementIdCopyButtonEnabled()) {
@@ -138,24 +128,23 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.rightClickContextMenu.addSeparator();
 
-		if (this.settings.isOrientationChangeable()) {
-			FMContextMenu orientationMenu = new FMContextMenu();
-			orientationMenu.setAutoclose(true);
-			this.rightClickContextMenu.addChild(orientationMenu);
+		if (this.settings.isAnchorPointChangeable()) {
 
-			if (this.settings.isOrientationByElementAllowed()) {
-				orientationElementButton = new AdvancedButton(0, 0, 0, 16, "element", (press) -> {
+			ContextMenu anchorPointContext = new ContextMenu();
+			anchorPointContext.setAutoclose(true);
+			this.rightClickContextMenu.addChild(anchorPointContext);
+
+			if (this.settings.isElementAnchorPointAllowed()) {
+				Button anchorElementButton = new Button(0, 0, 0, 16, ElementAnchorPoint.ELEMENT.getDisplayName(), (press) -> {
 					this.editor.setObjectFocused(this, false, true);
 					FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
 						if (call != null) {
-							AbstractEditorElement l = this.editor.getElementByActionId(call);
+							AbstractEditorElementOld l = this.editor.getElementByInstanceIdentifier(call);
 							if (l != null) {
 								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 								this.element.anchorPointElementIdentifier = call;
 								this.element.anchorPointElement = l.element;
-								this.editor.history.setPreventSnapshotSaving(true);
-								this.setOrientation("element");
-								this.editor.history.setPreventSnapshotSaving(false);
+								this.setAnchorPoint(ElementAnchorPoint.ELEMENT);
 							} else {
 								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
 							}
@@ -165,80 +154,29 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						pop.setText(this.element.anchorPointElementIdentifier);
 					}
 					PopupHandler.displayPopup(pop);
-					orientationMenu.closeMenu();
+					anchorPointContext.closeMenu();
 				});
-				orientationElementButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
-				orientationMenu.addContent(orientationElementButton);
+				anchorElementButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
+				anchorPointContext.addContent(anchorElementButton);
 			}
 
-			orientationMenu.addSeparator();
+			anchorPointContext.addSeparator();
 
-			orientationTopLeftButton = new AdvancedButton(0, 0, 0, 16, "top-left", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("top-left");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationTopLeftButton);
+			for (ElementAnchorPoint p : ElementAnchorPoint.ANCHOR_POINTS) {
+				if (p != ElementAnchorPoint.ELEMENT) {
+					Button b = new Button(0, 0, 0, 0, p.getDisplayName(), true, (button) -> {
+						this.editor.setObjectFocused(this, false, true);
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						this.setAnchorPoint(p);
+						anchorPointContext.closeMenu();
+					});
+					anchorPointContext.addContent(b);
+				}
+			}
 
-			orientationMidLeftButton = new AdvancedButton(0, 0, 0, 16, "mid-left", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("mid-left");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationMidLeftButton);
-
-			orientationBottomLeftButton = new AdvancedButton(0, 0, 0, 16, "bottom-left", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("bottom-left");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationBottomLeftButton);
-
-			orientationTopCenteredButton = new AdvancedButton(0, 0, 0, 16, "top-centered", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("top-centered");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationTopCenteredButton);
-
-			orientationMidCenteredButton = new AdvancedButton(0, 0, 0, 16, "mid-centered", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("mid-centered");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationMidCenteredButton);
-
-			orientationBottomCenteredButton = new AdvancedButton(0, 0, 0, 16, "bottom-centered", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("bottom-centered");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationBottomCenteredButton);
-
-			orientationTopRightButton = new AdvancedButton(0, 0, 0, 16, "top-right", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("top-right");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationTopRightButton);
-
-			orientationMidRightButton = new AdvancedButton(0, 0, 0, 16, "mid-right", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("mid-right");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationMidRightButton);
-
-			orientationBottomRightButton = new AdvancedButton(0, 0, 0, 16, "bottom-right", (press) -> {
-				this.editor.setObjectFocused(this, false, true);
-				this.setOrientation("bottom-right");
-				orientationMenu.closeMenu();
-			});
-			orientationMenu.addContent(orientationBottomRightButton);
-
-			AdvancedButton orientationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
-				orientationMenu.setParentButton((AdvancedButton) press);
-				orientationMenu.openMenuAt(0, press.y);
+			AdvancedButton anchorPointButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
+				anchorPointContext.setParentButton((AdvancedButton) press);
+				anchorPointContext.openMenuAt(0, press.y);
 			}) {
 				@Override
 				public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
@@ -246,12 +184,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 				}
 			};
-			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
-			this.rightClickContextMenu.addContent(orientationButton);
+			anchorPointButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
+			this.rightClickContextMenu.addContent(anchorPointButton);
+
 		}
 
 		if (this.settings.isAdvancedPositioningSupported()) {
-			FMContextMenu advancedPositioningMenu = new FMContextMenu();
+			ContextMenu advancedPositioningMenu = new ContextMenu();
 			advancedPositioningMenu.setAutoclose(true);
 			this.rightClickContextMenu.addChild(advancedPositioningMenu);
 
@@ -283,7 +222,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						}
 						this.element.rawX = 0;
 						this.element.rawY = 0;
-						this.element.anchorPoint = "top-left";
+						this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 					}
 				});
 				s.multilineMode = false;
@@ -305,7 +244,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						}
 						this.element.rawX = 0;
 						this.element.rawY = 0;
-						this.element.anchorPoint = "top-left";
+						this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 					}
 				});
 				s.multilineMode = false;
@@ -318,7 +257,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 
 		if (this.settings.isAdvancedSizingSupported()) {
-			FMContextMenu advancedSizingMenu = new FMContextMenu();
+			ContextMenu advancedSizingMenu = new ContextMenu();
 			advancedSizingMenu.setAutoclose(true);
 			this.rightClickContextMenu.addChild(advancedSizingMenu);
 
@@ -355,7 +294,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							this.element.width = 50;
 							this.element.advancedWidth = call;
 							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint.equals("original"))) {
-								this.element.anchorPoint = "top-left";
+								this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 								this.element.rawX = 0;
 								this.element.rawY = 0;
 							}
@@ -386,7 +325,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							this.element.height = 50;
 							this.element.advancedHeight = call;
 							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint.equals("original"))) {
-								this.element.anchorPoint = "top-left";
+								this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 								this.element.rawX = 0;
 								this.element.rawY = 0;
 							}
@@ -402,13 +341,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			advancedSizingMenu.addContent(advancedHeightButton);
 		}
 
-		FMContextMenu layersMenu = new FMContextMenu();
+		ContextMenu layersMenu = new ContextMenu();
 		layersMenu.setAutoclose(true);
 		this.rightClickContextMenu.addChild(layersMenu);
 		
 		AdvancedButton layersButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.chooselayer"), true, (press) -> {
 			layersMenu.getContent().clear();
-			for (AbstractEditorElement o : this.hoveredLayers) {
+			for (AbstractEditorElementOld o : this.hoveredLayers) {
 				String label = o.element.builder.getDisplayName().getString();
 				if (Minecraft.getInstance().font.width(label) > 200) {
 					label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
@@ -494,7 +433,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isOrderable()) {
 			AdvancedButton moveUpButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.moveup"), (press) -> {
-				AbstractEditorElement o = this.editor.moveUp(this);
+				AbstractEditorElementOld o = this.editor.moveUp(this);
 				if (o != null) {
 					((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.moveup.desc", Locals.localize("helper.creator.object.moveup.desc.subtext", o.element.builder.getDisplayName().getString())), "%n%"));
 				}
@@ -503,7 +442,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.rightClickContextMenu.addContent(moveUpButton);
 
 			AdvancedButton moveDownButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.movedown"), (press) -> {
-				AbstractEditorElement o = this.editor.moveDown(this);
+				AbstractEditorElementOld o = this.editor.moveDown(this);
 				if (o != null) {
 					if (o instanceof LayoutVanillaButton) {
 						((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", Locals.localize("helper.creator.object.movedown.desc.subtext.vanillabutton")), "%n%"));
@@ -532,7 +471,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.rightClickContextMenu.addSeparator();
 
-		FMContextMenu delayMenu = new FMContextMenu();
+		ContextMenu delayMenu = new ContextMenu();
 		delayMenu.setAutoclose(true);
 		this.rightClickContextMenu.addChild(delayMenu);
 		
@@ -579,7 +518,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}) {
 			@Override
 			public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
-				this.active = AbstractEditorElement.this.element.delayAppearance;
+				this.active = AbstractEditorElementOld.this.element.delayAppearance;
 				super.render(matrix, mouseX, mouseY, partialTicks);
 			}
 		};
@@ -602,7 +541,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}) {
 			@Override
 			public void render(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-				this.active = AbstractEditorElement.this.element.delayAppearance;
+				this.active = AbstractEditorElementOld.this.element.delayAppearance;
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
@@ -628,7 +567,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}) {
 			@Override
 			public void render(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-				this.active = AbstractEditorElement.this.element.delayAppearance;
+				this.active = AbstractEditorElementOld.this.element.delayAppearance;
 				super.render(matrixStack, mouseX, mouseY, partialTicks);
 			}
 		};
@@ -649,155 +588,117 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public void onSettingsChanged() {
+		this.resetElementStates();
 		this.init();
 	}
 
-	protected void setOrientation(String pos) {
-		if (!this.settings.isOrientationChangeable()) {
+	protected void setAnchorPoint(@NotNull ElementAnchorPoint anchorPoint) {
+		if (!this.settings.isAnchorPointChangeable()) {
 			return;
 		}
-		this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-		if (pos.equals("mid-left")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = 0;
-			this.element.rawY = -(this.element.getHeight() / 2);
-		} else if (pos.equals("bottom-left")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = 0;
-			this.element.rawY = -this.element.getHeight();
-		} else if (pos.equals("top-centered")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = -(this.element.getWidth() / 2);
-			this.element.rawY = 0;
-		} else if (pos.equals("mid-centered")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = -(this.element.getWidth() / 2);
-			this.element.rawY = -(this.element.getHeight() / 2);
-		} else if (pos.equals("bottom-centered")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = -(this.element.getWidth() / 2);
-			this.element.rawY = -this.element.getHeight();
-		} else if (pos.equals("top-right")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = -this.element.getWidth();
-			this.element.rawY = 0;
-		} else if (pos.equals("mid-right")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = -this.element.getWidth();
-			this.element.rawY = -(this.element.getHeight() / 2);
-		} else if (pos.equals("bottom-right")) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = -this.element.getWidth();
-			this.element.rawY = -this.element.getHeight();
-		} else if (pos.equals("element") && (this.element.anchorPointElement != null)) {
-			this.element.anchorPoint = pos;
-			this.element.rawX = 10;
-			this.element.rawY = 10;
-		} else {
-			this.element.anchorPoint = pos;
-			this.element.rawX = 0;
-			this.element.rawY = 0;
-		}
+		this.element.anchorPoint = anchorPoint;
+		this.element.rawX = anchorPoint.getDefaultElementPositionX(this.element);
+		this.element.rawY = anchorPoint.getDefaultElementPositionY(this.element);
 	}
 	
-	protected int orientationMouseX(int mouseX) {
-		if (this.element.anchorPoint.endsWith("-centered")) {
-			return mouseX - (this.editor.width / 2);
-		}
-		if (this.element.anchorPoint.endsWith("-right")) {
-			return mouseX - this.editor.width;
-		}
-		return mouseX;
-	}
-	
-	protected int orientationMouseY(int mouseY) {
-		if (this.element.anchorPoint.startsWith("mid-")) {
-			return mouseY - (this.editor.height / 2);
-		}
-		if (this.element.anchorPoint.startsWith("bottom-")) {
-			return mouseY - this.editor.height;
-		}
-		return mouseY;
-	}
-
-	private boolean isOrientationSupportedByStretchAction(boolean stX, boolean stY) {
-		try {
-			if (stX && !stY) {
-				if (!this.element.anchorPoint.equals("top-left") && !this.element.anchorPoint.equals("mid-left") && !this.element.anchorPoint.equals("bottom-left")) {
-					return false;
-				}
-			}
-			if (stY && !stX) {
-				if (!this.element.anchorPoint.equals("top-left") && !this.element.anchorPoint.equals("top-centered") && !this.element.anchorPoint.equals("top-right")) {
-					return false;
-				}
-			}
-			if (stX && stY) {
-				return this.element.anchorPoint.equals("top-left");
-			}
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	private void handleStretch() {
-		try {
-			if (this.element.stretchX || this.element.stretchY) {
-				this.orientationElementButton.active = false;
-			}
-			if (this.settings.isOrientationChangeable()) {
-				if (this.element.stretchX && !this.element.stretchY) {
-					this.orientationTopLeftButton.active = true;
-					this.orientationMidLeftButton.active = true;
-					this.orientationBottomLeftButton.active = true;
-					this.orientationTopCenteredButton.active = false;
-					this.orientationMidCenteredButton.active = false;
-					this.orientationBottomCenteredButton.active = false;
-					this.orientationTopRightButton.active = false;
-					this.orientationMidRightButton.active = false;
-					this.orientationBottomRightButton.active = false;
-				}
-				if (this.element.stretchY && !this.element.stretchX) {
-					this.orientationTopLeftButton.active = true;
-					this.orientationMidLeftButton.active = false;
-					this.orientationBottomLeftButton.active = false;
-					this.orientationTopCenteredButton.active = true;
-					this.orientationMidCenteredButton.active = false;
-					this.orientationBottomCenteredButton.active = false;
-					this.orientationTopRightButton.active = true;
-					this.orientationMidRightButton.active = false;
-					this.orientationBottomRightButton.active = false;
-				}
-				if (this.element.stretchX && this.element.stretchY) {
-					this.orientationTopLeftButton.active = true;
-					this.orientationMidLeftButton.active = false;
-					this.orientationBottomLeftButton.active = false;
-					this.orientationTopCenteredButton.active = false;
-					this.orientationMidCenteredButton.active = false;
-					this.orientationBottomCenteredButton.active = false;
-					this.orientationTopRightButton.active = false;
-					this.orientationMidRightButton.active = false;
-					this.orientationBottomRightButton.active = false;
-				}
-				if (!this.element.stretchX && !this.element.stretchY) {
-					this.orientationTopLeftButton.active = true;
-					this.orientationMidLeftButton.active = true;
-					this.orientationBottomLeftButton.active = true;
-					this.orientationTopCenteredButton.active = true;
-					this.orientationMidCenteredButton.active = true;
-					this.orientationBottomCenteredButton.active = true;
-					this.orientationTopRightButton.active = true;
-					this.orientationMidRightButton.active = true;
-					this.orientationBottomRightButton.active = true;
-					this.orientationElementButton.active = true;
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+//	protected int orientationMouseX(int mouseX) {
+//		if (this.element.anchorPoint.endsWith("-centered")) {
+//			return mouseX - (this.editor.width / 2);
+//		}
+//		if (this.element.anchorPoint.endsWith("-right")) {
+//			return mouseX - this.editor.width;
+//		}
+//		return mouseX;
+//	}
+//
+//	protected int orientationMouseY(int mouseY) {
+//		if (this.element.anchorPoint.startsWith("mid-")) {
+//			return mouseY - (this.editor.height / 2);
+//		}
+//		if (this.element.anchorPoint.startsWith("bottom-")) {
+//			return mouseY - this.editor.height;
+//		}
+//		return mouseY;
+//	}
+//
+//	private boolean isOrientationSupportedByStretchAction(boolean stX, boolean stY) {
+//		try {
+//			if (stX && !stY) {
+//				if (!this.element.anchorPoint.equals("top-left") && !this.element.anchorPoint.equals("mid-left") && !this.element.anchorPoint.equals("bottom-left")) {
+//					return false;
+//				}
+//			}
+//			if (stY && !stX) {
+//				if (!this.element.anchorPoint.equals("top-left") && !this.element.anchorPoint.equals("top-centered") && !this.element.anchorPoint.equals("top-right")) {
+//					return false;
+//				}
+//			}
+//			if (stX && stY) {
+//				return this.element.anchorPoint.equals("top-left");
+//			}
+//			return true;
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		return false;
+//	}
+//
+//	private void handleStretch() {
+//		try {
+//			if (this.element.stretchX || this.element.stretchY) {
+//				this.orientationElementButton.active = false;
+//			}
+//			if (this.settings.isAnchorPointChangeable()) {
+//				if (this.element.stretchX && !this.element.stretchY) {
+//					this.orientationTopLeftButton.active = true;
+//					this.orientationMidLeftButton.active = true;
+//					this.orientationBottomLeftButton.active = true;
+//					this.orientationTopCenteredButton.active = false;
+//					this.orientationMidCenteredButton.active = false;
+//					this.orientationBottomCenteredButton.active = false;
+//					this.orientationTopRightButton.active = false;
+//					this.orientationMidRightButton.active = false;
+//					this.orientationBottomRightButton.active = false;
+//				}
+//				if (this.element.stretchY && !this.element.stretchX) {
+//					this.orientationTopLeftButton.active = true;
+//					this.orientationMidLeftButton.active = false;
+//					this.orientationBottomLeftButton.active = false;
+//					this.orientationTopCenteredButton.active = true;
+//					this.orientationMidCenteredButton.active = false;
+//					this.orientationBottomCenteredButton.active = false;
+//					this.orientationTopRightButton.active = true;
+//					this.orientationMidRightButton.active = false;
+//					this.orientationBottomRightButton.active = false;
+//				}
+//				if (this.element.stretchX && this.element.stretchY) {
+//					this.orientationTopLeftButton.active = true;
+//					this.orientationMidLeftButton.active = false;
+//					this.orientationBottomLeftButton.active = false;
+//					this.orientationTopCenteredButton.active = false;
+//					this.orientationMidCenteredButton.active = false;
+//					this.orientationBottomCenteredButton.active = false;
+//					this.orientationTopRightButton.active = false;
+//					this.orientationMidRightButton.active = false;
+//					this.orientationBottomRightButton.active = false;
+//				}
+//				if (!this.element.stretchX && !this.element.stretchY) {
+//					this.orientationTopLeftButton.active = true;
+//					this.orientationMidLeftButton.active = true;
+//					this.orientationBottomLeftButton.active = true;
+//					this.orientationTopCenteredButton.active = true;
+//					this.orientationMidCenteredButton.active = true;
+//					this.orientationBottomCenteredButton.active = true;
+//					this.orientationTopRightButton.active = true;
+//					this.orientationMidRightButton.active = true;
+//					this.orientationBottomRightButton.active = true;
+//					this.orientationElementButton.active = true;
+//				}
+//			}
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
 	@Override
 	public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
@@ -806,7 +707,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.element.render(matrix, mouseX, mouseY, partial);
 
-		this.handleStretch();
+//		this.handleStretch();
         
 		// Renders the border around the object if its focused (starts to render one tick after the object got focused)
 		if (this.editor.isFocused(this)) {
@@ -845,7 +746,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						this.lastGrabber = this.getActiveResizeGrabber();
 					}
 					this.resizing = true;
-					this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
+//					this.handleResize(this.orientationMouseX(mouseX), this.orientationMouseY(mouseY));
+					this.handleResize(mouseX, mouseY);
 				}
 			}
 		} else {
@@ -1209,7 +1111,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.element.anchorPointElementIdentifier != null) {
 			String id = "vanillabtn:" + btn.getButtonId();
 			if (this.element.anchorPointElementIdentifier.equals(id)) {
-				this.element.anchorPointElement = this.editor.getElementByActionId(id).element;
+				this.element.anchorPointElement = this.editor.getElementByInstanceIdentifier(id).element;
 			}
 		}
 	}

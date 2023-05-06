@@ -2,10 +2,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.text;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -367,7 +367,7 @@ public class TextEditorElement extends AbstractEditorElement {
         scrollingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.scrolling.desc"), "%n%"));
         this.rightClickContextMenu.addContent(scrollingButton);
 
-        FMContextMenu grabberTextureMenu = new FMContextMenu();
+        ContextMenu grabberTextureMenu = new ContextMenu();
         this.rightClickContextMenu.addChild(grabberTextureMenu);
 
         //GRABBER TEXTURE BUTTON
@@ -427,7 +427,7 @@ public class TextEditorElement extends AbstractEditorElement {
         });
         grabberTextureMenu.addContent(grabberHoverTextureButton);
 
-        FMContextMenu grabberColorMenu = new FMContextMenu();
+        ContextMenu grabberColorMenu = new ContextMenu();
         this.rightClickContextMenu.addChild(grabberColorMenu);
 
         //GRABBER COLOR BUTTON

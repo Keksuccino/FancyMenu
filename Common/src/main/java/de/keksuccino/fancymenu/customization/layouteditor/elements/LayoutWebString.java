@@ -4,10 +4,10 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.customization.element.v1.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement.Alignment;
@@ -59,7 +59,7 @@ public class LayoutWebString extends AbstractEditorElement {
 		});
 		this.rightClickContextMenu.addContent(shadowB);
 
-		FMContextMenu alignmentMenu = new FMContextMenu();
+		ContextMenu alignmentMenu = new ContextMenu();
 		alignmentMenu.setAutoclose(true);
 		this.rightClickContextMenu.addChild(alignmentMenu);
 
@@ -148,8 +148,8 @@ public class LayoutWebString extends AbstractEditorElement {
 	}
 
 	@Override
-	protected void setOrientation(String pos) {
-		super.setOrientation(pos);
+	protected void setAnchorPoint(String pos) {
+		super.setAnchorPoint(pos);
 		if (this.getObject().alignment == Alignment.CENTERED) {
 			if (this.element.anchorPoint.endsWith("-right")) {
 				this.element.rawX += this.element.getWidth();

@@ -29,7 +29,7 @@ import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.guicreator.CreateCustomGuiPopup;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar.ElementAlignment;
@@ -93,7 +93,7 @@ public class CustomizationOverlayUI extends UIBase {
 			bar = new MenuBar();
 
 			/** CURRENT MENU TAB START **/
-			FMContextMenu currentMenu = new FMContextMenu();
+			ContextMenu currentMenu = new ContextMenu();
 			currentMenu.setAutoclose(true);
 			bar.addChild(currentMenu, "fm.ui.tab.current", ElementAlignment.LEFT);
 
@@ -115,7 +115,7 @@ public class CustomizationOverlayUI extends UIBase {
 			toggleCustomizationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.onoff.btndesc"), "%n%"));
 			currentMenu.addContent(toggleCustomizationButton);
 
-			FMContextMenu layoutsMenu = new FMContextMenu();
+			ContextMenu layoutsMenu = new ContextMenu();
 			layoutsMenu.setAutoclose(true);
 			currentMenu.addChild(layoutsMenu);
 
@@ -158,7 +158,7 @@ public class CustomizationOverlayUI extends UIBase {
 			layoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.desc"), "%n%"));
 			currentMenu.addContent(layoutsButton);
 
-			FMContextMenu advancedMenu = new FMContextMenu();
+			ContextMenu advancedMenu = new ContextMenu();
 			advancedMenu.setAutoclose(true);
 			currentMenu.addChild(advancedMenu);
 
@@ -278,7 +278,7 @@ public class CustomizationOverlayUI extends UIBase {
 			/** CURRENT MENU TAB END **/
 
 			/** UNIVERSAL LAYOUTS START **/
-			FMContextMenu universalLayoutsMenu = new FMContextMenu();
+			ContextMenu universalLayoutsMenu = new ContextMenu();
 			universalLayoutsMenu.setAutoclose(true);
 			bar.addChild(universalLayoutsMenu, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT);
 
@@ -317,7 +317,7 @@ public class CustomizationOverlayUI extends UIBase {
 			/** UNIVERSAL LAYOUTS END **/
 
 			/** SETUP TAB START **/
-			FMContextMenu setupMenu = new FMContextMenu();
+			ContextMenu setupMenu = new ContextMenu();
 			setupMenu.setAutoclose(true);
 			bar.addChild(setupMenu, "fm.ui.tab.setup_import_export", ElementAlignment.LEFT);
 
@@ -335,7 +335,7 @@ public class CustomizationOverlayUI extends UIBase {
 			setupMenu.addContent(exportSetupButton);
 
 			//Import Menu
-			FMContextMenu importMenu = new FMContextMenu();
+			ContextMenu importMenu = new ContextMenu();
 			importMenu.setAutoclose(true);
 			setupMenu.addChild(importMenu);
 
@@ -362,7 +362,7 @@ public class CustomizationOverlayUI extends UIBase {
 			importMenu.addContent(enterPathButton);
 
 			//Restore Menu
-			FMContextMenu restoreMenu = new FMContextMenu();
+			ContextMenu restoreMenu = new ContextMenu();
 			restoreMenu.setAutoclose(true);
 			setupMenu.addChild(restoreMenu);
 
@@ -458,7 +458,7 @@ public class CustomizationOverlayUI extends UIBase {
 			/** SETUP TAB END **/
 
 			/** CUSTOM GUI TAB START **/
-			FMContextMenu customGuiMenu = new FMContextMenu();
+			ContextMenu customGuiMenu = new ContextMenu();
 			customGuiMenu.setAutoclose(true);
 			bar.addChild(customGuiMenu, "fm.ui.tab.customguis", ElementAlignment.LEFT);
 
@@ -493,7 +493,7 @@ public class CustomizationOverlayUI extends UIBase {
 			/** CUSTOM GUI TAB END **/
 
 			/** TOOLS TAB START **/
-			FMContextMenu toolsMenu = new FMContextMenu();
+			ContextMenu toolsMenu = new ContextMenu();
 			toolsMenu.setAutoclose(true);
 			bar.addChild(toolsMenu, "fm.ui.tab.tools", ElementAlignment.LEFT);
 
@@ -558,7 +558,7 @@ public class CustomizationOverlayUI extends UIBase {
 			/** TOOLS TAB END **/
 
 			/** MISCELLANEOUS TAB START **/
-			FMContextMenu miscMenu = new FMContextMenu();
+			ContextMenu miscMenu = new ContextMenu();
 			miscMenu.setAutoclose(true);
 			bar.addChild(miscMenu, "fm.ui.tab.misc", ElementAlignment.LEFT);
 
@@ -955,7 +955,7 @@ public class CustomizationOverlayUI extends UIBase {
 		}
 	}
 
-	private static class ManageCustomGuiContextMenu extends FMContextMenu {
+	private static class ManageCustomGuiContextMenu extends ContextMenu {
 
 		private ManageCustomGuiSubContextMenu manageMenu;
 
@@ -1042,7 +1042,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	}
 
-	private static class ManageCustomGuiSubContextMenu extends FMContextMenu {
+	private static class ManageCustomGuiSubContextMenu extends ContextMenu {
 
 		public void openMenuAt(int x, int y, String customGuiIdentifier) {
 			this.content.clear();
@@ -1086,7 +1086,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	}
 
-	private static class ManageLayoutsContextMenu extends FMContextMenu {
+	private static class ManageLayoutsContextMenu extends ContextMenu {
 
 		private ManageLayoutsSubContextMenu manageSubPopup;
 		private boolean isUniversal;
@@ -1229,7 +1229,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	}
 
-	private static class ManageLayoutsSubContextMenu extends FMContextMenu {
+	private static class ManageLayoutsSubContextMenu extends ContextMenu {
 
 		public void openMenuAt(int x, int y, File layout, boolean disabled) {
 
@@ -1290,7 +1290,7 @@ public class CustomizationOverlayUI extends UIBase {
 		}
 	}
 
-	private static class OverrideMenuContextMenu extends FMContextMenu {
+	private static class OverrideMenuContextMenu extends ContextMenu {
 
 		@Override
 		public void openMenuAt(int x, int y) {

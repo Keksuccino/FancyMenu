@@ -14,6 +14,9 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class AbstractElement extends GuiComponent implements Renderable {
 
+	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
+	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(PoseStack p,int i1,int i2,float f){}};
+
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoint.TOP_LEFT;
 	public String anchorPointElementIdentifier = null;
@@ -22,8 +25,8 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public int rawX = 0;
 	/** Not the same as {@link AbstractElement#getY()}! This is the raw value without orientation and scale! **/
 	public int rawY = 0;
-	public int width = 20;
-	public int height = 20;
+	public int width = 0;
+	public int height = 0;
 	public String advancedX;
 	public String advancedY;
 	public String advancedWidth;
@@ -46,7 +49,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public LoadingRequirementContainer loadingRequirementContainer;
 	protected String instanceIdentifier;
 
-	public AbstractElement(ElementBuilder<?,?> builder) {
+	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
 		this.builder = builder;
 	}
 
@@ -68,7 +71,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			return 0;
 		}
 		if (this.anchorPoint != null) {
-			return this.anchorPoint.calculatePositionX(this);
+			return this.anchorPoint.getElementPositionX(this);
 		}
 		return 0;
 	}
@@ -88,7 +91,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			return 0;
 		}
 		if (this.anchorPoint != null) {
-			return this.anchorPoint.calculatePositionY(this);
+			return this.anchorPoint.getElementPositionY(this);
 		}
 		return 0;
 	}

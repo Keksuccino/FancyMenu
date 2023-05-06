@@ -1,4 +1,6 @@
-package de.keksuccino.fancymenu.customization.element;
+package de.keksuccino.fancymenu.customization.element.editor;
+
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 
 public class EditorElementSettings {
 
@@ -16,9 +18,9 @@ public class EditorElementSettings {
     private boolean resizeableX = true;
     private boolean resizeableY = true;
     private boolean dragable = true;
-    private boolean orientationCanBeChanged = true;
+    private boolean anchorPointCanBeChanged = true;
     private boolean enableElementIdCopyButton = true;
-    private boolean allowOrientationByElement = true;
+    private boolean allowElementAnchorPoint = true;
     private boolean enableLoadingRequirements = true;
 
     public boolean isDestroyable() {
@@ -129,12 +131,12 @@ public class EditorElementSettings {
         this.settingsChanged();
     }
 
-    public boolean isOrientationChangeable() {
-        return orientationCanBeChanged;
+    public boolean isAnchorPointChangeable() {
+        return anchorPointCanBeChanged;
     }
 
-    public void setOrientationChangeable(boolean changeable) {
-        this.orientationCanBeChanged = changeable;
+    public void setAnchorPointChangeable(boolean changeable) {
+        this.anchorPointCanBeChanged = changeable;
         this.settingsChanged();
     }
 
@@ -147,12 +149,12 @@ public class EditorElementSettings {
         this.settingsChanged();
     }
 
-    public boolean isOrientationByElementAllowed() {
-        return allowOrientationByElement;
+    public boolean isElementAnchorPointAllowed() {
+        return allowElementAnchorPoint;
     }
 
-    public void setOrientationByElementAllowed(boolean allow) {
-        this.allowOrientationByElement = allow;
+    public void setElementAnchorPointAllowed(boolean allow) {
+        this.allowElementAnchorPoint = allow;
         this.settingsChanged();
     }
 

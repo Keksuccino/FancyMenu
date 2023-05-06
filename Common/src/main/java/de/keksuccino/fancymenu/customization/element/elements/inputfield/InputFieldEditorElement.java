@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -75,7 +75,7 @@ public class InputFieldEditorElement extends AbstractEditorElement {
         });
         this.rightClickContextMenu.addContent(setMaxLengthButton);
 
-        FMContextMenu setTypeMenu = new FMContextMenu();
+        ContextMenu setTypeMenu = new ContextMenu();
         this.rightClickContextMenu.addChild(setTypeMenu);
 
         AdvancedButton setTypeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.input_field.editor.set_type"), true, (press) -> {

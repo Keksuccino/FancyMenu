@@ -23,12 +23,12 @@ import de.keksuccino.fancymenu.customization.overlay.OverlayButton;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.layouteditor.loadingrequirements.ManageRequirementsScreen;
-import de.keksuccino.fancymenu.rendering.ui.ChooseFromStringListScreen;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.screen.ChooseFromStringListScreen;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
@@ -81,7 +81,7 @@ public class LayoutEditorUI extends UIBase {
 			bar.setExtended(extended);
 
 			/** LAYOUT TAB **/
-			FMContextMenu layoutMenu = new FMContextMenu();
+			ContextMenu layoutMenu = new ContextMenu();
 			layoutMenu.setAutoclose(true);
 			bar.addChild(layoutMenu, "fm.editor.ui.tab.layout", ElementAlignment.LEFT);
 
@@ -138,7 +138,7 @@ public class LayoutEditorUI extends UIBase {
 			bar.addElement(layoutTab, "fm.editor.ui.tab.layout", ElementAlignment.LEFT, false);
 
 			/** EDIT TAB **/
-			FMContextMenu editMenu = new FMContextMenu();
+			ContextMenu editMenu = new ContextMenu();
 			editMenu.setAutoclose(true);
 			bar.addChild(editMenu, "fm.editor.ui.tab.edit", ElementAlignment.LEFT);
 
@@ -181,7 +181,7 @@ public class LayoutEditorUI extends UIBase {
 			bar.addElement(editTab, "fm.editor.ui.tab.edit", ElementAlignment.LEFT, false);
 
 			/** ELEMENT TAB **/
-			FMContextMenu elementMenu = new FMContextMenu();
+			ContextMenu elementMenu = new ContextMenu();
 			elementMenu.setAutoclose(true);
 			bar.addChild(elementMenu, "fm.editor.ui.tab.element", ElementAlignment.LEFT);
 
@@ -295,7 +295,7 @@ public class LayoutEditorUI extends UIBase {
 		});
 	}
 
-	private static class OpenLayoutContextMenu extends FMContextMenu {
+	private static class OpenLayoutContextMenu extends ContextMenu {
 
 		private LayoutEditorUI ui;
 
@@ -377,7 +377,7 @@ public class LayoutEditorUI extends UIBase {
 
 	}
 
-	public static class LayoutPropertiesContextMenu extends FMContextMenu {
+	public static class LayoutPropertiesContextMenu extends ContextMenu {
 
 		private LayoutEditorScreen parent;
 
@@ -398,7 +398,7 @@ public class LayoutEditorUI extends UIBase {
 
 			if (this.parent.isUniversalLayout()) {
 
-				FMContextMenu universalLayoutMenu = new FMContextMenu();
+				ContextMenu universalLayoutMenu = new ContextMenu();
 				universalLayoutMenu.setAutoclose(true);
 				this.addChild(universalLayoutMenu);
 
@@ -712,7 +712,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addSeparator();
 
 			/** RENDERING ORDER **/
-			FMContextMenu renderingOrderMenu = new FMContextMenu();
+			ContextMenu renderingOrderMenu = new ContextMenu();
 			renderingOrderMenu.setAutoclose(true);
 			this.addChild(renderingOrderMenu);
 
@@ -809,7 +809,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(menuScaleButton);
 
 			/** OPEN/CLOSE SOUND **/
-			FMContextMenu openCloseSoundMenu = new FMContextMenu();
+			ContextMenu openCloseSoundMenu = new ContextMenu();
 			openCloseSoundMenu.setAutoclose(true);
 			this.addChild(openCloseSoundMenu);
 
@@ -926,7 +926,7 @@ public class LayoutEditorUI extends UIBase {
 			
 
 			/** WINDOW SIZE RESTRICTIONS **/
-			FMContextMenu windowSizeMenu = new FMContextMenu();
+			ContextMenu windowSizeMenu = new ContextMenu();
 			windowSizeMenu.setAutoclose(true);
 			this.addChild(windowSizeMenu);
 
@@ -977,7 +977,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(requiredModsButton);
 
 			/** MC VERSION **/
-			FMContextMenu mcVersionMenu = new FMContextMenu();
+			ContextMenu mcVersionMenu = new ContextMenu();
 			mcVersionMenu.setAutoclose(true);
 			this.addChild(mcVersionMenu);
 
@@ -1022,7 +1022,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(mcVersionButton);
 
 			/** FM VERSION **/
-			FMContextMenu fmVersionMenu = new FMContextMenu();
+			ContextMenu fmVersionMenu = new ContextMenu();
 			fmVersionMenu.setAutoclose(true);
 			this.addChild(fmVersionMenu);
 
@@ -1097,7 +1097,7 @@ public class LayoutEditorUI extends UIBase {
 
 	}
 
-	public static class NewElementContextMenu extends FMContextMenu {
+	public static class NewElementContextMenu extends ContextMenu {
 
 		private LayoutEditorScreen parent;
 
@@ -1140,7 +1140,7 @@ public class LayoutEditorUI extends UIBase {
 //			this.addContent(webTextButton);
 
 			/** SPLASH TEXT **/
-			FMContextMenu splashMenu = new FMContextMenu();
+			ContextMenu splashMenu = new ContextMenu();
 			splashMenu.setAutoclose(true);
 			this.addChild(splashMenu);
 
@@ -1187,7 +1187,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(buttonButton);
 
 			/** ANIMATION **/
-			FMContextMenu animationMenu = new FMContextMenu();
+			ContextMenu animationMenu = new ContextMenu();
 			animationMenu.setAutoclose(true);
 			this.addChild(animationMenu);
 
@@ -1212,7 +1212,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(animationButton);
 
 			/** SLIDESHOW **/
-			FMContextMenu slideshowMenu = new FMContextMenu();
+			ContextMenu slideshowMenu = new ContextMenu();
 			slideshowMenu.setAutoclose(true);
 			this.addChild(slideshowMenu);
 
@@ -1244,7 +1244,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addContent(slideshowButton);
 
 			/** SHAPE **/
-			FMContextMenu shapesMenu = new FMContextMenu();
+			ContextMenu shapesMenu = new ContextMenu();
 			shapesMenu.setAutoclose(true);
 			this.addChild(shapesMenu);
 
@@ -1287,7 +1287,7 @@ public class LayoutEditorUI extends UIBase {
 
 	}
 
-	public static class ManageAudioContextMenu extends FMContextMenu {
+	public static class ManageAudioContextMenu extends ContextMenu {
 
 		private LayoutEditorScreen parent;
 
@@ -1314,7 +1314,7 @@ public class LayoutEditorUI extends UIBase {
 						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
 					}
 
-					FMContextMenu actionsMenu = new FMContextMenu();
+					ContextMenu actionsMenu = new ContextMenu();
 					actionsMenu.setAutoclose(true);
 					this.addChild(actionsMenu);
 
@@ -1362,7 +1362,7 @@ public class LayoutEditorUI extends UIBase {
 
 	}
 
-	public static class MultiselectContextMenu extends FMContextMenu {
+	public static class MultiselectContextMenu extends ContextMenu {
 
 		private LayoutEditorScreen parent;
 
@@ -1390,7 +1390,7 @@ public class LayoutEditorUI extends UIBase {
 				this.addContent(deleteBtn);
 
 				/** STRETCH ALL **/
-				FMContextMenu stretchMenu = new FMContextMenu();
+				ContextMenu stretchMenu = new ContextMenu();
 				stretchMenu.setAutoclose(true);
 				this.addChild(stretchMenu);
 
@@ -1643,7 +1643,7 @@ public class LayoutEditorUI extends UIBase {
 
 	}
 
-	public static class HiddenVanillaButtonContextMenu extends FMContextMenu {
+	public static class HiddenVanillaButtonContextMenu extends ContextMenu {
 
 		private LayoutEditorScreen parent;
 

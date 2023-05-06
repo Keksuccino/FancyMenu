@@ -20,7 +20,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.v1.*;
 import de.keksuccino.fancymenu.customization.element.v1.button.ButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutAnimation;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutShape;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutSlideshow;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.LayoutSplashText;
@@ -879,7 +879,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 		for (AbstractEditorElement e : this.content) {
 			if (e.element.anchorPointElementIdentifier != null) {
-				AbstractEditorElement oe = this.getElementByActionId(e.element.anchorPointElementIdentifier);
+				AbstractEditorElement oe = this.getElementByInstanceIdentifier(e.element.anchorPointElementIdentifier);
 				if (oe != null) {
 					e.element.anchorPointElement = oe.element;
 				}

@@ -161,8 +161,8 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
     }
 
     @Override
-    protected void setOrientation(String pos) {
-        super.setOrientation(pos);
+    protected void setAnchorPoint(String pos) {
+        super.setAnchorPoint(pos);
         if (!pos.equals("original")) {
             this.element.rawX += (this.element.width / 2);
             this.element.rawY += (this.element.height / 2);

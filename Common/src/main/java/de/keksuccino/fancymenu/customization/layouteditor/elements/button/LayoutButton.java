@@ -14,8 +14,8 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layouteditor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.layouteditor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.customization.element.AbstractEditorElement;
-import de.keksuccino.fancymenu.rendering.ui.FMContextMenu;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -289,7 +289,7 @@ public class LayoutButton extends AbstractEditorElement {
 	}
 
 	private void initOnlyDisplayInMenu() {
-		FMContextMenu onlyDisplayInMenu = new FMContextMenu();
+		ContextMenu onlyDisplayInMenu = new ContextMenu();
 		this.rightClickContextMenu.addChild(onlyDisplayInMenu);
 
 		String outgame = Locals.localize("helper.creator.items.custombutton.onlydisplayin.outgame");
