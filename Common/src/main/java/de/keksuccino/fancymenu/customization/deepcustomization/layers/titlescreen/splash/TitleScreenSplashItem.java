@@ -114,8 +114,8 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
             originY = s.height;
         }
 
-        finalPosX = originX + rawX;
-        finalPosY = originY + rawY;
+        finalPosX = originX + baseX;
+        finalPosY = originY + baseY;
 
         this.lastSplashPosX = (int) finalPosX;
         this.lastSplashPosY = (int) finalPosY;

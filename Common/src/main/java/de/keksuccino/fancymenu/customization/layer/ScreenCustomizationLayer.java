@@ -18,10 +18,10 @@ import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.element.ElementAnchorPoint;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.acara.EventListener;
@@ -1679,8 +1679,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			if ((d != null) && (d.getButton() != null)) {
 				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
 				vb.anchorPoint = ElementAnchorPoint.TOP_LEFT;
-				vb.rawX = d.getButton().x;
-				vb.rawY = d.getButton().y;
+				vb.baseX = d.getButton().x;
+				vb.baseY = d.getButton().y;
 				vb.width = d.getButton().getWidth();
 				vb.height = d.getButton().getHeight();
 				return vb;

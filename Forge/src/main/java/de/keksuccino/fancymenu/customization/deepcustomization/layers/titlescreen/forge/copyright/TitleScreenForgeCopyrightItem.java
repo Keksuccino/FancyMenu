@@ -29,8 +29,8 @@ public class TitleScreenForgeCopyrightItem extends DeepCustomizationItem {
 
         this.width = font.width(line);
         this.height = font.lineHeight;
-        this.rawX = menu.width - this.getWidth() - 1;
-        this.rawY = menu.height - 11 - font.lineHeight;
+        this.baseX = menu.width - this.getWidth() - 1;
+        this.baseY = menu.height - 11 - font.lineHeight;
 
     }
 

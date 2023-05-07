@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescre
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layouteditor.elements.ChooseFilePopup;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationItem;
@@ -41,8 +41,8 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
                 this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
             }
             this.getSplashItem().anchorPoint = "original";
-            this.getSplashItem().rawX = 0;
-            this.getSplashItem().rawY = 0;
+            this.getSplashItem().baseX = 0;
+            this.getSplashItem().baseY = 0;
         });
         this.rightClickContextMenu.addContent(resetOrientationButton);
 
@@ -164,8 +164,8 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
     protected void setAnchorPoint(String pos) {
         super.setAnchorPoint(pos);
         if (!pos.equals("original")) {
-            this.element.rawX += (this.element.width / 2);
-            this.element.rawY += (this.element.height / 2);
+            this.element.baseX += (this.element.width / 2);
+            this.element.baseY += (this.element.height / 2);
         }
     }
 

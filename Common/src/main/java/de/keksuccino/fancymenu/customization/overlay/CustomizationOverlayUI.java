@@ -28,7 +28,7 @@ import de.keksuccino.fancymenu.customization.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.guicreator.CreateCustomGuiPopup;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;

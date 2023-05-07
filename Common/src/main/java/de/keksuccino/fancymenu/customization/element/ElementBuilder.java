@@ -2,10 +2,11 @@ package de.keksuccino.fancymenu.customization.element;
 
 import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -98,13 +99,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         if (x != null) {
             x = PlaceholderParser.replacePlaceholders(x);
             if (MathUtils.isInteger(x)) {
-                element.rawX = Integer.parseInt(x);
+                element.baseX = Integer.parseInt(x);
             }
         }
         if (y != null) {
             y = PlaceholderParser.replacePlaceholders(y);
             if (MathUtils.isInteger(y)) {
-                element.rawY = Integer.parseInt(y);
+                element.baseY = Integer.parseInt(y);
             }
         }
 
@@ -113,9 +114,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             anchor = serializedElement.getEntryValue("orientation");
         }
         if (anchor != null) {
-            element.anchorPoint = ElementAnchorPoint.getByName(anchor);
+            element.anchorPoint = ElementAnchorPoints.getAnchorPointByName(anchor);
             if (element.anchorPoint == null) {
-                element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
+                element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
             }
         }
 
@@ -217,12 +218,12 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 sec.addEntry("fadeinspeed", "" + element.fadeInSpeed);
             }
         }
-        sec.addEntry("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoint.TOP_LEFT.getName());
-        if ((element.anchorPoint == ElementAnchorPoint.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
+        sec.addEntry("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
+        if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
             sec.addEntry("anchor_point_element", element.anchorPointElementIdentifier);
         }
-        sec.addEntry("x", "" + element.rawX);
-        sec.addEntry("y", "" + element.rawY);
+        sec.addEntry("x", "" + element.baseX);
+        sec.addEntry("y", "" + element.baseY);
         sec.addEntry("width", "" + element.getWidth());
         sec.addEntry("height", "" + element.getHeight());
         sec.addEntry("stretch_x", "" + element.stretchX);

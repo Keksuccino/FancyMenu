@@ -37,8 +37,8 @@ public class TitleScreenForgeTopItem extends DeepCustomizationItem {
         }
         this.height = (font.lineHeight * 2) + 1;
 
-        this.rawX = (menu.width / 2) - (this.getWidth() / 2);
-        this.rawY = 4;
+        this.baseX = (menu.width / 2) - (this.getWidth() / 2);
+        this.baseY = 4;
 
     }
 

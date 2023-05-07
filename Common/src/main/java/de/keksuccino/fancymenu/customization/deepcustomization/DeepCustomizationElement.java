@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.deepcustomization;
 
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
 public abstract class DeepCustomizationElement {

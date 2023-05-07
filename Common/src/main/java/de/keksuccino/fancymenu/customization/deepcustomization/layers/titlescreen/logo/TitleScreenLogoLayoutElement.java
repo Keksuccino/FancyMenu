@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.logo;
 
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationItem;
 import org.jetbrains.annotations.NotNull;

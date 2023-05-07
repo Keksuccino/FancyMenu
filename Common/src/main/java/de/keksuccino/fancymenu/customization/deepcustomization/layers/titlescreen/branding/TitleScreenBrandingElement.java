@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescre
 
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationItem;
 import de.keksuccino.konkrete.localization.Locals;

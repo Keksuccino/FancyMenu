@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -15,16 +17,17 @@ import org.jetbrains.annotations.Nullable;
 public abstract class AbstractElement extends GuiComponent implements Renderable {
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
+	@SuppressWarnings("all")
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(PoseStack p,int i1,int i2,float f){}};
 
 	public final ElementBuilder<?,?> builder;
-	public ElementAnchorPoint anchorPoint = ElementAnchorPoint.TOP_LEFT;
+	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.TOP_LEFT;
 	public String anchorPointElementIdentifier = null;
 	public AbstractElement anchorPointElement = null;
 	/** Not the same as {@link AbstractElement#getX()}! This is the raw value without orientation and scale! **/
-	public int rawX = 0;
+	public int baseX = 0;
 	/** Not the same as {@link AbstractElement#getY()}! This is the raw value without orientation and scale! **/
-	public int rawY = 0;
+	public int baseY = 0;
 	public int width = 0;
 	public int height = 0;
 	public String advancedX;
@@ -58,7 +61,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	/**
 	 * Should be used to get the ACTUAL X position of the element.<br>
-	 * Not the same as {@link  AbstractElement#rawX}!
+	 * Not the same as {@link AbstractElement#baseX}!
 	 */
 	public int getX() {
 		if (this.advancedX != null) {
@@ -78,7 +81,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	
 	/**
 	 * Should be used to get the ACTUAL Y position of the element.<br>
-	 * Not the same as {@link AbstractElement#rawY}!
+	 * Not the same as {@link AbstractElement#baseY}!
 	 */
 	public int getY() {
 		if (this.advancedY != null) {
@@ -164,16 +167,16 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	}
 
 	@Nullable
-	protected static Screen getScreen() {
+	public static Screen getScreen() {
 		return Minecraft.getInstance().screen;
 	}
 
-	protected static int getScreenWidth() {
+	public static int getScreenWidth() {
 		Screen s = getScreen();
 		return (s != null) ? s.width : 0;
 	}
 
-	protected static int getScreenHeight() {
+	public static int getScreenHeight() {
 		Screen s = getScreen();
 		return (s != null) ? s.height : 0;
 	}

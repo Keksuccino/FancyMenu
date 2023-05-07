@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
 import net.minecraft.client.gui.GuiComponent;
@@ -44,8 +44,12 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected boolean leftMouseDown = false;
 	protected double leftMouseDownX = 0;
 	protected double leftMouseDownY = 0;
-	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabber.GrabberPosition.TOP), new ResizeGrabber(ResizeGrabber.GrabberPosition.RIGHT), new ResizeGrabber(ResizeGrabber.GrabberPosition.BOTTOM), new ResizeGrabber(ResizeGrabber.GrabberPosition.LEFT)};
+	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
+	protected int resizeStartX = 0;
+	protected int resizeStartY = 0;
+	protected int resizeStartWidth = 0;
+	protected int resizeStartHeight = 0;
 
 	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
@@ -61,12 +65,19 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	
 	public void init() {
 
+		this.menu.closeMenu();
+		this.menu.clearEntries();
+
+		//TODO add default entries
+
 	}
 
 	@Override
 	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
+
+		this.element.render(pose, mouseX, mouseY, partial);
 
 		this.renderBorder(pose, mouseX, mouseY, partial);
 
@@ -82,6 +93,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			g.render(pose, mouseX, mouseY, partial);
 		}
 
+	}
+
+	public void onSettingsChanged() {
+//		this.resetElementStates();
+		this.init();
 	}
 
 	@Override
@@ -101,6 +117,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					this.leftMouseDown = true;
 					this.leftMouseDownX = mouseX;
 					this.leftMouseDownY = mouseY;
+					this.resizeStartX = this.element.baseX;
+					this.resizeStartY = this.element.baseY;
+					this.resizeStartWidth = this.element.width;
+					this.resizeStartHeight = this.element.height;
 				}
 			}
 			if (this.menu.isOpen() && !this.menu.isHovered()) {
@@ -133,15 +153,22 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 		if (button == 0) {
+			int diffX = (int)-(this.leftMouseDownX - mouseX);
+			int diffY = (int)-(this.leftMouseDownY - mouseY);
 			if (this.leftMouseDown && !this.isGettingResized()) {
-				int diffX = (int)-(this.leftMouseDownX - mouseX);
-				int diffY = (int)-(this.leftMouseDownY - mouseY);
-				this.element.rawX += diffX;
-				this.element.rawY += diffY;
+				this.element.baseX += diffX;
+				this.element.baseY += diffY;
 				return true;
 			}
 			if (this.leftMouseDown && this.isGettingResized()) {
-				//TODO handle resize
+				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
+					this.element.width = this.resizeStartWidth + diffX;
+					this.element.baseX = this.resizeStartX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+				}
+				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
+					this.element.height = this.resizeStartHeight + diffY;
+					this.element.baseY = this.resizeStartY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+				}
 			}
 		}
 		return false;
@@ -238,11 +265,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		protected int width = 4;
 		protected int height = 4;
-		protected final GrabberPosition position;
+		protected final ResizeGrabberType type;
 		protected boolean hovered = false;
 
-		protected ResizeGrabber(GrabberPosition position) {
-			this.position = position;
+		protected ResizeGrabber(ResizeGrabberType type) {
+			this.type = type;
 		}
 
 		@Override
@@ -255,13 +282,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		protected int getX() {
 			int x = AbstractEditorElement.this.getX();
-			if ((this.position == GrabberPosition.TOP) || (this.position == GrabberPosition.BOTTOM)) {
+			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
 				x += (AbstractEditorElement.this.getWidth() / 2) - (this.width / 2);
 			}
-			if (this.position == GrabberPosition.RIGHT) {
+			if (this.type == ResizeGrabberType.RIGHT) {
 				x += AbstractEditorElement.this.getWidth() - (this.width / 2);
 			}
-			if (this.position == GrabberPosition.LEFT) {
+			if (this.type == ResizeGrabberType.LEFT) {
 				x -= (this.width / 2);
 			}
 			return x;
@@ -269,13 +296,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		protected int getY() {
 			int y = AbstractEditorElement.this.getY();
-			if (this.position == GrabberPosition.TOP) {
+			if (this.type == ResizeGrabberType.TOP) {
 				y -= (this.height / 2);
 			}
-			if ((this.position == GrabberPosition.RIGHT) || (this.position == GrabberPosition.LEFT)) {
+			if ((this.type == ResizeGrabberType.RIGHT) || (this.type == ResizeGrabberType.LEFT)) {
 				y += (AbstractEditorElement.this.getHeight() / 2) - (this.height / 2);
 			}
-			if (this.position == GrabberPosition.BOTTOM) {
+			if (this.type == ResizeGrabberType.BOTTOM) {
 				y += AbstractEditorElement.this.getHeight() - (this.height / 2);
 			}
 			return y;
@@ -285,13 +312,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			return (mouseX >= this.getX()) && (mouseX <= this.getX() + this.width) && (mouseY >= this.getY()) && mouseY <= this.getY() + this.height;
 		}
 
-		protected enum GrabberPosition {
-			TOP,
-			RIGHT,
-			BOTTOM,
-			LEFT;
-		}
+	}
 
+	public enum ResizeGrabberType {
+		TOP,
+		RIGHT,
+		BOTTOM,
+		LEFT
 	}
 
 }

@@ -37,8 +37,8 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
 
         this.width = lastWidth;
         this.height = lastHeight;
-        this.rawX = 2;
-        this.rawY = menu.height - 2 - lastHeight;
+        this.baseX = 2;
+        this.baseY = menu.height - 2 - lastHeight;
 
     }
 

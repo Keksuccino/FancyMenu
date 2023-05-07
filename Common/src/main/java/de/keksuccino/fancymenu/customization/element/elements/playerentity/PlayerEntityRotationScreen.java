@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.slider.RangeSliderButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;

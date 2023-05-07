@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.forge.copyright;
 
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationItem;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;

@@ -3,11 +3,11 @@ package de.keksuccino.fancymenu.customization.element.editor;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.ElementAnchorPoint;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorHistory;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layouteditor.elements.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.customization.layouteditor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
+import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
@@ -220,8 +220,8 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 						} else {
 							this.element.advancedX = call;
 						}
-						this.element.rawX = 0;
-						this.element.rawY = 0;
+						this.element.baseX = 0;
+						this.element.baseY = 0;
 						this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 					}
 				});
@@ -242,8 +242,8 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 						} else {
 							this.element.advancedY = call;
 						}
-						this.element.rawX = 0;
-						this.element.rawY = 0;
+						this.element.baseX = 0;
+						this.element.baseY = 0;
 						this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 					}
 				});
@@ -295,8 +295,8 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 							this.element.advancedWidth = call;
 							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint.equals("original"))) {
 								this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
-								this.element.rawX = 0;
-								this.element.rawY = 0;
+								this.element.baseX = 0;
+								this.element.baseY = 0;
 							}
 						}
 					}
@@ -326,8 +326,8 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 							this.element.advancedHeight = call;
 							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint.equals("original"))) {
 								this.element.anchorPoint = ElementAnchorPoint.TOP_LEFT;
-								this.element.rawX = 0;
-								this.element.rawY = 0;
+								this.element.baseX = 0;
+								this.element.baseY = 0;
 							}
 						}
 					}
@@ -597,8 +597,8 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 			return;
 		}
 		this.element.anchorPoint = anchorPoint;
-		this.element.rawX = anchorPoint.getDefaultElementPositionX(this.element);
-		this.element.rawY = anchorPoint.getDefaultElementPositionY(this.element);
+		this.element.baseX = anchorPoint.getDefaultElementPositionX(this.element);
+		this.element.baseY = anchorPoint.getDefaultElementPositionY(this.element);
 	}
 	
 //	protected int orientationMouseX(int mouseX) {
@@ -763,20 +763,20 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 				this.moving = true;
 				if ((mouseX >= 5) && (mouseX <= this.editor.width -5)) {
 					if (!this.element.stretchX) {
-						this.element.rawX = this.orientationMouseX(mouseX) - this.startDiffX;
+						this.element.baseX = this.orientationMouseX(mouseX) - this.startDiffX;
 					}
 				}
 				if ((mouseY >= 5) && (mouseY <= this.editor.height -5)) {
 					if (!this.element.stretchY) {
-						this.element.rawY = this.orientationMouseY(mouseY) - this.startDiffY;
+						this.element.baseY = this.orientationMouseY(mouseY) - this.startDiffY;
 					}
 				}
 			}
 		}
 		if (!this.isDragged()) {
-			this.startDiffX = this.orientationMouseX(mouseX) - this.element.rawX;
-			this.startDiffY = this.orientationMouseY(mouseY) - this.element.rawY;
-			if (((this.startX != this.element.rawX) || (this.startY != this.element.rawY)) && this.moving) {
+			this.startDiffX = this.orientationMouseX(mouseX) - this.element.baseX;
+			this.startDiffY = this.orientationMouseY(mouseY) - this.element.baseY;
+			if (((this.startX != this.element.baseX) || (this.startY != this.element.baseY)) && this.moving) {
 				if (this.cachedSnapshot != null) {
 					this.editor.history.saveSnapshot(this.cachedSnapshot);
 				}
@@ -790,8 +790,8 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 					this.editor.history.saveSnapshot(this.cachedSnapshot);
 				}
 			}
-			this.startX = this.element.rawX;
-			this.startY = this.element.rawY;
+			this.startX = this.element.baseX;
+			this.startY = this.element.baseY;
 			this.startWidth = this.element.getWidth();
 			this.startHeight = this.element.getHeight();
 			this.resizing = false;
@@ -947,7 +947,7 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 			if (g == 0) { //left
 				int w = this.startWidth + this.getOppositeInt(diffX);
 				if (w >= 5) {
-					this.element.rawX = this.startX + diffX;
+					this.element.baseX = this.startX + diffX;
 					this.element.setWidth(w);
 					if (isShiftPressed) {
 						int h = this.getAspectHeight(this.startWidth, this.startHeight, w);
@@ -975,7 +975,7 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 			if (g == 2) { //top
 				int h = this.startHeight + this.getOppositeInt(diffY);
 				if (h >= 5) {
-					this.element.rawY = this.startY + diffY;
+					this.element.baseY = this.startY + diffY;
 					this.element.setHeight(h);
 					if (isShiftPressed) {
 						int w = this.getAspectWidth(this.startWidth, this.startHeight, h);
@@ -1032,14 +1032,14 @@ public abstract class AbstractEditorElementOld extends GuiComponent implements R
 	 * Sets the BASE position of this object (NOT the absolute position!)
 	 */
 	public void setRawX(int x) {
-		this.element.rawX = x;
+		this.element.baseX = x;
 	}
 	
 	/**
 	 * Sets the BASE position of this object (NOT the absolute position!)
 	 */
 	public void setRawY(int y) {
-		this.element.rawY = y;
+		this.element.baseY = y;
 	}
 	
 	/**

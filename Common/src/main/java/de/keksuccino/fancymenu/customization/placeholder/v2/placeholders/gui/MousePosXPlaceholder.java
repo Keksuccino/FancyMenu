@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.v2.placeholders.gui;
 
 import de.keksuccino.fancymenu.customization.placeholder.v2.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.v2.Placeholder;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;

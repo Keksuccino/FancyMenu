@@ -67,8 +67,8 @@ public class AnimationCustomizationItem extends AbstractElement {
 		AnimationCustomizationItem item = new AnimationCustomizationItem(new PropertiesSection(""));
 		item.setHeight(this.getHeight());
 		item.anchorPoint = this.anchorPoint;
-		item.rawX = this.rawX;
-		item.rawY = this.rawY;
+		item.baseX = this.baseX;
+		item.baseY = this.baseY;
 		item.renderer = this.renderer;
 		item.value = this.value;
 		item.setWidth(this.getWidth());

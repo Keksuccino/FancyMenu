@@ -79,13 +79,13 @@ public class VanillaButtonCustomizationItem extends AbstractElement {
 				if (x != null) {
 					x = PlaceholderParser.replacePlaceholders(x);
 					if (MathUtils.isInteger(x)) {
-						this.rawX = Integer.parseInt(x);
+						this.baseX = Integer.parseInt(x);
 					}
 				}
 				if (y != null) {
 					y = PlaceholderParser.replacePlaceholders(y);
 					if (MathUtils.isInteger(y)) {
-						this.rawY = Integer.parseInt(y);
+						this.baseY = Integer.parseInt(y);
 					}
 				}
 

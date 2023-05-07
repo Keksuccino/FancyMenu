@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.deepcustomization;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -184,8 +184,8 @@ public abstract class DeepCustomizationLayoutEditorElement extends AbstractEdito
                 sec.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
             }
         }
-        sec.addEntry("x", "" + this.element.rawX);
-        sec.addEntry("y", "" + this.element.rawY);
+        sec.addEntry("x", "" + this.element.baseX);
+        sec.addEntry("y", "" + this.element.baseY);
         sec.addEntry("orientation", this.element.anchorPoint);
         if (this.element.anchorPoint.equals("element") && (this.element.anchorPointElementIdentifier != null)) {
             sec.addEntry("orientation_element", this.element.anchorPointElementIdentifier);
@@ -194,14 +194,14 @@ public abstract class DeepCustomizationLayoutEditorElement extends AbstractEdito
             sec.addEntry("x", "0");
             sec.addEntry("width", "%guiwidth%");
         } else {
-            sec.addEntry("x", "" + this.element.rawX);
+            sec.addEntry("x", "" + this.element.baseX);
             sec.addEntry("width", "" + this.element.getWidth());
         }
         if (this.stretchY) {
             sec.addEntry("y", "0");
             sec.addEntry("height", "%guiheight%");
         } else {
-            sec.addEntry("y", "" + this.element.rawY);
+            sec.addEntry("y", "" + this.element.baseY);
             sec.addEntry("height", "" + this.element.getHeight());
         }
         sec.addEntry("hidden", "" + this.getDeepCustomizationItem().hidden);

@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.layouteditor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
 import de.keksuccino.konkrete.file.FileUtils;
