@@ -6,6 +6,6 @@ package de.keksuccino.fancymenu.misc;
 @FunctionalInterface
 public interface ConsumingSupplier<C, R> {
 
-    R supply(C consumes);
+    R get(C consumes);
 
 }

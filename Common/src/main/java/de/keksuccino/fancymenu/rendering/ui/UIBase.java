@@ -34,7 +34,6 @@ public class UIBase extends GuiComponent {
 	public static final Color LISTING_DOT_ORANGE = new Color(170, 130, 63);
 
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
-	public static final float UI_SCALE_BASE = 1.0F;
 	public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
 	public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
 	public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
@@ -51,12 +50,13 @@ public class UIBase extends GuiComponent {
 	}
 
 	public static float getUIScale() {
-
 		float uiScale = FancyMenu.getConfig().getOrDefault("uiscale", 1.0F);
-		double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
+		return calculateFixedScale(uiScale);
+	}
 
-		return (float) ((((double)UI_SCALE_BASE) * (((double)UI_SCALE_BASE) / mcScale)) * uiScale);
-
+	public static float calculateFixedScale(float fixedScale) {
+		double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 
 	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {

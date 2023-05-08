@@ -6,12 +6,26 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
+import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +51,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	public AbstractElement element;
 	public final EditorElementSettings settings;
 	public AdvancedContextMenu menu = new AdvancedContextMenu();
+	public EditorElementBorderDisplay topLeftDisplay = new EditorElementBorderDisplay(this, EditorElementBorderDisplay.DisplayPosition.TOP_LEFT, EditorElementBorderDisplay.DisplayPosition.LEFT_TOP, EditorElementBorderDisplay.DisplayPosition.BOTTOM_LEFT);
+	public EditorElementBorderDisplay bottomRightDisplay = new EditorElementBorderDisplay(this, EditorElementBorderDisplay.DisplayPosition.BOTTOM_RIGHT, EditorElementBorderDisplay.DisplayPosition.RIGHT_BOTTOM, EditorElementBorderDisplay.DisplayPosition.TOP_RIGHT);
 	public LayoutEditorScreen editor;
 	protected boolean selected = false;
 	protected boolean multiSelected = false;
@@ -67,8 +83,280 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.menu.closeMenu();
 		this.menu.clearEntries();
+		this.topLeftDisplay.clearLines();
+		this.bottomRightDisplay.clearLines();
 
-		//TODO add default entries
+		this.topLeftDisplay.addLine("anchor_point", () -> Component.translatable("fancymenu.element.border_display.anchor_point", this.element.anchorPoint.getDisplayName()));
+		this.topLeftDisplay.addLine("pos_x", () -> Component.translatable("fancymenu.element.border_display.pos_x", "" + this.getX()));
+		this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
+
+		this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
+		this.bottomRightDisplay.addLine("height", () -> Component.translatable("fancymenu.element.border_display.height", "" + this.getHeight()));
+
+		//TODO add support for vanilla/deepcuz elements (vanilla buttons, etc.)
+		this.menu.addClickableEntry("copy_id", false, Component.translatable("fancymenu.helper.editor.items.copyid"), null, Boolean.class, (entry, inherited, pass) -> {
+			Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
+		}).setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.copyid.btn.desc"));
+
+		//TODO add vanilla button locator button in vanilla button editor element HERE
+
+		this.menu.addSeparatorEntry("separator_1", true);
+
+		if (this.settings.isAnchorPointChangeable()) {
+
+			AdvancedContextMenu anchorPointMenu = new AdvancedContextMenu();
+			this.menu.addClickableEntry("anchor_point", true, Component.translatable("helper.creator.items.setorientation"), anchorPointMenu, Boolean.class, (entry, inherited, pass) -> {
+				if (inherited == null) {
+					anchorPointMenu.openMenu(0,0);
+				}
+				pass.accept(true);
+			})
+			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("helper.creator.items.orientation.btndesc"))
+			.setTicker((entry) -> {
+				((AdvancedContextMenu.ClickableMenuEntry<?>)entry).getButton().active = (element.advancedX == null) && (element.advancedY == null);
+			});
+
+			if (this.settings.isElementAnchorPointAllowed()) {
+				anchorPointMenu.addClickableEntry("anchor_point_element", true, ElementAnchorPoints.ELEMENT.getDisplayName(), null, AbstractElement.class, (entry, inherited, pass) -> {
+					if (inherited == null) {
+						FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
+							if (call != null) {
+								AbstractEditorElement editorElement = this.editor.getElementByInstanceIdentifier(call);
+								if (editorElement != null) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+									this.element.anchorPointElementIdentifier = editorElement.element.builder.getIdentifier();
+									this.element.anchorPointElement = editorElement.element;
+									this.setAnchorPoint(ElementAnchorPoints.ELEMENT);
+									pass.accept(editorElement.element);
+								} else {
+									PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, TooltipHandler.splitLocalizedTooltipStringLines("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+								}
+							}
+						});
+						if (!entry.isPartOfStack() && (this.element.anchorPointElementIdentifier != null)) {
+							p.setText(this.element.anchorPointElementIdentifier);
+						}
+						PopupHandler.displayPopup(p);
+						anchorPointMenu.closeMenu();
+					} else {
+						this.element.anchorPointElementIdentifier = inherited.builder.getIdentifier();
+						this.element.anchorPointElement = inherited;
+						this.setAnchorPoint(ElementAnchorPoints.ELEMENT);
+						pass.accept(inherited);
+					}
+				}).setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.orientation.element.btn.desc"));
+			}
+
+			anchorPointMenu.addSeparatorEntry("separator_1", true);
+
+			for (ElementAnchorPoint p : ElementAnchorPoints.getAnchorPoints()) {
+				if (p != ElementAnchorPoints.ELEMENT) {
+					anchorPointMenu.addClickableEntry("anchor_point_" + p.getName().replace("-", "_"), true, p.getDisplayName(), null, Boolean.class, (entry, inherited, pass) -> {
+						if (inherited == null) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						}
+						anchorPointMenu.closeMenu();
+						this.setAnchorPoint(p);
+						pass.accept(true);
+					});
+				}
+			}
+
+		}
+
+		if (this.settings.isAdvancedPositioningSupported()) {
+
+			AdvancedContextMenu advancedPositioningMenu = new AdvancedContextMenu();
+			this.menu.addClickableEntry("advanced_positioning", false, Component.literal(""), advancedPositioningMenu, Boolean.class, (entry, inherited, pass) -> {
+				advancedPositioningMenu.openMenu(0,0);
+			})
+			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.features.advanced_positioning.desc"))
+			.setTicker((entry) -> {
+				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
+				if ((element.advancedX != null) || (element.advancedY != null)) {
+					e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.active"));
+				} else {
+					e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning"));
+				}
+			});
+
+			advancedPositioningMenu.addClickableEntry("advanced_positioning_x", false, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"), null, Boolean.class, (entry, inherited, pass) -> {
+				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"), this.editor, null, (call) -> {
+					if (call != null) {
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						if (call.replace(" ", "").equals("")) {
+							this.element.advancedX = null;
+						} else {
+							this.element.advancedX = call;
+						}
+						this.element.baseX = 0;
+						this.element.baseY = 0;
+						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+					}
+				});
+				s.multilineMode = false;
+				if (this.element.advancedX != null) {
+					s.setText(this.element.advancedX);
+				}
+				Minecraft.getInstance().setScreen(s);
+			});
+
+			advancedPositioningMenu.addClickableEntry("advanced_positioning_y", false, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"), null, Boolean.class, (entry, inherited, pass) -> {
+				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"), this.editor, null, (call) -> {
+					if (call != null) {
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						if (call.replace(" ", "").equals("")) {
+							this.element.advancedY = null;
+						} else {
+							this.element.advancedY = call;
+						}
+						this.element.baseX = 0;
+						this.element.baseY = 0;
+						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+					}
+				});
+				s.multilineMode = false;
+				if (this.element.advancedY != null) {
+					s.setText(this.element.advancedY);
+				}
+				Minecraft.getInstance().setScreen(s);
+			});
+
+		}
+
+		if (this.settings.isAdvancedSizingSupported()) {
+
+			AdvancedContextMenu advancedSizingMenu = new AdvancedContextMenu();
+			this.menu.addClickableEntry("advanced_sizing", false, Component.literal(""), advancedSizingMenu, Boolean.class, (entry, inherited, pass) -> {
+						advancedSizingMenu.openMenu(0,0);
+					})
+					.setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.features.advanced_sizing.desc"))
+					.setTicker((entry) -> {
+						AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
+						if ((element.advancedX != null) || (element.advancedY != null)) {
+							e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.active"));
+						} else {
+							e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing"));
+						}
+					});
+
+			advancedSizingMenu.addClickableEntry("advanced_sizing_width", false, Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"), null, Boolean.class, (entry, inherited, pass) -> {
+				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"), this.editor, null, (call) -> {
+					if (call != null) {
+						if (call.replace(" ", "").equals("")) {
+							if ((this.element.advancedWidth != null) || (this.element.width != 50)) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							}
+							this.element.width = 50;
+							this.element.advancedWidth = null;
+						} else {
+							if (!call.equals(this.element.advancedWidth) || (this.element.width != 50)) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							}
+							this.element.width = 50;
+							this.element.advancedWidth = call;
+//							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint == ElementAnchorPoints.VANILLA)) {
+//								this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+//								this.element.baseX = 0;
+//								this.element.baseY = 0;
+//							}
+						}
+					}
+				});
+				s.multilineMode = false;
+				if (this.element.advancedWidth != null) {
+					s.setText(this.element.advancedWidth);
+				}
+				Minecraft.getInstance().setScreen(s);
+			});
+
+			advancedSizingMenu.addClickableEntry("advanced_sizing_height", false, Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"), null, Boolean.class, (entry, inherited, pass) -> {
+				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"), this.editor, null, (call) -> {
+					if (call != null) {
+						if (call.replace(" ", "").equals("")) {
+							if ((this.element.advancedHeight != null) || (this.element.height != 50)) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							}
+							this.element.height = 50;
+							this.element.advancedHeight = null;
+						} else {
+							if (!call.equals(this.element.advancedHeight) || (this.element.height != 50)) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							}
+							this.element.height = 50;
+							this.element.advancedHeight = call;
+//							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint == ElementAnchorPoints.VANILLA)) {
+//								this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+//								this.element.baseX = 0;
+//								this.element.baseY = 0;
+//							}
+						}
+					}
+				});
+				s.multilineMode = false;
+				if (this.element.advancedHeight != null) {
+					s.setText(this.element.advancedHeight);
+				}
+				Minecraft.getInstance().setScreen(s);
+			});
+
+		}
+
+		this.menu.addSeparatorEntry("separator_2", true);
+
+		if (this.settings.isStretchable()) {
+
+			this.menu.addClickableEntry("stretch_x", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				this.element.stretchX = !this.element.stretchX;
+			})
+			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("helper.creator.object.stretch.x.desc"))
+			.setTicker((entry) -> {
+				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
+				e.getButton().active = element.advancedWidth == null;
+				if (element.stretchX && e.getButton().active) {
+					e.setLabel(Component.translatable("helper.creator.object.stretch.x.on"));
+				} else {
+					e.setLabel(Component.translatable("helper.creator.object.stretch.x.off"));
+				}
+			});
+
+			this.menu.addClickableEntry("stretch_y", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				this.element.stretchY = !this.element.stretchY;
+			})
+			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("helper.creator.object.stretch.y.desc"))
+			.setTicker((entry) -> {
+				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
+				e.getButton().active = element.advancedHeight == null;
+				if (element.stretchY && e.getButton().active) {
+					e.setLabel(Component.translatable("helper.creator.object.stretch.y.on"));
+				} else {
+					e.setLabel(Component.translatable("helper.creator.object.stretch.y.off"));
+				}
+			});
+
+		}
+
+		this.menu.addSeparatorEntry("separator_3", true);
+
+		//TODO add layers entry HERE
+
+		this.menu.addSeparatorEntry("separator_4", true);
+
+		if (this.settings.isLoadingRequirementsEnabled()) {
+
+			this.menu.addClickableEntry("loading_requirements", false, Component.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), null, Boolean.class, (entry, inherited, pass) -> {
+				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer, (call) -> {});
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				Minecraft.getInstance().setScreen(s);
+			}).setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"));
+
+		}
+
+		this.menu.addSeparatorEntry("separator_5", true);
+
+		//TODO hier bei orderable entry weiter machen
 
 	}
 
@@ -79,6 +367,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.element.render(pose, mouseX, mouseY, partial);
 
+		//Update cursor
+		ResizeGrabber hoveredGrabber = this.getHoveredResizeGrabber();
+		GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), (hoveredGrabber != null) ? hoveredGrabber.getCursor() : CURSOR_NORMAL);
+
 		this.renderBorder(pose, mouseX, mouseY, partial);
 
 		//TODO render menu in editor
@@ -87,22 +379,51 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	protected void renderBorder(PoseStack pose, int mouseX, int mouseY, float partial) {
 
-		//TODO render border
+		if (this.isHovered() || this.isSelected() || this.isMultiSelected()) {
 
-		for (ResizeGrabber g : this.resizeGrabbers) {
-			g.render(pose, mouseX, mouseY, partial);
+			//TOP
+			fill(pose, this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 2, this.getY() + 1, BORDER_COLOR.get(this));
+			//BOTTOM
+			fill(pose, this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 2, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			//LEFT
+			fill(pose, this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			//RIGHT
+			fill(pose, this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+
+			for (ResizeGrabber g : this.resizeGrabbers) {
+				g.render(pose, mouseX, mouseY, partial);
+			}
+
+		}
+
+		if (this.isSelected()) {
+			this.topLeftDisplay.render(pose, mouseX, mouseY, partial);
+			this.bottomRightDisplay.render(pose, mouseX, mouseY, partial);
 		}
 
 	}
 
-	public void onSettingsChanged() {
-//		this.resetElementStates();
-		this.init();
+	public void setAnchorPoint(ElementAnchorPoint p) {
+		this.resetElementStates();
+		if (p == null) {
+			p = ElementAnchorPoints.TOP_LEFT;
+		}
+		this.element.anchorPoint = p;
+		this.element.baseX = p.getDefaultElementPositionX(this.element);
+		this.element.baseY = p.getDefaultElementPositionY(this.element);
 	}
 
-	@Override
-	public void mouseMoved(double mouseX, double mouseY) {
+	public void resetElementStates() {
+		this.selected = false;
+		this.multiSelected = false;
+		this.leftMouseDown = false;
+		this.activeResizeGrabber = null;
+		this.menu.closeMenu();
+	}
 
+	public void onSettingsChanged() {
+		this.resetElementStates();
+		this.init();
 	}
 
 	@Override
@@ -171,27 +492,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				}
 			}
 		}
-		return false;
-	}
-
-	@Override
-	public boolean mouseScrolled(double $$0, double $$1, double $$2) {
-		return false;
-	}
-
-	@Override
-	public boolean keyPressed(int $$0, int $$1, int $$2) {
-		return false;
-	}
-
-	@Override
-	public boolean keyReleased(int $$0, int $$1, int $$2) {
-		return false;
-	}
-
-	@Override
-	public boolean charTyped(char c, int key) {
-
 		return false;
 	}
 
@@ -274,9 +574,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		@Override
 		public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-			this.hovered = AbstractEditorElement.this.isSelected() && this.isMouseOver(mouseX, mouseY);
-			if (AbstractEditorElement.this.isSelected()) {
-				fill(pose, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.supply(AbstractEditorElement.this));
+			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
+			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
+				fill(pose, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
 			}
 		}
 
@@ -306,6 +606,26 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				y += AbstractEditorElement.this.getHeight() - (this.height / 2);
 			}
 			return y;
+		}
+
+		protected long getCursor() {
+			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
+				return CURSOR_VERTICAL_RESIZE;
+			}
+			return CURSOR_HORIZONTAL_RESIZE;
+		}
+
+		protected boolean isGrabberEnabled() {
+			if (AbstractEditorElement.this.isMultiSelected()) {
+				return false;
+			}
+			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
+				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY();
+			}
+			if ((this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.RIGHT)) {
+				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX();
+			}
+			return false;
 		}
 
 		protected boolean isMouseOver(double mouseX, double mouseY) {

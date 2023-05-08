@@ -19,7 +19,6 @@ public class EditorElementSettings {
     private boolean resizeableY = true;
     private boolean dragable = true;
     private boolean anchorPointCanBeChanged = true;
-    private boolean enableElementIdCopyButton = true;
     private boolean allowElementAnchorPoint = true;
     private boolean enableLoadingRequirements = true;
 
@@ -137,15 +136,6 @@ public class EditorElementSettings {
 
     public void setAnchorPointChangeable(boolean changeable) {
         this.anchorPointCanBeChanged = changeable;
-        this.settingsChanged();
-    }
-
-    public boolean isElementIdCopyButtonEnabled() {
-        return enableElementIdCopyButton;
-    }
-
-    public void setElementIdCopyButtonEnabled(boolean enabled) {
-        this.enableElementIdCopyButton = enabled;
         this.settingsChanged();
     }
 

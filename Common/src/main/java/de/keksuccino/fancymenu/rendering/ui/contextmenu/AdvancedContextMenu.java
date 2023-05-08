@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.rendering.ui.contextmenu;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.Button;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
@@ -45,10 +47,19 @@ public class AdvancedContextMenu implements Renderable {
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        if (this.contextMenu.isOpen()) {
+            this.tick();
+        }
         UIBase.renderScaledContextMenu(pose, this.contextMenu);
     }
 
-    public <R> void addClickableEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, ClickAction<R> clickAction) {
+    protected void tick() {
+        for (MenuEntry e : this.entries) {
+            e.tick();
+        }
+    }
+
+    public <R> ClickableMenuEntry<R> addClickableEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, Class<? extends R> resultType, ClickAction<R> clickAction) {
         int index = this.getIndexOfEntry(addAfterIdentifier);
         if (index == -1) {
             index = this.entries.size();
@@ -56,18 +67,19 @@ public class AdvancedContextMenu implements Renderable {
         } else {
             index++;
         }
-        this.addClickableEntry(index, identifier, stackable, label, childContextMenu, clickAction);
+        return this.addClickableEntry(index, identifier, stackable, label, childContextMenu, resultType, clickAction);
     }
 
-    public <R> void addClickableEntry(@NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, ClickAction<R> clickAction) {
-        this.addClickableEntry(this.entries.size(), identifier, stackable, label, childContextMenu, clickAction);
+    public <R> ClickableMenuEntry<R> addClickableEntry(@NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, Class<? extends R> resultType, ClickAction<R> clickAction) {
+        return this.addClickableEntry(this.entries.size(), identifier, stackable, label, childContextMenu, resultType, clickAction);
     }
 
-    public <R> void addClickableEntry(int index, @NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, ClickAction<R> clickAction) {
-        this.addEntry(index, new ClickableMenuEntry<R>(identifier, stackable, label, childContextMenu, clickAction));
+    @SuppressWarnings("all")
+    public <R> ClickableMenuEntry<R> addClickableEntry(int index, @NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, Class<? extends R> resultType, ClickAction<R> clickAction) {
+        return (ClickableMenuEntry<R>) this.addEntry(index, new ClickableMenuEntry<R>(identifier, stackable, label, childContextMenu, clickAction));
     }
 
-    public void addSeparatorEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, boolean stackable) {
+    public SeparatorMenuEntry addSeparatorEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, boolean stackable) {
         int index = this.getIndexOfEntry(addAfterIdentifier);
         if (index == -1) {
             index = this.entries.size();
@@ -75,18 +87,18 @@ public class AdvancedContextMenu implements Renderable {
         } else {
             index++;
         }
-        this.addSeparatorEntry(index, identifier, stackable);
+        return this.addSeparatorEntry(index, identifier, stackable);
     }
 
-    public void addSeparatorEntry(@NotNull String identifier, boolean stackable) {
-        this.addSeparatorEntry(this.entries.size(), identifier, stackable);
+    public SeparatorMenuEntry addSeparatorEntry(@NotNull String identifier, boolean stackable) {
+        return this.addSeparatorEntry(this.entries.size(), identifier, stackable);
     }
 
-    public void addSeparatorEntry(int index, @NotNull String identifier, boolean stackable) {
-        this.addEntry(index, new SeparatorMenuEntry(identifier, stackable));
+    public SeparatorMenuEntry addSeparatorEntry(int index, @NotNull String identifier, boolean stackable) {
+        return (SeparatorMenuEntry) this.addEntry(index, new SeparatorMenuEntry(identifier, stackable));
     }
 
-    protected void addEntry(int index, @NotNull MenuEntry entry) {
+    protected MenuEntry addEntry(int index, @NotNull MenuEntry entry) {
         index = Math.max(0, Math.min(this.entries.size(), index));
         if (!this.identifierTaken(entry.identifier)) {
             this.entries.add(index, entry);
@@ -94,6 +106,7 @@ public class AdvancedContextMenu implements Renderable {
             LOGGER.error("[FANCYMENU] Failed to add entry to context menu! Identifier already in use: " + entry.identifier);
         }
         this.rebuildMenu();
+        return entry;
     }
 
     public void removeEntry(String identifier) {
@@ -201,6 +214,7 @@ public class AdvancedContextMenu implements Renderable {
                     continue;
                 }
                 MenuEntry topEntry = l.get(0).copy();
+                topEntry.partOfStack = true;
                 //Stack possible child context menus of entry stack
                 if ((topEntry instanceof ClickableMenuEntry) && (((ClickableMenuEntry<?>)topEntry).childContextMenu != null)) {
                     List<AdvancedContextMenu> children = new ArrayList<>();
@@ -216,6 +230,10 @@ public class AdvancedContextMenu implements Renderable {
                     MenuEntry prev = topEntry;
                     for (MenuEntry e : l.subList(1, l.size())) {
                         MenuEntry copy = e.copy();
+                        copy.partOfStack = true;
+                        if (copy instanceof ClickableMenuEntry) {
+                            ((ClickableMenuEntry<?>)copy).tooltip = null;
+                        }
                         prev.nextInStack = copy;
                         prev = copy;
                     }
@@ -249,13 +267,41 @@ public class AdvancedContextMenu implements Renderable {
 
     public abstract static class MenuEntry {
 
-        public String identifier;
-        public boolean stackable;
-        public MenuEntry nextInStack = null;
+        protected String identifier;
+        protected boolean stackable;
+        protected boolean partOfStack = false;
+        protected MenuEntry nextInStack = null;
+        protected Consumer<MenuEntry> ticker = null;
 
         protected MenuEntry(@NotNull String identifier, boolean stackable) {
             this.identifier = identifier;
             this.stackable = stackable;
+        }
+
+        public MenuEntry setTicker(@Nullable Consumer<MenuEntry> ticker) {
+            this.ticker = ticker;
+            return this;
+        }
+
+        protected void tick() {
+            if (this.ticker != null) {
+                this.ticker.accept(this);
+            }
+            if (this.nextInStack != null) {
+                this.nextInStack.tick();
+            }
+        }
+
+        public String getIdentifier() {
+            return this.identifier;
+        }
+
+        public boolean isStackable() {
+            return this.stackable;
+        }
+
+        public boolean isPartOfStack() {
+            return this.partOfStack;
         }
 
         protected abstract boolean isCompatibleWith(MenuEntry entry);
@@ -266,10 +312,11 @@ public class AdvancedContextMenu implements Renderable {
 
     public static class ClickableMenuEntry<R> extends MenuEntry {
 
-        public ClickAction<R> clickAction;
-        public AdvancedContextMenu childContextMenu;
-        public Component label;
-        public Button button;
+        protected ClickAction<R> clickAction;
+        protected AdvancedContextMenu childContextMenu;
+        protected Component label;
+        protected Button button;
+        protected List<Component> tooltip = null;
 
         protected ClickableMenuEntry(String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, @NotNull ClickAction<R> clickAction) {
             super(identifier, stackable);
@@ -280,8 +327,78 @@ public class AdvancedContextMenu implements Renderable {
         }
 
         @SuppressWarnings("all")
+        @Override
+        public ClickableMenuEntry<R> setTicker(@Nullable Consumer<MenuEntry> ticker) {
+            return (ClickableMenuEntry<R>) super.setTicker(ticker);
+        }
+
+        @Override
+        protected void tick() {
+            if (this.childContextMenu != null) {
+                this.childContextMenu.contextMenu.setParentButton(this.button);
+            }
+            if (this.tooltip != null) {
+                TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(this.tooltip.toArray(new Component[]{})), false, true);
+            }
+            super.tick();
+        }
+
+        public ClickableMenuEntry<R> clearTooltip() {
+            return this.setTooltip((List<Component>) null);
+        }
+
+        public ClickableMenuEntry<R> setStringTooltip(@Nullable String... tooltip) {
+            return this.setStringTooltip((tooltip != null) ? Arrays.asList(tooltip) : null);
+        }
+
+        public ClickableMenuEntry<R> setStringTooltip(@Nullable List<String> tooltip) {
+            if (tooltip == null) {
+                return this.setTooltip((List<Component>) null);
+            }
+            List<Component> l = new ArrayList<>();
+            for (String s : tooltip) {
+                l.add(Component.literal(s));
+            }
+            return this.setTooltip(l);
+        }
+
+        public ClickableMenuEntry<R> setTooltip(@Nullable Component... tooltip) {
+            return this.setTooltip((tooltip != null) ? Arrays.asList(tooltip) : null);
+        }
+
+        public ClickableMenuEntry<R> setTooltip(@Nullable List<Component> tooltip) {
+            this.tooltip = tooltip;
+            return this;
+        }
+
+        public List<Component> getTooltip() {
+            return new ArrayList<>(this.tooltip);
+        }
+
+        public ClickAction<R> getClickAction() {
+            return this.clickAction;
+        }
+
+        public AdvancedContextMenu getChildContextMenu() {
+            return this.childContextMenu;
+        }
+
+        public Component getLabel() {
+            return this.label;
+        }
+
+        public void setLabel(Component label) {
+            this.label = label;
+            this.button.setMessage(label);
+        }
+
+        public Button getButton() {
+            return this.button;
+        }
+
+        @SuppressWarnings("all")
         protected void onClick(@Nullable R inheritedResult) {
-            this.clickAction.onClick(inheritedResult, (passedResult) -> {
+            this.clickAction.onClick(this, inheritedResult, (passedResult) -> {
                 if ((this.nextInStack != null) && this.isCompatibleWith(this.nextInStack)) {
                     ((ClickableMenuEntry<R>)this.nextInStack).onClick(passedResult);
                 }
@@ -303,7 +420,10 @@ public class AdvancedContextMenu implements Renderable {
 
         @Override
         protected ClickableMenuEntry<R> copy() {
-            return new ClickableMenuEntry<>(this.identifier, this.stackable, this.label, this.childContextMenu, this.clickAction);
+            ClickableMenuEntry<R> e = new ClickableMenuEntry<>(this.identifier, this.stackable, this.label, this.childContextMenu, this.clickAction);
+            e.tooltip = this.tooltip;
+            e.ticker = this.ticker;
+            return e;
         }
 
     }
@@ -321,7 +441,9 @@ public class AdvancedContextMenu implements Renderable {
 
         @Override
         protected SeparatorMenuEntry copy() {
-            return new SeparatorMenuEntry(this.identifier, this.stackable);
+            SeparatorMenuEntry e = new SeparatorMenuEntry(this.identifier, this.stackable);
+            e.ticker = this.ticker;
+            return e;
         }
 
     }
@@ -329,7 +451,12 @@ public class AdvancedContextMenu implements Renderable {
     @FunctionalInterface
     public interface ClickAction<R> {
 
-        void onClick(@Nullable R inheritedResult, Consumer<R> passResultToNextInStack);
+        /**
+         * @param entry The parent {@link ClickableMenuEntry} this {@link ClickAction} is part of.
+         * @param inheritedResult If the parent {@link ClickableMenuEntry} is stackable, this is the result the previous entry in the stack passed to this one. If the parent entry is the first in the stack, this will be NULL!
+         * @param passResultToNextInStack If the parent {@link ClickableMenuEntry} is stackable, this is used to pass the result of this entry to the next in the stack.
+         */
+        void onClick(@NotNull ClickableMenuEntry<R> entry, @Nullable R inheritedResult, Consumer<R> passResultToNextInStack);
 
     }
 
