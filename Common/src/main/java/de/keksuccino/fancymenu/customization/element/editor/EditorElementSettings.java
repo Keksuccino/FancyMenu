@@ -21,6 +21,7 @@ public class EditorElementSettings {
     private boolean anchorPointCanBeChanged = true;
     private boolean allowElementAnchorPoint = true;
     private boolean enableLoadingRequirements = true;
+    private boolean identifierCopyable = true;
 
     public boolean isDestroyable() {
         return destroyable;
@@ -155,6 +156,14 @@ public class EditorElementSettings {
     public void setLoadingRequirementsEnabled(boolean enabled) {
         this.enableLoadingRequirements = enabled;
         this.settingsChanged();
+    }
+
+    public boolean isIdentifierCopyable() {
+        return this.identifierCopyable;
+    }
+
+    public void setIdentifierCopyable(boolean copyable) {
+        this.identifierCopyable = copyable;
     }
 
     protected void settingsChanged() {

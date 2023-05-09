@@ -5,6 +5,7 @@ import java.awt.Color;
 import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -12,14 +13,21 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
+import de.keksuccino.fancymenu.misc.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
@@ -78,7 +86,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	public AbstractEditorElement(@Nonnull AbstractElement element, @Nonnull LayoutEditorScreen editor) {
 		this(element, editor, new EditorElementSettings());
 	}
-	
+
+	@SuppressWarnings("all")
 	public void init() {
 
 		this.menu.closeMenu();
@@ -93,14 +102,39 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
 		this.bottomRightDisplay.addLine("height", () -> Component.translatable("fancymenu.element.border_display.height", "" + this.getHeight()));
 
+		AdvancedContextMenu pickElementMenu = new AdvancedContextMenu();
+		this.menu.addClickableEntry("pick_element", false, Component.translatable("fancymenu.element.general.pick_element"), pickElementMenu, Boolean.class, (entry, inherited, pass) -> {
+			pickElementMenu.closeMenu();
+			pickElementMenu.clearEntries();
+			int i = 0;
+			for (AbstractEditorElement e : this.editor.getContent()) {
+				if (e.isHovered()) {
+					pickElementMenu.addClickableEntry("element_" + i, false, e.element.builder.getDisplayName(e.element), null, Boolean.class, (entry2, inherited2, pass2) -> {
+						for (AbstractEditorElement e2 : this.editor.getContent()) {
+							e2.resetElementStates();
+						}
+						e.setSelected(true);
+					});
+					i++;
+				}
+			}
+			pickElementMenu.openMenu(0,0);
+		}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
+
+		this.menu.addSeparatorEntry("separator_1", true);
+
 		//TODO add support for vanilla/deepcuz elements (vanilla buttons, etc.)
-		this.menu.addClickableEntry("copy_id", false, Component.translatable("fancymenu.helper.editor.items.copyid"), null, Boolean.class, (entry, inherited, pass) -> {
-			Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
-		}).setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.copyid.btn.desc"));
+		if (this.settings.isIdentifierCopyable()) {
+
+			this.menu.addClickableEntry("copy_id", false, Component.translatable("fancymenu.helper.editor.items.copyid"), null, Boolean.class, (entry, inherited, pass) -> {
+				Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")));
+
+		}
 
 		//TODO add vanilla button locator button in vanilla button editor element HERE
 
-		this.menu.addSeparatorEntry("separator_1", true);
+		this.menu.addSeparatorEntry("separator_2", true);
 
 		if (this.settings.isAnchorPointChangeable()) {
 
@@ -111,7 +145,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				}
 				pass.accept(true);
 			})
-			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("helper.creator.items.orientation.btndesc"))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.items.orientation.btndesc")))
 			.setTicker((entry) -> {
 				((AdvancedContextMenu.ClickableMenuEntry<?>)entry).getButton().active = (element.advancedX == null) && (element.advancedY == null);
 			});
@@ -129,7 +163,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 									this.setAnchorPoint(ElementAnchorPoints.ELEMENT);
 									pass.accept(editorElement.element);
 								} else {
-									PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, TooltipHandler.splitLocalizedTooltipStringLines("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+									PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
 								}
 							}
 						});
@@ -144,7 +178,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						this.setAnchorPoint(ElementAnchorPoints.ELEMENT);
 						pass.accept(inherited);
 					}
-				}).setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.orientation.element.btn.desc"));
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.btn.desc")));
 			}
 
 			anchorPointMenu.addSeparatorEntry("separator_1", true);
@@ -170,7 +204,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.menu.addClickableEntry("advanced_positioning", false, Component.literal(""), advancedPositioningMenu, Boolean.class, (entry, inherited, pass) -> {
 				advancedPositioningMenu.openMenu(0,0);
 			})
-			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.features.advanced_positioning.desc"))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
 			.setTicker((entry) -> {
 				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
 				if ((element.advancedX != null) || (element.advancedY != null)) {
@@ -230,7 +264,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.menu.addClickableEntry("advanced_sizing", false, Component.literal(""), advancedSizingMenu, Boolean.class, (entry, inherited, pass) -> {
 						advancedSizingMenu.openMenu(0,0);
 					})
-					.setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.helper.editor.items.features.advanced_sizing.desc"))
+					.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
 					.setTicker((entry) -> {
 						AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
 						if ((element.advancedX != null) || (element.advancedY != null)) {
@@ -302,7 +336,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		}
 
-		this.menu.addSeparatorEntry("separator_2", true);
+		this.menu.addSeparatorEntry("separator_3", true);
 
 		if (this.settings.isStretchable()) {
 
@@ -310,7 +344,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.element.stretchX = !this.element.stretchX;
 			})
-			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("helper.creator.object.stretch.x.desc"))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.stretch.x.desc")))
 			.setTicker((entry) -> {
 				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
 				e.getButton().active = element.advancedWidth == null;
@@ -325,7 +359,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.element.stretchY = !this.element.stretchY;
 			})
-			.setTooltip(TooltipHandler.splitLocalizedTooltipLines("helper.creator.object.stretch.y.desc"))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.stretch.y.desc")))
 			.setTicker((entry) -> {
 				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
 				e.getButton().active = element.advancedHeight == null;
@@ -338,10 +372,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		}
 
-		this.menu.addSeparatorEntry("separator_3", true);
-
-		//TODO add layers entry HERE
-
 		this.menu.addSeparatorEntry("separator_4", true);
 
 		if (this.settings.isLoadingRequirementsEnabled()) {
@@ -350,13 +380,180 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer, (call) -> {});
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				Minecraft.getInstance().setScreen(s);
-			}).setTooltip(TooltipHandler.splitLocalizedTooltipLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")));
 
 		}
 
 		this.menu.addSeparatorEntry("separator_5", true);
 
-		//TODO hier bei orderable entry weiter machen
+		if (this.settings.isOrderable()) {
+
+			this.menu.addClickableEntry("move_up_element", false, Component.translatable("helper.creator.object.moveup"), null, Boolean.class, (entry, inherited, pass) -> {
+				AbstractEditorElement o = this.editor.moveUp(this);
+				if (o != null) {
+					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.moveup.desc", I18n.get("helper.creator.object.moveup.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
+				}
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.moveup.desc")));
+
+			this.menu.addClickableEntry("move_down_element", false, Component.translatable("helper.creator.object.movedown"), null, Boolean.class, (entry, inherited, pass) -> {
+				AbstractEditorElement o = this.editor.moveDown(this);
+				if (o != null) {
+					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.movedown.desc", I18n.get("helper.creator.object.movedown.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
+				}
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.movedown.desc")));
+
+		}
+
+		this.menu.addSeparatorEntry("separator_6", true);
+
+		if (this.settings.isCopyable()) {
+
+			this.menu.addClickableEntry("copy_element", true, Component.translatable("helper.editor.ui.edit.copy"), null, Boolean.class, (entry, inherited, pass) -> {
+				if (inherited == null) {
+					this.editor.copySelectedElements();
+				}
+				pass.accept(true);
+			});
+
+		}
+
+		if (this.settings.isDestroyable()) {
+
+			this.menu.addClickableEntry("delete_element", true, Component.translatable("helper.creator.items.delete"), null, Boolean.class, (entry, inherited, pass) -> {
+				if (inherited == null) {
+					if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
+						PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
+							if (call) {
+								pass.accept(this.deleteElement());
+							}
+						}, "§c§l" + I18n.get("helper.creator.messages.sure"), "", I18n.get("helper.creator.deleteobject"), "", "", "", "", ""));
+					} else {
+						pass.accept(this.deleteElement());
+					}
+				} else if (inherited) {
+					pass.accept(this.deleteElement());
+				}
+			});
+
+		}
+
+		this.menu.addSeparatorEntry("separator_7", true);
+
+		if (this.settings.isDelayable()) {
+
+			AdvancedContextMenu appearanceDelayMenu = new AdvancedContextMenu();
+			this.menu.addClickableEntry("appearance_delay", true, Component.translatable("fancymenu.element.general.appearance_delay"), appearanceDelayMenu, Boolean.class, (entry, inherited, pass) -> {
+				if (inherited == null) {
+					appearanceDelayMenu.openMenu(0,0);
+				}
+				pass.accept(true);
+			});
+
+			appearanceDelayMenu.addClickableEntry("appearance_delay_type", true, Component.translatable("fancymenu.element.general.appearance_delay.no_delay"), null, Boolean.class, (entry, inherited, pass) -> {
+				if (entry.isFirstInStack()) {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				}
+				if (!entry.getEntryStackMeta().hasProperty("delay")) {
+					entry.getEntryStackMeta().putProperty("delay", entry.isPartOfStack() ? AbstractElement.AppearanceDelay.NO_DELAY : this.element.appearanceDelay);
+				}
+				AbstractElement.AppearanceDelay delay = entry.getEntryStackMeta().getProperty("delay", AbstractElement.AppearanceDelay.class);
+				this.element.appearanceDelay = AbstractElement.AppearanceDelay.next(delay);
+				if (entry.isLastInStack()) {
+					entry.getEntryStackMeta().putProperty("delay", this.element.appearanceDelay);
+				}
+				pass.accept(true);
+			}).setTicker((entry) -> {
+				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
+				AbstractElement.AppearanceDelay delay = this.element.appearanceDelay;
+				if (e.isPartOfStack()) {
+					AbstractElement.AppearanceDelay stackedDelay = e.getEntryStackMeta().getProperty("delay", AbstractElement.AppearanceDelay.class);
+					delay = (stackedDelay != null) ? stackedDelay : AbstractElement.AppearanceDelay.NO_DELAY;
+				}
+				e.setLabel(Component.translatable("fancymenu.element.general.appearance_delay." + delay.name));
+			});
+
+			appearanceDelayMenu.addClickableEntry("appearance_delay_seconds", true, Component.translatable("fancymenu.element.general.appearance_delay.seconds"), null, Float.class, (entry, inherited, pass) -> {
+				if (entry.isFirstInStack()) {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				}
+				if (inherited == null) {
+					FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + I18n.get("fancymenu.element.general.appearance_delay.seconds"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+						if (call != null) {
+							if (call.replace(" ", "").equals("")) {
+								this.element.appearanceDelayInSeconds = 1.0F;
+							} else if (MathUtils.isFloat(call)) {
+								this.element.appearanceDelayInSeconds = Float.parseFloat(call);
+							}
+							pass.accept(this.element.appearanceDelayInSeconds);
+						}
+					});
+					if (!entry.isPartOfStack()) {
+						p.setText("" + this.element.appearanceDelayInSeconds);
+					}
+					PopupHandler.displayPopup(p);
+				} else {
+					this.element.appearanceDelayInSeconds = inherited;
+					pass.accept(inherited);
+				}
+			});
+
+			appearanceDelayMenu.addSeparatorEntry("separator_1", true);
+
+			appearanceDelayMenu.addClickableEntry("appearance_delay_fade_in", true, Component.translatable("fancymenu.element.general.appearance_delay.fade_in.off"), null, Boolean.class, (entry, inherited, pass) -> {
+				if (entry.isFirstInStack()) {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				}
+				if (!entry.getEntryStackMeta().hasProperty("fade_in")) {
+					entry.getEntryStackMeta().putProperty("fade_in", entry.isPartOfStack() ? false : this.element.fadeIn);
+				}
+				boolean fade = entry.getEntryStackMeta().getBooleanProperty("fade_in");
+				this.element.fadeIn = !fade;
+				if (entry.isLastInStack()) {
+					entry.getEntryStackMeta().putProperty("fade_in", this.element.fadeIn);
+				}
+				pass.accept(true);
+			}).setTicker((entry) -> {
+				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
+				boolean fade = this.element.fadeIn;
+				if (e.isPartOfStack()) {
+					Boolean stackedFade = e.getEntryStackMeta().getProperty("fade_in", Boolean.class);
+					fade = (stackedFade != null) ? stackedFade : false;
+				}
+				if (fade) {
+					e.setLabel(Component.translatable("fancymenu.element.general.appearance_delay.fade_in.on"));
+				} else {
+					e.setLabel(Component.translatable("fancymenu.element.general.appearance_delay.fade_in.off"));
+				}
+			});
+
+			appearanceDelayMenu.addClickableEntry("appearance_delay_fade_in_speed", true, Component.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"), null, Float.class, (entry, inherited, pass) -> {
+				if (entry.isFirstInStack()) {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				}
+				if (inherited == null) {
+					FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + I18n.get("fancymenu.element.general.appearance_delay.fade_in.speed"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+						if (call != null) {
+							if (call.replace(" ", "").equals("")) {
+								this.element.fadeInSpeed = 1.0F;
+							} else if (MathUtils.isFloat(call)) {
+								this.element.fadeInSpeed = Float.parseFloat(call);
+							}
+							pass.accept(this.element.fadeInSpeed);
+						}
+					});
+					if (!entry.isPartOfStack()) {
+						p.setText("" + this.element.fadeInSpeed);
+					}
+					PopupHandler.displayPopup(p);
+				} else {
+					this.element.fadeInSpeed = inherited;
+					pass.accept(inherited);
+				}
+			});
+
+		}
+
+		this.menu.addSeparatorEntry("separator_8", true);
 
 	}
 
@@ -542,6 +739,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	public int getHeight() {
 		return this.element.getHeight();
+	}
+
+	public boolean deleteElement() {
+		if (!this.settings.isDestroyable()) {
+			return false;
+		}
+		this.editor.deleteContentQueue.add(this);
+		return true;
 	}
 
 	public boolean isGettingResized() {

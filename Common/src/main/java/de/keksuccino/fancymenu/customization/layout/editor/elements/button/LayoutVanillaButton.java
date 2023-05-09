@@ -337,7 +337,7 @@ public class LayoutVanillaButton extends AbstractEditorElement {
 		super.render(matrix, mouseX, mouseY);
 
 		if (this.element.delayAppearance) {
-			this.editor.vanillaDelayAppearance.put(this.button.getId(), this.element.delayAppearanceSec);
+			this.editor.vanillaDelayAppearance.put(this.button.getId(), this.element.appearanceDelayInSeconds);
 		} else {
 			this.editor.vanillaDelayAppearance.remove(this.button.getId());
 		}
@@ -480,7 +480,7 @@ public class LayoutVanillaButton extends AbstractEditorElement {
 			PropertiesSection s = new PropertiesSection("customization");
 			s.addEntry("action", "hidebuttonfor");
 			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("seconds", "" + this.element.delayAppearanceSec);
+			s.addEntry("seconds", "" + this.element.appearanceDelayInSeconds);
 			s.addEntry("onlyfirsttime", "" + !this.element.delayAppearanceEverytime);
 			if (this.element.fadeIn) {
 				s.addEntry("fadein", "true");

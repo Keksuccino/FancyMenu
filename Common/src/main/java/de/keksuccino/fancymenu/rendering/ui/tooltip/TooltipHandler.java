@@ -4,10 +4,7 @@ import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
-import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -80,20 +77,6 @@ public class TooltipHandler {
         if (tooltip.widget != null) {
             this.widgetTooltips.remove(tooltip.widget);
         }
-    }
-
-    @NotNull
-    public static Component[] splitLocalizedTooltipLines(@NotNull String localizationKey) {
-        List<Component> l = new ArrayList<>();
-        for (String s : splitLocalizedTooltipStringLines(localizationKey)) {
-            l.add(Component.literal(s));
-        }
-        return l.toArray(new Component[]{});
-    }
-
-    @NotNull
-    public static String[] splitLocalizedTooltipStringLines(@NotNull String localizationKey) {
-        return StringUtils.splitLines(I18n.get(localizationKey), "\n");
     }
 
     public static class HandledTooltip {

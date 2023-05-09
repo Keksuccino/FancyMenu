@@ -225,7 +225,7 @@ helper.buttons.tools.creategui.create = 创建
 
 gameintro.skip = 按下空格以跳过
 
-helper.creator.items.chooselayer = 选择最表层元素
+fancymenu.element.general.pick_element = 选择最表层元素
 
 customization.items.webstring.unabletoload = 无法加载网络文本！无效的 URL 或未连接到互联网！
 

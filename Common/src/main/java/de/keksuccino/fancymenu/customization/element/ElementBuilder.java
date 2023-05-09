@@ -70,28 +70,30 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         if ((fis != null) && MathUtils.isFloat(fis)) {
             element.fadeInSpeed = Float.parseFloat(fis);
         }
-        String da = serializedElement.getEntryValue("delayappearance");
-        if ((da != null) && da.equalsIgnoreCase("true")) {
-            element.delayAppearance = true;
+        String delay = serializedElement.getEntryValue("appearance_delay");
+        //Compatibility layer for old appearance delay format
+        if (delay == null) {
+            String da = serializedElement.getEntryValue("delayappearance");
+            if ((da != null) && da.equalsIgnoreCase("true")) {
+                delay = AbstractElement.AppearanceDelay.FIRST_TIME.name;
+            }
+            String dae = serializedElement.getEntryValue("delayappearanceeverytime");
+            if ((dae != null) && dae.equalsIgnoreCase("true")) {
+                delay = AbstractElement.AppearanceDelay.EVERY_TIME.name;
+            }
         }
-        String legacyDa = serializedElement.getEntryValue("hideforseconds");
-        if (legacyDa != null) {
-            element.delayAppearance = true;
+        if (delay != null) {
+            AbstractElement.AppearanceDelay appearanceDelay = AbstractElement.AppearanceDelay.getByName(delay);
+            if (appearanceDelay != null) {
+                element.appearanceDelay = appearanceDelay;
+            }
         }
-        String dae = serializedElement.getEntryValue("delayappearanceeverytime");
-        if ((dae != null) && dae.equalsIgnoreCase("true")) {
-            element.delayAppearanceEverytime = true;
+        String delaySec = serializedElement.getEntryValue("appearance_delay_seconds");
+        if (delaySec == null) {
+            delaySec = serializedElement.getEntryValue("delayappearanceseconds");
         }
-        String legacyDae = serializedElement.getEntryValue("delayonlyfirsttime");
-        if ((legacyDae != null) && legacyDae.equalsIgnoreCase("false")) {
-            element.delayAppearanceEverytime = true;
-        }
-        String das = serializedElement.getEntryValue("delayappearanceseconds");
-        if ((das != null) && MathUtils.isFloat(das)) {
-            element.delayAppearanceSec = Float.parseFloat(das);
-        }
-        if ((legacyDa != null) && MathUtils.isFloat(legacyDa)) {
-            element.delayAppearanceSec = Float.parseFloat(legacyDa);
+        if ((delaySec != null) && MathUtils.isFloat(delaySec)) {
+            element.appearanceDelayInSeconds = Float.parseFloat(delaySec);
         }
 
         String x = serializedElement.getEntryValue("x");
@@ -197,6 +199,17 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         //sec.addEntry("action", "custom_layout_element:" + element.builder.getIdentifier());
         sec.addEntry("element_type", element.builder.getIdentifier());
         sec.addEntry("instance_identifier", element.getInstanceIdentifier());
+
+        sec.addEntry("appearance_delay", element.appearanceDelay.name);
+        sec.addEntry("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
+        sec.addEntry("fade_in", "" + element.fadeIn);
+        sec.addEntry("fade_in_speed", "" + element.fadeInSpeed);
+
+        sec.addEntry("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
+        if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
+            sec.addEntry("anchor_point_element", element.anchorPointElementIdentifier);
+        }
+
         if (element.advancedX != null) {
             sec.addEntry("advanced_posx", element.advancedX);
         }
@@ -209,18 +222,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         if (element.advancedHeight != null) {
             sec.addEntry("advanced_height", element.advancedHeight);
         }
-        if (element.delayAppearance) {
-            sec.addEntry("delayappearance", "true");
-            sec.addEntry("delayappearanceeverytime", "" + element.delayAppearanceEverytime);
-            sec.addEntry("delayappearanceseconds", "" + element.delayAppearanceSec);
-            if (element.fadeIn) {
-                sec.addEntry("fadein", "true");
-                sec.addEntry("fadeinspeed", "" + element.fadeInSpeed);
-            }
-        }
-        sec.addEntry("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
-        if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
-            sec.addEntry("anchor_point_element", element.anchorPointElementIdentifier);
+        if (element.appearanceDelay == null) {
+            element.appearanceDelay = AbstractElement.AppearanceDelay.NO_DELAY;
         }
         sec.addEntry("x", "" + element.baseX);
         sec.addEntry("y", "" + element.baseY);
@@ -228,6 +231,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         sec.addEntry("height", "" + element.getHeight());
         sec.addEntry("stretch_x", "" + element.stretchX);
         sec.addEntry("stretch_y", "" + element.stretchY);
+
         element.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 
         return sec;
@@ -245,13 +249,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
      * Returns the display name of this element type. Used in the {@link LayoutEditorScreen}.
      */
     @NotNull
-    public abstract Component getDisplayName();
+    public abstract Component getDisplayName(@Nullable AbstractElement element);
 
     /**
      * Returns the description of this element type. Used in the {@link LayoutEditorScreen}.
      */
     @Nullable
-    public abstract Component[] getDescription();
+    public abstract Component[] getDescription(@Nullable AbstractElement element);
 
     @NotNull
     public String getIdentifier() {

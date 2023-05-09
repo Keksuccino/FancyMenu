@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.rendering.ui.contextmenu;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.misc.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
@@ -13,20 +14,24 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class AdvancedContextMenu implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public static final Tooltip DEFAULT_TOOLTIP_STYLE = Tooltip.create().setBackgroundColor(Tooltip.DEFAULT_BACKGROUND_COLOR, Tooltip.DEFAULT_BORDER_COLOR);
+
     protected ContextMenu contextMenu;
+    protected Tooltip tooltipStyle = DEFAULT_TOOLTIP_STYLE;
     protected List<MenuEntry> entries = new ArrayList<>();
 
     public AdvancedContextMenu() {
         this.rebuildMenu();
     }
 
-    public void rebuildMenu() {
+    public AdvancedContextMenu rebuildMenu() {
         if (this.contextMenu != null) {
             this.contextMenu.closeMenu();
         }
@@ -43,6 +48,7 @@ public class AdvancedContextMenu implements Renderable {
                 }
             }
         }
+        return this;
     }
 
     @Override
@@ -55,10 +61,19 @@ public class AdvancedContextMenu implements Renderable {
 
     protected void tick() {
         for (MenuEntry e : this.entries) {
-            e.tick();
+            e.tick(this);
         }
     }
 
+    /**
+     * This will add a clickable entry with a {@link ClickAction} as last parameter.<br><br>
+     *
+     * <strong>Click Action:</strong><br>
+     * The {@link ClickAction} is stackable and can pass a result to the next in the stack.<br>
+     * The <b>first parameter</b> is the {@link ClickableMenuEntry} the {@link ClickAction} is part of.<br>
+     * The <b>second parameter</b> of the {@link ClickAction} is the value the previous one passed to it, so if it's the first in the stack, this parameter will be NULL.<br>
+     * The <b>third paramter</b> of the {@link ClickAction} is the consumer that is used to pass the result to the next one in the stack. <b>The next in the stack will ony get called if the previus one passes a result to it!</b>
+     */
     public <R> ClickableMenuEntry<R> addClickableEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, Class<? extends R> resultType, ClickAction<R> clickAction) {
         int index = this.getIndexOfEntry(addAfterIdentifier);
         if (index == -1) {
@@ -70,10 +85,28 @@ public class AdvancedContextMenu implements Renderable {
         return this.addClickableEntry(index, identifier, stackable, label, childContextMenu, resultType, clickAction);
     }
 
+    /**
+     * This will add a clickable entry with a {@link ClickAction} as last parameter.<br><br>
+     *
+     * <strong>Click Action:</strong><br>
+     * The {@link ClickAction} is stackable and can pass a result to the next in the stack.<br>
+     * The <b>first parameter</b> is the {@link ClickableMenuEntry} the {@link ClickAction} is part of.<br>
+     * The <b>second parameter</b> of the {@link ClickAction} is the value the previous one passed to it, so if it's the first in the stack, this parameter will be NULL.<br>
+     * The <b>third paramter</b> of the {@link ClickAction} is the consumer that is used to pass the result to the next one in the stack. <b>The next in the stack will ony get called if the previus one passes a result to it!</b>
+     */
     public <R> ClickableMenuEntry<R> addClickableEntry(@NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, Class<? extends R> resultType, ClickAction<R> clickAction) {
         return this.addClickableEntry(this.entries.size(), identifier, stackable, label, childContextMenu, resultType, clickAction);
     }
 
+    /**
+     * This will add a clickable entry with a {@link ClickAction} as last parameter.<br><br>
+     *
+     * <strong>Click Action:</strong><br>
+     * The {@link ClickAction} is stackable and can pass a result to the next in the stack.<br>
+     * The <b>first parameter</b> is the {@link ClickableMenuEntry} the {@link ClickAction} is part of.<br>
+     * The <b>second parameter</b> of the {@link ClickAction} is the value the previous one passed to it, so if it's the first in the stack, this parameter will be NULL.<br>
+     * The <b>third paramter</b> of the {@link ClickAction} is the consumer that is used to pass the result to the next one in the stack. <b>The next in the stack will ony get called if the previus one passes a result to it!</b>
+     */
     @SuppressWarnings("all")
     public <R> ClickableMenuEntry<R> addClickableEntry(int index, @NotNull String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, Class<? extends R> resultType, ClickAction<R> clickAction) {
         return (ClickableMenuEntry<R>) this.addEntry(index, new ClickableMenuEntry<R>(identifier, stackable, label, childContextMenu, clickAction));
@@ -109,21 +142,23 @@ public class AdvancedContextMenu implements Renderable {
         return entry;
     }
 
-    public void removeEntry(String identifier) {
+    public AdvancedContextMenu removeEntry(String identifier) {
         int index = this.getIndexOfEntry(identifier);
-        this.removeEntry(index);
+        return this.removeEntry(index);
     }
 
-    public void removeEntry(int index) {
+    public AdvancedContextMenu removeEntry(int index) {
         if ((index >= 0) && (index < this.entries.size())) {
             this.entries.remove(index);
         }
         this.rebuildMenu();
+        return this;
     }
 
-    public void clearEntries() {
+    public AdvancedContextMenu clearEntries() {
         this.entries.clear();
         this.rebuildMenu();
+        return this;
     }
 
     @Nullable
@@ -151,16 +186,19 @@ public class AdvancedContextMenu implements Renderable {
         return this.contextMenu;
     }
 
-    public void closeMenu() {
+    public AdvancedContextMenu closeMenu() {
         this.contextMenu.closeMenu();
+        return this;
     }
 
-    public void openMenuAtMouse() {
+    public AdvancedContextMenu openMenuAtMouse() {
         UIBase.openScaledContextMenuAtMouse(this.contextMenu);
+        return this;
     }
 
-    public void openMenu(int posX, int posY) {
+    public AdvancedContextMenu openMenu(int posX, int posY) {
         UIBase.openScaledContextMenuAt(this.contextMenu, posX, posY);
+        return this;
     }
 
     public boolean isOpen() {
@@ -173,6 +211,16 @@ public class AdvancedContextMenu implements Renderable {
 
     public boolean isUserNavigatingInMenu() {
         return this.contextMenu.isOpen() && this.contextMenu.isHovered();
+    }
+
+    @Nullable
+    public Tooltip getTooltipStyle() {
+        return tooltipStyle;
+    }
+
+    public AdvancedContextMenu setTooltipStyle(@Nullable Tooltip tooltipStyle) {
+        this.tooltipStyle = tooltipStyle;
+        return this;
     }
 
     @Nullable
@@ -213,8 +261,12 @@ public class AdvancedContextMenu implements Renderable {
                 if (!allMenuEntriesCompatible(l)) {
                     continue;
                 }
+                RuntimePropertyContainer meta = new RuntimePropertyContainer();
                 MenuEntry topEntry = l.get(0).copy();
+                topEntry.entryStackMeta = meta;
                 topEntry.partOfStack = true;
+                topEntry.firstInStack = true;
+                topEntry.lastInStack = false;
                 //Stack possible child context menus of entry stack
                 if ((topEntry instanceof ClickableMenuEntry) && (((ClickableMenuEntry<?>)topEntry).childContextMenu != null)) {
                     List<AdvancedContextMenu> children = new ArrayList<>();
@@ -231,12 +283,16 @@ public class AdvancedContextMenu implements Renderable {
                     for (MenuEntry e : l.subList(1, l.size())) {
                         MenuEntry copy = e.copy();
                         copy.partOfStack = true;
+                        copy.entryStackMeta = meta;
+                        copy.lastInStack = false;
+                        copy.firstInStack = false;
                         if (copy instanceof ClickableMenuEntry) {
                             ((ClickableMenuEntry<?>)copy).tooltip = null;
                         }
                         prev.nextInStack = copy;
                         prev = copy;
                     }
+                    prev.lastInStack = true;
                 }
                 stacked.addEntry(stacked.entries.size(), topEntry);
             }
@@ -269,7 +325,10 @@ public class AdvancedContextMenu implements Renderable {
 
         protected String identifier;
         protected boolean stackable;
+        protected RuntimePropertyContainer entryStackMeta = new RuntimePropertyContainer();
         protected boolean partOfStack = false;
+        protected boolean firstInStack = true;
+        protected boolean lastInStack = true;
         protected MenuEntry nextInStack = null;
         protected Consumer<MenuEntry> ticker = null;
 
@@ -283,12 +342,12 @@ public class AdvancedContextMenu implements Renderable {
             return this;
         }
 
-        protected void tick() {
+        protected void tick(AdvancedContextMenu menu) {
             if (this.ticker != null) {
                 this.ticker.accept(this);
             }
             if (this.nextInStack != null) {
-                this.nextInStack.tick();
+                this.nextInStack.tick(menu);
             }
         }
 
@@ -304,6 +363,19 @@ public class AdvancedContextMenu implements Renderable {
             return this.partOfStack;
         }
 
+        public boolean isLastInStack() {
+            return this.lastInStack;
+        }
+
+        public boolean isFirstInStack() {
+            return this.firstInStack;
+        }
+
+        @NotNull
+        public RuntimePropertyContainer getEntryStackMeta() {
+            return this.entryStackMeta;
+        }
+
         protected abstract boolean isCompatibleWith(MenuEntry entry);
 
         protected abstract MenuEntry copy();
@@ -316,7 +388,7 @@ public class AdvancedContextMenu implements Renderable {
         protected AdvancedContextMenu childContextMenu;
         protected Component label;
         protected Button button;
-        protected List<Component> tooltip = null;
+        protected Tooltip tooltip = null;
 
         protected ClickableMenuEntry(String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, @NotNull ClickAction<R> clickAction) {
             super(identifier, stackable);
@@ -333,46 +405,27 @@ public class AdvancedContextMenu implements Renderable {
         }
 
         @Override
-        protected void tick() {
+        protected void tick(AdvancedContextMenu menu) {
             if (this.childContextMenu != null) {
                 this.childContextMenu.contextMenu.setParentButton(this.button);
             }
             if (this.tooltip != null) {
-                TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(this.tooltip.toArray(new Component[]{})), false, true);
+                if (menu.tooltipStyle != null) {
+                    this.tooltip.copyStyleOf(menu.tooltipStyle);
+                }
+                TooltipHandler.INSTANCE.addWidgetTooltip(this.button, this.tooltip, false, true);
             }
-            super.tick();
+            super.tick(menu);
         }
 
-        public ClickableMenuEntry<R> clearTooltip() {
-            return this.setTooltip((List<Component>) null);
-        }
-
-        public ClickableMenuEntry<R> setStringTooltip(@Nullable String... tooltip) {
-            return this.setStringTooltip((tooltip != null) ? Arrays.asList(tooltip) : null);
-        }
-
-        public ClickableMenuEntry<R> setStringTooltip(@Nullable List<String> tooltip) {
-            if (tooltip == null) {
-                return this.setTooltip((List<Component>) null);
-            }
-            List<Component> l = new ArrayList<>();
-            for (String s : tooltip) {
-                l.add(Component.literal(s));
-            }
-            return this.setTooltip(l);
-        }
-
-        public ClickableMenuEntry<R> setTooltip(@Nullable Component... tooltip) {
-            return this.setTooltip((tooltip != null) ? Arrays.asList(tooltip) : null);
-        }
-
-        public ClickableMenuEntry<R> setTooltip(@Nullable List<Component> tooltip) {
+        public ClickableMenuEntry<R> setTooltip(@Nullable Tooltip tooltip) {
             this.tooltip = tooltip;
             return this;
         }
 
-        public List<Component> getTooltip() {
-            return new ArrayList<>(this.tooltip);
+        @Nullable
+        public Tooltip getTooltip() {
+            return this.tooltip;
         }
 
         public ClickAction<R> getClickAction() {
@@ -454,7 +507,7 @@ public class AdvancedContextMenu implements Renderable {
         /**
          * @param entry The parent {@link ClickableMenuEntry} this {@link ClickAction} is part of.
          * @param inheritedResult If the parent {@link ClickableMenuEntry} is stackable, this is the result the previous entry in the stack passed to this one. If the parent entry is the first in the stack, this will be NULL!
-         * @param passResultToNextInStack If the parent {@link ClickableMenuEntry} is stackable, this is used to pass the result of this entry to the next in the stack.
+         * @param passResultToNextInStack If the parent {@link ClickableMenuEntry} is stackable, this is used to pass the result of this entry to the next in the stack. The next entry in the stack will only get called if the previous one passed a result.
          */
         void onClick(@NotNull ClickableMenuEntry<R> entry, @Nullable R inheritedResult, Consumer<R> passResultToNextInStack);
 

@@ -168,7 +168,7 @@ helper.buttons.tools.creategui.create = Создавать
 
 gameintro.skip = НАЖМИТЕ SPACE, ЧТОБЫ ПРОПУСТИТЬ
 
-helper.creator.items.chooselayer = Выберите элемент
+fancymenu.element.general.pick_element = Выберите элемент
 
 customization.items.webstring.unabletoload = Не удается загрузить веб-текст! Неверный URL-адрес или не подключен к Интернету!
 

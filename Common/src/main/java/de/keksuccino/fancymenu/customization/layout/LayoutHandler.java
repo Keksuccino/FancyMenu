@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -282,8 +283,8 @@ public class LayoutHandler {
 					meta.get(0).addEntry("path", layout.getPath());
 					LayoutEditorScreen.isActive = true;
 					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
-					ScreenCustomization.stopSounds();
-					ScreenCustomization.resetSounds();
+					SoundRegistry.stopSounds();
+					SoundRegistry.resetSounds();
 					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 						if (r instanceof AdvancedAnimation) {
 							((AdvancedAnimation)r).stopAudio();

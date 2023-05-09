@@ -224,7 +224,7 @@ helper.buttons.tools.creategui.create = Erstellen
 
 gameintro.skip = MIT LEERTASTE ÜBERSPRINGEN
 
-helper.creator.items.chooselayer = Ebene wählen
+fancymenu.element.general.pick_element = Ebene wählen
 
 customization.items.webstring.unabletoload = Web Text konnte nicht geladen werden! Ungültige URL oder keine Internetverbindung!
 

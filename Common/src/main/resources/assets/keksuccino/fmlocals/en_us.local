@@ -168,7 +168,8 @@ helper.buttons.tools.creategui.create = Create
 
 gameintro.skip = PRESS SPACE TO SKIP
 
-helper.creator.items.chooselayer = Pick Element
+fancymenu.element.general.pick_element = Pick Element
+fancymenu.element.general.pick_element.desc = List will all elements at the position%n%of the mouse cursor when%n%you opened this context menu.%n%%n%Useful for when you need to%n%select an element that's behind%n%another one.
 
 customization.items.webstring.unabletoload = Unable to load web text! Invalid URL or not connected to internet!
 
@@ -616,14 +617,14 @@ helper.creator.items.splash.refresh.desc = Pick a new splash everytime the menu%
 helper.creator.items.splash.basecolor = Base Color
 helper.creator.items.splash.rotation = Rotation
 
-helper.creator.items.delay = Delay Appearance
-helper.creator.items.delay.off = Delay: §cOff
-helper.creator.items.delay.firsttime = Delay: §6First Time
-helper.creator.items.delay.everytime = Delay: §aEverytime
-helper.creator.items.delay.seconds = Set Delay In Seconds
-helper.creator.items.delay.fadein.off = Fade-In: §cOff
-helper.creator.items.delay.fadein.on = Fade-In: §aOn
-helper.creator.items.delay.fadein.speed = Set Fade-In Speed
+fancymenu.element.general.appearance_delay = Delay Appearance
+fancymenu.element.general.appearance_delay.no_delay = Delay: §cNo Delay
+fancymenu.element.general.appearance_delay.first_time = Delay: §6First Time
+fancymenu.element.general.appearance_delay.every_time = Delay: §aEvery Time
+fancymenu.element.general.appearance_delay.seconds = Set Delay In Seconds
+fancymenu.element.general.appearance_delay.fade_in.off = Fade-In: §cOff
+fancymenu.element.general.appearance_delay.fade_in.on = Fade-In: §aOn
+fancymenu.element.general.appearance_delay.fade_in.speed = Set Fade-In Speed
 
 fancymenu.helper.creator.layoutoptions.randommode.on = Random Mode: §aOn
 fancymenu.helper.creator.layoutoptions.randommode.off = Random Mode: §cOff

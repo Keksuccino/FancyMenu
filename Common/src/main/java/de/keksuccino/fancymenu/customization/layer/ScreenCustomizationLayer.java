@@ -1077,7 +1077,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 				
 				new Thread(() -> {
 					long start = System.currentTimeMillis();
-					float delay = (float) (1000.0 * i.delayAppearanceSec);
+					float delay = (float) (1000.0 * i.appearanceDelayInSeconds);
 					boolean fade = false;
 					while (c.running.get()) {
 						try {

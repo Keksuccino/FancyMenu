@@ -178,7 +178,7 @@ public abstract class DeepCustomizationLayoutEditorElement extends AbstractEdito
         if (this.element.delayAppearance) {
             sec.addEntry("delayappearance", "true");
             sec.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
-            sec.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+            sec.addEntry("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
             if (this.element.fadeIn) {
                 sec.addEntry("fadein", "true");
                 sec.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);

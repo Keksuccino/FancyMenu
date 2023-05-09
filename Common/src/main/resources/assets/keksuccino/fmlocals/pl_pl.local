@@ -224,7 +224,7 @@ helper.buttons.tools.creategui.create = Utwórz
 
 gameintro.skip = NACIŚNIJ SPACJĘ ABY POMINĄĆ
 
-helper.creator.items.chooselayer = Wybierz Warstwę
+fancymenu.element.general.pick_element = Wybierz Warstwę
 
 customization.items.webstring.unabletoload = Nie można załadować tekstu internetowego! Nieprawidłowy adres URL lub brak połączenia z Internetem!
 

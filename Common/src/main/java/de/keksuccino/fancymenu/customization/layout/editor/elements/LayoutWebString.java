@@ -207,7 +207,7 @@ public class LayoutWebString extends AbstractEditorElement {
 		if (this.element.delayAppearance) {
 			p1.addEntry("delayappearance", "true");
 			p1.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
-			p1.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+			p1.addEntry("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
 			if (this.element.fadeIn) {
 				p1.addEntry("fadein", "true");
 				p1.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);

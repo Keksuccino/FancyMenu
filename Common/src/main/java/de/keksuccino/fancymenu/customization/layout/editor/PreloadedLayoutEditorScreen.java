@@ -485,7 +485,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								van.element.delayAppearance = true;
 
 								float ds = Float.parseFloat(seconds);
-								van.element.delayAppearanceSec = ds;
+								van.element.appearanceDelayInSeconds = ds;
 								this.vanillaDelayAppearance.put(b.getId(), ds);
 
 								if ((firsttime != null) && firsttime.equalsIgnoreCase("true")) {
@@ -589,7 +589,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 								this.element.delayAppearance = bc.delayAppearance;
 								this.element.delayAppearanceEverytime = bc.delayAppearanceEverytime;
-								this.element.delayAppearanceSec = bc.delayAppearanceSec;
+								this.element.appearanceDelayInSeconds = bc.appearanceDelayInSeconds;
 								this.element.fadeIn = bc.fadeIn;
 								this.element.fadeInSpeed = bc.fadeInSpeed;
 								this.element.loadingRequirementContainer = bc.loadingRequirementContainer;

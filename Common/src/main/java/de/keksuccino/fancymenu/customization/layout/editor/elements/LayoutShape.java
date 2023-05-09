@@ -89,7 +89,7 @@ public class LayoutShape extends AbstractEditorElement {
 			if (this.element.delayAppearance) {
 				s.addEntry("delayappearance", "true");
 				s.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
-				s.addEntry("delayappearanceseconds", "" + this.element.delayAppearanceSec);
+				s.addEntry("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
 				if (this.element.fadeIn) {
 					s.addEntry("fadein", "true");
 					s.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);

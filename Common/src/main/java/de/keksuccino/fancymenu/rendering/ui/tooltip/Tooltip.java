@@ -34,6 +34,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final Color DEFAULT_BACKGROUND_COLOR = new Color(26, 26, 26, 250);
+    public static final Color DEFAULT_BORDER_COLOR = new Color(64, 64, 64, 250);
 
     protected Font font = Minecraft.getInstance().font;
     protected List<Component> textLines = new ArrayList<>();
@@ -43,10 +44,11 @@ public class Tooltip extends GuiComponent implements Renderable {
     protected int aspectHeight = -1;
     protected Integer x = null;
     protected Integer y = null;
-    protected int borderSize = 5;
+    protected int textBorderSize = 5;
     protected int mouseOffset = 12;
     protected SimpleTexture backgroundTexture = null;
     protected Color backgroundColor = null;
+    protected Color borderColor = null;
     protected boolean vanillaLike = true;
     protected boolean keepBackgroundAspectRatio = true;
     protected boolean textShadow = true;
@@ -77,7 +79,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
@@ -87,62 +89,75 @@ public class Tooltip extends GuiComponent implements Renderable {
             int y = this.calculateY(s, mouseY);
 
             RenderSystem.enableBlend();
-            RenderUtils.setZLevelPre(matrix, 400);
+            RenderUtils.setZLevelPre(pose, 400);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-            this.renderBackground(matrix, x, y);
-            this.renderTextLines(matrix, x, y);
+            this.renderBackground(pose, x, y);
+            this.renderTextLines(pose, x, y);
 
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderUtils.setZLevelPost(matrix);
+            RenderUtils.setZLevelPost(pose);
             RenderSystem.disableBlend();
 
         }
     }
 
-    protected void renderTextLines(PoseStack matrix, int x, int y) {
+    protected void renderTextLines(PoseStack pose, int x, int y) {
         int yLine = y;
         for (Component c : this.textLines) {
             int w = this.font.width(c);
-            int x2 = x + this.borderSize;
-            int y2 = yLine + this.borderSize;
+            int x2 = x + this.textBorderSize;
+            int y2 = yLine + this.textBorderSize;
             if (this.textAlignment == TooltipTextAlignment.RIGHT) {
-                int diff = Math.max(0, (x + this.getWidth() - this.borderSize) - (x2 + w));
+                int diff = Math.max(0, (x + this.getWidth() - this.textBorderSize) - (x2 + w));
                 x2 += diff;
             }
             if (this.textAlignment == TooltipTextAlignment.CENTERED) {
                 x2 = x + Math.max(0, (this.getWidth() / 2) - (w / 2));
             }
             if (this.hasTextShadow()) {
-                this.font.drawShadow(matrix, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getRGB() : -1);
+                this.font.drawShadow(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getRGB() : -1);
             } else {
-                this.font.draw(matrix, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getRGB() : -1);
+                this.font.draw(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getRGB() : -1);
             }
             yLine += this.font.lineHeight + 2;
         }
     }
 
-    protected void renderBackground(PoseStack matrix, int x, int y) {
+    protected void renderBackground(PoseStack pose, int x, int y) {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
-            this.renderVanillaLikeBackground(matrix, x, y, this.getWidth(), this.getHeight());
+            this.renderVanillaLikeBackground(pose, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
             RenderUtils.bindTexture(this.backgroundTexture.getTextureLocation());
-            blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         } else {
-            fill(matrix, x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getRGB());
+            if (this.borderColor != null) {
+                //BACKGROUND
+                fill(pose, x + 1, y + 1, x + this.getWidth() - 2, y + this.getHeight() - 2, this.backgroundColor.getRGB());
+                //TOP
+                fill(pose, x + 1, y, x + this.getWidth() - 2, y + 1, this.borderColor.getRGB());
+                //BOTTOM
+                fill(pose, x + 1, y + this.getHeight() - 1, x + this.getWidth() - 2, y + this.getHeight(), this.borderColor.getRGB());
+                //LEFT
+                fill(pose, x, y, x + 1, y + this.getHeight(), this.borderColor.getRGB());
+                //RIGHT
+                fill(pose, x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getRGB());
+            } else {
+                fill(pose, x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getRGB());
+            }
         }
     }
 
-    protected void renderVanillaLikeBackground(PoseStack matrix, int x, int y, int width, int height) {
+    protected void renderVanillaLikeBackground(PoseStack pose, int x, int y, int width, int height) {
 
-        matrix.pushPose();
+        pose.pushPose();
 
         ShaderInstance shaderInstance = RenderSystem.getShader();
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferBuilder2 = tesselator.getBuilder();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
         bufferBuilder2.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix4f2 = matrix.last().pose();
+        Matrix4f matrix4f2 = pose.last().pose();
 
         TooltipRenderUtil.renderTooltipBackground(GuiComponent::fillGradient, matrix4f2, bufferBuilder2, x, y, width, height, 400);
 
@@ -153,7 +168,7 @@ public class Tooltip extends GuiComponent implements Renderable {
             RenderSystem.setShader(() -> shaderInstance);
         }
 
-        matrix.popPose();
+        pose.popPose();
 
     }
 
@@ -222,31 +237,32 @@ public class Tooltip extends GuiComponent implements Renderable {
             }
             h += this.font.lineHeight + 2;
         }
-        this.width = w + (this.borderSize * 2);
-        this.height = h + (this.borderSize * 2);
+        this.width = w + (this.textBorderSize * 2);
+        this.height = h + (this.textBorderSize * 2);
     }
 
     public boolean isEmpty() {
         return this.textLines.isEmpty();
     }
 
-    public void setTooltipText(String... lines) {
+    public Tooltip setTooltipText(String... lines) {
         List<Component> l = new ArrayList<>();
         if (lines != null) {
             for (String s : lines) {
                 l.add(Component.literal(s));
             }
         }
-        this.setTooltipText(l);
+        return this.setTooltipText(l);
     }
 
-    public void setTooltipText(Component... lines) {
-        this.setTooltipText((lines != null) ? Arrays.asList(lines) : null);
+    public Tooltip setTooltipText(Component... lines) {
+        return this.setTooltipText((lines != null) ? Arrays.asList(lines) : null);
     }
 
-    public void setTooltipText(List<Component> lines) {
+    public Tooltip setTooltipText(List<Component> lines) {
         this.textLines = (lines != null) ? lines : new ArrayList<>();
         this.updateSize();
+        return this;
     }
 
     /** Returns a COPY of the tooltip list. **/
@@ -254,79 +270,93 @@ public class Tooltip extends GuiComponent implements Renderable {
         return new ArrayList<>(this.textLines);
     }
 
-    public void setBorderSize(int size) {
-        this.borderSize = size;
+    public Tooltip setTextBorderSize(int size) {
+        this.textBorderSize = size;
         this.updateSize();
+        return this;
     }
 
-    public int getBorderSize() {
-        return this.borderSize;
+    public int getTextBorderSize() {
+        return this.textBorderSize;
     }
 
-    public void setMouseOffset(int offset) {
+    public Tooltip setMouseOffset(int offset) {
         this.mouseOffset = offset;
+        return this;
     }
 
     public int getMouseOffset() {
         return this.mouseOffset;
     }
 
-    public void setBackgroundTexture(ResourceLocation texture) {
+    public Tooltip setBackgroundTexture(ResourceLocation texture) {
         this.backgroundTexture = SimpleTexture.create(texture);
         this.backgroundColor = null;
         this.vanillaLike = (texture == null);
+        return this;
     }
 
     public SimpleTexture getBackgroundTexture() {
         return backgroundTexture;
     }
 
-    public void setBackgroundColor(Color backgroundColor) {
+    public Tooltip setBackgroundColor(Color backgroundColor, @Nullable Color borderColor) {
         this.backgroundColor = backgroundColor;
+        this.borderColor = borderColor;
         this.backgroundTexture = null;
         this.vanillaLike = (backgroundColor == null);
+        return this;
     }
 
     public Color getBackgroundColor() {
-        return backgroundColor;
+        return this.backgroundColor;
     }
 
-    public void setVanillaLike(boolean vanillaLike) {
+    public Color getBorderColor() {
+        return this.borderColor;
+    }
+
+    public Tooltip setVanillaLike(boolean vanillaLike) {
         this.vanillaLike = vanillaLike;
         this.backgroundColor = null;
         this.backgroundTexture = null;
+        return this;
     }
 
     public boolean isVanillaLike() {
         return vanillaLike;
     }
 
-    public void setKeepBackgroundAspectRatio(boolean keepBackgroundAspectRatio) {
+    public Tooltip setKeepBackgroundAspectRatio(boolean keepBackgroundAspectRatio) {
         this.keepBackgroundAspectRatio = keepBackgroundAspectRatio;
+        return this;
     }
 
     public boolean keepBackgroundAspectRatio() {
         return keepBackgroundAspectRatio;
     }
 
-    public void setTextShadow(boolean textShadow) {
+    public Tooltip setTextShadow(boolean textShadow) {
         this.textShadow = textShadow;
+        return this;
     }
 
     public boolean hasTextShadow() {
         return textShadow;
     }
 
-    public void setTextAlignment(TooltipTextAlignment textAlignment) {
+    public Tooltip setTextAlignment(TooltipTextAlignment textAlignment) {
         this.textAlignment = textAlignment;
+        return this;
     }
 
     public TooltipTextAlignment getTextAlignment() {
         return textAlignment;
     }
 
-    public void setTextBaseColor(@Nullable Color textBaseColor) {
+    public Tooltip setTextBaseColor(@Nullable Color textBaseColor) {
         this.textBaseColor = textBaseColor;
+        return this;
     }
 
     @Nullable
@@ -334,17 +364,33 @@ public class Tooltip extends GuiComponent implements Renderable {
         return textBaseColor;
     }
 
-    public void setFont(Font font) {
+    public Tooltip setFont(Font font) {
         this.font = (font != null) ? font : Minecraft.getInstance().font;
         this.updateSize();
+        return this;
     }
 
     public Font getFont() {
         return font;
     }
 
-    public void setCustomX(@Nullable Integer x) {
+    public Tooltip copyStyleOf(Tooltip tooltip) {
+        this.borderColor = tooltip.borderColor;
+        this.backgroundColor = tooltip.backgroundColor;
+        this.backgroundTexture = tooltip.backgroundTexture;
+        this.keepBackgroundAspectRatio = tooltip.keepBackgroundAspectRatio;
+        this.vanillaLike = tooltip.vanillaLike;
+        this.textBorderSize = tooltip.textBorderSize;
+        this.textAlignment = tooltip.textAlignment;
+        this.textShadow = tooltip.textShadow;
+        this.textBaseColor = tooltip.textBaseColor;
+        this.font = tooltip.font;
+        return this;
+    }
+
+    public Tooltip setCustomX(@Nullable Integer x) {
         this.x = x;
+        return this;
     }
 
     @Nullable
@@ -352,8 +398,9 @@ public class Tooltip extends GuiComponent implements Renderable {
         return x;
     }
 
-    public void setCustomY(@Nullable Integer y) {
+    public Tooltip setCustomY(@Nullable Integer y) {
         this.y = y;
+        return this;
     }
 
     @Nullable

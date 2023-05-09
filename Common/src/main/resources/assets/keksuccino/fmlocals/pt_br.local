@@ -224,7 +224,7 @@ helper.buttons.tools.creategui.create = Criar
 
 gameintro.skip = APERTE ESPAçO PARA PULAR
 
-helper.creator.items.chooselayer = Escolher camada
+fancymenu.element.general.pick_element = Escolher camada
 
 customization.items.webstring.unabletoload = Impossível carregar texto da web! URL inválido ou sem conexão!
 

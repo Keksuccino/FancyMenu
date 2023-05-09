@@ -1,68 +1,49 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import java.awt.Color;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.background.MenuBackground;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.element.v1.*;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.button.ButtonBackgroundPopup;
-import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayerRegistry;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
-import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.api.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.button.ButtonData;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorUI.LayoutPropertiesContextMenu;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutAnimation;
+import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
+import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;
+import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayerRegistry;
+import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutShape;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutSlideshow;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutSplashText;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutString;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutTexture;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutWebString;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutWebTexture;
+import de.keksuccino.fancymenu.customization.element.v1.*;
+import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorUI.LayoutPropertiesContextMenu;
+import de.keksuccino.fancymenu.customization.layout.editor.elements.*;
+import de.keksuccino.fancymenu.customization.layout.editor.elements.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
-import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
+import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
+import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.KeyboardData;
-import de.keksuccino.konkrete.input.KeyboardHandler;
-import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.konkrete.input.*;
+import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -71,27 +52,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
-public class LayoutEditorScreen extends Screen {
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-	//TODO komplett rewriten
+public class LayoutEditorScreenOLD extends Screen {
 
-	//TODO alte key press handler weg -> stattdessen die von Screen nutzen
+	private static final Logger LOGGER = LogManager.getLogger("fancymenu/LayoutEditorScreen");
 
-	//TODO GUI event listener methoden von Editor Elementen hier in richtigen methoden callen
-
-	//TODO das meiste der gecachten top-level layout properties von hier in eigene Layout Klasse verschieben
-
-	private static final Logger LOGGER = LogManager.getLogger();
-	
 	public static boolean isActive = false;
 
 	protected static final List<PropertiesSection> COPIED_ELEMENT_CACHE = new ArrayList<PropertiesSection>();
 	protected static boolean initDone = false;
-	
+
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
-	
+
 	public List<Runnable> postRenderTasks = new ArrayList<>();
-	
+
 	public final Screen screen;
 	protected List<AbstractEditorElement> content = new ArrayList<>();
 	protected List<AbstractEditorElement> newContentMove;
@@ -105,10 +85,10 @@ public class LayoutEditorScreen extends Screen {
 	public Map<Long, Float> vanillaFadeIn = new HashMap<>();
 	protected List<AbstractEditorElement> focusedObjects = new ArrayList<>();
 	protected List<AbstractEditorElement> focusedObjectsCache = new ArrayList<>();
-	
+
 	protected ContextMenu multiselectRightclickMenu;
 	protected LayoutPropertiesContextMenu propertiesRightclickMenu;
-	
+
 	protected IAnimationRenderer backgroundAnimation;
 	public ExternalTextureResourceLocation backgroundTexture;
 	public String backgroundTexturePath;
@@ -128,7 +108,7 @@ public class LayoutEditorScreen extends Screen {
 
 	protected String openAudio;
 	protected String closeAudio;
-	
+
 	protected String renderorder = "foreground";
 	protected String requiredmods;
 	protected String minimumMC;
@@ -166,8 +146,8 @@ public class LayoutEditorScreen extends Screen {
 	protected ContextMenu activeElementContextMenu = null;
 
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
-	
-	public LayoutEditorScreen(Screen screenToCustomize) {
+
+	public LayoutEditorScreenOLD(Screen screenToCustomize) {
 		super(Component.literal(""));
 		this.screen = screenToCustomize;
 		Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.screen.getClass());
@@ -176,8 +156,8 @@ public class LayoutEditorScreen extends Screen {
 		}
 
 		if (!initDone) {
-			KeyboardHandler.addKeyPressedListener(LayoutEditorScreen::onShortcutPressed);
-			KeyboardHandler.addKeyPressedListener(LayoutEditorScreen::onArrowKeysPressed);
+			KeyboardHandler.addKeyPressedListener(LayoutEditorScreenOLD::onShortcutPressed);
+			KeyboardHandler.addKeyPressedListener(LayoutEditorScreenOLD::onArrowKeysPressed);
 			initDone = true;
 		}
 
@@ -1529,17 +1509,17 @@ public class LayoutEditorScreen extends Screen {
 	public void copySelectedElements() {
 		List<AbstractEditorElement> l = this.getFocusedObjects();
 
-		LayoutEditorScreen.COPIED_ELEMENT_CACHE.clear();
+		LayoutEditorScreenOLD.COPIED_ELEMENT_CACHE.clear();
 		for (AbstractEditorElement e : l) {
-			LayoutEditorScreen.COPIED_ELEMENT_CACHE.addAll(e.getProperties());
+			LayoutEditorScreenOLD.COPIED_ELEMENT_CACHE.addAll(e.getProperties());
 		}
 	}
 
 	public void pasteElements() {
-		if (!LayoutEditorScreen.COPIED_ELEMENT_CACHE.isEmpty()) {
+		if (!LayoutEditorScreenOLD.COPIED_ELEMENT_CACHE.isEmpty()) {
 
 			PropertiesSet set = new PropertiesSet("menu");
-			for (PropertiesSection s : LayoutEditorScreen.COPIED_ELEMENT_CACHE) {
+			for (PropertiesSection s : LayoutEditorScreenOLD.COPIED_ELEMENT_CACHE) {
 				set.addProperties(s);
 				if (s.hasEntry("actionid") && s.getSectionType().equalsIgnoreCase("customization")) {
 					s.removeEntry("actionid");
@@ -1564,10 +1544,10 @@ public class LayoutEditorScreen extends Screen {
 			this.newContentPaste.addAll(pe.content);
 			
 			this.postRenderTasks.add(() -> {
-				LayoutEditorScreen.this.init();
-				LayoutEditorScreen.this.focusedObjects.clear();
-				LayoutEditorScreen.this.focusedObjectsCache.clear();
-				LayoutEditorScreen.this.focusedObjects.addAll(pe.content);
+				LayoutEditorScreenOLD.this.init();
+				LayoutEditorScreenOLD.this.focusedObjects.clear();
+				LayoutEditorScreenOLD.this.focusedObjectsCache.clear();
+				LayoutEditorScreenOLD.this.focusedObjects.addAll(pe.content);
 			});
 
 		}
@@ -1626,13 +1606,13 @@ public class LayoutEditorScreen extends Screen {
 
 	protected static void onShortcutPressed(KeyboardData d) {
 		Screen c = Minecraft.getInstance().screen;
-		if (c instanceof LayoutEditorScreen) {
+		if (c instanceof LayoutEditorScreenOLD) {
 
 			//CTRL + C
 			if (d.keycode == 67) {
 				if (KeyboardHandler.isCtrlPressed()) {
 					if (!PopupHandler.isPopupActive()) {
-						((LayoutEditorScreen) c).copySelectedElements();
+						((LayoutEditorScreenOLD) c).copySelectedElements();
 					}
 				}
 			}
@@ -1641,7 +1621,7 @@ public class LayoutEditorScreen extends Screen {
 			if (d.keycode == 86) {
 				if (KeyboardHandler.isCtrlPressed()) {
 					if (!PopupHandler.isPopupActive()) {
-						((LayoutEditorScreen) c).pasteElements();
+						((LayoutEditorScreenOLD) c).pasteElements();
 					}
 				}
 			}
@@ -1650,7 +1630,7 @@ public class LayoutEditorScreen extends Screen {
 			if (d.keycode == 83) {
 				if (KeyboardHandler.isCtrlPressed()) {
 					if (!PopupHandler.isPopupActive()) {
-						((LayoutEditorScreen) c).saveLayout();
+						((LayoutEditorScreenOLD) c).saveLayout();
 					}
 				}
 			}
@@ -1658,14 +1638,14 @@ public class LayoutEditorScreen extends Screen {
 			//CTRL + Z
 			if (d.keycode == 89) {
 				if (KeyboardHandler.isCtrlPressed()) {
-					((LayoutEditorScreen) c).history.stepBack();
+					((LayoutEditorScreenOLD) c).history.stepBack();
 				}
 			}
 
 			//CTRL + Y
 			if (d.keycode == 90) {
 				if (KeyboardHandler.isCtrlPressed()) {
-					((LayoutEditorScreen) c).history.stepForward();
+					((LayoutEditorScreenOLD) c).history.stepForward();
 				}
 			}
 
@@ -1685,9 +1665,9 @@ public class LayoutEditorScreen extends Screen {
 			}
 
 			//DEL
-			if (((LayoutEditorScreen)c).isObjectFocused() && !PopupHandler.isPopupActive()) {
+			if (((LayoutEditorScreenOLD)c).isObjectFocused() && !PopupHandler.isPopupActive()) {
 				if (d.keycode == 261) {
-					((LayoutEditorScreen) c).deleteFocusedObjects();
+					((LayoutEditorScreenOLD) c).deleteFocusedObjects();
 				}
 			}
 
@@ -1696,17 +1676,17 @@ public class LayoutEditorScreen extends Screen {
 
 	protected static void onArrowKeysPressed(KeyboardData d) {
 		Screen c = Minecraft.getInstance().screen;
-		if (c instanceof LayoutEditorScreen) {
-			if (((LayoutEditorScreen) c).isObjectFocused() && !PopupHandler.isPopupActive()) {
+		if (c instanceof LayoutEditorScreenOLD) {
+			if (((LayoutEditorScreenOLD) c).isObjectFocused() && !PopupHandler.isPopupActive()) {
 
 				if (!((d.keycode == 263) || (d.keycode == 262) || (d.keycode == 265) || (d.keycode == 264))) {
 					return;
 				}
 
-				LayoutEditorHistory.Snapshot snap = ((LayoutEditorScreen) c).history.createSnapshot();
+				LayoutEditorHistory.Snapshot snap = ((LayoutEditorScreenOLD) c).history.createSnapshot();
 				boolean saveSnap = false;
 
-				for (AbstractEditorElement o : ((LayoutEditorScreen) c).focusedObjects) {
+				for (AbstractEditorElement o : ((LayoutEditorScreenOLD) c).focusedObjects) {
 					if ((o instanceof LayoutVanillaButton) && o.element.anchorPoint.equals("original")) {
 						((LayoutVanillaButton)o).displaySetOrientationNotification();
 						continue;
@@ -1734,7 +1714,7 @@ public class LayoutEditorScreen extends Screen {
 				}
 
 				if (saveSnap) {
-					((LayoutEditorScreen) c).history.saveSnapshot(snap);
+					((LayoutEditorScreenOLD) c).history.saveSnapshot(snap);
 				}
 
 			}

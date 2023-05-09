@@ -36,10 +36,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public String advancedHeight;
 	public boolean stretchX = false;
 	public boolean stretchY = false;
-	public volatile boolean delayAppearance = false;
-	public volatile boolean delayAppearanceEverytime = false;
-	public volatile float delayAppearanceSec = 1.0F;
 	public volatile boolean visible = true;
+	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
+	public volatile float appearanceDelayInSeconds = 1.0F;
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
@@ -193,7 +192,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			this.key = key;
 		}
 
-		public static Alignment getByName(String name) {
+		public static Alignment getByName(@NotNull String name) {
 			for (Alignment a : Alignment.values()) {
 				if (a.key.equals(name)) {
 					return a;
@@ -202,6 +201,41 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			return null;
 		}
 		
+	}
+
+	public enum AppearanceDelay {
+
+		NO_DELAY("no_delay"),
+		FIRST_TIME("first_time"),
+		EVERY_TIME("every_time");
+
+		public final String name;
+
+		AppearanceDelay(String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public static AppearanceDelay getByName(@NotNull String name) {
+			for (AppearanceDelay d : AppearanceDelay.values()) {
+				if (d.name.equals(name)) {
+					return d;
+				}
+			}
+			return null;
+		}
+
+		@NotNull
+		public static AppearanceDelay next(AppearanceDelay previous) {
+			if (previous == FIRST_TIME) {
+				return EVERY_TIME;
+			}
+			if (previous == EVERY_TIME) {
+				return NO_DELAY;
+			}
+			return FIRST_TIME;
+		}
+
 	}
 
 }
