@@ -35,8 +35,8 @@ public class ElementRegistry {
     }
 
     @Nullable
-    public static ElementBuilder<?,?> getBuilder(@NotNull String itemIdentifier) {
-        return ELEMENT_BUILDERS.get(itemIdentifier);
+    public static ElementBuilder<?,?> getBuilder(@NotNull String identifier) {
+        return ELEMENT_BUILDERS.get(identifier);
     }
 
 }

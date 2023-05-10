@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutSplashText;
@@ -1261,7 +1261,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** DUMMY BUTTON: INSTALL AUDIO EXTENSION **/
 			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
-				ButtonScriptEngine.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
+				ActionExecutor.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
 			});
 			audioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.btn.desc"), "%n%"));
 			if (!FancyMenu.isAudioExtensionLoaded()) {

@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.button.ButtonData;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;

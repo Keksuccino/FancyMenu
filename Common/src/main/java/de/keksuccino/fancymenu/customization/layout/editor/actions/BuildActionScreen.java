@@ -2,8 +2,8 @@
 package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.ScrollAreaEntry;
@@ -74,7 +74,7 @@ public class BuildActionScreen extends Screen {
         }) {
             @Override
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                ButtonActionContainer b = BuildActionScreen.this.instance.action;
+                Action b = BuildActionScreen.this.instance.action;
                 if ((b != null) && !b.hasValue()) {
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value"), "%n%"));
                 } else {
@@ -193,7 +193,7 @@ public class BuildActionScreen extends Screen {
 
     }
 
-    protected void setDescription(@Nullable ButtonActionContainer action) {
+    protected void setDescription(@Nullable Action action) {
 
         this.actionDescriptionScrollArea.clearEntries();
 
@@ -213,7 +213,7 @@ public class BuildActionScreen extends Screen {
 
         this.actionsListScrollArea.clearEntries();
 
-        for (ButtonActionContainer c : ButtonActionRegistry.getActions()) {
+        for (Action c : ActionRegistry.getActions()) {
             ActionScrollEntry e = new ActionScrollEntry(this.actionsListScrollArea, c, (entry) -> {
                 this.instance.action = c;
                 this.setDescription(c);
@@ -225,10 +225,10 @@ public class BuildActionScreen extends Screen {
 
     public static class ActionScrollEntry extends TextListScrollAreaEntry {
 
-        public ButtonActionContainer action;
+        public Action action;
 
-        public ActionScrollEntry(ScrollArea parent, @NotNull ButtonActionContainer action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(action.getAction()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+        public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
             this.action = action;
         }
 

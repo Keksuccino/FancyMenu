@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
@@ -38,8 +38,8 @@ public class TickerEditorElement extends AbstractEditorElement {
 
         AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
             List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
-            for (ButtonScriptEngine.ActionContainer c : i.actions) {
-                ButtonActionContainer bac = ButtonActionRegistry.getActionByName(c.action);
+            for (ActionExecutor.ActionContainer c : i.actions) {
+                Action bac = ActionRegistry.getActionByName(c.action);
                 if (bac != null) {
                     ManageActionsScreen.ActionInstance i2 = new ManageActionsScreen.ActionInstance(bac, c.value);
                     l.add(i2);
@@ -50,7 +50,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                     this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
                     i.actions.clear();
                     for (ManageActionsScreen.ActionInstance i2 : call) {
-                        i.actions.add(new ButtonScriptEngine.ActionContainer(i2.action.getAction(), i2.value));
+                        i.actions.add(new ActionExecutor.ActionContainer(i2.action.getIdentifier(), i2.value));
                     }
                 }
             });
@@ -141,7 +141,7 @@ public class TickerEditorElement extends AbstractEditorElement {
         sec.addEntry("tick_delay", "" + i.tickDelayMs);
         sec.addEntry("tick_mode", "" + i.tickMode.name);
         int index = 0;
-        for (ButtonScriptEngine.ActionContainer c : i.actions) {
+        for (ActionExecutor.ActionContainer c : i.actions) {
             String v = c.value;
             if (v == null) {
                 v = "";

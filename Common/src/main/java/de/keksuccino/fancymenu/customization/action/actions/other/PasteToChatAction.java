@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
 import de.keksuccino.konkrete.localization.Locals;
@@ -8,15 +8,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 
-public class PasteToChatAction extends ButtonActionContainer {
+public class PasteToChatAction extends Action {
 
     public PasteToChatAction() {
-        super("fancymenu_buttonaction_paste_to_chat");
-    }
-
-    @Override
-    public String getAction() {
-        return "paste_to_chat";
+        super("paste_to_chat");
     }
 
     @Override

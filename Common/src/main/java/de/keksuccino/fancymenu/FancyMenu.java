@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 import de.keksuccino.fancymenu.platform.Services;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;

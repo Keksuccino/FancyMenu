@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,10 +12,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.api.background.MenuBackground;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -33,7 +29,6 @@ import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.event.events.widget.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.event.events.widget.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.button.ButtonCache;
@@ -42,8 +37,6 @@ import de.keksuccino.fancymenu.customization.button.ButtonData;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.v1.AnimationCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.v1.button.ButtonCustomizationItem;
@@ -51,17 +44,13 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.v1.SlideshowCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.v1.SplashTextCustomizationItem;
-import de.keksuccino.fancymenu.customization.element.v1.StringCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.v1.TextureCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.v1.button.VanillaButtonCustomizationItem;
-import de.keksuccino.fancymenu.customization.element.v1.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.customization.element.v1.WebTextureCustomizationItem;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.ExternalTexturePanoramaRenderer;
-import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
-import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -85,6 +74,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+//TODO komplett rewriten und neues Layout element nutzen + LayoutHandler
 
 public class ScreenCustomizationLayer extends GuiComponent {
 
@@ -241,97 +232,97 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 		this.cachedLayoutWideLoadingRequirements.clear();
 
-		for (PropertiesSet s : rawLayouts) {
-			
-			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
-			if (metas.isEmpty()) {
-				metas = s.getPropertiesOfType("type-meta");
-			}
-			if (metas.isEmpty()) {
-				continue;
-			}
-
-			LoadingRequirementContainer layoutWideRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(metas.get(0));
-			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
-			if (!layoutWideRequirementContainer.requirementsMet()) {
-				continue;
-			}
-
-			if (!this.forceDisableCustomMenuTitle) {
-				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
-				if (cusMenuTitle != null) {
-					this.customMenuTitle = cusMenuTitle;
-					ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
-				}
-			}
-			
-			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
-			if (biggerthanwidth != null) {
-				biggerthanwidth = biggerthanwidth.replace(" ", "");
-				if (MathUtils.isInteger(biggerthanwidth)) {
-					int i = Integer.parseInt(biggerthanwidth);
-					if (WindowHandler.getWindowGuiWidth() < i) {
-						continue;
-					}
-				}
-			}
-			String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
-			if (biggerthanheight != null) {
-				biggerthanheight = biggerthanheight.replace(" ", "");
-				if (MathUtils.isInteger(biggerthanheight)) {
-					int i = Integer.parseInt(biggerthanheight);
-					if (WindowHandler.getWindowGuiHeight() < i) {
-						continue;
-					}
-				}
-			}
-			String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
-			if (smallerthanwidth != null) {
-				smallerthanwidth = smallerthanwidth.replace(" ", "");
-				if (MathUtils.isInteger(smallerthanwidth)) {
-					int i = Integer.parseInt(smallerthanwidth);
-					if (WindowHandler.getWindowGuiWidth() > i) {
-						continue;
-					}
-				}
-			}
-			String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
-			if (smallerthanheight != null) {
-				smallerthanheight = smallerthanheight.replace(" ", "");
-				if (MathUtils.isInteger(smallerthanheight)) {
-					int i = Integer.parseInt(smallerthanheight);
-					if (WindowHandler.getWindowGuiHeight() > i) {
-						continue;
-					}
-				}
-			}
-			
-			String randomMode = metas.get(0).getEntryValue("randommode");
-			if ((randomMode != null) && randomMode.equalsIgnoreCase("true")) {
-				
-				String group = metas.get(0).getEntryValue("randomgroup");
-				if (group == null) {
-					group = defaultGroup;
-				}
-				if (!this.randomLayoutGroups.containsKey(group)) {
-					this.randomLayoutGroups.put(group, new RandomLayoutContainer(group, this));
-				}
-				RandomLayoutContainer c = this.randomLayoutGroups.get(group);
-				if (c != null) {
-					String randomOnlyFirstTime = metas.get(0).getEntryValue("randomonlyfirsttime");
-					if ((randomOnlyFirstTime != null) && randomOnlyFirstTime.equalsIgnoreCase("true")) {
-						c.setOnlyFirstTime(true);
-					}
-					c.addLayout(s);
-				}
-				
-			} else {
-				
-				this.normalLayouts.add(s);
-				
-			}
-			
-		}
+//		for (PropertiesSet s : rawLayouts) {
+//
+//			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+//			if (metas.isEmpty()) {
+//				metas = s.getPropertiesOfType("type-meta");
+//			}
+//			if (metas.isEmpty()) {
+//				continue;
+//			}
+//
+//			LoadingRequirementContainer layoutWideRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(metas.get(0));
+//			this.cachedLayoutWideLoadingRequirements.put(layoutWideRequirementContainer, layoutWideRequirementContainer.requirementsMet());
+//			if (!layoutWideRequirementContainer.requirementsMet()) {
+//				continue;
+//			}
+//
+//			if (!this.forceDisableCustomMenuTitle) {
+//				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+//				if (cusMenuTitle != null) {
+//					this.customMenuTitle = cusMenuTitle;
+//					ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
+//				}
+//			}
+//
+//			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
+//			if (biggerthanwidth != null) {
+//				biggerthanwidth = biggerthanwidth.replace(" ", "");
+//				if (MathUtils.isInteger(biggerthanwidth)) {
+//					int i = Integer.parseInt(biggerthanwidth);
+//					if (WindowHandler.getWindowGuiWidth() < i) {
+//						continue;
+//					}
+//				}
+//			}
+//			String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
+//			if (biggerthanheight != null) {
+//				biggerthanheight = biggerthanheight.replace(" ", "");
+//				if (MathUtils.isInteger(biggerthanheight)) {
+//					int i = Integer.parseInt(biggerthanheight);
+//					if (WindowHandler.getWindowGuiHeight() < i) {
+//						continue;
+//					}
+//				}
+//			}
+//			String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
+//			if (smallerthanwidth != null) {
+//				smallerthanwidth = smallerthanwidth.replace(" ", "");
+//				if (MathUtils.isInteger(smallerthanwidth)) {
+//					int i = Integer.parseInt(smallerthanwidth);
+//					if (WindowHandler.getWindowGuiWidth() > i) {
+//						continue;
+//					}
+//				}
+//			}
+//			String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
+//			if (smallerthanheight != null) {
+//				smallerthanheight = smallerthanheight.replace(" ", "");
+//				if (MathUtils.isInteger(smallerthanheight)) {
+//					int i = Integer.parseInt(smallerthanheight);
+//					if (WindowHandler.getWindowGuiHeight() > i) {
+//						continue;
+//					}
+//				}
+//			}
+//
+//			String randomMode = metas.get(0).getEntryValue("randommode");
+//			if ((randomMode != null) && randomMode.equalsIgnoreCase("true")) {
+//
+//				String group = metas.get(0).getEntryValue("randomgroup");
+//				if (group == null) {
+//					group = defaultGroup;
+//				}
+//				if (!this.randomLayoutGroups.containsKey(group)) {
+//					this.randomLayoutGroups.put(group, new RandomLayoutContainer(group, this));
+//				}
+//				RandomLayoutContainer c = this.randomLayoutGroups.get(group);
+//				if (c != null) {
+//					String randomOnlyFirstTime = metas.get(0).getEntryValue("randomonlyfirsttime");
+//					if ((randomOnlyFirstTime != null) && randomOnlyFirstTime.equalsIgnoreCase("true")) {
+//						c.setOnlyFirstTime(true);
+//					}
+//					c.addLayout(s);
+//				}
+//
+//			} else {
+//
+//				this.normalLayouts.add(s);
+//
+//			}
+//
+//		}
 
 		List<String> trashLayoutGroups = new ArrayList<String>();
 		for (Map.Entry<String, RandomLayoutContainer> m : this.randomLayoutGroups.entrySet()) {
@@ -380,45 +371,45 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	
 	protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
 		
-		String action = sec.getEntryValue("action");
-		if (action != null) {
-			String identifier = sec.getEntryValue("identifier");
-
-			if (action.equalsIgnoreCase("overridemenu")) {
-				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
-					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, null, e.getScreen(), (onClose) -> {
-						e.getScreen().removed();
-					});
-					Minecraft.getInstance().setScreen(cus);
-				}
-			}
-
-			if (action.contentEquals("setscale")) {
-				String scale = sec.getEntryValue("scale");
-				if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
-					int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
-					if (newscale <= 0) {
-						newscale = 1;
-					}
-					Window m = Minecraft.getInstance().getWindow();
-					m.setGuiScale(newscale);
-					e.getScreen().width = m.getGuiScaledWidth();
-					e.getScreen().height = m.getGuiScaledHeight();
-					this.sharedLayoutProps.scaled = true;
-				}
-			}
-
-			if (action.equalsIgnoreCase("autoscale")) {
-				String baseWidth = sec.getEntryValue("basewidth");
-				if (MathUtils.isInteger(baseWidth)) {
-					this.sharedLayoutProps.autoScaleBaseWidth = Integer.parseInt(baseWidth);
-				}
-				String baseHeight = sec.getEntryValue("baseheight");
-				if (MathUtils.isInteger(baseHeight)) {
-					this.sharedLayoutProps.autoScaleBaseHeight = Integer.parseInt(baseHeight);
-				}
-			}
-		}
+//		String action = sec.getEntryValue("action");
+//		if (action != null) {
+//			String identifier = sec.getEntryValue("identifier");
+//
+//			if (action.equalsIgnoreCase("overridemenu")) {
+//				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
+//					CustomGuiBase cus = CustomGuiLoader.getGui(identifier, null, e.getScreen(), (onClose) -> {
+//						e.getScreen().removed();
+//					});
+//					Minecraft.getInstance().setScreen(cus);
+//				}
+//			}
+//
+//			if (action.contentEquals("setscale")) {
+//				String scale = sec.getEntryValue("scale");
+//				if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
+//					int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
+//					if (newscale <= 0) {
+//						newscale = 1;
+//					}
+//					Window m = Minecraft.getInstance().getWindow();
+//					m.setGuiScale(newscale);
+//					e.getScreen().width = m.getGuiScaledWidth();
+//					e.getScreen().height = m.getGuiScaledHeight();
+//					this.sharedLayoutProps.scaled = true;
+//				}
+//			}
+//
+//			if (action.equalsIgnoreCase("autoscale")) {
+//				String baseWidth = sec.getEntryValue("basewidth");
+//				if (MathUtils.isInteger(baseWidth)) {
+//					this.sharedLayoutProps.autoScaleBaseWidth = Integer.parseInt(baseWidth);
+//				}
+//				String baseHeight = sec.getEntryValue("baseheight");
+//				if (MathUtils.isInteger(baseHeight)) {
+//					this.sharedLayoutProps.autoScaleBaseHeight = Integer.parseInt(baseHeight);
+//				}
+//			}
+//		}
 		
 	}
 
@@ -483,7 +474,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			if (metas.isEmpty()) {
 				metas = s.getPropertiesOfType("type-meta");
 			}
-			String renderOrder = metas.get(0).getEntryValue("renderorder");
+//			String renderOrder = metas.get(0).getEntryValue("renderorder");
 			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
 				this.applyLayout(sec, renderOrder, e);
 			}
@@ -495,7 +486,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 				if (metas.isEmpty()) {
 					metas = s.getPropertiesOfType("type-meta");
 				}
-				String renderOrder = metas.get(0).getEntryValue("renderorder");
+//				String renderOrder = metas.get(0).getEntryValue("renderorder");
 				for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
 					this.applyLayout(sec, renderOrder, e);
 				}
@@ -596,148 +587,148 @@ public class ScreenCustomizationLayer extends GuiComponent {
 				}
 			}
 
-			if (action.equalsIgnoreCase("backgroundoptions")) {
-				String keepAspect = sec.getEntryValue("keepaspectratio");
-				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
-					this.keepBackgroundAspectRatio = true;
-				}
-			}
-
-			if (action.equalsIgnoreCase("setbackgroundslideshow")) {
-				String name = sec.getEntryValue("name");
-				if (name != null) {
-					if (SlideshowHandler.slideshowExists(name)) {
-						this.slideshow = SlideshowHandler.getSlideshow(name);
-					}
-				}
-			}
-			
-			if (action.equalsIgnoreCase("setbackgroundpanorama")) {
-				String name = sec.getEntryValue("name");
-				if (name != null) {
-					if (PanoramaHandler.panoramaExists(name)) {
-						this.panoramaCube = PanoramaHandler.getPanorama(name);
-					}
-				}
-			}
-			
-			if (action.equalsIgnoreCase("texturizebackground")) {
-				String value = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
-				String pano = sec.getEntryValue("wideformat");
-				if (pano == null) {
-					pano = sec.getEntryValue("panorama");
-				}
-				if (value != null) {
-					File f = new File(value.replace("\\", "/"));
-					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-						value = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + value.replace("\\", "/");
-						f = new File(value);
-					}
-					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
-							this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(value);
-						}
-						this.panoramaback = (pano != null) && pano.equalsIgnoreCase("true");
-						this.sharedLayoutProps.backgroundTextureSet = true;
-					}
-				}
-			}
-
-			if (action.equalsIgnoreCase("animatebackground")) {
-				String value = sec.getEntryValue("name");
-				String random = sec.getEntryValue("random");
-				boolean ran = (random != null) && random.equalsIgnoreCase("true");
-				boolean restartOnLoad = false;
-				String restartOnLoadString = sec.getEntryValue("restart_on_load");
-				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
-					restartOnLoad = true;
-				}
-				if (value != null) {
-					if (value.contains(",")) {
-						for (String s2 : value.split(",")) {
-							int i = 0;
-							for (char c : s2.toCharArray()) {
-								if (c != ' ') {
-									break;
-								}
-								i++;
-							}
-							if (i > s2.length()) {
-								continue;
-							}
-							String temp = new StringBuilder(s2.substring(i)).reverse().toString();
-							int i2 = 0;
-							for (char c : temp.toCharArray()) {
-								if (c != ' ') {
-									break;
-								}
-								i2++;
-							}
-							String name = new StringBuilder(temp.substring(i2)).reverse().toString();
-							if (AnimationHandler.animationExists(name)) {
-								this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
-							}
-						}
-					} else {
-						if (AnimationHandler.animationExists(value)) {
-							this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
-						}
-					}
-
-					if (!this.backgroundAnimations.isEmpty()) {
-						if (restartOnLoad && ScreenCustomization.isNewMenu()) {
-							for (IAnimationRenderer r : this.backgroundAnimations) {
-								r.resetAnimation();
-							}
-						}
-						if (ran) {
-							if (ScreenCustomization.isNewMenu()) {
-								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
-							}
-							this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
-						} else {
-							if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
-								this.backgroundAnimation = this.lastBackgroundAnimation;
-							} else {
-								this.backgroundAnimationId = 0;
-								this.backgroundAnimation = this.backgroundAnimations.get(0);
-							}
-							this.lastBackgroundAnimation = this.backgroundAnimation;
-						}
-					}
-				}
-			}
-
-			//Custom background handling (API)
-			if (action.equalsIgnoreCase("api:custombackground")) {
-				String typeId = sec.getEntryValue("type_identifier");
-				String backId = sec.getEntryValue("background_identifier");
-				String inputString = sec.getEntryValue("input_string");
-				if (typeId != null) {
-					MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
-					if (type != null) {
-						if (type.needsInputString() && (inputString != null)) {
-							try {
-								this.customMenuBackground = type.createInstanceFromInputString(inputString);
-							} catch (Exception ex) {
-								ex.printStackTrace();
-							}
-							if (this.customMenuBackground != null) {
-								if (ScreenCustomization.isNewMenu()) {
-									this.customMenuBackground.onOpenMenu();
-								}
-							}
-						} else if (backId != null) {
-							this.customMenuBackground = type.getBackgroundByIdentifier(backId);
-							if (this.customMenuBackground != null) {
-								if (ScreenCustomization.isNewMenu()) {
-									this.customMenuBackground.onOpenMenu();
-								}
-							}
-						}
-					}
-				}
-			}
+//			if (action.equalsIgnoreCase("backgroundoptions")) {
+//				String keepAspect = sec.getEntryValue("keepaspectratio");
+//				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
+//					this.keepBackgroundAspectRatio = true;
+//				}
+//			}
+//
+//			if (action.equalsIgnoreCase("setbackgroundslideshow")) {
+//				String name = sec.getEntryValue("name");
+//				if (name != null) {
+//					if (SlideshowHandler.slideshowExists(name)) {
+//						this.slideshow = SlideshowHandler.getSlideshow(name);
+//					}
+//				}
+//			}
+//
+//			if (action.equalsIgnoreCase("setbackgroundpanorama")) {
+//				String name = sec.getEntryValue("name");
+//				if (name != null) {
+//					if (PanoramaHandler.panoramaExists(name)) {
+//						this.panoramaCube = PanoramaHandler.getPanorama(name);
+//					}
+//				}
+//			}
+//
+//			if (action.equalsIgnoreCase("texturizebackground")) {
+//				String value = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
+//				String pano = sec.getEntryValue("wideformat");
+//				if (pano == null) {
+//					pano = sec.getEntryValue("panorama");
+//				}
+//				if (value != null) {
+//					File f = new File(value.replace("\\", "/"));
+//					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+//						value = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + value.replace("\\", "/");
+//						f = new File(value);
+//					}
+//					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
+//						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
+//							this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(value);
+//						}
+//						this.panoramaback = (pano != null) && pano.equalsIgnoreCase("true");
+//						this.sharedLayoutProps.backgroundTextureSet = true;
+//					}
+//				}
+//			}
+//
+//			if (action.equalsIgnoreCase("animatebackground")) {
+//				String value = sec.getEntryValue("name");
+//				String random = sec.getEntryValue("random");
+//				boolean ran = (random != null) && random.equalsIgnoreCase("true");
+//				boolean restartOnLoad = false;
+//				String restartOnLoadString = sec.getEntryValue("restart_on_load");
+//				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+//					restartOnLoad = true;
+//				}
+//				if (value != null) {
+//					if (value.contains(",")) {
+//						for (String s2 : value.split(",")) {
+//							int i = 0;
+//							for (char c : s2.toCharArray()) {
+//								if (c != ' ') {
+//									break;
+//								}
+//								i++;
+//							}
+//							if (i > s2.length()) {
+//								continue;
+//							}
+//							String temp = new StringBuilder(s2.substring(i)).reverse().toString();
+//							int i2 = 0;
+//							for (char c : temp.toCharArray()) {
+//								if (c != ' ') {
+//									break;
+//								}
+//								i2++;
+//							}
+//							String name = new StringBuilder(temp.substring(i2)).reverse().toString();
+//							if (AnimationHandler.animationExists(name)) {
+//								this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
+//							}
+//						}
+//					} else {
+//						if (AnimationHandler.animationExists(value)) {
+//							this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
+//						}
+//					}
+//
+//					if (!this.backgroundAnimations.isEmpty()) {
+//						if (restartOnLoad && ScreenCustomization.isNewMenu()) {
+//							for (IAnimationRenderer r : this.backgroundAnimations) {
+//								r.resetAnimation();
+//							}
+//						}
+//						if (ran) {
+//							if (ScreenCustomization.isNewMenu()) {
+//								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
+//							}
+//							this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
+//						} else {
+//							if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
+//								this.backgroundAnimation = this.lastBackgroundAnimation;
+//							} else {
+//								this.backgroundAnimationId = 0;
+//								this.backgroundAnimation = this.backgroundAnimations.get(0);
+//							}
+//							this.lastBackgroundAnimation = this.backgroundAnimation;
+//						}
+//					}
+//				}
+//			}
+//
+//			//Custom background handling (API)
+//			if (action.equalsIgnoreCase("api:custombackground")) {
+//				String typeId = sec.getEntryValue("type_identifier");
+//				String backId = sec.getEntryValue("background_identifier");
+//				String inputString = sec.getEntryValue("input_string");
+//				if (typeId != null) {
+//					MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
+//					if (type != null) {
+//						if (type.needsInputString() && (inputString != null)) {
+//							try {
+//								this.customMenuBackground = type.createInstanceFromInputString(inputString);
+//							} catch (Exception ex) {
+//								ex.printStackTrace();
+//							}
+//							if (this.customMenuBackground != null) {
+//								if (ScreenCustomization.isNewMenu()) {
+//									this.customMenuBackground.onOpenMenu();
+//								}
+//							}
+//						} else if (backId != null) {
+//							this.customMenuBackground = type.getBackgroundByIdentifier(backId);
+//							if (this.customMenuBackground != null) {
+//								if (ScreenCustomization.isNewMenu()) {
+//									this.customMenuBackground.onOpenMenu();
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
 
 			if (action.equalsIgnoreCase("hidebuttonfor")) {
 				String time = sec.getEntryValue("seconds");
@@ -871,22 +862,6 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			
 			// CUSTOM ITEMS
 
-			if (action.equalsIgnoreCase("addtext")) {
-				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundElements.add(new StringCustomizationItem(sec));
-				} else {
-					foregroundElements.add(new StringCustomizationItem(sec));
-				}
-			}
-
-			if (action.equalsIgnoreCase("addwebtext")) {
-				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-					backgroundElements.add(new WebStringCustomizationItem(sec));
-				} else {
-					foregroundElements.add(new WebStringCustomizationItem(sec));
-				}
-			}
-
 			if (action.equalsIgnoreCase("addtexture")) {
 				if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
 					backgroundElements.add(new TextureCustomizationItem(sec));
@@ -936,80 +911,53 @@ public class ScreenCustomizationLayer extends GuiComponent {
 					foregroundElements.add(i);
 				}
 			}
-
-			if (action.equalsIgnoreCase("addaudio")) {
-				if (FancyMenu.getConfig().getOrDefault("playbackgroundsounds", true)) {
-					if ((Minecraft.getInstance().level == null) || FancyMenu.getConfig().getOrDefault("playbackgroundsoundsinworld", false)) {
-						String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
-						String loopString = sec.getEntryValue("loop");
-
-						boolean loop = (loopString != null) && loopString.equalsIgnoreCase("true");
-						if (path != null) {
-							File f = new File(path);
-							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-								path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-								f = new File(path);
-							}
-							if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-								try {
-									String name = path + Files.size(f.toPath());
-									SoundRegistry.registerSound(name, path);
-									this.audio.put(name, loop);
-								} catch (Exception ex) {
-									ex.printStackTrace();
-								}
-							}
-						}
-					}
-				}
-			}
 			
-			if (action.equalsIgnoreCase("setcloseaudio")) {
-				String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
-
-				if (path != null) {
-					File f = new File(path);
-					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-						path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-						f = new File(path);
-					}
-					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-						try {
-							String name = "closesound_" + path + Files.size(f.toPath());
-							SoundRegistry.registerSound(name, path);
-							this.closeAudio = name;
-							this.sharedLayoutProps.closeAudioSet = true;
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-					}
-				}
-			}
-
-			if (action.equalsIgnoreCase("setopenaudio")) {
-				if (ScreenCustomization.isNewMenu()) {
-					String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
-					if (path != null) {
-						File f = new File(path);
-						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-							path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-							f = new File(path);
-						}
-						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-							try {
-								String name = "opensound_" + path + Files.size(f.toPath());
-								SoundRegistry.registerSound(name, path);
-								SoundHandler.resetSound(name);
-								SoundHandler.playSound(name);
-								this.openAudio = name;
-								this.sharedLayoutProps.openAudioSet = true;
-							} catch (Exception ex) {
-								ex.printStackTrace();
-							}
-						}
-					}
-				}
-			}
+//			if (action.equalsIgnoreCase("setcloseaudio")) {
+//				String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
+//
+//				if (path != null) {
+//					File f = new File(path);
+//					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+//						path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
+//						f = new File(path);
+//					}
+//					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+//						try {
+//							String name = "closesound_" + path + Files.size(f.toPath());
+//							SoundRegistry.registerSound(name, path);
+//							this.closeAudio = name;
+//							this.sharedLayoutProps.closeAudioSet = true;
+//						} catch (Exception ex) {
+//							ex.printStackTrace();
+//						}
+//					}
+//				}
+//			}
+//
+//			if (action.equalsIgnoreCase("setopenaudio")) {
+//				if (ScreenCustomization.isNewMenu()) {
+//					String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
+//					if (path != null) {
+//						File f = new File(path);
+//						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+//							path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
+//							f = new File(path);
+//						}
+//						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+//							try {
+//								String name = "opensound_" + path + Files.size(f.toPath());
+//								SoundRegistry.registerSound(name, path);
+//								SoundHandler.resetSound(name);
+//								SoundHandler.playSound(name);
+//								this.openAudio = name;
+//								this.sharedLayoutProps.openAudioSet = true;
+//							} catch (Exception ex) {
+//								ex.printStackTrace();
+//							}
+//						}
+//					}
+//				}
+//			}
 
 			if (action.equalsIgnoreCase("setbuttondescription")) {
 				if (b != null) {

@@ -8,10 +8,10 @@ import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.ScrollAreaEn
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.LoadingRequirementRegistry;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;

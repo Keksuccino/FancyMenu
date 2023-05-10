@@ -1,7 +1,6 @@
 
 package de.keksuccino.fancymenu.customization.action;
 
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.konkrete.localization.Locals;
 
 import java.util.ArrayList;
@@ -35,8 +34,8 @@ public class LegacyActions {
         return actionIdentifiers;
     }
 
-    public static List<ButtonActionContainer> buildLegacyActionContainers() {
-        List<ButtonActionContainer> actions = new ArrayList<>();
+    public static List<Action> buildLegacyActionContainers() {
+        List<Action> actions = new ArrayList<>();
         List<String> actionIdentifiers = getLegacyIdentifiers();
         for (String s : actionIdentifiers) {
             String actionDescKey = "helper.creator.custombutton.config.actiontype." + s + ".desc";
@@ -47,12 +46,8 @@ public class LegacyActions {
         return actions;
     }
 
-    private static ButtonActionContainer buildContainer(String identifier, String descLocalizationKey, String valueDescLocalizationKey, String valueExampleKey) {
-        return new ButtonActionContainer(identifier) {
-            @Override
-            public String getAction() {
-                return identifier;
-            }
+    private static Action buildContainer(String identifier, String descLocalizationKey, String valueDescLocalizationKey, String valueExampleKey) {
+        return new Action(identifier) {
             @Override
             public boolean hasValue() {
                 return !valueDescLocalizationKey.equals(Locals.localize(valueDescLocalizationKey));

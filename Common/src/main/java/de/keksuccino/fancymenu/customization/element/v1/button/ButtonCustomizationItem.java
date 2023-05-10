@@ -7,7 +7,7 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorItem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -42,7 +42,7 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 	public String labelRaw;
 	public String tooltip;
 	
-	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
+	public List<ActionExecutor.ActionContainer> actions = new ArrayList<>();
 
 	public ButtonCustomizationItem(PropertiesSection item) {
 		super(item);
@@ -101,18 +101,18 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 								action = s.split(";", 2)[0];
 								value = s.split(";", 2)[1];
 							}
-							this.actions.add(new ButtonScriptEngine.ActionContainer(action, value));
+							this.actions.add(new ActionExecutor.ActionContainer(action, value));
 						}
 					}
 				} else {
-					this.actions.add(new ButtonScriptEngine.ActionContainer(buttonaction, actionvalue));
+					this.actions.add(new ActionExecutor.ActionContainer(buttonaction, actionvalue));
 				}
 			}
 			
 
 			
 			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (press) -> {
-				for (ButtonScriptEngine.ActionContainer c : this.actions) {
+				for (ActionExecutor.ActionContainer c : this.actions) {
 					c.execute();
 				}
 			});
@@ -289,7 +289,7 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 
 	
 	@Override
-	public List<ButtonScriptEngine.ActionContainer> getActionList() {
+	public List<ActionExecutor.ActionContainer> getActionList() {
 		return this.actions;
 	}
 

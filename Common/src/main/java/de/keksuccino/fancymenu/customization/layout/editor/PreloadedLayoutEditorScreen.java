@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundType;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.customization.deepcustomization.*;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -32,7 +32,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.elements.button.Layou
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.math.MathUtils;

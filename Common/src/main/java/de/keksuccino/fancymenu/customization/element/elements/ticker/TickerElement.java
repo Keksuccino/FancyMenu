@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.ticker;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine.ActionContainer;
+import de.keksuccino.fancymenu.customization.action.ActionExecutor.ActionContainer;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorItem;
 import de.keksuccino.konkrete.localization.Locals;

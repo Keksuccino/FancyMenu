@@ -1,18 +1,13 @@
 package de.keksuccino.fancymenu.customization.action.actions.variables;
 
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.konkrete.localization.Locals;
 
-public class ClearVariablesAction extends ButtonActionContainer {
+public class ClearVariablesAction extends Action {
 
     public ClearVariablesAction() {
-        super("fancymenu_buttonaction_clear_all_variables");
-    }
-
-    @Override
-    public String getAction() {
-        return "clear_variables";
+        super("clear_variables");
     }
 
     @Override

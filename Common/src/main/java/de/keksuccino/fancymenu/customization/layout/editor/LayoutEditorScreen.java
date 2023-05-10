@@ -11,7 +11,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.element.v1.*;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.ButtonBackgroundPopup;
@@ -20,7 +20,7 @@ import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomization
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -1466,7 +1466,7 @@ public class LayoutEditorScreen extends Screen {
 
 		if ((this instanceof PreloadedLayoutEditorScreen) && (((PreloadedLayoutEditorScreen)this).single != null)) {
 
-			if (!LayoutHandler.saveLayout(this.getAllProperties(), ((PreloadedLayoutEditorScreen)this).single)) {
+			if (!LayoutHandler.saveLayoutToFile(this.getAllProperties(), ((PreloadedLayoutEditorScreen)this).single)) {
 				this.saveLayoutAs();
 			} else {
 				LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();
@@ -1497,7 +1497,7 @@ public class LayoutEditorScreen extends Screen {
 					String file = FancyMenu.getCustomizationsDirectory().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
 					File f = new File(file);
 					if (!f.exists()) {
-						if (!LayoutHandler.saveLayout(this.getAllProperties(), file)) {
+						if (!LayoutHandler.saveLayoutToFile(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
 						} else {
 							LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();

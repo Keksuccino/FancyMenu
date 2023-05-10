@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.api.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -25,7 +25,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.elements.*;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutButton;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
@@ -240,33 +240,33 @@ public class LayoutEditorScreenOLD extends Screen {
 		meta.addEntry("randomgroup", this.randomGroup);
 		meta.addEntry("randomonlyfirsttime", "" + this.randomOnlyFirstTime);
 		
-		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
-			meta.addEntry("requiredmods", this.requiredmods);
-		}
-		if ((this.minimumMC != null) && !this.minimumMC.replace(" ", "").equals("")) {
-			meta.addEntry("minimummcversion", this.minimumMC);
-		}
-		if ((this.maximumMC != null) && !this.maximumMC.replace(" ", "").equals("")) {
-			meta.addEntry("maximummcversion", this.maximumMC);
-		}
-		if ((this.minimumFM != null) && !this.minimumFM.replace(" ", "").equals("")) {
-			meta.addEntry("minimumfmversion", this.minimumFM);
-		}
-		if ((this.maximumFM != null) && !this.maximumFM.replace(" ", "").equals("")) {
-			meta.addEntry("maximumfmversion", this.maximumFM);
-		}
-		if (this.biggerThanWidth != 0) {
-			meta.addEntry("biggerthanwidth", "" + this.biggerThanWidth);
-		}
-		if (this.biggerThanHeight != 0) {
-			meta.addEntry("biggerthanheight", "" + this.biggerThanHeight);
-		}
-		if (this.smallerThanWidth != 0) {
-			meta.addEntry("smallerthanwidth", "" + this.smallerThanWidth);
-		}
-		if (this.smallerThanHeight != 0) {
-			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
-		}
+//		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
+//			meta.addEntry("requiredmods", this.requiredmods);
+//		}
+//		if ((this.minimumMC != null) && !this.minimumMC.replace(" ", "").equals("")) {
+//			meta.addEntry("minimummcversion", this.minimumMC);
+//		}
+//		if ((this.maximumMC != null) && !this.maximumMC.replace(" ", "").equals("")) {
+//			meta.addEntry("maximummcversion", this.maximumMC);
+//		}
+//		if ((this.minimumFM != null) && !this.minimumFM.replace(" ", "").equals("")) {
+//			meta.addEntry("minimumfmversion", this.minimumFM);
+//		}
+//		if ((this.maximumFM != null) && !this.maximumFM.replace(" ", "").equals("")) {
+//			meta.addEntry("maximumfmversion", this.maximumFM);
+//		}
+//		if (this.biggerThanWidth != 0) {
+//			meta.addEntry("biggerthanwidth", "" + this.biggerThanWidth);
+//		}
+//		if (this.biggerThanHeight != 0) {
+//			meta.addEntry("biggerthanheight", "" + this.biggerThanHeight);
+//		}
+//		if (this.smallerThanWidth != 0) {
+//			meta.addEntry("smallerthanwidth", "" + this.smallerThanWidth);
+//		}
+//		if (this.smallerThanHeight != 0) {
+//			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
+//		}
 		if (this.isUniversalLayout() && !this.universalLayoutWhitelist.isEmpty()) {
 			String wl = "";
 			for (String s : this.universalLayoutWhitelist) {
@@ -1446,7 +1446,7 @@ public class LayoutEditorScreenOLD extends Screen {
 
 		if ((this instanceof PreloadedLayoutEditorScreen) && (((PreloadedLayoutEditorScreen)this).single != null)) {
 
-			if (!LayoutHandler.saveLayout(this.getAllProperties(), ((PreloadedLayoutEditorScreen)this).single)) {
+			if (!LayoutHandler.saveLayoutToFile(this.getAllProperties(), ((PreloadedLayoutEditorScreen)this).single)) {
 				this.saveLayoutAs();
 			} else {
 				LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();
@@ -1477,7 +1477,7 @@ public class LayoutEditorScreenOLD extends Screen {
 					String file = FancyMenu.getCustomizationsDirectory().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
 					File f = new File(file);
 					if (!f.exists()) {
-						if (!LayoutHandler.saveLayout(this.getAllProperties(), file)) {
+						if (!LayoutHandler.saveLayoutToFile(this.getAllProperties(), file)) {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
 						} else {
 							LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();

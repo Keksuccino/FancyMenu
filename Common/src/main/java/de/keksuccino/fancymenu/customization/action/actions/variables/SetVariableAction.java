@@ -1,18 +1,13 @@
 package de.keksuccino.fancymenu.customization.action.actions.variables;
 
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.konkrete.localization.Locals;
 
-public class SetVariableAction extends ButtonActionContainer {
+public class SetVariableAction extends Action {
 
     public SetVariableAction() {
-        super("fancymenu_buttonaction_setvariable");
-    }
-
-    @Override
-    public String getAction() {
-        return "set_variable";
+        super("set_variable");
     }
 
     @Override
@@ -24,8 +19,8 @@ public class SetVariableAction extends ButtonActionContainer {
     public void execute(String value) {
         if (value != null) {
             if (value.contains(":")) {
-                String name = value.split("[:]", 2)[0];
-                String val = value.split("[:]", 2)[1];
+                String name = value.split(":", 2)[0];
+                String val = value.split(":", 2)[1];
                 VariableHandler.setVariable(name, val);
             }
         }

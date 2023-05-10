@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.customization.layout.editor.elements;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.background.MenuBackground;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
-import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundType;
+import de.keksuccino.fancymenu.customization.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.konkrete.input.*;

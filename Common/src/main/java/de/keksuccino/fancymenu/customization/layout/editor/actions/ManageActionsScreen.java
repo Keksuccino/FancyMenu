@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
+import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
@@ -291,7 +291,7 @@ public class ManageActionsScreen extends Screen {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.action.getAction()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
+            this.displayNameComponent = Component.literal(this.instance.action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
             String valueString = ((this.instance.value != null) && this.instance.action.hasValue()) ? this.instance.value : Locals.localize("fancymenu.editor.action.screens.manage_screen.info.value.none");
             this.valueComponent = Component.literal(Locals.localize("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
 
@@ -334,10 +334,10 @@ public class ManageActionsScreen extends Screen {
 
     public static class ActionInstance {
 
-        public ButtonActionContainer action;
+        public Action action;
         public String value;
 
-        public ActionInstance(ButtonActionContainer action, @Nullable String value) {
+        public ActionInstance(Action action, @Nullable String value) {
             this.action = action;
             this.value = value;
         }

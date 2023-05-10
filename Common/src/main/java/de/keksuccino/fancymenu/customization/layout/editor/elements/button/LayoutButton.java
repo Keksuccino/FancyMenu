@@ -7,9 +7,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
-import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
@@ -36,7 +36,7 @@ public class LayoutButton extends AbstractEditorElement {
 	private AdvancedButton onlySingleplayerBtn;
 	private AdvancedButton onlyMultiplayerBtn;
 	
-	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
+	public List<ActionExecutor.ActionContainer> actions = new ArrayList<>();
 
 	public LayoutButton(ScreenCustomizationLayer.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, label, width, height, 0, 0), true, handler, false);
@@ -74,8 +74,8 @@ public class LayoutButton extends AbstractEditorElement {
 		
 		AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
 			List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
-			for (ButtonScriptEngine.ActionContainer c : this.actions) {
-				ButtonActionContainer bac = ButtonActionRegistry.getActionByName(c.action);
+			for (ActionExecutor.ActionContainer c : this.actions) {
+				Action bac = ActionRegistry.getActionByName(c.action);
 				if (bac != null) {
 					ManageActionsScreen.ActionInstance i = new ManageActionsScreen.ActionInstance(bac, c.value);
 					l.add(i);
@@ -86,7 +86,7 @@ public class LayoutButton extends AbstractEditorElement {
 					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					this.actions.clear();
 					for (ManageActionsScreen.ActionInstance i : call) {
-						this.actions.add(new ButtonScriptEngine.ActionContainer(i.action.getAction(), i.value));
+						this.actions.add(new ActionExecutor.ActionContainer(i.action.getIdentifier(), i.value));
 					}
 				}
 			});
@@ -397,7 +397,7 @@ public class LayoutButton extends AbstractEditorElement {
 
 		if (!this.actions.isEmpty()) {
 			String buttonaction = "";
-			for (ButtonScriptEngine.ActionContainer c : this.actions) {
+			for (ActionExecutor.ActionContainer c : this.actions) {
 				String s2 = c.action;
 				if (c.value != null) {
 					s2 += ";" + c.value;

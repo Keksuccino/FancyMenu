@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.button.ButtonCache;
-import de.keksuccino.fancymenu.customization.button.ButtonScriptEngine;
+import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deepcustomization.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.customization.layer.layers.ScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.loadingrequirement.v2.requirements.LoadingRequirements;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.v1.placeholders.Placeholders;
@@ -103,7 +103,7 @@ public class ScreenCustomization {
 
 		readCustomizableScreensFromFile();
 
-		ButtonScriptEngine.init();
+		ActionExecutor.init();
 
 		LastWorldHandler.init();
 
