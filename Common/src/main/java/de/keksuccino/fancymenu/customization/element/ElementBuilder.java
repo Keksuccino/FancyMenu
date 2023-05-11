@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -27,9 +28,17 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final String identifier;
+    private final List<String> alternativeIdentifiers = new ArrayList<>();
 
     public ElementBuilder(@NotNull String uniqueElementIdentifier) {
+        this(uniqueElementIdentifier, (String[]) null);
+    }
+
+    public ElementBuilder(@NotNull String uniqueElementIdentifier, @Nullable String... alternativeIdentifiers) {
         this.identifier = uniqueElementIdentifier;
+        if (alternativeIdentifiers != null) {
+            this.alternativeIdentifiers.addAll(Arrays.asList(alternativeIdentifiers));
+        }
     }
 
     /**
@@ -278,6 +287,11 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
     @NotNull
     public String getIdentifier() {
         return this.identifier;
+    }
+
+    @NotNull
+    public List<String> getAlternativeIdentifiers() {
+        return new ArrayList<>(this.alternativeIdentifiers);
     }
 
     private static SerializedElement removeReservedPropertyKeys(SerializedElement serializedElement) {

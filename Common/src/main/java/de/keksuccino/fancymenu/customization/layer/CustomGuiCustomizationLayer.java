@@ -10,9 +10,9 @@ public class CustomGuiCustomizationLayer extends ScreenCustomizationLayer {
 	}
 
 	@Override
-	protected boolean shouldCustomize(Screen menu) {
-		if (menu instanceof CustomGuiBase) {
-			if (((CustomGuiBase) menu).getIdentifier().equals(this.getIdentifier())) {
+	protected boolean shouldCustomize(Screen screen) {
+		if (screen instanceof CustomGuiBase) {
+			if (((CustomGuiBase) screen).getIdentifier().equals(this.getIdentifier())) {
 				return true;
 			}
 		}

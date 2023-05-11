@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
+import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deepcustomization.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
@@ -67,6 +68,8 @@ public class ScreenCustomization {
 
 		ScreenCustomizationLayerHandler.init();
 		ScreenCustomizationLayers.registerAll();
+
+		VanillaButtonHandler.init();
 
 		DeepCustomizationLayers.registerAll();
 

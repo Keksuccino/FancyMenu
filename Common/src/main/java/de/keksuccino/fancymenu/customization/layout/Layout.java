@@ -1,11 +1,16 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -32,6 +37,7 @@ public class Layout extends LayoutBase {
     public List<String> universalLayoutMenuBlacklist = new ArrayList<>();
     public LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
     public List<SerializedElement> serializedElements = new ArrayList<>();
+    public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
 
     public PropertiesSet serialize() {
 
@@ -191,6 +197,42 @@ public class Layout extends LayoutBase {
 
             }
 
+            //TODO add compatibility layer to load button customizations in old format
+            //Handle vanilla buttons
+            for (PropertiesSection sec : serialized.getPropertiesOfType("vanilla_button")) {
+                layout.serializedVanillaButtonElements.add(convertSectionToElement(sec, "vanilla_button"));
+            }
+
+            //Handle elements
+            List<PropertiesSection> potentialSerializedElements = new ArrayList<>(serialized.getPropertiesOfType("element"));
+            potentialSerializedElements.addAll(serialized.getPropertiesOfType("customization"));
+            for (PropertiesSection sec : potentialSerializedElements) {
+                String elementType = sec.getEntryValue("element_type");
+                if (elementType == null) {
+                    elementType = sec.getEntryValue("action");
+                }
+                if (elementType != null) {
+                    elementType = elementType.replace("custom_layout_element:", "");
+                    if (ElementRegistry.hasBuilder(elementType)) {
+                        layout.serializedElements.add(convertSectionToElement(sec));
+                    }
+                }
+            }
+
+            //Handle menu backgrounds
+            List<PropertiesSection> menuBackgroundSections = serialized.getPropertiesOfType("menu_background");
+            if (!menuBackgroundSections.isEmpty()) {
+                PropertiesSection menuBack = menuBackgroundSections.get(0);
+                String backgroundIdentifier = menuBack.getEntryValue("background_type");
+                if (backgroundIdentifier != null) {
+                    MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
+                    if (builder != null) {
+                        layout.menuBackground = builder.deserializeBackground(convertSectionToBackground(menuBack));
+                    }
+                }
+            }
+
+            //Handle everything that's not elements or other stuff
             for (PropertiesSection sec : serialized.getPropertiesOfType("customization")) {
 
                 String action = sec.getEntryValue("action");
@@ -240,6 +282,7 @@ public class Layout extends LayoutBase {
                         if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
                             try {
                                 layout.closeAudio = "closesound_" + path + Files.size(f.toPath());
+                                SoundRegistry.registerSound(layout.closeAudio, path);
                             } catch (Exception ex) {
                                 ex.printStackTrace();
                             }
@@ -259,6 +302,7 @@ public class Layout extends LayoutBase {
                             if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
                                 try {
                                     layout.openAudio = "opensound_" + path + Files.size(f.toPath());
+                                    SoundRegistry.registerSound(layout.openAudio, path);
                                 } catch (Exception ex) {
                                     ex.printStackTrace();
                                 }
@@ -267,18 +311,6 @@ public class Layout extends LayoutBase {
                     }
                 }
 
-            }
-
-            List<PropertiesSection> menuBackgroundSections = serialized.getPropertiesOfType("menu_background");
-            if (!menuBackgroundSections.isEmpty()) {
-                PropertiesSection menuBack = menuBackgroundSections.get(0);
-                String backgroundIdentifier = menuBack.getEntryValue("background_type");
-                if (backgroundIdentifier != null) {
-                    MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
-                    if (builder != null) {
-                        layout.menuBackground = builder.deserializeBackground(convertSectionToBackground(menuBack));
-                    }
-                }
             }
 
             return layout;
@@ -304,6 +336,44 @@ public class Layout extends LayoutBase {
             return this.layoutWideLoadingRequirementContainer.requirementsMet();
         }
         return true;
+    }
+
+    @NotNull
+    public OrderedElementCollection buildElementInstances() {
+        OrderedElementCollection collection = new OrderedElementCollection();
+        for (SerializedElement serialized : this.serializedElements) {
+            String elementType = serialized.getEntryValue("element_type");
+            if (elementType == null) {
+                elementType = serialized.getEntryValue("action");
+            }
+            if (elementType != null) {
+                elementType = elementType.replace("custom_layout_element:", "");
+                ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(elementType);
+                if (builder != null) {
+                    AbstractElement element = builder.deserializeElementInternal(serialized);
+                    if (element != null) {
+                        if (this.renderCustomElementsBehindVanilla) {
+                            collection.backgroundElements.add(element);
+                        } else {
+                            collection.foregroundElements.add(element);
+                        }
+                    }
+                }
+            }
+        }
+        return collection;
+    }
+
+    @NotNull
+    public List<VanillaButtonElement> buildVanillaButtonElementInstances() {
+        List<VanillaButtonElement> elements = new ArrayList<>();
+        for (SerializedElement serialized : this.serializedVanillaButtonElements) {
+            VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.deserializeElementInternal(serialized);
+            if (element != null) {
+                elements.add(element);
+            }
+        }
+        return elements;
     }
 
     @NotNull
@@ -341,6 +411,13 @@ public class Layout extends LayoutBase {
         }
 
         return layout;
+
+    }
+
+    public static class OrderedElementCollection {
+
+        public List<AbstractElement> foregroundElements = new ArrayList<>();
+        public List<AbstractElement> backgroundElements = new ArrayList<>();
 
     }
 

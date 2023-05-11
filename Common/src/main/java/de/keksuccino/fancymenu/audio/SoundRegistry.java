@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.audio;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.konkrete.sound.SoundHandler;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class SoundRegistry {
         if (!REGISTERED_SOUNDS.contains(key)) {
             REGISTERED_SOUNDS.add(key);
         }
-        SoundHandler.registerSound(key, path);
+        SoundHandler.registerSound(key, ScreenCustomization.getAbsoluteGameDirectoryPath(path));
     }
 
     public static void unregisterSound(String key) {

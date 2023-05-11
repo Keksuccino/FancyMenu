@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements;
 
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
+import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.SliderElementBuilder;
@@ -11,6 +12,7 @@ public class Elements {
 
     public static void registerAll() {
 
+        ElementRegistry.register(new ButtonElementBuilder());
         ElementRegistry.register(new InputFieldElementBuilder());
         ElementRegistry.register(new SliderElementBuilder());
         ElementRegistry.register(new TextElementBuilder());

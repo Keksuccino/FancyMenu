@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.IActionExecutorItem;
+import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
@@ -26,7 +26,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class ButtonCustomizationItem extends AbstractElement implements IActionExecutorItem {
+public class ButtonCustomizationItem extends AbstractElement implements IActionExecutorElement {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -56,10 +56,6 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
 
-			
-//			if (buttonaction == null) {
-//				return;
-//			}
 			if (actionvalue == null) {
 				actionvalue = "";
 			}

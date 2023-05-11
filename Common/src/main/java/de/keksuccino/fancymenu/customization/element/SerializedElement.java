@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import de.keksuccino.fancymenu.misc.OverrideablePropertiesSection;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A serialized {@link AbstractElement}.
@@ -8,7 +9,11 @@ import de.keksuccino.fancymenu.misc.OverrideablePropertiesSection;
 public class SerializedElement extends OverrideablePropertiesSection {
 
     public SerializedElement() {
-        super("customization");
+        super("element");
+    }
+
+    public SerializedElement(@NotNull String type) {
+        super(type);
     }
 
 }

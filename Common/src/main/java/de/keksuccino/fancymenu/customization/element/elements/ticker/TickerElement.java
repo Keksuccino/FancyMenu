@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor.ActionContainer;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IActionExecutorItem;
+import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -17,7 +17,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-public class TickerElement extends AbstractElement implements IActionExecutorItem {
+public class TickerElement extends AbstractElement implements IActionExecutorElement {
 
     public volatile List<ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;

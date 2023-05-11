@@ -44,7 +44,11 @@ public class LayoutBase {
     }
 
     protected static SerializedElement convertSectionToElement(PropertiesSection sec) {
-        SerializedElement e = new SerializedElement();
+        return convertSectionToElement(sec, "element");
+    }
+
+    protected static SerializedElement convertSectionToElement(PropertiesSection sec, String type) {
+        SerializedElement e = new SerializedElement(type);
         for (Map.Entry<String, String> m : sec.getEntries().entrySet()) {
             e.addEntry(m.getKey(), m.getValue());
         }
