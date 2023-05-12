@@ -12,6 +12,9 @@ public class SerializedElement extends OverrideablePropertiesSection {
         super("element");
     }
 
+    /**
+     * Only for <b>internal</b> use. Don't touch this if you don't know what you're doing!
+     */
     public SerializedElement(@NotNull String type) {
         super(type);
     }

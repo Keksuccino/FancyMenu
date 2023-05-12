@@ -199,12 +199,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
     }
 
     /**
-     * Will serialize the given {@link AbstractElement} instance.<br>
+     * Will serialize the given {@link AbstractElement} instance to the given {@link SerializedElement}.<br>
      * All base properties like width, height, x, y, orientation, etc. are handled by
      * {@link ElementBuilder#serializeElementInternal(AbstractElement)},
-     *  so just serialize the <b>custom</b> properties of the element type here.
+     *  so just serialize the <b>custom</b> properties of the element type here.<br>
+     *  Return the {@link SerializedElement} instance at the end.
      */
-    protected abstract SerializedElement serializeElement(@NotNull E element);
+    protected abstract SerializedElement serializeElement(@NotNull E element, @NotNull SerializedElement serializeTo);
 
     /**
      * Only for internal use. Don't touch this if you don't know what you're doing!
@@ -214,7 +215,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
         try {
 
-            SerializedElement sec = removeReservedPropertyKeys(this.serializeElement((E) element));
+            SerializedElement sec = removeReservedPropertyKeys(this.serializeElement((E) element, new SerializedElement()));
 
             //sec.addEntry("action", "custom_layout_element:" + element.builder.getIdentifier());
             sec.addEntry("element_type", element.builder.getIdentifier());
@@ -299,7 +300,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 "action",
                 "element_type",
                 "actionid",
-                "instance_identifier"
+                "instance_identifier",
+                "button_identifier"
         );
         List<String> removed = new ArrayList<>();
         for (String s : reserved) {

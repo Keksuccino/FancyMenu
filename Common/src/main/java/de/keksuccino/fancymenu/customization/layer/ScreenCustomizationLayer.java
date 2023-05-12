@@ -8,8 +8,6 @@ import com.mojang.blaze3d.platform.Window;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.element.SerializedElement;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
@@ -30,19 +28,17 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.v1.button.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,7 +52,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	protected String identifier;
 
 	protected LayoutBase layoutBase = new LayoutBase();
-	protected Layout.OrderedElementCollection elements = new Layout.OrderedElementCollection();
+	protected List<AbstractElement> allElements = new ArrayList<>();
+	protected Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
 	protected List<VanillaButtonElement> vanillaButtonElements = new ArrayList<>();
 	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
 	protected List<Layout> activeLayouts = new ArrayList<>();
@@ -87,7 +84,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	}
 
 	@EventListener
-	public void onSoftReload(ScreenReloadEvent e) {
+	public void onScreenReload(ScreenReloadEvent e) {
 		if (this.shouldCustomize(e.getScreen())) {
 			this.delayAppearanceFirstTime.clear();
 			this.isNewMenu = true;
@@ -98,7 +95,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	}
 
 	@EventListener
-	public void onMenuReloaded(ModReloadEvent e) {
+	public void onModReload(ModReloadEvent e) {
 		this.delayAppearanceFirstTime.clear();
 		this.isNewMenu = true;
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
@@ -142,8 +139,9 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 		this.activeLayouts.clear();
 		this.layoutBase = new LayoutBase();
-		this.elements = new Layout.OrderedElementCollection();
+		this.normalElements = new Layout.OrderedElementCollection();
 		this.vanillaButtonElements.clear();
+		this.allElements.clear();
 		this.backgroundOpacity = 1.0F;
 		this.backgroundDrawable = false;
 		this.cachedLayoutWideLoadingRequirements.clear();
@@ -242,34 +240,60 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
+		Map<ButtonData, List<VanillaButtonElement>> unstackedVanillaElements = new HashMap<>();
 		for (Layout layout : this.activeLayouts) {
 			//Construct element instances
 			Layout.OrderedElementCollection layoutElements = layout.buildElementInstances();
-			this.elements.foregroundElements.addAll(layoutElements.foregroundElements);
-			this.elements.backgroundElements.addAll(layoutElements.backgroundElements);
-			//Load vanilla button customizations
+			this.normalElements.foregroundElements.addAll(layoutElements.foregroundElements);
+			this.normalElements.backgroundElements.addAll(layoutElements.backgroundElements);
+			this.allElements.addAll(this.normalElements.foregroundElements);
+			this.allElements.addAll(this.normalElements.backgroundElements);
+			//Construct vanilla button element instances
 			for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
 				ButtonData d = ButtonCache.getButtonForCompatibilityId(element.vanillaButtonIdentifier);
 				if ((d == null) && MathUtils.isLong(element.vanillaButtonIdentifier)) {
 					d = ButtonCache.getButtonForId(Long.parseLong(element.vanillaButtonIdentifier));
 				}
 				if (d != null) {
-					element.buttonData = d;
-					element.button = d.getButton();
-					this.vanillaButtonElements.add(element);
-					this.elements.backgroundElements.add(element);
+					element.setVanillaButton(d);
+					if (!unstackedVanillaElements.containsKey(d)) {
+						unstackedVanillaElements.put(d, new ArrayList<>());
+					}
+					unstackedVanillaElements.get(d).add(element);
 				}
+			}
+		}
+		//Add missing vanilla button element instances
+		for (ButtonData d : e.getButtonDataList()) {
+			if (!unstackedVanillaElements.containsKey(d)) {
+				VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance();
+				element.setVanillaButton(d);
+				if (!unstackedVanillaElements.containsKey(d)) {
+					unstackedVanillaElements.put(d, new ArrayList<>());
+				}
+				unstackedVanillaElements.get(d).add(element);
+			}
+		}
+		//Stack collected vanilla button elements, so only one element per button is active at the same time
+		for (Map.Entry<ButtonData, List<VanillaButtonElement>> m : unstackedVanillaElements.entrySet()) {
+			if (!m.getValue().isEmpty()) {
+				VanillaButtonElement stacked = VanillaButtonElement.stackElements(m.getValue().toArray(new VanillaButtonElement[0]));
+				if (stacked != null) {
+					this.vanillaButtonElements.add(stacked);
+					this.allElements.add(stacked);
+				}
+			}
+		}
+		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
+		if (e.getScreen() != null) {
+			for (ButtonData d : e.getButtonDataList()) {
+				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getButton());
 			}
 		}
 
 		//Handle appearance delay
-		for (AbstractElement i : this.elements.foregroundElements) {
-			if (ScreenCustomization.isNewMenu()) {
-				this.handleAppearanceDelayFor(i);
-			}
-		}
-		for (AbstractElement i : this.elements.backgroundElements) {
-			if (ScreenCustomization.isNewMenu()) {
+		for (AbstractElement i : this.allElements) {
+			if (this.isNewMenu) {
 				this.handleAppearanceDelayFor(i);
 			}
 		}
@@ -279,59 +303,57 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	}
 
 	protected void handleAppearanceDelayFor(AbstractElement element) {
-		if (!(element instanceof VanillaButtonCustomizationItem)) {
-			if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
-				if (element.getInstanceIdentifier() == null) {
-					return;
+		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
+			if (element.getInstanceIdentifier() == null) {
+				return;
+			}
+			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
+				return;
+			}
+			if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
+				if (!this.delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
+					delayAppearanceFirstTime.add(element.getInstanceIdentifier());
 				}
-				if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
-					return;
-				}
-				if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
-					if (!this.delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
-						delayAppearanceFirstTime.add(element.getInstanceIdentifier());
-					}
-				}
-				element.visible = false;
-				if (element.fadeIn) {
-					element.opacity = 0.1F;
-				}
-				ThreadCaller c = new ThreadCaller();
-				this.delayThreads.add(c);
-				new Thread(() -> {
-					long start = System.currentTimeMillis();
-					float delay = (float) (1000.0 * element.appearanceDelayInSeconds);
-					boolean fade = false;
-					while (c.running.get()) {
-						try {
-							long now = System.currentTimeMillis();
-							if (!fade) {
-								if (now >= start + (int)delay) {
-									element.visible = true;
-									if (!element.fadeIn) {
-										return;
-									} else {
-										fade = true;
-									}
-								}
-							} else {
-								float o = element.opacity + (0.03F * element.fadeInSpeed);
-								if (o > 1.0F) {
-									o = 1.0F;
-								}
-								if (element.opacity < 1.0F) {
-									element.opacity = o;
-								} else {
+			}
+			element.visible = false;
+			if (element.fadeIn) {
+				element.opacity = 0.1F;
+			}
+			ThreadCaller c = new ThreadCaller();
+			this.delayThreads.add(c);
+			new Thread(() -> {
+				long start = System.currentTimeMillis();
+				float delay = (float) (1000.0 * element.appearanceDelayInSeconds);
+				boolean fade = false;
+				while (c.running.get()) {
+					try {
+						long now = System.currentTimeMillis();
+						if (!fade) {
+							if (now >= start + (int)delay) {
+								element.visible = true;
+								if (!element.fadeIn) {
 									return;
+								} else {
+									fade = true;
 								}
 							}
-							Thread.sleep(50);
-						} catch (Exception e) {
-							e.printStackTrace();
+						} else {
+							float o = element.opacity + (0.03F * element.fadeInSpeed);
+							if (o > 1.0F) {
+								o = 1.0F;
+							}
+							if (element.opacity < 1.0F) {
+								element.opacity = o;
+							} else {
+								return;
+							}
 						}
+						Thread.sleep(50);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-				}).start();
-			}
+				}
+			}).start();
 		}
 	}
 
@@ -341,12 +363,17 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		//Re-init screen if layout-wide requirements changed
+		//Re-init screen if layout-wide loading requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
 				e.getScreen().resize(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
 				break;
 			}
+		}
+
+		//Set custom menu title
+		if ((this.layoutBase.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
+			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
 		}
 
 	}
@@ -357,21 +384,20 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		if ((this.layoutBase.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
-			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
-		}
-
 		//Render background elements in foreground if it wasn't possible to render to the menu background
 		if (!this.backgroundDrawable) {
-			List<AbstractElement> background = new ArrayList<>(this.elements.backgroundElements);
-			for (AbstractElement element : background) {
+			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
 				element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
 
+		//Render vanilla button elements
+		for (AbstractElement element : new ArrayList<>(this.vanillaButtonElements)) {
+			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+		}
+
 		//Render foreground elements
-		List<AbstractElement> foreground = new ArrayList<>(this.elements.foregroundElements);
-		for (AbstractElement element : foreground) {
+		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
@@ -387,13 +413,9 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	@EventListener
 	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
 		Screen s = Minecraft.getInstance().screen;
-		if (this.shouldCustomize(s)) {
-			if (ScreenCustomization.isCustomizationEnabledForScreen(s)) {
-				//Allow background stuff to be rendered in scrollable GUIs
-				if (Minecraft.getInstance().screen != null) {
-					this.renderBackground(e.getPoseStack(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), s);
-				}
-			}
+		if ((s != null) && this.shouldCustomize(s)) {
+			//Allow background rendering in scrollable GUIs
+			this.renderBackground(e.getPoseStack(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), s);
 		}
 	}
 
@@ -410,8 +432,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		if (PopupHandler.isPopupActive()) return;
 
 		//Render background elements
-		List<AbstractElement> background = new ArrayList<>(this.elements.backgroundElements);
-		for (AbstractElement elements : background) {
+		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
 			elements.render(pose, mouseX, mouseY, partial);
 		}
 
@@ -421,36 +442,23 @@ public class ScreenCustomizationLayer extends GuiComponent {
 
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
-		List<AbstractElement> combined = new ArrayList<>(this.elements.backgroundElements);
-		combined.addAll(this.elements.foregroundElements);
-		for (AbstractElement element : combined) {
-			if (element instanceof VanillaButtonCustomizationItem) {
-				String id = "vanillabtn:" + ((VanillaButtonCustomizationItem)element).getButtonId();
-				if (id.equals(instanceIdentifier)) {
-					return element;
+		for (AbstractElement element : this.allElements) {
+			if (element instanceof VanillaButtonElement) {
+				ButtonData d = ((VanillaButtonElement)element).buttonData;
+				if (d != null) {
+					String id = "vanillabtn:" + d.getId();
+					String idComp = (d.getCompatibilityId() != null) ? "vanillabtn:" + d.getCompatibilityId() : null;
+					if (id.equals(instanceIdentifier) || ("" + d.getId()).equals(instanceIdentifier)) {
+						return element;
+					}
+					if ((idComp != null) && ((idComp.equals(instanceIdentifier)) || (d.getCompatibilityId().equals(instanceIdentifier)))) {
+						return element;
+					}
 				}
 			} else {
 				if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
 					return element;
 				}
-			}
-		}
-		if (instanceIdentifier.startsWith("vanillabtn:")) {
-			String idRaw = instanceIdentifier.split(":", 2)[1];
-			ButtonData d;
-			if (MathUtils.isLong(idRaw)) {
-				d = ButtonCache.getButtonForId(Long.parseLong(idRaw));
-			} else {
-				d = ButtonCache.getButtonForCompatibilityId(idRaw);
-			}
-			if ((d != null) && (d.getButton() != null)) {
-				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
-				vb.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-				vb.baseX = d.getButton().x;
-				vb.baseY = d.getButton().y;
-				vb.width = d.getButton().getWidth();
-				vb.height = d.getButton().getHeight();
-				return vb;
 			}
 		}
 		return null;
@@ -465,25 +473,26 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		return true;
 	}
 
-	protected static ButtonData getVanillaButtonData(String identifier) {
-		if (identifier.startsWith("%id=")) {
-			String p = identifier.split("=")[1].replace("%", "");
-			if (MathUtils.isLong(p)) {
-				return ButtonCache.getButtonForId(Long.parseLong(p));
-			} else if (p.startsWith("button_compatibility_id:")) {
-				return ButtonCache.getButtonForCompatibilityId(p);
-			}
-		} else {
-			ButtonData b;
-			if (I18n.exists(identifier)) {
-				b = ButtonCache.getButtonForKey(identifier);
-			} else {
-				b = ButtonCache.getButtonForName(identifier);
-			}
-			return b;
-		}
-		return null;
-	}
+	//TODO remove this??
+//	protected static ButtonData getVanillaButtonData(String identifier) {
+//		if (identifier.startsWith("%id=")) {
+//			String p = identifier.split("=")[1].replace("%", "");
+//			if (MathUtils.isLong(p)) {
+//				return ButtonCache.getButtonForId(Long.parseLong(p));
+//			} else if (p.startsWith("button_compatibility_id:")) {
+//				return ButtonCache.getButtonForCompatibilityId(p);
+//			}
+//		} else {
+//			ButtonData b;
+//			if (I18n.exists(identifier)) {
+//				b = ButtonCache.getButtonForKey(identifier);
+//			} else {
+//				b = ButtonCache.getButtonForName(identifier);
+//			}
+//			return b;
+//		}
+//		return null;
+//	}
 
 	private static class ThreadCaller {
 		AtomicBoolean running = new AtomicBoolean(true);
@@ -534,7 +543,7 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		@Nullable
 		public Layout getRandomLayout() {
 			if (!this.layouts.isEmpty()) {
-				if ((this.onlyFirstTime || !ScreenCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
+				if ((this.onlyFirstTime || !this.parent.isNewMenu) && (this.lastLayoutPath != null)) {
 					File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.lastLayoutPath));
 					if (f.exists()) {
 						for (Layout layout : this.layouts) {

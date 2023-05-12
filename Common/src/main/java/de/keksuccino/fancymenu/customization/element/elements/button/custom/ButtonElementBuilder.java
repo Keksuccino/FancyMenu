@@ -76,7 +76,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.tooltip = serialized.getEntryValue("description");
 
         element.button = new Button(0, 0, 0, 0, Component.literal(""), true, (press) -> {
-            for (ActionExecutor.ActionContainer c : element.actions) {
+            for (ActionExecutor.ActionContainer c : element.getActionList()) {
                 c.execute();
             }
         });
@@ -114,9 +114,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     }
 
     @Override
-    protected @NotNull SerializedElement serializeElement(@NotNull ButtonElement element) {
-
-        SerializedElement serialized = new SerializedElement();
+    protected @NotNull SerializedElement serializeElement(@NotNull ButtonElement element, @NotNull SerializedElement serializeTo) {
 
         if ((element.actions != null) && !element.actions.isEmpty()) {
             String buttonaction = "";
@@ -127,40 +125,40 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
                 }
                 buttonaction += s2 + "%btnaction_splitter_fm%";
             }
-            serialized.addEntry("buttonaction", buttonaction);
+            serializeTo.addEntry("buttonaction", buttonaction);
         }
 
         if (element.backgroundTextureNormal != null) {
-            serialized.addEntry("backgroundnormal", element.backgroundTextureNormal);
+            serializeTo.addEntry("backgroundnormal", element.backgroundTextureNormal);
         }
         if (element.backgroundAnimationNormal != null) {
-            serialized.addEntry("backgroundanimationnormal", element.backgroundAnimationNormal);
+            serializeTo.addEntry("backgroundanimationnormal", element.backgroundAnimationNormal);
         }
         if (element.backgroundTextureHover != null) {
-            serialized.addEntry("backgroundhovered", element.backgroundTextureHover);
+            serializeTo.addEntry("backgroundhovered", element.backgroundTextureHover);
         }
         if (element.backgroundAnimationHover != null) {
-            serialized.addEntry("backgroundanimationhovered", element.backgroundAnimationHover);
+            serializeTo.addEntry("backgroundanimationhovered", element.backgroundAnimationHover);
         }
-        serialized.addEntry("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
-        serialized.addEntry("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
+        serializeTo.addEntry("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
+        serializeTo.addEntry("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
         if (element.hoverSound != null) {
-            serialized.addEntry("hoversound", element.hoverSound);
+            serializeTo.addEntry("hoversound", element.hoverSound);
         }
         if (element.hoverLabel != null) {
-            serialized.addEntry("hoverlabel", element.hoverLabel);
+            serializeTo.addEntry("hoverlabel", element.hoverLabel);
         }
         if (element.clickSound != null) {
-            serialized.addEntry("clicksound", element.clickSound);
+            serializeTo.addEntry("clicksound", element.clickSound);
         }
         if (element.tooltip != null) {
-            serialized.addEntry("description", element.tooltip);
+            serializeTo.addEntry("description", element.tooltip);
         }
         if (element.label != null) {
-            serialized.addEntry("label", element.label);
+            serializeTo.addEntry("label", element.label);
         }
 
-        return serialized;
+        return serializeTo;
 
     }
 

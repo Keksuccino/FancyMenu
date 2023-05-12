@@ -71,7 +71,7 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 			this.menuHandler = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
 			//If it's the first time a screen gets initialized, soft-reload the screen's handler, so first-time stuff works when fading to the Title menu
 			if ((this.menuHandler != null) && firstScreenInit) {
-				this.menuHandler.onSoftReload(new ScreenReloadEvent(Minecraft.getInstance().screen));
+				this.menuHandler.onScreenReload(new ScreenReloadEvent(Minecraft.getInstance().screen));
 			}
 			firstScreenInit = false;
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly, because the menu got initialized already (this is after screen init)

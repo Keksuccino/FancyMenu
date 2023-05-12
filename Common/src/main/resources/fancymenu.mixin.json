@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "client.IMixinAbstractWidget",
+    "client.IMixinButton",
     "client.IMixinChatScreen",
     "client.IMixinEditBox",
     "client.IMixinLevelLoadingScreen",

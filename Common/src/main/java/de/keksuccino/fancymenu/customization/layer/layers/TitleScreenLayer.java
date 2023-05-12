@@ -63,8 +63,8 @@ public class TitleScreenLayer extends ScreenCustomizationLayer {
 	}
 
 	@Override
-	public void onMenuReloaded(ModReloadEvent e) {
-		super.onMenuReloaded(e);
+	public void onModReload(ModReloadEvent e) {
+		super.onModReload(e);
 
 		TitleScreenSplashItem.cachedSplashText = null;
 	}

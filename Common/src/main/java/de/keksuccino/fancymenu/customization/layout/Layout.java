@@ -9,12 +9,17 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.misc.Legacy;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,14 +27,16 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Layout extends LayoutBase {
 
     public String menuIdentifier;
     public File layoutFile;
 
-    public boolean renderCustomElementsBehindVanilla = false;
+    public boolean renderElementsBehindVanilla = false;
     public boolean randomMode = false;
     public String randomGroup = "1";
     public boolean randomOnlyFirstTime = false;
@@ -39,6 +46,8 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedElements = new ArrayList<>();
     public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
 
+    //TODO compatibility layer für alte top-level customization sections wie addbackgroundanimation, backgroundtexture, etc. (siehe alte Customizationlayer klasse)
+
     public PropertiesSet serialize() {
 
         PropertiesSet set = new PropertiesSet("fancymenu_layout");
@@ -47,7 +56,7 @@ public class Layout extends LayoutBase {
         set.addProperties(meta);
 
         meta.addEntry("identifier", this.menuIdentifier);
-        meta.addEntry("render_custom_elements_behind_vanilla", "" + this.renderCustomElementsBehindVanilla);
+        meta.addEntry("render_custom_elements_behind_vanilla", "" + this.renderElementsBehindVanilla);
 
         meta.addEntry("randommode", "" + this.randomMode);
         meta.addEntry("randomgroup", this.randomGroup);
@@ -124,6 +133,7 @@ public class Layout extends LayoutBase {
         this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(meta);
 
         this.serializedElements.forEach(set::addProperties);
+        this.serializedVanillaButtonElements.forEach(set::addProperties);
 
         return set;
 
@@ -173,7 +183,7 @@ public class Layout extends LayoutBase {
                     }
                 }
                 if ((renderBehindVanilla != null) && renderBehindVanilla.equals("true")) {
-                    layout.renderCustomElementsBehindVanilla = true;
+                    layout.renderElementsBehindVanilla = true;
                 }
 
                 if (layout.isUniversalLayout()) {
@@ -197,16 +207,15 @@ public class Layout extends LayoutBase {
 
             }
 
-            //TODO add compatibility layer to load button customizations in old format
-            //Handle vanilla buttons
+            //Handle vanilla button elements
             for (PropertiesSection sec : serialized.getPropertiesOfType("vanilla_button")) {
                 layout.serializedVanillaButtonElements.add(convertSectionToElement(sec, "vanilla_button"));
             }
+            //Handle legacy vanilla button customizations
+            layout.serializedVanillaButtonElements.addAll(convertLegacyVanillaButtonCustomizations(serialized));
 
-            //Handle elements
-            List<PropertiesSection> potentialSerializedElements = new ArrayList<>(serialized.getPropertiesOfType("element"));
-            potentialSerializedElements.addAll(serialized.getPropertiesOfType("customization"));
-            for (PropertiesSection sec : potentialSerializedElements) {
+            //Handle normal elements
+            for (PropertiesSection sec : ListUtils.mergeLists(serialized.getPropertiesOfType("element"), serialized.getPropertiesOfType("customization"))) {
                 String elementType = sec.getEntryValue("element_type");
                 if (elementType == null) {
                     elementType = sec.getEntryValue("action");
@@ -214,7 +223,9 @@ public class Layout extends LayoutBase {
                 if (elementType != null) {
                     elementType = elementType.replace("custom_layout_element:", "");
                     if (ElementRegistry.hasBuilder(elementType)) {
-                        layout.serializedElements.add(convertSectionToElement(sec));
+                        SerializedElement e = convertSectionToElement(sec);
+                        e.addEntry("element_type", elementType);
+                        layout.serializedElements.add(e);
                     }
                 }
             }
@@ -232,15 +243,10 @@ public class Layout extends LayoutBase {
                 }
             }
 
-            //Handle everything that's not elements or other stuff
+            //Handle everything else
             for (PropertiesSection sec : serialized.getPropertiesOfType("customization")) {
 
                 String action = sec.getEntryValue("action");
-
-                if ((action != null) && action.startsWith("add_element:")) {
-                    layout.serializedElements.add(convertSectionToElement(sec));
-                    continue;
-                }
 
                 if ((action != null) && action.equals("setscale")) {
                     String scale = sec.getEntryValue("scale");
@@ -343,16 +349,12 @@ public class Layout extends LayoutBase {
         OrderedElementCollection collection = new OrderedElementCollection();
         for (SerializedElement serialized : this.serializedElements) {
             String elementType = serialized.getEntryValue("element_type");
-            if (elementType == null) {
-                elementType = serialized.getEntryValue("action");
-            }
             if (elementType != null) {
-                elementType = elementType.replace("custom_layout_element:", "");
                 ElementBuilder<?, ?> builder = ElementRegistry.getBuilder(elementType);
                 if (builder != null) {
                     AbstractElement element = builder.deserializeElementInternal(serialized);
                     if (element != null) {
-                        if (this.renderCustomElementsBehindVanilla) {
+                        if (this.renderElementsBehindVanilla) {
                             collection.backgroundElements.add(element);
                         } else {
                             collection.foregroundElements.add(element);
@@ -389,7 +391,7 @@ public class Layout extends LayoutBase {
         layout.keepBackgroundAspectRatio = this.keepBackgroundAspectRatio;
         layout.openAudio = this.openAudio;
         layout.closeAudio = this.closeAudio;
-        layout.renderCustomElementsBehindVanilla = this.renderCustomElementsBehindVanilla;
+        layout.renderElementsBehindVanilla = this.renderElementsBehindVanilla;
         layout.randomMode = this.randomMode;
         layout.randomGroup = this.randomGroup;
         layout.randomOnlyFirstTime = this.randomOnlyFirstTime;
@@ -409,8 +411,191 @@ public class Layout extends LayoutBase {
         for (SerializedElement e : this.serializedElements) {
             layout.serializedElements.add(convertSectionToElement(e));
         }
+        for (SerializedElement e : this.serializedVanillaButtonElements) {
+            layout.serializedVanillaButtonElements.add(convertSectionToElement(e, "vanilla_button"));
+        }
 
         return layout;
+
+    }
+
+    @Legacy("This converts old button customization sections and should get removed in the future.")
+    @NotNull
+    protected static List<SerializedElement> convertLegacyVanillaButtonCustomizations(PropertiesSet layout) {
+
+        Map<String, VanillaButtonElement> elements = new HashMap<>();
+
+        for (PropertiesSection sec : layout.getPropertiesOfType("customization")) {
+            VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance();
+            String action = sec.getEntryValue("action");
+            String identifier = sec.getEntryValue("identifier");
+            if ((identifier != null) && identifier.startsWith("%id=")) {
+                identifier = identifier.replace("%id=", "");
+                identifier = new StringBuilder(new StringBuilder(identifier).reverse().substring(1)).reverse().toString();
+            } else {
+                identifier = null;
+            }
+            if ((action != null) && (identifier != null)) {
+
+                element.vanillaButtonIdentifier = identifier;
+
+                boolean addElement = false;
+
+                if (action.equalsIgnoreCase("addhoversound")) {
+                    element.hoverSound = sec.getEntryValue("path");
+                    if (element.hoverSound != null) {
+                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.hoverSound));
+                        if (f.exists() && f.isFile()) {
+                            SoundRegistry.registerSound(element.hoverSound, element.hoverSound);
+                            addElement = true;
+                        } else {
+                            element.hoverSound = null;
+                        }
+                    }
+                }
+
+                if (action.equalsIgnoreCase("sethoverlabel")) {
+                    element.hoverLabel = sec.getEntryValue("label");
+                    if (element.hoverLabel != null) {
+                        addElement = true;
+                    }
+                }
+
+                if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
+                    element.label = sec.getEntryValue("value");
+                    if (element.label != null) {
+                        addElement = true;
+                    }
+                }
+
+                if (action.equalsIgnoreCase("movebutton")) {
+
+                    String x = sec.getEntryValue("x");
+                    String y = sec.getEntryValue("y");
+                    if (x != null) {
+                        x = PlaceholderParser.replacePlaceholders(x);
+                        if (MathUtils.isInteger(x)) {
+                            element.baseX = Integer.parseInt(x);
+                        }
+                    }
+                    if (y != null) {
+                        y = PlaceholderParser.replacePlaceholders(y);
+                        if (MathUtils.isInteger(y)) {
+                            element.baseY = Integer.parseInt(y);
+                        }
+                    }
+
+                    String anchor = sec.getEntryValue("orientation");
+                    if (anchor != null) {
+                        element.anchorPoint = ElementAnchorPoints.getAnchorPointByName(anchor);
+                        if (element.anchorPoint == null) {
+                            element.anchorPoint = ElementAnchorPoints.VANILLA;
+                        }
+                        if (element.anchorPoint != ElementAnchorPoints.VANILLA) {
+                            addElement = true;
+                        }
+                    }
+
+                    element.anchorPointElementIdentifier = sec.getEntryValue("orientation_element");
+
+                }
+
+                if (action.equalsIgnoreCase("setbuttondescription")) {
+                    element.tooltip = sec.getEntryValue("description");
+                    if (element.tooltip != null) {
+                        addElement = true;
+                    }
+                }
+
+                if (action.equalsIgnoreCase("hidebuttonfor")) {
+                    String seconds = sec.getEntryValue("seconds");
+                    String onlyFirstTime = sec.getEntryValue("onlyfirsttime");
+                    String fadeIn = sec.getEntryValue("fadein");
+                    String fadeInSpeed = sec.getEntryValue("fadeinspeed");
+                    if ((onlyFirstTime != null) && onlyFirstTime.equalsIgnoreCase("true")) {
+                        element.appearanceDelay = AbstractElement.AppearanceDelay.FIRST_TIME;
+                    } else {
+                        element.appearanceDelay = AbstractElement.AppearanceDelay.EVERY_TIME;
+                    }
+                    if ((seconds != null) && MathUtils.isFloat(seconds)) {
+                        element.appearanceDelayInSeconds = Float.parseFloat(seconds);
+                    }
+                    if ((fadeIn != null) && fadeIn.equalsIgnoreCase("true")) {
+                        if ((fadeInSpeed != null) && MathUtils.isFloat(fadeInSpeed)) {
+                            element.fadeIn = true;
+                            element.fadeInSpeed = Float.parseFloat(fadeInSpeed);
+                        }
+                    }
+                    addElement = true;
+                }
+
+                if (action.equalsIgnoreCase("hidebutton")) {
+                    element.vanillaButtonHidden = true;
+                    addElement = true;
+                }
+
+                if (action.equalsIgnoreCase("setbuttontexture")) {
+                    String loopBackAnimations = sec.getEntryValue("loopbackgroundanimations");
+                    if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
+                        element.loopBackgroundAnimations = false;
+                    }
+                    String restartBackAnimationsOnHover = sec.getEntryValue("restartbackgroundanimations");
+                    if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
+                        element.restartBackgroundAnimationsOnHover = false;
+                    }
+                    element.backgroundTextureNormal = sec.getEntryValue("backgroundnormal");
+                    element.backgroundTextureHover = sec.getEntryValue("backgroundhovered");
+                    element.backgroundAnimationNormal = sec.getEntryValue("backgroundanimationnormal");
+                    element.backgroundAnimationHover = sec.getEntryValue("backgroundanimationhovered");
+                    addElement = true;
+                }
+
+                if (action.equalsIgnoreCase("setbuttonclicksound")) {
+                    element.clickSound = sec.getEntryValue("path");
+                    if (element.clickSound != null) {
+                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.clickSound));
+                        if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
+                            SoundHandler.registerSound(f.getPath(), f.getPath());
+                            addElement = true;
+                        } else {
+                            element.clickSound = null;
+                        }
+                    }
+                }
+
+                if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
+                    element.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(sec);
+                    addElement = true;
+                }
+
+                if (action.equalsIgnoreCase("clickbutton")) {
+                    String clicks = sec.getEntryValue("clicks");
+                    if ((clicks != null) && (MathUtils.isInteger(clicks))) {
+                        element.automatedButtonClicks = Integer.parseInt(clicks);
+                        addElement = true;
+                    }
+                }
+
+                if (addElement) {
+                    if (!elements.containsKey(identifier)) {
+                        elements.put(identifier, element);
+                    } else {
+                        elements.put(identifier, VanillaButtonElement.stackElements(elements.get(identifier), element));
+                    }
+                }
+
+            }
+        }
+
+        List<SerializedElement> l = new ArrayList<>();
+        for (VanillaButtonElement e : elements.values()) {
+            SerializedElement serialized = VanillaButtonElementBuilder.INSTANCE.serializeElementInternal(e);
+            if (serialized != null) {
+                l.add(serialized);
+            }
+        }
+
+        return l;
 
     }
 

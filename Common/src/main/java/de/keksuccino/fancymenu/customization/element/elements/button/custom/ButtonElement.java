@@ -9,9 +9,9 @@ import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
@@ -21,6 +21,7 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,11 +48,9 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     public String backgroundAnimationHover;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
+    public final List<ActionExecutor.ActionContainer> actions = new ArrayList<>();
 
-    protected boolean renderButton = true;
     protected boolean hovered = false;
-
-    public List<ActionExecutor.ActionContainer> actions = new ArrayList<>();
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -66,16 +65,22 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
         this.tick();
 
         this.getButton().setAlpha(this.opacity);
-        if (this.anchorPoint != ElementAnchorPoints.VANILLA) {
-            this.getButton().setX(this.getX());
-            this.getButton().setY(this.getY());
-            this.getButton().setWidth(this.getWidth());
-            ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getHeight());
+        this.getButton().setX(this.getX());
+        this.getButton().setY(this.getY());
+        this.getButton().setWidth(this.getWidth());
+        ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getHeight());
+
+        if (isEditor()) {
+            if (this.button instanceof AdvancedButton) {
+                ((AdvancedButton)this.button).setPressAction((b) -> {});
+            } else if (this.button instanceof Button) {
+                ((IMixinButton)this.button).setPressActionFancyMenu((b) -> {});
+            } else {
+                this.button.active = false;
+            }
         }
 
-        if (this.renderButton) {
-            this.getButton().render(pose, mouseX, mouseY, partial);
-        }
+        this.getButton().render(pose, mouseX, mouseY, partial);
 
         this.hovered = this.button.isHoveredOrFocused();
 

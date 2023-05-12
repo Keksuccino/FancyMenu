@@ -21,11 +21,7 @@ public class ElementRegistry {
         register(builder.getIdentifier(), builder);
     }
 
-    /**
-     * Here you can register elements which can then be used in layouts.<br>
-     * {@link ElementBuilder}s should get registered during mod-init.
-     **/
-    public static void register(@NotNull String identifier, @NotNull ElementBuilder<?,?> builder) {
+    private static void register(@NotNull String identifier, @NotNull ElementBuilder<?,?> builder) {
         Objects.requireNonNull(identifier, "[FANCYMENU] Failed to register element! Identifier was NULL!");
         if (ELEMENT_BUILDERS.containsKey(identifier)) {
             LOGGER.warn("[FANCYMENU] Element with identifier '" + identifier + "' already registered! Overriding element!");
