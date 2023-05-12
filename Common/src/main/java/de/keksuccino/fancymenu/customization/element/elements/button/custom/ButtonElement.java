@@ -71,10 +71,13 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
         ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getHeight());
 
         if (isEditor()) {
+            this.button.visible = true;
             if (this.button instanceof AdvancedButton) {
                 ((AdvancedButton)this.button).setPressAction((b) -> {});
+                this.button.active = true;
             } else if (this.button instanceof Button) {
                 ((IMixinButton)this.button).setPressActionFancyMenu((b) -> {});
+                this.button.active = true;
             } else {
                 this.button.active = false;
             }
