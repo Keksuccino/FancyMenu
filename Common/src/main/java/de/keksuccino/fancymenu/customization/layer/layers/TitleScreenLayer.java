@@ -7,11 +7,11 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationItem;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayerRegistry;
-import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.splash.TitleScreenSplashElement;
-import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.splash.TitleScreenSplashItem;
+import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
+import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayerRegistry;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.splash.TitleScreenSplashBuilder;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.splash.TitleScreenSplashItemAbstract;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
@@ -20,13 +20,13 @@ import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;
+import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinTitleScreen;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -56,7 +56,7 @@ public class TitleScreenLayer extends ScreenCustomizationLayer {
 	protected boolean showForgeNotificationCopyright = true;
 	protected boolean showForgeNotificationTop = true;
 	protected boolean showRealmsNotification = true;
-	protected TitleScreenSplashItem splashItem = null;
+	protected TitleScreenSplashItemAbstract splashItem = null;
 
 	public TitleScreenLayer() {
 		super(TitleScreen.class.getName());
@@ -66,7 +66,7 @@ public class TitleScreenLayer extends ScreenCustomizationLayer {
 	public void onModReload(ModReloadEvent e) {
 		super.onModReload(e);
 
-		TitleScreenSplashItem.cachedSplashText = null;
+		TitleScreenSplashItemAbstract.cachedSplashText = null;
 	}
 
 	@Override
@@ -90,11 +90,11 @@ public class TitleScreenLayer extends ScreenCustomizationLayer {
 				showForgeNotificationCopyright = true;
 				showForgeNotificationTop = true;
 				showRealmsNotification = true;
-				DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getIdentifier());
+				DeepScreenCustomizationLayer layer = DeepScreenCustomizationLayerRegistry.getLayer(this.getIdentifier());
 				if (layer != null) {
-					TitleScreenSplashElement element = (TitleScreenSplashElement) layer.getElementByIdentifier("title_screen_splash");
+					TitleScreenSplashBuilder element = (TitleScreenSplashBuilder) layer.getBuilder("title_screen_splash");
 					if (element != null) {
-						splashItem = (TitleScreenSplashItem) element.constructDefaultItemInstance();
+						splashItem = (TitleScreenSplashItemAbstract) element.constructDefaultItemInstance();
 					}
 				}
 				super.onButtonsCached(e);
@@ -103,51 +103,51 @@ public class TitleScreenLayer extends ScreenCustomizationLayer {
 	}
 
 	@Override
-	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCacheUpdatedEvent e) {
+	protected void applyLayout(PropertyContainer sec, String renderOrder, ButtonCacheUpdatedEvent e) {
 
 		super.applyLayout(sec, renderOrder, e);
 
-		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.getIdentifier());
+		DeepScreenCustomizationLayer layer = DeepScreenCustomizationLayerRegistry.getLayer(this.getIdentifier());
 		if (layer != null) {
 
-			String action = sec.getEntryValue("action");
+			String action = sec.getValue("action");
 			if (action != null) {
 
 				if (action.startsWith("deep_customization_element:")) {
 					String elementId = action.split("[:]", 2)[1];
-					DeepCustomizationElement element = layer.getElementByIdentifier(elementId);
+					DeepElementBuilder element = layer.getBuilder(elementId);
 					if (element != null) {
-						DeepCustomizationItem i = element.constructCustomizedItemInstance(sec);
+						AbstractDeepElement i = element.constructCustomizedItemInstance(sec);
 						if (i != null) {
 							if (elementId.equals("title_screen_branding")) {
 								if (this.showBranding) {
-									this.showBranding = !(i.hidden);
+									this.showBranding = !(i.deepElementHidden);
 								}
 							}
 							if (elementId.equals("title_screen_logo")) {
 								if (this.showLogo) {
-									this.showLogo = !(i.hidden);
+									this.showLogo = !(i.deepElementHidden);
 								}
 							}
 							if (elementId.equals("title_screen_splash")) {
-								if ((this.splashItem == null) || !this.splashItem.hidden) {
-									this.splashItem = (TitleScreenSplashItem) i;
+								if ((this.splashItem == null) || !this.splashItem.deepElementHidden) {
+									this.splashItem = (TitleScreenSplashItemAbstract) i;
 								}
 							}
 							if (elementId.equals("title_screen_realms_notification")) {
 								if (this.showRealmsNotification) {
-									this.showRealmsNotification = !(i.hidden);
+									this.showRealmsNotification = !(i.deepElementHidden);
 								}
 							}
 							//Forge -------------->
 							if (elementId.equals("title_screen_forge_copyright")) {
 								if (this.showForgeNotificationCopyright) {
-									this.showForgeNotificationCopyright = !(i.hidden);
+									this.showForgeNotificationCopyright = !(i.deepElementHidden);
 								}
 							}
 							if (elementId.equals("title_screen_forge_top")) {
 								if (this.showForgeNotificationTop) {
-									this.showForgeNotificationTop = !(i.hidden);
+									this.showForgeNotificationTop = !(i.deepElementHidden);
 								}
 							}
 						}

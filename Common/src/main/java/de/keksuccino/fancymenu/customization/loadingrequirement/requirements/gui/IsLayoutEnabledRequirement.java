@@ -6,8 +6,8 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -29,11 +29,11 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
 
         if (value != null) {
 
-            for (PropertiesSet s : LayoutHandler.getEnabledLayouts()) {
-                List<PropertiesSection> l = s.getPropertiesOfType("customization-meta");
+            for (PropertyContainerSet s : LayoutHandler.getEnabledLayouts()) {
+                List<PropertyContainer> l = s.getSectionsOfType("customization-meta");
                 if (!l.isEmpty()) {
-                    PropertiesSection meta = l.get(0);
-                    String path = meta.getEntryValue("path");
+                    PropertyContainer meta = l.get(0);
+                    String path = meta.getValue("path");
                     if (path != null) {
                         String name = Files.getNameWithoutExtension(path);
                         if (name.equals(value)) {

@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.TitleScreenLayer;
-import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.forge.copyright.TitleScreenForgeCopyrightElement;
-import de.keksuccino.fancymenu.customization.deepcustomization.layers.titlescreen.forge.top.TitleScreenForgeTopElement;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copyright.TitleScreenForgeCopyrightBuilder;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.top.TitleScreenForgeTopBuilder;
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -55,8 +55,8 @@ public class ForgeCompatibilityLayer implements IPlatformCompatibilityLayer {
 
     @Override
     public void registerTitleScreenDeepCustomizationLayerElements(TitleScreenLayer layer) {
-        layer.registerElement(new TitleScreenForgeCopyrightElement(layer));
-        layer.registerElement(new TitleScreenForgeTopElement(layer));
+        layer.registerBuilder(new TitleScreenForgeCopyrightBuilder(layer));
+        layer.registerBuilder(new TitleScreenForgeTopBuilder(layer));
     }
 
 }

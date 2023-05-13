@@ -8,6 +8,8 @@ import java.util.List;
 
 public class LegacyActions {
 
+    //TODO Legacy actions zu neuem system porten
+
     public static List<String> getLegacyIdentifiers() {
         List<String> actionIdentifiers = new ArrayList<>();
         actionIdentifiers.add("openlink");
@@ -15,7 +17,6 @@ public class LegacyActions {
         actionIdentifiers.add("quitgame");
         actionIdentifiers.add("joinserver");
         actionIdentifiers.add("loadworld");
-        actionIdentifiers.add("opencustomgui");
         actionIdentifiers.add("opengui");
         actionIdentifiers.add("openfile");
         actionIdentifiers.add("movefile");

@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
@@ -36,11 +36,11 @@ public class WebTextureCustomizationItem extends AbstractElement {
 
 	@OptifineFix
 	//FIX: Web textures need to be loaded in the main thread if OF is installed
-	public WebTextureCustomizationItem(PropertiesSection item) {
+	public WebTextureCustomizationItem(PropertyContainer item) {
 		super(item);
 
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addwebtexture")) {
-			this.value = item.getEntryValue("url");
+			this.value = item.getValue("url");
 			if (this.value != null) {
 				this.rawURL = this.value;
 				this.value = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.value), "§", "&");

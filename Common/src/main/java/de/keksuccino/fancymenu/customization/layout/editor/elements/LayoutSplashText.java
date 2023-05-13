@@ -16,7 +16,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 
@@ -190,35 +190,35 @@ public class LayoutSplashText extends AbstractEditorElement {
 	}
 	
 	@Override
-	public List<PropertiesSection> getProperties() {
-		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
+	public List<PropertyContainer> getProperties() {
+		List<PropertyContainer> l = new ArrayList<PropertyContainer>();
 		
-		PropertiesSection p1 = new PropertiesSection("customization");
-		p1.addEntry("actionid", this.element.getInstanceIdentifier());
+		PropertyContainer p1 = new PropertyContainer("customization");
+		p1.putProperty("actionid", this.element.getInstanceIdentifier());
 		if (this.element.advancedX != null) {
-			p1.addEntry("advanced_posx", this.element.advancedX);
+			p1.putProperty("advanced_posx", this.element.advancedX);
 		}
 		if (this.element.advancedY != null) {
-			p1.addEntry("advanced_posy", this.element.advancedY);
+			p1.putProperty("advanced_posy", this.element.advancedY);
 		}
 		if (this.element.advancedWidth != null) {
-			p1.addEntry("advanced_width", this.element.advancedWidth);
+			p1.putProperty("advanced_width", this.element.advancedWidth);
 		}
 		if (this.element.advancedHeight != null) {
-			p1.addEntry("advanced_height", this.element.advancedHeight);
+			p1.putProperty("advanced_height", this.element.advancedHeight);
 		}
 		if (this.element.delayAppearance) {
-			p1.addEntry("delayappearance", "true");
-			p1.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
-			p1.addEntry("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
+			p1.putProperty("delayappearance", "true");
+			p1.putProperty("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+			p1.putProperty("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
 			if (this.element.fadeIn) {
-				p1.addEntry("fadein", "true");
-				p1.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
+				p1.putProperty("fadein", "true");
+				p1.putProperty("fadeinspeed", "" + this.element.fadeInSpeed);
 			}
 		}
-		p1.addEntry("action", "addsplash");
+		p1.putProperty("action", "addsplash");
 		if (this.getObject().text != null) {
-			p1.addEntry("text", this.getObject().text);
+			p1.putProperty("text", this.getObject().text);
 		}
 		if (this.getObject().splashfile != null) {
 			File home = Minecraft.getInstance().gameDirectory;
@@ -229,21 +229,21 @@ public class LayoutSplashText extends AbstractEditorElement {
 					path = path.substring(1);
 				}
 			}
-			p1.addEntry("splashfilepath", path);
+			p1.putProperty("splashfilepath", path);
 		}
-		p1.addEntry("x", "" + this.element.baseX);
-		p1.addEntry("y", "" + this.element.baseY);
-		p1.addEntry("orientation", this.element.anchorPoint);
+		p1.putProperty("x", "" + this.element.baseX);
+		p1.putProperty("y", "" + this.element.baseY);
+		p1.putProperty("orientation", this.element.anchorPoint);
 		if (this.element.anchorPoint.equals("element") && (this.element.anchorPointElementIdentifier != null)) {
-			p1.addEntry("orientation_element", this.element.anchorPointElementIdentifier);
+			p1.putProperty("orientation_element", this.element.anchorPointElementIdentifier);
 		}
-		p1.addEntry("scale", "" + this.getObject().scale);
-		p1.addEntry("shadow", "" + this.getObject().shadow);
-		p1.addEntry("rotation", "" + this.getObject().rotation);
-		p1.addEntry("basecolor", this.getObject().basecolorString);
-		p1.addEntry("refresh", "" + this.getObject().refreshOnMenuReload);
-		p1.addEntry("bouncing", "" + this.getObject().bounce);
-		p1.addEntry("vanilla-like", "" + this.getObject().vanillaLike);
+		p1.putProperty("scale", "" + this.getObject().scale);
+		p1.putProperty("shadow", "" + this.getObject().shadow);
+		p1.putProperty("rotation", "" + this.getObject().rotation);
+		p1.putProperty("basecolor", this.getObject().basecolorString);
+		p1.putProperty("refresh", "" + this.getObject().refreshOnMenuReload);
+		p1.putProperty("bouncing", "" + this.getObject().bounce);
+		p1.putProperty("vanilla-like", "" + this.getObject().vanillaLike);
 
 		this.serializeLoadingRequirementsTo(p1);
 		

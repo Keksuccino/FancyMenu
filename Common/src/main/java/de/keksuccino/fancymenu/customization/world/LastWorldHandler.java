@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.world;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 
 import java.io.File;
 import java.util.List;
@@ -43,16 +43,16 @@ public class LastWorldHandler {
             if (!LAST_WORLD_SAVE_FILE.isFile()) {
                 writeFile();
             }
-            PropertiesSet set = PropertiesSerializer.getProperties(LAST_WORLD_SAVE_FILE.getPath());
+            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(LAST_WORLD_SAVE_FILE.getPath());
             if (set != null) {
-                List<PropertiesSection> secs = set.getPropertiesOfType("last_world");
+                List<PropertyContainer> secs = set.getSectionsOfType("last_world");
                 if (!secs.isEmpty()) {
-                    PropertiesSection sec = secs.get(0);
-                    String isServerString = sec.getEntryValue("is_server");
+                    PropertyContainer sec = secs.get(0);
+                    String isServerString = sec.getValue("is_server");
                     if ((isServerString != null) && isServerString.equals("true")) {
                         isServer = true;
                     }
-                    String worldString = sec.getEntryValue("world");
+                    String worldString = sec.getValue("world");
                     if (worldString != null) {
                         lastWorld = worldString;
                     }
@@ -68,12 +68,12 @@ public class LastWorldHandler {
             if (!LAST_WORLD_SAVE_FILE.isFile()) {
                 LAST_WORLD_SAVE_FILE.createNewFile();
             }
-            PropertiesSet set = new PropertiesSet("last_world");
-            PropertiesSection sec = new PropertiesSection("last_world");
-            sec.addEntry("is_server", "" + isServer);
-            sec.addEntry("world", lastWorld);
-            set.addProperties(sec);
-            PropertiesSerializer.writeProperties(set, LAST_WORLD_SAVE_FILE.getPath());
+            PropertyContainerSet set = new PropertyContainerSet("last_world");
+            PropertyContainer sec = new PropertyContainer("last_world");
+            sec.putProperty("is_server", "" + isServer);
+            sec.putProperty("world", lastWorld);
+            set.putContainer(sec);
+            PropertiesSerializer.serializePropertyContainerSet(set, LAST_WORLD_SAVE_FILE.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }

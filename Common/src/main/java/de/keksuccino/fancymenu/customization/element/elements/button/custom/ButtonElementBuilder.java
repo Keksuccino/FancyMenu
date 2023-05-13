@@ -36,10 +36,10 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         ButtonElement element = buildDefaultInstance();
 
-        element.label = serialized.getEntryValue("label");
+        element.label = serialized.getValue("label");
 
-        String buttonAction = serialized.getEntryValue("buttonaction");
-        String actionValue = serialized.getEntryValue("value");
+        String buttonAction = serialized.getValue("buttonaction");
+        String actionValue = serialized.getValue("value");
         if (actionValue == null) {
             actionValue = "";
         }
@@ -61,7 +61,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             }
         }
 
-        element.hoverSound = serialized.getEntryValue("hoversound");
+        element.hoverSound = serialized.getValue("hoversound");
         if (element.hoverSound != null) {
             File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.hoverSound));
             if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
@@ -71,9 +71,9 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             }
         }
 
-        element.hoverLabel = serialized.getEntryValue("hoverlabel");
+        element.hoverLabel = serialized.getValue("hoverlabel");
 
-        element.tooltip = serialized.getEntryValue("description");
+        element.tooltip = serialized.getValue("description");
 
         element.button = new Button(0, 0, 0, 0, Component.literal(""), true, (press) -> {
             for (ActionExecutor.ActionContainer c : element.getActionList()) {
@@ -81,7 +81,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             }
         });
 
-        element.clickSound = serialized.getEntryValue("clicksound");
+        element.clickSound = serialized.getValue("clicksound");
         if (element.clickSound != null) {
             File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.clickSound));
             if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
@@ -91,23 +91,23 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             }
         }
 
-        element.backgroundTextureNormal = serialized.getEntryValue("backgroundnormal");
+        element.backgroundTextureNormal = serialized.getValue("backgroundnormal");
 
-        element.backgroundTextureHover = serialized.getEntryValue("backgroundhovered");
+        element.backgroundTextureHover = serialized.getValue("backgroundhovered");
 
-        String loopBackAnimations = serialized.getEntryValue("loopbackgroundanimations");
+        String loopBackAnimations = serialized.getValue("loopbackgroundanimations");
         if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
             element.loopBackgroundAnimations = false;
         }
 
-        String restartBackAnimationsOnHover = serialized.getEntryValue("restartbackgroundanimations");
+        String restartBackAnimationsOnHover = serialized.getValue("restartbackgroundanimations");
         if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
             element.restartBackgroundAnimationsOnHover = false;
         }
 
-        element.backgroundAnimationNormal = serialized.getEntryValue("backgroundanimationnormal");
+        element.backgroundAnimationNormal = serialized.getValue("backgroundanimationnormal");
 
-        element.backgroundAnimationHover = serialized.getEntryValue("backgroundanimationhovered");
+        element.backgroundAnimationHover = serialized.getValue("backgroundanimationhovered");
 
         return element;
 
@@ -125,37 +125,37 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
                 }
                 buttonaction += s2 + "%btnaction_splitter_fm%";
             }
-            serializeTo.addEntry("buttonaction", buttonaction);
+            serializeTo.putProperty("buttonaction", buttonaction);
         }
 
         if (element.backgroundTextureNormal != null) {
-            serializeTo.addEntry("backgroundnormal", element.backgroundTextureNormal);
+            serializeTo.putProperty("backgroundnormal", element.backgroundTextureNormal);
         }
         if (element.backgroundAnimationNormal != null) {
-            serializeTo.addEntry("backgroundanimationnormal", element.backgroundAnimationNormal);
+            serializeTo.putProperty("backgroundanimationnormal", element.backgroundAnimationNormal);
         }
         if (element.backgroundTextureHover != null) {
-            serializeTo.addEntry("backgroundhovered", element.backgroundTextureHover);
+            serializeTo.putProperty("backgroundhovered", element.backgroundTextureHover);
         }
         if (element.backgroundAnimationHover != null) {
-            serializeTo.addEntry("backgroundanimationhovered", element.backgroundAnimationHover);
+            serializeTo.putProperty("backgroundanimationhovered", element.backgroundAnimationHover);
         }
-        serializeTo.addEntry("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
-        serializeTo.addEntry("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
+        serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
+        serializeTo.putProperty("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
         if (element.hoverSound != null) {
-            serializeTo.addEntry("hoversound", element.hoverSound);
+            serializeTo.putProperty("hoversound", element.hoverSound);
         }
         if (element.hoverLabel != null) {
-            serializeTo.addEntry("hoverlabel", element.hoverLabel);
+            serializeTo.putProperty("hoverlabel", element.hoverLabel);
         }
         if (element.clickSound != null) {
-            serializeTo.addEntry("clicksound", element.clickSound);
+            serializeTo.putProperty("clicksound", element.clickSound);
         }
         if (element.tooltip != null) {
-            serializeTo.addEntry("description", element.tooltip);
+            serializeTo.putProperty("description", element.tooltip);
         }
         if (element.label != null) {
-            serializeTo.addEntry("label", element.label);
+            serializeTo.putProperty("label", element.label);
         }
 
         return serializeTo;

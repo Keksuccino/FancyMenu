@@ -5,7 +5,7 @@ import java.io.IOException;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -13,11 +13,11 @@ public class AnimationCustomizationItem extends AbstractElement {
 
 	public IAnimationRenderer renderer = null;
 	
-	public AnimationCustomizationItem(PropertiesSection item) {
+	public AnimationCustomizationItem(PropertyContainer item) {
 		super(item);
 		
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addanimation")) {
-			this.value = item.getEntryValue("name");
+			this.value = item.getValue("name");
 			if ((this.value != null) && AnimationHandler.animationExists(this.value)) {
 				this.renderer = AnimationHandler.getAnimation(this.value);
 			} else {
@@ -64,7 +64,7 @@ public class AnimationCustomizationItem extends AbstractElement {
 
 	@Override
 	public AnimationCustomizationItem clone() {
-		AnimationCustomizationItem item = new AnimationCustomizationItem(new PropertiesSection(""));
+		AnimationCustomizationItem item = new AnimationCustomizationItem(new PropertyContainer(""));
 		item.setHeight(this.getHeight());
 		item.anchorPoint = this.anchorPoint;
 		item.baseX = this.baseX;

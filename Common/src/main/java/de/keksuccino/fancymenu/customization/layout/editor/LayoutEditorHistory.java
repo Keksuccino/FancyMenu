@@ -5,8 +5,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 
 public class LayoutEditorHistory {
@@ -65,7 +65,7 @@ public class LayoutEditorHistory {
 			if (this.current <= this.history.size()-1) {
 
 				Snapshot snap = this.history.get(this.current);
-				List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+				List<PropertyContainerSet> l = new ArrayList<PropertyContainerSet>();
 				l.add(snap.snapshot);
 
 				this.current--;
@@ -98,7 +98,7 @@ public class LayoutEditorHistory {
 				Snapshot snap = this.history.get(this.current).preSnapshotState;
 
 				if (snap != null) {
-					List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+					List<PropertyContainerSet> l = new ArrayList<PropertyContainerSet>();
 					l.add(snap.snapshot);
 
 					PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.editor.screen, l);
@@ -120,7 +120,7 @@ public class LayoutEditorHistory {
 	
 	public static class Snapshot {
 		
-		public PropertiesSet snapshot = new PropertiesSet("menu");
+		public PropertyContainerSet snapshot = new PropertyContainerSet("menu");
 		public Snapshot preSnapshotState = null;
 		private Runnable run; 
 		
@@ -128,8 +128,8 @@ public class LayoutEditorHistory {
 
 			this.run = onSnapshotRestore;
 			
-			for (PropertiesSection s : editor.getAllProperties()) {
-				this.snapshot.addProperties(s);
+			for (PropertyContainer s : editor.getAllProperties()) {
+				this.snapshot.putContainer(s);
 			}
 			
 		}

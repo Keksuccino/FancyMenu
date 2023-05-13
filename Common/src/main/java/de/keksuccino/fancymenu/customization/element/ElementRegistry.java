@@ -11,7 +11,7 @@ public class ElementRegistry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<String, ElementBuilder<?,?>> ELEMENT_BUILDERS = new LinkedHashMap<>();
+    private static final Map<String, ElementBuilder<?,?>> BUILDERS = new LinkedHashMap<>();
 
     /**
      * Here you can register elements which can then be used in layouts.<br>
@@ -22,32 +22,32 @@ public class ElementRegistry {
     }
 
     private static void register(@NotNull String identifier, @NotNull ElementBuilder<?,?> builder) {
-        Objects.requireNonNull(identifier, "[FANCYMENU] Failed to register element! Identifier was NULL!");
-        if (ELEMENT_BUILDERS.containsKey(identifier)) {
-            LOGGER.warn("[FANCYMENU] Element with identifier '" + identifier + "' already registered! Overriding element!");
+        Objects.requireNonNull(identifier, "[FANCYMENU] Failed to register ElementBuilder! Identifier was NULL!");
+        if (BUILDERS.containsKey(identifier)) {
+            LOGGER.warn("[FANCYMENU] ElementBuilder with identifier '" + identifier + "' already registered! Overriding builder!");
         }
-        ELEMENT_BUILDERS.put(identifier, builder);
+        BUILDERS.put(identifier, builder);
         for (String altIdentifier : builder.getAlternativeIdentifiers()) {
             register(altIdentifier, builder);
         }
     }
 
     public static void unregister(@NotNull String identifier) {
-        ELEMENT_BUILDERS.remove(identifier);
+        BUILDERS.remove(identifier);
     }
 
     @NotNull
     public static List<ElementBuilder<?,?>> getBuilders() {
-        return new ArrayList<>(ELEMENT_BUILDERS.values());
+        return new ArrayList<>(BUILDERS.values());
     }
 
     @Nullable
     public static ElementBuilder<?,?> getBuilder(@NotNull String identifier) {
-        return ELEMENT_BUILDERS.get(identifier);
+        return BUILDERS.get(identifier);
     }
 
     public static boolean hasBuilder(@NotNull String identifier) {
-        return getBuilder(identifier) != null;
+        return BUILDERS.containsKey(identifier);
     }
 
 }

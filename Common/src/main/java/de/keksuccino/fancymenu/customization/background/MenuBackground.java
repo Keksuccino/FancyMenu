@@ -13,8 +13,10 @@ import org.jetbrains.annotations.NotNull;
 public abstract class MenuBackground extends GuiComponent implements Renderable {
 
     public final MenuBackgroundBuilder<?> builder;
-    /** This field gets set by the system when screens fade-in or -out. Make sure your background reacts to it. **/
+    /** This gets set by the {@link ScreenCustomizationLayer} when screens fade in or out and should only get used as getter. **/
     public float opacity = 1.0F;
+    /** This gets set by the {@link ScreenCustomizationLayer} and should only be used as getter. **/
+    public boolean keepBackgroundAspectRatio = false;
 
     public MenuBackground(MenuBackgroundBuilder<?> builder) {
         this.builder = builder;

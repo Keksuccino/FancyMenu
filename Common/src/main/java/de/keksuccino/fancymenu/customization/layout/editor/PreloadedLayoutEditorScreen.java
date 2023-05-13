@@ -10,7 +10,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundType;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
-import de.keksuccino.fancymenu.customization.deepcustomization.*;
+import de.keksuccino.fancymenu.customization.deep.*;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -36,8 +36,8 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
@@ -48,10 +48,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 	public String single;
 	private boolean audioInit = false;
 
-	protected List<PropertiesSet> cachedProperties;
+	protected List<PropertyContainerSet> cachedProperties;
 	protected boolean isPreLoadedInitialized = false;
 
-	public PreloadedLayoutEditorScreen(Screen screenToCustomize, List<PropertiesSet> properties) {
+	public PreloadedLayoutEditorScreen(Screen screenToCustomize, List<PropertyContainerSet> properties) {
 		super(screenToCustomize);
 		this.cachedProperties = properties;
 	}
@@ -70,51 +70,51 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 		List<AbstractEditorElement> con = new ArrayList<AbstractEditorElement>();
 
 		if (this.cachedProperties.size() == 1) {
-			List<PropertiesSection> l = this.cachedProperties.get(0).getPropertiesOfType("customization-meta");
+			List<PropertyContainer> l = this.cachedProperties.get(0).getSectionsOfType("customization-meta");
 			if (l.isEmpty()) {
-				l = this.cachedProperties.get(0).getPropertiesOfType("type-meta");
+				l = this.cachedProperties.get(0).getSectionsOfType("type-meta");
 			}
 			if (!l.isEmpty()) {
-				PropertiesSection meta = l.get(0);
+				PropertyContainer meta = l.get(0);
 
-				this.requiredmods = meta.getEntryValue("requiredmods");
-				this.minimumFM = meta.getEntryValue("minimumfmversion");
-				this.maximumFM = meta.getEntryValue("maximumfmversion");
-				this.minimumMC = meta.getEntryValue("minimummcversion");
-				this.maximumMC = meta.getEntryValue("maximummcversion");
+				this.requiredmods = meta.getValue("requiredmods");
+				this.minimumFM = meta.getValue("minimumfmversion");
+				this.maximumFM = meta.getValue("maximumfmversion");
+				this.minimumMC = meta.getValue("minimummcversion");
+				this.maximumMC = meta.getValue("maximummcversion");
 
 				this.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
 
-				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
+				this.customMenuTitle = meta.getValue("custom_menu_title");
 
-				String ulWhitelist = meta.getEntryValue("universal_layout_whitelist");
+				String ulWhitelist = meta.getValue("universal_layout_whitelist");
 				if ((ulWhitelist != null) && ulWhitelist.contains(";")) {
 					this.universalLayoutWhitelist.addAll(Arrays.asList(ulWhitelist.split("[;]")));
 				}
-				String ulBlacklist = meta.getEntryValue("universal_layout_blacklist");
+				String ulBlacklist = meta.getValue("universal_layout_blacklist");
 				if ((ulBlacklist != null) && ulBlacklist.contains(";")) {
 					this.universalLayoutBlacklist.addAll(Arrays.asList(ulBlacklist.split("[;]")));
 				}
 
-				String ranMode = meta.getEntryValue("randommode");
+				String ranMode = meta.getValue("randommode");
 				if ((ranMode != null) && ranMode.equalsIgnoreCase("true")) {
 					this.randomMode = true;
 				}
-				String ranModeGroup = meta.getEntryValue("randomgroup");
+				String ranModeGroup = meta.getValue("randomgroup");
 				if ((ranModeGroup != null) && MathUtils.isInteger(ranModeGroup)) {
 					this.randomGroup = ranModeGroup;
 				}
-				String ranModeFirstTime = meta.getEntryValue("randomonlyfirsttime");
+				String ranModeFirstTime = meta.getValue("randomonlyfirsttime");
 				if ((ranModeFirstTime != null) && ranModeFirstTime.equalsIgnoreCase("true")) {
 					this.randomOnlyFirstTime = true;
 				}
 
-				String order = meta.getEntryValue("renderorder");
+				String order = meta.getValue("renderorder");
 				if ((order != null) && order.equalsIgnoreCase("background")) {
 					this.renderorder = "background";
 				}
 
-				String biggerthanwidth = meta.getEntryValue("biggerthanwidth");
+				String biggerthanwidth = meta.getValue("biggerthanwidth");
 				if (biggerthanwidth != null) {
 					biggerthanwidth = biggerthanwidth.replace(" ", "");
 					if (MathUtils.isInteger(biggerthanwidth)) {
@@ -123,7 +123,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				String biggerthanheight = meta.getEntryValue("biggerthanheight");
+				String biggerthanheight = meta.getValue("biggerthanheight");
 				if (biggerthanheight != null) {
 					biggerthanheight = biggerthanheight.replace(" ", "");
 					if (MathUtils.isInteger(biggerthanheight)) {
@@ -132,7 +132,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				String smallerthanwidth = meta.getEntryValue("smallerthanwidth");
+				String smallerthanwidth = meta.getValue("smallerthanwidth");
 				if (smallerthanwidth != null) {
 					smallerthanwidth = smallerthanwidth.replace(" ", "");
 					if (MathUtils.isInteger(smallerthanwidth)) {
@@ -141,7 +141,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				String smallerthanheight = meta.getEntryValue("smallerthanheight");
+				String smallerthanheight = meta.getValue("smallerthanheight");
 				if (smallerthanheight != null) {
 					smallerthanheight = smallerthanheight.replace(" ", "");
 					if (MathUtils.isInteger(smallerthanheight)) {
@@ -150,7 +150,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				String biggerthan = meta.getEntryValue("biggerthan");
+				String biggerthan = meta.getValue("biggerthan");
 				if ((biggerthan != null) && biggerthan.toLowerCase().contains("x")) {
 					String wRaw = biggerthan.replace(" ", "").split("[x]", 2)[0];
 					String hRaw = biggerthan.replace(" ", "").split("[x]", 2)[1];
@@ -160,7 +160,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				String smallerthan = meta.getEntryValue("smallerthan");
+				String smallerthan = meta.getValue("smallerthan");
 				if ((smallerthan != null) && smallerthan.toLowerCase().contains("x")) {
 					String wRaw = smallerthan.replace(" ", "").split("[x]", 2)[0];
 					String hRaw = smallerthan.replace(" ", "").split("[x]", 2)[1];
@@ -170,20 +170,20 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 				}
 
-				String filePath = meta.getEntryValue("path");
+				String filePath = meta.getValue("path");
 				if (filePath != null) {
 					this.single = filePath;
 				}
 			}
 		}
 
-		List<PropertiesSection> deepCustomizationSecs = new ArrayList<>();
+		List<PropertyContainer> deepCustomizationSecs = new ArrayList<>();
 
-		for (PropertiesSet s : this.cachedProperties) {
-			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
-				String action = sec.getEntryValue("action");
+		for (PropertyContainerSet s : this.cachedProperties) {
+			for (PropertyContainer sec : s.getSectionsOfType("customization")) {
+				String action = sec.getValue("action");
 				if (action != null) {
-					String identifier = sec.getEntryValue("identifier");
+					String identifier = sec.getValue("identifier");
 					ButtonData b = null;
 					if (identifier != null) {
 						if (identifier.contains("%") && identifier.contains("=")) {
@@ -201,14 +201,14 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("backgroundoptions")) {
-						String keepAspect = sec.getEntryValue("keepaspectratio");
+						String keepAspect = sec.getValue("keepaspectratio");
 						if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
 							this.keepBackgroundAspectRatio = true;
 						}
 					}
 
 					if (action.equalsIgnoreCase("setbackgroundpanorama")) {
-						String name = sec.getEntryValue("name");
+						String name = sec.getValue("name");
 						if (name != null) {
 							if (PanoramaHandler.panoramaExists(name)) {
 								this.backgroundPanorama = PanoramaHandler.getPanorama(name);
@@ -217,7 +217,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("setbackgroundslideshow")) {
-						String name = sec.getEntryValue("name");
+						String name = sec.getValue("name");
 						if (name != null) {
 							if (SlideshowHandler.slideshowExists(name)) {
 								this.backgroundSlideshow = SlideshowHandler.getSlideshow(name);
@@ -226,10 +226,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("texturizebackground")) {
-						String value = sec.getEntryValue("path");
-						String pano = sec.getEntryValue("wideformat");
+						String value = sec.getValue("path");
+						String pano = sec.getValue("wideformat");
 						if (pano == null) {
-							pano = sec.getEntryValue("panorama");
+							pano = sec.getValue("panorama");
 						}
 						if (value != null) {
 							value = value.replace("\\", "/");
@@ -251,9 +251,9 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					//Custom background handling (API)
 					if (action.equalsIgnoreCase("api:custombackground")) {
-						String typeId = sec.getEntryValue("type_identifier");
-						String backId = sec.getEntryValue("background_identifier");
-						String inputString = sec.getEntryValue("input_string");
+						String typeId = sec.getValue("type_identifier");
+						String backId = sec.getValue("background_identifier");
+						String inputString = sec.getValue("input_string");
 						if (typeId != null) {
 							MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
 							if (type != null) {
@@ -278,10 +278,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("animatebackground")) {
-						String value = sec.getEntryValue("name");
-						String random = sec.getEntryValue("random");
+						String value = sec.getValue("name");
+						String random = sec.getValue("random");
 
-						String restartOnLoadString = sec.getEntryValue("restart_on_load");
+						String restartOnLoadString = sec.getValue("restart_on_load");
 						if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
 							this.restartAnimationBackgroundOnLoad = true;
 						}
@@ -335,7 +335,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
-						String value = sec.getEntryValue("value");
+						String value = sec.getValue("value");
 						if ((value != null) && (b != null)) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
 							van.customizationContainer.customButtonLabel = value;
@@ -343,23 +343,23 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("resizebutton")) {
-						String width = sec.getEntryValue("width");
-						String height = sec.getEntryValue("height");
+						String width = sec.getValue("width");
+						String height = sec.getValue("height");
 						if ((width != null) && (height != null) && MathUtils.isInteger(width) && MathUtils.isInteger(height) && (b != null)) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
 							int w = Integer.parseInt(width);
 							int h = Integer.parseInt(height);
 							van.element.setWidth(w);
 							van.element.setHeight(h);
-							van.element.advancedWidth = sec.getEntryValue("advanced_width");
-							van.element.advancedHeight = sec.getEntryValue("advanced_height");
+							van.element.advancedWidth = sec.getValue("advanced_width");
+							van.element.advancedHeight = sec.getValue("advanced_height");
 						}
 					}
 
 					if (action.equalsIgnoreCase("movebutton")) {
-						String posX = sec.getEntryValue("x");
-						String posY = sec.getEntryValue("y");
-						String orientation = sec.getEntryValue("orientation");
+						String posX = sec.getValue("x");
+						String posY = sec.getValue("y");
+						String orientation = sec.getValue("orientation");
 
 						if ((orientation != null) && (posX != null) && (posY != null) && MathUtils.isInteger(posX) && MathUtils.isInteger(posY) && (b != null)) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
@@ -368,21 +368,21 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							van.element.anchorPoint = orientation;
 							van.element.baseX = x;
 							van.element.baseY = y;
-							van.element.advancedX = sec.getEntryValue("advanced_posx");
-							van.element.advancedY = sec.getEntryValue("advanced_posy");
-							van.element.anchorPointElementIdentifier = sec.getEntryValue("orientation_element");
+							van.element.advancedX = sec.getValue("advanced_posx");
+							van.element.advancedY = sec.getValue("advanced_posy");
+							van.element.anchorPointElementIdentifier = sec.getValue("orientation_element");
 						}
 					}
 
 					if (action.equalsIgnoreCase("setbuttontexture")) {
 						if (b != null) {
 							LayoutVanillaButton van = this.getVanillaButton(b);
-							String backNormal = sec.getEntryValue("backgroundnormal");
-							String backHover = sec.getEntryValue("backgroundhovered");
-							String backAniNormal = sec.getEntryValue("backgroundanimationnormal");
-							String backAniHover = sec.getEntryValue("backgroundanimationhovered");
-							String loopBackAnimations = sec.getEntryValue("loopbackgroundanimations");
-							String restartBackAnimationsOnHover = sec.getEntryValue("restartbackgroundanimations");
+							String backNormal = sec.getValue("backgroundnormal");
+							String backHover = sec.getValue("backgroundhovered");
+							String backAniNormal = sec.getValue("backgroundanimationnormal");
+							String backAniHover = sec.getValue("backgroundanimationhovered");
+							String loopBackAnimations = sec.getValue("loopbackgroundanimations");
+							String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
 							if ((backNormal != null) || (backHover != null) || (backAniNormal != null) || (backAniHover != null)) {
 								if (backNormal != null) {
 									File f = new File(backNormal.replace("\\", "/"));
@@ -422,7 +422,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					if (action.equalsIgnoreCase("addhoversound")) {
 						if (b != null) {
-							String path = sec.getEntryValue("path");
+							String path = sec.getValue("path");
 							if (path != null) {
 								File f = new File(path);
 								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -438,7 +438,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					if (action.equalsIgnoreCase("sethoverlabel")) {
 						if (b != null) {
-							String label = sec.getEntryValue("label");
+							String label = sec.getValue("label");
 							if (label != null) {
 								LayoutVanillaButton van = this.getVanillaButton(b);
 								van.customizationContainer.hoverLabel = label;
@@ -448,7 +448,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					if (action.equalsIgnoreCase("setbuttonclicksound")) {
 						if (b != null) {
-							String path = sec.getEntryValue("path");
+							String path = sec.getValue("path");
 							if (path != null) {
 								File f = new File(path);
 								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -464,7 +464,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					if (action.equalsIgnoreCase("clickbutton")) {
 						if (b != null) {
-							String clicks = sec.getEntryValue("clicks");
+							String clicks = sec.getValue("clicks");
 							if ((clicks != null) && (MathUtils.isInteger(clicks))) {
 								LayoutVanillaButton van = this.getVanillaButton(b);
 								int i = Integer.parseInt(clicks);
@@ -475,10 +475,10 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					if (action.equalsIgnoreCase("hidebuttonfor")) {
 						if (b != null) {
-							String seconds = sec.getEntryValue("seconds");
-							String firsttime = sec.getEntryValue("onlyfirsttime");
-							String fade = sec.getEntryValue("fadein");
-							String fadespeed = sec.getEntryValue("fadeinspeed");
+							String seconds = sec.getValue("seconds");
+							String firsttime = sec.getValue("onlyfirsttime");
+							String fade = sec.getValue("fadein");
+							String fadespeed = sec.getValue("fadeinspeed");
 							if ((seconds != null) && (MathUtils.isFloat(seconds))) {
 								LayoutVanillaButton van = this.getVanillaButton(b);
 
@@ -569,7 +569,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
-						String onlydisplayin = sec.getEntryValue("onlydisplayin");
+						String onlydisplayin = sec.getValue("onlydisplayin");
 
 						if (onlydisplayin != null) {
 							if (onlydisplayin.equalsIgnoreCase("outgame")) {
@@ -613,17 +613,17 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 						lb.actions = bc.actions;
 
-						String desc = sec.getEntryValue("description");
+						String desc = sec.getValue("description");
 						if (desc != null) {
 							lb.customizationContainer.buttonDescription = desc;
 						}
 
-						String backNormal = sec.getEntryValue("backgroundnormal");
-						String backHover = sec.getEntryValue("backgroundhovered");
-						String backAniNormal = sec.getEntryValue("backgroundanimationnormal");
-						String backAniHover = sec.getEntryValue("backgroundanimationhovered");
-						String loopBackAnimations = sec.getEntryValue("loopbackgroundanimations");
-						String restartBackAnimationsOnHover = sec.getEntryValue("restartbackgroundanimations");
+						String backNormal = sec.getValue("backgroundnormal");
+						String backHover = sec.getValue("backgroundhovered");
+						String backAniNormal = sec.getValue("backgroundanimationnormal");
+						String backAniHover = sec.getValue("backgroundanimationhovered");
+						String loopBackAnimations = sec.getValue("loopbackgroundanimations");
+						String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
 						if ((backNormal != null) || (backHover != null) || (backAniNormal != null) || (backAniHover != null)) {
 							if (backNormal != null) {
 								File f = new File(backNormal.replace("\\", "/"));
@@ -659,17 +659,17 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.customizationContainer.restartAnimationOnHover = false;
 						}
 
-						String hoverSound = sec.getEntryValue("hoversound");
+						String hoverSound = sec.getValue("hoversound");
 						if (hoverSound != null) {
 							lb.customizationContainer.hoverSound = hoverSound.replace("\\", "/");
 						}
 
-						String hoverLabel = sec.getEntryValue("hoverlabel");
+						String hoverLabel = sec.getValue("hoverlabel");
 						if (hoverLabel != null) {
 							lb.customizationContainer.hoverLabel = hoverLabel;
 						}
 
-						String clicksound = sec.getEntryValue("clicksound");
+						String clicksound = sec.getValue("clicksound");
 						if (clicksound != null) {
 							lb.customizationContainer.clickSound = clicksound.replace("\\", "/");
 						}
@@ -688,8 +688,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("addaudio")) {
-						String path = sec.getEntryValue("path");
-						String loopString = sec.getEntryValue("loop");
+						String path = sec.getValue("path");
+						String loopString = sec.getValue("loop");
 						boolean loop = false;
 						if ((loopString != null) && loopString.equalsIgnoreCase("true")) {
 							loop = true;
@@ -718,7 +718,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("setscale")) {
-						String scale = sec.getEntryValue("scale");
+						String scale = sec.getValue("scale");
 						if ((scale != null) && (MathUtils.isInteger(scale) || MathUtils.isDouble(scale))) {
 							int sc = (int) Double.parseDouble(scale);
 							if (sc >= 0) {
@@ -728,8 +728,8 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("autoscale")) {
-						String w = sec.getEntryValue("basewidth");
-						String h = sec.getEntryValue("baseheight");
+						String w = sec.getValue("basewidth");
+						String h = sec.getValue("baseheight");
 						if ((w != null) && (h != null) && MathUtils.isInteger(w) && MathUtils.isInteger(h)) {
 							int w2 = Integer.parseInt(w);
 							int h2 = Integer.parseInt(h);
@@ -741,7 +741,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("setopenaudio")) {
-						String path = sec.getEntryValue("path");
+						String path = sec.getValue("path");
 						if (path != null) {
 							File f = new File(path);
 							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -754,7 +754,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("setcloseaudio")) {
-						String path = sec.getEntryValue("path");
+						String path = sec.getValue("path");
 						if (path != null) {
 							File f = new File(path);
 							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -768,7 +768,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 					if (action.equalsIgnoreCase("setbuttondescription")) {
 						if (b != null) {
-							String desc = sec.getEntryValue("description");
+							String desc = sec.getValue("description");
 							if (desc != null) {
 								LayoutVanillaButton van = this.getVanillaButton(b);
 								van.customizationContainer.buttonDescription = desc;
@@ -790,7 +790,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("addslideshow")) {
-						String name = sec.getEntryValue("name");
+						String name = sec.getValue("name");
 						if (name != null) {
 							if (SlideshowHandler.slideshowExists(name)) {
 								LayoutSlideshow ls = new LayoutSlideshow(new SlideshowCustomizationItem(sec), this);
@@ -811,7 +811,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					}
 
 					if (action.equalsIgnoreCase("addshape")) {
-						String shape = sec.getEntryValue("shape");
+						String shape = sec.getValue("shape");
 						if (shape != null) {
 							Shape sh = Shape.byName(shape);
 							if (sh != null) {
@@ -854,21 +854,21 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 			}
 		}
 
-		DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.screen.getClass().getName());
+		DeepScreenCustomizationLayer layer = DeepScreenCustomizationLayerRegistry.getLayer(this.screen.getClass().getName());
 		if (layer != null) {
-			List<DeepCustomizationElement> addedDeeps = new ArrayList<>();
-			for (PropertiesSection sec : deepCustomizationSecs) {
-				String action = sec.getEntryValue("action");
+			List<DeepElementBuilder> addedDeeps = new ArrayList<>();
+			for (PropertyContainer sec : deepCustomizationSecs) {
+				String action = sec.getValue("action");
 				String elementId = action.split(":", 2)[1];
-				DeepCustomizationElement e = layer.getElementByIdentifier(elementId);
+				DeepElementBuilder e = layer.getBuilder(elementId);
 				if (e != null) {
-					DeepCustomizationItem i = e.constructCustomizedItemInstance(sec);
-					DeepCustomizationLayoutEditorElement le = e.constructEditorElementInstance(i, this);
+					AbstractDeepElement i = e.constructCustomizedItemInstance(sec);
+					AbstractEditorDeepElement le = e.constructEditorElementInstance(i, this);
 					this.content.add(le);
 					addedDeeps.add(e);
 				}
 			}
-			for (DeepCustomizationElement e : layer.getElementsList()) {
+			for (DeepElementBuilder e : layer.getBuilders()) {
 				if (!addedDeeps.contains(e)) {
 					this.content.add(e.constructEditorElementInstance(e.constructDefaultItemInstance(), this));
 				}
@@ -926,11 +926,11 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 	 * 2 for VERTICALLY STRETCHED<br>
 	 * 3 for BOTH
 	 */
-	public static int isObjectStretched(PropertiesSection sec) {
-		String w = sec.getEntryValue("width");
-		String h = sec.getEntryValue("height");
-		String x = sec.getEntryValue("x");
-		String y = sec.getEntryValue("y");
+	public static int isObjectStretched(PropertyContainer sec) {
+		String w = sec.getValue("width");
+		String h = sec.getValue("height");
+		String x = sec.getValue("x");
+		String y = sec.getValue("y");
 
 		boolean stretchX = false;
 		if ((w != null) && (x != null)) {

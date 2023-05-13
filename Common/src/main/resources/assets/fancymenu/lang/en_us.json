@@ -18,5 +18,13 @@
   "fancymenu.element.border_display.pos_X": "X-Position: %s",
   "fancymenu.element.border_display.pos_y": "Y-Position: %s",
   "fancymenu.element.border_display.width": "Width: %s",
-  "fancymenu.element.border_display.height": "Height: %s"
+  "fancymenu.element.border_display.height": "Height: %s",
+  "fancymenu.background.image": "Image",
+  "fancymenu.background.image.desc": "A simple PNG/JPEG image.",
+  "fancymenu.background.animation": "Animation",
+  "fancymenu.background.animation.desc": "An animation.\nSee fm.keksuccino.dev for details.",
+  "fancymenu.background.slideshow": "Slideshow",
+  "fancymenu.background.slideshow.desc": "An image slideshow.\nSee fm.keksuccino.dev for details.",
+  "fancymenu.background.panorama": "Cubic Panorama",
+  "fancymenu.background.panorama.desc": "A moving panorama cube.\nSimilar to the Title Menu background.\nSee fm.keksuccino.dev for details."
 }

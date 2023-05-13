@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -29,7 +29,7 @@ public class LayoutButtonDummyCustomizationItem  extends AbstractElement {
 	protected ScreenCustomizationLayer.ButtonCustomizationContainer button;
 
 	public LayoutButtonDummyCustomizationItem(ScreenCustomizationLayer.ButtonCustomizationContainer button, String label, int width, int height, int x, int y) {
-		super(new PropertiesSection("customization"));
+		super(new PropertyContainer("customization"));
 		this.value = label;
 		this.elementType = "handlelayoutbutton";
 		this.setWidth(width);

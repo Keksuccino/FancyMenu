@@ -7,18 +7,18 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.gui.screens.Screen;
 
 public class SlideshowCustomizationItem extends AbstractElement {
 
 	public ExternalTextureSlideshowRenderer renderer = null;
 	
-	public SlideshowCustomizationItem(PropertiesSection item) {
+	public SlideshowCustomizationItem(PropertyContainer item) {
 		super(item);
 		
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addslideshow")) {
-			this.value = item.getEntryValue("name");
+			this.value = item.getValue("name");
 			if ((this.value != null) && SlideshowHandler.slideshowExists(this.value)) {
 				this.renderer = SlideshowHandler.getSlideshow(this.value);
 			} else {

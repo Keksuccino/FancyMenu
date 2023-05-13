@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
@@ -29,17 +29,17 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
     protected volatile long lastTick = -1;
     protected volatile TickerElementThreadController asyncThreadController = null;
 
-    public TickerElement(ElementBuilder parent, PropertiesSection serializedElement) {
+    public TickerElement(ElementBuilder parent, PropertyContainer serializedElement) {
         super(parent, serializedElement);
     }
 
     @Override
-    protected void init(PropertiesSection serializedElement) {
+    protected void init(PropertyContainer serializedElement) {
 
         super.init(serializedElement);
 
         Map<Integer, ActionContainer> tempActions = new HashMap<>();
-        for (Map.Entry<String, String> m : serializedElement.getEntries().entrySet()) {
+        for (Map.Entry<String, String> m : serializedElement.getProperties().entrySet()) {
             //tickeraction_<index>_ACTION
             if (m.getKey().startsWith("tickeraction_")) {
                 String index = m.getKey().split("_", 3)[1];
@@ -57,17 +57,17 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
             this.actions.add(tempActions.get(i));
         }
 
-        String tickDelayMsString = serializedElement.getEntryValue("tick_delay");
+        String tickDelayMsString = serializedElement.getValue("tick_delay");
         if ((tickDelayMsString != null) && MathUtils.isLong(tickDelayMsString)) {
             this.tickDelayMs = Long.parseLong(tickDelayMsString);
         }
 
-        String isAsyncString = serializedElement.getEntryValue("is_async");
+        String isAsyncString = serializedElement.getValue("is_async");
         if ((isAsyncString != null) && isAsyncString.equalsIgnoreCase("true")) {
             this.isAsync = true;
         }
 
-        String tickModeString = serializedElement.getEntryValue("tick_mode");
+        String tickModeString = serializedElement.getValue("tick_mode");
         if (tickModeString != null) {
             TickMode t = TickMode.getByName(tickModeString);
             if (t != null) {

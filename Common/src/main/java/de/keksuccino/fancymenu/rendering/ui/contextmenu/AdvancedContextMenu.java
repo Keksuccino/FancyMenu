@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.rendering.ui.contextmenu;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.misc.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;

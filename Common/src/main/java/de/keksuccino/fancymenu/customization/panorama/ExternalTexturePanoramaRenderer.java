@@ -9,9 +9,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -45,26 +45,26 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 		if (props.exists()) {
 
-			PropertiesSet s = PropertiesSerializer.getProperties(props.getPath());
+			PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(props.getPath());
 
 			if (s != null) {
-				List<PropertiesSection> l = s.getPropertiesOfType("panorama-meta");
+				List<PropertyContainer> l = s.getSectionsOfType("panorama-meta");
 				if ((l != null) && !l.isEmpty()) {
-					this.name = l.get(0).getEntryValue("name");
+					this.name = l.get(0).getValue("name");
 					if (this.name == null) {
 						System.out.println("############## ERROR [FANCYMENU] ##############");
 						System.out.println("Missing 'name' value in properties file for panorama cube: " + this.dir);
 						System.out.println("###############################################");
 					}
-					String sp = l.get(0).getEntryValue("speed");
+					String sp = l.get(0).getValue("speed");
 					if ((sp != null) && MathUtils.isFloat(sp)) {
 						this.speed = Float.parseFloat(sp);
 					}
-					String fo = l.get(0).getEntryValue("fov");
+					String fo = l.get(0).getValue("fov");
 					if ((fo != null) && MathUtils.isDouble(fo)) {
 						this.fov = Double.parseDouble(fo);
 					}
-					String an = l.get(0).getEntryValue("angle");
+					String an = l.get(0).getValue("angle");
 					if ((an != null) && MathUtils.isFloat(an)) {
 						this.angle = Float.parseFloat(an);
 					}

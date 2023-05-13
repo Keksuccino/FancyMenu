@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,15 +57,15 @@ public class LoadingRequirementGroup {
     }
 
     @NotNull
-    public static PropertiesSection serializeRequirementGroup(@NotNull LoadingRequirementGroup group) {
-        PropertiesSection sec = new PropertiesSection("requirement_group");
+    public static PropertyContainer serializeRequirementGroup(@NotNull LoadingRequirementGroup group) {
+        PropertyContainer sec = new PropertyContainer("requirement_group");
         String key = "[loading_requirement_group:" + group.identifier + "]";
         String value = "[group_mode:" + group.mode.name + "]";
-        sec.addEntry(key, value);
+        sec.putProperty(key, value);
         for (LoadingRequirementInstance i : group.instances) {
             i.group = group;
             List<String> l = LoadingRequirementInstance.serializeRequirementInstance(i);
-            sec.addEntry(l.get(0), l.get(1));
+            sec.putProperty(l.get(0), l.get(1));
         }
         return sec;
     }

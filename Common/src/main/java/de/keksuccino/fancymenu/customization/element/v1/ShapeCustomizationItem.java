@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
@@ -16,18 +16,18 @@ public class ShapeCustomizationItem extends AbstractElement {
 	protected String colorString = "#ffffff";
 	protected Color color = Color.WHITE;
 	
-	public ShapeCustomizationItem(PropertiesSection item) {
+	public ShapeCustomizationItem(PropertyContainer item) {
 		super(item);
 		
 		if (this.elementType.equals("addshape")) {
 			
-			String sh = item.getEntryValue("shape");
+			String sh = item.getValue("shape");
 			if (sh != null) {
 				this.value = sh;
 				this.shape = Shape.byName(sh);
 			}
 			
-			String c = item.getEntryValue("color");
+			String c = item.getValue("color");
 			if (c != null) {
 				this.setColor(c);
 			}

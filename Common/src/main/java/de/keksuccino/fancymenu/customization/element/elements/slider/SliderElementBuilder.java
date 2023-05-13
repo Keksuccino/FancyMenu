@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 
 public class SliderElementBuilder extends ElementBuilder {
@@ -17,14 +17,14 @@ public class SliderElementBuilder extends ElementBuilder {
 
     @Override
     public @NotNull CustomizationItem buildDefaultInstance() {
-        SliderElement i = new SliderElement(this, new PropertiesSection("dummy"));
+        SliderElement i = new SliderElement(this, new PropertyContainer("dummy"));
         i.width = 100;
         i.height = 20;
         return i;
     }
 
     @Override
-    public CustomizationItem deserializeElement(PropertiesSection serializedElement) {
+    public CustomizationItem deserializeElement(PropertyContainer serializedElement) {
         return new SliderElement(this, serializedElement);
     }
 

@@ -10,9 +10,9 @@ public class AspectRatio {
     protected final int width;
     protected final int height;
 
-    public AspectRatio(int width, int height) {
-        this.width = width;
-        this.height = height;
+    public AspectRatio(int originalWidth, int originalHeight) {
+        this.width = originalWidth;
+        this.height = originalHeight;
     }
 
     public int getInputWidth() {

@@ -22,7 +22,7 @@
 //import de.keksuccino.konkrete.input.StringUtils;
 //import de.keksuccino.konkrete.localization.Locals;
 //import de.keksuccino.konkrete.math.MathUtils;
-//import de.keksuccino.konkrete.properties.PropertiesSection;
+//import de.keksuccino.fancymenu.properties.PropertiesSection;
 //import de.keksuccino.konkrete.rendering.RenderUtils;
 //import net.minecraft.client.Minecraft;
 //import net.minecraft.client.gui.GuiComponent;

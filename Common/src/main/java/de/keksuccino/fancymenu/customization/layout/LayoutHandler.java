@@ -13,9 +13,9 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.PreloadedLayoutEditorScreen;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -47,7 +47,7 @@ public class LayoutHandler {
 		}
 		for (File f : dir.listFiles()) {
 			if (f.getPath().toLowerCase().endsWith(".txt")) {
-				PropertiesSet s = PropertiesSerializer.getProperties(f.getAbsolutePath().replace("\\", "/"));
+				PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(f.getAbsolutePath().replace("\\", "/"));
 				if (s != null) {
 					Layout layout = deserializeLayout(s, f);
 					if (layout != null) {
@@ -60,7 +60,7 @@ public class LayoutHandler {
 	}
 
 	@Nullable
-	public static Layout deserializeLayout(@NotNull PropertiesSet serialized, @Nullable File layoutFile) {
+	public static Layout deserializeLayout(@NotNull PropertyContainerSet serialized, @Nullable File layoutFile) {
 		return Layout.deserialize(serialized, layoutFile);
 	}
 
@@ -152,15 +152,15 @@ public class LayoutHandler {
 	public static void editLayout(Screen current, File layout) {
 		try {
 			if ((layout != null) && (current != null) && (layout.exists()) && (layout.isFile())) {
-				List<PropertiesSet> l = new ArrayList<>();
-				PropertiesSet set = PropertiesSerializer.getProperties(layout.getPath());
+				List<PropertyContainerSet> l = new ArrayList<>();
+				PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(layout.getPath());
 				l.add(set);
-				List<PropertiesSection> meta = set.getPropertiesOfType("customization-meta");
+				List<PropertyContainer> meta = set.getSectionsOfType("customization-meta");
 				if (meta.isEmpty()) {
-					meta = set.getPropertiesOfType("type-meta");
+					meta = set.getSectionsOfType("type-meta");
 				}
 				if (!meta.isEmpty()) {
-					meta.get(0).addEntry("path", layout.getPath());
+					meta.get(0).putProperty("path", layout.getPath());
 					LayoutEditorScreen.isActive = true;
 					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
 					SoundRegistry.stopSounds();
@@ -192,9 +192,9 @@ public class LayoutHandler {
 			if (f.exists() && f.isFile()) {
 				f.delete();
 			}
-			PropertiesSet set = layout.serialize();
+			PropertyContainerSet set = layout.serialize();
 			if (set != null) {
-				PropertiesSerializer.writeProperties(set, f.getPath());
+				PropertiesSerializer.serializePropertyContainerSet(set, f.getPath());
 				return true;
 			}
 		}

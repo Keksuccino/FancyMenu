@@ -1,16 +1,16 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanilla;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.IElementStacker;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElementBuilder;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-
-public class VanillaButtonElementBuilder extends ButtonElementBuilder {
+public class VanillaButtonElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaButtonElement> {
 
     public static final VanillaButtonElementBuilder INSTANCE = new VanillaButtonElementBuilder();
 
@@ -21,7 +21,9 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder {
 
     @Override
     public @NotNull VanillaButtonElement buildDefaultInstance() {
-        return new VanillaButtonElement(this);
+        VanillaButtonElement element = new VanillaButtonElement(this);
+        element.anchorPoint = ElementAnchorPoints.VANILLA;
+        return element;
     }
 
     @Override
@@ -30,17 +32,14 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder {
         try {
 
             VanillaButtonElement element = (VanillaButtonElement) elementAbstract;
-            SerializedElement ori = super.serializeElementInternal(element);
-            if (ori != null) {
+            SerializedElement serialized = super.serializeElementInternal(element);
+            if (serialized != null) {
 
-                SerializedElement serialized = new SerializedElement("vanilla_button");
-                for (Map.Entry<String, String> m : ori.getEntries().entrySet()) {
-                    serialized.addEntry(m.getKey(), m.getValue());
-                }
+                serialized.setType("vanilla_button");
 
-                serialized.addEntry("button_identifier", element.vanillaButtonIdentifier);
-                serialized.addEntry("is_hidden", "" + element.vanillaButtonHidden);
-                serialized.addEntry("automated_button_clicks", "" + element.automatedButtonClicks);
+                serialized.putProperty("button_identifier", element.vanillaButtonIdentifier);
+                serialized.putProperty("is_hidden", "" + element.vanillaButtonHidden);
+                serialized.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
                 return serialized;
 
@@ -59,19 +58,19 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder {
 
         VanillaButtonElement element = (VanillaButtonElement) super.deserializeElement(serialized);
 
-        String buttonId = serialized.getEntryValue("button_identifier");
+        String buttonId = serialized.getValue("button_identifier");
         if (buttonId != null) {
             element.vanillaButtonIdentifier = buttonId;
         } else {
             throw new NullPointerException("[FANCYMENU] Failed to deserialize VanillaButtonElement! Button ID was NULL!");
         }
 
-        String hidden = serialized.getEntryValue("is_hidden");
+        String hidden = serialized.getValue("is_hidden");
         if ((hidden != null) && hidden.equalsIgnoreCase("true")) {
             element.vanillaButtonHidden = true;
         }
 
-        String automatedClicks = serialized.getEntryValue("automated_button_clicks");
+        String automatedClicks = serialized.getValue("automated_button_clicks");
         if ((automatedClicks != null) && MathUtils.isInteger(automatedClicks)) {
             element.automatedButtonClicks = Integer.parseInt(automatedClicks);
         }
@@ -81,8 +80,81 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder {
     }
 
     @Override
-    public @Nullable VanillaButtonElement deserializeElementInternal(@NotNull SerializedElement serializedElement) {
-        return (VanillaButtonElement) super.deserializeElementInternal(serializedElement);
+    public @Nullable VanillaButtonElement deserializeElementInternal(@NotNull SerializedElement serialized) {
+        return (VanillaButtonElement) super.deserializeElementInternal(serialized);
+    }
+
+    @Override
+    public void stackElements(@NotNull VanillaButtonElement e, @NotNull VanillaButtonElement stack) {
+
+        //Don't stack cached button stuff, just the plain customization part + identifier
+
+        //VanillaButtonElement stuff
+        if (e.vanillaButtonIdentifier != null) {
+            stack.vanillaButtonIdentifier = e.vanillaButtonIdentifier;
+        }
+        if (e.vanillaButtonHidden) {
+            stack.vanillaButtonHidden = true;
+        }
+        if (e.automatedButtonClicks != 0) {
+            stack.automatedButtonClicks = e.automatedButtonClicks;
+        }
+
+        //ButtonElement stuff
+        if (e.clickSound != null) {
+            stack.clickSound = e.clickSound;
+        }
+        if (e.hoverSound != null) {
+            stack.hoverSound = e.hoverSound;
+        }
+        if (e.label != null) {
+            stack.label = e.label;
+        }
+        if (e.hoverLabel != null) {
+            stack.hoverLabel = e.hoverLabel;
+        }
+        if (e.tooltip != null) {
+            stack.tooltip = e.tooltip;
+        }
+        if (e.backgroundTextureNormal != null) {
+            stack.backgroundTextureNormal = e.backgroundTextureNormal;
+        }
+        if (e.backgroundTextureHover != null) {
+            stack.backgroundTextureHover = e.backgroundTextureHover;
+        }
+        if (e.backgroundAnimationNormal != null) {
+            stack.backgroundAnimationNormal = e.backgroundAnimationNormal;
+        }
+        if (e.backgroundAnimationHover != null) {
+            stack.backgroundAnimationHover = e.backgroundAnimationHover;
+        }
+        if (!e.loopBackgroundAnimations) {
+            stack.loopBackgroundAnimations = false;
+        }
+        if (!e.restartBackgroundAnimationsOnHover) {
+            stack.restartBackgroundAnimationsOnHover = false;
+        }
+
+    }
+
+    @Override
+    public void stackElementsSingleInternal(AbstractElement e, AbstractElement stack) {
+
+        IElementStacker.super.stackElementsSingleInternal(e, stack);
+
+        //AbstractElement stuff
+        if (e.anchorPoint != ElementAnchorPoints.VANILLA) {
+            stack.anchorPoint = e.anchorPoint;
+        }
+
+    }
+
+    @Override
+    public @Nullable VanillaButtonElement stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
+        if (stack != null) {
+            stack.anchorPoint = ElementAnchorPoints.VANILLA;
+        }
+        return IElementStacker.super.stackElementsInternal(stack, elements);
     }
 
     @Override

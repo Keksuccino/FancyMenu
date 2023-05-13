@@ -16,10 +16,10 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.element.v1.*;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationElement;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayerRegistry;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
+import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
+import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayerRegistry;
+import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.localization.Locals;
@@ -57,8 +57,8 @@ import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -85,7 +85,7 @@ public class LayoutEditorScreen extends Screen {
 	
 	public static boolean isActive = false;
 
-	protected static final List<PropertiesSection> COPIED_ELEMENT_CACHE = new ArrayList<PropertiesSection>();
+	protected static final List<PropertyContainer> COPIED_ELEMENT_CACHE = new ArrayList<PropertyContainer>();
 	protected static boolean initDone = false;
 	
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
@@ -182,9 +182,9 @@ public class LayoutEditorScreen extends Screen {
 		}
 
 		if (!(this instanceof PreloadedLayoutEditorScreen)) {
-			DeepCustomizationLayer layer = DeepCustomizationLayerRegistry.getLayerByMenuIdentifier(this.screen.getClass().getName());
+			DeepScreenCustomizationLayer layer = DeepScreenCustomizationLayerRegistry.getLayer(this.screen.getClass().getName());
 			if (layer != null) {
-				for (DeepCustomizationElement e : layer.getElementsList()) {
+				for (DeepElementBuilder e : layer.getBuilders()) {
 					this.content.add(e.constructEditorElementInstance(e.constructDefaultItemInstance(), this));
 				}
 			}
@@ -248,61 +248,61 @@ public class LayoutEditorScreen extends Screen {
 		return false;
 	}
 
-	protected List<PropertiesSection> getAllProperties() {
+	protected List<PropertyContainer> getAllProperties() {
 
-		List<PropertiesSection> l = new ArrayList<>();
+		List<PropertyContainer> l = new ArrayList<>();
 		
-		PropertiesSection meta = new PropertiesSection("customization-meta");
-		meta.addEntry("identifier", this.getScreenToCustomizeIdentifier());
-		meta.addEntry("renderorder", this.renderorder);
+		PropertyContainer meta = new PropertyContainer("customization-meta");
+		meta.putProperty("identifier", this.getScreenToCustomizeIdentifier());
+		meta.putProperty("renderorder", this.renderorder);
 
-		meta.addEntry("randommode", "" + this.randomMode);
-		meta.addEntry("randomgroup", this.randomGroup);
-		meta.addEntry("randomonlyfirsttime", "" + this.randomOnlyFirstTime);
+		meta.putProperty("randommode", "" + this.randomMode);
+		meta.putProperty("randomgroup", this.randomGroup);
+		meta.putProperty("randomonlyfirsttime", "" + this.randomOnlyFirstTime);
 		
 		if ((this.requiredmods != null) && !this.requiredmods.replace(" ", "").equals("")) {
-			meta.addEntry("requiredmods", this.requiredmods);
+			meta.putProperty("requiredmods", this.requiredmods);
 		}
 		if ((this.minimumMC != null) && !this.minimumMC.replace(" ", "").equals("")) {
-			meta.addEntry("minimummcversion", this.minimumMC);
+			meta.putProperty("minimummcversion", this.minimumMC);
 		}
 		if ((this.maximumMC != null) && !this.maximumMC.replace(" ", "").equals("")) {
-			meta.addEntry("maximummcversion", this.maximumMC);
+			meta.putProperty("maximummcversion", this.maximumMC);
 		}
 		if ((this.minimumFM != null) && !this.minimumFM.replace(" ", "").equals("")) {
-			meta.addEntry("minimumfmversion", this.minimumFM);
+			meta.putProperty("minimumfmversion", this.minimumFM);
 		}
 		if ((this.maximumFM != null) && !this.maximumFM.replace(" ", "").equals("")) {
-			meta.addEntry("maximumfmversion", this.maximumFM);
+			meta.putProperty("maximumfmversion", this.maximumFM);
 		}
 		if (this.biggerThanWidth != 0) {
-			meta.addEntry("biggerthanwidth", "" + this.biggerThanWidth);
+			meta.putProperty("biggerthanwidth", "" + this.biggerThanWidth);
 		}
 		if (this.biggerThanHeight != 0) {
-			meta.addEntry("biggerthanheight", "" + this.biggerThanHeight);
+			meta.putProperty("biggerthanheight", "" + this.biggerThanHeight);
 		}
 		if (this.smallerThanWidth != 0) {
-			meta.addEntry("smallerthanwidth", "" + this.smallerThanWidth);
+			meta.putProperty("smallerthanwidth", "" + this.smallerThanWidth);
 		}
 		if (this.smallerThanHeight != 0) {
-			meta.addEntry("smallerthanheight", "" + this.smallerThanHeight);
+			meta.putProperty("smallerthanheight", "" + this.smallerThanHeight);
 		}
 		if (this.isUniversalLayout() && !this.universalLayoutWhitelist.isEmpty()) {
 			String wl = "";
 			for (String s : this.universalLayoutWhitelist) {
 				wl += s + ";";
 			}
-			meta.addEntry("universal_layout_whitelist", wl);
+			meta.putProperty("universal_layout_whitelist", wl);
 		}
 		if (this.isUniversalLayout() && !this.universalLayoutBlacklist.isEmpty()) {
 			String bl = "";
 			for (String s : this.universalLayoutBlacklist) {
 				bl += s + ";";
 			}
-			meta.addEntry("universal_layout_blacklist", bl);
+			meta.putProperty("universal_layout_blacklist", bl);
 		}
 		if (this.customMenuTitle != null) {
-			meta.addEntry("custom_menu_title", this.customMenuTitle);
+			meta.putProperty("custom_menu_title", this.customMenuTitle);
 		}
 
 		this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(meta);
@@ -320,93 +320,93 @@ public class LayoutEditorScreen extends Screen {
 					i++;
 				}
 			}
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "animatebackground");
-			ps.addEntry("name", names);
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "animatebackground");
+			ps.putProperty("name", names);
 			if (this.randomBackgroundAnimation) {
-				ps.addEntry("random", "true");
+				ps.putProperty("random", "true");
 			}
-			ps.addEntry("restart_on_load", "" + this.restartAnimationBackgroundOnLoad);
+			ps.putProperty("restart_on_load", "" + this.restartAnimationBackgroundOnLoad);
 			l.add(ps);
 		}
 
 		if (this.backgroundPanorama != null) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "setbackgroundpanorama");
-			ps.addEntry("name", this.backgroundPanorama.getName());
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "setbackgroundpanorama");
+			ps.putProperty("name", this.backgroundPanorama.getName());
 			l.add(ps);
 		}
 
 		if (this.backgroundSlideshow != null) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "setbackgroundslideshow");
-			ps.addEntry("name", this.backgroundSlideshow.getName());
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "setbackgroundslideshow");
+			ps.putProperty("name", this.backgroundSlideshow.getName());
 			l.add(ps);
 		}
 		
 		if (this.backgroundTexture != null) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "texturizebackground");
-			ps.addEntry("path", this.backgroundTexturePath);
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "texturizebackground");
+			ps.putProperty("path", this.backgroundTexturePath);
 			if (this.panorama) {
-				ps.addEntry("wideformat", "true");
+				ps.putProperty("wideformat", "true");
 			}
 			l.add(ps);
 		}
 
 		if (this.customMenuBackground != null) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "api:custombackground");
-			ps.addEntry("type_identifier", this.customMenuBackground.getType().getIdentifier());
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "api:custombackground");
+			ps.putProperty("type_identifier", this.customMenuBackground.getType().getIdentifier());
 			if (this.customMenuBackground.getType().needsInputString()) {
-				ps.addEntry("input_string", this.customMenuBackgroundInputString);
+				ps.putProperty("input_string", this.customMenuBackgroundInputString);
 			} else {
-				ps.addEntry("background_identifier", this.customMenuBackground.getIdentifier());
+				ps.putProperty("background_identifier", this.customMenuBackground.getIdentifier());
 			}
 			l.add(ps);
 		}
 
 		if (this.scale > 0) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "setscale");
-			ps.addEntry("scale", "" + this.scale);
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "setscale");
+			ps.putProperty("scale", "" + this.scale);
 			l.add(ps);
 		}
 
 		if ((this.autoScalingWidth != 0) && (this.autoScalingHeight != 0)) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "autoscale");
-			ps.addEntry("basewidth", "" + this.autoScalingWidth);
-			ps.addEntry("baseheight", "" + this.autoScalingHeight);
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "autoscale");
+			ps.putProperty("basewidth", "" + this.autoScalingWidth);
+			ps.putProperty("baseheight", "" + this.autoScalingHeight);
 			l.add(ps);
 		}
 
 		if (this.openAudio != null) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "setopenaudio");
-			ps.addEntry("path", this.openAudio);
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "setopenaudio");
+			ps.putProperty("path", this.openAudio);
 			l.add(ps);
 		}
 
 		if (this.closeAudio != null) {
-			PropertiesSection ps = new PropertiesSection("customization");
-			ps.addEntry("action", "setcloseaudio");
-			ps.addEntry("path", this.closeAudio);
+			PropertyContainer ps = new PropertyContainer("customization");
+			ps.putProperty("action", "setcloseaudio");
+			ps.putProperty("path", this.closeAudio);
 			l.add(ps);
 		}
 		
 		for (Map.Entry<String, Boolean> m : this.audio.entrySet()) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addaudio");
-			s.addEntry("path", m.getKey());
-			s.addEntry("loop", "" + m.getValue());
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "addaudio");
+			s.putProperty("path", m.getKey());
+			s.putProperty("loop", "" + m.getValue());
 			l.add(s);
 		}
 
 		//Background Options Section
-		PropertiesSection s = new PropertiesSection("customization");
-		s.addEntry("action", "backgroundoptions");
-		s.addEntry("keepaspectratio", "" + this.keepBackgroundAspectRatio);
+		PropertyContainer s = new PropertyContainer("customization");
+		s.putProperty("action", "backgroundoptions");
+		s.putProperty("keepaspectratio", "" + this.keepBackgroundAspectRatio);
 		l.add(s);
 		
 		for (AbstractEditorElement o : this.content) {
@@ -440,7 +440,7 @@ public class LayoutEditorScreen extends Screen {
 			if (!this.containsVanillaButton(l, b)) {
 				if (!this.vanillaButtonCustomizationContainers.containsKey(b.getId())) {
 					ScreenCustomizationLayer.ButtonCustomizationContainer cc = new ScreenCustomizationLayer.ButtonCustomizationContainer();
-					PropertiesSection dummySec = new PropertiesSection("customization");
+					PropertyContainer dummySec = new PropertyContainer("customization");
 					cc.loadingRequirementContainer = new LoadingRequirementContainer();
 					this.vanillaButtonCustomizationContainers.put(b.getId(), cc);
 				}
@@ -541,7 +541,7 @@ public class LayoutEditorScreen extends Screen {
 			if ((this.isFocused(object))) {
 				this.focusedObjects.remove(object);
 			}
-			if (!(object instanceof DeepCustomizationLayoutEditorElement)) {
+			if (!(object instanceof AbstractEditorDeepElement)) {
 				this.content.remove(object);
 			}
 			this.updateContent();
@@ -590,14 +590,14 @@ public class LayoutEditorScreen extends Screen {
 		if (this.renderorder.equalsIgnoreCase("foreground")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
 			for (AbstractEditorElement l : this.content) {
-				if (l instanceof DeepCustomizationLayoutEditorElement) {
+				if (l instanceof AbstractEditorDeepElement) {
 					l.render(matrix, mouseX, mouseY);
 				}
 			}
 		}
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
 		for (AbstractEditorElement l : this.content) {
-			if (!(l instanceof LayoutVanillaButton) && !(l instanceof DeepCustomizationLayoutEditorElement)) {
+			if (!(l instanceof LayoutVanillaButton) && !(l instanceof AbstractEditorDeepElement)) {
 				if (!this.isFocused(l)) {
 					l.render(matrix, mouseX, mouseY);
 				}
@@ -606,7 +606,7 @@ public class LayoutEditorScreen extends Screen {
 		if (this.renderorder.equalsIgnoreCase("background")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
 			for (AbstractEditorElement l : this.content) {
-				if (l instanceof DeepCustomizationLayoutEditorElement) {
+				if (l instanceof AbstractEditorDeepElement) {
 					l.render(matrix, mouseX, mouseY);
 				}
 			}
@@ -1111,11 +1111,11 @@ public class LayoutEditorScreen extends Screen {
 			if (filename.equals(f.getName())) {
 				this.history.saveSnapshot(this.history.createSnapshot());
 				
-				PropertiesSection sec = new PropertiesSection("customization");
-				sec.addEntry("action", "addtexture");
-				sec.addEntry("path", path);
-				sec.addEntry("height", "100");
-				sec.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+				PropertyContainer sec = new PropertyContainer("customization");
+				sec.putProperty("action", "addtexture");
+				sec.putProperty("path", path);
+				sec.putProperty("height", "100");
+				sec.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 				
 				TextureCustomizationItem i = new TextureCustomizationItem(sec);
 				this.addContent(new LayoutTexture(i, this));
@@ -1130,12 +1130,12 @@ public class LayoutEditorScreen extends Screen {
 
 	protected void addWebTexture(String url) {
 		this.history.saveSnapshot(this.history.createSnapshot());
-		PropertiesSection s = new PropertiesSection("customization");
-		s.addEntry("action", "addwebtexture");
-		s.addEntry("url", url);
-		s.addEntry("height", "100");
-		s.addEntry("width", "100");
-		s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+		PropertyContainer s = new PropertyContainer("customization");
+		s.putProperty("action", "addwebtexture");
+		s.putProperty("url", url);
+		s.putProperty("height", "100");
+		s.putProperty("width", "100");
+		s.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 		this.addContent(new LayoutWebTexture(new WebTextureCustomizationItem(s), this));
 	}
 
@@ -1146,10 +1146,10 @@ public class LayoutEditorScreen extends Screen {
 		if (SlideshowHandler.slideshowExists(name)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addslideshow");
-			s.addEntry("name", name);
-			s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "addslideshow");
+			s.putProperty("name", name);
+			s.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 			SlideshowCustomizationItem i = new SlideshowCustomizationItem(s);
 			int w = SlideshowHandler.getSlideshow(name).width;
 			int h = SlideshowHandler.getSlideshow(name).height;
@@ -1165,12 +1165,12 @@ public class LayoutEditorScreen extends Screen {
 	}
 	
 	protected void addShape(Shape shape) {
-		PropertiesSection s = new PropertiesSection("customization");
-		s.addEntry("action", "addshape");
-		s.addEntry("shape", shape.name);
-		s.addEntry("width", "100");
-		s.addEntry("height", "100");
-		s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+		PropertyContainer s = new PropertyContainer("customization");
+		s.putProperty("action", "addshape");
+		s.putProperty("shape", shape.name);
+		s.putProperty("width", "100");
+		s.putProperty("height", "100");
+		s.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 		this.history.saveSnapshot(this.history.createSnapshot());
 		this.addContent(new LayoutShape(new ShapeCustomizationItem(s), this));
 	}
@@ -1191,10 +1191,10 @@ public class LayoutEditorScreen extends Screen {
 			
 			this.history.saveSnapshot(this.history.createSnapshot());
 			
-			PropertiesSection sec = new PropertiesSection("customization");
-			sec.addEntry("action", "addsplash");
-			sec.addEntry("splashfilepath", path);
-			sec.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+			PropertyContainer sec = new PropertyContainer("customization");
+			sec.putProperty("action", "addsplash");
+			sec.putProperty("splashfilepath", path);
+			sec.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 			
 			SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
 			this.addContent(new LayoutSplashText(i, this));
@@ -1212,10 +1212,10 @@ public class LayoutEditorScreen extends Screen {
 			
 			this.history.saveSnapshot(this.history.createSnapshot());
 			
-			PropertiesSection sec = new PropertiesSection("customization");
-			sec.addEntry("action", "addsplash");
-			sec.addEntry("text", content);
-			sec.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+			PropertyContainer sec = new PropertyContainer("customization");
+			sec.putProperty("action", "addsplash");
+			sec.putProperty("text", content);
+			sec.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 			
 			SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
 			this.addContent(new LayoutSplashText(i, this));
@@ -1232,10 +1232,10 @@ public class LayoutEditorScreen extends Screen {
 		if (AnimationHandler.animationExists(name)) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addanimation");
-			s.addEntry("name", name);
-			s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "addanimation");
+			s.putProperty("name", name);
+			s.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 			AnimationCustomizationItem i = new AnimationCustomizationItem(s);
 			int w = AnimationHandler.getAnimation(name).getWidth();
 			int h = AnimationHandler.getAnimation(name).getHeight();
@@ -1267,10 +1267,10 @@ public class LayoutEditorScreen extends Screen {
 
 	protected void addWebText(String url) {
 		this.history.saveSnapshot(this.history.createSnapshot());
-		PropertiesSection s = new PropertiesSection("customization");
-		s.addEntry("action", "addwebtext");
-		s.addEntry("url", url);
-		s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+		PropertyContainer s = new PropertyContainer("customization");
+		s.putProperty("action", "addwebtext");
+		s.putProperty("url", url);
+		s.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 		this.addContent(new LayoutWebString(new WebStringCustomizationItem(s), this));
 	}
 	
@@ -1281,10 +1281,10 @@ public class LayoutEditorScreen extends Screen {
 		if (text.length() > 0) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addtext");
-			s.addEntry("value", StringUtils.convertFormatCodes(text, "&", "§"));
-			s.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "addtext");
+			s.putProperty("value", StringUtils.convertFormatCodes(text, "&", "§"));
+			s.putProperty("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 			StringCustomizationItem i = new StringCustomizationItem(s);
 			this.addContent(new LayoutString(i, this));
 		} else {
@@ -1471,7 +1471,7 @@ public class LayoutEditorScreen extends Screen {
 			} else {
 				LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();
 
-				List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+				List<PropertyContainerSet> l = new ArrayList<PropertyContainerSet>();
 				l.add(snap.snapshot);
 
 				PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.screen, l);
@@ -1502,7 +1502,7 @@ public class LayoutEditorScreen extends Screen {
 						} else {
 							LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();
 
-							List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+							List<PropertyContainerSet> l = new ArrayList<PropertyContainerSet>();
 							l.add(snap.snapshot);
 
 							PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.screen, l);
@@ -1538,16 +1538,16 @@ public class LayoutEditorScreen extends Screen {
 	public void pasteElements() {
 		if (!LayoutEditorScreen.COPIED_ELEMENT_CACHE.isEmpty()) {
 
-			PropertiesSet set = new PropertiesSet("menu");
-			for (PropertiesSection s : LayoutEditorScreen.COPIED_ELEMENT_CACHE) {
-				set.addProperties(s);
-				if (s.hasEntry("actionid") && s.getSectionType().equalsIgnoreCase("customization")) {
-					s.removeEntry("actionid");
-					s.addEntry("actionid", ScreenCustomization.generateUniqueIdentifier());
+			PropertyContainerSet set = new PropertyContainerSet("menu");
+			for (PropertyContainer s : LayoutEditorScreen.COPIED_ELEMENT_CACHE) {
+				set.putContainer(s);
+				if (s.hasProperty("actionid") && s.getType().equalsIgnoreCase("customization")) {
+					s.removeProperty("actionid");
+					s.putProperty("actionid", ScreenCustomization.generateUniqueIdentifier());
 				}
 			}
 
-			List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+			List<PropertyContainerSet> l = new ArrayList<PropertyContainerSet>();
 			l.add(set);
 
 			//Init dummy preloaded editor to use its customization action serializer for building the copied elements

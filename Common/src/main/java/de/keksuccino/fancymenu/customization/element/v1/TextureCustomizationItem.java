@@ -7,7 +7,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -21,11 +21,11 @@ public class TextureCustomizationItem extends AbstractElement {
 	public ExternalTextureResourceLocation texture;
 	public ExternalGifAnimationRenderer gif;
 	
-	public TextureCustomizationItem(PropertiesSection item) {
+	public TextureCustomizationItem(PropertyContainer item) {
 		super(item);
 		
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addtexture")) {
-			this.value = fixBackslashPath(item.getEntryValue("path"));
+			this.value = fixBackslashPath(item.getValue("path"));
 			if (this.value != null) {
 				this.value = this.value.replace("\\", "/");
 				

@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.utils.PlayerUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -66,7 +66,7 @@ public class PlayerEntityElement extends CustomizationItem {
     public float headRotationX;
     public float headRotationY;
 
-    public PlayerEntityElement(ElementBuilder parentContainer, PropertiesSection item) {
+    public PlayerEntityElement(ElementBuilder parentContainer, PropertyContainer item) {
 
         super(parentContainer, item);
 
@@ -75,29 +75,29 @@ public class PlayerEntityElement extends CustomizationItem {
             PlayerEntityElementBuilder.ELEMENT_CACHE.clear();
         }
 
-        String copyClientPlayerString = item.getEntryValue("copy_client_player");
+        String copyClientPlayerString = item.getValue("copy_client_player");
         if ((copyClientPlayerString != null) && copyClientPlayerString.equals("true")) {
             this.setCopyClientPlayer(true);
         }
 
         if (!this.copyClientPlayer) {
 
-            String playerNameString = item.getEntryValue("playername");
+            String playerNameString = item.getValue("playername");
             if (playerNameString != null) {
                 this.setPlayerName(playerNameString, true);
             }
 
-            String autoSkinString = item.getEntryValue("auto_skin");
+            String autoSkinString = item.getValue("auto_skin");
             if ((autoSkinString != null) && autoSkinString.equalsIgnoreCase("true")) {
                 this.autoSkin = true;
             }
 
-            String autoCapeString = item.getEntryValue("auto_cape");
+            String autoCapeString = item.getValue("auto_cape");
             if ((autoCapeString != null) && autoCapeString.equalsIgnoreCase("true")) {
                 this.autoCape = true;
             }
 
-            String slim = item.getEntryValue("slim");
+            String slim = item.getValue("slim");
             if (slim != null) {
                 if (slim.replace(" ", "").equalsIgnoreCase("true")) {
                     this.slim = true;
@@ -105,11 +105,11 @@ public class PlayerEntityElement extends CustomizationItem {
             }
 
             if (!this.autoSkin) {
-                this.skinUrl = item.getEntryValue("skinurl");
+                this.skinUrl = item.getValue("skinurl");
                 if (this.skinUrl != null) {
                     this.setSkinTextureBySource(this.skinUrl, true);
                 }
-                this.skinPath = fixBackslashPath(item.getEntryValue("skinpath"));
+                this.skinPath = fixBackslashPath(item.getValue("skinpath"));
                 if ((this.skinPath != null) && (this.skinUrl == null)) {
                     this.setSkinTextureBySource(this.skinPath, false);
                 }
@@ -118,11 +118,11 @@ public class PlayerEntityElement extends CustomizationItem {
             }
 
             if (!this.autoCape) {
-                this.capeUrl = item.getEntryValue("capeurl");
+                this.capeUrl = item.getValue("capeurl");
                 if (this.capeUrl != null) {
                     this.setCapeTextureBySource(this.capeUrl, true);
                 }
-                this.capePath = fixBackslashPath(item.getEntryValue("capepath"));
+                this.capePath = fixBackslashPath(item.getValue("capepath"));
                 if ((this.capePath != null) && (this.capeUrl == null)) {
                     this.setCapeTextureBySource(this.capePath, false);
                 }
@@ -132,54 +132,54 @@ public class PlayerEntityElement extends CustomizationItem {
 
         }
 
-        String scaleString = item.getEntryValue("scale");
+        String scaleString = item.getValue("scale");
         if ((scaleString != null) && MathUtils.isDouble(scaleString)) {
             this.scale = (int) Double.parseDouble(scaleString);
         }
 
-        String hasParrotString = item.getEntryValue("parrot");
+        String hasParrotString = item.getValue("parrot");
         if (hasParrotString != null) {
             if (hasParrotString.replace(" ", "").equalsIgnoreCase("true")) {
                 this.setHasParrotOnShoulder(true, false);
             }
         }
 
-        String parrotLeftShoulderString = item.getEntryValue("parrot_left_shoulder");
+        String parrotLeftShoulderString = item.getValue("parrot_left_shoulder");
         if (parrotLeftShoulderString != null) {
             if (parrotLeftShoulderString.replace(" ", "").equalsIgnoreCase("true")) {
                 this.setHasParrotOnShoulder(this.hasParrotOnShoulder, true);
             }
         }
 
-        String isBabyString = item.getEntryValue("is_baby");
+        String isBabyString = item.getValue("is_baby");
         if (isBabyString != null) {
             if (isBabyString.replace(" ", "").equalsIgnoreCase("true")) {
                 this.setIsBaby(true);
             }
         }
 
-        String crouching = item.getEntryValue("crouching");
+        String crouching = item.getValue("crouching");
         if (crouching != null) {
             if (crouching.replace(" ", "").equalsIgnoreCase("true")) {
                 this.setCrouching(true);
             }
         }
 
-        String showName = item.getEntryValue("showname");
+        String showName = item.getValue("showname");
         if (showName != null) {
             if (showName.replace(" ", "").equalsIgnoreCase("false")) {
                 this.setShowPlayerName(false);
             }
         }
 
-        String followMouseString = item.getEntryValue("follow_mouse");
+        String followMouseString = item.getValue("follow_mouse");
         if (followMouseString != null) {
             if (followMouseString.replace(" ", "").equalsIgnoreCase("false")) {
                 this.followMouse = false;
             }
         }
 
-        String rotX = item.getEntryValue("headrotationx");
+        String rotX = item.getValue("headrotationx");
         if (rotX != null) {
             rotX = rotX.replace(" ", "");
             if (MathUtils.isFloat(rotX)) {
@@ -187,7 +187,7 @@ public class PlayerEntityElement extends CustomizationItem {
             }
         }
 
-        String rotY = item.getEntryValue("headrotationy");
+        String rotY = item.getValue("headrotationy");
         if (rotY != null) {
             rotY = rotY.replace(" ", "");
             if (MathUtils.isFloat(rotY)) {
@@ -195,7 +195,7 @@ public class PlayerEntityElement extends CustomizationItem {
             }
         }
 
-        String bodyrotX = item.getEntryValue("bodyrotationx");
+        String bodyrotX = item.getValue("bodyrotationx");
         if (bodyrotX != null) {
             bodyrotX = bodyrotX.replace(" ", "");
             if (MathUtils.isFloat(bodyrotX)) {
@@ -203,7 +203,7 @@ public class PlayerEntityElement extends CustomizationItem {
             }
         }
 
-        String bodyrotY = item.getEntryValue("bodyrotationy");
+        String bodyrotY = item.getValue("bodyrotationy");
         if (bodyrotY != null) {
             bodyrotY = bodyrotY.replace(" ", "");
             if (MathUtils.isFloat(bodyrotY)) {

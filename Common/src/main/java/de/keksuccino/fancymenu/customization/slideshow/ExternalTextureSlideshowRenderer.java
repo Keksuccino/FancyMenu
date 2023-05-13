@@ -10,9 +10,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.gui.GuiComponent;
@@ -50,24 +50,24 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		
 		if (props.exists()) {
 			
-			PropertiesSet s = PropertiesSerializer.getProperties(props.getPath());
+			PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(props.getPath());
 			
 			if (s != null) {
-				List<PropertiesSection> l = s.getPropertiesOfType("slideshow-meta");
+				List<PropertyContainer> l = s.getSectionsOfType("slideshow-meta");
 				if ((l != null) && !l.isEmpty()) {
-					this.name = l.get(0).getEntryValue("name");
+					this.name = l.get(0).getValue("name");
 					if (this.name == null) {
 						System.out.println("############## ERROR [FANCYMENU] ##############");
 						System.out.println("Missing 'name' value in properties file for slideshow: " + this.dir);
 						System.out.println("###############################################");
 					}
 					
-					String dur = l.get(0).getEntryValue("duration");
+					String dur = l.get(0).getValue("duration");
 					if ((dur != null) && MathUtils.isDouble(dur)) {
 						this.imageDuration = Double.parseDouble(dur);
 					}
 					
-					String fs = l.get(0).getEntryValue("fadespeed");
+					String fs = l.get(0).getValue("fadespeed");
 					if ((fs != null) && MathUtils.isFloat(fs)) {
 						float f = Float.parseFloat(fs);
 						if (f < 0.0F) {
@@ -76,22 +76,22 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 						this.fadeSpeed = f;
 					}
 					
-					String sx = l.get(0).getEntryValue("x");
+					String sx = l.get(0).getValue("x");
 					if ((sx != null) && MathUtils.isInteger(sx)) {
 						this.x = Integer.parseInt(sx);
 					}
 					
-					String sy = l.get(0).getEntryValue("y");
+					String sy = l.get(0).getValue("y");
 					if ((sy != null) && MathUtils.isInteger(sy)) {
 						this.y = Integer.parseInt(sy);
 					}
 					
-					String sw = l.get(0).getEntryValue("width");
+					String sw = l.get(0).getValue("width");
 					if ((sw != null) && MathUtils.isInteger(sw)) {
 						this.width = Integer.parseInt(sw);
 					}
 					
-					String sh = l.get(0).getEntryValue("height");
+					String sh = l.get(0).getValue("height");
 					if ((sh != null) && MathUtils.isInteger(sh)) {
 						this.height = Integer.parseInt(sh);
 					}

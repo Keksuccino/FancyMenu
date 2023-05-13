@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.variables;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -64,13 +64,13 @@ public class VariableHandler {
             if (!VARIABLES_FILE.exists()) {
                 VARIABLES_FILE.createNewFile();
             }
-            PropertiesSet set = new PropertiesSet("cached_variables");
-            PropertiesSection sec = new PropertiesSection("variables");
+            PropertyContainerSet set = new PropertyContainerSet("cached_variables");
+            PropertyContainer sec = new PropertyContainer("variables");
             for (Map.Entry<String, String> m : variables.entrySet()) {
-                sec.addEntry(m.getKey(), m.getValue());
+                sec.putProperty(m.getKey(), m.getValue());
             }
-            set.addProperties(sec);
-            PropertiesSerializer.writeProperties(set, VARIABLES_FILE.getPath());
+            set.putContainer(sec);
+            PropertiesSerializer.serializePropertyContainerSet(set, VARIABLES_FILE.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,12 +82,12 @@ public class VariableHandler {
                 writeToFile();
             }
             variables.clear();
-            PropertiesSet set = PropertiesSerializer.getProperties(VARIABLES_FILE.getPath());
+            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(VARIABLES_FILE.getPath());
             if (set != null) {
-                List<PropertiesSection> secs = set.getPropertiesOfType("variables");
+                List<PropertyContainer> secs = set.getSectionsOfType("variables");
                 if (!secs.isEmpty()) {
-                    PropertiesSection sec = secs.get(0);
-                    for (Map.Entry<String, String> m : sec.getEntries().entrySet()) {
+                    PropertyContainer sec = secs.get(0);
+                    for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
                         variables.put(m.getKey(), m.getValue());
                     }
                 }

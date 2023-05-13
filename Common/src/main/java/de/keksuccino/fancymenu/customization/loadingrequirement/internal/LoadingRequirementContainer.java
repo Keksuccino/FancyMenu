@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -109,33 +109,33 @@ public class LoadingRequirementContainer {
         return new ArrayList<>(this.instances);
     }
 
-    public void serializeContainerToExistingPropertiesSection(@NotNull PropertiesSection target) {
-        PropertiesSection sec = serializeRequirementContainer(this);
-        for (Map.Entry<String, String> m : sec.getEntries().entrySet()) {
-            target.addEntry(m.getKey(), m.getValue());
+    public void serializeContainerToExistingPropertiesSection(@NotNull PropertyContainer target) {
+        PropertyContainer sec = serializeRequirementContainer(this);
+        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
+            target.putProperty(m.getKey(), m.getValue());
         }
     }
 
     @NotNull
-    public static PropertiesSection serializeRequirementContainer(LoadingRequirementContainer container) {
-        PropertiesSection sec = new PropertiesSection("loading_requirement_container");
+    public static PropertyContainer serializeRequirementContainer(LoadingRequirementContainer container) {
+        PropertyContainer sec = new PropertyContainer("loading_requirement_container");
         for (LoadingRequirementGroup g : container.groups) {
-            PropertiesSection sg = LoadingRequirementGroup.serializeRequirementGroup(g);
-            for (Map.Entry<String, String> m : sg.getEntries().entrySet()) {
-                sec.addEntry(m.getKey(), m.getValue());
+            PropertyContainer sg = LoadingRequirementGroup.serializeRequirementGroup(g);
+            for (Map.Entry<String, String> m : sg.getProperties().entrySet()) {
+                sec.putProperty(m.getKey(), m.getValue());
             }
         }
         for (LoadingRequirementInstance i : container.instances) {
             List<String> l = LoadingRequirementInstance.serializeRequirementInstance(i);
-            sec.addEntry(l.get(0), l.get(1));
+            sec.putProperty(l.get(0), l.get(1));
         }
         return sec;
     }
 
     @NotNull
-    public static LoadingRequirementContainer deserializeRequirementContainer(PropertiesSection sec) {
+    public static LoadingRequirementContainer deserializeRequirementContainer(PropertyContainer sec) {
         LoadingRequirementContainer c = new LoadingRequirementContainer();
-        for (Map.Entry<String, String> m : sec.getEntries().entrySet()) {
+        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
             if (m.getKey().startsWith("[loading_requirement_group:")) {
                 LoadingRequirementGroup g = LoadingRequirementGroup.deserializeRequirementGroup(m.getKey(), m.getValue(), c);
                 if (g != null) {
@@ -143,7 +143,7 @@ public class LoadingRequirementContainer {
                 }
             }
         }
-        for (Map.Entry<String, String> m : sec.getEntries().entrySet()) {
+        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
             if (m.getKey().startsWith("[loading_requirement:")) {
                 LoadingRequirementInstance i = LoadingRequirementInstance.deserializeRequirementInstance(m.getKey(), m.getValue(), c);
                 if (i != null) {

@@ -42,8 +42,8 @@ import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -115,7 +115,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 	protected boolean preInitialized = false;
 
 	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
-	protected List<PropertiesSet> normalLayouts = new ArrayList<>();
+	protected List<PropertyContainerSet> normalLayouts = new ArrayList<>();
 	protected SharedLayoutProperties sharedLayoutProps = new SharedLayoutProperties();
 
 	protected String closeAudio;
@@ -208,7 +208,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 		preInitialized = true;
 
-		List<PropertiesSet> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getIdentifier());
+		List<PropertyContainerSet> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getIdentifier());
 		String defaultGroup = "-100397";
 
 		this.normalLayouts.clear();
@@ -224,11 +224,11 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 		this.cachedLayoutWideLoadingRequirements.clear();
 
-		for (PropertiesSet s : rawLayouts) {
+		for (PropertyContainerSet s : rawLayouts) {
 
-			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+			List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 			if (metas.isEmpty()) {
-				metas = s.getPropertiesOfType("type-meta");
+				metas = s.getSectionsOfType("type-meta");
 			}
 			if (metas.isEmpty()) {
 				continue;
@@ -241,14 +241,14 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (!this.forceDisableCustomMenuTitle) {
-				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+				String cusMenuTitle = metas.get(0).getValue("custom_menu_title");
 				if (cusMenuTitle != null) {
 					this.customMenuTitle = cusMenuTitle;
 					ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
 				}
 			}
 
-			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
+			String biggerthanwidth = metas.get(0).getValue("biggerthanwidth");
 			if (biggerthanwidth != null) {
 				biggerthanwidth = biggerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanwidth)) {
@@ -258,7 +258,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 					}
 				}
 			}
-			String biggerthanheight = metas.get(0).getEntryValue("biggerthanheight");
+			String biggerthanheight = metas.get(0).getValue("biggerthanheight");
 			if (biggerthanheight != null) {
 				biggerthanheight = biggerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanheight)) {
@@ -268,7 +268,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 					}
 				}
 			}
-			String smallerthanwidth = metas.get(0).getEntryValue("smallerthanwidth");
+			String smallerthanwidth = metas.get(0).getValue("smallerthanwidth");
 			if (smallerthanwidth != null) {
 				smallerthanwidth = smallerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanwidth)) {
@@ -278,7 +278,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 					}
 				}
 			}
-			String smallerthanheight = metas.get(0).getEntryValue("smallerthanheight");
+			String smallerthanheight = metas.get(0).getValue("smallerthanheight");
 			if (smallerthanheight != null) {
 				smallerthanheight = smallerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanheight)) {
@@ -289,10 +289,10 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 				}
 			}
 
-			String randomMode = metas.get(0).getEntryValue("randommode");
+			String randomMode = metas.get(0).getValue("randommode");
 			if ((randomMode != null) && randomMode.equalsIgnoreCase("true")) {
 
-				String group = metas.get(0).getEntryValue("randomgroup");
+				String group = metas.get(0).getValue("randomgroup");
 				if (group == null) {
 					group = defaultGroup;
 				}
@@ -301,7 +301,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 				}
 				RandomLayoutContainer c = this.randomLayoutGroups.get(group);
 				if (c != null) {
-					String randomOnlyFirstTime = metas.get(0).getEntryValue("randomonlyfirsttime");
+					String randomOnlyFirstTime = metas.get(0).getValue("randomonlyfirsttime");
 					if ((randomOnlyFirstTime != null) && randomOnlyFirstTime.equalsIgnoreCase("true")) {
 						c.setOnlyFirstTime(true);
 					}
@@ -327,15 +327,15 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 		}
 
 		//Applying customizations which needs to be done before other ones
-		for (PropertiesSet s : this.normalLayouts) {
-			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+		for (PropertyContainerSet s : this.normalLayouts) {
+			for (PropertyContainer sec : s.getSectionsOfType("customization")) {
 				this.applyLayoutPre(sec, e);
 			}
 		}
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
-			PropertiesSet s = c.getRandomLayout();
+			PropertyContainerSet s = c.getRandomLayout();
 			if (s != null) {
-				for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+				for (PropertyContainer sec : s.getSectionsOfType("customization")) {
 					this.applyLayoutPre(sec, e);
 				}
 			}
@@ -361,11 +361,11 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 	}
 
 	
-	protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
+	protected void applyLayoutPre(PropertyContainer sec, InitOrResizeScreenEvent.Pre e) {
 		
-		String action = sec.getEntryValue("action");
+		String action = sec.getValue("action");
 		if (action != null) {
-			String identifier = sec.getEntryValue("identifier");
+			String identifier = sec.getValue("identifier");
 
 			if (action.equalsIgnoreCase("overridemenu")) {
 				if ((identifier != null) && CustomGuiLoader.guiExists(identifier)) {
@@ -377,7 +377,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.contentEquals("setscale")) {
-				String scale = sec.getEntryValue("scale");
+				String scale = sec.getValue("scale");
 				if ((scale != null) && (MathUtils.isInteger(scale.replace(" ", "")) || MathUtils.isDouble(scale.replace(" ", "")))) {
 					int newscale = (int) Double.parseDouble(scale.replace(" ", ""));
 					if (newscale <= 0) {
@@ -392,11 +392,11 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("autoscale")) {
-				String baseWidth = sec.getEntryValue("basewidth");
+				String baseWidth = sec.getValue("basewidth");
 				if (MathUtils.isInteger(baseWidth)) {
 					this.sharedLayoutProps.autoScaleBaseWidth = Integer.parseInt(baseWidth);
 				}
-				String baseHeight = sec.getEntryValue("baseheight");
+				String baseHeight = sec.getValue("baseheight");
 				if (MathUtils.isInteger(baseHeight)) {
 					this.sharedLayoutProps.autoScaleBaseHeight = Integer.parseInt(baseHeight);
 				}
@@ -461,25 +461,25 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 		}
 		this.backgroundDrawable = false;
 
-		for (PropertiesSet s : this.normalLayouts) {
-			List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+		for (PropertyContainerSet s : this.normalLayouts) {
+			List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 			if (metas.isEmpty()) {
-				metas = s.getPropertiesOfType("type-meta");
+				metas = s.getSectionsOfType("type-meta");
 			}
 //			String renderOrder = metas.get(0).getEntryValue("renderorder");
-			for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+			for (PropertyContainer sec : s.getSectionsOfType("customization")) {
 				this.applyLayout(sec, renderOrder, e);
 			}
 		}
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
-			PropertiesSet s = c.getRandomLayout();
+			PropertyContainerSet s = c.getRandomLayout();
 			if (s != null) {
-				List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+				List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 				if (metas.isEmpty()) {
-					metas = s.getPropertiesOfType("type-meta");
+					metas = s.getSectionsOfType("type-meta");
 				}
 //				String renderOrder = metas.get(0).getEntryValue("renderorder");
-				for (PropertiesSection sec : s.getPropertiesOfType("customization")) {
+				for (PropertyContainer sec : s.getSectionsOfType("customization")) {
 					this.applyLayout(sec, renderOrder, e);
 				}
 			}
@@ -538,8 +538,8 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 				}
 			}
 			if (!isBtnHidden) {
-				PropertiesSection dummySec = new PropertiesSection("customization");
-				dummySec.addEntry("action", "vanilla_button_visibility_requirements");
+				PropertyContainer dummySec = new PropertyContainer("customization");
+				dummySec.putProperty("action", "vanilla_button_visibility_requirements");
 				ButtonData btn = null;
 				for (ButtonData d : ButtonCache.getButtons()) {
 					if (d.getButton() == m.getKey()) {
@@ -565,11 +565,11 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 	}
 
-	protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCacheUpdatedEvent e) {
+	protected void applyLayout(PropertyContainer sec, String renderOrder, ButtonCacheUpdatedEvent e) {
 
-		String action = sec.getEntryValue("action");
+		String action = sec.getValue("action");
 		if (action != null) {
-			String identifier = sec.getEntryValue("identifier");
+			String identifier = sec.getValue("identifier");
 			AbstractWidget b = null;
 			ButtonData bd = null;
 			if (identifier != null) {
@@ -580,14 +580,14 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("backgroundoptions")) {
-				String keepAspect = sec.getEntryValue("keepaspectratio");
+				String keepAspect = sec.getValue("keepaspectratio");
 				if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
 					this.keepBackgroundAspectRatio = true;
 				}
 			}
 
 			if (action.equalsIgnoreCase("setbackgroundslideshow")) {
-				String name = sec.getEntryValue("name");
+				String name = sec.getValue("name");
 				if (name != null) {
 					if (SlideshowHandler.slideshowExists(name)) {
 						this.slideshow = SlideshowHandler.getSlideshow(name);
@@ -596,7 +596,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("setbackgroundpanorama")) {
-				String name = sec.getEntryValue("name");
+				String name = sec.getValue("name");
 				if (name != null) {
 					if (PanoramaHandler.panoramaExists(name)) {
 						this.panoramaCube = PanoramaHandler.getPanorama(name);
@@ -605,10 +605,10 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("texturizebackground")) {
-				String value = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
-				String pano = sec.getEntryValue("wideformat");
+				String value = AbstractElement.fixBackslashPath(sec.getValue("path"));
+				String pano = sec.getValue("wideformat");
 				if (pano == null) {
-					pano = sec.getEntryValue("panorama");
+					pano = sec.getValue("panorama");
 				}
 				if (value != null) {
 					File f = new File(value.replace("\\", "/"));
@@ -627,11 +627,11 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("animatebackground")) {
-				String value = sec.getEntryValue("name");
-				String random = sec.getEntryValue("random");
+				String value = sec.getValue("name");
+				String random = sec.getValue("random");
 				boolean ran = (random != null) && random.equalsIgnoreCase("true");
 				boolean restartOnLoad = false;
-				String restartOnLoadString = sec.getEntryValue("restart_on_load");
+				String restartOnLoadString = sec.getValue("restart_on_load");
 				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
 					restartOnLoad = true;
 				}
@@ -693,9 +693,9 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 			//Custom background handling (API)
 			if (action.equalsIgnoreCase("api:custombackground")) {
-				String typeId = sec.getEntryValue("type_identifier");
-				String backId = sec.getEntryValue("background_identifier");
-				String inputString = sec.getEntryValue("input_string");
+				String typeId = sec.getValue("type_identifier");
+				String backId = sec.getValue("background_identifier");
+				String inputString = sec.getValue("input_string");
 				if (typeId != null) {
 					MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
 					if (type != null) {
@@ -723,10 +723,10 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 
 			if (action.equalsIgnoreCase("hidebuttonfor")) {
-				String time = sec.getEntryValue("seconds");
-				String onlyfirsttime = sec.getEntryValue("onlyfirsttime");
-				String fadein = sec.getEntryValue("fadein");
-				String fadeinspeed = sec.getEntryValue("fadeinspeed");
+				String time = sec.getValue("seconds");
+				String onlyfirsttime = sec.getValue("onlyfirsttime");
+				String fadein = sec.getValue("fadein");
+				String fadeinspeed = sec.getValue("fadeinspeed");
 				if (b != null) {
 					if (ScreenCustomization.isNewMenu()) {
 						boolean ft = (onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true");
@@ -777,20 +777,20 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 			if (action.equalsIgnoreCase("setbuttontexture")) {
 				if (b != null) {
-					String loopBackAnimations = sec.getEntryValue("loopbackgroundanimations");
+					String loopBackAnimations = sec.getValue("loopbackgroundanimations");
 					if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
 						this.getContainerForVanillaButton(b).loopAnimation = false;
 					}
-					String restartBackAnimationsOnHover = sec.getEntryValue("restartbackgroundanimations");
+					String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
 					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
 						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
 					}
-					String backNormal = AbstractElement.fixBackslashPath(sec.getEntryValue("backgroundnormal"));
-					String backHover = AbstractElement.fixBackslashPath(sec.getEntryValue("backgroundhovered"));
+					String backNormal = AbstractElement.fixBackslashPath(sec.getValue("backgroundnormal"));
+					String backHover = AbstractElement.fixBackslashPath(sec.getValue("backgroundhovered"));
 					if (backNormal != null) {
 						this.getContainerForVanillaButton(b).normalBackground = backNormal;
 					} else {
-						String backAniNormal = sec.getEntryValue("backgroundanimationnormal");
+						String backAniNormal = sec.getValue("backgroundanimationnormal");
 						if (backAniNormal != null) {
 							this.getContainerForVanillaButton(b).normalBackground = "animation:" + backAniNormal;
 						}
@@ -798,7 +798,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 					if (backHover != null) {
 						this.getContainerForVanillaButton(b).hoverBackground = backHover;
 					} else {
-						String backAniHover = sec.getEntryValue("backgroundanimationhovered");
+						String backAniHover = sec.getValue("backgroundanimationhovered");
 						if (backAniHover != null) {
 							this.getContainerForVanillaButton(b).hoverBackground = "animation:" + backAniHover;
 						}
@@ -808,7 +808,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 			if (action.equalsIgnoreCase("setbuttonclicksound")) {
 				if (b != null) {
-					String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
+					String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
 					if (path != null) {
 						this.getContainerForVanillaButton(b).clickSound = path;
 					}
@@ -843,7 +843,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 			if (action.equalsIgnoreCase("clickbutton")) {
 				if (b != null) {
-					String clicks = sec.getEntryValue("clicks");
+					String clicks = sec.getValue("clicks");
 					if ((clicks != null) && (MathUtils.isInteger(clicks))) {
 						for (int i = 0; i < Integer.parseInt(clicks); i++) {
 							b.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
@@ -905,7 +905,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 			
 			if (action.equalsIgnoreCase("setcloseaudio")) {
-				String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
+				String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
 
 				if (path != null) {
 					File f = new File(path);
@@ -928,7 +928,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 
 			if (action.equalsIgnoreCase("setopenaudio")) {
 				if (ScreenCustomization.isNewMenu()) {
-					String path = AbstractElement.fixBackslashPath(sec.getEntryValue("path"));
+					String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
 					if (path != null) {
 						File f = new File(path);
 						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -958,8 +958,8 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			}
 			
 			if (action.equalsIgnoreCase("addsplash")) {
-				String file = AbstractElement.fixBackslashPath(sec.getEntryValue("splashfilepath"));
-				String text = sec.getEntryValue("text");
+				String file = AbstractElement.fixBackslashPath(sec.getValue("splashfilepath"));
+				String text = sec.getValue("text");
 				if ((file != null) || (text != null)) {
 					
 					SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
@@ -1617,7 +1617,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 				d = ButtonCache.getButtonForCompatibilityId(idRaw);
 			}
 			if ((d != null) && (d.getButton() != null)) {
-				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertiesSection("customization"), d, this);
+				VanillaButtonCustomizationItem vb = new VanillaButtonCustomizationItem(new PropertyContainer("customization"), d, this);
 				vb.anchorPoint = ElementAnchorPoint.TOP_LEFT;
 				vb.baseX = d.getButton().x;
 				vb.baseY = d.getButton().y;
@@ -1709,7 +1709,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 	public static class RandomLayoutContainer {
 		
 		public final String id;
-		protected List<PropertiesSet> layouts = new ArrayList<PropertiesSet>();
+		protected List<PropertyContainerSet> layouts = new ArrayList<PropertyContainerSet>();
 		protected boolean onlyFirstTime = false;
 		protected String lastLayoutPath = null;
 		
@@ -1720,15 +1720,15 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 			this.parent = parent;
 		}
 		
-		public List<PropertiesSet> getLayouts() {
+		public List<PropertyContainerSet> getLayouts() {
 			return this.layouts;
 		}
 		
-		public void addLayout(PropertiesSet layout) {
+		public void addLayout(PropertyContainerSet layout) {
 			this.layouts.add(layout);
 		}
 		
-		public void addLayouts(List<PropertiesSet> layouts) {
+		public void addLayouts(List<PropertyContainerSet> layouts) {
 			this.layouts.addAll(layouts);
 		}
 		
@@ -1749,7 +1749,7 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 		}
 		
 		@Nullable
-		public PropertiesSet getRandomLayout() {
+		public PropertyContainerSet getRandomLayout() {
 			if (!this.layouts.isEmpty()) {
 				if ((this.onlyFirstTime || !ScreenCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
 					File f = new File(this.lastLayoutPath);
@@ -1758,15 +1758,15 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 						f = new File(this.lastLayoutPath);
 					}
 					if (f.exists()) {
-						for (PropertiesSet s : this.layouts) {
-							List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+						for (PropertyContainerSet s : this.layouts) {
+							List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 							if (metas.isEmpty()) {
-								metas = s.getPropertiesOfType("type-meta");
+								metas = s.getSectionsOfType("type-meta");
 							}
 							if (metas.isEmpty()) {
 								continue;
 							}
-							String path = metas.get(0).getEntryValue("path");
+							String path = metas.get(0).getValue("path");
 							if ((path != null) && path.equals(this.lastLayoutPath)) {
 								return s;
 							}
@@ -1780,13 +1780,13 @@ public class ScreenCustomizationLayerOLD extends GuiComponent {
 					}
 				}
 				int i = MathUtils.getRandomNumberInRange(0, this.layouts.size()-1);
-				PropertiesSet s = this.layouts.get(i);
-				List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+				PropertyContainerSet s = this.layouts.get(i);
+				List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 				if (metas.isEmpty()) {
-					metas = s.getPropertiesOfType("type-meta");
+					metas = s.getSectionsOfType("type-meta");
 				}
 				if (!metas.isEmpty()) {
-					String path = metas.get(0).getEntryValue("path");
+					String path = metas.get(0).getValue("path");
 					if ((path != null)) {
 						this.lastLayoutPath = path;
 						return s;

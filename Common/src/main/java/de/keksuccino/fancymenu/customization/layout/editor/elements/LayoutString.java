@@ -18,7 +18,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -263,31 +263,31 @@ public class LayoutString extends AbstractEditorElement {
 	}
 	
 	@Override
-	public List<PropertiesSection> getProperties() {
-		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
+	public List<PropertyContainer> getProperties() {
+		List<PropertyContainer> l = new ArrayList<PropertyContainer>();
 		
-		PropertiesSection p1 = new PropertiesSection("customization");
-		p1.addEntry("action", "addtext");
-		p1.addEntry("actionid", this.element.getInstanceIdentifier());
+		PropertyContainer p1 = new PropertyContainer("customization");
+		p1.putProperty("action", "addtext");
+		p1.putProperty("actionid", this.element.getInstanceIdentifier());
 		if (this.element.delayAppearance) {
-			p1.addEntry("delayappearance", "true");
-			p1.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
-			p1.addEntry("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
+			p1.putProperty("delayappearance", "true");
+			p1.putProperty("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+			p1.putProperty("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
 			if (this.element.fadeIn) {
-				p1.addEntry("fadein", "true");
-				p1.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
+				p1.putProperty("fadein", "true");
+				p1.putProperty("fadeinspeed", "" + this.element.fadeInSpeed);
 			}
 		}
-		p1.addEntry("value", this.element.value);
-		p1.addEntry("x", "" + this.element.baseX);
-		p1.addEntry("y", "" + this.element.baseY);
-		p1.addEntry("orientation", this.element.anchorPoint);
+		p1.putProperty("value", this.element.value);
+		p1.putProperty("x", "" + this.element.baseX);
+		p1.putProperty("y", "" + this.element.baseY);
+		p1.putProperty("orientation", this.element.anchorPoint);
 		if (this.element.anchorPoint.equals("element") && (this.element.anchorPointElementIdentifier != null)) {
-			p1.addEntry("orientation_element", this.element.anchorPointElementIdentifier);
+			p1.putProperty("orientation_element", this.element.anchorPointElementIdentifier);
 		}
-		p1.addEntry("scale", "" + this.getObject().scale);
-		p1.addEntry("shadow", "" + this.getObject().shadow);
-		p1.addEntry("alignment", "" + this.getObject().alignment.key);
+		p1.putProperty("scale", "" + this.getObject().scale);
+		p1.putProperty("shadow", "" + this.getObject().shadow);
+		p1.putProperty("alignment", "" + this.getObject().alignment.key);
 
 		this.serializeLoadingRequirementsTo(p1);
 

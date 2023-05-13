@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -31,13 +31,13 @@ public class SliderElement extends CustomizationItem {
 
     public AdvancedSliderButton slider;
 
-    public SliderElement(ElementBuilder parentContainer, PropertiesSection item) {
+    public SliderElement(ElementBuilder parentContainer, PropertyContainer item) {
 
         super(parentContainer, item);
 
-        this.linkedVariable = item.getEntryValue("linked_variable");
+        this.linkedVariable = item.getValue("linked_variable");
 
-        String sliderTypeString = item.getEntryValue("slider_type");
+        String sliderTypeString = item.getValue("slider_type");
         if (sliderTypeString != null) {
             SliderType t = SliderType.getByName(sliderTypeString);
             if (t != null) {
@@ -45,18 +45,18 @@ public class SliderElement extends CustomizationItem {
             }
         }
 
-        this.labelPrefix = item.getEntryValue("label_prefix");
+        this.labelPrefix = item.getValue("label_prefix");
 
-        this.labelSuffix = item.getEntryValue("label_suffix");
+        this.labelSuffix = item.getValue("label_suffix");
 
         if (this.type == SliderType.RANGE) {
-            String minRangeString = item.getEntryValue("min_range_value");
+            String minRangeString = item.getValue("min_range_value");
             if (minRangeString != null) {
                 if (MathUtils.isInteger(minRangeString)) {
                     this.minRangeValue = Integer.parseInt(minRangeString);
                 }
             }
-            String maxRangeString = item.getEntryValue("max_range_value");
+            String maxRangeString = item.getValue("max_range_value");
             if (maxRangeString != null) {
                 if (MathUtils.isInteger(maxRangeString)) {
                     this.maxRangeValue = Integer.parseInt(maxRangeString);
@@ -64,7 +64,7 @@ public class SliderElement extends CustomizationItem {
             }
         }
         if (this.type == SliderType.LIST) {
-            String listValueString = item.getEntryValue("list_values");
+            String listValueString = item.getValue("list_values");
             if (listValueString != null) {
                 this.listValues = deserializeValuesList(listValueString);
             }

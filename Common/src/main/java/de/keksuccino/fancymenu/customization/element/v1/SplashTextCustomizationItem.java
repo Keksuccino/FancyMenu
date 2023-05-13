@@ -20,7 +20,7 @@ import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -51,7 +51,7 @@ public class SplashTextCustomizationItem extends AbstractElement {
 
 	protected static Map<String, String> vanillaLikeCache = new HashMap<>();
 	
-	public SplashTextCustomizationItem(PropertiesSection item) {
+	public SplashTextCustomizationItem(PropertyContainer item) {
 		super(item);
 		
 		if (!init) {
@@ -61,12 +61,12 @@ public class SplashTextCustomizationItem extends AbstractElement {
 		
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addsplash")) {
 
-			String vanillaLikeString = item.getEntryValue("vanilla-like");
+			String vanillaLikeString = item.getValue("vanilla-like");
 			if ((vanillaLikeString != null) && vanillaLikeString.equals("true")) {
 				this.vanillaLike = true;
 			}
 
-			String filepath = fixBackslashPath(item.getEntryValue("splashfilepath"));
+			String filepath = fixBackslashPath(item.getValue("splashfilepath"));
 			if (filepath != null) {
 				this.splashfile = new File(filepath);
 				if (!this.splashfile.exists() || !this.splashfile.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
@@ -79,22 +79,22 @@ public class SplashTextCustomizationItem extends AbstractElement {
 			}
 
 			if (!this.vanillaLike) {
-				this.text = item.getEntryValue("text");
+				this.text = item.getValue("text");
 			} else if (vanillaLikeCache.containsKey(this.instanceIdentifier)) {
 				this.text = vanillaLikeCache.get(this.instanceIdentifier);
 			}
 			
-			String ro = item.getEntryValue("rotation");
+			String ro = item.getValue("rotation");
 			if ((ro != null) && MathUtils.isFloat(ro)) {
 				this.rotation = Float.parseFloat(ro);
 			}
 			
-			String re = item.getEntryValue("refresh");
+			String re = item.getValue("refresh");
 			if ((re != null) && re.equalsIgnoreCase("true")) {
 				this.refreshOnMenuReload = true;
 			}
 			
-			String co = item.getEntryValue("basecolor");
+			String co = item.getValue("basecolor");
 			if (co != null) {
 				Color c = RenderUtils.getColorFromHexString(co);
 				if (c != null) {
@@ -103,19 +103,19 @@ public class SplashTextCustomizationItem extends AbstractElement {
 				}
 			}
 			
-			String sh = item.getEntryValue("shadow");
+			String sh = item.getValue("shadow");
 			if ((sh != null)) {
 				if (sh.equalsIgnoreCase("false")) {
 					this.shadow = false;
 				}
 			}
 			
-			String sc = item.getEntryValue("scale");
+			String sc = item.getValue("scale");
 			if ((sc != null) && MathUtils.isFloat(sc)) {
 				this.scale = Float.parseFloat(sc);
 			}
 			
-			String b = item.getEntryValue("bouncing");
+			String b = item.getValue("bouncing");
 			if ((b != null) && b.equalsIgnoreCase("false")) {
 				this.bounce = false;
 			}

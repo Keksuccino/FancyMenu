@@ -15,7 +15,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.web.WebUtils;
@@ -62,13 +62,13 @@ public class TextElement extends CustomizationItem {
     public volatile boolean updating = false;
     public volatile int cachedTextWidth = 0; //currently unused
 
-    public TextElement(ElementBuilder parentContainer, PropertiesSection item) {
+    public TextElement(ElementBuilder parentContainer, PropertyContainer item) {
 
         super(parentContainer, item);
 
-        this.source = item.getEntryValue("source");
+        this.source = item.getValue("source");
 
-        String sourceModeString = item.getEntryValue("source_mode");
+        String sourceModeString = item.getValue("source_mode");
         if (sourceModeString != null) {
             SourceMode s = SourceMode.getByName(sourceModeString);
             if (s != null) {
@@ -76,12 +76,12 @@ public class TextElement extends CustomizationItem {
             }
         }
 
-        String shadowString = item.getEntryValue("shadow");
+        String shadowString = item.getValue("shadow");
         if ((shadowString != null) && shadowString.equals("false")) {
             this.shadow = false;
         }
 
-        String caseModeString = item.getEntryValue("case_mode");
+        String caseModeString = item.getValue("case_mode");
         if (caseModeString != null) {
             CaseMode c = CaseMode.getByName(caseModeString);
             if (c != null) {
@@ -89,14 +89,14 @@ public class TextElement extends CustomizationItem {
             }
         }
 
-        String scaleString = item.getEntryValue("scale");
+        String scaleString = item.getValue("scale");
         if (scaleString != null) {
             if (MathUtils.isFloat(scaleString)) {
                 this.scale = Float.parseFloat(scaleString);
             }
         }
 
-        String alignmentString = item.getEntryValue("alignment");
+        String alignmentString = item.getValue("alignment");
         if (alignmentString != null) {
             Alignment a = Alignment.getByName(alignmentString);
             if (a != null) {
@@ -104,7 +104,7 @@ public class TextElement extends CustomizationItem {
             }
         }
 
-        String baseColorString = item.getEntryValue("base_color");
+        String baseColorString = item.getValue("base_color");
         if (baseColorString != null) {
             Color c = de.keksuccino.konkrete.rendering.RenderUtils.getColorFromHexString(baseColorString);
             if (c != null) {
@@ -112,23 +112,23 @@ public class TextElement extends CustomizationItem {
             }
         }
 
-        String textBorderString = item.getEntryValue("text_border");
+        String textBorderString = item.getValue("text_border");
         if ((textBorderString != null) && MathUtils.isInteger(textBorderString)) {
             this.textBorder = Integer.parseInt(textBorderString);
         }
 
-        String lineSpacingString = item.getEntryValue("line_spacing");
+        String lineSpacingString = item.getValue("line_spacing");
         if ((lineSpacingString != null) && MathUtils.isInteger(lineSpacingString)) {
             this.lineSpacing = Integer.parseInt(lineSpacingString);
         }
 
-        this.scrollGrabberColorHexNormal = item.getEntryValue("grabber_color_normal");
-        this.scrollGrabberColorHexHover = item.getEntryValue("grabber_color_hover");
+        this.scrollGrabberColorHexNormal = item.getValue("grabber_color_normal");
+        this.scrollGrabberColorHexHover = item.getValue("grabber_color_hover");
 
-        this.scrollGrabberTextureNormal = item.getEntryValue("grabber_texture_normal");
-        this.scrollGrabberTextureHover = item.getEntryValue("grabber_texture_hover");
+        this.scrollGrabberTextureNormal = item.getValue("grabber_texture_normal");
+        this.scrollGrabberTextureHover = item.getValue("grabber_texture_hover");
 
-        String enableScrollingString = item.getEntryValue("enable_scrolling");
+        String enableScrollingString = item.getValue("enable_scrolling");
         if ((enableScrollingString != null) && enableScrollingString.equals("false")) {
             this.enableScrolling = false;
         }

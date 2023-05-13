@@ -8,11 +8,12 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
 import de.keksuccino.fancymenu.customization.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.customization.deepcustomization.layers.DeepCustomizationLayers;
+import de.keksuccino.fancymenu.customization.deep.layers.DeepCustomizationLayers;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
@@ -36,9 +37,9 @@ import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -48,7 +49,7 @@ public class ScreenCustomization {
 
 	private static final List<ScreenBlacklistRule> SCREEN_BLACKLIST_RULES = new ArrayList<>();
 
-	private static PropertiesSet customizableScreens;
+	private static PropertyContainerSet customizableScreens;
 	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static ScreenCustomizationEvents eventsInstance = new ScreenCustomizationEvents();
@@ -80,6 +81,8 @@ public class ScreenCustomization {
 		Placeholders.registerAll();
 
 		de.keksuccino.fancymenu.customization.placeholder.v2.placeholders.Placeholders.registerAll();
+
+		MenuBackgrounds.registerAll();
 
 		Elements.registerAll();
 
@@ -121,8 +124,8 @@ public class ScreenCustomization {
 		if (screen != null) {
 			if (!(screen instanceof CustomGuiBase)) {
 				String identifier = screen.getClass().getName();
-				PropertiesSection sec = new PropertiesSection(identifier);
-				customizableScreens.addProperties(sec);
+				PropertyContainer sec = new PropertyContainer(identifier);
+				customizableScreens.putContainer(sec);
 				writeCustomizableScreensToFile();
 			}
 		}
@@ -135,15 +138,15 @@ public class ScreenCustomization {
 		if (screen != null) {
 			if (!(screen instanceof CustomGuiBase)) {
 				String identifier = screen.getClass().getName();
-				List<PropertiesSection> l = new ArrayList<>();
-				for (PropertiesSection sec : customizableScreens.getProperties()) {
-					if (!sec.getSectionType().equals(identifier)) {
+				List<PropertyContainer> l = new ArrayList<>();
+				for (PropertyContainer sec : customizableScreens.getContainers()) {
+					if (!sec.getType().equals(identifier)) {
 						l.add(sec);
 					}
 				}
-				customizableScreens = new PropertiesSet("customizablemenus");
-				for (PropertiesSection sec : l) {
-					customizableScreens.addProperties(sec);
+				customizableScreens = new PropertyContainerSet("customizablemenus");
+				for (PropertyContainer sec : l) {
+					customizableScreens.putContainer(sec);
 				}
 				writeCustomizableScreensToFile();
 			}
@@ -162,40 +165,40 @@ public class ScreenCustomization {
 				return true;
 			}
 			String identifier = screen.getClass().getName();
-			List<PropertiesSection> s = customizableScreens.getPropertiesOfType(identifier);
+			List<PropertyContainer> s = customizableScreens.getSectionsOfType(identifier);
 			return (s != null) && !s.isEmpty();
 		}
 		return false;
 	}
 
 	private static void writeCustomizableScreensToFile() {
-		PropertiesSerializer.writeProperties(customizableScreens, CUSTOMIZABLE_MENUS_FILE.getPath());
+		PropertiesSerializer.serializePropertyContainerSet(customizableScreens, CUSTOMIZABLE_MENUS_FILE.getPath());
 	}
 
 	public static void readCustomizableScreensFromFile() {
 		try {
 			if (!CUSTOMIZABLE_MENUS_FILE.exists()) {
 				CUSTOMIZABLE_MENUS_FILE.createNewFile();
-				PropertiesSerializer.writeProperties(new PropertiesSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				PropertiesSerializer.serializePropertyContainerSet(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
-			PropertiesSet s = PropertiesSerializer.getProperties(CUSTOMIZABLE_MENUS_FILE.getPath());
+			PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(CUSTOMIZABLE_MENUS_FILE.getPath());
 			if (s == null) {
-				PropertiesSerializer.writeProperties(new PropertiesSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
-				s = PropertiesSerializer.getProperties(CUSTOMIZABLE_MENUS_FILE.getPath());
+				PropertiesSerializer.serializePropertyContainerSet(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				s = PropertiesSerializer.deserializePropertyContainerSet(CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
-			PropertiesSet s2 = new PropertiesSet("customizablemenus");
-			for (PropertiesSection sec : s.getProperties()) {
+			PropertyContainerSet s2 = new PropertyContainerSet("customizablemenus");
+			for (PropertyContainer sec : s.getContainers()) {
 				String identifier = null;
 				try {
-					if ((sec.getSectionType() != null) && (sec.getSectionType().length() > 5)) {
-						Class.forName(sec.getSectionType(), false, ScreenCustomization.class.getClassLoader());
-						identifier = sec.getSectionType();
+					if ((sec.getType() != null) && (sec.getType().length() > 5)) {
+						Class.forName(sec.getType(), false, ScreenCustomization.class.getClassLoader());
+						identifier = sec.getType();
 					}
 				} catch (Exception ignored) {}
 				if (identifier == null) {
-					identifier = findValidMenuIdentifierFor(sec.getSectionType());
+					identifier = findValidMenuIdentifierFor(sec.getType());
 				}
-				s2.addProperties(new PropertiesSection(identifier));
+				s2.putContainer(new PropertyContainer(identifier));
 			}
 			customizableScreens = s2;
 		} catch (Exception e) {

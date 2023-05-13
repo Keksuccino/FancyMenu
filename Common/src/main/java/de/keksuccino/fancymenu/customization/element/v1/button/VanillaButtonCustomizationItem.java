@@ -15,7 +15,7 @@
 //import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 //import de.keksuccino.konkrete.input.StringUtils;
 //import de.keksuccino.konkrete.math.MathUtils;
-//import de.keksuccino.konkrete.properties.PropertiesSection;
+//import de.keksuccino.fancymenu.properties.PropertiesSection;
 //import de.keksuccino.konkrete.sound.SoundHandler;
 //import net.minecraft.client.gui.screens.Screen;
 //import net.minecraft.network.chat.Component;

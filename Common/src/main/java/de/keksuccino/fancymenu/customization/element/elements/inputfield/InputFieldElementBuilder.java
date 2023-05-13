@@ -30,13 +30,13 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
     }
 
     @Override
-    public @NotNull InputFieldElement deserializeElement(@NotNull SerializedElement serializedElement) {
+    public @NotNull InputFieldElement deserializeElement(@NotNull SerializedElement serialized) {
 
         InputFieldElement element = buildDefaultInstance();
 
-        element.linkedVariable = serializedElement.getEntryValue("linked_variable");
+        element.linkedVariable = serialized.getValue("linked_variable");
 
-        String inputFieldTypeString = serializedElement.getEntryValue("input_field_type");
+        String inputFieldTypeString = serialized.getValue("input_field_type");
         if (inputFieldTypeString != null) {
             InputFieldElement.InputFieldType t = InputFieldElement.InputFieldType.getByName(inputFieldTypeString);
             if (t != null) {
@@ -44,7 +44,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             }
         }
 
-        String maxLengthString = serializedElement.getEntryValue("max_text_length");
+        String maxLengthString = serialized.getValue("max_text_length");
         if (maxLengthString != null) {
             if (MathUtils.isInteger(maxLengthString)) {
                 element.maxTextLength = Integer.parseInt(maxLengthString);
@@ -73,10 +73,10 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
         SerializedElement serialized = new SerializedElement();
 
         if (element.linkedVariable != null) {
-            serialized.addEntry("linked_variable", element.linkedVariable);
+            serialized.putProperty("linked_variable", element.linkedVariable);
         }
-        serialized.addEntry("input_field_type", element.type.getName());
-        serialized.addEntry("max_text_length", "" + element.maxTextLength);
+        serialized.putProperty("input_field_type", element.type.getName());
+        serialized.putProperty("max_text_length", "" + element.maxTextLength);
 
         return serialized;
 

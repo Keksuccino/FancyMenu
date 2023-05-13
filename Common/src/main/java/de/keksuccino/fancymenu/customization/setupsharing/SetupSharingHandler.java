@@ -17,9 +17,9 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
@@ -340,14 +340,14 @@ public class SetupSharingHandler {
             File exportToTempSetup = new File(exportToTemp.getPath() + "/setup");
             exportToTempSetup.mkdirs();
 
-            List<PropertiesSet> layouts = new ArrayList<>();
+            List<PropertyContainerSet> layouts = new ArrayList<>();
             layouts.addAll(LayoutHandler.getEnabledLayouts());
             layouts.addAll(LayoutHandler.getDisabledLayouts());
 
             //Export all layout resources
             List<String> exportedResources = new ArrayList<>();
             List<String> failedToExportResources = new ArrayList<>();
-            for (PropertiesSet l : layouts) {
+            for (PropertyContainerSet l : layouts) {
                 for (String s : getLayoutResources(l)) {
                     try {
                         if (!exportedResources.contains(s) && !failedToExportResources.contains(s)) {
@@ -548,24 +548,24 @@ public class SetupSharingHandler {
     protected static void writeSetupPropertiesFile(String saveToPathWithFileName) {
         try {
 
-            PropertiesSet set = new PropertiesSet("fancymenu_setup");
+            PropertyContainerSet set = new PropertyContainerSet("fancymenu_setup");
 
-            PropertiesSection meta = new PropertiesSection("setup-meta");
-            meta.addEntry("modloader", FancyMenu.MOD_LOADER);
-            meta.addEntry("mcversion", SharedConstants.getCurrentVersion().getName());
-            meta.addEntry("fmversion", FancyMenu.VERSION);
-            set.addProperties(meta);
+            PropertyContainer meta = new PropertyContainer("setup-meta");
+            meta.putProperty("modloader", FancyMenu.MOD_LOADER);
+            meta.putProperty("mcversion", SharedConstants.getCurrentVersion().getName());
+            meta.putProperty("fmversion", FancyMenu.VERSION);
+            set.putContainer(meta);
 
-            PropertiesSection mods = new PropertiesSection("mod-list");
+            PropertyContainer mods = new PropertyContainer("mod-list");
             int i = 1;
             for (String id : Services.PLATFORM.getLoadedModIds()) {
                 if (!id.equals("fancymenu") && !id.equals("konkrete") && !id.equals("loadmyresources") && !id.equals("forge") && !id.equals("mcp") && !id.equals("minecraft") && !id.equals("fml")) {
-                    mods.addEntry("" + i, id);
+                    mods.putProperty("" + i, id);
                 }
             }
-            set.addProperties(mods);
+            set.putContainer(mods);
 
-            PropertiesSerializer.writeProperties(set, saveToPathWithFileName);
+            PropertiesSerializer.serializePropertyContainerSet(set, saveToPathWithFileName);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -578,19 +578,19 @@ public class SetupSharingHandler {
 
         try {
 
-            PropertiesSet set = PropertiesSerializer.getProperties(propsFilePath);
+            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(propsFilePath);
             if (set != null) {
-                List<PropertiesSection> metas = set.getPropertiesOfType("setup-meta");
+                List<PropertyContainer> metas = set.getSectionsOfType("setup-meta");
                 if (!metas.isEmpty()) {
-                    PropertiesSection meta = metas.get(0);
-                    sp.modLoader = meta.getEntryValue("modloader");
-                    sp.mcVersion = meta.getEntryValue("mcversion");
-                    sp.fmVersion = meta.getEntryValue("fmversion");
+                    PropertyContainer meta = metas.get(0);
+                    sp.modLoader = meta.getValue("modloader");
+                    sp.mcVersion = meta.getValue("mcversion");
+                    sp.fmVersion = meta.getValue("fmversion");
                 }
-                List<PropertiesSection> modLists = set.getPropertiesOfType("mod-list");
+                List<PropertyContainer> modLists = set.getSectionsOfType("mod-list");
                 if (!modLists.isEmpty()) {
-                    PropertiesSection modList = modLists.get(0);
-                    for (Map.Entry<String, String> m : modList.getEntries().entrySet()) {
+                    PropertyContainer modList = modLists.get(0);
+                    for (Map.Entry<String, String> m : modList.getProperties().entrySet()) {
                         sp.modList.add(m.getValue());
                     }
                 }
@@ -604,12 +604,12 @@ public class SetupSharingHandler {
 
     }
 
-    protected static List<String> getLayoutResources(PropertiesSet layout) {
+    protected static List<String> getLayoutResources(PropertyContainerSet layout) {
         List<String> l = new ArrayList<>();
-        for (PropertiesSection s : layout.getPropertiesOfType("customization")) {
-            String action = s.getEntryValue("action");
+        for (PropertyContainer s : layout.getSectionsOfType("customization")) {
+            String action = s.getValue("action");
             if (action != null) {
-                for (Map.Entry<String, String> m : s.getEntries().entrySet()) {
+                for (Map.Entry<String, String> m : s.getProperties().entrySet()) {
                     //Skip values of button actions
                     if (action.equalsIgnoreCase("addbutton") && (m.getKey() != null) && m.getKey().equals("value")) {
                         continue;
@@ -967,14 +967,14 @@ public class SetupSharingHandler {
 
         protected boolean allMenuIdentifiersValid() {
             try {
-                for (Map.Entry<String, PropertiesSet> m : getLayouts().entrySet()) {
-                    List<PropertiesSection> metas = m.getValue().getPropertiesOfType("customization-meta");
+                for (Map.Entry<String, PropertyContainerSet> m : getLayouts().entrySet()) {
+                    List<PropertyContainer> metas = m.getValue().getSectionsOfType("customization-meta");
                     if (metas.isEmpty()) {
-                        metas = m.getValue().getPropertiesOfType("type-meta");
+                        metas = m.getValue().getSectionsOfType("type-meta");
                     }
                     if (!metas.isEmpty()) {
-                        PropertiesSection meta = metas.get(0);
-                        String identifier = meta.getEntryValue("identifier");
+                        PropertyContainer meta = metas.get(0);
+                        String identifier = meta.getValue("identifier");
                         if (identifier != null) {
                             if (!isValidMenuIdentifier(identifier)) {
                                 return false;
@@ -984,10 +984,10 @@ public class SetupSharingHandler {
                 }
                 File customizableMenusFile = new File(this.setupInstancePath.getPath() + "/config/fancymenu/customizablemenus.txt");
                 if (customizableMenusFile.isFile()) {
-                    PropertiesSet menus = PropertiesSerializer.getProperties(customizableMenusFile.getPath());
+                    PropertyContainerSet menus = PropertiesSerializer.deserializePropertyContainerSet(customizableMenusFile.getPath());
                     if (menus != null) {
-                        for (PropertiesSection sec : menus.getProperties()) {
-                            if (!isValidMenuIdentifier(sec.getSectionType())) {
+                        for (PropertyContainer sec : menus.getContainers()) {
+                            if (!isValidMenuIdentifier(sec.getType())) {
                                 return false;
                             }
                         }
@@ -1001,21 +1001,21 @@ public class SetupSharingHandler {
 
         protected void fixMenuIdentifiers() {
             try {
-                for (Map.Entry<String, PropertiesSet> m : getLayouts().entrySet()) {
-                    List<PropertiesSection> metas = m.getValue().getPropertiesOfType("customization-meta");
+                for (Map.Entry<String, PropertyContainerSet> m : getLayouts().entrySet()) {
+                    List<PropertyContainer> metas = m.getValue().getSectionsOfType("customization-meta");
                     if (metas.isEmpty()) {
-                        metas = m.getValue().getPropertiesOfType("type-meta");
+                        metas = m.getValue().getSectionsOfType("type-meta");
                     }
                     if (!metas.isEmpty()) {
-                        PropertiesSection meta = metas.get(0);
-                        String identifier = meta.getEntryValue("identifier");
+                        PropertyContainer meta = metas.get(0);
+                        String identifier = meta.getValue("identifier");
                         if (identifier != null) {
                             if (!isValidMenuIdentifier(identifier)) {
                                 String fixedIdentifier = menuIdentifierDatabase.findValidIdentifierFor(identifier);
                                 if (fixedIdentifier != null) {
-                                    meta.removeEntry("identifier");
-                                    meta.addEntry("identifier", fixedIdentifier);
-                                    PropertiesSerializer.writeProperties(m.getValue(), m.getKey());
+                                    meta.removeProperty("identifier");
+                                    meta.putProperty("identifier", fixedIdentifier);
+                                    PropertiesSerializer.serializePropertyContainerSet(m.getValue(), m.getKey());
                                     LOGGER.info("[FANCYMENU] SETUP IMPORT: Identifier fixed: " + identifier + " -> " + fixedIdentifier);
                                 } else {
                                     LOGGER.warn("[FANCYMENU] SETUP IMPORT: Unable to fix identifier: " + identifier);
@@ -1026,28 +1026,28 @@ public class SetupSharingHandler {
                 }
                 File customizableMenusFile = new File(this.setupInstancePath.getPath() + "/config/fancymenu/customizablemenus.txt");
                 if (customizableMenusFile.isFile()) {
-                    PropertiesSet menus = PropertiesSerializer.getProperties(customizableMenusFile.getPath());
+                    PropertyContainerSet menus = PropertiesSerializer.deserializePropertyContainerSet(customizableMenusFile.getPath());
                     if (menus != null) {
                         int fixed = 0;
-                        PropertiesSet newMenus = new PropertiesSet("customizablemenus");
-                        for (PropertiesSection sec : menus.getProperties()) {
-                            if (!isValidMenuIdentifier(sec.getSectionType())) {
-                                String fixedIdentifier = menuIdentifierDatabase.findValidIdentifierFor(sec.getSectionType());
+                        PropertyContainerSet newMenus = new PropertyContainerSet("customizablemenus");
+                        for (PropertyContainer sec : menus.getContainers()) {
+                            if (!isValidMenuIdentifier(sec.getType())) {
+                                String fixedIdentifier = menuIdentifierDatabase.findValidIdentifierFor(sec.getType());
                                 if (fixedIdentifier != null) {
-                                    PropertiesSection newSec = new PropertiesSection(fixedIdentifier);
-                                    newMenus.addProperties(newSec);
+                                    PropertyContainer newSec = new PropertyContainer(fixedIdentifier);
+                                    newMenus.putContainer(newSec);
                                     fixed++;
-                                    LOGGER.info("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Identifier fixed: " + sec.getSectionType() + " -> " + fixedIdentifier);
+                                    LOGGER.info("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Identifier fixed: " + sec.getType() + " -> " + fixedIdentifier);
                                 } else {
-                                    newMenus.addProperties(sec);
-                                    LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Unable to fix identifier: " + sec.getSectionType());
+                                    newMenus.putContainer(sec);
+                                    LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Unable to fix identifier: " + sec.getType());
                                 }
                             } else {
-                                newMenus.addProperties(sec);
+                                newMenus.putContainer(sec);
                             }
                         }
                         if (fixed > 0) {
-                            PropertiesSerializer.writeProperties(newMenus, customizableMenusFile.getPath());
+                            PropertiesSerializer.serializePropertyContainerSet(newMenus, customizableMenusFile.getPath());
                             LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Fixed identifiers successfully written to file!");
                         }
                     }
@@ -1057,8 +1057,8 @@ public class SetupSharingHandler {
             }
         }
 
-        protected Map<String, PropertiesSet> getLayouts() {
-            Map<String, PropertiesSet> m = new HashMap<>();
+        protected Map<String, PropertyContainerSet> getLayouts() {
+            Map<String, PropertyContainerSet> m = new HashMap<>();
             try {
                 if (this.setupInstancePath != null) {
                     File cusPath = new File(this.setupInstancePath.getPath() + "/config/fancymenu/customization");
@@ -1070,7 +1070,7 @@ public class SetupSharingHandler {
                         }
                         for (File f : layouts) {
                             if (f.isFile() && f.getName().toLowerCase().endsWith(".txt")) {
-                                PropertiesSet set = PropertiesSerializer.getProperties(f.getPath());
+                                PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(f.getPath());
                                 if (set != null) {
                                     m.put(f.getPath(), set);
                                 }
@@ -1128,11 +1128,11 @@ public class SetupSharingHandler {
 
         public MenuIdentifierDatabase(File dbFile) {
             try {
-                PropertiesSet set = PropertiesSerializer.getProperties(dbFile.getPath());
+                PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(dbFile.getPath());
                 if (set != null) {
-                    for (PropertiesSection s : set.getPropertiesOfType("identifier-group")) {
+                    for (PropertyContainer s : set.getSectionsOfType("identifier-group")) {
                         List<String> l = new ArrayList<>();
-                        for (Map.Entry<String, String> m : s.getEntries().entrySet()) {
+                        for (Map.Entry<String, String> m : s.getProperties().entrySet()) {
                             l.add(m.getValue());
                         }
                         if (!l.isEmpty()) {

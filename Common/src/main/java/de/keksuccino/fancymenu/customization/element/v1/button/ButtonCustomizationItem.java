@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
@@ -44,23 +44,23 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 	
 	public List<ActionExecutor.ActionContainer> actions = new ArrayList<>();
 
-	public ButtonCustomizationItem(PropertiesSection item) {
+	public ButtonCustomizationItem(PropertyContainer item) {
 		super(item);
 
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addbutton")) {
-			this.labelRaw = item.getEntryValue("label");
+			this.labelRaw = item.getValue("label");
 			if (this.labelRaw == null) {
 				this.labelRaw = "";
 			}
 
-			String buttonaction = item.getEntryValue("buttonaction");
-			String actionvalue = item.getEntryValue("value");
+			String buttonaction = item.getValue("buttonaction");
+			String actionvalue = item.getValue("value");
 
 			if (actionvalue == null) {
 				actionvalue = "";
 			}
 
-			this.hoverSound = item.getEntryValue("hoversound");
+			this.hoverSound = item.getValue("hoversound");
 			if (this.hoverSound != null) {
 				this.hoverSound = this.hoverSound.replace("\\", "/");
 				File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.hoverSound));
@@ -71,9 +71,9 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 				}
 			}
 
-			this.hoverLabelRaw = item.getEntryValue("hoverlabel");
+			this.hoverLabelRaw = item.getValue("hoverlabel");
 
-			String onlyX = item.getEntryValue("onlydisplayin");
+			String onlyX = item.getValue("onlydisplayin");
 			if (onlyX != null) {
 				if (onlyX.equalsIgnoreCase("outgame")) {
 					this.onlyOutgame = true;
@@ -114,7 +114,7 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 			});
 			
 
-			String click = item.getEntryValue("clicksound");
+			String click = item.getValue("clicksound");
 			if (click != null) {
 				click.replace("\\", "/");
 				File f = new File(click);
@@ -127,17 +127,17 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 				}
 			}
 
-			this.tooltip = item.getEntryValue("description");
+			this.tooltip = item.getValue("description");
 			if (this.tooltip != null) {
 				TooltipHandler.INSTANCE.addWidgetTooltip(this.button, Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
 			}
 
-			String backNormal = fixBackslashPath(item.getEntryValue("backgroundnormal"));
-			String backHover = fixBackslashPath(item.getEntryValue("backgroundhovered"));
-			String loopBackAnimations = item.getEntryValue("loopbackgroundanimations");
-			String restartBackAnimationsOnHover = item.getEntryValue("restartbackgroundanimations");
-			String backAnimationNormal = item.getEntryValue("backgroundanimationnormal");
-			String backAnimationHover = item.getEntryValue("backgroundanimationhovered");
+			String backNormal = fixBackslashPath(item.getValue("backgroundnormal"));
+			String backHover = fixBackslashPath(item.getValue("backgroundhovered"));
+			String loopBackAnimations = item.getValue("loopbackgroundanimations");
+			String restartBackAnimationsOnHover = item.getValue("restartbackgroundanimations");
+			String backAnimationNormal = item.getValue("backgroundanimationnormal");
+			String backAnimationHover = item.getValue("backgroundanimationhovered");
 
 			if (this.button != null) {
 				if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {

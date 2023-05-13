@@ -11,12 +11,12 @@ import javax.annotation.Nullable;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.gui.screens.Screen;
 
 public class CustomGuiLoader {
 	
-	private static Map<String, PropertiesSection> screens = new HashMap<String, PropertiesSection>();
+	private static Map<String, PropertyContainer> screens = new HashMap<String, PropertyContainer>();
 	
 	/**
 	 * Can be used for both loading and reloading.
@@ -63,10 +63,10 @@ public class CustomGuiLoader {
 			}
 			
 			if (identifier != null) {
-				PropertiesSection sec = new PropertiesSection("customgui");
-				sec.addEntry("identifier", identifier);
-				sec.addEntry("title", title);
-				sec.addEntry("allowesc", "" + allowesc);
+				PropertyContainer sec = new PropertyContainer("customgui");
+				sec.putProperty("identifier", identifier);
+				sec.putProperty("title", title);
+				sec.putProperty("allowesc", "" + allowesc);
 				
 				screens.put(identifier, sec);
 			}
@@ -79,24 +79,24 @@ public class CustomGuiLoader {
 	
 	public static CustomGuiBase getGui(String identifier, @Nullable Screen parent, @Nullable Screen overrides) {
 		if (guiExists(identifier)) {
-			PropertiesSection sec = screens.get(identifier);
+			PropertyContainer sec = screens.get(identifier);
 			boolean esc = true;
-			if (sec.getEntryValue("allowesc").equalsIgnoreCase("false")) {
+			if (sec.getValue("allowesc").equalsIgnoreCase("false")) {
 				esc = false;
 			}
-			return new CustomGuiBase(sec.getEntryValue("title"), identifier, esc, parent, overrides);
+			return new CustomGuiBase(sec.getValue("title"), identifier, esc, parent, overrides);
 		}
 		return null;
 	}
 	
 	public static CustomGuiBase getGui(String identifier, @Nullable Screen parent, @Nullable Screen overrides, Consumer<CustomGuiBase> onClose) {
 		if (guiExists(identifier)) {
-			PropertiesSection sec = screens.get(identifier);
+			PropertyContainer sec = screens.get(identifier);
 			boolean esc = true;
-			if (sec.getEntryValue("allowesc").equalsIgnoreCase("false")) {
+			if (sec.getValue("allowesc").equalsIgnoreCase("false")) {
 				esc = false;
 			}
-			return new CustomGuiBase(sec.getEntryValue("title"), identifier, esc, parent, overrides) {
+			return new CustomGuiBase(sec.getValue("title"), identifier, esc, parent, overrides) {
 				@Override
 				public void removed() {
 					onClose.accept(this);

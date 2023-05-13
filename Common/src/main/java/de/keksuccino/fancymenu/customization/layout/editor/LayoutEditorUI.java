@@ -36,7 +36,7 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.customization.element.v1.SplashTextCustomizationItem;
-import de.keksuccino.fancymenu.customization.deepcustomization.DeepCustomizationLayoutEditorElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar.ElementAlignment;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -46,8 +46,8 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
@@ -313,21 +313,21 @@ public class LayoutEditorUI extends UIBase {
 				identifier = ((CustomGuiBase) this.ui.parent.screen).getIdentifier();
 			}
 
-			List<PropertiesSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
+			List<PropertyContainerSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
 			if (!enabled.isEmpty()) {
-				for (PropertiesSet s : enabled) {
-					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
+				for (PropertyContainerSet s : enabled) {
+					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
 					if (secs.isEmpty()) {
-						secs = s.getPropertiesOfType("type-meta");
+						secs = s.getSectionsOfType("type-meta");
 					}
 					if (!secs.isEmpty()) {
 						String name = "<missing name>";
-						PropertiesSection meta = secs.get(0);
-						File f = new File(meta.getEntryValue("path"));
+						PropertyContainer meta = secs.get(0);
+						File f = new File(meta.getValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
 
-							int totalactions = s.getProperties().size() - 1;
+							int totalactions = s.getContainers().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
 									LayoutHandler.editLayout(this.ui.parent.screen, f);
@@ -340,21 +340,21 @@ public class LayoutEditorUI extends UIBase {
 				}
 			}
 
-			List<PropertiesSet> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
+			List<PropertyContainerSet> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
 			if (!disabled.isEmpty()) {
-				for (PropertiesSet s : disabled) {
-					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
+				for (PropertyContainerSet s : disabled) {
+					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
 					if (secs.isEmpty()) {
-						secs = s.getPropertiesOfType("type-meta");
+						secs = s.getSectionsOfType("type-meta");
 					}
 					if (!secs.isEmpty()) {
 						String name = "<missing name>";
-						PropertiesSection meta = secs.get(0);
-						File f = new File(meta.getEntryValue("path"));
+						PropertyContainer meta = secs.get(0);
+						File f = new File(meta.getValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
 
-							int totalactions = s.getProperties().size() - 1;
+							int totalactions = s.getContainers().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
 									LayoutHandler.editLayout(this.ui.parent.screen, f);
@@ -1162,10 +1162,10 @@ public class LayoutEditorUI extends UIBase {
 
 			AdvancedButton vanillaLikeSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like"), true, (press) -> {
 				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				PropertiesSection sec = new PropertiesSection("customization");
-				sec.addEntry("action", "addsplash");
-				sec.addEntry("vanilla-like", "true");
-				sec.addEntry("y", "" + (int)(this.parent.ui.bar.getHeight() * UIBase.getUIScale()));
+				PropertyContainer sec = new PropertyContainer("customization");
+				sec.putProperty("action", "addsplash");
+				sec.putProperty("vanilla-like", "true");
+				sec.putProperty("y", "" + (int)(this.parent.ui.bar.getHeight() * UIBase.getUIScale()));
 				SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
 				this.parent.addContent(new LayoutSplashText(i, this.parent));
 			});
@@ -1659,11 +1659,11 @@ public class LayoutEditorUI extends UIBase {
 
 			boolean containsHiddenDeeps = false;
 			for (AbstractEditorElement e : this.parent.content) {
-				if (e instanceof DeepCustomizationLayoutEditorElement) {
-					if (((DeepCustomizationLayoutEditorElement)e).getDeepCustomizationItem().hidden) {
-						String name = ((DeepCustomizationLayoutEditorElement) e).parentDeepCustomizationElement.getDisplayName();
+				if (e instanceof AbstractEditorDeepElement) {
+					if (((AbstractEditorDeepElement)e).getDeepCustomizationItem().deepElementHidden) {
+						String name = ((AbstractEditorDeepElement) e).parentDeepElementBuilder.getDisplayName();
 						AdvancedButton hiddenButton = new AdvancedButton(0, 0, 0, 0, name, true, (press) -> {
-							((DeepCustomizationLayoutEditorElement) e).getDeepCustomizationItem().hidden = false;
+							((AbstractEditorDeepElement) e).getDeepCustomizationItem().deepElementHidden = false;
 							this.parent.updateContent();
 							this.closeMenu();
 						});

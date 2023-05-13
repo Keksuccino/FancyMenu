@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layout;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -23,42 +23,57 @@ public class LayoutBase {
     public int autoScalingHeight = 0;
     public String customMenuTitle;
 
-    @SuppressWarnings("all")
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
         LayoutBase layout = new LayoutBase();
         if (layouts != null) {
             for (LayoutBase l : layouts) {
-                layout.overrideMenuWith = (l.overrideMenuWith != null) ? l.overrideMenuWith : layout.overrideMenuWith;
-                layout.menuBackground = (l.menuBackground != null) ? l.menuBackground : layout.menuBackground;
-                layout.keepBackgroundAspectRatio = (l.keepBackgroundAspectRatio) ? l.keepBackgroundAspectRatio : layout.keepBackgroundAspectRatio;
-                layout.openAudio = (l.openAudio != null) ? l.openAudio : layout.openAudio;
-                layout.closeAudio = (l.closeAudio != null) ? l.closeAudio : layout.closeAudio;
-                layout.forcedScale = (l.forcedScale != -1F) ? l.forcedScale : layout.forcedScale;
-                layout.autoScalingWidth = (l.autoScalingWidth != 0) ? l.autoScalingWidth : layout.autoScalingWidth;
-                layout.autoScalingHeight = (l.autoScalingHeight != 0) ? l.autoScalingHeight : layout.autoScalingHeight;
-                layout.customMenuTitle = (l.customMenuTitle != null) ? l.customMenuTitle : layout.customMenuTitle;
+
+                if (l.overrideMenuWith != null) {
+                    layout.overrideMenuWith = l.overrideMenuWith;
+                }
+                if (l.menuBackground != null) {
+                    layout.menuBackground = l.menuBackground;
+                }
+                if (l.keepBackgroundAspectRatio) {
+                    layout.keepBackgroundAspectRatio = true;
+                }
+                if (l.openAudio != null) {
+                    layout.openAudio = l.openAudio;
+                }
+                if (l.closeAudio != null) {
+                    layout.closeAudio = l.closeAudio;
+                }
+                if (l.forcedScale != -1F) {
+                    layout.forcedScale = l.forcedScale;
+                }
+                if (l.autoScalingWidth != 0) {
+                    layout.autoScalingWidth = l.autoScalingWidth;
+                }
+                if (l.autoScalingHeight != 0) {
+                    layout.autoScalingHeight = l.autoScalingHeight;
+                }
+                if (l.customMenuTitle != null) {
+                    layout.customMenuTitle = l.customMenuTitle;
+                }
+
             }
         }
         return layout;
     }
 
-    protected static SerializedElement convertSectionToElement(PropertiesSection sec) {
-        return convertSectionToElement(sec, "element");
-    }
-
-    protected static SerializedElement convertSectionToElement(PropertiesSection sec, String type) {
-        SerializedElement e = new SerializedElement(type);
-        for (Map.Entry<String, String> m : sec.getEntries().entrySet()) {
-            e.addEntry(m.getKey(), m.getValue());
+    protected static SerializedElement convertSectionToElement(PropertyContainer sec) {
+        SerializedElement e = new SerializedElement();
+        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
+            e.putProperty(m.getKey(), m.getValue());
         }
         return e;
     }
 
-    public static SerializedMenuBackground convertSectionToBackground(PropertiesSection section) {
+    public static SerializedMenuBackground convertSectionToBackground(PropertyContainer section) {
         SerializedMenuBackground b = new SerializedMenuBackground();
-        for (Map.Entry<String, String> m : section.getEntries().entrySet()) {
-            b.addEntry(m.getKey(), m.getValue());
+        for (Map.Entry<String, String> m : section.getProperties().entrySet()) {
+            b.putProperty(m.getKey(), m.getValue());
         }
         return b;
     }

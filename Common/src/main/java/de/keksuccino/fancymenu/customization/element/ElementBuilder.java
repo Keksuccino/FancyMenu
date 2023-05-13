@@ -54,42 +54,42 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
      * {@link ElementBuilder#deserializeElementInternal(SerializedElement)},
      * so just deserialize the <b>custom</b> properties of the element type here.
      */
-    public abstract E deserializeElement(@NotNull SerializedElement serializedElement);
+    public abstract E deserializeElement(@NotNull SerializedElement serialized);
 
     /**
      * Only for internal use. Don't touch this if you don't know what you're doing!
      */
     @Nullable
-    public E deserializeElementInternal(@NotNull SerializedElement serializedElement) {
+    public E deserializeElementInternal(@NotNull SerializedElement serialized) {
 
         try {
 
-            E element = deserializeElement(serializedElement);
+            E element = deserializeElement(serialized);
 
-            element.instanceIdentifier = serializedElement.getEntryValue("instance_identifier");
+            element.instanceIdentifier = serialized.getValue("instance_identifier");
             if (element.instanceIdentifier == null) {
-                element.instanceIdentifier = serializedElement.getEntryValue("actionid");
+                element.instanceIdentifier = serialized.getValue("actionid");
             }
             if (element.instanceIdentifier == null) {
                 element.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
             }
 
-            String fi = serializedElement.getEntryValue("fadein");
+            String fi = serialized.getValue("fadein");
             if ((fi != null) && fi.equalsIgnoreCase("true")) {
                 element.fadeIn = true;
             }
-            String fis = serializedElement.getEntryValue("fadeinspeed");
+            String fis = serialized.getValue("fadeinspeed");
             if ((fis != null) && MathUtils.isFloat(fis)) {
                 element.fadeInSpeed = Float.parseFloat(fis);
             }
-            String delay = serializedElement.getEntryValue("appearance_delay");
+            String delay = serialized.getValue("appearance_delay");
             //Compatibility layer for old appearance delay format
             if (delay == null) {
-                String da = serializedElement.getEntryValue("delayappearance");
+                String da = serialized.getValue("delayappearance");
                 if ((da != null) && da.equalsIgnoreCase("true")) {
                     delay = AbstractElement.AppearanceDelay.FIRST_TIME.name;
                 }
-                String dae = serializedElement.getEntryValue("delayappearanceeverytime");
+                String dae = serialized.getValue("delayappearanceeverytime");
                 if ((dae != null) && dae.equalsIgnoreCase("true")) {
                     delay = AbstractElement.AppearanceDelay.EVERY_TIME.name;
                 }
@@ -100,16 +100,16 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                     element.appearanceDelay = appearanceDelay;
                 }
             }
-            String delaySec = serializedElement.getEntryValue("appearance_delay_seconds");
+            String delaySec = serialized.getValue("appearance_delay_seconds");
             if (delaySec == null) {
-                delaySec = serializedElement.getEntryValue("delayappearanceseconds");
+                delaySec = serialized.getValue("delayappearanceseconds");
             }
             if ((delaySec != null) && MathUtils.isFloat(delaySec)) {
                 element.appearanceDelayInSeconds = Float.parseFloat(delaySec);
             }
 
-            String x = serializedElement.getEntryValue("x");
-            String y = serializedElement.getEntryValue("y");
+            String x = serialized.getValue("x");
+            String y = serialized.getValue("y");
             if (x != null) {
                 x = PlaceholderParser.replacePlaceholders(x);
                 if (MathUtils.isInteger(x)) {
@@ -123,9 +123,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 }
             }
 
-            String anchor = serializedElement.getEntryValue("anchor_point");
+            String anchor = serialized.getValue("anchor_point");
             if (anchor == null) {
-                anchor = serializedElement.getEntryValue("orientation");
+                anchor = serialized.getValue("orientation");
             }
             if (anchor != null) {
                 element.anchorPoint = ElementAnchorPoints.getAnchorPointByName(anchor);
@@ -134,15 +134,15 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 }
             }
 
-            String anchorElement = serializedElement.getEntryValue("anchor_point_element");
+            String anchorElement = serialized.getValue("anchor_point_element");
             if (anchorElement == null) {
-                anchorElement = serializedElement.getEntryValue("orientation_element");
+                anchorElement = serialized.getValue("orientation_element");
             }
             if (anchorElement != null) {
                 element.anchorPointElementIdentifier = anchorElement;
             }
 
-            String w = serializedElement.getEntryValue("width");
+            String w = serialized.getValue("width");
             if (w != null) {
                 if (w.equals("%guiwidth%")) {
                     element.stretchX = true;
@@ -156,7 +156,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 }
             }
 
-            String h = serializedElement.getEntryValue("height");
+            String h = serialized.getValue("height");
             if (h != null) {
                 if (h.equals("%guiheight%")) {
                     element.stretchY = true;
@@ -170,22 +170,22 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 }
             }
 
-            String stretchXString = serializedElement.getEntryValue("stretch_x");
+            String stretchXString = serialized.getValue("stretch_x");
             if ((stretchXString != null) && stretchXString.equals("true")) {
                 element.stretchX = true;
             }
 
-            String stretchYString = serializedElement.getEntryValue("stretch_y");
+            String stretchYString = serialized.getValue("stretch_y");
             if ((stretchYString != null) && stretchYString.equals("true")) {
                 element.stretchY = true;
             }
 
-            element.advancedWidth = serializedElement.getEntryValue("advanced_width");
-            element.advancedHeight = serializedElement.getEntryValue("advanced_height");
-            element.advancedX = serializedElement.getEntryValue("advanced_posx");
-            element.advancedY = serializedElement.getEntryValue("advanced_posy");
+            element.advancedWidth = serialized.getValue("advanced_width");
+            element.advancedHeight = serialized.getValue("advanced_height");
+            element.advancedX = serialized.getValue("advanced_posx");
+            element.advancedY = serialized.getValue("advanced_posy");
 
-            element.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(serializedElement);
+            element.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(serialized);
 
             return element;
 
@@ -218,40 +218,40 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             SerializedElement sec = removeReservedPropertyKeys(this.serializeElement((E) element, new SerializedElement()));
 
             //sec.addEntry("action", "custom_layout_element:" + element.builder.getIdentifier());
-            sec.addEntry("element_type", element.builder.getIdentifier());
-            sec.addEntry("instance_identifier", element.getInstanceIdentifier());
+            sec.putProperty("element_type", element.builder.getIdentifier());
+            sec.putProperty("instance_identifier", element.getInstanceIdentifier());
 
-            sec.addEntry("appearance_delay", element.appearanceDelay.name);
-            sec.addEntry("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
-            sec.addEntry("fade_in", "" + element.fadeIn);
-            sec.addEntry("fade_in_speed", "" + element.fadeInSpeed);
+            sec.putProperty("appearance_delay", element.appearanceDelay.name);
+            sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
+            sec.putProperty("fade_in", "" + element.fadeIn);
+            sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
 
-            sec.addEntry("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
+            sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
             if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
-                sec.addEntry("anchor_point_element", element.anchorPointElementIdentifier);
+                sec.putProperty("anchor_point_element", element.anchorPointElementIdentifier);
             }
 
             if (element.advancedX != null) {
-                sec.addEntry("advanced_posx", element.advancedX);
+                sec.putProperty("advanced_posx", element.advancedX);
             }
             if (element.advancedY != null) {
-                sec.addEntry("advanced_posy", element.advancedY);
+                sec.putProperty("advanced_posy", element.advancedY);
             }
             if (element.advancedWidth != null) {
-                sec.addEntry("advanced_width", element.advancedWidth);
+                sec.putProperty("advanced_width", element.advancedWidth);
             }
             if (element.advancedHeight != null) {
-                sec.addEntry("advanced_height", element.advancedHeight);
+                sec.putProperty("advanced_height", element.advancedHeight);
             }
             if (element.appearanceDelay == null) {
                 element.appearanceDelay = AbstractElement.AppearanceDelay.NO_DELAY;
             }
-            sec.addEntry("x", "" + element.baseX);
-            sec.addEntry("y", "" + element.baseY);
-            sec.addEntry("width", "" + element.getWidth());
-            sec.addEntry("height", "" + element.getHeight());
-            sec.addEntry("stretch_x", "" + element.stretchX);
-            sec.addEntry("stretch_y", "" + element.stretchY);
+            sec.putProperty("x", "" + element.baseX);
+            sec.putProperty("y", "" + element.baseY);
+            sec.putProperty("width", "" + element.getWidth());
+            sec.putProperty("height", "" + element.getHeight());
+            sec.putProperty("stretch_x", "" + element.stretchX);
+            sec.putProperty("stretch_y", "" + element.stretchY);
 
             element.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 
@@ -295,7 +295,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         return new ArrayList<>(this.alternativeIdentifiers);
     }
 
-    private static SerializedElement removeReservedPropertyKeys(SerializedElement serializedElement) {
+    private static SerializedElement removeReservedPropertyKeys(SerializedElement serialized) {
         List<String> reserved = Lists.newArrayList(
                 "action",
                 "element_type",
@@ -305,8 +305,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         );
         List<String> removed = new ArrayList<>();
         for (String s : reserved) {
-            if (serializedElement.hasEntry(s)) {
-                serializedElement.removeEntry(s);
+            if (serialized.hasProperty(s)) {
+                serialized.removeProperty(s);
                 removed.add(s);
             }
         }
@@ -320,7 +320,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
             LOGGER.error("[FANCYMENU] Failed to add properties to serialized element! Keys reserved by the system: " + keys);
         }
-        return serializedElement;
+        return serialized;
     }
 
 }

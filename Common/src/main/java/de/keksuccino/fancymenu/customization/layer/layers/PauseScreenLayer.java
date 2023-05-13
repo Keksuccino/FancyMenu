@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinPauseScreen;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -15,14 +15,14 @@ public class PauseScreenLayer extends ScreenCustomizationLayer {
     }
 
     @Override
-    protected void applyLayout(PropertiesSection sec, String renderOrder, ButtonCacheUpdatedEvent e) {
+    protected void applyLayout(PropertyContainer sec, String renderOrder, ButtonCacheUpdatedEvent e) {
         if (this.customizePauseScreen(e.getScreen())) {
             super.applyLayout(sec, renderOrder, e);
         }
     }
 
     @Override
-    protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
+    protected void applyLayoutPre(PropertyContainer sec, InitOrResizeScreenEvent.Pre e) {
         if (this.customizePauseScreen(e.getScreen())) {
             super.applyLayoutPre(sec, e);
         }

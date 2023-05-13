@@ -13,7 +13,7 @@ import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 
 public class LayoutShape extends AbstractEditorElement {
@@ -66,54 +66,54 @@ public class LayoutShape extends AbstractEditorElement {
 	}
 	
 	@Override
-	public List<PropertiesSection> getProperties() {
-		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
-		PropertiesSection s = new PropertiesSection("customization");
+	public List<PropertyContainer> getProperties() {
+		List<PropertyContainer> l = new ArrayList<PropertyContainer>();
+		PropertyContainer s = new PropertyContainer("customization");
 		
 		if (this.getObject().shape != null) {
 			
-			s.addEntry("action", "addshape");
-			s.addEntry("actionid", this.element.getInstanceIdentifier());
+			s.putProperty("action", "addshape");
+			s.putProperty("actionid", this.element.getInstanceIdentifier());
 			if (this.element.advancedX != null) {
-				s.addEntry("advanced_posx", this.element.advancedX);
+				s.putProperty("advanced_posx", this.element.advancedX);
 			}
 			if (this.element.advancedY != null) {
-				s.addEntry("advanced_posy", this.element.advancedY);
+				s.putProperty("advanced_posy", this.element.advancedY);
 			}
 			if (this.element.advancedWidth != null) {
-				s.addEntry("advanced_width", this.element.advancedWidth);
+				s.putProperty("advanced_width", this.element.advancedWidth);
 			}
 			if (this.element.advancedHeight != null) {
-				s.addEntry("advanced_height", this.element.advancedHeight);
+				s.putProperty("advanced_height", this.element.advancedHeight);
 			}
 			if (this.element.delayAppearance) {
-				s.addEntry("delayappearance", "true");
-				s.addEntry("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
-				s.addEntry("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
+				s.putProperty("delayappearance", "true");
+				s.putProperty("delayappearanceeverytime", "" + this.element.delayAppearanceEverytime);
+				s.putProperty("delayappearanceseconds", "" + this.element.appearanceDelayInSeconds);
 				if (this.element.fadeIn) {
-					s.addEntry("fadein", "true");
-					s.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
+					s.putProperty("fadein", "true");
+					s.putProperty("fadeinspeed", "" + this.element.fadeInSpeed);
 				}
 			}
-			s.addEntry("shape", this.getObject().shape.name);
-			s.addEntry("color", this.getObject().getColorString());
-			s.addEntry("orientation", this.element.anchorPoint);
+			s.putProperty("shape", this.getObject().shape.name);
+			s.putProperty("color", this.getObject().getColorString());
+			s.putProperty("orientation", this.element.anchorPoint);
 			if (this.element.anchorPoint.equals("element") && (this.element.anchorPointElementIdentifier != null)) {
-				s.addEntry("orientation_element", this.element.anchorPointElementIdentifier);
+				s.putProperty("orientation_element", this.element.anchorPointElementIdentifier);
 			}
 			if (this.stretchX) {
-				s.addEntry("x", "0");
-				s.addEntry("width", "%guiwidth%");
+				s.putProperty("x", "0");
+				s.putProperty("width", "%guiwidth%");
 			} else {
-				s.addEntry("x", "" + this.element.baseX);
-				s.addEntry("width", "" + this.element.getWidth());
+				s.putProperty("x", "" + this.element.baseX);
+				s.putProperty("width", "" + this.element.getWidth());
 			}
 			if (this.stretchY) {
-				s.addEntry("y", "0");
-				s.addEntry("height", "%guiheight%");
+				s.putProperty("y", "0");
+				s.putProperty("height", "%guiheight%");
 			} else {
-				s.addEntry("y", "" + this.element.baseY);
-				s.addEntry("height", "" + this.element.getHeight());
+				s.putProperty("y", "" + this.element.baseY);
+				s.putProperty("height", "" + this.element.getHeight());
 			}
 
 			this.serializeLoadingRequirementsTo(s);

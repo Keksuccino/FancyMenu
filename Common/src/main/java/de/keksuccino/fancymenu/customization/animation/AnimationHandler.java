@@ -8,9 +8,9 @@ import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFo
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.customization.animation.AnimationData.Type;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -92,50 +92,50 @@ public class AnimationHandler {
 					continue;
 				}
 
-				PropertiesSet props = PropertiesSerializer.getProperties(p.getPath());
+				PropertyContainerSet props = PropertiesSerializer.deserializePropertyContainerSet(p.getPath());
 				if (props == null) {
 					continue;
 				}
 
 				// ANIMATION META
-				List<PropertiesSection> metas = props.getPropertiesOfType("animation-meta");
+				List<PropertyContainer> metas = props.getSectionsOfType("animation-meta");
 				if (metas.isEmpty()) {
 					continue;
 				}
-				PropertiesSection m = metas.get(0);
+				PropertyContainer m = metas.get(0);
 
-				name = m.getEntryValue("name");
+				name = m.getValue("name");
 				if (name == null) {
 					continue;
 				}
 
-				String fpsString = m.getEntryValue("fps");
+				String fpsString = m.getValue("fps");
 				if ((fpsString != null) && MathUtils.isInteger(fpsString)) {
 					fps = Integer.parseInt(fpsString);
 				}
 
-				String loopString = m.getEntryValue("loop");
+				String loopString = m.getValue("loop");
 				if ((loopString != null) && loopString.equalsIgnoreCase("false")) {
 					loop = false;
 				}
 
-				String replayString = m.getEntryValue("replayintro");
+				String replayString = m.getValue("replayintro");
 				if ((replayString != null) && replayString.equalsIgnoreCase("true")) {
 					replayIntro = true;
 				}
 
-				resourceNamespace = m.getEntryValue("namespace");
+				resourceNamespace = m.getValue("namespace");
 				if (resourceNamespace == null) {
 					continue;
 				}
 
 				// MAIN FRAME NAMES
-				List<PropertiesSection> mainFrameSecs = props.getPropertiesOfType("frames-main");
+				List<PropertyContainer> mainFrameSecs = props.getSectionsOfType("frames-main");
 				if (mainFrameSecs.isEmpty()) {
 					continue;
 				}
-				PropertiesSection mainFrames = mainFrameSecs.get(0);
-				Map<String, String> mainFramesMap = mainFrames.getEntries();
+				PropertyContainer mainFrames = mainFrameSecs.get(0);
+				Map<String, String> mainFramesMap = mainFrames.getProperties();
 				List<String> mainFrameKeys = new ArrayList<>();
 				for(Map.Entry<String, String> me : mainFramesMap.entrySet()) {
 					if (me.getKey().startsWith("frame_")) {
@@ -164,10 +164,10 @@ public class AnimationHandler {
 				}
 
 				// INTRO FRAME NAMES
-				List<PropertiesSection> introFrameSecs = props.getPropertiesOfType("frames-intro");
+				List<PropertyContainer> introFrameSecs = props.getSectionsOfType("frames-intro");
 				if (!introFrameSecs.isEmpty()) {
-					PropertiesSection introFrames = introFrameSecs.get(0);
-					Map<String, String> introFramesMap = introFrames.getEntries();
+					PropertyContainer introFrames = introFrameSecs.get(0);
+					Map<String, String> introFramesMap = introFrames.getProperties();
 					List<String> introFrameKeys = new ArrayList<String>();
 					for (Map.Entry<String, String> me : introFramesMap.entrySet()) {
 						if (me.getKey().startsWith("frame_")) {

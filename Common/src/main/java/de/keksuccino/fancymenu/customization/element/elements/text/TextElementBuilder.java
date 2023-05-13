@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ public class TextElementBuilder extends ElementBuilder {
 
     @Override
     public @NotNull CustomizationItem buildDefaultInstance() {
-        TextElement i = new TextElement(this, new PropertiesSection("dummy"));
+        TextElement i = new TextElement(this, new PropertyContainer("dummy"));
         i.width = 200;
         i.height = 40;
         Screen s = Minecraft.getInstance().screen;
@@ -32,7 +32,7 @@ public class TextElementBuilder extends ElementBuilder {
     }
 
     @Override
-    public CustomizationItem deserializeElement(PropertiesSection serializedElement) {
+    public CustomizationItem deserializeElement(PropertyContainer serializedElement) {
         return new TextElement(this, serializedElement);
     }
 

@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,14 +71,14 @@ public class TickerElementBuilder extends ElementBuilder {
 
     @Override
     public @NotNull CustomizationItem buildDefaultInstance() {
-        TickerElement i = new TickerElement(this, new PropertiesSection("dummy"));
+        TickerElement i = new TickerElement(this, new PropertyContainer("dummy"));
         i.width = 70;
         i.height = 70;
         return i;
     }
 
     @Override
-    public CustomizationItem deserializeElement(PropertiesSection serializedElement) {
+    public CustomizationItem deserializeElement(PropertyContainer serializedElement) {
         return new TickerElement(this, serializedElement);
     }
 

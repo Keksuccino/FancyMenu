@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -25,26 +25,26 @@ public class StringCustomizationItem extends AbstractElement {
 	public String valueRaw;
 
 	@Deprecated
-	public StringCustomizationItem(PropertiesSection item) {
+	public StringCustomizationItem(PropertyContainer item) {
 		super(item);
 
 		if ((this.elementType != null) && this.elementType.equalsIgnoreCase("addtext")) {
-			this.valueRaw = item.getEntryValue("value");
+			this.valueRaw = item.getValue("value");
 			this.updateValue();
 
-			String sh = item.getEntryValue("shadow");
+			String sh = item.getValue("shadow");
 			if ((sh != null)) {
 				if (sh.equalsIgnoreCase("true")) {
 					this.shadow = true;
 				}
 			}
 
-			String sc = item.getEntryValue("scale");
+			String sc = item.getValue("scale");
 			if ((sc != null) && MathUtils.isFloat(sc)) {
 				this.scale = Float.parseFloat(sc);
 			}
 
-			String al = item.getEntryValue("alignment");
+			String al = item.getValue("alignment");
 			if (al != null) {
 				if (al.equalsIgnoreCase("right")) {
 					this.alignment = Alignment.RIGHT;

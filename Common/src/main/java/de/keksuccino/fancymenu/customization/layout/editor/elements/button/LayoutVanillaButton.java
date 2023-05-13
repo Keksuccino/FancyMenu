@@ -24,7 +24,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
 
 public class LayoutVanillaButton extends AbstractEditorElement {
@@ -370,48 +370,48 @@ public class LayoutVanillaButton extends AbstractEditorElement {
 	}
 
 	@Override
-	public List<PropertiesSection> getProperties() {
-		List<PropertiesSection> l = new ArrayList<PropertiesSection>();
+	public List<PropertyContainer> getProperties() {
+		List<PropertyContainer> l = new ArrayList<PropertyContainer>();
 
 		//hidebutton
 		if (this.customizationContainer.isButtonHidden) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "hidebutton");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "hidebutton");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
 			l.add(s);
 		}
 		//movebutton
 		if (this.canBeModified()) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "movebutton");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("orientation", this.element.anchorPoint);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "movebutton");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("orientation", this.element.anchorPoint);
 			if (this.element.anchorPoint.equals("element") && (this.element.anchorPointElementIdentifier != null)) {
-				s.addEntry("orientation_element", this.element.anchorPointElementIdentifier);
+				s.putProperty("orientation_element", this.element.anchorPointElementIdentifier);
 			}
-			s.addEntry("x", "" + this.element.baseX);
-			s.addEntry("y", "" + this.element.baseY);
+			s.putProperty("x", "" + this.element.baseX);
+			s.putProperty("y", "" + this.element.baseY);
 			if (this.element.advancedX != null) {
-				s.addEntry("advanced_posx", this.element.advancedX);
+				s.putProperty("advanced_posx", this.element.advancedX);
 			}
 			if (this.element.advancedY != null) {
-				s.addEntry("advanced_posy", this.element.advancedY);
+				s.putProperty("advanced_posy", this.element.advancedY);
 			}
 			l.add(s);
 		}
 
 		// resizebutton
 		if (this.canBeModified() && ((this.getWidth() != this.button.width) || (this.getHeight() != this.button.height) || (this.element.advancedHeight != null) || (this.element.advancedWidth != null))) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "resizebutton");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("width", "" + this.element.width);
-			s.addEntry("height", "" + this.element.height);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "resizebutton");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("width", "" + this.element.width);
+			s.putProperty("height", "" + this.element.height);
 			if (this.element.advancedWidth != null) {
-				s.addEntry("advanced_width", this.element.advancedWidth);
+				s.putProperty("advanced_width", this.element.advancedWidth);
 			}
 			if (this.element.advancedHeight != null) {
-				s.addEntry("advanced_height", this.element.advancedHeight);
+				s.putProperty("advanced_height", this.element.advancedHeight);
 			}
 			l.add(s);
 		}
@@ -419,99 +419,99 @@ public class LayoutVanillaButton extends AbstractEditorElement {
 		// renamebutton
 		if (this.customizationContainer.customButtonLabel != null) {
 			if (!this.customizationContainer.customButtonLabel.equals(this.button.label)) {
-				PropertiesSection s = new PropertiesSection("customization");
-				s.addEntry("action", "setbuttonlabel");
-				s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-				s.addEntry("value", this.customizationContainer.customButtonLabel);
+				PropertyContainer s = new PropertyContainer("customization");
+				s.putProperty("action", "setbuttonlabel");
+				s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+				s.putProperty("value", this.customizationContainer.customButtonLabel);
 				l.add(s);
 			}
 		}
 		// setbuttontexture
 		if ((this.customizationContainer.normalBackground != null) || (this.customizationContainer.hoverBackground != null)) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "setbuttontexture");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "setbuttontexture");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
 			if (this.customizationContainer.normalBackground != null) {
 				if (this.customizationContainer.normalBackground.startsWith("animation:")) {
 					String aniName = this.customizationContainer.normalBackground.split("[:]", 2)[1];
-					s.addEntry("backgroundanimationnormal", aniName);
+					s.putProperty("backgroundanimationnormal", aniName);
 				} else {
-					s.addEntry("backgroundnormal", this.customizationContainer.normalBackground);
+					s.putProperty("backgroundnormal", this.customizationContainer.normalBackground);
 				}
 			}
 			if (this.customizationContainer.hoverBackground != null) {
 				if (this.customizationContainer.hoverBackground.startsWith("animation:")) {
 					String aniName = this.customizationContainer.hoverBackground.split("[:]", 2)[1];
-					s.addEntry("backgroundanimationhovered", aniName);
+					s.putProperty("backgroundanimationhovered", aniName);
 				} else {
-					s.addEntry("backgroundhovered", this.customizationContainer.hoverBackground);
+					s.putProperty("backgroundhovered", this.customizationContainer.hoverBackground);
 				}
 			}
-			s.addEntry("restartbackgroundanimations", "" + this.customizationContainer.restartAnimationOnHover);
-			s.addEntry("loopbackgroundanimations", "" + this.customizationContainer.loopAnimation);
+			s.putProperty("restartbackgroundanimations", "" + this.customizationContainer.restartAnimationOnHover);
+			s.putProperty("loopbackgroundanimations", "" + this.customizationContainer.loopAnimation);
 			l.add(s);
 		}
 		// clickbutton
 		if (this.customizationContainer.autoButtonClicks > 0) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "clickbutton");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("clicks", "" + this.customizationContainer.autoButtonClicks);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "clickbutton");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("clicks", "" + this.customizationContainer.autoButtonClicks);
 			l.add(s);
 		}
 		//addhoversound
 		if (this.customizationContainer.hoverSound != null) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "addhoversound");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("path", this.customizationContainer.hoverSound);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "addhoversound");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("path", this.customizationContainer.hoverSound);
 			l.add(s);
 		}
 		//sethoverlabel
 		if (this.customizationContainer.hoverLabel != null) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "sethoverlabel");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("label", this.customizationContainer.hoverLabel);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "sethoverlabel");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("label", this.customizationContainer.hoverLabel);
 			l.add(s);
 		}
 		//hidebuttonfor
 		if (this.element.delayAppearance) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "hidebuttonfor");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("seconds", "" + this.element.appearanceDelayInSeconds);
-			s.addEntry("onlyfirsttime", "" + !this.element.delayAppearanceEverytime);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "hidebuttonfor");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("seconds", "" + this.element.appearanceDelayInSeconds);
+			s.putProperty("onlyfirsttime", "" + !this.element.delayAppearanceEverytime);
 			if (this.element.fadeIn) {
-				s.addEntry("fadein", "true");
-				s.addEntry("fadeinspeed", "" + this.element.fadeInSpeed);
+				s.putProperty("fadein", "true");
+				s.putProperty("fadeinspeed", "" + this.element.fadeInSpeed);
 			}
 			l.add(s);
 		}
 		//setbuttonclicksound
 		if (this.customizationContainer.clickSound != null) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "setbuttonclicksound");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("path", this.customizationContainer.clickSound);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "setbuttonclicksound");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("path", this.customizationContainer.clickSound);
 			l.add(s);
 		}
 		//setbuttondescription
 		if (this.customizationContainer.buttonDescription != null) {
-			PropertiesSection s = new PropertiesSection("customization");
-			s.addEntry("action", "setbuttondescription");
-			s.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-			s.addEntry("description", this.customizationContainer.buttonDescription);
+			PropertyContainer s = new PropertyContainer("customization");
+			s.putProperty("action", "setbuttondescription");
+			s.putProperty("identifier", "%id=" + this.getButtonId() + "%");
+			s.putProperty("description", this.customizationContainer.buttonDescription);
 			l.add(s);
 		}
 
 		//Visibility Requirements
-		PropertiesSection visReqs = new PropertiesSection("customization");
-		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
-		visReqs.addEntry("identifier", "%id=" + this.getButtonId() + "%");
+		PropertyContainer visReqs = new PropertyContainer("customization");
+		visReqs.putProperty("action", "vanilla_button_visibility_requirements");
+		visReqs.putProperty("identifier", "%id=" + this.getButtonId() + "%");
 		
 		this.serializeLoadingRequirementsTo(visReqs);
-		if (visReqs.getEntries().size() > 2) {
+		if (visReqs.getProperties().size() > 2) {
 			l.add(visReqs);
 		}
 

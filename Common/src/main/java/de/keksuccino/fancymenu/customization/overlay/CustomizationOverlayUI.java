@@ -46,9 +46,9 @@ import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.properties.PropertiesSerializer;
-import de.keksuccino.konkrete.properties.PropertiesSet;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
@@ -180,24 +180,24 @@ public class CustomizationOverlayUI extends UIBase {
 				} else {
 
 					for (String s : FileUtils.getFiles(FancyMenu.getCustomizationsDirectory().getPath())) {
-						PropertiesSet props = PropertiesSerializer.getProperties(s);
+						PropertyContainerSet props = PropertiesSerializer.deserializePropertyContainerSet(s);
 						if (props == null) {
 							continue;
 						}
-						PropertiesSet props2 = new PropertiesSet(props.getPropertiesType());
-						List<PropertiesSection> l = props.getProperties();
-						List<PropertiesSection> l2 = new ArrayList<>();
+						PropertyContainerSet props2 = new PropertyContainerSet(props.getType());
+						List<PropertyContainer> l = props.getContainers();
+						List<PropertyContainer> l2 = new ArrayList<>();
 						boolean b = false;
 
-						List<PropertiesSection> metas = props.getPropertiesOfType("customization-meta");
+						List<PropertyContainer> metas = props.getSectionsOfType("customization-meta");
 						if ((metas == null) || metas.isEmpty()) {
-							metas = props.getPropertiesOfType("type-meta");
+							metas = props.getSectionsOfType("type-meta");
 						}
 						if (metas != null) {
 							if (metas.isEmpty()) {
 								continue;
 							}
-							String identifier = metas.get(0).getEntryValue("identifier");
+							String identifier = metas.get(0).getValue("identifier");
 							Screen overridden = ((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen();
 							if ((identifier == null) || !identifier.equalsIgnoreCase(overridden.getClass().getName())) {
 								continue;
@@ -207,9 +207,9 @@ public class CustomizationOverlayUI extends UIBase {
 							continue;
 						}
 
-						for (PropertiesSection sec : l) {
-							String action = sec.getEntryValue("action");
-							if (sec.getSectionType().equalsIgnoreCase("customization-meta") || sec.getSectionType().equalsIgnoreCase("type-meta")) {
+						for (PropertyContainer sec : l) {
+							String action = sec.getValue("action");
+							if (sec.getType().equalsIgnoreCase("customization-meta") || sec.getType().equalsIgnoreCase("type-meta")) {
 								l2.add(sec);
 								continue;
 							}
@@ -228,11 +228,11 @@ public class CustomizationOverlayUI extends UIBase {
 							}
 
 							if (l2.size() > 1) {
-								for (PropertiesSection sec : l2) {
-									props2.addProperties(sec);
+								for (PropertyContainer sec : l2) {
+									props2.putContainer(sec);
 								}
 
-								PropertiesSerializer.writeProperties(props2, s);
+								PropertiesSerializer.serializePropertyContainerSet(props2, s);
 							}
 						}
 					}
@@ -1111,14 +1111,14 @@ public class CustomizationOverlayUI extends UIBase {
 				identifier = "%fancymenu:universal_layout%";
 			}
 
-			List<PropertiesSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
+			List<PropertyContainerSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
 			if (!this.isUniversal) {
-				List<PropertiesSet> sets = new ArrayList<>();
-				for (PropertiesSet s : enabled) {
-					List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+				List<PropertyContainerSet> sets = new ArrayList<>();
+				for (PropertyContainerSet s : enabled) {
+					List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 					if (!metas.isEmpty()) {
-						PropertiesSection meta = metas.get(0);
-						String id = meta.getEntryValue("identifier");
+						PropertyContainer meta = metas.get(0);
+						String id = meta.getValue("identifier");
 						if (!id.equals("%fancymenu:universal_layout%")) {
 							sets.add(s);
 						}
@@ -1127,19 +1127,19 @@ public class CustomizationOverlayUI extends UIBase {
 				enabled = sets;
 			}
 			if (!enabled.isEmpty()) {
-				for (PropertiesSet s : enabled) {
-					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
+				for (PropertyContainerSet s : enabled) {
+					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
 					if (secs.isEmpty()) {
-						secs = s.getPropertiesOfType("type-meta");
+						secs = s.getSectionsOfType("type-meta");
 					}
 					if (!secs.isEmpty()) {
 						String name = "<missing name>";
-						PropertiesSection meta = secs.get(0);
-						File f = new File(meta.getEntryValue("path"));
+						PropertyContainer meta = secs.get(0);
+						File f = new File(meta.getValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
 
-							int totalactions = s.getProperties().size() - 1;
+							int totalactions = s.getContainers().size() - 1;
 							OverlayButton layoutEntryBtn = new OverlayButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.manageSubPopup.setParentButton((AdvancedButton) press);
 								this.manageSubPopup.openMenuAt(0, press.y, f, false);
@@ -1151,14 +1151,14 @@ public class CustomizationOverlayUI extends UIBase {
 				}
 			}
 
-			List<PropertiesSet> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
+			List<PropertyContainerSet> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
 			if (!this.isUniversal) {
-				List<PropertiesSet> sets = new ArrayList<>();
-				for (PropertiesSet s : disabled) {
-					List<PropertiesSection> metas = s.getPropertiesOfType("customization-meta");
+				List<PropertyContainerSet> sets = new ArrayList<>();
+				for (PropertyContainerSet s : disabled) {
+					List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
 					if (!metas.isEmpty()) {
-						PropertiesSection meta = metas.get(0);
-						String id = meta.getEntryValue("identifier");
+						PropertyContainer meta = metas.get(0);
+						String id = meta.getValue("identifier");
 						if (!id.equals("%fancymenu:universal_layout%")) {
 							sets.add(s);
 						}
@@ -1167,19 +1167,19 @@ public class CustomizationOverlayUI extends UIBase {
 				disabled = sets;
 			}
 			if (!disabled.isEmpty()) {
-				for (PropertiesSet s : disabled) {
-					List<PropertiesSection> secs = s.getPropertiesOfType("customization-meta");
+				for (PropertyContainerSet s : disabled) {
+					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
 					if (secs.isEmpty()) {
-						secs = s.getPropertiesOfType("type-meta");
+						secs = s.getSectionsOfType("type-meta");
 					}
 					if (!secs.isEmpty()) {
 						String name = "<missing name>";
-						PropertiesSection meta = secs.get(0);
-						File f = new File(meta.getEntryValue("path"));
+						PropertyContainer meta = secs.get(0);
+						File f = new File(meta.getValue("path"));
 						if (f.isFile()) {
 							name = Files.getNameWithoutExtension(f.getName());
 
-							int totalactions = s.getProperties().size() - 1;
+							int totalactions = s.getContainers().size() - 1;
 							OverlayButton layoutEntryBtn = new OverlayButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.manageSubPopup.setParentButton((AdvancedButton) press);
 								this.manageSubPopup.openMenuAt(0, press.y, f, true);
@@ -1339,16 +1339,16 @@ public class CustomizationOverlayUI extends UIBase {
 
 	private static void onOverrideWithCustomGui(Screen current, String customGuiIdentifier) {
 		if ((customGuiIdentifier != null) && CustomGuiLoader.guiExists(customGuiIdentifier)) {
-			PropertiesSection meta = new PropertiesSection("customization-meta");
-			meta.addEntry("identifier", current.getClass().getName());
+			PropertyContainer meta = new PropertyContainer("customization-meta");
+			meta.putProperty("identifier", current.getClass().getName());
 
-			PropertiesSection or = new PropertiesSection("customization");
-			or.addEntry("action", "overridemenu");
-			or.addEntry("identifier", customGuiIdentifier);
+			PropertyContainer or = new PropertyContainer("customization");
+			or.putProperty("action", "overridemenu");
+			or.putProperty("identifier", customGuiIdentifier);
 
-			PropertiesSet props = new PropertiesSet("menu");
-			props.addProperties(meta);
-			props.addProperties(or);
+			PropertyContainerSet props = new PropertyContainerSet("menu");
+			props.putContainer(meta);
+			props.putContainer(or);
 
 			String screenname = current.getClass().getName();
 			if (screenname.contains(".")) {
@@ -1357,7 +1357,7 @@ public class CustomizationOverlayUI extends UIBase {
 			String filename = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), "overridemenu_" + screenname, "txt");
 
 			String finalpath = FancyMenu.getCustomizationsDirectory().getPath() + "/" + filename;
-			PropertiesSerializer.writeProperties(props, finalpath);
+			PropertiesSerializer.serializePropertyContainerSet(props, finalpath);
 
 			ScreenCustomization.reloadFancyMenu();
 		}

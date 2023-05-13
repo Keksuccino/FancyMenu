@@ -148,39 +148,6 @@ public class ActionExecutor {
 					openFile(f);
 				}
 			}
-			if (action.equalsIgnoreCase("prevbackground")) {
-				ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getActiveLayer();
-				if (handler != null) {
-					int cur = handler.getCurrentBackgroundAnimationId();
-					if (cur > 0) {
-						for (IAnimationRenderer an : handler.backgroundAnimations()) {
-							if (an instanceof AdvancedAnimation) {
-								((AdvancedAnimation)an).stopAudio();
-							}
-						}
-						handler.setBackgroundAnimation(cur-1);
-					}
-				}
-			}
-			if (action.equalsIgnoreCase("nextbackground")) {
-				ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getActiveLayer();
-				if (handler != null) {
-					int cur = handler.getCurrentBackgroundAnimationId();
-					if (cur < handler.backgroundAnimations().size()-1) {
-						for (IAnimationRenderer an : handler.backgroundAnimations()) {
-							if (an instanceof AdvancedAnimation) {
-								((AdvancedAnimation)an).stopAudio();
-							}
-						}
-						handler.setBackgroundAnimation(cur+1);
-					}
-				}
-			}
-			if (action.equalsIgnoreCase("opencustomgui")) {
-				if (CustomGuiLoader.guiExists(value)) {
-					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
-				}
-			}
 			if (action.equalsIgnoreCase("opengui") && (value != null)) {
 				if (ScreenCustomization.findValidMenuIdentifierFor(value).equals(PackSelectionScreen.class.getName())) {
 					Screen parent = Minecraft.getInstance().screen;

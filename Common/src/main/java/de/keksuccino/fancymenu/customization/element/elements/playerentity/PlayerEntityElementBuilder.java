@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.properties.PropertiesSection;
+import de.keksuccino.fancymenu.properties.PropertyContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -36,14 +36,14 @@ public class PlayerEntityElementBuilder extends ElementBuilder {
 
     @Override
     public @NotNull CustomizationItem buildDefaultInstance() {
-        PlayerEntityElement i = new PlayerEntityElement(this, new PropertiesSection("dummy"));
+        PlayerEntityElement i = new PlayerEntityElement(this, new PropertyContainer("dummy"));
         i.width = 100;
         i.height = 300;
         return i;
     }
 
     @Override
-    public CustomizationItem deserializeElement(PropertiesSection serializedElement) {
+    public CustomizationItem deserializeElement(PropertyContainer serializedElement) {
         return new PlayerEntityElement(this, serializedElement);
     }
 

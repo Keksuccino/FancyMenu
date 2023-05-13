@@ -212,20 +212,20 @@ helper.creator.custombutton.config.actiontype.unpackzip.desc.value = Filepath + 
 
 helper.creator.custombutton.config.actionvalue.example = Example: {}
 
-helper.creator.custombutton.config.actiontype.openlink.desc.value.example = https://google.com
-helper.creator.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all!
-helper.creator.custombutton.config.actiontype.joinserver.desc.value.example = mc.coolserver.com
-helper.creator.custombutton.config.actiontype.loadworld.desc.value.example = myworld
-helper.creator.custombutton.config.actiontype.opencustomgui.desc.value.example = coolcustomgui
-helper.creator.custombutton.config.actiontype.opengui.desc.value.example = some.menu.identifier
-helper.creator.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/changelog.txt
-helper.creator.custombutton.config.actiontype.movefile.desc.value.example = resources/image.jpg;folder/moveto/image.jpg
-helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = resources/image.jpg;some_folder/imagecopy.jpg
-helper.creator.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/rickroll.gif
-helper.creator.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/image.jpg;newimagename.jpg
-helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://hoster.com/layout.zip;download/layout.zip
-helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = resources/archive.zip;resources/unpacked/
-helper.creator.custombutton.config.actiontype.runscript.desc.value.example = coolscript
+helper.creator.custombutton.config.actiontype.openlink.desc.value.example = https://example.com
+helper.creator.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all! This is an example!
+helper.creator.custombutton.config.actiontype.joinserver.desc.value.example = mc.exampleserver.com
+helper.creator.custombutton.config.actiontype.loadworld.desc.value.example = example_world_name
+helper.creator.custombutton.config.actiontype.opencustomgui.desc.value.example = example_custom_gui_identifier
+helper.creator.custombutton.config.actiontype.opengui.desc.value.example = example.menu.identifier
+helper.creator.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/example.txt
+helper.creator.custombutton.config.actiontype.movefile.desc.value.example = resources/example.jpg;folder/moveto/example.jpg
+helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = resources/example.jpg;some_folder/example_copy.jpg
+helper.creator.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/example.gif
+helper.creator.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/example.jpg;new_name_example.jpg
+helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://example_hoster.com/layout.zip;download/layout.zip
+helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = resources/example.zip;resources/unpacked/
+helper.creator.custombutton.config.actiontype.runscript.desc.value.example = example_script_name
 
 helper.creator.rightclick.scale = Force GUI Scale
 helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than 0!
