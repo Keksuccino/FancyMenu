@@ -308,6 +308,10 @@ public class Tooltip extends GuiComponent implements Renderable {
         return this;
     }
 
+    public Tooltip setDefaultBackgroundColor() {
+        return this.setBackgroundColor(DEFAULT_BACKGROUND_COLOR, DEFAULT_BORDER_COLOR);
+    }
+
     public Color getBackgroundColor() {
         return this.backgroundColor;
     }

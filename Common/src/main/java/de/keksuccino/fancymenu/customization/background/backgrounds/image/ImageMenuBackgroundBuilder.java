@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,7 +19,7 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
     }
 
     @Override
-    public void buildNewOrEditInstance(@NotNull LayoutEditorScreen editor, @Nullable ImageMenuBackground backgroundToEdit, @NotNull Consumer<ImageMenuBackground> backgroundConsumer) {
+    public void buildNewOrEditInstance(@NotNull Screen currentScreen, @Nullable ImageMenuBackground backgroundToEdit, @NotNull Consumer<ImageMenuBackground> backgroundConsumer) {
         ChooseFilePopup p = new ChooseFilePopup((call) -> {
             if (call != null) {
                 ImageMenuBackground background = (backgroundToEdit != null) ? backgroundToEdit : new ImageMenuBackground(this);

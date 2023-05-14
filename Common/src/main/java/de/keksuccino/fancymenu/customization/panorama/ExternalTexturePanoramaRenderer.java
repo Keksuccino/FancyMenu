@@ -31,7 +31,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	private double fov = 85.0D;
 	private float angle = 25.0F;
 	private final Minecraft mc = Minecraft.getInstance();
-	
+
 	public float opacity = 1.0F;
 
 	/**
@@ -137,11 +137,11 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 			float pitch = Mth.sin(this.time * 0.001F) * 5.0F + this.angle;
 			float yaw = -this.time * 0.1F;
-			float fovf = ((float)this.fov * ((float)Math.PI / 180));
+			float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
 			Tesselator tesselator = Tesselator.getInstance();
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			Matrix4f matrix4f = new Matrix4f().setPerspective(fovf, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+			Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
 			RenderSystem.setProjectionMatrix(matrix4f);
 			PoseStack poseStack = RenderSystem.getModelViewStack();
@@ -264,6 +264,10 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 	public void setAngle(float angle) {
 		this.angle = angle;
+	}
+
+	public boolean isReady() {
+		return this.prepared;
 	}
 
 }

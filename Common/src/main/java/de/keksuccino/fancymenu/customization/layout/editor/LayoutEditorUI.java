@@ -90,7 +90,7 @@ public class LayoutEditorUI extends UIBase {
 					if (call) {
 						ScreenCustomization.stopSounds();
 						ScreenCustomization.resetSounds();
-						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.parent.screen));
+						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.parent.screenToCustomize));
 					}
 				});
 			});
@@ -286,7 +286,7 @@ public class LayoutEditorUI extends UIBase {
 				this.parent.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 				this.parent.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
-				Screen s = this.parent.screen;
+				Screen s = this.parent.screenToCustomize;
 				if ((s instanceof CustomGuiBase) && ((CustomGuiBase)s).getIdentifier().equals("%fancymenu:universal_layout%")) {
 					s = ((CustomGuiBase)s).parent;
 				}
@@ -308,9 +308,9 @@ public class LayoutEditorUI extends UIBase {
 
 			this.content.clear();
 
-			String identifier = this.ui.parent.screen.getClass().getName();
-			if (this.ui.parent.screen instanceof CustomGuiBase) {
-				identifier = ((CustomGuiBase) this.ui.parent.screen).getIdentifier();
+			String identifier = this.ui.parent.screenToCustomize.getClass().getName();
+			if (this.ui.parent.screenToCustomize instanceof CustomGuiBase) {
+				identifier = ((CustomGuiBase) this.ui.parent.screenToCustomize).getIdentifier();
 			}
 
 			List<PropertyContainerSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
@@ -330,7 +330,7 @@ public class LayoutEditorUI extends UIBase {
 							int totalactions = s.getContainers().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
-									LayoutHandler.editLayout(this.ui.parent.screen, f);
+									LayoutHandler.editLayout(this.ui.parent.screenToCustomize, f);
 								});
 							});
 							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.enabled"), "" + totalactions), "%n%"));
@@ -357,7 +357,7 @@ public class LayoutEditorUI extends UIBase {
 							int totalactions = s.getContainers().size() - 1;
 							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.ui.displayUnsavedWarning((call) -> {
-									LayoutHandler.editLayout(this.ui.parent.screen, f);
+									LayoutHandler.editLayout(this.ui.parent.screenToCustomize, f);
 								});
 							});
 							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.disabled"), "" + totalactions), "%n%"));
@@ -591,8 +591,8 @@ public class LayoutEditorUI extends UIBase {
 
 			/** EDIT MENU TITLE **/
 			String defaultMenuTitleRaw = "";
-			if (this.parent.screen.getTitle() != null) {
-				defaultMenuTitleRaw = this.parent.screen.getTitle().getString();
+			if (this.parent.screenToCustomize.getTitle() != null) {
+				defaultMenuTitleRaw = this.parent.screenToCustomize.getTitle().getString();
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {

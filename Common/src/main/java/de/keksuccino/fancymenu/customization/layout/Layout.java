@@ -55,6 +55,8 @@ public class Layout extends LayoutBase {
 
     //TODO compatibility layer für alte top-level customization sections wie addbackgroundanimation, backgroundtexture, etc. (siehe alte Customizationlayer klasse)
 
+    //TODO compatibility layer für legacy items (image, animation, etc.) adden
+
     public PropertyContainerSet serialize() {
 
         PropertyContainerSet set = new PropertyContainerSet("fancymenu_layout");
@@ -267,7 +269,7 @@ public class Layout extends LayoutBase {
                 if (backgroundIdentifier != null) {
                     MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
                     if (builder != null) {
-                        layout.menuBackground = builder.deserializeBackground(convertSectionToBackground(menuBack));
+                        layout.menuBackground = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
                     }
                 }
             }

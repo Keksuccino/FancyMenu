@@ -340,7 +340,7 @@ public class ScrollArea extends UIBase {
     @Nullable
     public ScrollAreaEntry getFocusedEntry() {
         for (ScrollAreaEntry e : this.entries) {
-            if (e.isFocused()) {
+            if (e.isSelected()) {
                 return e;
             }
         }

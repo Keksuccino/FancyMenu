@@ -59,7 +59,7 @@ public class BuildRequirementScreen extends Screen {
             this.setContentOfRequirementsList(this.instance.requirement.getCategory());
             for (ScrollAreaEntry e : this.requirementsListScrollArea.getEntries()) {
                 if ((e instanceof RequirementScrollEntry) && (((RequirementScrollEntry) e).requirement == this.instance.requirement)) {
-                    e.setFocused(true);
+                    e.setSelected(true);
                     break;
                 }
             }
@@ -234,7 +234,7 @@ public class BuildRequirementScreen extends Screen {
         if ((requirement != null) && (requirement.getDescription() != null)) {
             for (String s : requirement.getDescription()) {
                 TextScrollAreaEntry e = new TextScrollAreaEntry(this.requirementDescriptionScrollArea, Component.literal(s), (entry) -> {});
-                e.setFocusable(false);
+                e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
                 this.requirementDescriptionScrollArea.addEntry(e);
@@ -259,7 +259,7 @@ public class BuildRequirementScreen extends Screen {
                     BuildRequirementScreen.this.instance.requirement = null;
                     this.setDescription(null);
                 });
-                e.setFocusable(false);
+                e.setSelectable(false);
                 this.requirementsListScrollArea.addEntry(e);
             }
             //Add requirement entries without category
@@ -282,7 +282,7 @@ public class BuildRequirementScreen extends Screen {
                 BuildRequirementScreen.this.instance.requirement = null;
                 this.setDescription(null);
             });
-            backEntry.setFocusable(false);
+            backEntry.setSelectable(false);
             this.requirementsListScrollArea.addEntry(backEntry);
 
             //Add requirement entries of given category

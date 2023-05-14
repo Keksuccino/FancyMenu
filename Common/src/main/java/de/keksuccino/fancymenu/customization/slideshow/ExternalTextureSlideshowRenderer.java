@@ -9,6 +9,8 @@ import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
@@ -20,13 +22,15 @@ import net.minecraft.resources.ResourceLocation;
 
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	
-	protected List<ExternalTextureResourceLocation> images = new ArrayList<ExternalTextureResourceLocation>();
+	protected List<ExternalTextureResourceLocation> images = new ArrayList<>();
 	protected ExternalTextureResourceLocation overlay_texture;
 	protected String name = null;
 	public String dir;
 	protected boolean prepared = false;
 	protected double imageDuration = 10.0D;
 	protected float fadeSpeed = 1.0F;
+	protected int originalWidth = 10;
+	protected int originalHeight = 10;
 	
 	public int width = 50;
 	public int height = 50;
@@ -117,7 +121,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	public void prepareSlideshow() {
 		if (!this.prepared && (this.name != null)) {
 			
-			File imagesDir = new File(this.dir + "/images");
+			File imagesDir = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.dir + "/images"));
 			
 			if (imagesDir.exists() && imagesDir.isDirectory()) {
 				
@@ -131,9 +135,13 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					for (String s : images) {
 						File f = new File(imagesDir.getPath() + "/" + s);
 						if (f.exists() && f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".png"))) {
-							ExternalTextureResourceLocation r = new ExternalTextureResourceLocation(f.getPath());
+							ExternalTextureResourceLocation r = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
 							this.images.add(r);
 						}
+					}
+					if (!this.images.isEmpty()) {
+						this.originalWidth = this.images.get(0).getWidth();
+						this.originalHeight = this.images.get(0).getHeight();
 					}
 					
 					File overlay = new File(this.dir + "/overlay.png");
@@ -283,6 +291,14 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	
 	public boolean isReady() {
 		return this.prepared;
+	}
+
+	public int getImageWidth() {
+		return this.originalWidth;
+	}
+
+	public int getImageHeight() {
+		return this.originalHeight;
 	}
 
 }

@@ -117,7 +117,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.menu.addSeparatorEntry("separator_1", true);
 
-		//TODO add support for vanilla/deepcuz elements (vanilla buttons, etc.)
 		if (this.settings.isIdentifierCopyable()) {
 
 			this.menu.addClickableEntry("copy_id", false, Component.translatable("fancymenu.helper.editor.items.copyid"), null, Boolean.class, (entry, inherited, pass) -> {

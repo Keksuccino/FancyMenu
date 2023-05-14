@@ -49,7 +49,7 @@ public class BuildActionScreen extends Screen {
         if (this.instance.action != null) {
             for (ScrollAreaEntry e : this.actionsListScrollArea.getEntries()) {
                 if ((e instanceof ActionScrollEntry) && (((ActionScrollEntry)e).action == this.instance.action)) {
-                    e.setFocused(true);
+                    e.setSelected(true);
                     break;
                 }
             }
@@ -200,7 +200,7 @@ public class BuildActionScreen extends Screen {
         if ((action != null) && (action.getActionDescription() != null)) {
             for (String s : StringUtils.splitLines(action.getActionDescription(), "%n%")) {
                 TextScrollAreaEntry e = new TextScrollAreaEntry(this.actionDescriptionScrollArea, Component.literal(s), (entry) -> {});
-                e.setFocusable(false);
+                e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
                 this.actionDescriptionScrollArea.addEntry(e);

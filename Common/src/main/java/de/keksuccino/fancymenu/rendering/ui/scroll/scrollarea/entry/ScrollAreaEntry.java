@@ -20,11 +20,11 @@ public abstract class ScrollAreaEntry extends UIBase {
     public AdvancedButton buttonBase;
     protected Color backgroundColorIdle = AREA_BACKGROUND_COLOR;
     protected Color backgroundColorHover = ENTRY_COLOR_FOCUSED;
-    protected boolean focusable = true;
-    protected boolean focused = false;
+    protected boolean selectable = true;
+    protected boolean selected = false;
     protected boolean playClickSound = true;
-    public boolean unfocusOtherEntriesOnFocus = true;
-    public boolean focusOnClick = true;
+    public boolean deselectOtherEntriesOnSelect = true;
+    public boolean selectOnClick = true;
     public int index = 0;
 
     public ScrollAreaEntry(ScrollArea parent, int width, int height) {
@@ -32,8 +32,8 @@ public abstract class ScrollAreaEntry extends UIBase {
         this.width = width;
         this.height = height;
         this.buttonBase = new AdvancedButton(0, 0, 0, 0, "", true, (button) -> {
-            if (this.focusOnClick) {
-                this.setFocused(true);
+            if (this.selectOnClick) {
+                this.setSelected(true);
             }
             this.onClick(this);
         }) {
@@ -83,7 +83,7 @@ public abstract class ScrollAreaEntry extends UIBase {
         this.buttonBase.setY(this.y);
         this.buttonBase.setWidth(this.width);
         ((IMixinAbstractWidget)this.buttonBase).setHeightFancyMenu(this.height);
-        if (!this.isFocused()) {
+        if (!this.isSelected()) {
             this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
         } else {
             this.buttonBase.setBackgroundColor(this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, 1);
@@ -126,32 +126,32 @@ public abstract class ScrollAreaEntry extends UIBase {
         return this.height;
     }
 
-    public boolean isFocused() {
-        return this.focusable && this.focused;
+    public boolean isSelected() {
+        return this.selectable && this.selected;
     }
 
-    public void setFocused(boolean focused) {
-        if (this.focusable) {
-            this.focused = focused;
+    public void setSelected(boolean selected) {
+        if (this.selectable) {
+            this.selected = selected;
             this.updateEntry();
-            if (focused && this.unfocusOtherEntriesOnFocus) {
+            if (selected && this.deselectOtherEntriesOnSelect) {
                 for (ScrollAreaEntry e : this.parent.getEntries()) {
                     if (e != this) {
-                        e.setFocused(false);
+                        e.setSelected(false);
                     }
                 }
             }
         }
     }
 
-    public boolean isFocusable() {
-        return this.focusable;
+    public boolean isSelectable() {
+        return this.selectable;
     }
 
-    public void setFocusable(boolean focusable) {
-        this.focusable = focusable;
-        if (!focusable) {
-            this.focused = false;
+    public void setSelectable(boolean selectable) {
+        this.selectable = selectable;
+        if (!selectable) {
+            this.selected = false;
         }
     }
 

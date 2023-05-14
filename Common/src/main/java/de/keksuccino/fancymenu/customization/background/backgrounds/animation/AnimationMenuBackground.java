@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
@@ -11,13 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public class AnimationMenuBackground extends MenuBackground {
-
-    //TODO Choose Animation Screen in neuem GUI Stil
-    // - links list mit allen verfügbaren animationen
-    // - rechts oben Vorschau von ausgewählter Animation (animation ist NICHT gemutet)
-    // - rechts unten Buttons für Cancel und Done (Done deaktiviert wenn keine Animation ausgewählt)
-
-    //TODO Choose Animation Screen in Animation Background Builder nutzen
 
     private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
 
@@ -34,11 +28,12 @@ public class AnimationMenuBackground extends MenuBackground {
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (this.animationName != null) {
-            if ((this.lastAnimationName == null) || (this.lastAnimationName != this.animationName)) {
-                //TODO get animation
-                this.animation = ;
+            if ((this.lastAnimationName == null) || !this.lastAnimationName.equals(this.animationName)) {
+                this.animation = AnimationHandler.getAnimation(this.animationName);
             }
             this.lastAnimationName = this.animationName;
+        } else {
+            this.animation = null;
         }
 
         if ((this.animation != null) && this.animation.isReady()) {

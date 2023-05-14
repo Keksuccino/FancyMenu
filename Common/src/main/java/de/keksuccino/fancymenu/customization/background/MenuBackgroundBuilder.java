@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.background;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,14 +26,14 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> {
      * This is used in the {@link LayoutEditorScreen} when adding the background type to a layout and when editing an existing instance of the background type, so it's possible to open a screen here that has configuration options to construct/edit the {@link MenuBackground} instance.<br>
      * Once you're done constructing/editing the background, return the new/edited background instance by using the {@code backgroundConsumer} parameter.
      */
-    public abstract void buildNewOrEditInstance(@NotNull LayoutEditorScreen editor, @Nullable T backgroundToEdit, @NotNull Consumer<T> backgroundConsumer);
+    public abstract void buildNewOrEditInstance(@Nullable Screen currentScreen, @Nullable T backgroundToEdit, @NotNull Consumer<T> backgroundConsumer);
 
     /**
      * Only for internal use! Don't touch this if you don't know what you're doing!
      */
-    public void buildNewOrEditInstanceInternal(@NotNull LayoutEditorScreen editor, @Nullable MenuBackground backgroundToEdit, Consumer<MenuBackground> backgroundConsumer) {
+    public void buildNewOrEditInstanceInternal(@Nullable Screen currentScreen, @Nullable MenuBackground backgroundToEdit, Consumer<MenuBackground> backgroundConsumer) {
         try {
-            this.buildNewOrEditInstance(editor, (T) backgroundToEdit, (Consumer<T>) backgroundConsumer);
+            this.buildNewOrEditInstance(currentScreen, (T) backgroundToEdit, (Consumer<T>) backgroundConsumer);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

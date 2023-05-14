@@ -453,7 +453,7 @@ public class TextElement extends CustomizationItem {
             this.bold = bold;
             this.scale = scale;
             this.parentItem = parentItem;
-            this.focusable = false;
+            this.selectable = false;
             this.playClickSound = false;
             this.backgroundColorIdle = new Color(0,0,0,0);
             this.backgroundColorHover = new Color(0,0,0,0);

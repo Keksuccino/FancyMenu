@@ -68,7 +68,7 @@ public class ManageActionsScreen extends Screen {
                     this.updateActionInstanceScrollArea(true);
                     for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
                         if ((e instanceof ActionInstanceEntry) && (((ActionInstanceEntry)e).instance == selected)) {
-                            e.setFocused(true);
+                            e.setSelected(true);
                             break;
                         }
                     }
@@ -100,7 +100,7 @@ public class ManageActionsScreen extends Screen {
                     this.updateActionInstanceScrollArea(true);
                     for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
                         if ((e instanceof ActionInstanceEntry) && (((ActionInstanceEntry)e).instance == selected)) {
-                            e.setFocused(true);
+                            e.setSelected(true);
                             break;
                         }
                     }

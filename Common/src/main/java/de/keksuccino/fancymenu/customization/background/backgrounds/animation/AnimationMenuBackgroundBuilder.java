@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
+import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,20 +19,22 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
     }
 
     @Override
-    public void buildNewOrEditInstance(@NotNull LayoutEditorScreen editor, @Nullable AnimationMenuBackground backgroundToEdit, @NotNull Consumer<AnimationMenuBackground> backgroundConsumer) {
-        ChooseFilePopup p = new ChooseFilePopup((call) -> {
+    public void buildNewOrEditInstance(@NotNull Screen currentScreen, @Nullable AnimationMenuBackground backgroundToEdit, @NotNull Consumer<AnimationMenuBackground> backgroundConsumer) {
+        ChooseAnimationScreen s = new ChooseAnimationScreen(currentScreen, (backgroundToEdit != null) ? backgroundToEdit.animationName : null, (call) -> {
             if (call != null) {
-                AnimationMenuBackground background = (backgroundToEdit != null) ? backgroundToEdit : new AnimationMenuBackground(this);
-                background.imagePath = call;
-                backgroundConsumer.accept(background);
+                if (backgroundToEdit != null) {
+                    backgroundToEdit.animationName = call;
+                    backgroundConsumer.accept(backgroundToEdit);
+                } else {
+                    AnimationMenuBackground b = new AnimationMenuBackground(this);
+                    b.animationName = call;
+                    backgroundConsumer.accept(b);
+                }
             } else {
                 backgroundConsumer.accept(backgroundToEdit);
             }
-        }, "png", "jpg", "jpeg");
-        if ((backgroundToEdit != null) && (backgroundToEdit.imagePath != null)) {
-            p.setText(backgroundToEdit.imagePath);
-        }
-        PopupHandler.displayPopup(p);
+        });
+        Minecraft.getInstance().setScreen(s);
     }
 
     @Override
@@ -40,7 +42,7 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
 
         AnimationMenuBackground b = new AnimationMenuBackground(this);
 
-        b.animation = serializedMenuBackground.getValue("animation_name");
+        b.animationName = serializedMenuBackground.getValue("animation_name");
 
         return b;
 
@@ -51,8 +53,8 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
 
         SerializedMenuBackground serialized = new SerializedMenuBackground();
 
-        if (background.imagePath != null) {
-            serialized.putProperty("image_path", background.imagePath);
+        if (background.animationName != null) {
+            serialized.putProperty("animation_name", background.animationName);
         }
 
         return serialized;
@@ -61,12 +63,12 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.background.image");
+        return Component.translatable("fancymenu.background.animation");
     }
 
     @Override
     public @Nullable Component[] getDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.background.image.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.desc");
     }
 
 }
