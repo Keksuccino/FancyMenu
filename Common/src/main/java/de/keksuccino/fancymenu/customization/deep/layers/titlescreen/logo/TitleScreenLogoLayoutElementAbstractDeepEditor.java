@@ -1,14 +1,14 @@
-package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.top;
+package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.logo;
 
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
 import org.jetbrains.annotations.NotNull;
 
-public class TitleScreenForgeTopLayoutElementAbstractDeep extends AbstractEditorDeepElement {
+public class TitleScreenLogoLayoutElementAbstractDeepEditor extends AbstractDeepEditorElement {
 
-    public TitleScreenForgeTopLayoutElementAbstractDeep(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
+    public TitleScreenLogoLayoutElementAbstractDeepEditor(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
         super(parentDeepElementBuilder, customizationItemInstance, true, handler);
     }
 

@@ -1,14 +1,14 @@
-package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copyright;
+package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.branding;
 
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
 import org.jetbrains.annotations.NotNull;
 
-public class TitleScreenForgeCopyrightLayoutElementAbstractDeep extends AbstractEditorDeepElement {
+public class TitleScreenBrandingLayoutElementAbstractDeepEditor extends AbstractDeepEditorElement {
 
-    public TitleScreenForgeCopyrightLayoutElementAbstractDeep(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
+    public TitleScreenBrandingLayoutElementAbstractDeepEditor(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
         super(parentDeepElementBuilder, customizationItemInstance, true, handler);
     }
 

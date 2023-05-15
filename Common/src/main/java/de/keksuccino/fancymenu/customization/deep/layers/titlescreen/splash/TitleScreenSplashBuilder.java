@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.splash;
 
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -27,8 +27,8 @@ public class TitleScreenSplashBuilder extends DeepElementBuilder {
     }
 
     @Override
-    public AbstractEditorDeepElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
-        return new TitleScreenSplashLayoutElementAbstractDeep(item.parentElement, item, handler);
+    public AbstractDeepEditorElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
+        return new TitleScreenSplashLayoutElementAbstractDeepEditor(item.parentElement, item, handler);
     }
 
     @Override

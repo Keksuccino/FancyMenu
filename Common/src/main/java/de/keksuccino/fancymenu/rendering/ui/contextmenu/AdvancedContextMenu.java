@@ -133,7 +133,7 @@ public class AdvancedContextMenu implements Renderable {
 
     protected MenuEntry addEntry(int index, @NotNull MenuEntry entry) {
         index = Math.max(0, Math.min(this.entries.size(), index));
-        if (!this.identifierTaken(entry.identifier)) {
+        if (!this.hasEntry(entry.identifier)) {
             this.entries.add(index, entry);
         } else {
             LOGGER.error("[FANCYMENU] Failed to add entry to context menu! Identifier already in use: " + entry.identifier);
@@ -177,7 +177,7 @@ public class AdvancedContextMenu implements Renderable {
         return -1;
     }
 
-    public boolean identifierTaken(String identifier) {
+    public boolean hasEntry(String identifier) {
         return this.getEntry(identifier) != null;
     }
 

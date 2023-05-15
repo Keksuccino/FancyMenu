@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.button.ButtonData;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
+import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
@@ -12,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-public class VanillaButtonElement extends ButtonElement implements IActionExecutorElement {
+public class VanillaButtonElement extends ButtonElement implements IHideableElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -147,6 +148,16 @@ public class VanillaButtonElement extends ButtonElement implements IActionExecut
         this.originalY = this.button.y;
         this.originalWidth = this.button.getWidth();
         this.originalHeight = this.button.getHeight();
+    }
+
+    @Override
+    public boolean isHidden() {
+        return this.vanillaButtonHidden;
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+        this.vanillaButtonHidden = hidden;
     }
 
 }

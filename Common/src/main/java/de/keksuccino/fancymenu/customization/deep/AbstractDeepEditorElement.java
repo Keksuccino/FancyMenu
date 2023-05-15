@@ -1,19 +1,20 @@
 package de.keksuccino.fancymenu.customization.deep;
 
+import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.editor.EditorElementSettings;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractEditorDeepElement extends AbstractEditorElement {
+public abstract class AbstractDeepEditorElement extends AbstractEditorElement implements IHideableElement {
 
-    public AbstractEditorDeepElement(@NotNull AbstractDeepElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
+    public AbstractDeepEditorElement(@NotNull AbstractDeepElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
         super(element, editor, settings);
         this.setDefaultSettings();
     }
 
-    public AbstractEditorDeepElement(@NotNull AbstractDeepElement element, @NotNull LayoutEditorScreen editor) {
+    public AbstractDeepEditorElement(@NotNull AbstractDeepElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.setDefaultSettings();
     }
@@ -25,9 +26,19 @@ public abstract class AbstractEditorDeepElement extends AbstractEditorElement {
         this.settings.setResizeable(false);
         this.settings.setDragable(false);
         this.settings.setAnchorPointChangeable(false);
-        this.settings.setIdentifierCopyable(false);
         this.settings.setAdvancedPositioningSupported(false);
         this.settings.setAdvancedSizingSupported(false);
+        this.settings.setHideInsteadOfDestroy(true);
+    }
+
+    @Override
+    public boolean isHidden() {
+        return ((IHideableElement)this.element).isHidden();
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+        ((IHideableElement)this.element).setHidden(hidden);
     }
 
 }

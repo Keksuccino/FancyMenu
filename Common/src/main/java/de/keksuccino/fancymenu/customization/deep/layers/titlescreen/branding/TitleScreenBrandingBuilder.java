@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.branding;
 
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -25,8 +25,8 @@ public class TitleScreenBrandingBuilder extends DeepElementBuilder {
     }
 
     @Override
-    public AbstractEditorDeepElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
-        return new TitleScreenBrandingLayoutElementAbstractDeep(item.parentElement, item, handler);
+    public AbstractDeepEditorElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
+        return new TitleScreenBrandingLayoutElementAbstractDeepEditor(item.parentElement, item, handler);
     }
 
     @Override

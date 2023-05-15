@@ -1,9 +1,10 @@
 package de.keksuccino.fancymenu.customization.deep;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 
-public abstract class AbstractDeepElement extends AbstractElement {
+public abstract class AbstractDeepElement extends AbstractElement implements IHideableElement {
 
     public boolean deepElementHidden = false;
 
@@ -20,6 +21,11 @@ public abstract class AbstractDeepElement extends AbstractElement {
         return super.shouldRender();
     }
 
+    @Override
+    public String getInstanceIdentifier() {
+        return "deep:" + this.builder.getIdentifier();
+    }
+
     public boolean isDeepElementVisible() {
         if (!this.loadingRequirementsMet()) {
             return false;
@@ -31,6 +37,16 @@ public abstract class AbstractDeepElement extends AbstractElement {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean isHidden() {
+        return this.deepElementHidden;
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+        this.deepElementHidden = hidden;
     }
 
 }

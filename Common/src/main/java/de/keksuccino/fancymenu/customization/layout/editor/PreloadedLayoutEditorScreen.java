@@ -42,6 +42,7 @@ import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
 
 public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
@@ -863,7 +864,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				DeepElementBuilder e = layer.getBuilder(elementId);
 				if (e != null) {
 					AbstractDeepElement i = e.constructCustomizedItemInstance(sec);
-					AbstractEditorDeepElement le = e.constructEditorElementInstance(i, this);
+					AbstractDeepEditorElement le = e.constructEditorElementInstance(i, this);
 					this.content.add(le);
 					addedDeeps.add(e);
 				}
@@ -907,7 +908,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 
 	//render
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
 		if (!audioInit) {
 			audioInit = true;
@@ -916,7 +917,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 			}
 		}
 
-		super.render(matrix, mouseX, mouseY, partialTicks);
+		super.render(pose, mouseX, mouseY, partial);
 	}
 
 	/**

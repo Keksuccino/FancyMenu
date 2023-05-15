@@ -108,6 +108,10 @@ public class EditorElementBorderDisplay implements Renderable {
         this.lines.clear();
     }
 
+    public boolean hasLine(String identifier) {
+        return this.lines.containsKey(identifier);
+    }
+
     protected void updateDisplay() {
         this.width = 0;
         this.height = 0;

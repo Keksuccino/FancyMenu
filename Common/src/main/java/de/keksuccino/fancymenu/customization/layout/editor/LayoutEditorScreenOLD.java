@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.customization.button.ButtonData;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayerRegistry;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.v1.*;
 import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
@@ -521,7 +521,7 @@ public class LayoutEditorScreenOLD extends Screen {
 			if ((this.isFocused(object))) {
 				this.focusedObjects.remove(object);
 			}
-			if (!(object instanceof AbstractEditorDeepElement)) {
+			if (!(object instanceof AbstractDeepEditorElement)) {
 				this.content.remove(object);
 			}
 			this.updateContent();
@@ -570,14 +570,14 @@ public class LayoutEditorScreenOLD extends Screen {
 		if (this.renderorder.equalsIgnoreCase("foreground")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
 			for (AbstractEditorElement l : this.content) {
-				if (l instanceof AbstractEditorDeepElement) {
+				if (l instanceof AbstractDeepEditorElement) {
 					l.render(matrix, mouseX, mouseY);
 				}
 			}
 		}
 		//Renders all layout objects. The focused object is always rendered on top of all other objects.
 		for (AbstractEditorElement l : this.content) {
-			if (!(l instanceof LayoutVanillaButton) && !(l instanceof AbstractEditorDeepElement)) {
+			if (!(l instanceof LayoutVanillaButton) && !(l instanceof AbstractDeepEditorElement)) {
 				if (!this.isFocused(l)) {
 					l.render(matrix, mouseX, mouseY);
 				}
@@ -586,7 +586,7 @@ public class LayoutEditorScreenOLD extends Screen {
 		if (this.renderorder.equalsIgnoreCase("background")) {
 			this.renderVanillaButtons(matrix, mouseX, mouseY);
 			for (AbstractEditorElement l : this.content) {
-				if (l instanceof AbstractEditorDeepElement) {
+				if (l instanceof AbstractDeepEditorElement) {
 					l.render(matrix, mouseX, mouseY);
 				}
 			}

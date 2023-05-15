@@ -46,5 +46,6 @@
   "fancymenu.menu_background.choose.available_types": "Available Background Types",
   "fancymenu.menu_background.choose.type_description": "Background Type Description",
   "fancymenu.menu_background.choose.not_configured": "§cYou need to configure the background first!",
-  "fancymenu.menu_background.choose.not_background_selected": "§cYou need to select a background type first!"
+  "fancymenu.menu_background.choose.not_background_selected": "§cYou need to select a background type first!",
+  "fancymenu.elements.vanilla_button.dragging_not_allowed": "§cTo move this element, change its anchor point first!"
 }

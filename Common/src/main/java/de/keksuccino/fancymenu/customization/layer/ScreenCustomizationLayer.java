@@ -9,11 +9,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -49,7 +45,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ScreenCustomizationLayer extends GuiComponent {
+public class ScreenCustomizationLayer extends GuiComponent implements IElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -246,79 +242,11 @@ public class ScreenCustomizationLayer extends GuiComponent {
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
-		Map<ButtonData, List<VanillaButtonElement>> unstackedVanillaButtonElements = new HashMap<>();
-		Map<DeepElementBuilder<?,?,?>, List<AbstractDeepElement>> unstackedDeepElements = new HashMap<>();
-		for (Layout layout : this.activeLayouts) {
-			//Construct element instances
-			Layout.OrderedElementCollection layoutElements = layout.buildElementInstances();
-			this.normalElements.backgroundElements.addAll(layoutElements.backgroundElements);
-			this.normalElements.foregroundElements.addAll(layoutElements.foregroundElements);
-			this.allElements.addAll(this.normalElements.backgroundElements);
-			this.allElements.addAll(this.normalElements.foregroundElements);
-			//Construct vanilla button element instances
-			for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
-				ButtonData d = ButtonCache.getButtonForCompatibilityId(element.vanillaButtonIdentifier);
-				if ((d == null) && MathUtils.isLong(element.vanillaButtonIdentifier)) {
-					d = ButtonCache.getButtonForId(Long.parseLong(element.vanillaButtonIdentifier));
-				}
-				if (d != null) {
-					element.setVanillaButton(d);
-					if (!unstackedVanillaButtonElements.containsKey(d)) {
-						unstackedVanillaButtonElements.put(d, new ArrayList<>());
-					}
-					unstackedVanillaButtonElements.get(d).add(element);
-				}
-			}
-			//Construct deep element instances
-			for (AbstractDeepElement element : layout.buildDeepElementInstances()) {
-				if (!unstackedDeepElements.containsKey((DeepElementBuilder<?, ?, ?>)element.builder)) {
-					unstackedDeepElements.put((DeepElementBuilder<?, ?, ?>)element.builder, new ArrayList<>());
-				}
-				unstackedDeepElements.get(element.builder).add(element);
-			}
-		}
-
-		//Add missing vanilla button element instances
-		for (ButtonData d : e.getButtonDataList()) {
-			if (!unstackedVanillaButtonElements.containsKey(d)) {
-				VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance();
-				element.setVanillaButton(d);
-				unstackedVanillaButtonElements.put(d, new ArrayList<>());
-				unstackedVanillaButtonElements.get(d).add(element);
-			}
-		}
-		//Stack collected vanilla button elements, so only one element per button is active at the same time
-		for (Map.Entry<ButtonData, List<VanillaButtonElement>> m : unstackedVanillaButtonElements.entrySet()) {
-			if (!m.getValue().isEmpty()) {
-				VanillaButtonElement stacked = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaButtonElement[0]));
-				if (stacked != null) {
-					this.vanillaButtonElements.add(stacked);
-					this.allElements.add(stacked);
-				}
-			}
-		}
-
-		//Add missing deep element instances
-		DeepScreenCustomizationLayer<?> deepScreenCustomizationLayer = (this.identifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(this.identifier) : null;
-		if (deepScreenCustomizationLayer != null) {
-			for (DeepElementBuilder<?,?,?> builder : deepScreenCustomizationLayer.getBuilders()) {
-				if (!unstackedDeepElements.containsKey(builder)) {
-					AbstractDeepElement element = builder.buildDefaultInstance();
-					unstackedDeepElements.put(builder, new ArrayList<>());
-					unstackedDeepElements.get(builder).add(element);
-				}
-			}
-		}
-		//Stack collected deep elements, so only one element per element type is active at the same time
-		for (Map.Entry<DeepElementBuilder<?,?,?>, List<AbstractDeepElement>> m : unstackedDeepElements.entrySet()) {
-			if (!m.getValue().isEmpty()) {
-				AbstractDeepElement stacked = m.getKey().stackElementsInternal(m.getKey().buildDefaultInstance(), m.getValue().toArray(new AbstractDeepElement[0]));
-				if (stacked != null) {
-					this.deepElements.add(stacked);
-					this.allElements.add(stacked);
-				}
-			}
-		}
+		this.constructElementInstances(this.identifier, e.getButtonDataList(), this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
+		this.allElements.addAll(this.normalElements.backgroundElements);
+		this.allElements.addAll(this.normalElements.foregroundElements);
+		this.allElements.addAll(this.deepElements);
+		this.allElements.addAll(this.vanillaButtonElements);
 
 		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
 		if (e.getScreen() != null) {
@@ -485,22 +413,8 @@ public class ScreenCustomizationLayer extends GuiComponent {
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
 		for (AbstractElement element : this.allElements) {
-			if (element instanceof VanillaButtonElement) {
-				ButtonData d = ((VanillaButtonElement)element).buttonData;
-				if (d != null) {
-					String id = "vanillabtn:" + d.getId();
-					String idComp = (d.getCompatibilityId() != null) ? "vanillabtn:" + d.getCompatibilityId() : null;
-					if (id.equals(instanceIdentifier) || ("" + d.getId()).equals(instanceIdentifier)) {
-						return element;
-					}
-					if ((idComp != null) && ((idComp.equals(instanceIdentifier)) || (d.getCompatibilityId().equals(instanceIdentifier)))) {
-						return element;
-					}
-				}
-			} else {
-				if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
-					return element;
-				}
+			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
+				return element;
 			}
 		}
 		return null;
@@ -514,27 +428,6 @@ public class ScreenCustomizationLayer extends GuiComponent {
 		if (ButtonCache.isCaching()) return false;
 		return true;
 	}
-
-	//TODO remove this??
-//	protected static ButtonData getVanillaButtonData(String identifier) {
-//		if (identifier.startsWith("%id=")) {
-//			String p = identifier.split("=")[1].replace("%", "");
-//			if (MathUtils.isLong(p)) {
-//				return ButtonCache.getButtonForId(Long.parseLong(p));
-//			} else if (p.startsWith("button_compatibility_id:")) {
-//				return ButtonCache.getButtonForCompatibilityId(p);
-//			}
-//		} else {
-//			ButtonData b;
-//			if (I18n.exists(identifier)) {
-//				b = ButtonCache.getButtonForKey(identifier);
-//			} else {
-//				b = ButtonCache.getButtonForName(identifier);
-//			}
-//			return b;
-//		}
-//		return null;
-//	}
 
 	private static class ThreadCaller {
 		AtomicBoolean running = new AtomicBoolean(true);

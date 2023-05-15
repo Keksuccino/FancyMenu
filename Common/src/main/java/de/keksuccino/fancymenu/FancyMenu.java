@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 import de.keksuccino.fancymenu.platform.Services;
-import de.keksuccino.fancymenu.customization.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
@@ -21,28 +20,15 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
 
+	//TODO "not_allowed.png" textur ersetzen
+
 	//TODO TextBox class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
-
-	//TODO ScreenCustomizationLayer komplett reworken/rewriten
-
-	//TODO Vanilla Button Customization reworken
-	// - Alles in ein CusItem
-	// - Nur eine props section pro button
-	// - Alte button CusSections in layouts beim laden konvertieren
 
 	//TODO GameIntro stuff komplett reworken/rewriten
 
 	//TODO Altes Tooltip rendering fixen (am besten mit neuer engine ersetzen)
 
-	//TODO MenuHandlerEvents -> close audio handling: nach Mixin in setScreen() -> removed() verschieben
-
-	//TODO Layout handle stuff von MenuCustomization nach LayoutHandler verschieben
-
 	//TODO Alle dirs aus FancyMenu class nach MenuCustomization verschieben
-
-	//TODO API package stuff nach customization.backend aufteilen
-
-	//TODO APIs verbessern
 
 	//TODO Konkrete Locals zu I18n porten (nur noch mit I18n arbeiten)
 
@@ -99,8 +85,6 @@ public class FancyMenu {
 	        	ScreenCustomization.init();
 
 				WindowHandler.handleForceFullscreen();
-
-				MenuBackgroundTypeRegistry.init();
 
 //				EventHandler.INSTANCE.registerListenersOf(new Test());
 
@@ -205,9 +189,7 @@ public class FancyMenu {
 			config.registerValue("show_server_icons", true, "multiplayer_screen");
 
 			config.registerValue("show_world_icons", true, "singleplayer_screen");
-			
-			config.registerValue("showvanillamovewarning", true, "layouteditor", "If the warning when trying to move an vanilla button without an orientation should be displayed or not.");
-			config.registerValue("editordeleteconfirmation", true, "layouteditor");
+
 			config.registerValue("showgrid", false, "layouteditor");
 			config.registerValue("gridsize", 10, "layouteditor");
 

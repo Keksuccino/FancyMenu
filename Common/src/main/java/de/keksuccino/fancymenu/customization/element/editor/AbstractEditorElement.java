@@ -1,33 +1,37 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
+import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +42,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
+	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = new ResourceLocation("fancymenu", "textures/not_allowed.png");
+	protected static final Color DRAGGING_NOT_ALLOWED_OVERLAY_COLOR = new Color(232, 54, 9, 200);
 	protected static final Color BORDER_COLOR_SELECTED = new Color(3, 219, 252);
 	protected static final Color BORDER_COLOR_NORMAL = new Color(3, 148, 252);
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
@@ -68,6 +74,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected int resizeStartY = 0;
 	protected int resizeStartWidth = 0;
 	protected int resizeStartHeight = 0;
+	protected long renderDraggingNotAllowedTime = -1;
 
 	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
@@ -101,10 +108,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			pickElementMenu.closeMenu();
 			pickElementMenu.clearEntries();
 			int i = 0;
-			for (AbstractEditorElement e : this.editor.getContent()) {
+			for (AbstractEditorElement e : this.editor.getAllElements()) {
 				if (e.isHovered()) {
 					pickElementMenu.addClickableEntry("element_" + i, false, e.element.builder.getDisplayName(e.element), null, Boolean.class, (entry2, inherited2, pass2) -> {
-						for (AbstractEditorElement e2 : this.editor.getContent()) {
+						for (AbstractEditorElement e2 : this.editor.getAllElements()) {
 							e2.resetElementStates();
 						}
 						e.setSelected(true);
@@ -282,11 +289,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							}
 							this.element.width = 50;
 							this.element.advancedWidth = call;
-//							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint == ElementAnchorPoints.VANILLA)) {
-//								this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-//								this.element.baseX = 0;
-//								this.element.baseY = 0;
-//							}
 						}
 					}
 				});
@@ -312,11 +314,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							}
 							this.element.height = 50;
 							this.element.advancedHeight = call;
-//							if ((this instanceof LayoutVanillaButton) && (this.element.anchorPoint == ElementAnchorPoints.VANILLA)) {
-//								this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-//								this.element.baseX = 0;
-//								this.element.baseY = 0;
-//							}
 						}
 					}
 				});
@@ -382,14 +379,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isOrderable()) {
 
 			this.menu.addClickableEntry("move_up_element", false, Component.translatable("helper.creator.object.moveup"), null, Boolean.class, (entry, inherited, pass) -> {
-				AbstractEditorElement o = this.editor.moveUp(this);
+				AbstractEditorElement o = this.editor.moveElementUp(this);
 				if (o != null) {
 					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.moveup.desc", I18n.get("helper.creator.object.moveup.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
 				}
 			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.moveup.desc")));
 
 			this.menu.addClickableEntry("move_down_element", false, Component.translatable("helper.creator.object.movedown"), null, Boolean.class, (entry, inherited, pass) -> {
-				AbstractEditorElement o = this.editor.moveDown(this);
+				AbstractEditorElement o = this.editor.moveElementDown(this);
 				if (o != null) {
 					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.movedown.desc", I18n.get("helper.creator.object.movedown.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
 				}
@@ -401,11 +398,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isCopyable()) {
 
-			this.menu.addClickableEntry("copy_element", true, Component.translatable("helper.editor.ui.edit.copy"), null, Boolean.class, (entry, inherited, pass) -> {
-				if (inherited == null) {
-					this.editor.copySelectedElements();
+			this.menu.addClickableEntry("copy_element", true, Component.translatable("helper.editor.ui.edit.copy"), null, List.class, (entry, inherited, pass) -> {
+				List<AbstractEditorElement> elements = (inherited != null) ? inherited : new ArrayList<>();
+				elements.add(this);
+				if (entry.isLastInStack()) {
+					this.editor.copyElementsToClipboard(elements.toArray(new AbstractEditorElement[0]));
+				} else {
+					pass.accept(elements);
 				}
-				pass.accept(true);
 			});
 
 		}
@@ -414,15 +414,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.menu.addClickableEntry("delete_element", true, Component.translatable("helper.creator.items.delete"), null, Boolean.class, (entry, inherited, pass) -> {
 				if (inherited == null) {
-					if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
-						PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
-							if (call) {
-								pass.accept(this.deleteElement());
-							}
-						}, "§c§l" + I18n.get("helper.creator.messages.sure"), "", I18n.get("helper.creator.deleteobject"), "", "", "", "", ""));
-					} else {
-						pass.accept(this.deleteElement());
-					}
+					pass.accept(this.deleteElement());
 				} else if (inherited) {
 					pass.accept(this.deleteElement());
 				}
@@ -557,14 +549,29 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.element.render(pose, mouseX, mouseY, partial);
 
+		this.renderDraggingNotAllowedOverlay(pose);
+
 		//Update cursor
 		ResizeGrabber hoveredGrabber = this.getHoveredResizeGrabber();
 		GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), (hoveredGrabber != null) ? hoveredGrabber.getCursor() : CURSOR_NORMAL);
 
 		this.renderBorder(pose, mouseX, mouseY, partial);
 
-		//TODO render menu in editor
+	}
 
+	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
+		if (this.renderDraggingNotAllowedTime >= System.currentTimeMillis()) {
+			RenderSystem.enableBlend();
+			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), DRAGGING_NOT_ALLOWED_OVERLAY_COLOR.getRGB());
+			AspectRatio ratio = new AspectRatio(32, 32);
+			int[] size = ratio.getAspectRatioSize(this.getWidth(), this.getHeight());
+			int texW = size[0];
+			int texH = size[1];
+			int texX = this.getX() + (this.getWidth() / 2) - (texW / 2);
+			int texY = this.getY() + (this.getHeight() / 2) - (texH / 2);
+			RenderUtils.bindTexture(DRAGGING_NOT_ALLOWED_TEXTURE);
+			blit(pose, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+		}
 	}
 
 	protected void renderBorder(PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -604,6 +611,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public void resetElementStates() {
+		this.hovered = false;
 		this.selected = false;
 		this.multiSelected = false;
 		this.leftMouseDown = false;
@@ -623,8 +631,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 		if (button == 0) {
 			if (!this.menu.isUserNavigatingInMenu()) {
-				this.activeResizeGrabber = this.getHoveredResizeGrabber();
-				if (this.isHovered() || this.isGettingResized()) {
+				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
+				if (this.isHovered() || this.isMultiSelected() || this.isGettingResized()) {
 					this.leftMouseDown = true;
 					this.leftMouseDownX = mouseX;
 					this.leftMouseDownY = mouseY;
@@ -637,12 +645,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			if (this.menu.isOpen() && !this.menu.isHovered()) {
 				this.menu.closeMenu();
 			}
-			return true;
 		}
 		if (button == 1) {
 			if (this.isHovered() && !this.isGettingResized()) {
 				this.menu.openMenuAtMouse();
-				return true;
 			}
 			if (!this.isHovered()) {
 				this.menu.closeMenu();
@@ -656,21 +662,27 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
-			return true;
 		}
 		return false;
 	}
 
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
+		if (!this.isSelected()) {
+			return false;
+		}
 		if (button == 0) {
 			int diffX = (int)-(this.leftMouseDownX - mouseX);
 			int diffY = (int)-(this.leftMouseDownY - mouseY);
 			if (this.leftMouseDown && !this.isGettingResized()) {
-				this.element.baseX += diffX;
-				this.element.baseY += diffY;
-				return true;
+				if (this.settings.isDragable()) {
+					this.element.baseX += diffX;
+					this.element.baseY += diffY;
+				} else {
+					this.renderDraggingNotAllowedTime = System.currentTimeMillis() + 2000;
+				}
 			}
+			//TODO add SHIFT-resize (aspect ratio)
 			if (this.leftMouseDown && this.isGettingResized()) {
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					this.element.width = this.resizeStartWidth + diffX;
@@ -704,6 +716,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	public void setSelected(boolean selected) {
 		this.selected = selected;
+		if (!this.selected) {
+			this.resetElementStates();
+		}
+		this.editor.onUpdateSelectedElements();
 	}
 
 	public boolean isMultiSelected() {
@@ -715,7 +731,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public boolean isHovered() {
-		return this.hovered;
+		return this.hovered || this.menu.isUserNavigatingInMenu();
 	}
 
 	public int getX() {
@@ -735,19 +751,21 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public boolean deleteElement() {
-		if (!this.settings.isDestroyable()) {
-			return false;
-		}
-		this.editor.deleteContentQueue.add(this);
-		return true;
+		return this.editor.deleteElement(this);
 	}
 
 	public boolean isGettingResized() {
+		if (!this.settings.isResizeable()) {
+			return false;
+		}
 		return this.activeResizeGrabber != null;
 	}
 
 	@Nullable
 	protected ResizeGrabber getHoveredResizeGrabber() {
+		if (!this.settings.isResizeable()) {
+			return null;
+		}
 		if (this.activeResizeGrabber != null) {
 			return this.activeResizeGrabber;
 		}

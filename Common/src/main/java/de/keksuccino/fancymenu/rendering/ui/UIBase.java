@@ -16,6 +16,7 @@ public class UIBase extends GuiComponent {
 	public static final Color SCROLL_GRABBER_IDLE_COLOR = new Color(89, 91, 93, 100);
 	public static final Color SCROLL_GRABBER_HOVER_COLOR = new Color(102, 104, 104, 100);
 	public static final Color SCREEN_BACKGROUND_COLOR = new Color(60, 63, 65);
+	public static final Color SCREEN_BACKGROUND_COLOR_DARK = new Color(38, 38, 38);
 	public static final Color ELEMENT_BORDER_COLOR_IDLE = new Color(209, 194, 209);
 	public static final Color ELEMENT_BORDER_COLOR_HOVER = new Color(227, 211, 227);
 	public static final Color ELEMENT_BACKGROUND_COLOR_IDLE = new Color(71, 71, 71);

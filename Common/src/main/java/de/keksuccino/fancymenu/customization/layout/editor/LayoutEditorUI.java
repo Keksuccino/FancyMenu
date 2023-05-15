@@ -36,7 +36,7 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
 import de.keksuccino.fancymenu.customization.element.v1.SplashTextCustomizationItem;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar.ElementAlignment;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -1659,11 +1659,11 @@ public class LayoutEditorUI extends UIBase {
 
 			boolean containsHiddenDeeps = false;
 			for (AbstractEditorElement e : this.parent.content) {
-				if (e instanceof AbstractEditorDeepElement) {
-					if (((AbstractEditorDeepElement)e).getDeepCustomizationItem().deepElementHidden) {
-						String name = ((AbstractEditorDeepElement) e).parentDeepElementBuilder.getDisplayName();
+				if (e instanceof AbstractDeepEditorElement) {
+					if (((AbstractDeepEditorElement)e).getDeepCustomizationItem().deepElementHidden) {
+						String name = ((AbstractDeepEditorElement) e).parentDeepElementBuilder.getDisplayName();
 						AdvancedButton hiddenButton = new AdvancedButton(0, 0, 0, 0, name, true, (press) -> {
-							((AbstractEditorDeepElement) e).getDeepCustomizationItem().deepElementHidden = false;
+							((AbstractDeepEditorElement) e).getDeepCustomizationItem().deepElementHidden = false;
 							this.parent.updateContent();
 							this.closeMenu();
 						});

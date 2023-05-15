@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 
@@ -25,8 +25,8 @@ public class TitleScreenForgeTopBuilder extends DeepElementBuilder {
     }
 
     @Override
-    public AbstractEditorDeepElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
-        return new TitleScreenForgeTopLayoutElementAbstractDeep(item.parentElement, item, handler);
+    public AbstractDeepEditorElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
+        return new TitleScreenForgeTopLayoutElementAbstractDeepEditor(item.parentElement, item, handler);
     }
 
     @Override

@@ -243,7 +243,7 @@ public class Layout extends LayoutBase {
             }
 
             //Handle deep elements
-            layout.deepScreenCustomizationLayer = (layout.menuIdentifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.menuIdentifier) : null;
+            layout.deepScreenCustomizationLayer = ((layout.menuIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.menuIdentifier) : null;
             if (layout.deepScreenCustomizationLayer != null) {
                 for (PropertyContainer sec : ListUtils.mergeLists(serialized.getSectionsOfType("deep_element"), serialized.getSectionsOfType("customization"))) {
                     String elementType = sec.getValue("element_type");
@@ -432,43 +432,50 @@ public class Layout extends LayoutBase {
     @NotNull
     public Layout copy() {
 
-        Layout layout = new Layout();
+        Layout copy = new Layout();
 
-        layout.menuIdentifier = this.menuIdentifier;
-        layout.layoutFile = this.layoutFile;
+        copy.menuIdentifier = this.menuIdentifier;
+        copy.layoutFile = this.layoutFile;
 
-        layout.overrideMenuWith = this.overrideMenuWith;
-        layout.menuBackground = this.menuBackground;
-        layout.keepBackgroundAspectRatio = this.keepBackgroundAspectRatio;
-        layout.openAudio = this.openAudio;
-        layout.closeAudio = this.closeAudio;
-        layout.renderElementsBehindVanilla = this.renderElementsBehindVanilla;
-        layout.randomMode = this.randomMode;
-        layout.randomGroup = this.randomGroup;
-        layout.randomOnlyFirstTime = this.randomOnlyFirstTime;
-        layout.forcedScale = this.forcedScale;
-        layout.autoScalingWidth = this.autoScalingWidth;
-        layout.autoScalingHeight = this.autoScalingHeight;
-        layout.customMenuTitle = this.customMenuTitle;
-        layout.universalLayoutMenuWhitelist = this.universalLayoutMenuWhitelist;
-        layout.universalLayoutMenuBlacklist = this.universalLayoutMenuBlacklist;
+        copy.overrideMenuWith = this.overrideMenuWith;
+        copy.menuBackground = this.menuBackground;
+        copy.keepBackgroundAspectRatio = this.keepBackgroundAspectRatio;
+        copy.openAudio = this.openAudio;
+        copy.closeAudio = this.closeAudio;
+        copy.renderElementsBehindVanilla = this.renderElementsBehindVanilla;
+        copy.randomMode = this.randomMode;
+        copy.randomGroup = this.randomGroup;
+        copy.randomOnlyFirstTime = this.randomOnlyFirstTime;
+        copy.forcedScale = this.forcedScale;
+        copy.autoScalingWidth = this.autoScalingWidth;
+        copy.autoScalingHeight = this.autoScalingHeight;
+        copy.customMenuTitle = this.customMenuTitle;
+        copy.universalLayoutMenuWhitelist = this.universalLayoutMenuWhitelist;
+        copy.universalLayoutMenuBlacklist = this.universalLayoutMenuBlacklist;
 
         if (this.layoutWideLoadingRequirementContainer != null) {
             PropertyContainer loadingRequirementsSec = new PropertyContainer("loading_requirements");
             this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(loadingRequirementsSec);
-            layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(loadingRequirementsSec);
+            copy.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(loadingRequirementsSec);
         }
 
         for (SerializedElement e : this.serializedElements) {
-            layout.serializedElements.add(convertSectionToElement(e));
+            copy.serializedElements.add(convertSectionToElement(e));
         }
         for (SerializedElement e : this.serializedVanillaButtonElements) {
             SerializedElement serializedVanilla = convertSectionToElement(e);
             serializedVanilla.setType("vanilla_button");
-            layout.serializedVanillaButtonElements.add(serializedVanilla);
+            copy.serializedVanillaButtonElements.add(serializedVanilla);
+        }
+        for (SerializedElement e : this.serializedDeepElements) {
+            SerializedElement serializedDeep = convertSectionToElement(e);
+            serializedDeep.setType("deep_element");
+            copy.serializedDeepElements.add(serializedDeep);
         }
 
-        return layout;
+        copy.deepScreenCustomizationLayer = this.deepScreenCustomizationLayer;
+
+        return copy;
 
     }
 

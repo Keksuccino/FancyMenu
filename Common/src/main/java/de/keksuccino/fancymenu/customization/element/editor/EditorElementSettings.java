@@ -7,6 +7,7 @@ public class EditorElementSettings {
     protected AbstractEditorElement editorElement;
 
     private boolean destroyable = true;
+    private boolean hideInsteadOfDestroy = false;
     private boolean stretchable = true;
     private boolean orderable = true;
     private boolean copyable = true;
@@ -30,6 +31,14 @@ public class EditorElementSettings {
     public void setDestroyable(boolean destroyable) {
         this.destroyable = destroyable;
         this.settingsChanged();
+    }
+
+    public boolean shouldHideInsteadOfDestroy() {
+        return this.hideInsteadOfDestroy;
+    }
+
+    public void setHideInsteadOfDestroy(boolean hideInsteadOfDestroy) {
+        this.hideInsteadOfDestroy = hideInsteadOfDestroy;
     }
 
     public boolean isStretchable() {

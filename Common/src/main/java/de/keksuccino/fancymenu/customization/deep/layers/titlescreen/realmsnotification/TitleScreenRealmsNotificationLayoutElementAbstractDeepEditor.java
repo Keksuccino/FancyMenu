@@ -1,14 +1,14 @@
-package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.branding;
+package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.realmsnotification;
 
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import org.jetbrains.annotations.NotNull;
 
-public class TitleScreenBrandingLayoutElementAbstractDeep extends AbstractEditorDeepElement {
+public class TitleScreenRealmsNotificationLayoutElementAbstractDeepEditor extends AbstractDeepEditorElement {
 
-    public TitleScreenBrandingLayoutElementAbstractDeep(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
+    public TitleScreenRealmsNotificationLayoutElementAbstractDeepEditor(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
         super(parentDeepElementBuilder, customizationItemInstance, true, handler);
     }
 

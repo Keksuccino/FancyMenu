@@ -217,7 +217,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             SerializedElement sec = removeReservedPropertyKeys(this.serializeElement((E) element, new SerializedElement()));
 
-            //sec.addEntry("action", "custom_layout_element:" + element.builder.getIdentifier());
             sec.putProperty("element_type", element.builder.getIdentifier());
             sec.putProperty("instance_identifier", element.getInstanceIdentifier());
 
@@ -272,6 +271,19 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
      */
     @NotNull
     public abstract L wrapIntoEditorElement(@NotNull E element, @NotNull LayoutEditorScreen editor);
+
+    /**
+     * Only for internal use. Don't touch this if you don't know what you're doing!
+     */
+    @Nullable
+    public L wrapIntoEditorElementInternal(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+        try {
+            return this.wrapIntoEditorElement((E) element, editor);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 
     /**
      * Returns the display name of this element type. Used in the {@link LayoutEditorScreen}.

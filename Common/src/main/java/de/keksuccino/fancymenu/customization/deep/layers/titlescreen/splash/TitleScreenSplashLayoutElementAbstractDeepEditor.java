@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.splash;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.deep.AbstractEditorDeepElement;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
@@ -18,9 +18,9 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.io.File;
 
-public class TitleScreenSplashLayoutElementAbstractDeep extends AbstractEditorDeepElement {
+public class TitleScreenSplashLayoutElementAbstractDeepEditor extends AbstractDeepEditorElement {
 
-    public TitleScreenSplashLayoutElementAbstractDeep(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
+    public TitleScreenSplashLayoutElementAbstractDeepEditor(@NotNull DeepElementBuilder parentDeepElementBuilder, @NotNull AbstractDeepElement customizationItemInstance, @NotNull LayoutEditorScreen handler) {
         super(parentDeepElementBuilder, customizationItemInstance, true, handler);
     }
 
