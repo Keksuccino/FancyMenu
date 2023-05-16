@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,17 +22,24 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,14 +47,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LayoutEditorScreen extends Screen implements IElementFactory {
-
-	//TODO komplett rewriten
-
-	//TODO alte key press handler weg -> stattdessen die von Screen nutzen
-
-	//TODO GUI event listener methoden von Editor Elementen hier in richtigen methoden callen
-
-	//TODO das meiste der gecachten top-level layout properties von hier in eigene Layout Klasse verschieben
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -56,7 +56,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public static final Color GRID_COLOR_CENTER = new Color(150, 105, 255, 100);
 
 	@Nullable
-	public Screen screenToCustomize;
+	public Screen layoutTargetScreen;
 	@NotNull
 	public Layout layout;
 	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
@@ -65,22 +65,31 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
-	public AdvancedContextMenu rightClickContextMenu = new AdvancedContextMenu();
+	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
 	
-	public LayoutEditorScreen(@Nullable Screen screenToCustomize, @Nullable Layout layout) {
+	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @Nullable Layout layout) {
 
 		super(Component.literal(""));
 
-		this.screenToCustomize = screenToCustomize;
+		this.layoutTargetScreen = layoutTargetScreen;
 		if (layout != null) {
 			this.layout = layout.copy();
 		} else {
 			this.layout = new Layout();
+			if (this.layoutTargetScreen == null) {
+				this.layout.setToUniversalLayout();
+			} else {
+				if (this.layoutTargetScreen instanceof CustomGuiBase c) {
+					this.layout.setMenuIdentifier(c.getIdentifier());
+				} else {
+					this.layout.setMenuIdentifier(this.layoutTargetScreen.getClass().getName());
+				}
+			}
 		}
 
-		Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.screenToCustomize.getClass());
+		Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.layoutTargetScreen.getClass());
 		if (cachedOriTitle != null) {
-			ScreenTitleUtils.setScreenTitle(this.screenToCustomize, cachedOriTitle);
+			ScreenTitleUtils.setScreenTitle(this.layoutTargetScreen, cachedOriTitle);
 		}
 
 		//Load all element instances before init, so the layout instance elements don't get wiped when updating it
@@ -91,10 +100,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	protected void init() {
 
-		this.ui.updateUI();
+		this.ui.updateTopMenuBar();
 
-		this.rightClickContextMenu.closeMenu();
-		//TODO init context menu
+		this.rightClickMenu.closeMenu();
 
 		this.serializeElementInstancesToLayoutInstance();
 
@@ -121,6 +129,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		this.renderBackground(pose, mouseX, mouseY, partial);
 
 		this.renderElements(pose, mouseX, mouseY, partial);
+
+		this.ui.renderTopMenuBar(pose, this);
 
 	}
 
@@ -234,14 +244,14 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	protected void constructElementInstances() {
 
 		Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
-		List<VanillaButtonElement> vanillaButtonElements = (this.screenToCustomize != null) ? new ArrayList<>() : null;
-		List<AbstractDeepElement> deepElements = (this.screenToCustomize != null) ? new ArrayList<>() : null;
+		List<VanillaButtonElement> vanillaButtonElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
+		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
-		if (this.screenToCustomize != null) {
-			ButtonCache.cacheButtons(this.screenToCustomize, this.width, this.height);
+		if (this.layoutTargetScreen != null) {
+			ButtonCache.cacheButtons(this.layoutTargetScreen, this.width, this.height);
 		}
 
-		List<ButtonData> vanillaButtonDataList = (this.screenToCustomize != null) ? ButtonCache.getButtons() : null;
+		List<ButtonData> vanillaButtonDataList = (this.layoutTargetScreen != null) ? ButtonCache.getButtons() : null;
 
 		this.constructElementInstances(this.layout.menuIdentifier, vanillaButtonDataList, this.layout, normalElements, vanillaButtonElements, deepElements);
 
@@ -468,6 +478,34 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
+	public void saveLayout() {
+		if (this.layout.layoutFile != null) {
+			this.serializeElementInstancesToLayoutInstance();
+			if (!LayoutHandler.saveLayoutToFile(this.layout, this.layout.layoutFile.getAbsolutePath())) {
+				Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+			}
+		} else {
+			this.saveLayoutAs();
+		}
+	}
+
+	public void saveLayoutAs() {
+		FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.editor.save_as"), CharacterFilter.getFilenameFilterWithUppercaseSupport(), 240, (call) -> {
+			if (call != null) {
+				this.serializeElementInstancesToLayoutInstance();
+				File f = new File(FancyMenu.getCustomizationsDirectory().getAbsolutePath() + "/" + call + ".txt");
+				if (f.isFile()) {
+					Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.file_exists")));
+				} else {
+					if (!LayoutHandler.saveLayoutToFile(this.layout, f.getAbsolutePath())) {
+						Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+					}
+				}
+			}
+		});
+		PopupHandler.displayPopup(p);
+	}
+
 	public void onUpdateSelectedElements() {
 		List<AbstractEditorElement> selected = this.getSelectedElements();
 		if (selected.size() > 1) {
@@ -486,13 +524,14 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
-		if ((button == 0) && !this.rightClickContextMenu.isUserNavigatingInMenu()) {
-			this.rightClickContextMenu.closeMenu();
+		if ((button == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
+			this.rightClickMenu.closeMenu();
 		}
 		if (topHoverElement == null) {
 			this.deselectAllElements();
 			if (button == 1) {
-				this.rightClickContextMenu.openMenuAtMouse();
+				this.rightClickMenu = this.ui.buildEditorRightClickContextMenu();
+				this.rightClickMenu.openMenuAtMouse();
 			}
 		}
 		for (AbstractEditorElement e : this.getAllElements()) {
@@ -545,7 +584,57 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		if (PopupHandler.isPopupActive()) return false;
 
-		//TODO add arrow key move element
+		//ARROW LEFT
+		if (keycode == InputConstants.KEY_LEFT) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			for (AbstractEditorElement e : this.getSelectedElements()) {
+				if (e.settings.isMovable()) {
+					e.element.baseX -= 1;
+				} else {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				}
+			}
+			return true;
+		}
+
+		//ARROW UP
+		if (keycode == InputConstants.KEY_UP) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			for (AbstractEditorElement e : this.getSelectedElements()) {
+				if (e.settings.isMovable()) {
+					e.element.baseY -= 1;
+				} else {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				}
+			}
+			return true;
+		}
+
+		//ARROW RIGHT
+		if (keycode == InputConstants.KEY_RIGHT) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			for (AbstractEditorElement e : this.getSelectedElements()) {
+				if (e.settings.isMovable()) {
+					e.element.baseX += 1;
+				} else {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				}
+			}
+			return true;
+		}
+
+		//ARROW DOWN
+		if (keycode == InputConstants.KEY_DOWN) {
+			this.history.saveSnapshot(this.history.createSnapshot());
+			for (AbstractEditorElement e : this.getSelectedElements()) {
+				if (e.settings.isMovable()) {
+					e.element.baseY += 1;
+				} else {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				}
+			}
+			return true;
+		}
 
 		//CTRL + C
 		if ((keycode == InputConstants.KEY_C) && hasControlDown()) {
@@ -561,7 +650,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//CTRL + S
 		if ((keycode == InputConstants.KEY_S) && hasControlDown()) {
-			//TODO save layout / save layout as
+			this.saveLayout();
 			return true;
 		}
 
@@ -589,6 +678,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//DEL
 		if (keycode == InputConstants.KEY_DELETE) {
+			this.history.saveSnapshot(this.history.createSnapshot());
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				e.deleteElement();
 			}

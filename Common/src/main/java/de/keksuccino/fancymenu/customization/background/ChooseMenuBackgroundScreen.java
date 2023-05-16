@@ -24,6 +24,8 @@ import java.util.function.Consumer;
 
 public class ChooseMenuBackgroundScreen extends Screen {
 
+    //TODO adden: Möglichkeit, "empty background" zu returnen (siehe notes)
+
     protected Screen parentScreen;
     protected MenuBackgroundBuilder<?> backgroundType;
     protected MenuBackground background;

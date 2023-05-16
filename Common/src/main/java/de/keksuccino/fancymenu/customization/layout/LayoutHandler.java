@@ -11,9 +11,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.PreloadedLayoutEditorScreen;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -149,32 +147,19 @@ public class LayoutHandler {
 		}
 	}
 
-	public static void editLayout(Screen current, File layout) {
+	public static void openLayoutEditor(@Nullable Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
-			if ((layout != null) && (current != null) && (layout.exists()) && (layout.isFile())) {
-				List<PropertyContainerSet> l = new ArrayList<>();
-				PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(layout.getPath());
-				l.add(set);
-				List<PropertyContainer> meta = set.getSectionsOfType("customization-meta");
-				if (meta.isEmpty()) {
-					meta = set.getSectionsOfType("type-meta");
-				}
-				if (!meta.isEmpty()) {
-					meta.get(0).putProperty("path", layout.getPath());
-					LayoutEditorScreen.isActive = true;
-					Minecraft.getInstance().setScreen(new PreloadedLayoutEditorScreen(current, l));
-					SoundRegistry.stopSounds();
-					SoundRegistry.resetSounds();
-					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-						if (r instanceof AdvancedAnimation) {
-							((AdvancedAnimation)r).stopAudio();
-							if (((AdvancedAnimation)r).replayIntro()) {
-								r.resetAnimation();
-							}
-						}
+			SoundRegistry.stopSounds();
+			SoundRegistry.resetSounds();
+			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+				if (r instanceof AdvancedAnimation) {
+					((AdvancedAnimation)r).stopAudio();
+					if (((AdvancedAnimation)r).replayIntro()) {
+						r.resetAnimation();
 					}
 				}
 			}
+			Minecraft.getInstance().setScreen(new LayoutEditorScreen(layoutTargetScreen, layout));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

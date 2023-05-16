@@ -37,6 +37,8 @@ import java.util.Map;
 
 public class Layout extends LayoutBase {
 
+    public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
+
     public String menuIdentifier;
     public File layoutFile;
 
@@ -97,7 +99,7 @@ public class Layout extends LayoutBase {
             set.putContainer(sec);
         }
 
-        if (this.forcedScale != -1F) {
+        if (this.forcedScale != 0) {
             PropertyContainer ps = new PropertyContainer("customization");
             ps.putProperty("action", "setscale");
             ps.putProperty("scale", "" + this.forcedScale);
@@ -365,7 +367,11 @@ public class Layout extends LayoutBase {
     }
 
     public boolean isUniversalLayout() {
-        return (this.menuIdentifier != null) && this.menuIdentifier.equals("%fancymenu:universal_layout%");
+        return (this.menuIdentifier != null) && this.menuIdentifier.equals(UNIVERSAL_LAYOUT_IDENTIFIER);
+    }
+
+    public void setToUniversalLayout() {
+        this.menuIdentifier = UNIVERSAL_LAYOUT_IDENTIFIER;
     }
 
     public boolean layoutWideLoadingRequirementsMet() {

@@ -72,7 +72,7 @@ public class LayoutEditorHistory {
 
 				snap.preSnapshotState = this.createSnapshot();
 
-				PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.editor.screenToCustomize, l);
+				PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.editor.layoutTargetScreen, l);
 				neweditor.history = this;
 				String single = null;
 				if (this.editor instanceof PreloadedLayoutEditorScreen) {
@@ -101,7 +101,7 @@ public class LayoutEditorHistory {
 					List<PropertyContainerSet> l = new ArrayList<PropertyContainerSet>();
 					l.add(snap.snapshot);
 
-					PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.editor.screenToCustomize, l);
+					PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.editor.layoutTargetScreen, l);
 					neweditor.history = this;
 					String single = null;
 					if (this.editor instanceof PreloadedLayoutEditorScreen) {

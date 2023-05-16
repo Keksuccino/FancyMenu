@@ -47,5 +47,17 @@
   "fancymenu.menu_background.choose.type_description": "Background Type Description",
   "fancymenu.menu_background.choose.not_configured": "§cYou need to configure the background first!",
   "fancymenu.menu_background.choose.not_background_selected": "§cYou need to select a background type first!",
-  "fancymenu.elements.vanilla_button.dragging_not_allowed": "§cTo move this element, change its anchor point first!"
+  "fancymenu.elements.vanilla_button.dragging_not_allowed": "§cTo move this element, change its anchor point first!",
+  "fancymenu.editor.save_as": "Save Layout As [Input Layout Name]",
+  "fancymenu.editor.saving_failed.file_exists": "§c§fUnable to save layout!\nA layout with this name already exists!",
+  "fancymenu.editor.saving_failed.generic": "§c§fUnable to save layout!\nAn error happened while trying to save the layout!",
+  "fancymenu.editor.render_custom_behind_vanilla.on": "Custom Elements Behind Vanilla: §aOn",
+  "fancymenu.editor.render_custom_behind_vanilla.off": "Custom Elements Behind Vanilla: §cOff",
+  "fancymenu.editor.render_custom_behind_vanilla.desc": "If all non-vanilla elements should\nget rendered behind vanilla elements.\n\nSince you can't change the order\nof vanilla elements, this is the only\nway to have some kind of control over it.",
+  "fancymenu.editor.error.invalid_audio": "§c§lInvalid Audio File!\n\nThe input audio file does not exist or is\nnot a valid WAV audio file.",
+  "fancymenu.editor.open_audio": "Set Open-Audio",
+  "fancymenu.editor.open_audio.desc": "Play an audio when opening the menu.\n\n§cSet a blank file path to\n§cremove/reset the audio.",
+  "fancymenu.editor.close_audio": "Set Close-Audio",
+  "fancymenu.editor.close_audio.desc": "Play an audio when closing the menu.\n\n§cSet a blank file path to\n§cremove/reset the audio.",
+  "fancymenu.editor.hidden_vanilla_elements.element.desc": "Left-click to make visible again!"
 }

@@ -11,6 +11,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +33,9 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
             this.parentList = parentList;
         }
 
-        this.backButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.guicomponents.back"), true, (press) -> {
-            this.onCancel();
+        this.backButton = new AdvancedButton(0, 0, 200, 20, I18n.get("fancymenu.guicomponents.back"), true, (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
+            this.onCancel();
         });
         UIBase.colorizeButton(this.backButton);
 
@@ -53,8 +54,8 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
     //On Esc
     @Override
     public void onClose() {
-        this.onCancel();
         Minecraft.getInstance().setScreen(this.parent);
+        this.onCancel();
     }
 
     @Override
@@ -119,6 +120,7 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
                 if (MouseInput.isLeftMouseDown() && !this.isMouseDown) {
                     if (this.isHovered()) {
                         if (this.parentScreen.callback != null) {
+                            Minecraft.getInstance().setScreen(this.parentScreen.parent);
                             this.parentScreen.callback.accept(this.entryValue);
                         }
                     }

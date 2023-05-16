@@ -1261,7 +1261,7 @@ public class CustomizationOverlayUI extends UIBase {
 						s = new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null);
 					}
 				}
-				LayoutHandler.editLayout(s, layout);
+				LayoutHandler.openLayoutEditor(s, layout);
 			});
 			editLayoutBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.edit.desc"), "%n%"));
 			this.addContent(editLayoutBtn);

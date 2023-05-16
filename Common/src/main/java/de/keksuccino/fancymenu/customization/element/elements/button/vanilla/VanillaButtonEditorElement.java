@@ -29,10 +29,10 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
 
     @Override
     protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
-        if ((this.renderDraggingNotAllowedTime >= System.currentTimeMillis()) && !this.topLeftDisplay.hasLine("vanilla_button_dragging_not_allowed")) {
+        if ((this.renderMovingNotAllowedTime >= System.currentTimeMillis()) && !this.topLeftDisplay.hasLine("vanilla_button_dragging_not_allowed")) {
             this.topLeftDisplay.addLine("vanilla_button_dragging_not_allowed", () -> Component.translatable("fancymenu.elements.vanilla_button.dragging_not_allowed"));
         }
-        if ((this.renderDraggingNotAllowedTime < System.currentTimeMillis()) && this.topLeftDisplay.hasLine("vanilla_button_dragging_not_allowed")) {
+        if ((this.renderMovingNotAllowedTime < System.currentTimeMillis()) && this.topLeftDisplay.hasLine("vanilla_button_dragging_not_allowed")) {
             this.topLeftDisplay.removeLine("vanilla_button_dragging_not_allowed");
         }
         super.renderDraggingNotAllowedOverlay(pose);
@@ -41,12 +41,12 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     protected void tick() {
         if ((this.lastAnchorPoint == null) || (this.lastAnchorPoint != this.element.anchorPoint)) {
             if (this.element.anchorPoint == ElementAnchorPoints.VANILLA) {
-                this.settings.setDragable(false);
+                this.settings.setMovable(false);
                 this.settings.setResizeable(false);
                 this.settings.setAdvancedSizingSupported(false);
                 this.settings.setAdvancedPositioningSupported(false);
             } else {
-                this.settings.setDragable(true);
+                this.settings.setMovable(true);
                 this.settings.setResizeable(true);
                 this.settings.setAdvancedSizingSupported(true);
                 this.settings.setAdvancedPositioningSupported(true);
@@ -72,6 +72,9 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     @Override
     public void setHidden(boolean hidden) {
         ((IHideableElement)this.element).setHidden(hidden);
+        if (this.isHidden()) {
+            this.resetElementStates();
+        }
     }
 
 }

@@ -18,7 +18,7 @@ public class LayoutBase {
     public boolean keepBackgroundAspectRatio = false;
     public String openAudio;
     public String closeAudio;
-    public float forcedScale = -1F;
+    public float forcedScale = 0;
     public int autoScalingWidth = 0;
     public int autoScalingHeight = 0;
     public String customMenuTitle;
@@ -44,7 +44,7 @@ public class LayoutBase {
                 if (l.closeAudio != null) {
                     layout.closeAudio = l.closeAudio;
                 }
-                if (l.forcedScale != -1F) {
+                if (l.forcedScale != 0) {
                     layout.forcedScale = l.forcedScale;
                 }
                 if (l.autoScalingWidth != 0) {

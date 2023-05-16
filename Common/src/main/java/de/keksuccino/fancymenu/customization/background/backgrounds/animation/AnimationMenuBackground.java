@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class AnimationMenuBackground extends MenuBackground {
 
+    //TODO add "restart animation on menu load"
+
     private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
 
     public String animationName;

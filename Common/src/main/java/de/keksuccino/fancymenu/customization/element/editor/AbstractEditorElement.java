@@ -74,7 +74,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected int resizeStartY = 0;
 	protected int resizeStartWidth = 0;
 	protected int resizeStartHeight = 0;
-	protected long renderDraggingNotAllowedTime = -1;
+	public long renderMovingNotAllowedTime = -1;
 
 	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
@@ -119,7 +119,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					i++;
 				}
 			}
-			pickElementMenu.openMenu(0,0);
+			pickElementMenu.getContextMenu().setParentButton(entry.getButton());
+			pickElementMenu.openMenu(0, entry.getButton().y);
 		}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
 
 		this.menu.addSeparatorEntry("separator_1", true);
@@ -141,7 +142,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			AdvancedContextMenu anchorPointMenu = new AdvancedContextMenu();
 			this.menu.addClickableEntry("anchor_point", true, Component.translatable("helper.creator.items.setorientation"), anchorPointMenu, Boolean.class, (entry, inherited, pass) -> {
 				if (inherited == null) {
-					anchorPointMenu.openMenu(0,0);
+					anchorPointMenu.getContextMenu().setParentButton(entry.getButton());
+					anchorPointMenu.openMenu(0, entry.getButton().y);
 				}
 				pass.accept(true);
 			})
@@ -202,7 +204,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			AdvancedContextMenu advancedPositioningMenu = new AdvancedContextMenu();
 			this.menu.addClickableEntry("advanced_positioning", false, Component.literal(""), advancedPositioningMenu, Boolean.class, (entry, inherited, pass) -> {
-				advancedPositioningMenu.openMenu(0,0);
+				advancedPositioningMenu.getContextMenu().setParentButton(entry.getButton());
+				advancedPositioningMenu.openMenu(0, entry.getButton().y);
 			})
 			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
 			.setTicker((entry) -> {
@@ -262,7 +265,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			AdvancedContextMenu advancedSizingMenu = new AdvancedContextMenu();
 			this.menu.addClickableEntry("advanced_sizing", false, Component.literal(""), advancedSizingMenu, Boolean.class, (entry, inherited, pass) -> {
-						advancedSizingMenu.openMenu(0,0);
+						advancedSizingMenu.getContextMenu().setParentButton(entry.getButton());
+						advancedSizingMenu.openMenu(0, entry.getButton().y);
 					})
 					.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
 					.setTicker((entry) -> {
@@ -414,6 +418,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.menu.addClickableEntry("delete_element", true, Component.translatable("helper.creator.items.delete"), null, Boolean.class, (entry, inherited, pass) -> {
 				if (inherited == null) {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					pass.accept(this.deleteElement());
 				} else if (inherited) {
 					pass.accept(this.deleteElement());
@@ -429,7 +434,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			AdvancedContextMenu appearanceDelayMenu = new AdvancedContextMenu();
 			this.menu.addClickableEntry("appearance_delay", true, Component.translatable("fancymenu.element.general.appearance_delay"), appearanceDelayMenu, Boolean.class, (entry, inherited, pass) -> {
 				if (inherited == null) {
-					appearanceDelayMenu.openMenu(0,0);
+					appearanceDelayMenu.getContextMenu().setParentButton(entry.getButton());
+					appearanceDelayMenu.openMenu(0, entry.getButton().y);
 				}
 				pass.accept(true);
 			});
@@ -560,7 +566,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
-		if (this.renderDraggingNotAllowedTime >= System.currentTimeMillis()) {
+		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			RenderSystem.enableBlend();
 			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), DRAGGING_NOT_ALLOWED_OVERLAY_COLOR.getRGB());
 			AspectRatio ratio = new AspectRatio(32, 32);
@@ -675,11 +681,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			int diffX = (int)-(this.leftMouseDownX - mouseX);
 			int diffY = (int)-(this.leftMouseDownY - mouseY);
 			if (this.leftMouseDown && !this.isGettingResized()) {
-				if (this.settings.isDragable()) {
+				if (this.settings.isMovable()) {
 					this.element.baseX += diffX;
 					this.element.baseY += diffY;
 				} else {
-					this.renderDraggingNotAllowedTime = System.currentTimeMillis() + 2000;
+					this.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
 				}
 			}
 			//TODO add SHIFT-resize (aspect ratio)

@@ -855,7 +855,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 			}
 		}
 
-		DeepScreenCustomizationLayer layer = DeepScreenCustomizationLayerRegistry.getLayer(this.screenToCustomize.getClass().getName());
+		DeepScreenCustomizationLayer layer = DeepScreenCustomizationLayerRegistry.getLayer(this.layoutTargetScreen.getClass().getName());
 		if (layer != null) {
 			List<DeepElementBuilder> addedDeeps = new ArrayList<>();
 			for (PropertyContainer sec : deepCustomizationSecs) {

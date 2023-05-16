@@ -24,7 +24,7 @@ public abstract class AbstractDeepEditorElement extends AbstractEditorElement im
         this.settings.setOrderable(false);
         this.settings.setCopyable(false);
         this.settings.setResizeable(false);
-        this.settings.setDragable(false);
+        this.settings.setMovable(false);
         this.settings.setAnchorPointChangeable(false);
         this.settings.setAdvancedPositioningSupported(false);
         this.settings.setAdvancedSizingSupported(false);
@@ -39,6 +39,9 @@ public abstract class AbstractDeepEditorElement extends AbstractEditorElement im
     @Override
     public void setHidden(boolean hidden) {
         ((IHideableElement)this.element).setHidden(hidden);
+        if (this.isHidden()) {
+            this.resetElementStates();
+        }
     }
 
 }

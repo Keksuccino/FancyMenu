@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ImageMenuBackground extends MenuBackground {
 
+    //TODO add "slide background left to right"
+
     private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
 
     public String imagePath;

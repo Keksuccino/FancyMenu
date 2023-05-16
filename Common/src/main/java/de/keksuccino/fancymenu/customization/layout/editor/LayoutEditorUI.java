@@ -4,1695 +4,751 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import com.google.common.io.Files;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.LayoutSplashText;
 import de.keksuccino.fancymenu.customization.overlay.OverlayButton;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutButton;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.screen.ChooseFromStringListScreen;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
+import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.customization.element.v1.ShapeCustomizationItem.Shape;
-import de.keksuccino.fancymenu.customization.element.v1.SplashTextCustomizationItem;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
-import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.rendering.ui.MenuBar.ElementAlignment;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import de.keksuccino.konkrete.sound.SoundHandler;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("all")
 public class LayoutEditorUI extends UIBase {
-
-	public MenuBar bar;
-	public LayoutEditorScreen parent;
-
-	protected int tick = 0;
 
 	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
 
-	public LayoutEditorUI(LayoutEditorScreen parent) {
-		this.parent = parent;
-		this.updateUI();
+	public MenuBar topMenuBar;
+	public LayoutEditorScreen editor;
+
+	public AdvancedContextMenu layoutMenu = new AdvancedContextMenu();
+	public AdvancedContextMenu editMenu = new AdvancedContextMenu();
+	public AdvancedContextMenu elementMenu = new AdvancedContextMenu();
+
+	public LayoutEditorUI(LayoutEditorScreen editor) {
+		this.editor = editor;
+		this.updateTopMenuBar();
 	}
 
-	public void updateUI() {
+	public void updateTopMenuBar() {
+		
 		try {
 
 			boolean extended = true;
-			if (bar != null) {
-				extended = bar.isExtended();
+			if (this.topMenuBar != null) {
+				extended = this.topMenuBar.isExtended();
 			}
+			this.topMenuBar = new MenuBar();
+			this.topMenuBar.setExtended(extended);
 
-			bar = new MenuBar();
-			bar.setExtended(extended);
+			this.layoutMenu = new AdvancedContextMenu();
+			this.editMenu = new AdvancedContextMenu();
+			this.elementMenu = new AdvancedContextMenu();
 
-			/** LAYOUT TAB **/
-			ContextMenu layoutMenu = new ContextMenu();
-			layoutMenu.setAutoclose(true);
-			bar.addChild(layoutMenu, "fm.editor.ui.tab.layout", ElementAlignment.LEFT);
+			// LAYOUT TAB
+			this.layoutMenu.getContextMenu().setAutoclose(true);
+			this.topMenuBar.addChild(this.layoutMenu.getContextMenu(), "fm.editor.ui.tab.layout", ElementAlignment.LEFT);
+			OverlayButton layoutTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("helper.editor.ui.layout"), true, (press) -> {
+				layoutMenu.getContextMenu().setParentButton((AdvancedButton)press);
+				layoutMenu.openMenu(press.x, press.y + press.getHeight());
+			});
+			this.topMenuBar.addElement(layoutTabButton, "fm.editor.ui.tab.layout", ElementAlignment.LEFT, false);
 
-			AdvancedButton newLayoutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.new"), true, (press) -> {
+			this.layoutMenu.addClickableEntry("new_layout", false, Component.translatable("helper.editor.ui.layout.new"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.displayUnsavedWarning((call) -> {
 					if (call) {
-						ScreenCustomization.stopSounds();
-						ScreenCustomization.resetSounds();
-						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.parent.screenToCustomize));
+						SoundRegistry.stopSounds();
+						SoundRegistry.resetSounds();
+						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.editor.layoutTargetScreen, null));
 					}
 				});
 			});
-			layoutMenu.addContent(newLayoutButton);
 
-			OpenLayoutContextMenu openLayoutMenu = new OpenLayoutContextMenu(this);
-			openLayoutMenu.setAutoclose(true);
-			layoutMenu.addChild(openLayoutMenu);
-
-			AdvancedButton openLayoutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.open"), true, (press) -> {
-				openLayoutMenu.setParentButton((AdvancedButton) press);
-				openLayoutMenu.openMenuAt(0, press.y);
+			AdvancedContextMenu openLayoutMenu = this.buildOpenLayoutContextMenu();
+			openLayoutMenu.getContextMenu().setAutoclose(true);
+			this.layoutMenu.addClickableEntry("open_layout", false, Component.translatable("helper.editor.ui.layout.open"), openLayoutMenu, Boolean.class, (entry, inherited, pass) -> {
+				openLayoutMenu.getContextMenu().setParentButton(entry.getButton());
+				openLayoutMenu.openMenu(0, entry.getButton().y);
 			});
-			layoutMenu.addContent(openLayoutButton);
 
-			AdvancedButton layoutSaveButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.save"), true, (press) -> {
-				this.parent.saveLayout();
+			this.layoutMenu.addClickableEntry("save_layout", false, Component.translatable("helper.editor.ui.layout.save"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.saveLayout();
 			});
-			layoutMenu.addContent(layoutSaveButton);
 
-			AdvancedButton layoutSaveAsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.saveas"), true, (press) -> {
-				this.parent.saveLayoutAs();
+			this.layoutMenu.addClickableEntry("save_layout_as", false, Component.translatable("helper.editor.ui.layout.saveas"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.saveLayoutAs();
 			});
-			layoutMenu.addContent(layoutSaveAsButton);
 
-			LayoutPropertiesContextMenu layoutPropertiesMenu = new LayoutPropertiesContextMenu(this.parent, false);
-			layoutPropertiesMenu.setAutoclose(true);
-			layoutMenu.addChild(layoutPropertiesMenu);
+			this.layoutMenu.addSeparatorEntry("separator_1", false);
 
-			AdvancedButton layoutPropertiesButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout.properties"), true, (press) -> {
-				layoutPropertiesMenu.setParentButton((AdvancedButton) press);
-				layoutPropertiesMenu.openMenuAt(0, press.y);
+			AdvancedContextMenu layoutPropertiesMenu = this.buildEditorRightClickContextMenu();
+			layoutPropertiesMenu.getContextMenu().setAutoclose(true);
+			this.layoutMenu.addClickableEntry("layout_properties", false, Component.translatable("helper.editor.ui.layout.properties"), layoutPropertiesMenu, Boolean.class, (entry, inherited, pass) -> {
+				layoutPropertiesMenu.getContextMenu().setParentButton(entry.getButton());
+				layoutPropertiesMenu.openMenu(0, entry.getButton().y);
 			});
-			layoutMenu.addContent(layoutPropertiesButton);
 
-			AdvancedButton exitButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.exit"), true, (press) -> {
-				this.closeEditor();
+			// EDIT TAB
+			this.editMenu.getContextMenu().setAutoclose(true);
+			this.topMenuBar.addChild(this.editMenu.getContextMenu(), "fm.editor.ui.tab.edit", ElementAlignment.LEFT);
+			OverlayButton editTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("helper.editor.ui.edit"), true, (press) -> {
+				editMenu.getContextMenu().setParentButton((AdvancedButton)press);
+				editMenu.openMenu(press.x, press.y + press.getHeight());
 			});
-			layoutMenu.addContent(exitButton);
+			this.topMenuBar.addElement(editTabButton, "fm.editor.ui.tab.edit", ElementAlignment.LEFT, false);
 
-			OverlayButton layoutTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.layout"), true, (press) -> {
-				layoutMenu.setParentButton((AdvancedButton) press);
-				layoutMenu.openMenuAt(press.x, press.y + press.getHeight());
-			});
-			bar.addElement(layoutTab, "fm.editor.ui.tab.layout", ElementAlignment.LEFT, false);
-
-			/** EDIT TAB **/
-			ContextMenu editMenu = new ContextMenu();
-			editMenu.setAutoclose(true);
-			bar.addChild(editMenu, "fm.editor.ui.tab.edit", ElementAlignment.LEFT);
-
-			AdvancedButton undoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.undo"), true, (press) -> {
-				this.parent.history.stepBack();
+			this.editMenu.addClickableEntry("undo_action", false, Component.translatable("helper.editor.ui.edit.undo"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.stepBack();
 				try {
-					((LayoutEditorScreen)Minecraft.getInstance().screen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
+					if (Minecraft.getInstance().screen != null) ((LayoutEditorScreen)Minecraft.getInstance().screen).ui.topMenuBar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getContextMenu().getX(), editMenu.getContextMenu().getY());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			});
-			editMenu.addContent(undoButton);
 
-			AdvancedButton redoButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.redo"), true, (press) -> {
-				this.parent.history.stepForward();
+			this.editMenu.addClickableEntry("redo_action", false, Component.translatable("helper.editor.ui.edit.redo"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.stepForward();
 				try {
-					((LayoutEditorScreen)Minecraft.getInstance().screen).ui.bar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getX(), editMenu.getY());
+					if (Minecraft.getInstance().screen != null) ((LayoutEditorScreen)Minecraft.getInstance().screen).ui.topMenuBar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getContextMenu().getX(), editMenu.getContextMenu().getY());
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			});
-			editMenu.addContent(redoButton);
 
-			editMenu.addSeparator();
+			this.editMenu.addSeparatorEntry("separator_1", false);
 
-			AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), true, (press) -> {
-				this.parent.copySelectedElements();
+			this.editMenu.addClickableEntry("copy", false, Component.translatable("helper.editor.ui.edit.copy"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.copyElementsToClipboard(this.editor.getSelectedElements().toArray(new AbstractEditorElement[0]));
 			});
-			editMenu.addContent(copyButton);
 
-			AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.paste"), true, (press) -> {
-				this.parent.pasteElements();
+			this.editMenu.addClickableEntry("paste", false, Component.translatable("helper.editor.ui.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.pasteElementsFromClipboard();
 			});
-			editMenu.addContent(pasteButton);
 
-			OverlayButton editTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit"), true, (press) -> {
-				editMenu.setParentButton((AdvancedButton) press);
-				editMenu.openMenuAt(press.x, press.y + press.getHeight());
+			// ELEMENT TAB
+			this.elementMenu.getContextMenu().setAutoclose(true);
+			this.topMenuBar.addChild(this.elementMenu.getContextMenu(), "fm.editor.ui.tab.element", ElementAlignment.LEFT);
+			OverlayButton elementTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("helper.editor.ui.element"), true, (press) -> {
+				elementMenu.getContextMenu().setParentButton((AdvancedButton)press);
+				elementMenu.openMenu(press.x, press.y + press.getHeight());
 			});
-			bar.addElement(editTab, "fm.editor.ui.tab.edit", ElementAlignment.LEFT, false);
+			this.topMenuBar.addElement(elementTabButton, "fm.editor.ui.tab.element", ElementAlignment.LEFT, false);
 
-			/** ELEMENT TAB **/
-			ContextMenu elementMenu = new ContextMenu();
-			elementMenu.setAutoclose(true);
-			bar.addChild(elementMenu, "fm.editor.ui.tab.element", ElementAlignment.LEFT);
-
-			NewElementContextMenu newElementMenu = new NewElementContextMenu(this.parent);
-			newElementMenu.setAutoclose(true);
-			elementMenu.addChild(newElementMenu);
-
-			AdvancedButton newElementButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element.new"), true, (press) -> {
-				newElementMenu.setParentButton((AdvancedButton) press);
-				newElementMenu.openMenuAt(0, press.y);
+			AdvancedContextMenu newElementMenu = this.buildNewElementContextMenu();
+			newElementMenu.getContextMenu().setAutoclose(true);
+			this.elementMenu.addClickableEntry("new_element", false, Component.translatable("helper.editor.ui.element.new"), newElementMenu, Boolean.class, (entry, inherited, pass) -> {
+				newElementMenu.getContextMenu().setParentButton(entry.getButton());
+				newElementMenu.openMenu(0, entry.getButton().y);
 			});
-			elementMenu.addContent(newElementButton);
 
-			ManageAudioContextMenu manageAudioMenu = new ManageAudioContextMenu(this.parent);
-			manageAudioMenu.setAutoclose(true);
-			elementMenu.addChild(manageAudioMenu);
+			AdvancedContextMenu hiddenVanillaMenu = this.buildHiddenVanillaElementContextMenu();
+			hiddenVanillaMenu.getContextMenu().setAutoclose(true);
+			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), hiddenVanillaMenu, Boolean.class, (entry, inherited, pass) -> {
+				hiddenVanillaMenu.getContextMenu().setParentButton(entry.getButton());
+				hiddenVanillaMenu.openMenu(0, entry.getButton().y);
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc")));
 
-			AdvancedButton manageAudioButton = new AdvancedButton(0, 0, 0, 0, "§m" + Locals.localize("helper.editor.ui.element.manageaudio"), true, (press) -> {
-				manageAudioMenu.setParentButton((AdvancedButton) press);
-				manageAudioMenu.openMenuAt(0, press.y);
-			});
-			manageAudioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc"), "%n%"));
-			elementMenu.addContent(manageAudioButton);
-
-			HiddenVanillaButtonContextMenu hiddenVanillaMenu = new HiddenVanillaButtonContextMenu(this.parent);
-			hiddenVanillaMenu.setAutoclose(true);
-			elementMenu.addChild(hiddenVanillaMenu);
-
-			AdvancedButton hiddenVanillaButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), true, (press) -> {
-				hiddenVanillaMenu.setParentButton((AdvancedButton) press);
-				hiddenVanillaMenu.openMenuAt(0, press.y);
-			});
-			hiddenVanillaButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc"), "%n%"));
-			elementMenu.addContent(hiddenVanillaButton);
-
-			OverlayButton elementTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.element"), true, (press) -> {
-				elementMenu.setParentButton((AdvancedButton) press);
-				elementMenu.openMenuAt(press.x, press.y + press.getHeight());
-			});
-			bar.addElement(elementTab, "fm.editor.ui.tab.element", ElementAlignment.LEFT, false);
-
-			/** CLOSE GUI BUTTON TAB **/
-			AdvancedImageButton exitEditorButtonTab = new AdvancedImageButton(20, 20, 0, 0, CLOSE_BUTTON_TEXTURE, true, (press) -> {
-				this.closeEditor();
+			// CLOSE GUI BUTTON TAB
+			AdvancedImageButton exitButton = new AdvancedImageButton(20, 20, 0, 0, CLOSE_BUTTON_TEXTURE, true, (press) -> {
+				this.displayUnsavedWarning((call) -> {
+					if (call) {
+						for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+							if (r instanceof AdvancedAnimation) {
+								((AdvancedAnimation)r).stopAudio();
+								if (((AdvancedAnimation)r).replayIntro()) {
+									r.resetAnimation();
+								}
+							}
+						}
+						SoundRegistry.stopSounds();
+						SoundRegistry.resetSounds();
+						LayoutHandler.reloadLayouts();
+						Screen s = this.editor.layoutTargetScreen;
+						if (this.editor.layout.isUniversalLayout()) {
+							s = (Minecraft.getInstance().level != null) ? new PauseScreen(true) : new TitleScreen();
+						}
+						Minecraft.getInstance().setScreen(s);
+					}
+				});
 			}) {
 				@Override
-				public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+				@SuppressWarnings("all")
+				public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+					TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.editor.ui.exit.desc")), false, true);
 					this.width = this.height;
-					super.render(matrix, mouseX, mouseY, partialTicks);
+					super.render(pose, mouseX, mouseY, partial);
 				}
 			};
-			exitEditorButtonTab.ignoreLeftMouseDownClickBlock = true;
-			exitEditorButtonTab.ignoreBlockedInput = true;
-			exitEditorButtonTab.enableRightclick = true;
-			exitEditorButtonTab.setDescription(StringUtils.splitLines(Locals.localize("helper.editor.ui.exit.desc"), "%n%"));
-			bar.addElement(exitEditorButtonTab, "fm.editor.ui.tab.exit", ElementAlignment.RIGHT, false);
+			exitButton.ignoreLeftMouseDownClickBlock = true;
+			exitButton.ignoreBlockedInput = true;
+			exitButton.enableRightclick = true;
+			this.topMenuBar.addElement(exitButton, "fm.editor.ui.tab.exit", ElementAlignment.RIGHT, false);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void render(PoseStack matrix, Screen screen) {
+	public void renderTopMenuBar(PoseStack pose, Screen screen) {
 		try {
-
-			if (bar != null) {
-				if (!PopupHandler.isPopupActive()) {
-					if (screen instanceof LayoutEditorScreen) {
-
-						bar.render(matrix, screen);
-
-					}
-				}
+			if ((this.topMenuBar != null) && !PopupHandler.isPopupActive()) {
+				this.topMenuBar.render(pose, screen);
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	protected void displayUnsavedWarning(Consumer<Boolean> callback) {
-		PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, callback, Locals.localize("helper.editor.ui.unsavedwarning")));
+		PopupHandler.displayPopup(
+				new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, callback, LocalizationUtils.splitLocalizedStringLines("helper.editor.ui.unsavedwarning"))
+		);
 	}
 
-	public void closeEditor() {
-		this.displayUnsavedWarning((call) -> {
-			if (call) {
-				LayoutEditorScreen.isActive = false;
-				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-					if (r instanceof AdvancedAnimation) {
-						((AdvancedAnimation)r).stopAudio();
-						if (((AdvancedAnimation)r).replayIntro()) {
-							((AdvancedAnimation)r).resetAnimation();
-						}
-					}
-				}
-				ScreenCustomization.stopSounds();
-				ScreenCustomization.resetSounds();
-				LayoutHandler.reloadLayouts();
+	@NotNull
+	public AdvancedContextMenu buildOpenLayoutContextMenu() {
 
-				Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-				this.parent.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-				this.parent.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+		AdvancedContextMenu menu = new AdvancedContextMenu();
 
-				Screen s = this.parent.screenToCustomize;
-				if ((s instanceof CustomGuiBase) && ((CustomGuiBase)s).getIdentifier().equals("%fancymenu:universal_layout%")) {
-					s = ((CustomGuiBase)s).parent;
-				}
-				Minecraft.getInstance().setScreen(s);
-			}
-		});
-	}
+		try {
 
-	private static class OpenLayoutContextMenu extends ContextMenu {
+			String identifier = this.editor.layout.menuIdentifier;
 
-		private LayoutEditorUI ui;
-
-		public OpenLayoutContextMenu(LayoutEditorUI ui) {
-			this.ui = ui;
-		}
-
-		@Override
-		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-
-			this.content.clear();
-
-			String identifier = this.ui.parent.screenToCustomize.getClass().getName();
-			if (this.ui.parent.screenToCustomize instanceof CustomGuiBase) {
-				identifier = ((CustomGuiBase) this.ui.parent.screenToCustomize).getIdentifier();
-			}
-
-			List<PropertyContainerSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
+			List<Layout> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
 			if (!enabled.isEmpty()) {
-				for (PropertyContainerSet s : enabled) {
-					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
-					if (secs.isEmpty()) {
-						secs = s.getSectionsOfType("type-meta");
+				int count = 0;
+				for (Layout l : enabled) {
+					String name = "huh? unknown layout, who dis?";
+					if (this.editor.layout.layoutFile != null) {
+						name = Files.getNameWithoutExtension(this.editor.layout.layoutFile.getName());
 					}
-					if (!secs.isEmpty()) {
-						String name = "<missing name>";
-						PropertyContainer meta = secs.get(0);
-						File f = new File(meta.getValue("path"));
-						if (f.isFile()) {
-							name = Files.getNameWithoutExtension(f.getName());
-
-							int totalactions = s.getContainers().size() - 1;
-							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§a" + name, (press) -> {
-								this.ui.displayUnsavedWarning((call) -> {
-									LayoutHandler.editLayout(this.ui.parent.screenToCustomize, f);
-								});
-							});
-							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.enabled"), "" + totalactions), "%n%"));
-							this.addContent(layoutEntryBtn);
-						}
-					}
+					menu.addClickableEntry("layout_" + count, false, Component.literal(name).withStyle(ChatFormatting.GREEN), null, Boolean.class, (entry, inherited, pass) -> {
+						this.displayUnsavedWarning((call) -> {
+							LayoutHandler.openLayoutEditor(l, this.editor.layoutTargetScreen);
+						});
+					});
+					count++;
 				}
 			}
 
-			List<PropertyContainerSet> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
+			List<Layout> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
 			if (!disabled.isEmpty()) {
-				for (PropertyContainerSet s : disabled) {
-					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
-					if (secs.isEmpty()) {
-						secs = s.getSectionsOfType("type-meta");
+				int count = 0;
+				for (Layout l : disabled) {
+					String name = "huh? unknown layout, who dis?";
+					if (this.editor.layout.layoutFile != null) {
+						name = Files.getNameWithoutExtension(this.editor.layout.layoutFile.getName());
 					}
-					if (!secs.isEmpty()) {
-						String name = "<missing name>";
-						PropertyContainer meta = secs.get(0);
-						File f = new File(meta.getValue("path"));
-						if (f.isFile()) {
-							name = Files.getNameWithoutExtension(f.getName());
-
-							int totalactions = s.getContainers().size() - 1;
-							AdvancedButton layoutEntryBtn = new AdvancedButton(0, 0, 0, 0, "§c" + name, (press) -> {
-								this.ui.displayUnsavedWarning((call) -> {
-									LayoutHandler.editLayout(this.ui.parent.screenToCustomize, f);
-								});
-							});
-							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.disabled"), "" + totalactions), "%n%"));
-							this.addContent(layoutEntryBtn);
-						}
-					}
+					menu.addClickableEntry("layout_" + count, false, Component.literal(name).withStyle(ChatFormatting.RED), null, Boolean.class, (entry, inherited, pass) -> {
+						this.displayUnsavedWarning((call) -> {
+							LayoutHandler.openLayoutEditor(l, this.editor.layoutTargetScreen);
+						});
+					});
+					count++;
 				}
 			}
 
 			if (enabled.isEmpty() && disabled.isEmpty()) {
-				AdvancedButton emptyBtn = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), (press) -> {});
-				this.addContent(emptyBtn);
+				menu.addClickableEntry("empty", false, Component.translatable("helper.creator.empty"), null, Boolean.class, (entry, inherited, pass) -> {});
 			}
 
-			super.openMenuAt(x, y, screenWidth, screenHeight);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
+
+		return menu;
 
 	}
 
-	public static class LayoutPropertiesContextMenu extends ContextMenu {
+	@NotNull
+	public AdvancedContextMenu buildEditorRightClickContextMenu() {
 
-		private LayoutEditorScreen parent;
+		AdvancedContextMenu menu = new AdvancedContextMenu();
 
-		private AdvancedButton renderingOrderBackgroundButton;
-		private AdvancedButton renderingOrderForegroundButton;
+		try {
 
-		private boolean isRightclickOpened;
+			if (this.editor.layout.isUniversalLayout()) {
 
-		public LayoutPropertiesContextMenu(LayoutEditorScreen parent, boolean openedByRightclick) {
-			this.parent = parent;
-			this.isRightclickOpened = openedByRightclick;
-		}
-
-		@Override
-		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-
-			this.content.clear();
-
-			if (this.parent.isUniversalLayout()) {
-
-				ContextMenu universalLayoutMenu = new ContextMenu();
-				universalLayoutMenu.setAutoclose(true);
-				this.addChild(universalLayoutMenu);
-
-				AdvancedButton universalLayoutButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options"), true, (press) -> {
-					universalLayoutMenu.setParentButton((AdvancedButton) press);
-					universalLayoutMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
+				AdvancedContextMenu universalLayoutMenu = new AdvancedContextMenu();
+				universalLayoutMenu.getContextMenu().setAutoclose(true);
+				menu.addClickableEntry("universal_layout_options", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options"), universalLayoutMenu, Boolean.class, (entry, inherited, pass) -> {
+					universalLayoutMenu.getContextMenu().setParentButton(entry.getButton());
+					universalLayoutMenu.openMenu(0, entry.getButton().y);
 				});
-				this.addContent(universalLayoutButton);
 
-				//Add to Blacklist -----------------
-				AdvancedButton addBlacklistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist"), true, (press) -> {
-					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
+				universalLayoutMenu.addClickableEntry("add_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
+					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
 						if (call != null) {
-							if (!this.parent.universalLayoutBlacklist.contains(call)) {
-								this.parent.universalLayoutBlacklist.add(call);
+							if (!this.editor.layout.universalLayoutMenuBlacklist.contains(call)) {
+								this.editor.layout.universalLayoutMenuBlacklist.add(call);
 							}
 						}
 					});
 					PopupHandler.displayPopup(p);
-				});
-				addBlacklistButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc"), "%n%"));
-				universalLayoutMenu.addContent(addBlacklistButton);
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
-				//Remove From Blacklist -----------------
-				AdvancedButton removeBlacklistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), true, (press) -> {
-					ChooseFromStringListScreen s = new ChooseFromStringListScreen(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.parent, this.parent.universalLayoutBlacklist, (call) -> {
+				universalLayoutMenu.addClickableEntry("remove_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
+					ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.editor, this.editor.layout.universalLayoutMenuBlacklist, (call) -> {
 						if (call != null) {
-							FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call2) -> {
+							ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
 								if (call2) {
-									this.parent.universalLayoutBlacklist.remove(call);
+									this.editor.layout.universalLayoutMenuBlacklist.remove(call);
 								}
-							}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"), "%n%"));
-							PopupHandler.displayPopup(p);
+							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"));
+							Minecraft.getInstance().setScreen(s2);
 						}
-						Minecraft.getInstance().setScreen(this.parent);
 					});
 					Minecraft.getInstance().setScreen(s);
 				});
-				universalLayoutMenu.addContent(removeBlacklistButton);
 
-				//Clear Blacklist -----------------
-				AdvancedButton clearBlacklistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), true, (press) -> {
-					FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
-						if (call) {
-							this.parent.universalLayoutBlacklist.clear();
+				universalLayoutMenu.addClickableEntry("clear_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
+					ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
+						if (call2) {
+							this.editor.layout.universalLayoutMenuBlacklist.clear();
 						}
-					}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"), "%n%"));
-					PopupHandler.displayPopup(p);
+					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"));
+					Minecraft.getInstance().setScreen(s2);
 				});
-				universalLayoutMenu.addContent(clearBlacklistButton);
 
-				universalLayoutMenu.addSeparator();
+				universalLayoutMenu.addSeparatorEntry("separator_1", false);
 
-				//Add to Whitelist -----------------
-				AdvancedButton addWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), true, (press) -> {
-					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
+				universalLayoutMenu.addClickableEntry("add_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
+					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
 						if (call != null) {
-							if (!this.parent.universalLayoutWhitelist.contains(call)) {
-								this.parent.universalLayoutWhitelist.add(call);
+							if (!this.editor.layout.universalLayoutMenuWhitelist.contains(call)) {
+								this.editor.layout.universalLayoutMenuWhitelist.add(call);
 							}
 						}
 					});
 					PopupHandler.displayPopup(p);
-				});
-				addWhitelistButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc"), "%n%"));
-				universalLayoutMenu.addContent(addWhitelistButton);
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
-				//Remove From Whitelist -----------------
-				AdvancedButton removeWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), true, (press) -> {
-					ChooseFromStringListScreen s = new ChooseFromStringListScreen(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.parent, this.parent.universalLayoutWhitelist, (call) -> {
+				universalLayoutMenu.addClickableEntry("remove_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
+					ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.editor, this.editor.layout.universalLayoutMenuWhitelist, (call) -> {
 						if (call != null) {
-							FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call2) -> {
+							ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
 								if (call2) {
-									this.parent.universalLayoutWhitelist.remove(call);
+									this.editor.layout.universalLayoutMenuWhitelist.remove(call);
 								}
-							}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"), "%n%"));
-							PopupHandler.displayPopup(p);
+							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"));
+							Minecraft.getInstance().setScreen(s2);
 						}
-						Minecraft.getInstance().setScreen(this.parent);
 					});
 					Minecraft.getInstance().setScreen(s);
 				});
-				universalLayoutMenu.addContent(removeWhitelistButton);
 
-				//Clear Whitelist -----------------
-				AdvancedButton clearWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), true, (press) -> {
-					FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
-						if (call) {
-							this.parent.universalLayoutWhitelist.clear();
+				universalLayoutMenu.addClickableEntry("clear_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
+					ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
+						if (call2) {
+							this.editor.layout.universalLayoutMenuWhitelist.clear();
 						}
-					}, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"), "%n%"));
-					PopupHandler.displayPopup(p);
+					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"));
+					Minecraft.getInstance().setScreen(s2);
 				});
-				universalLayoutMenu.addContent(clearWhitelistButton);
-
-				this.addSeparator();
 
 			}
 
-			/** SET BACKGROUND **/
-			AdvancedButton backgroundOptionsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), true, (press) -> {
-				PopupHandler.displayPopup(new BackgroundOptionsPopup(this.parent));
-			});
-			backgroundOptionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc"), "%n%"));
-			this.addContent(backgroundOptionsButton);
+			menu.addSeparatorEntry("separator_1", false);
 
-			/** RESET BACKGROUND **/
-			AdvancedButton resetBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.resetbackground"), true, (press) -> {
-				if ((this.parent.backgroundTexture != null) || (this.parent.backgroundAnimation != null) || (this.parent.backgroundPanorama != null)) {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				}
-
-				if (this.parent.backgroundAnimation != null) {
-					((AdvancedAnimation)this.parent.backgroundAnimation).stopAudio();
-				}
-
-				this.parent.backgroundAnimationNames = new ArrayList<String>();
-				this.parent.backgroundPanorama = null;
-				this.parent.backgroundSlideshow = null;
-				this.parent.backgroundAnimation = null;
-				this.parent.backgroundTexture = null;
-				if (this.parent.customMenuBackground != null) {
-					this.parent.customMenuBackground.onResetBackground();
-				}
-				this.parent.customMenuBackground = null;
-				this.parent.customMenuBackgroundInputString = null;
-			});
-			this.addContent(resetBackgroundButton);
-
-			/** KEEP BACKGROUND ASPECT RATIO **/
-			String backgroundAspectLabel = Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.on");
-			if (!this.parent.keepBackgroundAspectRatio) {
-				backgroundAspectLabel = Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.off");
-			}
-			AdvancedButton backgroundAspectButton = new AdvancedButton(0, 0, 0, 16, backgroundAspectLabel, true, (press) -> {
-				if (this.parent.keepBackgroundAspectRatio) {
-					this.parent.keepBackgroundAspectRatio = false;
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.off"));
-				} else {
-					this.parent.keepBackgroundAspectRatio = true;
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.on"));
-				}
-			});
-			this.addContent(backgroundAspectButton);
-
-			/** SLIDE BACKGROUND IMAGE **/
-			String slideBackgroundLabel = Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.on");
-			if (!this.parent.panorama) {
-				slideBackgroundLabel = Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.off");
-			}
-			AdvancedButton slideBackgroundButton = new AdvancedButton(0, 0, 0, 16, slideBackgroundLabel, true, (press) -> {
-				if (this.parent.panorama) {
-					this.parent.panorama = false;
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.off"));
-				} else {
-					this.parent.panorama = true;
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.on"));
-				}
-			});
-			slideBackgroundButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.layoutoptions.backgroundoptions.slideimage.btn.desc"), "%n%"));
-			this.addContent(slideBackgroundButton);
-
-			/** RESTART ANIMATION ON LOAD **/
-			AdvancedButton restartOnLoadButton = new AdvancedButton(0, 0, 0, 16, "", true, (press) -> {
-				if (this.parent.restartAnimationBackgroundOnLoad) {
-					this.parent.restartAnimationBackgroundOnLoad = false;
-				} else {
-					this.parent.restartAnimationBackgroundOnLoad = true;
-				}
-			}) {
-				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-					if (parent.backgroundAnimation != null) {
-						this.active = true;
-					} else {
-						this.active = false;
-					}
-					if (parent.restartAnimationBackgroundOnLoad) {
-						this.setMessage(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.on"));
-					} else {
-						this.setMessage(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.off"));
-					}
-					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-				}
-			};
-			restartOnLoadButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.backgrounds.animation.restart_on_load.desc"), "%n%"));
-			this.addContent(restartOnLoadButton);
-
-			this.addSeparator();
-
-			/** EDIT MENU TITLE **/
-			String defaultMenuTitleRaw = "";
-			if (this.parent.screenToCustomize.getTitle() != null) {
-				defaultMenuTitleRaw = this.parent.screenToCustomize.getTitle().getString();
-			}
-			String defaultMenuTitle = defaultMenuTitleRaw;
-			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				
-				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.edit_menu_title")), this.parent, null, (call) -> {
+			// SET BACKGROUND
+			menu.addClickableEntry("set_background", false, Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), null, Boolean.class, (entry, inherited, pass) -> {
+				ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(this.editor, this.editor.layout.menuBackground, (call) -> {
 					if (call != null) {
-						if (!call.equals(defaultMenuTitle)) {
-							if ((this.parent.customMenuTitle == null) || !this.parent.customMenuTitle.equals(call)) {
-								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-							}
-							this.parent.customMenuTitle = call;
-						} else {
-							if (this.parent.customMenuTitle != null) {
-								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-							}
-							this.parent.customMenuTitle = null;
-						}
+						//TODO handle EMPTY_BACKGROUND returned (to reset background)
+						this.editor.layout.menuBackground = call;
 					}
 				});
-				s.multilineMode = false;
-				if (this.parent.customMenuTitle != null) {
-					s.setText(this.parent.customMenuTitle);
-				} else {
-					s.setText(defaultMenuTitle);
-				}
 				Minecraft.getInstance().setScreen(s);
-				
-			});
-			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
-			this.addContent(editMenuTitleButton);
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")));
 
-			/** RESET MENU TITLE **/
-			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
-				if (this.parent.customMenuTitle != null) {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+			// KEEP BACKGROUND ASPECT RATIO
+			menu.addClickableEntry("keep_background_aspect_ratio", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.layout.keepBackgroundAspectRatio = !this.editor.layout.keepBackgroundAspectRatio;
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					if (this.editor.layout.keepBackgroundAspectRatio) {
+						e.setLabel(Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.on"));
+					} else {
+						e.setLabel(Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect.off"));
+					}
 				}
-				this.parent.customMenuTitle = null;
 			});
-			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
-			this.addContent(resetMenuTitleButton);
 
-			this.addSeparator();
+			menu.addSeparatorEntry("separator_2", false);
 
-			/** RANDOM MODE **/
-			String randomModeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.on");
-			if (!this.parent.randomMode) {
-				randomModeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.off");
+			if ((this.editor.layoutTargetScreen != null) && (this.editor.layoutTargetScreen.getTitle() != null) && !this.editor.layout.isUniversalLayout()) {
+
+				// EDIT MENU TITLE
+				String defaultMenuTitleRaw = this.editor.layoutTargetScreen.getTitle().getString();
+				menu.addClickableEntry("edit_menu_title", false, Component.translatable("fancymenu.helper.editor.edit_menu_title"), null, Boolean.class, (entry, inherited, pass) -> {
+					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.edit_menu_title"), this.editor, null, (call) -> {
+						if (call != null) {
+							if (!call.equals(defaultMenuTitleRaw)) {
+								if ((this.editor.layout.customMenuTitle == null) || !this.editor.layout.customMenuTitle.equals(call)) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+								}
+								this.editor.layout.customMenuTitle = call;
+							} else {
+								if (this.editor.layout.customMenuTitle != null) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+								}
+								this.editor.layout.customMenuTitle = null;
+							}
+						}
+					});
+					s.multilineMode = false;
+					if (this.editor.layout.customMenuTitle != null) {
+						s.setText(this.editor.layout.customMenuTitle);
+					} else {
+						s.setText(defaultMenuTitleRaw);
+					}
+					Minecraft.getInstance().setScreen(s);
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")));
+
+				// RESET MENU TITLE
+				menu.addClickableEntry("reset_menu_title", false, Component.translatable("fancymenu.helper.editor.edit_menu_title.reset"), null, Boolean.class, (entry, inherited, pass) -> {
+					if (this.editor.layout.customMenuTitle != null) {
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+					}
+					this.editor.layout.customMenuTitle = null;
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.desc")));
+
 			}
-			AdvancedButton randomModeButton = new AdvancedButton(0, 0, 0, 16, randomModeString, true, (press) -> {
-				if (this.parent.randomMode) {
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.off"));
-					this.parent.randomMode = false;
-				} else {
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.on"));
-					this.parent.randomMode = true;
-				}
-			});
-			randomModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.btn.desc"), "%n%"));
-			this.addContent(randomModeButton);
 
-			AdvancedButton randomModeGroupButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), true, (press) -> {
-				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+			menu.addSeparatorEntry("separator_3", false);
+
+			// RANDOM MODE
+			menu.addClickableEntry("random_mode", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.layout.randomMode = !this.editor.layout.randomMode;
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					if (this.editor.layout.randomMode) {
+						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.on"));
+					} else {
+						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.off"));
+					}
+				}
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.btn.desc")));
+
+			menu.addClickableEntry("random_mode_group", false, Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), null, Boolean.class, (entry, inherited, pass) -> {
+				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 					if (call != null) {
 						if (!MathUtils.isInteger(call)) {
 							call = "1";
 						}
-						if (!call.equalsIgnoreCase(this.parent.randomGroup)) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+						if (!call.equalsIgnoreCase(this.editor.layout.randomGroup)) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
-						this.parent.randomGroup = call;
+						this.editor.layout.randomGroup = call;
 					}
 				});
-				if (this.parent.randomGroup != null) {
-					pop.setText(this.parent.randomGroup);
+				if (this.editor.layout.randomGroup != null) {
+					pop.setText(this.editor.layout.randomGroup);
 				}
 				PopupHandler.displayPopup(pop);
-			}) {
-				@Override
-				public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-					if (parent.randomMode) {
-						this.active = true;
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					e.getButton().active = this.editor.layout.randomMode;
+				}
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc")));
+
+			menu.addClickableEntry("random_mode_first_time", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.layout.randomOnlyFirstTime = !this.editor.layout.randomOnlyFirstTime;
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					if (this.editor.layout.randomOnlyFirstTime) {
+						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on"));
 					} else {
-						this.active = false;
+						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off"));
 					}
-					super.render(matrixStack, mouseX, mouseY, partialTicks);
 				}
-			};
-			randomModeGroupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc"), "%n%"));
-			this.addContent(randomModeGroupButton);
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					e.getButton().active = this.editor.layout.randomMode;
+				}
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.btn.desc")));
 
-			String randomModeFirstTimeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on");
-			if (!this.parent.randomOnlyFirstTime) {
-				randomModeFirstTimeString = Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off");
-			}
-			AdvancedButton randomModeFirstTimeButton = new AdvancedButton(0, 0, 0, 16, randomModeFirstTimeString, true, (press) -> {
-				if (this.parent.randomOnlyFirstTime) {
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off"));
-					this.parent.randomOnlyFirstTime = false;
-				} else {
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on"));
-					this.parent.randomOnlyFirstTime = true;
-				}
-			}) {
-				@Override
-				public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-					if (parent.randomMode) {
-						this.active = true;
+			menu.addSeparatorEntry("separator_4", false);
+
+			// RENDER CUSTOM BEHIND VANILLA
+			menu.addClickableEntry("render_custom_behind_vanilla", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.layout.renderElementsBehindVanilla = !this.editor.layout.renderElementsBehindVanilla;
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					if (this.editor.layout.renderElementsBehindVanilla) {
+						e.setLabel(Component.translatable("fancymenu.editor.render_custom_behind_vanilla.on"));
 					} else {
-						this.active = false;
+						e.setLabel(Component.translatable("fancymenu.editor.render_custom_behind_vanilla.off"));
 					}
-					super.render(matrixStack, mouseX, mouseY, partialTicks);
 				}
-			};
-			randomModeFirstTimeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.btn.desc"), "%n%"));
-			this.addContent(randomModeFirstTimeButton);
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.render_custom_behind_vanilla.desc")));
 
-			this.addSeparator();
+			menu.addSeparatorEntry("separator_5", false);
 
-			/** RENDERING ORDER **/
-			ContextMenu renderingOrderMenu = new ContextMenu();
-			renderingOrderMenu.setAutoclose(true);
-			this.addChild(renderingOrderMenu);
-
-			this.renderingOrderBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder.background"), true, (press) -> {
-				((AdvancedButton)press).setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));
-				this.renderingOrderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
-				if (!this.parent.renderorder.equals("background")) {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				}
-
-				this.parent.renderorder = "background";
-			});
-			renderingOrderMenu.addContent(renderingOrderBackgroundButton);
-
-			this.renderingOrderForegroundButton = new AdvancedButton(0, 0, 0, 16, "§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"), true, (press) -> {
-				((AdvancedButton)press).setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
-				this.renderingOrderBackgroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.background"));
-				if (!this.parent.renderorder.equals("foreground")) {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				}
-
-				this.parent.renderorder = "foreground";
-			});
-			renderingOrderMenu.addContent(renderingOrderForegroundButton);
-
-			if (this.parent.renderorder.equals("background")) {
-				renderingOrderForegroundButton.setMessage(Locals.localize("helper.creator.layoutoptions.renderorder.foreground"));
-				renderingOrderBackgroundButton.setMessage("§a" + Locals.localize("helper.creator.layoutoptions.renderorder.background"));
-			}
-
-			AdvancedButton renderingOrderButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.renderorder"), true, (press) -> {
-				renderingOrderMenu.setParentButton((AdvancedButton) press);
-				renderingOrderMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(renderingOrderButton);
-
-			/** AUTO-SCALING **/
-			String autoScalingLabel = Locals.localize("fancymenu.helper.editor.properties.autoscale.off");
-			if ((this.parent.autoScalingWidth != 0) && (this.parent.autoScalingHeight != 0)) {
-				autoScalingLabel = Locals.localize("fancymenu.helper.editor.properties.autoscale.on");
-			}
-			AdvancedButton autoScalingButton = new AdvancedButton(0, 0, 0, 16, autoScalingLabel, true, (press) -> {
-				if ((this.parent.autoScalingWidth != 0) && (this.parent.autoScalingHeight != 0)) {
-					((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.properties.autoscale.off"));
-					this.parent.autoScalingWidth = 0;
-					this.parent.autoScalingHeight = 0;
-					this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			// AUTO-SCALING
+			menu.addClickableEntry("auto_scaling", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				if ((this.editor.layout.autoScalingWidth != 0) && (this.editor.layout.autoScalingHeight != 0)) {
+					this.editor.layout.autoScalingWidth = 0;
+					this.editor.layout.autoScalingHeight = 0;
+					this.editor.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 				} else {
-					PopupHandler.displayPopup(new AutoScalingPopup(this.parent, (call) -> {
+					PopupHandler.displayPopup(new AutoScalingPopup(this.editor, (call) -> {
 						if (call) {
-							((AdvancedButton)press).setMessage(Locals.localize("fancymenu.helper.editor.properties.autoscale.on"));
-							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+							this.editor.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 						}
 					}));
 				}
-			}) {
-				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-					if (parent.scale != 0) {
-						this.active = true;
-						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.btn.desc"), "%n%"));
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					if ((this.editor.layout.autoScalingWidth != 0) && (this.editor.layout.autoScalingHeight != 0)) {
+						e.setLabel(Component.translatable("fancymenu.helper.editor.properties.autoscale.on"));
 					} else {
-						this.active = false;
-						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"), "%n%"));
+						e.setLabel(Component.translatable("fancymenu.helper.editor.properties.autoscale.off"));
 					}
-					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+					if (this.editor.layout.forcedScale != 0) {
+						e.getButton().active = true;
+						e.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.btn.desc")));
+					} else {
+						e.getButton().active = false;
+						e.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed")));
+						e.setLabel(Component.translatable("fancymenu.helper.editor.properties.autoscale.off"));
+					}
 				}
-			};
-			this.addContent(autoScalingButton);
+			});
 
-			/** FORCE GUI SCALE **/
-			AdvancedButton menuScaleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+			// FORCE GUI SCALE
+			menu.addClickableEntry("forced_scale", false, Component.translatable("helper.creator.rightclick.scale"), null, Boolean.class, (entry, inherited, pass) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 					if (call != null) {
 						int s = 0;
 						if (MathUtils.isInteger(call)) {
 							s = Integer.parseInt(call);
 						}
 						if (s < 0) {
-							LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.rightclick.scale.invalid"), "", "", "", "");
+							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {}, LocalizationUtils.splitLocalizedStringLines("helper.creator.rightclick.scale.invalid")));
 						} else {
-							if (this.parent.scale != s) {
-								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+							if (this.editor.layout.forcedScale != s) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
-							this.parent.scale = s;
-							this.parent.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+							this.editor.layout.forcedScale = s;
+							this.editor.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 						}
 					}
 				});
-				p.setText("" + this.parent.scale);
+				p.setText("" + this.editor.layout.forcedScale);
 				PopupHandler.displayPopup(p);
-			});
-			menuScaleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.scale.btn.desc"), "%n%"));
-			this.addContent(menuScaleButton);
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")));
 
-			/** OPEN/CLOSE SOUND **/
-			ContextMenu openCloseSoundMenu = new ContextMenu();
-			openCloseSoundMenu.setAutoclose(true);
-			this.addChild(openCloseSoundMenu);
+			menu.addSeparatorEntry("separator_6", false);
 
-			AdvancedButton openSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.openaudio"), true, (press) -> {
+			// OPEN-AUDIO
+			menu.addClickableEntry("open_audio", false, Component.translatable("fancymenu.editor.open_audio"), null, Boolean.class, (entry, inherited, pass) -> {
 				ChooseFilePopup p = new ChooseFilePopup((call) -> {
 					if (call != null) {
-						if (call.length() < 3) {
-							if (this.parent.openAudio != null) {
-								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+						if (call.replace(" ", "").length() == 0) {
+							if (this.editor.layout.openAudio != null) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
-							this.parent.openAudio = null;
+							this.editor.layout.openAudio = null;
 						} else {
-							File f = new File(call);
-							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
-							}
+							File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(call));
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
-								if (this.parent.openAudio != call) {
-									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+								if (!this.editor.layout.openAudio.equals(call)) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 								}
-								this.parent.openAudio = call;
+								this.editor.layout.openAudio = call;
 							} else {
-								LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "");
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.error.invalid_audio")));
 							}
 						}
-					} else {
-						if (this.parent.openAudio != null) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-						this.parent.openAudio = null;
 					}
 				}, "wav");
-				if (this.parent.openAudio != null) {
-					p.setText(this.parent.openAudio);
+				if (this.editor.layout.openAudio != null) {
+					p.setText(this.editor.layout.openAudio);
 				}
 				PopupHandler.displayPopup(p);
-			});
-			openSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.openaudio.desc"), "%n%"));
-			openCloseSoundMenu.addContent(openSoundBtn);
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")));
 
-			AdvancedButton resetOpenBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.openaudio.reset"), true, (press) -> {
-				if (this.parent.openAudio != null) {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				}
-				this.parent.openAudio = null;
-			});
-			resetOpenBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.opencloseaudio.reset.desc"), "%n%"));
-			openCloseSoundMenu.addContent(resetOpenBtn);
-
-			AdvancedButton closeSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.closeaudio"), true, (press) -> {
+			// CLOSE-AUDIO
+			menu.addClickableEntry("close_audio", false, Component.translatable("fancymenu.editor.close_audio"), null, Boolean.class, (entry, inherited, pass) -> {
 				ChooseFilePopup p = new ChooseFilePopup((call) -> {
 					if (call != null) {
-						if (call.length() < 3) {
-							if (this.parent.closeAudio != null) {
-								this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+						if (call.replace(" ", "").length() == 0) {
+							if (this.editor.layout.closeAudio != null) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							}
-							this.parent.closeAudio = null;
+							this.editor.layout.closeAudio = null;
 						} else {
-							File f = new File(call);
-							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-								f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
-							}
+							File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(call));
 							if (f.exists() && f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
-								if (this.parent.closeAudio != call) {
-									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+								if (!this.editor.layout.closeAudio.equals(call)) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 								}
-								this.parent.closeAudio = call;
+								this.editor.layout.closeAudio = call;
 							} else {
-								LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "");
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.error.invalid_audio")));
 							}
 						}
-					} else {
-						if (this.parent.closeAudio != null) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-						this.parent.closeAudio = null;
 					}
 				}, "wav");
-				if (this.parent.closeAudio != null) {
-					p.setText(this.parent.closeAudio);
+				if (this.editor.layout.closeAudio != null) {
+					p.setText(this.editor.layout.closeAudio);
 				}
 				PopupHandler.displayPopup(p);
-			});
-			closeSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.closeaudio.desc"), "%n%"));
-			openCloseSoundMenu.addContent(closeSoundBtn);
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")));
 
-			AdvancedButton resetCloseBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.closeaudio.reset"), true, (press) -> {
-				if (this.parent.closeAudio != null) {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				}
-				this.parent.closeAudio = null;
-			});
-			resetCloseBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.opencloseaudio.reset.desc"), "%n%"));
-			openCloseSoundMenu.addContent(resetCloseBtn);
+			menu.addSeparatorEntry("separator_7", false);
 
-			AdvancedButton openCloseSoundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.opencloseaudio"), true, (press) -> {
-				openCloseSoundMenu.setParentButton((AdvancedButton) press);
-				openCloseSoundMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			openCloseSoundButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.opencloseaudio.desc"), "%n%"));
-			this.addContent(openCloseSoundButton);
-
-			this.addSeparator();
-
-			
-			/** LOADING REQUIREMENTS [LAYOUT-WIDE] **/
-			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (press) -> {
-				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer, (call) -> {});
-				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
+			// LOADING REQUIREMENTS [LAYOUT-WIDE]
+			menu.addClickableEntry("layout_wide_requirements", false, Component.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), null, Boolean.class, (entry, inherited, pass) -> {
+				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.editor.layout.layoutWideLoadingRequirementContainer, (call) -> {});
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				Minecraft.getInstance().setScreen(s);
-			});
-			loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc"), "%n%"));
-			this.addContent(loadingRequirementsButton);
-			
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")));
 
-			/** WINDOW SIZE RESTRICTIONS **/
-			ContextMenu windowSizeMenu = new ContextMenu();
-			windowSizeMenu.setAutoclose(true);
-			this.addChild(windowSizeMenu);
+			menu.addSeparatorEntry("separator_8", false);
 
-			AdvancedButton biggerThanButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.biggerthan"), true, (press) -> {
-				PopupHandler.displayPopup(new WindowSizePopup(this.parent, WindowSizePopup.ActionType.BIGGERTHAN));
-			});
-			windowSizeMenu.addContent(biggerThanButton);
-
-			AdvancedButton smallerThanButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.windowsize.smallerthan"), true, (press) -> {
-				PopupHandler.displayPopup(new WindowSizePopup(this.parent, WindowSizePopup.ActionType.SMALLERTHAN));
-			});
-			windowSizeMenu.addContent(smallerThanButton);
-
-			AdvancedButton windowSizeButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.windowsize"), true, (press) -> {
-				windowSizeMenu.setParentButton((AdvancedButton) press);
-				windowSizeMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			windowSizeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.windowsizerestrictions.btn.desc"), "%n%"));
-			this.addContent(windowSizeButton);
-
-			AdvancedButton resetWindowSizeRestrictionsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.windowsizerestrictions.reset"), true, (press) -> {
-				this.parent.biggerThanWidth = 0;
-				this.parent.biggerThanHeight = 0;
-				this.parent.smallerThanWidth = 0;
-				this.parent.smallerThanHeight = 0;
-			});
-			resetWindowSizeRestrictionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc"), "%n%"));
-			this.addContent(resetWindowSizeRestrictionsButton);
-
-			this.addSeparator();
-
-			/** REQUIRED MODS **/
-			AdvancedButton requiredModsButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.requiredmods"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.requiredmods.desc"), null, 240, (call) -> {
-					if (call != null) {
-						if (this.parent.requiredmods != call) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-
-						this.parent.requiredmods = call;
-					}
-				});
-				if (this.parent.requiredmods != null) {
-					p.setText(this.parent.requiredmods);
+			// PASTE
+			menu.addClickableEntry("paste_elements", false, Component.translatable("helper.editor.ui.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.pasteElementsFromClipboard();
+			}).setTicker((entry) -> {
+				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
+					e.getButton().active = LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.size() > 0;
 				}
-				PopupHandler.displayPopup(p);
 			});
-			this.addContent(requiredModsButton);
 
-			/** MC VERSION **/
-			ContextMenu mcVersionMenu = new ContextMenu();
-			mcVersionMenu.setAutoclose(true);
-			this.addChild(mcVersionMenu);
-
-			AdvancedButton minMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.mc"), null, 240, (call) -> {
-					if (call != null) {
-						if (this.parent.minimumMC != call) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-
-						this.parent.minimumMC = call;
-					}
-				});
-				if (this.parent.minimumMC != null) {
-					p.setText(this.parent.minimumMC);
-				}
-				PopupHandler.displayPopup(p);
+			// NEW ELEMENT
+			AdvancedContextMenu newElementMenu = this.buildNewElementContextMenu();
+			newElementMenu.getContextMenu().setAutoclose(true);
+			menu.addClickableEntry("new_element", false, Component.translatable("helper.editor.ui.layoutproperties.newelement"), newElementMenu, Boolean.class, (entry, inherited, pass) -> {
+				newElementMenu.getContextMenu().setParentButton(entry.getButton());
+				newElementMenu.openMenu(0, entry.getButton().y);
 			});
-			mcVersionMenu.addContent(minMcVersionButton);
 
-			AdvancedButton maxMcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.mc"), null, 240, (call) -> {
-					if (call != null) {
-						if (this.parent.maximumMC != call) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-
-						this.parent.maximumMC = call;
-					}
-				});
-				if (this.parent.maximumMC != null) {
-					p.setText(this.parent.maximumMC);
-				}
-				PopupHandler.displayPopup(p);
-			});
-			mcVersionMenu.addContent(maxMcVersionButton);
-
-			AdvancedButton mcVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.mc"), true, (press) -> {
-				mcVersionMenu.setParentButton((AdvancedButton) press);
-				mcVersionMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(mcVersionButton);
-
-			/** FM VERSION **/
-			ContextMenu fmVersionMenu = new ContextMenu();
-			fmVersionMenu.setAutoclose(true);
-			this.addChild(fmVersionMenu);
-
-			AdvancedButton minFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.minimum"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.minimum.fm"), null, 240, (call) -> {
-					if (call != null) {
-						if (this.parent.minimumFM != call) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-
-						this.parent.minimumFM = call;
-					}
-				});
-				if (this.parent.minimumFM != null) {
-					p.setText(this.parent.minimumFM);
-				}
-				PopupHandler.displayPopup(p);
-			});
-			fmVersionMenu.addContent(minFmVersionButton);
-
-			AdvancedButton maxFmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.maximum"), true, (press) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.layoutoptions.version.maximum.fm"), null, 240, (call) -> {
-					if (call != null) {
-						if (this.parent.maximumFM != call) {
-							this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						}
-
-						this.parent.maximumFM = call;
-					}
-				});
-				if (this.parent.maximumFM != null) {
-					p.setText(this.parent.maximumFM);
-				}
-				PopupHandler.displayPopup(p);
-			});
-			fmVersionMenu.addContent(maxFmVersionButton);
-
-			AdvancedButton fmVersionButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.layoutoptions.version.fm"), true, (press) -> {
-				fmVersionMenu.setParentButton((AdvancedButton) press);
-				fmVersionMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(fmVersionButton);
-
-			if (this.isRightclickOpened) {
-				this.addSeparator();
-			}
-
-			/** PASTE **/
-			AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.edit.paste"), (press) -> {
-				this.parent.pasteElements();
-			});
-			if (this.isRightclickOpened) {
-				this.addContent(pasteButton);
-			}
-
-			/** NEW ELEMENT **/
-			NewElementContextMenu newElementMenu = new NewElementContextMenu(this.parent);
-			newElementMenu.setAutoclose(true);
-			this.addChild(newElementMenu);
-
-			AdvancedButton newElementButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.layoutproperties.newelement"), (press) -> {
-				newElementMenu.setParentButton((AdvancedButton) press);
-				newElementMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			if (this.isRightclickOpened) {
-				this.addContent(newElementButton);
-			}
-
-
-			super.openMenuAt(x, y, screenWidth, screenHeight);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
+
+		return menu;
 
 	}
 
-	public static class NewElementContextMenu extends ContextMenu {
+	@NotNull
+	public AdvancedContextMenu buildNewElementContextMenu() {
 
-		private LayoutEditorScreen parent;
+		AdvancedContextMenu menu = new AdvancedContextMenu();
 
-		public NewElementContextMenu(LayoutEditorScreen parent) {
-			this.parent = parent;
-		}
+		try {
 
-		@Override
-		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-
-			this.content.clear();
-
-			/** IMAGE **/
-			AdvancedButton imageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.image"), (press) -> {
-				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addTexture, "jpg", "jpeg", "png", "gif"));
-			});
-			this.addContent(imageButton);
-
-			/** WEB IMAGE **/
-			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				
-				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
-				s.multilineMode = false;
-				Minecraft.getInstance().setScreen(s);
-				
-			});
-			this.addContent(webImageButton);
-
-
-//			/** TEXT **/
-//			AdvancedButton textButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.text"), (press) -> {
-//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.text.newtext") + ":", null, 240, this.parent::addText));
-//			});
-//			this.addContent(textButton);
-//
-//			/** WEB TEXT **/
-//			AdvancedButton webTextButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webtext"), (press) -> {
-//				PopupHandler.displayPopup(new DynamicValueInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.web.enterurl"), null, 240, this.parent::addWebText));
-//			});
-//			this.addContent(webTextButton);
-
-			/** SPLASH TEXT **/
-			ContextMenu splashMenu = new ContextMenu();
-			splashMenu.setAutoclose(true);
-			this.addChild(splashMenu);
-
-			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				
-				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
-				s.multilineMode = false;
-				Minecraft.getInstance().setScreen(s);
-				
-			});
-			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
-			splashMenu.addContent(singleSplashButton);
-
-			AdvancedButton multiSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.multi"), true, (press) -> {
-				PopupHandler.displayPopup(new ChooseFilePopup(this.parent::addMultiSplashText, "txt"));
-			});
-			multiSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.multi.desc"), "%n%"));
-			splashMenu.addContent(multiSplashButton);
-
-			AdvancedButton vanillaLikeSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like"), true, (press) -> {
-				this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-				PropertyContainer sec = new PropertyContainer("customization");
-				sec.putProperty("action", "addsplash");
-				sec.putProperty("vanilla-like", "true");
-				sec.putProperty("y", "" + (int)(this.parent.ui.bar.getHeight() * UIBase.getUIScale()));
-				SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
-				this.parent.addContent(new LayoutSplashText(i, this.parent));
-			});
-			vanillaLikeSplashButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.splash.vanilla_like.desc"), "%n%"));
-			splashMenu.addContent(vanillaLikeSplashButton);
-
-			AdvancedButton splashButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.splash"), (press) -> {
-				splashMenu.setParentButton((AdvancedButton) press);
-				splashMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(splashButton);
-
-			/** BUTTON **/
-			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				
-				this.parent.addButton("New Button");
-				
-			});
-			this.addContent(buttonButton);
-
-			/** ANIMATION **/
-			ContextMenu animationMenu = new ContextMenu();
-			animationMenu.setAutoclose(true);
-			this.addChild(animationMenu);
-
-			AdvancedButton inputAnimationButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation.entername"), true, (press) -> {
-				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.animation.entername.title") + ":", null, 240, this.parent::addAnimation));
-			});
-			animationMenu.addContent(inputAnimationButton);
-
-			animationMenu.addSeparator();
-
-			for (String s : AnimationHandler.getCustomAnimationNames()) {
-				AdvancedButton aniB = new AdvancedButton(0, 0, 0, 20, s, true, (press) -> {
-					this.parent.addAnimation(s);
-				});
-				animationMenu.addContent(aniB);
-			}
-
-			AdvancedButton animationButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.animation"), (press) -> {
-				animationMenu.setParentButton((AdvancedButton) press);
-				animationMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(animationButton);
-
-			/** SLIDESHOW **/
-			ContextMenu slideshowMenu = new ContextMenu();
-			slideshowMenu.setAutoclose(true);
-			this.addChild(slideshowMenu);
-
-			AdvancedButton inputSlideshowButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.slideshow.entername"), true, (press) -> {
-				PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.add.slideshow.entername.title") + ":", null, 240, this.parent::addSlideshow));
-			});
-			slideshowMenu.addContent(inputSlideshowButton);
-
-			slideshowMenu.addSeparator();
-
-			for (String s : SlideshowHandler.getSlideshowNames()) {
-				String name = s;
-				if (Minecraft.getInstance().font.width(name) > 90) {
-					name = Minecraft.getInstance().font.plainSubstrByWidth(name, 90) + "..";
-				}
-
-				AdvancedButton slideshowB = new AdvancedButton(0, 0, 0, 20, name, true, (press) -> {
-					if (SlideshowHandler.slideshowExists(s)) {
-						this.parent.addSlideshow(s);
-					}
-				});
-				slideshowMenu.addContent(slideshowB);
-			}
-
-			AdvancedButton slideshowButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.slideshow"), (press) -> {
-				slideshowMenu.setParentButton((AdvancedButton) press);
-				slideshowMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(slideshowButton);
-
-			/** SHAPE **/
-			ContextMenu shapesMenu = new ContextMenu();
-			shapesMenu.setAutoclose(true);
-			this.addChild(shapesMenu);
-
-			AdvancedButton addRectangleButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.shapes.rectangle"), (press) -> {
-				this.parent.addShape(Shape.RECTANGLE);
-			});
-			shapesMenu.addContent(addRectangleButton);
-
-			AdvancedButton shapesButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.shapes"), (press) -> {
-				shapesMenu.setParentButton((AdvancedButton) press);
-				shapesMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-			});
-			this.addContent(shapesButton);
-
-			/** DUMMY BUTTON: INSTALL AUDIO EXTENSION **/
-			AdvancedButton audioButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.audio"), (press) -> {
-				ActionExecutor.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
-			});
-			audioButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.extension.dummy.audio.btn.desc"), "%n%"));
+			// DUMMY BUTTON: INSTALL AUDIO EXTENSION
 			if (!FancyMenu.isAudioExtensionLoaded()) {
-				this.addContent(audioButton);
+				menu.addClickableEntry("install_audio_extension", false, Component.translatable("helper.creator.add.audio"), null, Boolean.class, (entry, inherited, pass) -> {
+					ActionExecutor.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.extension.dummy.audio.btn.desc")));
 			}
 
-			/** CUSTOM ITEMS (API) **/
-			for (ElementBuilder c : ElementRegistry.getBuilders()) {
-
-				AdvancedButton cusItemButton = new AdvancedButton(0, 0, 0, 20, c.getDisplayName(), (press) -> {
-					this.parent.addContent(c.wrapIntoEditorElement(c.buildDefaultInstance(), this.parent));
-				});
-				String[] desc = c.getDescription();
-				if ((desc != null) && (desc.length > 0)) {
-					cusItemButton.setDescription(desc);
-				}
-				this.addContent(cusItemButton);
-
+			// ADD ALL ELEMENT TYPES
+			int count = 0;
+			for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
+				Component[] desc = builder.getDescription(null);
+				menu.addClickableEntry("element_" + count, false, builder.getDisplayName(null), null, Boolean.class, (entry, inherited, pass) -> {
+					this.editor.normalEditorElements.add(builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), this.editor));
+				}).setTooltip((desc != null) ? Tooltip.create(desc) : null);
+				count++;
 			}
 
-			super.openMenuAt(x, y, screenWidth, screenHeight);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
+
+		return menu;
 
 	}
 
-	public static class ManageAudioContextMenu extends ContextMenu {
+	@NotNull
+	public AdvancedContextMenu buildHiddenVanillaElementContextMenu() {
 
-		private LayoutEditorScreen parent;
+		AdvancedContextMenu menu = new AdvancedContextMenu();
 
-		public ManageAudioContextMenu(LayoutEditorScreen parent) {
-			this.parent = parent;
-		}
+		try {
 
-		@Override
-		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-
-			this.content.clear();
-
-			if (this.parent.audio.isEmpty()) {
-
-				AdvancedButton bt = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
-				this.addContent(bt);
-
-			} else {
-
-				for (Map.Entry<String, Boolean> m : this.parent.audio.entrySet()) {
-
-					String label = new File(m.getKey()).getName();
-					if (Minecraft.getInstance().font.width(label) > 200) {
-						label = Minecraft.getInstance().font.plainSubstrByWidth(label, 200) + "..";
-					}
-
-					ContextMenu actionsMenu = new ContextMenu();
-					actionsMenu.setAutoclose(true);
-					this.addChild(actionsMenu);
-
-					AdvancedButton deleteButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.audio.delete"), true, (press2) -> {
-						this.closeMenu();
-						PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
-							if (call) {
-								this.parent.audio.remove(m.getKey());
-								SoundHandler.stopSound(m.getKey());
-								ScreenCustomization.unregisterSound(m.getKey());
-							}
-						}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", "", Locals.localize("helper.creator.audio.delete.msg"), "", ""));
-					});
-					actionsMenu.addContent(deleteButton);
-
-					String lab = Locals.localize("helper.editor.ui.element.manageaudio.loop.off");
-					if (m.getValue()) {
-						lab = Locals.localize("helper.editor.ui.element.manageaudio.loop.on");
-					}
-					AdvancedButton toggleLoopButton = new AdvancedButton(0, 0, 0, 16, lab, true, (press2) -> {
-						if (((AdvancedButton)press2).getMessage().getString().equals(Locals.localize("helper.editor.ui.element.manageaudio.loop.off"))) {
-							SoundHandler.setLooped(m.getKey(), true);
-							this.parent.audio.put(m.getKey(), true);
-							((AdvancedButton)press2).setMessage(Locals.localize("helper.editor.ui.element.manageaudio.loop.on"));;
-						} else {
-							SoundHandler.setLooped(m.getKey(), false);
-							this.parent.audio.put(m.getKey(), false);
-							((AdvancedButton)press2).setMessage(Locals.localize("helper.editor.ui.element.manageaudio.loop.off"));;
-						}
-					});
-					actionsMenu.addContent(toggleLoopButton);
-
-					AdvancedButton actionsButton = new AdvancedButton(0, 0, 0, 16, label, true, (press) -> {
-						actionsMenu.setParentButton((AdvancedButton) press);
-						actionsMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-					});
-					this.addContent(actionsButton);
-
+			List<VanillaButtonEditorElement> hiddenVanillaButtons = new ArrayList<>();
+			for (VanillaButtonEditorElement e : this.editor.vanillaButtonEditorElements) {
+				if (e.isHidden()) {
+					hiddenVanillaButtons.add(e);
+				}
+			}
+			List<AbstractDeepEditorElement> hiddenDeepElements = new ArrayList<>();
+			for (AbstractDeepEditorElement e : this.editor.deepEditorElements) {
+				if (e.isHidden()) {
+					hiddenDeepElements.add(e);
 				}
 			}
 
-
-			super.openMenuAt(x, y, screenWidth, screenHeight);
-		}
-
-	}
-
-	public static class MultiselectContextMenu extends ContextMenu {
-
-		private LayoutEditorScreen parent;
-
-		public MultiselectContextMenu(LayoutEditorScreen parent) {
-			this.parent = parent;
-		}
-
-		@Override
-		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-
-			this.content.clear();
-
-			if (this.parent.isObjectFocused()) {
-
-				this.parent.focusedObjectsCache = this.parent.getFocusedObjects();
-
-				this.parent.multiselectStretchedX = false;
-				this.parent.multiselectStretchedY = false;
-
-				/** DELETE ALL **/
-				AdvancedButton deleteBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.object.deleteall"), true, (press) -> {
-					this.parent.deleteFocusedObjects();
-				});
-				deleteBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.object.deleteall.btndesc"), "%n%"));
-				this.addContent(deleteBtn);
-
-				/** STRETCH ALL **/
-				ContextMenu stretchMenu = new ContextMenu();
-				stretchMenu.setAutoclose(true);
-				this.addChild(stretchMenu);
-
-				AdvancedButton stretchXBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.stretch.x"), true, (press) -> {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-
-					for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-						if (o.isStretchable()) {
-							o.setStretchedX(!this.parent.multiselectStretchedX, false);
-						}
-					}
-
-					this.parent.multiselectStretchedX = !this.parent.multiselectStretchedX;
-
-					if (!this.parent.multiselectStretchedX) {
-						press.setMessage(Component.literal(Locals.localize("helper.creator.object.stretch.x")));
-					} else {
-						press.setMessage(Component.literal("§a" + Locals.localize("helper.creator.object.stretch.x")));
-					}
-
-				});
-				stretchMenu.addContent(stretchXBtn);
-
-				AdvancedButton stretchYBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.object.stretch.y"), true, (press) -> {
-					this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-
-					for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-						if (o.isStretchable()) {
-							o.setStretchedY(!this.parent.multiselectStretchedY, false);
-						}
-					}
-
-					this.parent.multiselectStretchedY = !this.parent.multiselectStretchedY;
-
-					if (!this.parent.multiselectStretchedY) {
-						press.setMessage(Component.literal(Locals.localize("helper.creator.object.stretch.y")));
-					} else {
-						press.setMessage(Component.literal("§a" + Locals.localize("helper.creator.object.stretch.y")));
-					}
-
-				});
-				stretchMenu.addContent(stretchYBtn);
-
-				AdvancedButton stretchBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.object.stretchall"), true, (press) -> {
-					stretchMenu.setParentButton((AdvancedButton) press);
-					stretchMenu.openMenuAt(0, press.y, screenWidth, screenHeight);
-				});
-				stretchBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.object.stretchall.btndesc"), "%n%"));
-				this.addContent(stretchBtn);
-
-				/** COPY **/
-				AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
-					this.parent.copySelectedElements();
-				});
-				this.addContent(copyButton);
-
-				/** PASTE **/
-				AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.editor.ui.edit.paste"), (press) -> {
-					this.parent.pasteElements();
-				});
-				this.addContent(pasteButton);
-
-				boolean allVanillaBtns = true;
-				boolean allBtns = true;
-				for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-					if (!(o instanceof LayoutVanillaButton)) {
-						allVanillaBtns = false;
-					}
-					if (!(o instanceof LayoutVanillaButton) && !(o instanceof LayoutButton)) {
-						allBtns = false;
-					}
-				}
-				if (this.parent.focusedObjectsCache.isEmpty()) {
-					allVanillaBtns = false;
-					allBtns = false;
-				}
-
-				if (allVanillaBtns) {
-
-					/** VANILLA: RESET ORIENTATION **/
-					AdvancedButton resetOriBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation"), true, (press) -> {
-						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-
-						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-							if (o instanceof LayoutVanillaButton) {
-								LayoutVanillaButton vb = (LayoutVanillaButton) o;
-								vb.element.anchorPoint = "original";
-								vb.element.baseX = vb.button.x;
-								vb.element.baseY = vb.button.y;
-								vb.element.setWidth(vb.button.width);
-								vb.element.setHeight(vb.button.height);
-							}
-						}
-						this.closeMenu();
-						Minecraft.getInstance().setScreen(this.parent);
-					});
-					resetOriBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.vanillabutton.resetorientation.btndesc"), "%n%"));
-					this.addContent(resetOriBtn);
-
-					/** VANILLA: DELETE **/
-					AdvancedButton hideAllBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.multiselect.vanillabutton.hideall"), true, (press) -> {
-						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						this.parent.history.setPreventSnapshotSaving(true);
-
-						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-							if (o instanceof LayoutVanillaButton) {
-								LayoutVanillaButton vb = (LayoutVanillaButton) o;
-								this.parent.hideVanillaButton(vb);
-							}
-						}
-
-						this.parent.focusedObjects.clear();
-						this.parent.focusedObjectsCache.clear();
-						this.parent.multiselectRightclickMenu.closeMenu();
-
-						this.parent.history.setPreventSnapshotSaving(false);
-					});
-					hideAllBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.vanillabutton.hideall.btndesc"), "%n%"));
-					this.addContent(hideAllBtn);
-
-				}
-
-				if (allBtns) {
-
-					/** BUTTONS: BACKGROUND **/
-					AdvancedButton buttonBackgroundButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground"), true, (press) -> {
-						this.parent.setButtonTexturesForFocusedObjects();
-					});
-					buttonBackgroundButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.buttontexture.btndesc"), "%n%"));
-					this.addContent(buttonBackgroundButton);
-
-					/** BUTTONS: CLICK SOUND **/
-					AdvancedButton clickSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound"), true, (press) -> {
-						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-							if (call != null) {
-								File f = new File(call);
-								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
-								}
-								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-									this.parent.history.setPreventSnapshotSaving(true);
-
-									for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-										if (o instanceof LayoutVanillaButton) {
-											LayoutVanillaButton vb = (LayoutVanillaButton) o;
-											vb.customizationContainer.clickSound = call;
-										} else if (o instanceof LayoutButton) {
-											LayoutButton lb = (LayoutButton) o;
-											lb.customizationContainer.clickSound = call;
-										}
-									}
-
-									this.parent.history.setPreventSnapshotSaving(false);
-								} else {
-									LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
-								}
-							}
-						}, "wav");
-
-						PopupHandler.displayPopup(cf);
-					});
-					clickSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.clicksound.btndesc"), "%n%"));
-					this.addContent(clickSoundBtn);
-
-					/** BUTTONS: RESET CLICK SOUND **/
-					AdvancedButton resetClickSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.clicksound.reset"), true, (press) -> {
-
-						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						this.parent.history.setPreventSnapshotSaving(true);
-
-						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-							if (o instanceof LayoutVanillaButton) {
-								LayoutVanillaButton vb = (LayoutVanillaButton) o;
-								vb.customizationContainer.clickSound = null;
-							} else if (o instanceof LayoutButton) {
-								LayoutButton lb = (LayoutButton) o;
-								lb.customizationContainer.clickSound = null;
-							}
-						}
-
-						this.parent.history.setPreventSnapshotSaving(false);
-
-					});
-					resetClickSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.clicksound.reset.btndesc"), "%n%"));
-					this.addContent(resetClickSoundBtn);
-
-					/** BUTTONS: HOVER SOUND **/
-					AdvancedButton hoverSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound"), true, (press) -> {
-						ChooseFilePopup cf = new ChooseFilePopup((call) -> {
-							if (call != null) {
-								File f = new File(call);
-								if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-									f = new File(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + call);
-								}
-								if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
-									this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-									this.parent.history.setPreventSnapshotSaving(true);
-
-									for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-										if (o instanceof LayoutVanillaButton) {
-											LayoutVanillaButton vb = (LayoutVanillaButton) o;
-											vb.customizationContainer.hoverSound = call;
-										} else if (o instanceof LayoutButton) {
-											LayoutButton lb = (LayoutButton) o;
-											lb.customizationContainer.hoverSound = call;
-										}
-									}
-
-									this.parent.history.setPreventSnapshotSaving(false);
-								} else {
-									LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
-								}
-							}
-						}, "wav");
-
-						PopupHandler.displayPopup(cf);
-					});
-					hoverSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.hoversound.btndesc"), "%n%"));
-					this.addContent(hoverSoundBtn);
-
-					/** BUTTONS: RESET HOVERSOUND **/
-					AdvancedButton resetHoverSoundBtn = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoversound.reset"), true, (press) -> {
-
-						this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-						this.parent.history.setPreventSnapshotSaving(true);
-
-						for (AbstractEditorElement o : this.parent.focusedObjectsCache) {
-							if (o instanceof LayoutVanillaButton) {
-								LayoutVanillaButton vb = (LayoutVanillaButton) o;
-								vb.customizationContainer.hoverSound = null;
-							} else if (o instanceof LayoutButton) {
-								LayoutButton lb = (LayoutButton) o;
-								lb.customizationContainer.hoverSound = null;
-							}
-						}
-
-						this.parent.history.setPreventSnapshotSaving(false);
-
-					});
-					resetHoverSoundBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.multiselect.button.hoversound.reset.btndesc"), "%n%"));
-					this.addContent(resetHoverSoundBtn);
-				}
-
+			int count = 0;
+			for (VanillaButtonEditorElement e : hiddenVanillaButtons) {
+				menu.addClickableEntry("element_" + count, false, ((VanillaButtonElement)e.element).button.getMessage(), null, Boolean.class, (entry, inherited, pass) -> {
+					e.setHidden(false);
+					menu.closeMenu();
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+				count++;
+			}
+			for (AbstractDeepEditorElement e : hiddenDeepElements) {
+				menu.addClickableEntry("element_" + count, false, e.element.builder.getDisplayName(e.element), null, Boolean.class, (entry, inherited, pass) -> {
+					e.setHidden(false);
+					menu.closeMenu();
+				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+				count++;
 			}
 
-
-			super.openMenuAt(x, y, screenWidth, screenHeight);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 
-	}
-
-	public static class HiddenVanillaButtonContextMenu extends ContextMenu {
-
-		private LayoutEditorScreen parent;
-
-		public HiddenVanillaButtonContextMenu(LayoutEditorScreen parent) {
-			this.parent = parent;
-		}
-
-		@Override
-		public void openMenuAt(int x, int y, int screenWidth, int screenHeight) {
-
-			this.content.clear();
-			this.separators.clear();
-
-			boolean containsHiddenDeeps = false;
-			for (AbstractEditorElement e : this.parent.content) {
-				if (e instanceof AbstractDeepEditorElement) {
-					if (((AbstractDeepEditorElement)e).getDeepCustomizationItem().deepElementHidden) {
-						String name = ((AbstractDeepEditorElement) e).parentDeepElementBuilder.getDisplayName();
-						AdvancedButton hiddenButton = new AdvancedButton(0, 0, 0, 0, name, true, (press) -> {
-							((AbstractDeepEditorElement) e).getDeepCustomizationItem().deepElementHidden = false;
-							this.parent.updateContent();
-							this.closeMenu();
-						});
-						hiddenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.editor.ui.element.deletedvanillabuttons.entry.desc"), "%n%"));
-						this.addContent(hiddenButton);
-						containsHiddenDeeps = true;
-					}
-				}
-			}
-
-			if (!this.parent.getHiddenButtons().isEmpty()) {
-				for (LayoutVanillaButton b : this.parent.getHiddenButtons()) {
-
-					String name = b.button.getButton().getMessage().getString();
-					AdvancedButton hiddenButton = new AdvancedButton(0, 0, 0, 0, name, true, (press) -> {
-						this.parent.showVanillaButton(b);
-						this.closeMenu();
-					});
-					hiddenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.editor.ui.element.deletedvanillabuttons.entry.desc"), "%n%"));
-					this.addContent(hiddenButton);
-
-				}
-			} else if (!containsHiddenDeeps) {
-				AdvancedButton emptyButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.empty"), true, (press) -> {});
-				this.addContent(emptyButton);
-			}
-
-			super.openMenuAt(x, y, screenWidth, screenHeight);
-		}
+		return menu;
 
 	}
 

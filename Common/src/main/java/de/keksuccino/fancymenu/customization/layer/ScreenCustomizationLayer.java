@@ -204,7 +204,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		}
 
 		//Handle forced GUI scale
-		if (this.layoutBase.forcedScale != -1F) {
+		if (this.layoutBase.forcedScale != 0) {
 			float newscale = this.layoutBase.forcedScale;
 			if (newscale <= 0) {
 				newscale = 1;

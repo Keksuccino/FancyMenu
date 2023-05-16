@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-
 public class EditorElementSettings {
 
     protected AbstractEditorElement editorElement;
@@ -18,7 +16,7 @@ public class EditorElementSettings {
     private boolean supportsAdvancedSizing = true;
     private boolean resizeableX = true;
     private boolean resizeableY = true;
-    private boolean dragable = true;
+    private boolean movable = true;
     private boolean anchorPointCanBeChanged = true;
     private boolean allowElementAnchorPoint = true;
     private boolean enableLoadingRequirements = true;
@@ -131,12 +129,12 @@ public class EditorElementSettings {
         this.settingsChanged();
     }
 
-    public boolean isDragable() {
-        return dragable;
+    public boolean isMovable() {
+        return this.movable;
     }
 
-    public void setDragable(boolean dragable) {
-        this.dragable = dragable;
+    public void setMovable(boolean movable) {
+        this.movable = movable;
         this.settingsChanged();
     }
 
