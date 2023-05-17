@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.slider.RangeSliderButton;
@@ -11,6 +13,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
@@ -82,87 +85,87 @@ public class PlayerEntityRotationScreen extends Screen {
             this.applyChanges();
             this.onClose();
         });
-        UIBase.colorizeButton(this.doneButton);
+        UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (press) -> {
             this.onClose();
         });
-        UIBase.colorizeButton(this.cancelButton);
+        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
         //Draw screen background
-        fill(matrix, 0, 0, this.width, this.height, SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, SCREEN_BACKGROUND_COLOR.getRGB());
 
         int xCenter = this.width / 2;
         int yCenter = this.height / 2;
         int sliderX = xCenter - 100;
 
         this.bodyXSlider.setPosition(sliderX, yCenter - 5 - 20 - 5 - 20);
-        this.bodyXSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.bodyXSlider.render(pose, mouseX, mouseY, partial);
 
         this.bodyYSlider.setPosition(sliderX, yCenter - 5 - 20);
-        this.bodyYSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.bodyYSlider.render(pose, mouseX, mouseY, partial);
 
         this.headXSlider.setPosition(sliderX, yCenter);
-        this.headXSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.headXSlider.render(pose, mouseX, mouseY, partial);
 
         this.headYSlider.setPosition(sliderX, yCenter + 20 + 5);
-        this.headYSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.headYSlider.render(pose, mouseX, mouseY, partial);
 
         this.doneButton.setX(xCenter - this.doneButton.getWidth() - 5);
         this.doneButton.setY(this.height - 35);
-        this.doneButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.doneButton.render(pose, mouseX, mouseY, partial);
 
         this.cancelButton.setX(xCenter + 5);
         this.cancelButton.setY(this.height - 35);
-        this.cancelButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.cancelButton.render(pose, mouseX, mouseY, partial);
 
-        this.renderEntity(matrix, xCenter - 100 - (int)(this.element.getActiveEntityProperties().getDimensions().width * 40) - 30, yCenter - (int)(this.element.getActiveEntityProperties().getDimensions().height * 40) / 2);
+        this.renderEntity(pose, mouseX, mouseY, partial, xCenter - 100 - (int)(this.element.getActiveEntityProperties().getDimensions().width * 40) - 30, yCenter - (int)(this.element.getActiveEntityProperties().getDimensions().height * 40) / 2);
 
     }
 
-    protected void renderEntity(PoseStack matrix, int posX, int posY) {
+    protected void renderEntity(PoseStack pose, int mouseX, int mouseY, float partial, int posX, int posY) {
 
         float bX = this.element.bodyRotationX;
         float bY = this.element.bodyRotationY;
         float hX = this.element.headRotationX;
         float hY = this.element.headRotationY;
         int oriScale = this.element.scale;
-        String oriOrientation = this.element.orientation;
-        String oriAdX = this.element.advancedPosX;
-        String oriAdY = this.element.advancedPosY;
-        int oriPosX = this.element.rawPosX;
-        int oriPosY = this.element.rawPosY;
+        ElementAnchorPoint oriOrientation = this.element.anchorPoint;
+        String oriAdX = this.element.advancedX;
+        String oriAdY = this.element.advancedY;
+        int oriPosX = this.element.baseX;
+        int oriPosY = this.element.baseY;
 
         this.element.bodyRotationX = this.bodyRotationX;
         this.element.bodyRotationY = this.bodyRotationY;
         this.element.headRotationX = this.headRotationX;
         this.element.headRotationY = this.headRotationY;
         this.element.scale = 40;
-        this.element.orientation = "top-left";
-        this.element.advancedPosX = null;
-        this.element.advancedPosY = null;
-        this.element.rawPosX = posX;
-        this.element.rawPosY = posY;
+        this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+        this.element.advancedX = null;
+        this.element.advancedY = null;
+        this.element.baseX = posX;
+        this.element.baseY = posY;
 
-        this.element.render(matrix, this);
+        this.element.render(pose, mouseX, mouseY, partial);
 
         this.element.bodyRotationX = bX;
         this.element.bodyRotationY = bY;
         this.element.headRotationX = hX;
         this.element.headRotationY = hY;
         this.element.scale = oriScale;
-        this.element.orientation = oriOrientation;
-        this.element.advancedPosX = oriAdX;
-        this.element.advancedPosY = oriAdY;
-        this.element.rawPosX = oriPosX;
-        this.element.rawPosY = oriPosY;
+        this.element.anchorPoint = oriOrientation;
+        this.element.advancedX = oriAdX;
+        this.element.advancedY = oriAdY;
+        this.element.baseX = oriPosX;
+        this.element.baseY = oriPosY;
 
     }
 

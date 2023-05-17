@@ -17,45 +17,45 @@ public class PlayerEntityElementCache {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	
-	private static volatile Map<String, ResourceLocation> skinCache = new HashMap<>();
-	private static volatile Map<String, ResourceLocation> capeCache = new HashMap<>();
-	private static volatile Map<String, Boolean> isSlimSkinCache = new HashMap<>();
+	private static final Map<String, ResourceLocation> SKIN_CACHE = new HashMap<>();
+	private static final Map<String, ResourceLocation> CAPE_CACHE = new HashMap<>();
+	private static final Map<String, Boolean> IS_SLIM_CACHE = new HashMap<>();
 	
 	public static boolean isSkinCached(String playerName) {
-		return skinCache.containsKey(playerName);
+		return SKIN_CACHE.containsKey(playerName);
 	}
 
 	public static void cacheSkin(String playerName, ResourceLocation skin) {
-		skinCache.put(playerName, skin);
+		SKIN_CACHE.put(playerName, skin);
 	}
 	
 	public static ResourceLocation getSkin(String playerName) {
-		return skinCache.get(playerName);
+		return SKIN_CACHE.get(playerName);
 	}
 	
 	public static boolean isCapeCached(String playerName) {
-		return capeCache.containsKey(playerName);
+		return CAPE_CACHE.containsKey(playerName);
 	}
 	
 	public static void cacheCape(String playerName, ResourceLocation cape) {
-		capeCache.put(playerName, cape);
+		CAPE_CACHE.put(playerName, cape);
 	}
 	
 	public static ResourceLocation getCape(String playerName) {
-		return capeCache.get(playerName);
+		return CAPE_CACHE.get(playerName);
 	}
 	
 	public static boolean isSlimSkinInfoCached(String playerName) {
-		return isSlimSkinCache.containsKey(playerName);
+		return IS_SLIM_CACHE.containsKey(playerName);
 	}
 	
 	public static void cacheIsSlimSkin(String playerName, boolean isSlimSkin) {
-		isSlimSkinCache.put(playerName, isSlimSkin);
+		IS_SLIM_CACHE.put(playerName, isSlimSkin);
 	}
 	
 	public static boolean getIsSlimSkin(String playerName) {
-		if (isSlimSkinCache.containsKey(playerName)) {
-			return isSlimSkinCache.get(playerName);
+		if (IS_SLIM_CACHE.containsKey(playerName)) {
+			return IS_SLIM_CACHE.get(playerName);
 		}
 		return false;
 	}
@@ -69,12 +69,11 @@ public class PlayerEntityElementCache {
 			InputStream input = new FileInputStream(file);
 			byte[] buffer = new byte[8192];
 			int len = input.read(buffer);
-
 			while (len != -1) {
 				sha1.update(buffer, 0, len);
 				len = input.read(buffer);
 			}
-
+			IOUtils.closeQuietly(input);
 			return bytesToHexString(sha1.digest());
 		} catch (Exception e) {
 			e.printStackTrace();

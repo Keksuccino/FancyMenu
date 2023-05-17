@@ -2,9 +2,15 @@ package de.keksuccino.fancymenu.customization.layout;
 
 import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.animation.AnimationMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackground;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
@@ -17,7 +23,9 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.misc.Legacy;
 import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -30,10 +38,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Layout extends LayoutBase {
 
@@ -54,10 +59,6 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
     @Nullable
     public DeepScreenCustomizationLayer<?> deepScreenCustomizationLayer = null;
-
-    //TODO compatibility layer für alte top-level customization sections wie addbackgroundanimation, backgroundtexture, etc. (siehe alte Customizationlayer klasse)
-
-    //TODO compatibility layer für legacy items (image, animation, etc.) adden
 
     public PropertyContainerSet serialize() {
 
@@ -225,7 +226,7 @@ public class Layout extends LayoutBase {
                 serializedVanilla.setType("vanilla_button");
                 layout.serializedVanillaButtonElements.add(serializedVanilla);
             }
-            //Handle legacy vanilla button customizations
+            //Convert legacy vanilla button customizations
             layout.serializedVanillaButtonElements.addAll(convertLegacyVanillaButtonCustomizations(serialized));
 
             //Handle normal elements
@@ -243,6 +244,8 @@ public class Layout extends LayoutBase {
                     }
                 }
             }
+            //Convert legacy elements
+            layout.serializedElements.addAll(convertLegacyElements(serialized));
 
             //Handle deep elements
             layout.deepScreenCustomizationLayer = ((layout.menuIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.menuIdentifier) : null;
@@ -274,6 +277,11 @@ public class Layout extends LayoutBase {
                         layout.menuBackground = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
                     }
                 }
+            }
+            //Convert legacy backgrounds
+            MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
+            if (legacyBackground != null) {
+                layout.menuBackground = legacyBackground;
             }
 
             //Handle everything else
@@ -438,50 +446,214 @@ public class Layout extends LayoutBase {
     @NotNull
     public Layout copy() {
 
-        Layout copy = new Layout();
+       return Objects.requireNonNull(deserialize(this.serialize(), this.layoutFile));
 
-        copy.menuIdentifier = this.menuIdentifier;
-        copy.layoutFile = this.layoutFile;
+//        Layout copy = new Layout();
+//
+//        copy.menuIdentifier = this.menuIdentifier;
+//        copy.layoutFile = this.layoutFile;
+//
+//        copy.overrideMenuWith = this.overrideMenuWith;
+//        copy.menuBackground = this.menuBackground;
+//        copy.keepBackgroundAspectRatio = this.keepBackgroundAspectRatio;
+//        copy.openAudio = this.openAudio;
+//        copy.closeAudio = this.closeAudio;
+//        copy.renderElementsBehindVanilla = this.renderElementsBehindVanilla;
+//        copy.randomMode = this.randomMode;
+//        copy.randomGroup = this.randomGroup;
+//        copy.randomOnlyFirstTime = this.randomOnlyFirstTime;
+//        copy.forcedScale = this.forcedScale;
+//        copy.autoScalingWidth = this.autoScalingWidth;
+//        copy.autoScalingHeight = this.autoScalingHeight;
+//        copy.customMenuTitle = this.customMenuTitle;
+//        copy.universalLayoutMenuWhitelist = this.universalLayoutMenuWhitelist;
+//        copy.universalLayoutMenuBlacklist = this.universalLayoutMenuBlacklist;
+//
+//        if (this.layoutWideLoadingRequirementContainer != null) {
+//            PropertyContainer loadingRequirementsSec = new PropertyContainer("loading_requirements");
+//            this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(loadingRequirementsSec);
+//            copy.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(loadingRequirementsSec);
+//        }
+//
+//        for (SerializedElement e : this.serializedElements) {
+//            copy.serializedElements.add(convertSectionToElement(e));
+//        }
+//        for (SerializedElement e : this.serializedVanillaButtonElements) {
+//            SerializedElement serializedVanilla = convertSectionToElement(e);
+//            serializedVanilla.setType("vanilla_button");
+//            copy.serializedVanillaButtonElements.add(serializedVanilla);
+//        }
+//        for (SerializedElement e : this.serializedDeepElements) {
+//            SerializedElement serializedDeep = convertSectionToElement(e);
+//            serializedDeep.setType("deep_element");
+//            copy.serializedDeepElements.add(serializedDeep);
+//        }
+//
+//        copy.deepScreenCustomizationLayer = this.deepScreenCustomizationLayer;
+//
+//        return copy;
 
-        copy.overrideMenuWith = this.overrideMenuWith;
-        copy.menuBackground = this.menuBackground;
-        copy.keepBackgroundAspectRatio = this.keepBackgroundAspectRatio;
-        copy.openAudio = this.openAudio;
-        copy.closeAudio = this.closeAudio;
-        copy.renderElementsBehindVanilla = this.renderElementsBehindVanilla;
-        copy.randomMode = this.randomMode;
-        copy.randomGroup = this.randomGroup;
-        copy.randomOnlyFirstTime = this.randomOnlyFirstTime;
-        copy.forcedScale = this.forcedScale;
-        copy.autoScalingWidth = this.autoScalingWidth;
-        copy.autoScalingHeight = this.autoScalingHeight;
-        copy.customMenuTitle = this.customMenuTitle;
-        copy.universalLayoutMenuWhitelist = this.universalLayoutMenuWhitelist;
-        copy.universalLayoutMenuBlacklist = this.universalLayoutMenuBlacklist;
+    }
 
-        if (this.layoutWideLoadingRequirementContainer != null) {
-            PropertyContainer loadingRequirementsSec = new PropertyContainer("loading_requirements");
-            this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(loadingRequirementsSec);
-            copy.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(loadingRequirementsSec);
+    @NotNull
+    protected static List<SerializedElement> convertLegacyElements(PropertyContainerSet layout) {
+
+        //TODO convert legacy items to new format
+
+        List<SerializedElement> elements = new ArrayList<>();
+
+        for (PropertyContainer sec : layout.getSectionsOfType("customization")) {
+
+            String action = sec.getValue("action");
+            if (action != null) {
+
+                if (action.equalsIgnoreCase("addtexture")) {
+//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                        backgroundElements.add(new TextureCustomizationItem(sec));
+//                    } else {
+//                        foregroundElements.add(new TextureCustomizationItem(sec));
+//                    }
+                }
+
+                if (action.equalsIgnoreCase("addwebtexture")) {
+//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                        backgroundElements.add(new WebTextureCustomizationItem(sec));
+//                    } else {
+//                        foregroundElements.add(new WebTextureCustomizationItem(sec));
+//                    }
+                }
+
+                if (action.equalsIgnoreCase("addanimation")) {
+//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                        backgroundElements.add(new AnimationCustomizationItem(sec));
+//                    } else {
+//                        foregroundElements.add(new AnimationCustomizationItem(sec));
+//                    }
+                }
+
+                if (action.equalsIgnoreCase("addshape")) {
+//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                        backgroundElements.add(new ShapeCustomizationItem(sec));
+//                    } else {
+//                        foregroundElements.add(new ShapeCustomizationItem(sec));
+//                    }
+                }
+
+                if (action.equalsIgnoreCase("addslideshow")) {
+//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                        backgroundElements.add(new SlideshowCustomizationItem(sec));
+//                    } else {
+//                        foregroundElements.add(new SlideshowCustomizationItem(sec));
+//                    }
+                }
+
+                if (action.equalsIgnoreCase("addbutton")) {
+//                    ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
+//
+//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                        backgroundElements.add(i);
+//                    } else {
+//                        foregroundElements.add(i);
+//                    }
+                }
+
+                if (action.equalsIgnoreCase("addsplash")) {
+                    String path = sec.getValue("splashfilepath");
+                    String text = sec.getValue("text");
+                    if ((path != null) || (text != null)) {
+
+//                        SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
+//
+//                        if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+//                            backgroundElements.add(i);
+//                        } else {
+//                            foregroundElements.add(i);
+//                        }
+
+                    }
+                }
+
+            }
+
         }
 
-        for (SerializedElement e : this.serializedElements) {
-            copy.serializedElements.add(convertSectionToElement(e));
-        }
-        for (SerializedElement e : this.serializedVanillaButtonElements) {
-            SerializedElement serializedVanilla = convertSectionToElement(e);
-            serializedVanilla.setType("vanilla_button");
-            copy.serializedVanillaButtonElements.add(serializedVanilla);
-        }
-        for (SerializedElement e : this.serializedDeepElements) {
-            SerializedElement serializedDeep = convertSectionToElement(e);
-            serializedDeep.setType("deep_element");
-            copy.serializedDeepElements.add(serializedDeep);
+        return elements;
+
+    }
+
+    @Legacy("This converts old menu background sections to new background elements. Remove this in the future.")
+    @SuppressWarnings("all")
+    @Nullable
+    protected static MenuBackground convertLegacyMenuBackground(PropertyContainerSet layout) {
+
+        for (PropertyContainer sec : layout.getSectionsOfType("customization")) {
+
+            String action = sec.getValue("action");
+            if (action != null) {
+
+                if (action.equalsIgnoreCase("setbackgroundslideshow")) {
+                    String name = sec.getValue("name");
+                    if (name != null) {
+                        if (SlideshowHandler.slideshowExists(name)) {
+                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("slideshow");
+                            if (builder != null) {
+                                SlideshowMenuBackground b = new SlideshowMenuBackground((MenuBackgroundBuilder<SlideshowMenuBackground>)builder);
+                                b.slideshowName = name;
+                                return b;
+                            }
+                        }
+                    }
+                }
+                if (action.equalsIgnoreCase("setbackgroundpanorama")) {
+                    String name = sec.getValue("name");
+                    if (name != null) {
+                        if (PanoramaHandler.panoramaExists(name)) {
+                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("panorama");
+                            if (builder != null) {
+                                PanoramaMenuBackground b = new PanoramaMenuBackground((MenuBackgroundBuilder<PanoramaMenuBackground>)builder);
+                                b.panoramaName = name;
+                                return b;
+                            }
+                        }
+                    }
+                }
+                if (action.equalsIgnoreCase("texturizebackground")) {
+                    String value = AbstractElement.fixBackslashPath(sec.getValue("path"));
+                    String pano = sec.getValue("wideformat");
+                    if (value != null) {
+                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(value));
+                        if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
+                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("image");
+                            if (builder != null) {
+                                ImageMenuBackground b = new ImageMenuBackground((MenuBackgroundBuilder<ImageMenuBackground>)builder);
+                                b.imagePath = value;
+                                b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
+                                return b;
+                            }
+                        }
+                    }
+                }
+                if (action.equalsIgnoreCase("animatebackground")) {
+                    String value = sec.getValue("name");
+                    String restartOnLoadString = sec.getValue("restart_on_load");
+                    if (value != null) {
+                        if (AnimationHandler.animationExists(value)) {
+                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("animation");
+                            if (builder != null) {
+                                AnimationMenuBackground b = new AnimationMenuBackground((MenuBackgroundBuilder<AnimationMenuBackground>) builder);
+                                b.animationName = value;
+                                b.restartOnMenuLoad = (restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true");
+                                return b;
+                            }
+                        }
+                    }
+                }
+
+            }
+
         }
 
-        copy.deepScreenCustomizationLayer = this.deepScreenCustomizationLayer;
-
-        return copy;
+        return null;
 
     }
 

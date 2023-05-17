@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -63,7 +64,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.modloaded");
     }
 

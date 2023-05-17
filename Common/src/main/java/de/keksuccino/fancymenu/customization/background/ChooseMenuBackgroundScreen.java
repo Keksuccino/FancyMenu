@@ -2,6 +2,8 @@
 package de.keksuccino.fancymenu.customization.background;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
@@ -13,6 +15,7 @@ import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.Button;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -24,7 +27,8 @@ import java.util.function.Consumer;
 
 public class ChooseMenuBackgroundScreen extends Screen {
 
-    //TODO adden: Möglichkeit, "empty background" zu returnen (siehe notes)
+    protected static final MenuBackgroundBuilder<ImageMenuBackground> NO_BACKGROUND_TYPE = new ImageMenuBackgroundBuilder();
+    public static final MenuBackground NO_BACKGROUND = new ImageMenuBackground(NO_BACKGROUND_TYPE);
 
     protected Screen parentScreen;
     protected MenuBackgroundBuilder<?> backgroundType;
@@ -37,14 +41,14 @@ public class ChooseMenuBackgroundScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public ChooseMenuBackgroundScreen(@Nullable Screen parentScreen, @Nullable MenuBackground backgroundToEdit, @NotNull Consumer<MenuBackground> callback) {
+    public ChooseMenuBackgroundScreen(@Nullable Screen parentScreen, @Nullable MenuBackground backgroundToEdit, boolean addResetBackgroundEntry, @NotNull Consumer<MenuBackground> callback) {
 
         super(Component.translatable("fancymenu.menu_background.choose"));
 
         this.parentScreen = parentScreen;
         this.background = backgroundToEdit;
         this.callback = callback;
-        this.setContentOfBackgroundTypeList();
+        this.setContentOfBackgroundTypeList(addResetBackgroundEntry);
 
         //Select correct entry if instance has action
         if (this.background != null) {
@@ -58,6 +62,9 @@ public class ChooseMenuBackgroundScreen extends Screen {
         }
         if (this.backgroundType == null) {
             this.background = null;
+            if (addResetBackgroundEntry) {
+                this.backgroundTypeListScrollArea.getEntries().get(0).setSelected(true);
+            }
         }
 
         this.configureButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), true, (button) -> {
@@ -75,7 +82,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else {
-                    this.active = true;
+                    this.active = ChooseMenuBackgroundScreen.this.backgroundType != NO_BACKGROUND_TYPE;
                 }
                 super.render(pose, p_93658_, p_93659_, p_93660_);
             }
@@ -183,9 +190,20 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
     }
 
-    protected void setContentOfBackgroundTypeList() {
+    protected void setContentOfBackgroundTypeList(boolean addResetBackgroundEntry) {
 
         this.backgroundTypeListScrollArea.clearEntries();
+
+        if (addResetBackgroundEntry) {
+            BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, NO_BACKGROUND_TYPE, (entry) -> {
+                if (!entry.isSelected()) {
+                    this.backgroundType = NO_BACKGROUND_TYPE;
+                    this.background = NO_BACKGROUND;
+                    this.setDescription(NO_BACKGROUND_TYPE);
+                }
+            });
+            this.backgroundTypeListScrollArea.addEntry(e);
+        }
 
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
@@ -220,8 +238,15 @@ public class ChooseMenuBackgroundScreen extends Screen {
         public MenuBackgroundBuilder<?> backgroundType;
 
         public BackgroundTypeScrollEntry(ScrollArea parent, @NotNull MenuBackgroundBuilder<?> backgroundType, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, getText(backgroundType), LISTING_DOT_BLUE, onClick);
             this.backgroundType = backgroundType;
+        }
+
+        private static Component getText(MenuBackgroundBuilder<?> backgroundType) {
+            if (backgroundType == NO_BACKGROUND_TYPE) {
+                return Component.translatable("fancymenu.editor.menu_background.choose.entry.no_background").withStyle(ChatFormatting.RED);
+            }
+            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
         }
 
     }

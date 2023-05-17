@@ -19,27 +19,23 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    
     protected volatile boolean loaded = false;
     protected volatile int width = 0;
     protected volatile int height = 0;
     protected volatile ResourceLocation location = null;
     protected volatile String url;
     protected volatile NativeImage downloadedTexture = null;
-    
 
     public SkinWebTextureResourceLocation(String url) {
         super(url);
         this.url = url;
     }
 
-    
     @Nullable
     public NativeImage getDownloadedTexture() {
         return this.downloadedTexture;
     }
 
-    
     public void downloadTexture() {
         InputStream in = null;
         try {
@@ -101,7 +97,6 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
         }
     }
 
-    
     @Override
     public void loadTexture() {
         if (!this.loaded) {
@@ -157,7 +152,7 @@ public class SkinWebTextureResourceLocation extends WebTextureResourceLocation {
 
     protected String filterUrl(String url) {
         CharacterFilter c = new CharacterFilter();
-        c.addAllowedCharacters(new String[]{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "."});
+        c.addAllowedCharacters("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".");
         return c.filterForAllowedChars(url.toLowerCase());
     }
 

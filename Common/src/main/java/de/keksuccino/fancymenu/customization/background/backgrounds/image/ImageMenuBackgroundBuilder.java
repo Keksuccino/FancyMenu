@@ -2,9 +2,8 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -19,20 +18,19 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
     }
 
     @Override
-    public void buildNewOrEditInstance(@NotNull Screen currentScreen, @Nullable ImageMenuBackground backgroundToEdit, @NotNull Consumer<ImageMenuBackground> backgroundConsumer) {
-        ChooseFilePopup p = new ChooseFilePopup((call) -> {
+    public void buildNewOrEditInstance(Screen currentScreen, @Nullable ImageMenuBackground backgroundToEdit, @NotNull Consumer<ImageMenuBackground> backgroundConsumer) {
+        ImageMenuBackground back = (backgroundToEdit != null) ? (ImageMenuBackground) backgroundToEdit.copy() : null;
+        if (back == null) {
+            back = new ImageMenuBackground(this);
+        }
+        ImageMenuBackgroundConfigScreen s = new ImageMenuBackgroundConfigScreen(currentScreen, back, (call) -> {
             if (call != null) {
-                ImageMenuBackground background = (backgroundToEdit != null) ? backgroundToEdit : new ImageMenuBackground(this);
-                background.imagePath = call;
-                backgroundConsumer.accept(background);
+                backgroundConsumer.accept(call);
             } else {
                 backgroundConsumer.accept(backgroundToEdit);
             }
-        }, "png", "jpg", "jpeg");
-        if ((backgroundToEdit != null) && (backgroundToEdit.imagePath != null)) {
-            p.setText(backgroundToEdit.imagePath);
-        }
-        PopupHandler.displayPopup(p);
+        });
+        Minecraft.getInstance().setScreen(s);
     }
 
     @Override
@@ -41,6 +39,11 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         ImageMenuBackground b = new ImageMenuBackground(this);
 
         b.imagePath = serializedMenuBackground.getValue("image_path");
+
+        String slide = serializedMenuBackground.getValue("slide");
+        if ((slide != null) && slide.equals("true")) {
+            b.slideLeftRight = true;
+        }
 
         return b;
 
@@ -54,6 +57,8 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         if (background.imagePath != null) {
             serialized.putProperty("image_path", background.imagePath);
         }
+
+        serialized.putProperty("slide", "" + background.slideLeftRight);
 
         return serialized;
 

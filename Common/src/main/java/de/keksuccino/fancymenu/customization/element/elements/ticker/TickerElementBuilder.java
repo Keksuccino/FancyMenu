@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
+import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
@@ -10,18 +11,18 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class TickerElementBuilder extends ElementBuilder {
+public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -33,20 +34,20 @@ public class TickerElementBuilder extends ElementBuilder {
         EventHandler.INSTANCE.registerListenersOf(this);
     }
 
-    //Stop threads of old ticker items
+    //Stop threads of old ticker elements
     @EventListener
-    public void onClientTick(ClientTickEvent.Post e) {
+    public void onClientTickPost(ClientTickEvent.Post e) {
         List<TickerElement.TickerElementThreadController> activeControllers = new ArrayList<>();
         if (Minecraft.getInstance().screen != null) {
             ScreenCustomizationLayer m = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
             if (m != null) {
-                List<AbstractElement> items = new ArrayList<>();
-                items.addAll(m.backgroundElements);
-                items.addAll(m.foregroundElements);
-                for (AbstractElement i : items) {
-                    if (i instanceof TickerElement) {
-                        if (((TickerElement)i).asyncThreadController != null) {
-                            activeControllers.add(((TickerElement)i).asyncThreadController);
+                List<AbstractElement> elements = new ArrayList<>();
+                elements.addAll(m.normalElements.backgroundElements);
+                elements.addAll(m.normalElements.foregroundElements);
+                for (AbstractElement element : elements) {
+                    if (element instanceof TickerElement te) {
+                        if (te.asyncThreadController != null) {
+                            activeControllers.add(te.asyncThreadController);
                         }
                     }
                 }
@@ -64,37 +65,98 @@ public class TickerElementBuilder extends ElementBuilder {
     }
 
     @EventListener
-    public void onMenuReload(ModReloadEvent e) {
+    public void onModReload(ModReloadEvent e) {
         cachedOncePerSessionItems.clear();
         LOGGER.info("[FancyMenu] Successfully cleared cached once-per-session ticker elements.");
     }
 
     @Override
-    public @NotNull CustomizationItem buildDefaultInstance() {
-        TickerElement i = new TickerElement(this, new PropertyContainer("dummy"));
+    public @NotNull TickerElement buildDefaultInstance() {
+        TickerElement i = new TickerElement(this);
         i.width = 70;
         i.height = 70;
         return i;
     }
 
     @Override
-    public CustomizationItem deserializeElement(PropertyContainer serializedElement) {
-        return new TickerElement(this, serializedElement);
+    public TickerElement deserializeElement(@NotNull SerializedElement serialized) {
+
+        TickerElement element = this.buildDefaultInstance();
+
+        Map<Integer, ActionExecutor.ActionContainer> tempActions = new HashMap<>();
+        for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
+            //tickeraction_<index>_ACTION
+            if (m.getKey().startsWith("tickeraction_")) {
+                String index = m.getKey().split("_", 3)[1];
+                String tickerAction = m.getKey().split("_", 3)[2];
+                String actionValue = m.getValue();
+                if (MathUtils.isInteger(index)) {
+                    tempActions.put(Integer.parseInt(index), new ActionExecutor.ActionContainer(tickerAction, actionValue));
+                }
+            }
+        }
+        List<Integer> indexes = new ArrayList<>(tempActions.keySet());
+        Collections.sort(indexes);
+        element.actions.clear();
+        for (int i : indexes) {
+            element.actions.add(tempActions.get(i));
+        }
+
+        String tickDelayMsString = serialized.getValue("tick_delay");
+        if ((tickDelayMsString != null) && MathUtils.isLong(tickDelayMsString)) {
+            element.tickDelayMs = Long.parseLong(tickDelayMsString);
+        }
+
+        String isAsyncString = serialized.getValue("is_async");
+        if ((isAsyncString != null) && isAsyncString.equalsIgnoreCase("true")) {
+            element.isAsync = true;
+        }
+
+        String tickModeString = serialized.getValue("tick_mode");
+        if (tickModeString != null) {
+            TickerElement.TickMode t = TickerElement.TickMode.getByName(tickModeString);
+            if (t != null) {
+                element.tickMode = t;
+            }
+        }
+
+        return element;
+
     }
 
     @Override
-    public AbstractEditorElement buildEditorElementInstance(CustomizationItem item, LayoutEditorScreen handler) {
-        return new TickerEditorElement(this, (TickerElement) item, handler);
+    protected SerializedElement serializeElement(@NotNull TickerElement element, @NotNull SerializedElement serializeTo) {
+
+        serializeTo.putProperty("is_async", "" + element.isAsync);
+        serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
+        serializeTo.putProperty("tick_mode", "" + element.tickMode.name);
+        int index = 0;
+        for (ActionExecutor.ActionContainer c : element.actions) {
+            String v = c.value;
+            if (v == null) {
+                v = "";
+            }
+            serializeTo.putProperty("tickeraction_" + index + "_" + c.action, v);
+            index++;
+        }
+
+        return serializeTo;
+        
     }
 
     @Override
-    public @NotNull String getDisplayName() {
-        return Locals.localize("fancymenu.customization.items.ticker");
+    public @NotNull TickerEditorElement wrapIntoEditorElement(@NotNull TickerElement element, @NotNull LayoutEditorScreen editor) {
+        return new TickerEditorElement(element, editor);
     }
 
     @Override
-    public String[] getDescription() {
-        return StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.desc"), "%n%");
+    public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
+        return Component.translatable("fancymenu.customization.items.ticker");
+    }
+
+    @Override
+    public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
+        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.desc");
     }
 
 }

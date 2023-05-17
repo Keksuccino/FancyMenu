@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.customization.element.elements.text;
 import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.api.item.CustomizationItem;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
@@ -13,24 +13,20 @@ import de.keksuccino.fancymenu.utils.RenderUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FastColor;
-
+import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +35,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TextElement extends CustomizationItem {
+public class TextElement extends AbstractElement {
 
     public SourceMode sourceMode = SourceMode.DIRECT;
     public String source; //direct text, file path, link
@@ -60,81 +56,9 @@ public class TextElement extends CustomizationItem {
     public volatile ScrollArea scrollArea;
     public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
     public volatile boolean updating = false;
-    public volatile int cachedTextWidth = 0; //currently unused
 
-    public TextElement(ElementBuilder parentContainer, PropertyContainer item) {
-
-        super(parentContainer, item);
-
-        this.source = item.getValue("source");
-
-        String sourceModeString = item.getValue("source_mode");
-        if (sourceModeString != null) {
-            SourceMode s = SourceMode.getByName(sourceModeString);
-            if (s != null) {
-                this.sourceMode = s;
-            }
-        }
-
-        String shadowString = item.getValue("shadow");
-        if ((shadowString != null) && shadowString.equals("false")) {
-            this.shadow = false;
-        }
-
-        String caseModeString = item.getValue("case_mode");
-        if (caseModeString != null) {
-            CaseMode c = CaseMode.getByName(caseModeString);
-            if (c != null) {
-                this.caseMode = c;
-            }
-        }
-
-        String scaleString = item.getValue("scale");
-        if (scaleString != null) {
-            if (MathUtils.isFloat(scaleString)) {
-                this.scale = Float.parseFloat(scaleString);
-            }
-        }
-
-        String alignmentString = item.getValue("alignment");
-        if (alignmentString != null) {
-            Alignment a = Alignment.getByName(alignmentString);
-            if (a != null) {
-                this.alignment = a;
-            }
-        }
-
-        String baseColorString = item.getValue("base_color");
-        if (baseColorString != null) {
-            Color c = de.keksuccino.konkrete.rendering.RenderUtils.getColorFromHexString(baseColorString);
-            if (c != null) {
-                this.baseColorHex = baseColorString;
-            }
-        }
-
-        String textBorderString = item.getValue("text_border");
-        if ((textBorderString != null) && MathUtils.isInteger(textBorderString)) {
-            this.textBorder = Integer.parseInt(textBorderString);
-        }
-
-        String lineSpacingString = item.getValue("line_spacing");
-        if ((lineSpacingString != null) && MathUtils.isInteger(lineSpacingString)) {
-            this.lineSpacing = Integer.parseInt(lineSpacingString);
-        }
-
-        this.scrollGrabberColorHexNormal = item.getValue("grabber_color_normal");
-        this.scrollGrabberColorHexHover = item.getValue("grabber_color_hover");
-
-        this.scrollGrabberTextureNormal = item.getValue("grabber_texture_normal");
-        this.scrollGrabberTextureHover = item.getValue("grabber_texture_hover");
-
-        String enableScrollingString = item.getValue("enable_scrolling");
-        if ((enableScrollingString != null) && enableScrollingString.equals("false")) {
-            this.enableScrolling = false;
-        }
-
-        this.updateContent();
-
+    public TextElement(@NotNull ElementBuilder<?, ?> builder) {
+        super(builder);
     }
 
     public void updateScrollArea() {
@@ -149,8 +73,8 @@ public class TextElement extends CustomizationItem {
             public void updateScrollArea() {
                 super.updateScrollArea();
                 if (Minecraft.getInstance().screen != null) {
-                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getPosX(Minecraft.getInstance().screen) + TextElement.this.getWidth() + 12;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getPosY(Minecraft.getInstance().screen) + TextElement.this.getHeight() + 12;
+                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getX() + TextElement.this.getWidth() + 12;
+                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getY() + TextElement.this.getHeight() + 12;
                 }
             }
         };
@@ -216,13 +140,9 @@ public class TextElement extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         try {
-
-            if (this.source != null) {
-                this.value = this.source;
-            }
 
             if (this.shouldRender()) {
 
@@ -232,17 +152,17 @@ public class TextElement extends CustomizationItem {
 
                     if (this.scrollArea != null) {
                         this.scrollArea.customGuiScale = this.customGuiScale;
-                        this.scrollArea.setX(this.getPosX(menu), true);
-                        this.scrollArea.setY(this.getPosY(menu), true);
+                        this.scrollArea.setX(this.getX(), true);
+                        this.scrollArea.setY(this.getY(), true);
                         this.scrollArea.setWidth(this.getWidth(), true);
                         this.scrollArea.setHeight(this.getHeight(), true);
-                        this.scrollArea.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderUtils.getPartialTick());
+                        this.scrollArea.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderUtils.getPartialTick());
                     }
 
-                } else if (isEditorActive()) {
+                } else if (isEditor()) {
                     //Render "updating" view in editor
-                    fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
-                    drawCenteredString(matrix, font, Locals.localize("fancymenu.customization.items.text.status.loading"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (font.lineHeight / 2), -1);
+                    fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), Color.MAGENTA.getRGB());
+                    drawCenteredString(pose, font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 
             }
@@ -260,7 +180,6 @@ public class TextElement extends CustomizationItem {
         }
 
         updating = true;
-        cachedTextWidth = 0;
 
         new Thread(() -> {
 
@@ -321,12 +240,10 @@ public class TextElement extends CustomizationItem {
                                 }
                                 linesRaw.clear();
                             }
-                        } else {
-                            linesRaw.clear();
                         }
                     }
                 } else {
-                    linesRaw.add(Locals.localize("fancymenu.customization.items.text.placeholder"));
+                    linesRaw.add(I18n.get("fancymenu.customization.items.text.placeholder"));
                 }
 
             } catch (Exception e) {
@@ -336,8 +253,8 @@ public class TextElement extends CustomizationItem {
             this.lines.clear();
 
             if (linesRaw.isEmpty()) {
-                if (isEditorActive()) {
-                    linesRaw.add(Locals.localize("fancymenu.customization.items.text.status.unable_to_load"));
+                if (isEditor()) {
+                    linesRaw.add(I18n.get("fancymenu.customization.items.text.status.unable_to_load"));
                 } else {
                     linesRaw.add("");
                 }
@@ -391,7 +308,7 @@ public class TextElement extends CustomizationItem {
         LOCAL_SOURCE("local"),
         WEB_SOURCE("web");
 
-        String name;
+        final String name;
 
         SourceMode(String name) {
             this.name = name;
@@ -418,7 +335,7 @@ public class TextElement extends CustomizationItem {
         ALL_LOWER("lower"),
         ALL_UPPER("upper");
 
-        String name;
+        final String name;
 
         CaseMode(String name) {
             this.name = name;
@@ -466,7 +383,7 @@ public class TextElement extends CustomizationItem {
 
             RenderSystem.enableBlend();
 
-            String textToRender = isEditorActive() ? StringUtils.convertFormatCodes(this.textRaw, "&", "§") : PlaceholderParser.replacePlaceholders(this.textRaw);
+            String textToRender = isEditor() ? StringUtils.convertFormatCodes(this.textRaw, "&", "§") : PlaceholderParser.replacePlaceholders(this.textRaw);
             if (this.parentItem.caseMode == CaseMode.ALL_LOWER) {
                 textToRender = textToRender.toLowerCase();
             } else if (this.parentItem.caseMode == CaseMode.ALL_UPPER) {

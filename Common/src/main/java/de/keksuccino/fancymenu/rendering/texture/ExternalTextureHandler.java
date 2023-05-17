@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.rendering.texture;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.ITextureResourceLocation;
@@ -24,7 +25,7 @@ public class ExternalTextureHandler {
 
     @Nullable
     public ExternalTextureResourceLocation getTexture(String path) {
-        File f = new File(path);
+        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
         return this.getTexture(f);
     }
 
@@ -86,7 +87,7 @@ public class ExternalTextureHandler {
 
     @Nullable
     public ExternalGifAnimationRenderer getGif(String path) {
-        File f = new File(path);
+        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
         if (!gifs.containsKey(f.getAbsolutePath())) {
             if (f.exists() && f.isFile() && f.getPath().toLowerCase().replace(" ", "").endsWith(".gif")) {
                 ExternalGifAnimationRenderer r = new ExternalGifAnimationRenderer(f.getPath(), true, 0, 0, 0, 0);
@@ -102,7 +103,7 @@ public class ExternalTextureHandler {
     }
 
     public void removeResource(String path) {
-        File f = new File(path);
+        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
         textures.remove(f.getAbsolutePath());
     }
 

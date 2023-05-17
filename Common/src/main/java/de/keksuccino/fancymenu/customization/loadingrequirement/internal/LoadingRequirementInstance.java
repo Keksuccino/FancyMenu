@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

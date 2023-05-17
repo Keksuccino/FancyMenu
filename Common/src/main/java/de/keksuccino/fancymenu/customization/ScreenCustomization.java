@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.customization.button.ButtonCache;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.customization.deep.layers.DeepCustomizationLayers;
+import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
@@ -24,6 +24,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.Placeholders;
 import de.keksuccino.fancymenu.customization.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
@@ -72,7 +73,7 @@ public class ScreenCustomization {
 
 		VanillaButtonHandler.init();
 
-		DeepCustomizationLayers.registerAll();
+		DeepScreenCustomizationLayers.registerAll();
 
 		Actions.registerAll();
 
@@ -80,7 +81,7 @@ public class ScreenCustomization {
 
 		Placeholders.registerAll();
 
-		de.keksuccino.fancymenu.customization.placeholder.v2.placeholders.Placeholders.registerAll();
+		Placeholders.registerAll();
 
 		MenuBackgrounds.registerAll();
 

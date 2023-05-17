@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
@@ -13,14 +14,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class AnimationMenuBackground extends MenuBackground {
 
-    //TODO add "restart animation on menu load"
-
     private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
 
     public String animationName;
+    public boolean restartOnMenuLoad = false;
 
     protected String lastAnimationName;
     protected IAnimationRenderer animation;
+    protected boolean restarted = false;
 
     public AnimationMenuBackground(MenuBackgroundBuilder<AnimationMenuBackground> builder) {
         super(builder);
@@ -32,6 +33,14 @@ public class AnimationMenuBackground extends MenuBackground {
         if (this.animationName != null) {
             if ((this.lastAnimationName == null) || !this.lastAnimationName.equals(this.animationName)) {
                 this.animation = AnimationHandler.getAnimation(this.animationName);
+                if (this.restartOnMenuLoad && !this.restarted && (this.animation != null)) {
+                    this.animation.resetAnimation();
+                    if (this.animation instanceof AdvancedAnimation a) {
+                        a.stopAudio();
+                        a.resetAudio();
+                    }
+                    this.restarted = true;
+                }
             }
             this.lastAnimationName = this.animationName;
         } else {

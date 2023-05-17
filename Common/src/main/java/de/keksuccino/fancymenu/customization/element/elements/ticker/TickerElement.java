@@ -7,10 +7,8 @@ import de.keksuccino.fancymenu.customization.action.ActionExecutor.ActionContain
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
@@ -29,52 +27,8 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
     protected volatile long lastTick = -1;
     protected volatile TickerElementThreadController asyncThreadController = null;
 
-    public TickerElement(ElementBuilder parent, PropertyContainer serializedElement) {
-        super(parent, serializedElement);
-    }
-
-    @Override
-    protected void init(PropertyContainer serializedElement) {
-
-        super.init(serializedElement);
-
-        Map<Integer, ActionContainer> tempActions = new HashMap<>();
-        for (Map.Entry<String, String> m : serializedElement.getProperties().entrySet()) {
-            //tickeraction_<index>_ACTION
-            if (m.getKey().startsWith("tickeraction_")) {
-                String index = m.getKey().split("_", 3)[1];
-                String tickerAction = m.getKey().split("_", 3)[2];
-                String actionValue = m.getValue();
-                if (MathUtils.isInteger(index)) {
-                    tempActions.put(Integer.parseInt(index), new ActionContainer(tickerAction, actionValue));
-                }
-            }
-        }
-        List<Integer> indexes = new ArrayList<>(tempActions.keySet());
-        Collections.sort(indexes);
-        this.actions.clear();
-        for (int i : indexes) {
-            this.actions.add(tempActions.get(i));
-        }
-
-        String tickDelayMsString = serializedElement.getValue("tick_delay");
-        if ((tickDelayMsString != null) && MathUtils.isLong(tickDelayMsString)) {
-            this.tickDelayMs = Long.parseLong(tickDelayMsString);
-        }
-
-        String isAsyncString = serializedElement.getValue("is_async");
-        if ((isAsyncString != null) && isAsyncString.equalsIgnoreCase("true")) {
-            this.isAsync = true;
-        }
-
-        String tickModeString = serializedElement.getValue("tick_mode");
-        if (tickModeString != null) {
-            TickMode t = TickMode.getByName(tickModeString);
-            if (t != null) {
-                this.tickMode = t;
-            }
-        }
-
+    public TickerElement(@NotNull ElementBuilder<?, ?> builder) {
+        super(builder);
     }
 
     public void tick() {
@@ -106,14 +60,14 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial, Screen screen) {
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         this.ready = true;
 
         if (isEditor()) {
             RenderSystem.enableBlend();
-            fill(matrix, this.getX(screen), this.getY(screen), this.getX(screen) + this.getWidth(), this.getY(screen) + this.getHeight(), Color.ORANGE.getRGB());
-            drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.customization.items.ticker"), this.getX(screen) + (this.getWidth() / 2), this.getY(screen) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), Color.ORANGE.getRGB());
+            drawCenteredString(pose, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.customization.items.ticker"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
         } else if (!this.isAsync) {
             this.tick();
         }

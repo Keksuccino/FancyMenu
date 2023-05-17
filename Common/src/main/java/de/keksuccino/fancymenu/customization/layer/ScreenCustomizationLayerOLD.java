@@ -586,271 +586,271 @@
 //				}
 //			}
 //
-//			if (action.equalsIgnoreCase("setbackgroundslideshow")) {
-//				String name = sec.getValue("name");
-//				if (name != null) {
-//					if (SlideshowHandler.slideshowExists(name)) {
-//						this.slideshow = SlideshowHandler.getSlideshow(name);
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("setbackgroundpanorama")) {
-//				String name = sec.getValue("name");
-//				if (name != null) {
-//					if (PanoramaHandler.panoramaExists(name)) {
-//						this.panoramaCube = PanoramaHandler.getPanorama(name);
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("texturizebackground")) {
-//				String value = AbstractElement.fixBackslashPath(sec.getValue("path"));
-//				String pano = sec.getValue("wideformat");
-//				if (pano == null) {
-//					pano = sec.getValue("panorama");
-//				}
-//				if (value != null) {
-//					File f = new File(value.replace("\\", "/"));
-//					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-//						value = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + value.replace("\\", "/");
-//						f = new File(value);
-//					}
-//					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-//						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
-//							this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(value);
-//						}
-//						this.panoramaback = (pano != null) && pano.equalsIgnoreCase("true");
-//						this.sharedLayoutProps.backgroundTextureSet = true;
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("animatebackground")) {
-//				String value = sec.getValue("name");
-//				String random = sec.getValue("random");
-//				boolean ran = (random != null) && random.equalsIgnoreCase("true");
-//				boolean restartOnLoad = false;
-//				String restartOnLoadString = sec.getValue("restart_on_load");
-//				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
-//					restartOnLoad = true;
-//				}
-//				if (value != null) {
-//					if (value.contains(",")) {
-//						for (String s2 : value.split(",")) {
-//							int i = 0;
-//							for (char c : s2.toCharArray()) {
-//								if (c != ' ') {
-//									break;
-//								}
-//								i++;
-//							}
-//							if (i > s2.length()) {
-//								continue;
-//							}
-//							String temp = new StringBuilder(s2.substring(i)).reverse().toString();
-//							int i2 = 0;
-//							for (char c : temp.toCharArray()) {
-//								if (c != ' ') {
-//									break;
-//								}
-//								i2++;
-//							}
-//							String name = new StringBuilder(temp.substring(i2)).reverse().toString();
-//							if (AnimationHandler.animationExists(name)) {
-//								this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
-//							}
-//						}
-//					} else {
-//						if (AnimationHandler.animationExists(value)) {
-//							this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
-//						}
-//					}
-//
-//					if (!this.backgroundAnimations.isEmpty()) {
-//						if (restartOnLoad && ScreenCustomization.isNewMenu()) {
-//							for (IAnimationRenderer r : this.backgroundAnimations) {
-//								r.resetAnimation();
-//							}
-//						}
-//						if (ran) {
-//							if (ScreenCustomization.isNewMenu()) {
-//								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
-//							}
-//							this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
-//						} else {
-//							if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
-//								this.backgroundAnimation = this.lastBackgroundAnimation;
-//							} else {
-//								this.backgroundAnimationId = 0;
-//								this.backgroundAnimation = this.backgroundAnimations.get(0);
-//							}
-//							this.lastBackgroundAnimation = this.backgroundAnimation;
-//						}
-//					}
-//				}
-//			}
-//
-//			//Custom background handling (API)
-//			if (action.equalsIgnoreCase("api:custombackground")) {
-//				String typeId = sec.getValue("type_identifier");
-//				String backId = sec.getValue("background_identifier");
-//				String inputString = sec.getValue("input_string");
-//				if (typeId != null) {
-//					MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
-//					if (type != null) {
-//						if (type.needsInputString() && (inputString != null)) {
-//							try {
-//								this.customMenuBackground = type.createInstanceFromInputString(inputString);
-//							} catch (Exception ex) {
-//								ex.printStackTrace();
-//							}
-//							if (this.customMenuBackground != null) {
-//								if (ScreenCustomization.isNewMenu()) {
-//									this.customMenuBackground.onOpenMenu();
-//								}
-//							}
-//						} else if (backId != null) {
-//							this.customMenuBackground = type.getBackgroundByIdentifier(backId);
-//							if (this.customMenuBackground != null) {
-//								if (ScreenCustomization.isNewMenu()) {
-//									this.customMenuBackground.onOpenMenu();
-//								}
-//							}
-//						}
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("hidebuttonfor")) {
-//				String time = sec.getValue("seconds");
-//				String onlyfirsttime = sec.getValue("onlyfirsttime");
-//				String fadein = sec.getValue("fadein");
-//				String fadeinspeed = sec.getValue("fadeinspeed");
-//				if (b != null) {
-//					if (ScreenCustomization.isNewMenu()) {
-//						boolean ft = (onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true");
-//						if ((time != null) && MathUtils.isFloat(time)) {
-//							if (!ft || !this.delayAppearanceFirstTimeVanilla.contains(bd.getId())) {
-//								this.delayAppearanceVanilla.put(bd, Float.parseFloat(time));
-//							}
-//						}
-//						if (ft) {
-//							if (!this.delayAppearanceFirstTimeVanilla.contains(bd.getId())) {
-//								this.delayAppearanceFirstTimeVanilla.add(bd.getId());
-//							}
-//						}
-//						if ((fadein != null) && fadein.equalsIgnoreCase("true")) {
-//							float speed = 1.0F;
-//							if ((fadeinspeed != null) && MathUtils.isFloat(fadeinspeed)) {
-//								speed = Float.parseFloat(fadeinspeed);
-//							}
-//							this.fadeInVanilla.put(bd, speed);
-//						}
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("hidebutton")) {
-//				if (b != null) {
-//					this.hidden.add(bd);
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
-//				if (b != null) {
-//					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("resizebutton")) {
-//				if (b != null) {
-//					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("movebutton")) {
-//				if (b != null) {
-//					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("setbuttontexture")) {
-//				if (b != null) {
-//					String loopBackAnimations = sec.getValue("loopbackgroundanimations");
-//					if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
-//						this.getContainerForVanillaButton(b).loopAnimation = false;
-//					}
-//					String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
-//					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
-//						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
-//					}
-//					String backNormal = AbstractElement.fixBackslashPath(sec.getValue("backgroundnormal"));
-//					String backHover = AbstractElement.fixBackslashPath(sec.getValue("backgroundhovered"));
-//					if (backNormal != null) {
-//						this.getContainerForVanillaButton(b).normalBackground = backNormal;
-//					} else {
-//						String backAniNormal = sec.getValue("backgroundanimationnormal");
-//						if (backAniNormal != null) {
-//							this.getContainerForVanillaButton(b).normalBackground = "animation:" + backAniNormal;
-//						}
-//					}
-//					if (backHover != null) {
-//						this.getContainerForVanillaButton(b).hoverBackground = backHover;
-//					} else {
-//						String backAniHover = sec.getValue("backgroundanimationhovered");
-//						if (backAniHover != null) {
-//							this.getContainerForVanillaButton(b).hoverBackground = "animation:" + backAniHover;
-//						}
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("setbuttonclicksound")) {
-//				if (b != null) {
-//					String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
-//					if (path != null) {
-//						this.getContainerForVanillaButton(b).clickSound = path;
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-//				if (b != null) {
-//					this.vanillaButtonLoadingRequirementContainers.put(b, LoadingRequirementContainer.deserializeRequirementContainer(sec));
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("addhoversound")) {
-//				if (b != null) {
-//					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//						backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//					} else {
-//						foregroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("sethoverlabel")) {
-//				if (b != null) {
-//					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//						backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//					} else {
-//						foregroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("clickbutton")) {
-//				if (b != null) {
-//					String clicks = sec.getValue("clicks");
-//					if ((clicks != null) && (MathUtils.isInteger(clicks))) {
-//						for (int i = 0; i < Integer.parseInt(clicks); i++) {
-//							b.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
-//						}
-//					}
-//				}
-//			}
+////			if (action.equalsIgnoreCase("setbackgroundslideshow")) {
+////				String name = sec.getValue("name");
+////				if (name != null) {
+////					if (SlideshowHandler.slideshowExists(name)) {
+////						this.slideshow = SlideshowHandler.getSlideshow(name);
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("setbackgroundpanorama")) {
+////				String name = sec.getValue("name");
+////				if (name != null) {
+////					if (PanoramaHandler.panoramaExists(name)) {
+////						this.panoramaCube = PanoramaHandler.getPanorama(name);
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("texturizebackground")) {
+////				String value = AbstractElement.fixBackslashPath(sec.getValue("path"));
+////				String pano = sec.getValue("wideformat");
+////				if (pano == null) {
+////					pano = sec.getValue("panorama");
+////				}
+////				if (value != null) {
+////					File f = new File(value.replace("\\", "/"));
+////					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+////						value = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + value.replace("\\", "/");
+////						f = new File(value);
+////					}
+////					if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
+////						if ((this.backgroundTexture == null) || !this.backgroundTexture.getPath().equals(value)) {
+////							this.backgroundTexture = ExternalTextureHandler.INSTANCE.getTexture(value);
+////						}
+////						this.panoramaback = (pano != null) && pano.equalsIgnoreCase("true");
+////						this.sharedLayoutProps.backgroundTextureSet = true;
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("animatebackground")) {
+////				String value = sec.getValue("name");
+////				String random = sec.getValue("random");
+////				boolean ran = (random != null) && random.equalsIgnoreCase("true");
+////				boolean restartOnLoad = false;
+////				String restartOnLoadString = sec.getValue("restart_on_load");
+////				if ((restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true")) {
+////					restartOnLoad = true;
+////				}
+////				if (value != null) {
+////					if (value.contains(",")) {
+////						for (String s2 : value.split(",")) {
+////							int i = 0;
+////							for (char c : s2.toCharArray()) {
+////								if (c != ' ') {
+////									break;
+////								}
+////								i++;
+////							}
+////							if (i > s2.length()) {
+////								continue;
+////							}
+////							String temp = new StringBuilder(s2.substring(i)).reverse().toString();
+////							int i2 = 0;
+////							for (char c : temp.toCharArray()) {
+////								if (c != ' ') {
+////									break;
+////								}
+////								i2++;
+////							}
+////							String name = new StringBuilder(temp.substring(i2)).reverse().toString();
+////							if (AnimationHandler.animationExists(name)) {
+////								this.backgroundAnimations.add(AnimationHandler.getAnimation(name));
+////							}
+////						}
+////					} else {
+////						if (AnimationHandler.animationExists(value)) {
+////							this.backgroundAnimations.add(AnimationHandler.getAnimation(value));
+////						}
+////					}
+////
+////					if (!this.backgroundAnimations.isEmpty()) {
+////						if (restartOnLoad && ScreenCustomization.isNewMenu()) {
+////							for (IAnimationRenderer r : this.backgroundAnimations) {
+////								r.resetAnimation();
+////							}
+////						}
+////						if (ran) {
+////							if (ScreenCustomization.isNewMenu()) {
+////								this.backgroundAnimationId = MathUtils.getRandomNumberInRange(0, this.backgroundAnimations.size()-1);
+////							}
+////							this.backgroundAnimation = this.backgroundAnimations.get(this.backgroundAnimationId);
+////						} else {
+////							if ((this.lastBackgroundAnimation != null) && this.backgroundAnimations.contains(this.lastBackgroundAnimation)) {
+////								this.backgroundAnimation = this.lastBackgroundAnimation;
+////							} else {
+////								this.backgroundAnimationId = 0;
+////								this.backgroundAnimation = this.backgroundAnimations.get(0);
+////							}
+////							this.lastBackgroundAnimation = this.backgroundAnimation;
+////						}
+////					}
+////				}
+////			}
+////
+////			//Custom background handling (API)
+////			if (action.equalsIgnoreCase("api:custombackground")) {
+////				String typeId = sec.getValue("type_identifier");
+////				String backId = sec.getValue("background_identifier");
+////				String inputString = sec.getValue("input_string");
+////				if (typeId != null) {
+////					MenuBackgroundType type = MenuBackgroundTypeRegistry.getBackgroundTypeByIdentifier(typeId);
+////					if (type != null) {
+////						if (type.needsInputString() && (inputString != null)) {
+////							try {
+////								this.customMenuBackground = type.createInstanceFromInputString(inputString);
+////							} catch (Exception ex) {
+////								ex.printStackTrace();
+////							}
+////							if (this.customMenuBackground != null) {
+////								if (ScreenCustomization.isNewMenu()) {
+////									this.customMenuBackground.onOpenMenu();
+////								}
+////							}
+////						} else if (backId != null) {
+////							this.customMenuBackground = type.getBackgroundByIdentifier(backId);
+////							if (this.customMenuBackground != null) {
+////								if (ScreenCustomization.isNewMenu()) {
+////									this.customMenuBackground.onOpenMenu();
+////								}
+////							}
+////						}
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("hidebuttonfor")) {
+////				String time = sec.getValue("seconds");
+////				String onlyfirsttime = sec.getValue("onlyfirsttime");
+////				String fadein = sec.getValue("fadein");
+////				String fadeinspeed = sec.getValue("fadeinspeed");
+////				if (b != null) {
+////					if (ScreenCustomization.isNewMenu()) {
+////						boolean ft = (onlyfirsttime != null) && onlyfirsttime.equalsIgnoreCase("true");
+////						if ((time != null) && MathUtils.isFloat(time)) {
+////							if (!ft || !this.delayAppearanceFirstTimeVanilla.contains(bd.getId())) {
+////								this.delayAppearanceVanilla.put(bd, Float.parseFloat(time));
+////							}
+////						}
+////						if (ft) {
+////							if (!this.delayAppearanceFirstTimeVanilla.contains(bd.getId())) {
+////								this.delayAppearanceFirstTimeVanilla.add(bd.getId());
+////							}
+////						}
+////						if ((fadein != null) && fadein.equalsIgnoreCase("true")) {
+////							float speed = 1.0F;
+////							if ((fadeinspeed != null) && MathUtils.isFloat(fadeinspeed)) {
+////								speed = Float.parseFloat(fadeinspeed);
+////							}
+////							this.fadeInVanilla.put(bd, speed);
+////						}
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("hidebutton")) {
+////				if (b != null) {
+////					this.hidden.add(bd);
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("renamebutton") || action.equalsIgnoreCase("setbuttonlabel")) {
+////				if (b != null) {
+////					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("resizebutton")) {
+////				if (b != null) {
+////					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("movebutton")) {
+////				if (b != null) {
+////					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("setbuttontexture")) {
+////				if (b != null) {
+////					String loopBackAnimations = sec.getValue("loopbackgroundanimations");
+////					if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
+////						this.getContainerForVanillaButton(b).loopAnimation = false;
+////					}
+////					String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
+////					if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
+////						this.getContainerForVanillaButton(b).restartAnimationOnHover = false;
+////					}
+////					String backNormal = AbstractElement.fixBackslashPath(sec.getValue("backgroundnormal"));
+////					String backHover = AbstractElement.fixBackslashPath(sec.getValue("backgroundhovered"));
+////					if (backNormal != null) {
+////						this.getContainerForVanillaButton(b).normalBackground = backNormal;
+////					} else {
+////						String backAniNormal = sec.getValue("backgroundanimationnormal");
+////						if (backAniNormal != null) {
+////							this.getContainerForVanillaButton(b).normalBackground = "animation:" + backAniNormal;
+////						}
+////					}
+////					if (backHover != null) {
+////						this.getContainerForVanillaButton(b).hoverBackground = backHover;
+////					} else {
+////						String backAniHover = sec.getValue("backgroundanimationhovered");
+////						if (backAniHover != null) {
+////							this.getContainerForVanillaButton(b).hoverBackground = "animation:" + backAniHover;
+////						}
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("setbuttonclicksound")) {
+////				if (b != null) {
+////					String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
+////					if (path != null) {
+////						this.getContainerForVanillaButton(b).clickSound = path;
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
+////				if (b != null) {
+////					this.vanillaButtonLoadingRequirementContainers.put(b, LoadingRequirementContainer.deserializeRequirementContainer(sec));
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("addhoversound")) {
+////				if (b != null) {
+////					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+////						backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////					} else {
+////						foregroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("sethoverlabel")) {
+////				if (b != null) {
+////					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+////						backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////					} else {
+////						foregroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("clickbutton")) {
+////				if (b != null) {
+////					String clicks = sec.getValue("clicks");
+////					if ((clicks != null) && (MathUtils.isInteger(clicks))) {
+////						for (int i = 0; i < Integer.parseInt(clicks); i++) {
+////							b.onClick(MouseInput.getMouseX(), MouseInput.getMouseY());
+////						}
+////					}
+////				}
+////			}
 //
 //			// CUSTOM ITEMS
 //
@@ -904,59 +904,6 @@
 //				}
 //			}
 //
-//			if (action.equalsIgnoreCase("setcloseaudio")) {
-//				String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
-//
-//				if (path != null) {
-//					File f = new File(path);
-//					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-//						path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-//						f = new File(path);
-//					}
-//					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-//						try {
-//							String name = "closesound_" + path + Files.size(f.toPath());
-//							SoundRegistry.registerSound(name, path);
-//							this.closeAudio = name;
-//							this.sharedLayoutProps.closeAudioSet = true;
-//						} catch (Exception ex) {
-//							ex.printStackTrace();
-//						}
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("setopenaudio")) {
-//				if (ScreenCustomization.isNewMenu()) {
-//					String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
-//					if (path != null) {
-//						File f = new File(path);
-//						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-//							path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-//							f = new File(path);
-//						}
-//						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-//							try {
-//								String name = "opensound_" + path + Files.size(f.toPath());
-//								SoundRegistry.registerSound(name, path);
-//								SoundHandler.resetSound(name);
-//								SoundHandler.playSound(name);
-//								this.openAudio = name;
-//								this.sharedLayoutProps.openAudioSet = true;
-//							} catch (Exception ex) {
-//								ex.printStackTrace();
-//							}
-//						}
-//					}
-//				}
-//			}
-//
-//			if (action.equalsIgnoreCase("setbuttondescription")) {
-//				if (b != null) {
-//					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
-//				}
-//			}
-//
 //			if (action.equalsIgnoreCase("addsplash")) {
 //				String file = AbstractElement.fixBackslashPath(sec.getValue("splashfilepath"));
 //				String text = sec.getValue("text");
@@ -973,19 +920,72 @@
 //				}
 //			}
 //
-//			// CUSTOM ITEMS (API)
-//			if (action.startsWith("custom_layout_element:")) {
-//				String cusId = action.split(":", 2)[1];
-//				ElementBuilder cusItem = ElementRegistry.getBuilder(cusId);
-//				if (cusItem != null) {
-//					CustomizationItem cusItemInstance = cusItem.deserializeElement(sec);
-//					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//						backgroundElements.add(cusItemInstance);
-//					} else {
-//						foregroundElements.add(cusItemInstance);
-//					}
-//				}
-//			}
+////			if (action.equalsIgnoreCase("setcloseaudio")) {
+////				String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
+////
+////				if (path != null) {
+////					File f = new File(path);
+////					if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+////						path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
+////						f = new File(path);
+////					}
+////					if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+////						try {
+////							String name = "closesound_" + path + Files.size(f.toPath());
+////							SoundRegistry.registerSound(name, path);
+////							this.closeAudio = name;
+////							this.sharedLayoutProps.closeAudioSet = true;
+////						} catch (Exception ex) {
+////							ex.printStackTrace();
+////						}
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("setopenaudio")) {
+////				if (ScreenCustomization.isNewMenu()) {
+////					String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
+////					if (path != null) {
+////						File f = new File(path);
+////						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+////							path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
+////							f = new File(path);
+////						}
+////						if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+////							try {
+////								String name = "opensound_" + path + Files.size(f.toPath());
+////								SoundRegistry.registerSound(name, path);
+////								SoundHandler.resetSound(name);
+////								SoundHandler.playSound(name);
+////								this.openAudio = name;
+////								this.sharedLayoutProps.openAudioSet = true;
+////							} catch (Exception ex) {
+////								ex.printStackTrace();
+////							}
+////						}
+////					}
+////				}
+////			}
+////
+////			if (action.equalsIgnoreCase("setbuttondescription")) {
+////				if (b != null) {
+////					backgroundElements.add(new VanillaButtonCustomizationItem(sec, bd, this));
+////				}
+////			}
+////
+////			// CUSTOM ITEMS (API)
+////			if (action.startsWith("custom_layout_element:")) {
+////				String cusId = action.split(":", 2)[1];
+////				ElementBuilder cusItem = ElementRegistry.getBuilder(cusId);
+////				if (cusItem != null) {
+////					CustomizationItem cusItemInstance = cusItem.deserializeElement(sec);
+////					if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
+////						backgroundElements.add(cusItemInstance);
+////					} else {
+////						foregroundElements.add(cusItemInstance);
+////					}
+////				}
+////			}
 //
 //		}
 //

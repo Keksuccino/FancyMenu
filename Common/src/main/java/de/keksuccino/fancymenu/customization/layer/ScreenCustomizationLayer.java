@@ -29,7 +29,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -51,22 +51,22 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 	protected String identifier;
 
-	protected LayoutBase layoutBase = new LayoutBase();
-	protected List<AbstractElement> allElements = new ArrayList<>();
-	protected Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
-	protected List<VanillaButtonElement> vanillaButtonElements = new ArrayList<>();
-	protected List<AbstractDeepElement> deepElements = new ArrayList<>();
-	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
-	protected List<Layout> activeLayouts = new ArrayList<>();
+	public LayoutBase layoutBase = new LayoutBase();
+	public List<AbstractElement> allElements = new ArrayList<>();
+	public Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
+	public List<VanillaButtonElement> vanillaButtonElements = new ArrayList<>();
+	public List<AbstractDeepElement> deepElements = new ArrayList<>();
+	public Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
+	public List<Layout> activeLayouts = new ArrayList<>();
 
-	protected List<String> delayAppearanceFirstTime = new ArrayList<>();
-	protected List<ScreenCustomizationLayer.ThreadCaller> delayThreads = new ArrayList<>();
+	public List<String> delayAppearanceFirstTime = new ArrayList<>();
+	public List<ScreenCustomizationLayer.ThreadCaller> delayThreads = new ArrayList<>();
 
-	protected boolean backgroundDrawable;
-	protected boolean isNewMenu = true;
-	protected boolean forceDisableCustomMenuTitle = false;
+	public boolean backgroundDrawable;
+	public boolean isNewMenu = true;
+	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
-	protected Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
+	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
 

@@ -165,6 +165,7 @@ public class LayoutEditorUI extends UIBase {
 			});
 
 			this.editMenu.addClickableEntry("paste", false, Component.translatable("helper.editor.ui.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.pasteElementsFromClipboard();
 			});
 
@@ -184,9 +185,10 @@ public class LayoutEditorUI extends UIBase {
 				newElementMenu.openMenu(0, entry.getButton().y);
 			});
 
-			AdvancedContextMenu hiddenVanillaMenu = this.buildHiddenVanillaElementContextMenu();
-			hiddenVanillaMenu.getContextMenu().setAutoclose(true);
-			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), hiddenVanillaMenu, Boolean.class, (entry, inherited, pass) -> {
+			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), null, Boolean.class, (entry, inherited, pass) -> {
+				AdvancedContextMenu hiddenVanillaMenu = this.buildHiddenVanillaElementContextMenu();
+				hiddenVanillaMenu.getContextMenu().setAutoclose(true);
+				this.elementMenu.getContextMenu().addChild(hiddenVanillaMenu.getContextMenu());
 				hiddenVanillaMenu.getContextMenu().setParentButton(entry.getButton());
 				hiddenVanillaMenu.openMenu(0, entry.getButton().y);
 			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc")));
@@ -323,6 +325,7 @@ public class LayoutEditorUI extends UIBase {
 					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
 						if (call != null) {
 							if (!this.editor.layout.universalLayoutMenuBlacklist.contains(call)) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 								this.editor.layout.universalLayoutMenuBlacklist.add(call);
 							}
 						}
@@ -335,6 +338,7 @@ public class LayoutEditorUI extends UIBase {
 						if (call != null) {
 							ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
 								if (call2) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 									this.editor.layout.universalLayoutMenuBlacklist.remove(call);
 								}
 							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"));
@@ -347,6 +351,7 @@ public class LayoutEditorUI extends UIBase {
 				universalLayoutMenu.addClickableEntry("clear_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
 					ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
 						if (call2) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							this.editor.layout.universalLayoutMenuBlacklist.clear();
 						}
 					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"));
@@ -359,6 +364,7 @@ public class LayoutEditorUI extends UIBase {
 					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
 						if (call != null) {
 							if (!this.editor.layout.universalLayoutMenuWhitelist.contains(call)) {
+								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 								this.editor.layout.universalLayoutMenuWhitelist.add(call);
 							}
 						}
@@ -371,6 +377,7 @@ public class LayoutEditorUI extends UIBase {
 						if (call != null) {
 							ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
 								if (call2) {
+									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 									this.editor.layout.universalLayoutMenuWhitelist.remove(call);
 								}
 							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"));
@@ -383,6 +390,7 @@ public class LayoutEditorUI extends UIBase {
 				universalLayoutMenu.addClickableEntry("clear_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
 					ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
 						if (call2) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							this.editor.layout.universalLayoutMenuWhitelist.clear();
 						}
 					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"));
@@ -395,10 +403,10 @@ public class LayoutEditorUI extends UIBase {
 
 			// SET BACKGROUND
 			menu.addClickableEntry("set_background", false, Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), null, Boolean.class, (entry, inherited, pass) -> {
-				ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(this.editor, this.editor.layout.menuBackground, (call) -> {
+				ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(this.editor, this.editor.layout.menuBackground, true, (call) -> {
 					if (call != null) {
-						//TODO handle EMPTY_BACKGROUND returned (to reset background)
-						this.editor.layout.menuBackground = call;
+						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						this.editor.layout.menuBackground = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
 					}
 				});
 				Minecraft.getInstance().setScreen(s);
@@ -406,6 +414,7 @@ public class LayoutEditorUI extends UIBase {
 
 			// KEEP BACKGROUND ASPECT RATIO
 			menu.addClickableEntry("keep_background_aspect_ratio", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.layout.keepBackgroundAspectRatio = !this.editor.layout.keepBackgroundAspectRatio;
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
@@ -462,6 +471,7 @@ public class LayoutEditorUI extends UIBase {
 
 			// RANDOM MODE
 			menu.addClickableEntry("random_mode", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.layout.randomMode = !this.editor.layout.randomMode;
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
@@ -496,6 +506,7 @@ public class LayoutEditorUI extends UIBase {
 			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc")));
 
 			menu.addClickableEntry("random_mode_first_time", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.layout.randomOnlyFirstTime = !this.editor.layout.randomOnlyFirstTime;
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
@@ -515,6 +526,7 @@ public class LayoutEditorUI extends UIBase {
 
 			// RENDER CUSTOM BEHIND VANILLA
 			menu.addClickableEntry("render_custom_behind_vanilla", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.layout.renderElementsBehindVanilla = !this.editor.layout.renderElementsBehindVanilla;
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
@@ -531,12 +543,14 @@ public class LayoutEditorUI extends UIBase {
 			// AUTO-SCALING
 			menu.addClickableEntry("auto_scaling", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
 				if ((this.editor.layout.autoScalingWidth != 0) && (this.editor.layout.autoScalingHeight != 0)) {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					this.editor.layout.autoScalingWidth = 0;
 					this.editor.layout.autoScalingHeight = 0;
 					this.editor.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 				} else {
 					PopupHandler.displayPopup(new AutoScalingPopup(this.editor, (call) -> {
 						if (call) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							this.editor.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 						}
 					}));
@@ -644,8 +658,8 @@ public class LayoutEditorUI extends UIBase {
 
 			// LOADING REQUIREMENTS [LAYOUT-WIDE]
 			menu.addClickableEntry("layout_wide_requirements", false, Component.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), null, Boolean.class, (entry, inherited, pass) -> {
-				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.editor.layout.layoutWideLoadingRequirementContainer, (call) -> {});
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.editor.layout.layoutWideLoadingRequirementContainer, (call) -> {});
 				Minecraft.getInstance().setScreen(s);
 			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")));
 
@@ -653,6 +667,7 @@ public class LayoutEditorUI extends UIBase {
 
 			// PASTE
 			menu.addClickableEntry("paste_elements", false, Component.translatable("helper.editor.ui.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
+				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.pasteElementsFromClipboard();
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
@@ -695,6 +710,7 @@ public class LayoutEditorUI extends UIBase {
 			for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
 				Component[] desc = builder.getDescription(null);
 				menu.addClickableEntry("element_" + count, false, builder.getDisplayName(null), null, Boolean.class, (entry, inherited, pass) -> {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					this.editor.normalEditorElements.add(builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), this.editor));
 				}).setTooltip((desc != null) ? Tooltip.create(desc) : null);
 				count++;
@@ -731,6 +747,7 @@ public class LayoutEditorUI extends UIBase {
 			int count = 0;
 			for (VanillaButtonEditorElement e : hiddenVanillaButtons) {
 				menu.addClickableEntry("element_" + count, false, ((VanillaButtonElement)e.element).button.getMessage(), null, Boolean.class, (entry, inherited, pass) -> {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					e.setHidden(false);
 					menu.closeMenu();
 				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
@@ -738,6 +755,7 @@ public class LayoutEditorUI extends UIBase {
 			}
 			for (AbstractDeepEditorElement e : hiddenDeepElements) {
 				menu.addClickableEntry("element_" + count, false, e.element.builder.getDisplayName(e.element), null, Boolean.class, (entry, inherited, pass) -> {
+					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					e.setHidden(false);
 					menu.closeMenu();
 				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));

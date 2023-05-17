@@ -58,7 +58,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Nullable
 	public Screen layoutTargetScreen;
 	@NotNull
-	public Layout layout;
+	public Layout layout = new Layout();
 	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
 	public List<VanillaButtonEditorElement> vanillaButtonEditorElements = new ArrayList<>();
 	public List<AbstractDeepEditorElement> deepEditorElements = new ArrayList<>();
@@ -66,7 +66,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
-	
+
 	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @Nullable Layout layout) {
 
 		super(Component.literal(""));
@@ -74,7 +74,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		this.layoutTargetScreen = layoutTargetScreen;
 		if (layout != null) {
 			this.layout = layout.copy();
-		} else {
+		}
+		if (this.layout == null) {
 			this.layout = new Layout();
 			if (this.layoutTargetScreen == null) {
 				this.layout.setToUniversalLayout();
@@ -87,9 +88,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 
-		Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.layoutTargetScreen.getClass());
-		if (cachedOriTitle != null) {
-			ScreenTitleUtils.setScreenTitle(this.layoutTargetScreen, cachedOriTitle);
+		if (this.layoutTargetScreen != null) {
+			Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.layoutTargetScreen.getClass());
+			if (cachedOriTitle != null) {
+				ScreenTitleUtils.setScreenTitle(this.layoutTargetScreen, cachedOriTitle);
+			}
 		}
 
 		//Load all element instances before init, so the layout instance elements don't get wiped when updating it

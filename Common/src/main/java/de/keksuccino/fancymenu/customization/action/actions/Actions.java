@@ -12,16 +12,21 @@ import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 
 public class Actions {
 
+    public static final SetVariableAction SET_VARIABLE = new SetVariableAction();
+    public static final ClearVariablesAction CLEAR_VARIABLES = new ClearVariablesAction();
+    public static final PasteToChatAction PASTE_TO_CHAT = new PasteToChatAction();
+    public static final ToggleLayoutAction TOGGLE_LAYOUT = new ToggleLayoutAction();
+    public static final EnableLayoutAction ENABLE_LAYOUT = new EnableLayoutAction();
+    public static final DisableLayoutAction DISABLE_LAYOUT = new DisableLayoutAction();
+
     public static void registerAll() {
 
-        ActionRegistry.registerAction(new SetVariableAction());
-        ActionRegistry.registerAction(new ClearVariablesAction());
-
-        ActionRegistry.registerAction(new PasteToChatAction());
-
-        ActionRegistry.registerAction(new ToggleLayoutAction());
-        ActionRegistry.registerAction(new EnableLayoutAction());
-        ActionRegistry.registerAction(new DisableLayoutAction());
+        ActionRegistry.registerAction(SET_VARIABLE);
+        ActionRegistry.registerAction(CLEAR_VARIABLES);
+        ActionRegistry.registerAction(PASTE_TO_CHAT);
+        ActionRegistry.registerAction(TOGGLE_LAYOUT);
+        ActionRegistry.registerAction(ENABLE_LAYOUT);
+        ActionRegistry.registerAction(DISABLE_LAYOUT);
 
         for (Action b : LegacyActions.buildLegacyActionContainers()) {
             ActionRegistry.registerAction(b);

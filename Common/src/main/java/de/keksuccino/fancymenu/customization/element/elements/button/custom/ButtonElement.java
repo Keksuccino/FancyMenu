@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
 import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;

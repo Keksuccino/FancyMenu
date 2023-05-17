@@ -20,7 +20,7 @@ public class CapeWebTextureResourceLocation extends WebTextureResourceLocation {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private volatile String url;
+    private final String url;
     private volatile ResourceLocation location;
     private volatile boolean loaded = false;
     private volatile int width = 0;

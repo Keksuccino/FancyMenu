@@ -11,7 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.input.StringUtils;

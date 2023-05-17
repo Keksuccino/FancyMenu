@@ -8,17 +8,17 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.Sl
 
 public class MenuBackgrounds {
 
+    public static final ImageMenuBackgroundBuilder IMAGE = new ImageMenuBackgroundBuilder();
+    public static final AnimationMenuBackgroundBuilder ANIMATION = new AnimationMenuBackgroundBuilder();
+    public static final SlideshowMenuBackgroundBuilder SLIDESHOW = new SlideshowMenuBackgroundBuilder();
+    public static final PanoramaMenuBackgroundBuilder PANORAMA = new PanoramaMenuBackgroundBuilder();
+
     public static void registerAll() {
 
-        //TODO screen for layout editor to set background
-        // - ScrollArea in new GUI style with all background types
-        // - if background type already active, show button "Edit"
-        // - if background type is not active, show button "Set"
-
-        MenuBackgroundRegistry.register(new ImageMenuBackgroundBuilder());
-        MenuBackgroundRegistry.register(new AnimationMenuBackgroundBuilder());
-        MenuBackgroundRegistry.register(new SlideshowMenuBackgroundBuilder());
-        MenuBackgroundRegistry.register(new PanoramaMenuBackgroundBuilder());
+        MenuBackgroundRegistry.register(IMAGE);
+        MenuBackgroundRegistry.register(ANIMATION);
+        MenuBackgroundRegistry.register(SLIDESHOW);
+        MenuBackgroundRegistry.register(PANORAMA);
 
     }
 

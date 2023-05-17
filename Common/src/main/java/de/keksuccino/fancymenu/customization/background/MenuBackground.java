@@ -3,12 +3,12 @@ package de.keksuccino.fancymenu.customization.background;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class MenuBackground extends GuiComponent implements Renderable {
 
@@ -25,16 +25,14 @@ public abstract class MenuBackground extends GuiComponent implements Renderable 
     @Override
     public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
-    public static boolean keepBackgroundAspectRatio() {
-        if (isEditor()) {
-            //TODO return keepBackground
-        } else {
-            ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
-            if (layer != null) {
-                //TODO return keepBackground
-            }
+    @Nullable
+    public MenuBackground copy() {
+        try {
+            return this.builder.deserializeBackgroundInternal(this.builder.serializedBackgroundInternal(this));
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return false;
+        return null;
     }
 
     public static boolean isEditor() {

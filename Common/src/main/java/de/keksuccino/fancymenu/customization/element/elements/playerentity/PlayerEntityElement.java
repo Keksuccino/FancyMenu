@@ -4,33 +4,30 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import de.keksuccino.fancymenu.api.item.CustomizationItem;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
-import de.keksuccino.fancymenu.customization.placeholder.v2.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.utils.PlayerUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 
 import java.io.File;
 
-public class PlayerEntityElement extends CustomizationItem {
-
+public class PlayerEntityElement extends AbstractElement {
     
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -58,7 +55,6 @@ public class PlayerEntityElement extends CustomizationItem {
     
     protected volatile ResourceLocation currentSkinLocation = null;
     protected volatile ResourceLocation currentCapeLocation = null;
-    
 
     public boolean followMouse = true;
     public float bodyRotationX;
@@ -66,156 +62,105 @@ public class PlayerEntityElement extends CustomizationItem {
     public float headRotationX;
     public float headRotationY;
 
-    public PlayerEntityElement(ElementBuilder parentContainer, PropertyContainer item) {
-
-        super(parentContainer, item);
-
-        
-        if (isEditorActive()) {
+    public PlayerEntityElement(@NotNull ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> builder) {
+        super(builder);
+        if (isEditor()) {
             PlayerEntityElementBuilder.ELEMENT_CACHE.clear();
-        }
-
-        String copyClientPlayerString = item.getValue("copy_client_player");
-        if ((copyClientPlayerString != null) && copyClientPlayerString.equals("true")) {
-            this.setCopyClientPlayer(true);
-        }
-
-        if (!this.copyClientPlayer) {
-
-            String playerNameString = item.getValue("playername");
-            if (playerNameString != null) {
-                this.setPlayerName(playerNameString, true);
-            }
-
-            String autoSkinString = item.getValue("auto_skin");
-            if ((autoSkinString != null) && autoSkinString.equalsIgnoreCase("true")) {
-                this.autoSkin = true;
-            }
-
-            String autoCapeString = item.getValue("auto_cape");
-            if ((autoCapeString != null) && autoCapeString.equalsIgnoreCase("true")) {
-                this.autoCape = true;
-            }
-
-            String slim = item.getValue("slim");
-            if (slim != null) {
-                if (slim.replace(" ", "").equalsIgnoreCase("true")) {
-                    this.slim = true;
-                }
-            }
-
-            if (!this.autoSkin) {
-                this.skinUrl = item.getValue("skinurl");
-                if (this.skinUrl != null) {
-                    this.setSkinTextureBySource(this.skinUrl, true);
-                }
-                this.skinPath = fixBackslashPath(item.getValue("skinpath"));
-                if ((this.skinPath != null) && (this.skinUrl == null)) {
-                    this.setSkinTextureBySource(this.skinPath, false);
-                }
-            } else {
-                this.setSkinByPlayerName();
-            }
-
-            if (!this.autoCape) {
-                this.capeUrl = item.getValue("capeurl");
-                if (this.capeUrl != null) {
-                    this.setCapeTextureBySource(this.capeUrl, true);
-                }
-                this.capePath = fixBackslashPath(item.getValue("capepath"));
-                if ((this.capePath != null) && (this.capeUrl == null)) {
-                    this.setCapeTextureBySource(this.capePath, false);
-                }
-            } else {
-                this.setCapeByPlayerName();
-            }
-
-        }
-
-        String scaleString = item.getValue("scale");
-        if ((scaleString != null) && MathUtils.isDouble(scaleString)) {
-            this.scale = (int) Double.parseDouble(scaleString);
-        }
-
-        String hasParrotString = item.getValue("parrot");
-        if (hasParrotString != null) {
-            if (hasParrotString.replace(" ", "").equalsIgnoreCase("true")) {
-                this.setHasParrotOnShoulder(true, false);
-            }
-        }
-
-        String parrotLeftShoulderString = item.getValue("parrot_left_shoulder");
-        if (parrotLeftShoulderString != null) {
-            if (parrotLeftShoulderString.replace(" ", "").equalsIgnoreCase("true")) {
-                this.setHasParrotOnShoulder(this.hasParrotOnShoulder, true);
-            }
-        }
-
-        String isBabyString = item.getValue("is_baby");
-        if (isBabyString != null) {
-            if (isBabyString.replace(" ", "").equalsIgnoreCase("true")) {
-                this.setIsBaby(true);
-            }
-        }
-
-        String crouching = item.getValue("crouching");
-        if (crouching != null) {
-            if (crouching.replace(" ", "").equalsIgnoreCase("true")) {
-                this.setCrouching(true);
-            }
-        }
-
-        String showName = item.getValue("showname");
-        if (showName != null) {
-            if (showName.replace(" ", "").equalsIgnoreCase("false")) {
-                this.setShowPlayerName(false);
-            }
-        }
-
-        String followMouseString = item.getValue("follow_mouse");
-        if (followMouseString != null) {
-            if (followMouseString.replace(" ", "").equalsIgnoreCase("false")) {
-                this.followMouse = false;
-            }
-        }
-
-        String rotX = item.getValue("headrotationx");
-        if (rotX != null) {
-            rotX = rotX.replace(" ", "");
-            if (MathUtils.isFloat(rotX)) {
-                this.headRotationX = Float.parseFloat(rotX);
-            }
-        }
-
-        String rotY = item.getValue("headrotationy");
-        if (rotY != null) {
-            rotY = rotY.replace(" ", "");
-            if (MathUtils.isFloat(rotY)) {
-                this.headRotationY = Float.parseFloat(rotY);
-            }
-        }
-
-        String bodyrotX = item.getValue("bodyrotationx");
-        if (bodyrotX != null) {
-            bodyrotX = bodyrotX.replace(" ", "");
-            if (MathUtils.isFloat(bodyrotX)) {
-                this.bodyRotationX = Float.parseFloat(bodyrotX);
-            }
-        }
-
-        String bodyrotY = item.getValue("bodyrotationy");
-        if (bodyrotY != null) {
-            bodyrotY = bodyrotY.replace(" ", "");
-            if (MathUtils.isFloat(bodyrotY)) {
-                this.bodyRotationY = Float.parseFloat(bodyrotY);
-            }
-        }
-
-        
-        if (!isEditorActive()) {
+        } else {
             PlayerEntityElementBuilder.ELEMENT_CACHE.put(this.instanceIdentifier, this);
         }
+    }
 
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        if (this.shouldRender()) {
+
+            //Update placeholders of skin URL
+            if (this.skinUrl != null) {
+                String currentSkinUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.skinUrl), "§", "&");
+                if (!currentSkinUrl.equals(this.oldSkinUrl)) {
+                    this.oldSkinUrl = currentSkinUrl;
+                    this.setSkinTextureBySource(this.skinUrl, true);
+                }
+            }
+            //Update placeholders of cape URL
+            if (this.capeUrl != null) {
+                String currentCapeUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.capeUrl), "§", "&");
+                if (!currentCapeUrl.equals(this.oldCapeUrl)) {
+                    this.oldCapeUrl = currentCapeUrl;
+                    this.setCapeTextureBySource(this.capeUrl, true);
+                }
+            }
+            //Update placeholders in player name
+            this.setPlayerName(this.playerName, false);
+
+            //Update element size based on entity size
+            this.setWidth((int)(this.getActiveEntityProperties().getDimensions().width*this.scale));
+            this.setHeight((int)(this.getActiveEntityProperties().getDimensions().height*this.scale));
+
+            RenderSystem.enableBlend();
+
+            int x = this.getX();
+            int y = this.getY();
+
+            this.renderPlayerEntity(x, y, this.scale, (float)x - MouseInput.getMouseX(), (float)(y - 50) - MouseInput.getMouseY());
+
+        }
+
+    }
+
+    protected void renderPlayerEntity(int i11, int i12, int i13, float angleXComponent, float angleYComponent) {
+        float f = (float)Math.atan(angleXComponent / 40.0F);
+        float f1 = (float)Math.atan(angleYComponent / 40.0F);
+        innerRenderPlayerEntity(i11, i12, i13, f, f1, this.getActiveEntityProperties(), this.getActiveRenderer());
+    }
+
+    protected void innerRenderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
+        PoseStack modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushPose();
+        modelViewStack.translate((posX+((this.getActiveEntityProperties().getDimensions().width / 2) * scale)), (posY+(this.getActiveEntityProperties().getDimensions().height * this.scale)), 1050.0F);
+        modelViewStack.scale(1.0F, 1.0F, -1.0F);
+        RenderSystem.applyModelViewMatrix();
+        PoseStack innerMatrix = new PoseStack();
+        innerMatrix.translate(0.0F, 0.0F, 1000.0F);
+        innerMatrix.scale((float)scale, (float)scale, (float)scale);
+        Quaternionf quat1;
+        Quaternionf quat2;
+        if (this.followMouse) {
+            quat1 = (new Quaternionf()).rotateZ((float)Math.PI);
+            quat2 = (new Quaternionf()).rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F));
+            quat1.mul(quat2);
+            innerMatrix.mulPose(quat1);
+            props.yBodyRot = 180.0F + angleXComponent * 20.0F;
+            props.yRot = 180.0F + angleXComponent * 40.0F;
+            props.xRot = -angleYComponent * 20.0F;
+            props.yHeadRot = props.yRot;
+            props.yHeadRotO = props.yRot;
+        } else {
+            quat1 = Axis.ZP.rotationDegrees(180.0F);
+            quat2 = Axis.XP.rotationDegrees(this.bodyRotationY);
+            quat1.mul(quat2);
+            innerMatrix.mulPose(quat1);
+            props.yBodyRot = 180.0F + this.bodyRotationX;
+            props.xRot = this.headRotationY;
+            props.yHeadRot = 180.0F + this.headRotationX;
+            props.yHeadRotO = 180.0F + this.headRotationX;
+        }
+        Lighting.setupForEntityInInventory();
+        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        quat2.conjugate();
+        dispatcher.overrideCameraOrientation(quat2);
+        dispatcher.setRenderShadow(false);
+        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+        RenderSystem.runAsFancy(() -> {
+            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerMatrix, bufferSource, 15728880);
+        });
+        bufferSource.endBatch();
+        dispatcher.setRenderShadow(true);
+        modelViewStack.popPose();
+        RenderSystem.applyModelViewMatrix();
+        Lighting.setupFor3DItems();
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {
@@ -273,13 +218,11 @@ public class PlayerEntityElement extends CustomizationItem {
     }
 
     public void setCapeByPlayerName() {
-        
         PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
         if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
             this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
             return;
         }
-        
         new Thread(() -> {
             try {
                 if (this.playerName != null) {
@@ -297,13 +240,11 @@ public class PlayerEntityElement extends CustomizationItem {
     }
 
     public void setSkinByPlayerName() {
-        
         PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
         if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
             this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
             return;
         }
-        
         new Thread(() -> {
             try {
                 if (this.playerName != null) {
@@ -329,13 +270,11 @@ public class PlayerEntityElement extends CustomizationItem {
     }
 
     public void setSkinTextureBySource(String sourcePathOrLink, boolean web) {
-        
         PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
         if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
             this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
             return;
         }
-        
         if (sourcePathOrLink != null) {
             if (web) {
                 new Thread(() -> {
@@ -353,7 +292,7 @@ public class PlayerEntityElement extends CustomizationItem {
                                 if (sr.getDownloadedTexture() == null) {
                                     return;
                                 }
-                                MainThreadTaskExecutor.executeInMainThread(() -> sr.loadTexture(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                                MainThreadTaskExecutor.executeInMainThread(sr::loadTexture, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                                 long start = System.currentTimeMillis();
                                 while (sr.getResourceLocation() == null) {
                                     long now = System.currentTimeMillis();
@@ -385,7 +324,7 @@ public class PlayerEntityElement extends CustomizationItem {
                                 
                                 if (!PlayerEntityElementCache.isSkinCached(sha1)) {
                                     SkinExternalTextureResourceLocation sr = new SkinExternalTextureResourceLocation(path);
-                                    MainThreadTaskExecutor.executeInMainThread(() -> sr.loadTexture(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                                    MainThreadTaskExecutor.executeInMainThread(sr::loadTexture, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                                     long start = System.currentTimeMillis();
                                     while (sr.getResourceLocation() == null) {
                                         long now = System.currentTimeMillis();
@@ -419,13 +358,11 @@ public class PlayerEntityElement extends CustomizationItem {
     }
 
     public void setCapeTextureBySource(String sourcePathOrLink, boolean web) {
-        
         PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
         if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
             this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
             return;
         }
-        
         if (sourcePathOrLink != null) {
             if (web) {
                 new Thread(() -> {
@@ -443,7 +380,7 @@ public class PlayerEntityElement extends CustomizationItem {
                                 if (sr.getDownloadedTexture() == null) {
                                     return;
                                 }
-                                MainThreadTaskExecutor.executeInMainThread(() -> sr.loadTexture(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                                MainThreadTaskExecutor.executeInMainThread(sr::loadTexture, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                                 long start = System.currentTimeMillis();
                                 while (sr.getResourceLocation() == null) {
                                     long now = System.currentTimeMillis();
@@ -475,7 +412,7 @@ public class PlayerEntityElement extends CustomizationItem {
                             if (sha1 != null) {
                                 if (!PlayerEntityElementCache.isCapeCached(sha1)) {
                                     ExternalTextureResourceLocation er = new ExternalTextureResourceLocation(path);
-                                    MainThreadTaskExecutor.executeInMainThread(() -> er.loadTexture(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                                    MainThreadTaskExecutor.executeInMainThread(er::loadTexture, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                                     long start = System.currentTimeMillis();
                                     while (er.getResourceLocation() == null) {
                                         long now = System.currentTimeMillis();
@@ -522,26 +459,6 @@ public class PlayerEntityElement extends CustomizationItem {
         this.slimRenderer.properties.setCapeTextureLocation(loc);
     }
 
-    
-//    @Nullable
-//    protected ResourceLocation getResourceLocationOfWebResource(String url) {
-//        try {
-//            WebTextureResourceLocation wt = ExternalTextureHandler.INSTANCE.getWebResource(url, false);
-//            if (wt != null) {
-//                if (!wt.isReady()) {
-//                    wt.loadTexture();
-//                }
-//                ResourceLocation loc = wt.getResourceLocation();
-//                if (loc != null) {
-//                    return loc;
-//                }
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
     public PlayerEntityElementRenderer getActiveRenderer() {
         if (this.slim) {
             return this.slimRenderer;
@@ -551,105 +468,6 @@ public class PlayerEntityElement extends CustomizationItem {
 
     public PlayerEntityProperties getActiveEntityProperties() {
         return this.getActiveRenderer().properties;
-    }
-
-    @Override
-    public void render(PoseStack matrix, Screen menu) {
-
-        if (this.shouldRender()) {
-
-            //Update placeholders of skin URL
-            if (this.skinUrl != null) {
-                String currentSkinUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.skinUrl), "§", "&");
-                if (!currentSkinUrl.equals(this.oldSkinUrl)) {
-                    this.oldSkinUrl = currentSkinUrl;
-                    this.setSkinTextureBySource(this.skinUrl, true);
-                }
-            }
-            //Update placeholders of cape URL
-            if (this.capeUrl != null) {
-                String currentCapeUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.capeUrl), "§", "&");
-                if (!currentCapeUrl.equals(this.oldCapeUrl)) {
-                    this.oldCapeUrl = currentCapeUrl;
-                    this.setCapeTextureBySource(this.capeUrl, true);
-                }
-            }
-            //Update placeholders in player name
-            this.setPlayerName(this.playerName, false);
-
-            //Update element size based on entity size
-            this.setWidth((int)(this.getActiveEntityProperties().getDimensions().width*this.scale));
-            this.setHeight((int)(this.getActiveEntityProperties().getDimensions().height*this.scale));
-
-            //Update dummy value for layout editor
-            if (this.playerName != null) {
-                this.value = this.playerName;
-            } else {
-                this.value = "Player Entity";
-            }
-
-            RenderSystem.enableBlend();
-            int x = this.getPosX(menu);
-            int y = this.getPosY(menu);
-            this.renderPlayerEntity(x, y, this.scale, (float)x - MouseInput.getMouseX(), (float)(y - 50) - MouseInput.getMouseY());
-
-        }
-
-    }
-
-    protected void renderPlayerEntity(int i11, int i12, int i13, float angleXComponent, float angleYComponent) {
-        float f = (float)Math.atan(angleXComponent / 40.0F);
-        float f1 = (float)Math.atan(angleYComponent / 40.0F);
-        innerRenderPlayerEntity(i11, i12, i13, f, f1, this.getActiveEntityProperties(), this.getActiveRenderer());
-    }
-
-    protected void innerRenderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
-        float angleX = angleXComponent;
-        float angleY = angleYComponent;
-        PoseStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushPose();
-        modelViewStack.translate((posX+((this.getActiveEntityProperties().getDimensions().width / 2) * scale)), (posY+(this.getActiveEntityProperties().getDimensions().height * this.scale)), 1050.0F);
-        modelViewStack.scale(1.0F, 1.0F, -1.0F);
-        RenderSystem.applyModelViewMatrix();
-        PoseStack innerMatrix = new PoseStack();
-        innerMatrix.translate(0.0F, 0.0F, 1000.0F);
-        innerMatrix.scale((float)scale, (float)scale, (float)scale);
-        Quaternionf quat1;
-        Quaternionf quat2;
-        if (this.followMouse) {
-            quat1 = (new Quaternionf()).rotateZ((float)Math.PI);
-            quat2 = (new Quaternionf()).rotateX(angleY * 20.0F * ((float)Math.PI / 180F));
-            quat1.mul(quat2);
-            innerMatrix.mulPose(quat1);
-            props.yBodyRot = 180.0F + angleX * 20.0F;
-            props.yRot = 180.0F + angleX * 40.0F;
-            props.xRot = -angleY * 20.0F;
-            props.yHeadRot = props.yRot;
-            props.yHeadRotO = props.yRot;
-        } else {
-            quat1 = Axis.ZP.rotationDegrees(180.0F);
-            quat2 = Axis.XP.rotationDegrees(this.bodyRotationY);
-            quat1.mul(quat2);
-            innerMatrix.mulPose(quat1);
-            props.yBodyRot = 180.0F + this.bodyRotationX;
-            props.xRot = this.headRotationY;
-            props.yHeadRot = 180.0F + this.headRotationX;
-            props.yHeadRotO = 180.0F + this.headRotationX;
-        }
-        Lighting.setupForEntityInInventory();
-        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        quat2.conjugate();
-        dispatcher.overrideCameraOrientation(quat2);
-        dispatcher.setRenderShadow(false);
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        RenderSystem.runAsFancy(() -> {
-            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerMatrix, bufferSource, 15728880);
-        });
-        bufferSource.endBatch();
-        dispatcher.setRenderShadow(true);
-        modelViewStack.popPose();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupFor3DItems();
     }
 
 }

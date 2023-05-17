@@ -1,19 +1,17 @@
 package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.List;
+import org.jetbrains.annotations.Nullable;
 
 public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, InputFieldEditorElement> {
 
@@ -68,7 +66,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
     }
 
     @Override
-    protected @NotNull SerializedElement serializeElement(@NotNull InputFieldElement element) {
+    protected SerializedElement serializeElement(@NotNull InputFieldElement element, @NotNull SerializedElement serializeTo) {
 
         SerializedElement serialized = new SerializedElement();
 
@@ -84,21 +82,17 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
 
     @Override
     public @NotNull InputFieldEditorElement wrapIntoEditorElement(@NotNull InputFieldElement element, @NotNull LayoutEditorScreen editor) {
-        return new InputFieldEditorElement(this, element, editor);
+        return new InputFieldEditorElement(element, editor);
     }
 
     @Override
-    public @NotNull Component getDisplayName() {
-        return Component.literal(Locals.localize("fancymenu.customization.items.input_field"));
+    public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
+        return Component.translatable("fancymenu.customization.items.input_field");
     }
 
     @Override
-    public Component[] getDescription() {
-        List<Component> l = new ArrayList<>();
-        for (String s : StringUtils.splitLines(Locals.localize("fancymenu.customization.items.input_field.desc"), "%n%")) {
-            l.add(Component.literal(s));
-        }
-        return l.toArray(new Component[]{});
+    public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
+        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.desc");
     }
 
 }
