@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
+import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -61,9 +61,9 @@ public class LayoutButtonDummyCustomizationItem  extends AbstractElement {
 				}
 				if (f.isFile()) {
 					if (f.getPath().toLowerCase().endsWith(".gif")) {
-						animation = ExternalTextureHandler.INSTANCE.getGif(f.getPath());
+						animation = TextureHandler.INSTANCE.getGifTexture(f.getPath());
 					} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-						ExternalTextureResourceLocation exTex = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
+						ExternalTextureResourceLocation exTex = TextureHandler.INSTANCE.getTexture(f.getPath());
 						if (exTex != null) {
 							if (!exTex.isReady()) {
 								exTex.loadTexture();

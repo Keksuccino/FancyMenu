@@ -14,7 +14,7 @@ import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
+import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -104,14 +104,14 @@ public class TextElement extends AbstractElement {
         }
 
         if (this.scrollGrabberTextureNormal != null) {
-            ExternalTextureResourceLocation r = ExternalTextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureNormal);
+            ExternalTextureResourceLocation r = TextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
                 this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
         }
         if (this.scrollGrabberTextureHover != null) {
-            ExternalTextureResourceLocation r = ExternalTextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureHover);
+            ExternalTextureResourceLocation r = TextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
                 this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();

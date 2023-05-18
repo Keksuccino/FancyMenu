@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.SliderElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.TextElementBuilder;
 
@@ -18,6 +19,7 @@ public class Elements {
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
+    public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
 
     public static void registerAll() {
 
@@ -28,6 +30,7 @@ public class Elements {
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);
+        ElementRegistry.register(SPLASH_TEXT);
 
     }
 

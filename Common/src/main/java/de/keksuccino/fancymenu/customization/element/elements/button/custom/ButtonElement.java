@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
+import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -127,7 +127,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                 File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.backgroundTextureNormal));
                 if (f.isFile()) {
                     if (f.getPath().toLowerCase().endsWith(".gif")) {
-                        IAnimationRenderer ani = ExternalTextureHandler.INSTANCE.getGif(f.getPath());
+                        IAnimationRenderer ani = TextureHandler.INSTANCE.getGifTexture(f.getPath());
                         if (ani != null) {
                             if (this.button instanceof AdvancedButton) {
                                 ((AdvancedButton)this.button).setBackgroundNormal(ani);
@@ -141,7 +141,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
+                        ExternalTextureResourceLocation back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
                             if (!back.isReady()) {
                                 back.loadTexture();
@@ -179,7 +179,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                 File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.backgroundTextureHover));
                 if (f.isFile()) {
                     if (f.getPath().toLowerCase().endsWith(".gif")) {
-                        IAnimationRenderer ani = ExternalTextureHandler.INSTANCE.getGif(f.getPath());
+                        IAnimationRenderer ani = TextureHandler.INSTANCE.getGifTexture(f.getPath());
                         if (ani != null) {
                             if (this.button instanceof AdvancedButton) {
                                 ((AdvancedButton)this.button).setBackgroundHover(ani);
@@ -193,7 +193,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
+                        ExternalTextureResourceLocation back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
                             if (!back.isReady()) {
                                 back.loadTexture();

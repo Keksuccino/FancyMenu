@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import de.keksuccino.fancymenu.rendering.texture.SimpleTexture;
+import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -46,7 +46,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     protected Integer y = null;
     protected int textBorderSize = 5;
     protected int mouseOffset = 12;
-    protected SimpleTexture backgroundTexture = null;
+    protected LocalTexture backgroundTexture = null;
     protected Color backgroundColor = null;
     protected Color borderColor = null;
     protected boolean vanillaLike = true;
@@ -128,7 +128,7 @@ public class Tooltip extends GuiComponent implements Renderable {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
             this.renderVanillaLikeBackground(pose, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
-            RenderUtils.bindTexture(this.backgroundTexture.getTextureLocation());
+            RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
             blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         } else {
             if (this.borderColor != null) {
@@ -290,13 +290,13 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     public Tooltip setBackgroundTexture(ResourceLocation texture) {
-        this.backgroundTexture = SimpleTexture.create(texture);
+        this.backgroundTexture = LocalTexture.create(texture);
         this.backgroundColor = null;
         this.vanillaLike = (texture == null);
         return this;
     }
 
-    public SimpleTexture getBackgroundTexture() {
+    public LocalTexture getBackgroundTexture() {
         return backgroundTexture;
     }
 

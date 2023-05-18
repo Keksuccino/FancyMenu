@@ -35,7 +35,7 @@ import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
+import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
@@ -252,7 +252,7 @@ public class ScreenCustomization {
 
 	public static void reloadFancyMenu() {
 		FancyMenu.updateConfig();
-		ExternalTextureHandler.INSTANCE.clearResources();
+		TextureHandler.INSTANCE.clearResources();
 		SoundRegistry.resetSounds();
 		SoundRegistry.stopSounds();
 		AnimationHandler.resetAnimations();

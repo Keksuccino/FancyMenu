@@ -70,5 +70,7 @@
   "fancymenu.editor.open_audio.desc": "Play an audio when opening the menu.\n\n§cSet a blank file path to\n§cremove/reset the audio.",
   "fancymenu.editor.close_audio": "Set Close-Audio",
   "fancymenu.editor.close_audio.desc": "Play an audio when closing the menu.\n\n§cSet a blank file path to\n§cremove/reset the audio.",
-  "fancymenu.editor.hidden_vanilla_elements.element.desc": "Left-click to make visible again!"
+  "fancymenu.editor.hidden_vanilla_elements.element.desc": "Left-click to make visible again!",
+  "fancymenu.element.elements.splash_text": "Splash Text",
+  "fancymenu.element.elements.splash_text.desc": "A splash text like the bouncing\ntext in the Title screen."
 }

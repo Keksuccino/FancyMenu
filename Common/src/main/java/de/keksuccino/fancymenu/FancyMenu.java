@@ -22,6 +22,8 @@ public class FancyMenu {
 
 	//TODO "not_allowed.png" textur ersetzen
 
+	//TODO File Picker GUI rewriten mit neuem Screen UI layout
+
 	//TODO TextBox class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
 
 	//TODO GameIntro stuff komplett reworken/rewriten

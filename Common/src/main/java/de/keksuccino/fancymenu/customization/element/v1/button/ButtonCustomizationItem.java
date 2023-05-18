@@ -19,7 +19,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import de.keksuccino.fancymenu.rendering.texture.ExternalTextureHandler;
+import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -153,9 +153,9 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 					}
 					if (f.isFile()) {
 						if (f.getPath().toLowerCase().endsWith(".gif")) {
-							this.button.setBackgroundNormal(ExternalTextureHandler.INSTANCE.getGif(f.getPath()));
+							this.button.setBackgroundNormal(TextureHandler.INSTANCE.getGifTexture(f.getPath()));
 						} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-							ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
+							ExternalTextureResourceLocation back = TextureHandler.INSTANCE.getTexture(f.getPath());
 							if (back != null) {
 								if (!back.isReady()) {
 									back.loadTexture();
@@ -176,9 +176,9 @@ public class ButtonCustomizationItem extends AbstractElement implements IActionE
 					}
 					if (f.isFile()) {
 						if (f.getPath().toLowerCase().endsWith(".gif")) {
-							this.button.setBackgroundHover(ExternalTextureHandler.INSTANCE.getGif(f.getPath()));
+							this.button.setBackgroundHover(TextureHandler.INSTANCE.getGifTexture(f.getPath()));
 						} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-							ExternalTextureResourceLocation back = ExternalTextureHandler.INSTANCE.getTexture(f.getPath());
+							ExternalTextureResourceLocation back = TextureHandler.INSTANCE.getTexture(f.getPath());
 							if (back != null) {
 								if (!back.isReady()) {
 									back.loadTexture();

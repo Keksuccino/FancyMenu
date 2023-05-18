@@ -16,9 +16,11 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        //TODO add set path entry
+        //TODO add entry to set source mode
 
-        //TODO add restore aspect ratio entry
+        //TODO add entry to set path
+
+        //TODO add "restore aspect ratio" entry
 
     }
 
