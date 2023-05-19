@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.player;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,17 +30,17 @@ public class PlayerNamePlaceholder extends Placeholder {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("helper.ui.dynamicvariabletextfield.variables.playername");
+        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.playername");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("helper.ui.dynamicvariabletextfield.variables.playername.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.playername.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.player");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.player");
     }
 
     @Override

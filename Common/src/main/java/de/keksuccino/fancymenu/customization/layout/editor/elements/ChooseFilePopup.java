@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMFilePickerPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -21,10 +21,10 @@ import net.minecraft.network.chat.Component;
 public class ChooseFilePopup extends FMTextInputPopup {
 
 	protected AdvancedButton chooseFileBtn;
-	private String[] fileTypes;
+	private final String[] fileTypes;
 	
 	public ChooseFilePopup(Consumer<String> callback, String... fileTypes) {
-		super(new Color(0, 0, 0, 0), Locals.localize("helper.creator.choosefile.enterorchoose"), null, 0, callback);
+		super(new Color(0, 0, 0, 0), I18n.get("fancymenu.editor.choosefile.enterorchoose"), null, 0, callback);
 		this.fileTypes = fileTypes;
 	}
 	
@@ -32,7 +32,7 @@ public class ChooseFilePopup extends FMTextInputPopup {
 	protected void init(Color color, String title, CharacterFilter filter, Consumer<String> callback) {
 		super.init(color, title, filter, callback);
 		
-		this.chooseFileBtn = new AdvancedButton(0, 0, 100, 20, Locals.localize("helper.creator.choosefile.choose"), true, (press) -> {
+		this.chooseFileBtn = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.editor.choosefile.choose"), true, (press) -> {
 			PopupHandler.displayPopup(new FMFilePickerPopup(Minecraft.getInstance().gameDirectory.getAbsoluteFile().getAbsolutePath().replace("\\", "/"), Minecraft.getInstance().gameDirectory.getAbsoluteFile().getAbsolutePath().replace("\\", "/"), this, true, (call) -> {
 				if (call != null) {
 					String path = call.getAbsolutePath().replace("\\", "/");

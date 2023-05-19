@@ -6,11 +6,11 @@ public class ScreenCustomizationLayers {
 
     public static void registerAll() {
 
-        ScreenCustomizationLayerHandler.registerLayer(new TitleScreenLayer());
-        ScreenCustomizationLayerHandler.registerLayer(new MoreRefinedStorageTitleScreenLayer());
-        ScreenCustomizationLayerHandler.registerLayer(new DummyCoreTitleScreenLayer());
+//        ScreenCustomizationLayerHandler.registerLayer(new TitleScreenLayer());
+//        ScreenCustomizationLayerHandler.registerLayer(new MoreRefinedStorageTitleScreenLayer());
+//        ScreenCustomizationLayerHandler.registerLayer(new DummyCoreTitleScreenLayer());
         ScreenCustomizationLayerHandler.registerLayer(new WorldLoadingScreenLayer());
-        ScreenCustomizationLayerHandler.registerLayer(new PauseScreenLayer());
+//        ScreenCustomizationLayerHandler.registerLayer(new PauseScreenLayer());
 
     }
 

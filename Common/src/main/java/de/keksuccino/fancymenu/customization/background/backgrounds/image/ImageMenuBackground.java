@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
+import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -34,7 +35,7 @@ public class ImageMenuBackground extends MenuBackground {
         int imageHeight = 10;
         ResourceLocation r = null;
         if (this.imagePath != null) {
-            ExternalTextureResourceLocation external = TextureHandler.INSTANCE.getTexture(this.imagePath);
+            LocalTexture external = TextureHandler.INSTANCE.getTexture(this.imagePath);
             if (external != null) {
                 imageWidth = external.getWidth();
                 imageHeight = external.getHeight();

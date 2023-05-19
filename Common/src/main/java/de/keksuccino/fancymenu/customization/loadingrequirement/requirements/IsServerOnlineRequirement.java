@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.multiplayer.ServerData;
 
 import javax.annotation.Nullable;
@@ -36,12 +36,12 @@ public class IsServerOnlineRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.serveronline");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.serveronline");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.serveronline.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.visibilityrequirements.serveronline.desc")));
     }
 
     @Override
@@ -51,7 +51,7 @@ public class IsServerOnlineRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.serveronline.valuename");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.serveronline.valuename");
     }
 
     @Override

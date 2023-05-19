@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.variables;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 
 public class SetVariableAction extends Action {
 
@@ -28,12 +28,12 @@ public class SetVariableAction extends Action {
 
     @Override
     public String getActionDescription() {
-        return Locals.localize("fancymenu.helper.buttonaction.variables.set.desc");
+        return I18n.get("fancymenu.helper.buttonaction.variables.set.desc");
     }
 
     @Override
     public String getValueDescription() {
-        return Locals.localize("fancymenu.helper.buttonaction.variables.set.value.desc");
+        return I18n.get("fancymenu.helper.buttonaction.variables.set.value.desc");
     }
 
     @Override

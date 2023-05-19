@@ -7,14 +7,14 @@
 //
 //import com.mojang.blaze3d.vertex.PoseStack;
 //import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-//import de.keksuccino.konkrete.localization.Locals;
+//import net.minecraft.client.resources.language.I18n;
 //import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 //import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 //import de.keksuccino.fancymenu.customization.element.v1.SplashTextCustomizationItem;
 //import de.keksuccino.konkrete.gui.content.AdvancedButton;
 //import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 //import de.keksuccino.konkrete.input.CharacterFilter;
-//import de.keksuccino.konkrete.input.StringUtils;
+//import de.keksuccino.fancymenu.utils.LocalizationUtils;
 //import de.keksuccino.konkrete.math.MathUtils;
 //import de.keksuccino.fancymenu.properties.PropertyContainer;
 //import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -31,16 +31,16 @@
 //		super.init();
 //
 //		/** SCALE **/
-//		AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.string.setscale"), true, (press) -> {
-//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.string.setscale") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, this::setScaleCallback);
+//		AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.string.setscale"), true, (press) -> {
+//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.string.setscale") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, this::setScaleCallback);
 //			p.setText("" + this.getObject().scale);
 //			PopupHandler.displayPopup(p);
 //		});
 //		this.rightClickContextMenu.addContent(scaleButton);
 //
 //		/** ROTATION **/
-//		AdvancedButton rotationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.splash.rotation"), true, (press) -> {
-//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.splash.rotation") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+//		AdvancedButton rotationButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.splash.rotation"), true, (press) -> {
+//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.splash.rotation") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 //				if (call != null) {
 //					if (MathUtils.isFloat(call)) {
 //						this.getObject().rotation = Float.parseFloat(call);
@@ -53,8 +53,8 @@
 //		this.rightClickContextMenu.addContent(rotationButton);
 //
 //		/** BASE COLOR **/
-//		AdvancedButton colorButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.splash.basecolor"), true, (press) -> {
-//			FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("helper.creator.items.splash.basecolor") + ":", null, 240, (call) -> {
+//		AdvancedButton colorButton = new AdvancedButton(0, 0, 0, 16, I18n.get("fancymenu.editor.items.splash.basecolor"), true, (press) -> {
+//			FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.splash.basecolor") + ":", null, 240, (call) -> {
 //				if (call != null) {
 //					if (!call.equals("")) {
 //						Color c = RenderUtils.getColorFromHexString(call);
@@ -86,18 +86,18 @@
 //		this.rightClickContextMenu.addContent(colorButton);
 //
 //		/** SHADOW **/
-//		String shadowLabel = Locals.localize("helper.creator.items.string.setshadow");
+//		String shadowLabel = I18n.get("fancymenu.editor.items.string.setshadow");
 //		if (this.getObject().shadow) {
-//			shadowLabel = Locals.localize("helper.creator.items.string.setnoshadow");
+//			shadowLabel = I18n.get("fancymenu.editor.items.string.setnoshadow");
 //		}
 //		AdvancedButton shadowButton = new AdvancedButton(0, 0, 0, 0, shadowLabel, true, (press) -> {
 //			if (this.getObject().shadow) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setshadow"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.string.setshadow"));
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //
 //				this.getObject().shadow = false;
 //			} else {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.string.setnoshadow"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.string.setnoshadow"));
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //
 //				this.getObject().shadow = true;
@@ -106,18 +106,18 @@
 //		this.rightClickContextMenu.addContent(shadowButton);
 //
 //		/** BOUNCING **/
-//		String bounceLabel = Locals.localize("helper.creator.items.splash.bounce.off");
+//		String bounceLabel = I18n.get("fancymenu.editor.items.splash.bounce.off");
 //		if (this.getObject().bounce) {
-//			bounceLabel = Locals.localize("helper.creator.items.splash.bounce.on");
+//			bounceLabel = I18n.get("fancymenu.editor.items.splash.bounce.on");
 //		}
 //		AdvancedButton bounceButton = new AdvancedButton(0, 0, 0, 0, bounceLabel, true, (press) -> {
 //			if (this.getObject().bounce) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.splash.bounce.off"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.bounce.off"));
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //
 //				this.getObject().bounce = false;
 //			} else {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.splash.bounce.on"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.bounce.on"));
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //
 //				this.getObject().bounce = true;
@@ -126,24 +126,24 @@
 //		this.rightClickContextMenu.addContent(bounceButton);
 //
 //		/** REFRESH ON MENU RELOAD **/
-//		String refreshLabel = Locals.localize("helper.creator.items.splash.refresh.off");
+//		String refreshLabel = I18n.get("fancymenu.editor.items.splash.refresh.off");
 //		if (this.getObject().refreshOnMenuReload) {
-//			refreshLabel = Locals.localize("helper.creator.items.splash.refresh.on");
+//			refreshLabel = I18n.get("fancymenu.editor.items.splash.refresh.on");
 //		}
 //		AdvancedButton refreshButton = new AdvancedButton(0, 0, 0, 0, refreshLabel, true, (press) -> {
 //			if (this.getObject().refreshOnMenuReload) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.splash.refresh.off"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.refresh.off"));
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //
 //				this.getObject().refreshOnMenuReload = false;
 //			} else {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.splash.refresh.on"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.refresh.on"));
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //
 //				this.getObject().refreshOnMenuReload = true;
 //			}
 //		});
-//		refreshButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.splash.refresh.desc"), "%n%"));
+//		refreshButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.items.splash.refresh.desc")));
 //		if (this.getObject().text == null) {
 //			this.rightClickContextMenu.addContent(refreshButton);
 //		}
@@ -185,7 +185,7 @@
 //		if (MathUtils.isFloat(scale)) {
 //			this.setScale(Float.valueOf(scale));
 //		} else {
-//			LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.items.string.scale.invalidvalue.title"), "", Locals.localize("helper.creator.items.string.scale.invalidvalue.desc"), "", "", "", "", "");
+//			UIBase.displayNotification("§c§l" + I18n.get("fancymenu.editor.items.string.scale.invalidvalue.title"), "", I18n.get("fancymenu.editor.items.string.scale.invalidvalue.desc"), "", "", "", "", "");
 //		}
 //	}
 //
@@ -265,12 +265,12 @@
 //
 //		//Render pos and size values
 //		RenderUtils.setScale(matrix, 0.5F);
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.element.anchorPoint, this.element.getX(editor)*2, (this.element.getY(editor)*2) - 26, Color.WHITE.getRGB());
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.element.getX(editor), this.element.getX(editor)*2, (this.element.getY(editor)*2) - 17, Color.WHITE.getRGB());
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.element.getWidth(), this.element.getX(editor)*2, (this.element.getY(editor)*2) - 8, Color.WHITE.getRGB());
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.orientation") + ": " + this.element.anchorPoint, this.element.getX(editor)*2, (this.element.getY(editor)*2) - 26, Color.WHITE.getRGB());
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.posx") + ": " + this.element.getX(editor), this.element.getX(editor)*2, (this.element.getY(editor)*2) - 17, Color.WHITE.getRGB());
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.width") + ": " + this.element.getWidth(), this.element.getX(editor)*2, (this.element.getY(editor)*2) - 8, Color.WHITE.getRGB());
 //
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.element.getY(editor), ((this.element.getX(editor) + this.element.getWidth())*2)+3, ((this.element.getY(editor) + this.element.getHeight())*2) - 14, Color.WHITE.getRGB());
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.element.getHeight(), ((this.element.getX(editor) + this.element.getWidth())*2)+3, ((this.element.getY(editor) + this.element.getHeight())*2) - 5, Color.WHITE.getRGB());
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.posy") + ": " + this.element.getY(editor), ((this.element.getX(editor) + this.element.getWidth())*2)+3, ((this.element.getY(editor) + this.element.getHeight())*2) - 14, Color.WHITE.getRGB());
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.height") + ": " + this.element.getHeight(), ((this.element.getX(editor) + this.element.getWidth())*2)+3, ((this.element.getY(editor) + this.element.getHeight())*2) - 5, Color.WHITE.getRGB());
 //		RenderUtils.postScale(matrix);
 //	}
 //

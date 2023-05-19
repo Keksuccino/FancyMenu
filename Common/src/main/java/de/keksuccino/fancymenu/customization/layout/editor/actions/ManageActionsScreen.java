@@ -9,8 +9,8 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,14 +39,14 @@ public class ManageActionsScreen extends Screen {
 
     public ManageActionsScreen(@Nullable Screen parentScreen, @NotNull List<ActionInstance> instances, @NotNull Consumer<List<ActionInstance>> callback) {
 
-        super(Component.literal(Locals.localize("fancymenu.editor.action.screens.manage_screen.manage")));
+        super(Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.manage")));
 
         this.parentScreen = parentScreen;
         this.callback = callback;
         this.instances = instances;
         this.updateActionInstanceScrollArea(false);
 
-        this.addActionButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.action.screens.add_action"), true, (button) -> {
+        this.addActionButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), true, (button) -> {
             BuildActionScreen s = new BuildActionScreen(this, null, (call) -> {
                 if (call != null) {
                     this.instances.add(call);
@@ -55,10 +55,10 @@ public class ManageActionsScreen extends Screen {
             });
             Minecraft.getInstance().setScreen(s);
         });
-        this.addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.add_action.desc"), "%n%"));
+        this.addActionButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.add_action.desc")));
         UIBase.applyDefaultButtonSkinTo(this.addActionButton);
 
-        this.moveUpButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.action.screens.move_action_up"), true, (button) -> {
+        this.moveUpButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_up"), true, (button) -> {
             if (this.isInstanceSelected()) {
                 ActionInstance selected = this.getSelectedInstance();
                 int index = this.instances.indexOf(selected);
@@ -79,10 +79,10 @@ public class ManageActionsScreen extends Screen {
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
                 } else {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.move_action_up.desc"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.move_action_up.desc")));
                     this.active = true;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -90,7 +90,7 @@ public class ManageActionsScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.moveUpButton);
 
-        this.moveDownButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.action.screens.move_action_down"), true, (button) -> {
+        this.moveDownButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_down"), true, (button) -> {
             if (this.isInstanceSelected()) {
                 ActionInstance selected = this.getSelectedInstance();
                 int index = this.instances.indexOf(selected);
@@ -111,10 +111,10 @@ public class ManageActionsScreen extends Screen {
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
                 } else {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.move_action_down.desc"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.move_action_down.desc")));
                     this.active = true;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -122,7 +122,7 @@ public class ManageActionsScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.moveDownButton);
 
-        this.editButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.action.screens.edit_action"), true, (button) -> {
+        this.editButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), true, (button) -> {
             if (this.isInstanceSelected()) {
                 BuildActionScreen s = new BuildActionScreen(this, this.getSelectedInstance(), (call) -> {
                     this.updateActionInstanceScrollArea(false);
@@ -134,10 +134,10 @@ public class ManageActionsScreen extends Screen {
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
                 } else {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.edit_action.desc"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.edit_action.desc")));
                     this.active = true;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -145,7 +145,7 @@ public class ManageActionsScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.editButton);
 
-        this.removeButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.action.screens.remove_action"), true, (button) -> {
+        this.removeButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), true, (button) -> {
             if (this.isInstanceSelected()) {
                 ActionInstance i = this.getSelectedInstance();
                 Screen s = new ConfirmationScreen(this, (call) -> {
@@ -153,7 +153,7 @@ public class ManageActionsScreen extends Screen {
                         this.instances.remove(i);
                         this.updateActionInstanceScrollArea(false);
                     }
-                }, StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.remove_action.confirm"), "%n%"));
+                }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.remove_action.confirm")));
                 Minecraft.getInstance().setScreen(s);
             }
         }) {
@@ -161,10 +161,10 @@ public class ManageActionsScreen extends Screen {
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
                 } else {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.remove_action.desc"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.remove_action.desc")));
                     this.active = true;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -172,7 +172,7 @@ public class ManageActionsScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
-        this.doneButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instances);
         });
@@ -206,7 +206,7 @@ public class ManageActionsScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(matrix, titleComp, 20, 20, -1);
 
-        this.font.draw(matrix, Locals.localize("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, -1);
+        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, -1);
 
         this.actionsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
@@ -292,8 +292,8 @@ public class ManageActionsScreen extends Screen {
             this.lineHeight = lineHeight;
 
             this.displayNameComponent = Component.literal(this.instance.action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
-            String valueString = ((this.instance.value != null) && this.instance.action.hasValue()) ? this.instance.value : Locals.localize("fancymenu.editor.action.screens.manage_screen.info.value.none");
-            this.valueComponent = Component.literal(Locals.localize("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
+            String valueString = ((this.instance.value != null) && this.instance.action.hasValue()) ? this.instance.value : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
+            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 2) + (HEADER_FOOTER_HEIGHT * 2));

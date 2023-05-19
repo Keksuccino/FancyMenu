@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +41,7 @@ public class TickerEditorElement extends AbstractEditorElement {
 
 //        TickerElement i = ((TickerElement)this.element);
 //
-//        AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
+//        AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
 //            List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
 //            for (ActionExecutor.ActionContainer c : i.actions) {
 //                Action bac = ActionRegistry.getActionByName(c.action);
@@ -61,11 +61,11 @@ public class TickerEditorElement extends AbstractEditorElement {
 //            });
 //            Minecraft.getInstance().setScreen(s);
 //        });
-//        manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.elements.ticker.manage_actions.desc"), "%n%"));
+//        manageActionsButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.elements.ticker.manage_actions.desc")));
 //        this.rightClickContextMenu.addContent(manageActionsButton);
 //
-//        AdvancedButton tickDelayButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.tick_delay"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0), Locals.localize("fancymenu.customization.items.ticker.tick_delay"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+//        AdvancedButton tickDelayButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.ticker.tick_delay"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0), I18n.get("fancymenu.customization.items.ticker.tick_delay"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 //                if (call != null) {
 //                    if (MathUtils.isLong(call)) {
 //                        long delay = Long.parseLong(call);
@@ -86,7 +86,7 @@ public class TickerEditorElement extends AbstractEditorElement {
 //            p.setText("" + i.tickDelayMs);
 //            PopupHandler.displayPopup(p);
 //        });
-//        tickDelayButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.tick_delay.desc"), "%n%"));
+//        tickDelayButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.ticker.tick_delay.desc")));
 //        this.rightClickContextMenu.addContent(tickDelayButton);
 //
 //        AdvancedButton asyncButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
@@ -99,14 +99,14 @@ public class TickerEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.isAsync) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.async.on"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.async.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.async.off"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.async.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        asyncButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.async.desc"), "%n%"));
+//        asyncButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.ticker.async.desc")));
 //        this.rightClickContextMenu.addContent(asyncButton);
 //
 //        AdvancedButton oneTickModeButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
@@ -121,16 +121,16 @@ public class TickerEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.tickMode == TickerElement.TickMode.NORMAL) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.normal"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.tick_mode.normal"));
 //                } else if (i.tickMode == TickerElement.TickMode.ONCE_PER_SESSION){
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.once_per_session"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.tick_mode.once_per_session"));
 //                } else if (i.tickMode == TickerElement.TickMode.ON_MENU_LOAD) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.on_menu_load"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.tick_mode.on_menu_load"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        oneTickModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.tick_mode.desc"), "%n%"));
+//        oneTickModeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.ticker.tick_mode.desc")));
 //        this.rightClickContextMenu.addContent(oneTickModeButton);
 
     }

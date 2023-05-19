@@ -10,8 +10,8 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,8 +34,8 @@ public class SliderEditorElement extends AbstractEditorElement {
 
 //        SliderElement i = ((SliderElement)this.element);
 //
-//        AdvancedButton setVariableButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.set_variable"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.slider.editor.set_variable"), null, 240, (call) -> {
+//        AdvancedButton setVariableButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_variable"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.set_variable"), null, 240, (call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
 //                        if ((i.linkedVariable == null) || (!i.linkedVariable.equals(call))) {
@@ -55,20 +55,20 @@ public class SliderEditorElement extends AbstractEditorElement {
 //            }
 //            PopupHandler.displayPopup(p);
 //        });
-//        setVariableButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.slider.editor.set_variable.desc"), "%n%"));
+//        setVariableButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_variable.desc")));
 //        this.rightClickContextMenu.addContent(setVariableButton);
 //
 //        ContextMenu setTypeMenu = new ContextMenu();
 //        this.rightClickContextMenu.addChild(setTypeMenu);
 //
-//        AdvancedButton setTypeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.set_type"), true, (press) -> {
+//        AdvancedButton setTypeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_type"), true, (press) -> {
 //            setTypeMenu.setParentButton((AdvancedButton) press);
 //            setTypeMenu.openMenuAt(0, press.y);
 //        });
-//        setTypeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.slider.editor.set_type.desc"), "%n%"));
+//        setTypeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_type.desc")));
 //        this.rightClickContextMenu.addContent(setTypeButton);
 //        for (SliderElement.SliderType t : SliderElement.SliderType.values()) {
-//            AdvancedButton typeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.type." + t.getName()), (press) -> {
+//            AdvancedButton typeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.type." + t.getName()), (press) -> {
 //                if (i.type != t) {
 //                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //                }
@@ -80,9 +80,9 @@ public class SliderEditorElement extends AbstractEditorElement {
 //                @Override
 //                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                    if (i.type == t) {
-//                        this.setMessage("§a" + Locals.localize("fancymenu.customization.items.slider.type." + t.getName()));
+//                        this.setMessage("§a" + I18n.get("fancymenu.customization.items.slider.type." + t.getName()));
 //                    } else {
-//                        this.setMessage(Locals.localize("fancymenu.customization.items.slider.type." + t.getName()));
+//                        this.setMessage(I18n.get("fancymenu.customization.items.slider.type." + t.getName()));
 //                    }
 //                    super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //                }
@@ -90,8 +90,8 @@ public class SliderEditorElement extends AbstractEditorElement {
 //            setTypeMenu.addContent(typeButton);
 //        }
 //
-//        AdvancedButton setLabelPrefixButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.set_label_prefix"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.slider.editor.set_label_prefix"), null, 240, (call) -> {
+//        AdvancedButton setLabelPrefixButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_label_prefix"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.set_label_prefix"), null, 240, (call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
 //                        if ((i.labelPrefix == null) || (!i.labelPrefix.equals(call))) {
@@ -112,11 +112,11 @@ public class SliderEditorElement extends AbstractEditorElement {
 //            }
 //            PopupHandler.displayPopup(p);
 //        });
-//        setLabelPrefixButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.slider.editor.set_label_prefix.desc"), "%n%"));
+//        setLabelPrefixButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_label_prefix.desc")));
 //        this.rightClickContextMenu.addContent(setLabelPrefixButton);
 //
-//        AdvancedButton setLabelSuffixButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.set_label_suffix"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.slider.editor.set_label_suffix"), null, 240, (call) -> {
+//        AdvancedButton setLabelSuffixButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_label_suffix"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.set_label_suffix"), null, 240, (call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
 //                        if ((i.labelSuffix == null) || (!i.labelSuffix.equals(call))) {
@@ -137,15 +137,15 @@ public class SliderEditorElement extends AbstractEditorElement {
 //            }
 //            PopupHandler.displayPopup(p);
 //        });
-//        setLabelSuffixButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.slider.editor.set_label_suffix.desc"), "%n%"));
+//        setLabelSuffixButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_label_suffix.desc")));
 //        this.rightClickContextMenu.addContent(setLabelSuffixButton);
 //
 //        this.rightClickContextMenu.addSeparator();
 //
 //        if (i.type == SliderElement.SliderType.RANGE) {
 //
-//            AdvancedButton setMinRangeValueButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.range.set_min_range_value"), (press) -> {
-//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.slider.editor.range.set_min_range_value"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+//            AdvancedButton setMinRangeValueButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.range.set_min_range_value"), (press) -> {
+//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.range.set_min_range_value"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 //                    if (call != null) {
 //                        if (!call.replace(" ", "").equals("")) {
 //                            if (MathUtils.isInteger(call)) {
@@ -169,8 +169,8 @@ public class SliderEditorElement extends AbstractEditorElement {
 //            });
 //            this.rightClickContextMenu.addContent(setMinRangeValueButton);
 //
-//            AdvancedButton setMaxRangeValueButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.range.set_max_range_value"), (press) -> {
-//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.slider.editor.range.set_max_range_value"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+//            AdvancedButton setMaxRangeValueButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.range.set_max_range_value"), (press) -> {
+//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.range.set_max_range_value"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 //                    if (call != null) {
 //                        if (!call.replace(" ", "").equals("")) {
 //                            if (MathUtils.isInteger(call)) {
@@ -197,8 +197,8 @@ public class SliderEditorElement extends AbstractEditorElement {
 //        }
 //        if (i.type == SliderElement.SliderType.LIST) {
 //
-//            AdvancedButton setListValuesButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.slider.editor.list.set_list_values"), (press) -> {
-//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.slider.editor.list.set_list_values"), null, 240, (call) -> {
+//            AdvancedButton setListValuesButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values"), (press) -> {
+//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values"), null, 240, (call) -> {
 //                    if (call != null) {
 //                        if (!call.replace(" ", "").equals("")) {
 //                            List<String> newValues = SliderElement.deserializeValuesList(call);
@@ -208,7 +208,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 //                                }
 //                                i.listValues = SliderElement.deserializeValuesList(call);
 //                            } else {
-//                                FMNotificationPopup p2 = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.customization.items.slider.editor.list.set_list_values.error.not_enough_values"), "%n%"));
+//                                FMNotificationPopup p2 = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values.error.not_enough_values")));
 //                                PopupHandler.displayPopup(p2);
 //                            }
 //                        } else {
@@ -227,7 +227,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 //                p.setText(SliderElement.serializeValuesList(i.listValues));
 //                PopupHandler.displayPopup(p);
 //            });
-//            setListValuesButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.slider.editor.list.set_list_values.desc"), "%n%"));
+//            setListValuesButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values.desc")));
 //            this.rightClickContextMenu.addContent(setListValuesButton);
 //
 //        }

@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.wi
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,17 +30,17 @@ public class IsFullscreenRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.fullscreen");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.fullscreen");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.fullscreen.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.visibilityrequirements.fullscreen.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.editor.loading_requirement.category.window");
+        return I18n.get("fancymenu.editor.loading_requirement.category.window");
     }
 
     @Override

@@ -7,9 +7,8 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.v1.button.VanillaButtonCustomizationItem;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,26 +27,22 @@ public class ElementHeightPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String id = dps.values.get("id");
         if (id != null) {
-            AbstractElement element = findCustomizationItemForId(id);
+            AbstractElement element = findElement(id);
             if (element != null) {
-                if (element instanceof VanillaButtonCustomizationItem) {
-                    return "" + ((VanillaButtonCustomizationItem) element).parent.getButton().getHeight();
-                }
                 return "" + element.getHeight();
             }
         }
         return null;
     }
 
-    private AbstractElement findCustomizationItemForId(String id) {
+    private AbstractElement findElement(String id) {
         if (Minecraft.getInstance().screen != null) {
-            if (!(Minecraft.getInstance().screen instanceof LayoutEditorScreen)) {
+            if (!(Minecraft.getInstance().screen instanceof LayoutEditorScreen editor)) {
                 ScreenCustomizationLayer mh = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
                 if (mh != null) {
                     return mh.getElementByInstanceIdentifier(id);
                 }
             } else {
-                LayoutEditorScreen editor = ((LayoutEditorScreen)Minecraft.getInstance().screen);
                 AbstractEditorElement e = editor.getElementByInstanceIdentifier(id);
                 if (e != null) {
                     return e.element;
@@ -65,18 +60,18 @@ public class ElementHeightPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.placeholder.elementheight");
+    public @NotNull String getDisplayName() {
+        return I18n.get("fancymenu.helper.placeholder.elementheight");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.elementheight.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.placeholder.elementheight.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
     }
 
     @Override

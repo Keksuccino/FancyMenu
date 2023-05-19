@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,17 +32,17 @@ public class ScreenWidthPlaceholder extends Placeholder {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.gui");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui");
     }
 
     @Override

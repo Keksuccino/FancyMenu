@@ -13,7 +13,7 @@
 //import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 //import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 //import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-//import de.keksuccino.konkrete.input.StringUtils;
+//import de.keksuccino.fancymenu.utils.LocalizationUtils;
 //import de.keksuccino.konkrete.math.MathUtils;
 //import de.keksuccino.fancymenu.properties.PropertiesSection;
 //import de.keksuccino.konkrete.sound.SoundHandler;
@@ -177,7 +177,7 @@
 //
 //		if (this.elementType.equalsIgnoreCase("setbuttondescription") && (this.tooltip != null)) {
 //			if (this.parent.getButton().isHoveredOrFocused()) {
-//				TooltipHandler.INSTANCE.addWidgetTooltip(this.parent.getButton(), Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
+//				TooltipHandler.INSTANCE.addWidgetTooltip(this.parent.getButton(), Tooltip.create(LocalizationUtils.splitLocalizedStringLines(PlaceholderParser.replacePlaceholders(this.tooltip))), false, true);
 //			}
 //		}
 //

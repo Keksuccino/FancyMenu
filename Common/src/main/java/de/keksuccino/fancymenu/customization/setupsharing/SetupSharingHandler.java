@@ -15,8 +15,8 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
@@ -71,12 +71,12 @@ public class SetupSharingHandler {
         try {
             FMYesNoPopup importConfirmPop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
                 if (call) {
-                    FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.setupsharing.import.enterpath"), null, 240, (call2) -> {
+                    FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.setupsharing.import.enterpath"), null, 240, (call2) -> {
                         importSetupWithPathRaw(call2);
                     });
                     PopupHandler.displayPopup(pop);
                 }
-            }, Locals.localize("fancymenu.helper.setupsharing.import.confirm"));
+            }, I18n.get("fancymenu.helper.setupsharing.import.confirm"));
             PopupHandler.displayPopup(importConfirmPop);
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,7 +95,7 @@ public class SetupSharingHandler {
                     });
                     PopupHandler.displayPopup(pop);
                 }
-            }, Locals.localize("fancymenu.helper.setupsharing.import.confirm"));
+            }, I18n.get("fancymenu.helper.setupsharing.import.confirm"));
             PopupHandler.displayPopup(importConfirmPop);
         } catch (Exception e) {
             e.printStackTrace();
@@ -123,7 +123,7 @@ public class SetupSharingHandler {
                                         if (onFinished.wasImportSuccessful()) {
                                             FMNotificationPopup pop2 = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, () -> {
                                                 ScreenCustomization.reloadFancyMenu();
-                                            }, Locals.localize("fancymenu.helper.setupsharing.import.success"));
+                                            }, I18n.get("fancymenu.helper.setupsharing.import.success"));
                                             PopupHandler.displayPopup(pop2);
                                         } else if (!onFinished.wasCanceledByUser()) {
                                             displayImportErrorPopup();
@@ -143,7 +143,7 @@ public class SetupSharingHandler {
                         });
 
                     } else {
-                        FMNotificationPopup pop2 = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.setupsharing.import.invalidsetup"));
+                        FMNotificationPopup pop2 = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.helper.setupsharing.import.invalidsetup"));
                         PopupHandler.displayPopup(pop2);
                     }
                 }
@@ -157,7 +157,7 @@ public class SetupSharingHandler {
     protected static void displayImportErrorPopup() {
         FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, () -> {
             ScreenCustomization.reloadFancyMenu();
-        }, Locals.localize("fancymenu.helper.setupsharing.import.error"));
+        }, I18n.get("fancymenu.helper.setupsharing.import.error"));
         PopupHandler.displayPopup(pop);
     }
 
@@ -166,14 +166,14 @@ public class SetupSharingHandler {
             FMYesNoPopup exportConfirmPopup = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
                 if (call) {
                     String setupNameDefault = "exported_fm_setup_" + getTimestamp();
-                    FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.setupsharing.export.entername"), null, 240, (call2) -> {
+                    FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.setupsharing.export.entername"), null, 240, (call2) -> {
                         if (call2 != null) {
                             new Thread(() -> {
                                 String setupName = call2;
                                 if (setupName.replace(" ", "").equals("")) {
                                     setupName = setupNameDefault;
                                 }
-                                StatusPopup exportBlockerPopup = new StatusPopup(Locals.localize("fancymenu.helper.setupsharing.import.exportingsetup"));
+                                StatusPopup exportBlockerPopup = new StatusPopup(I18n.get("fancymenu.helper.setupsharing.import.exportingsetup"));
                                 PopupHandler.displayPopup(exportBlockerPopup);
                                 try {
                                     FM_SETUPS_DIR.mkdirs();
@@ -198,7 +198,7 @@ public class SetupSharingHandler {
                     pop.setText(setupNameDefault);
                     PopupHandler.displayPopup(pop);
                 }
-            }, Locals.localize("fancymenu.helper.setupsharing.export.confirm"));
+            }, I18n.get("fancymenu.helper.setupsharing.export.confirm"));
             PopupHandler.displayPopup(exportConfirmPopup);
         } catch (Exception e) {
             e.printStackTrace();
@@ -209,7 +209,7 @@ public class SetupSharingHandler {
     protected static void copyTempImportPath(File setup, File temp, Runnable onFinish) {
         new Thread(() -> {
             try {
-                StatusPopup copyBlockerPopup = new StatusPopup(Locals.localize("fancymenu.helper.setupsharing.import.preparing"));
+                StatusPopup copyBlockerPopup = new StatusPopup(I18n.get("fancymenu.helper.setupsharing.import.preparing"));
                 PopupHandler.displayPopup(copyBlockerPopup);
                 FileUtils.copyDirectory(setup, temp);
                 copyBlockerPopup.setDisplayed(false);
@@ -223,7 +223,7 @@ public class SetupSharingHandler {
     protected static void backupCurrentSetup(Runnable onFinish) {
         new Thread(() -> {
             try {
-                StatusPopup backupBlockerPopup = new StatusPopup(Locals.localize("fancymenu.helper.setupsharing.restore.backingup"));
+                StatusPopup backupBlockerPopup = new StatusPopup(I18n.get("fancymenu.helper.setupsharing.restore.backingup"));
                 PopupHandler.displayPopup(backupBlockerPopup);
                 SETUP_BACKUP_DIR.mkdirs();
                 deleteOldBackups();
@@ -293,7 +293,7 @@ public class SetupSharingHandler {
     }
 
     protected static void displayExportErrorPopup() {
-        FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.setupsharing.export.error"));
+        FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.helper.setupsharing.export.error"));
         PopupHandler.displayPopup(pop);
     }
 
@@ -307,7 +307,7 @@ public class SetupSharingHandler {
                 e.printStackTrace();
                 displayExportErrorPopup();
             }
-        }, Locals.localize("fancymenu.helper.setupsharing.export.success"));
+        }, I18n.get("fancymenu.helper.setupsharing.export.success"));
         PopupHandler.displayPopup(pop);
     }
 
@@ -319,7 +319,7 @@ public class SetupSharingHandler {
                 }
             }
             displayExportSuccessPopup(exportTo);
-        }, Locals.localize("fancymenu.helper.setupsharing.export.unabletoexport", "" + unableToExportList.size()));
+        }, I18n.get("fancymenu.helper.setupsharing.export.unabletoexport", "" + unableToExportList.size()));
         PopupHandler.displayPopup(pop);
     }
 
@@ -810,7 +810,7 @@ public class SetupSharingHandler {
                                                 } else {
                                                     finish(true);
                                                 }
-                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentmodloader", setupProperties.modLoader, FancyMenu.MOD_LOADER), "%n%"));
+                                            }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.setupsharing.import.differentmodloader", setupProperties.modLoader, FancyMenu.MOD_LOADER)));
                                             PopupHandler.displayPopup(pop);
                                         } else {
                                             step = 2;
@@ -830,7 +830,7 @@ public class SetupSharingHandler {
                                                 } else {
                                                     finish(true);
                                                 }
-                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentmcversion", setupProperties.mcVersion, SharedConstants.getCurrentVersion().getName()), "%n%"));
+                                            }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.setupsharing.import.differentmcversion", setupProperties.mcVersion, SharedConstants.getCurrentVersion().getName())));
                                             PopupHandler.displayPopup(pop);
                                         } else {
                                             step = 3;
@@ -850,7 +850,7 @@ public class SetupSharingHandler {
                                                 } else {
                                                     finish(true);
                                                 }
-                                            }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.differentfmversion", setupProperties.fmVersion, FancyMenu.VERSION), "%n%"));
+                                            }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.setupsharing.import.differentfmversion", setupProperties.fmVersion, FancyMenu.VERSION)));
                                             PopupHandler.displayPopup(pop);
                                         } else {
                                             step = 4;
@@ -874,7 +874,7 @@ public class SetupSharingHandler {
                                             }
                                             step = 6;
                                             doStep = true;
-                                        }, StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.invalididentifiers"), "%n%"));
+                                        }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.setupsharing.import.invalididentifiers")));
                                         PopupHandler.displayPopup(pop);
                                     } else {
                                         step = 6;
@@ -884,7 +884,7 @@ public class SetupSharingHandler {
                                 // STEP 6 : IMPORT SETUP
                                 if (step == 6) {
                                     try {
-                                        importBlockerPopup = new StatusPopup(Locals.localize("fancymenu.helper.setupsharing.import.importingsetup"));
+                                        importBlockerPopup = new StatusPopup(I18n.get("fancymenu.helper.setupsharing.import.importingsetup"));
                                         PopupHandler.displayPopup(importBlockerPopup);
                                         if (this.setupInstancePath.isDirectory()) {
                                             File targetRaw = Minecraft.getInstance().gameDirectory;

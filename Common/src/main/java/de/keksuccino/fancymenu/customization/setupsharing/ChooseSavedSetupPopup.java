@@ -10,7 +10,7 @@ import de.keksuccino.konkrete.gui.content.scrollarea.ScrollAreaEntry;
 import de.keksuccino.konkrete.input.KeyboardData;
 import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import java.awt.Color;
 import java.io.File;
@@ -49,7 +49,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
 
         this.updateScrollList();
 
-        this.chooseButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.choosefile.choose"), true, (press) -> {
+        this.chooseButton = new AdvancedButton(0, 0, 100, 20, I18n.get("popup.choosefile.choose"), true, (press) -> {
             if (this.focused != null) {
                 this.close();
             }
@@ -57,7 +57,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
         this.addButton(this.chooseButton);
         this.colorizePopupButton(this.chooseButton);
 
-        this.closeButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("popup.yesno.cancel"), true, (press) -> {
+        this.closeButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (press) -> {
             if (this.callback != null) {
                 this.callback.accept(null);
             }
@@ -87,7 +87,7 @@ public class ChooseSavedSetupPopup extends FMPopup {
         fill(matrix, 0, 0, renderIn.width, 40, this.overlayColor.getRGB());
         fill(matrix, 0, renderIn.height - 60, renderIn.width, renderIn.height, this.overlayColor.getRGB());
 
-        drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), renderIn.width / 2, 17, Color.WHITE.getRGB());
+        drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved"), renderIn.width / 2, 17, Color.WHITE.getRGB());
 
         this.chooseButton.x = renderIn.width / 2 - this.chooseButton.getWidth() - 5;
         this.chooseButton.y = renderIn.height - 40;
@@ -118,12 +118,12 @@ public class ChooseSavedSetupPopup extends FMPopup {
                     e3.printStackTrace();
                 }
                 String[] desc = new String[] {
-                        Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip"),
+                        I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip"),
                         " ",
-                        Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.datemodified", modified),
-                        Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.mcversion", sp.mcVersion),
-                        Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.fmversion", sp.fmVersion),
-                        Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.modloader", sp.modLoader)
+                        I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.datemodified", modified),
+                        I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.mcversion", sp.mcVersion),
+                        I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.fmversion", sp.fmVersion),
+                        I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved.tooltip.modloader", sp.modLoader)
                 };
                 renderDescription(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), desc);
             }

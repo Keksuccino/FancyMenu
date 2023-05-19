@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.objecthunter.exp4j.Expression;
 import de.keksuccino.konkrete.objecthunter.exp4j.ExpressionBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -51,17 +51,17 @@ public class CalculatorPlaceholder extends Placeholder {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.placeholder.calc");
+        return I18n.get("fancymenu.helper.placeholder.calc");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.calc.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.placeholder.calc.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.advanced");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced");
     }
 
     @Override

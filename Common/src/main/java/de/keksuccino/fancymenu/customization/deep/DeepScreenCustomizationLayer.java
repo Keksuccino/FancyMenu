@@ -7,18 +7,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class DeepScreenCustomizationLayer<B extends DeepElementBuilder<?,?,?>> {
+public class DeepScreenCustomizationLayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected String targetMenuIdentifier;
-    protected final Map<String, B> builders = new HashMap<>();
+    protected final Map<String, DeepElementBuilder<?,?,?>> builders = new HashMap<>();
 
     public DeepScreenCustomizationLayer(@NotNull String targetMenuIdentifier) {
         this.targetMenuIdentifier = targetMenuIdentifier;
     }
 
-    public void registerBuilder(@NotNull B builder) {
+    public void registerBuilder(@NotNull DeepElementBuilder<?,?,?> builder) {
         Objects.requireNonNull(builder.getIdentifier(), "[FANCYMENU] Failed to register DeepElementBuilder! Identifier was NULL!");
         if (builders.containsKey(builder.getIdentifier())) {
             LOGGER.warn("[FANCYMENU] DeepElementBuilder with identifier '" + builder.getIdentifier() + "' already registered! Overriding builder!");
@@ -31,12 +31,12 @@ public class DeepScreenCustomizationLayer<B extends DeepElementBuilder<?,?,?>> {
     }
 
     @NotNull
-    public List<B> getBuilders() {
+    public List<DeepElementBuilder<?,?,?>> getBuilders() {
         return new ArrayList<>(this.builders.values());
     }
 
     @Nullable
-    public B getBuilder(@NotNull String identifier) {
+    public DeepElementBuilder<?,?,?> getBuilder(@NotNull String identifier) {
         return this.builders.get(identifier);
     }
 

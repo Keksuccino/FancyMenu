@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -51,12 +51,12 @@ public class PasteToChatAction extends Action {
 
     @Override
     public String getActionDescription() {
-        return Locals.localize("fancymenu.helper.buttonaction.paste_to_chat.desc");
+        return I18n.get("fancymenu.helper.buttonaction.paste_to_chat.desc");
     }
 
     @Override
     public String getValueDescription() {
-        return Locals.localize("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
+        return I18n.get("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
     }
 
     @Override

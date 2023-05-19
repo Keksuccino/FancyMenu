@@ -1,11 +1,14 @@
 package de.keksuccino.fancymenu.customization.element.elements;
 
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
+import de.keksuccino.fancymenu.customization.element.elements.animation.AnimationElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.SliderElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.TextElementBuilder;
@@ -20,6 +23,9 @@ public class Elements {
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
     public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
+    public static final AnimationElementBuilder ANIMATION = new AnimationElementBuilder();
+    public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
+    public static final ShapeElementBuilder SHAPE = new ShapeElementBuilder();
 
     public static void registerAll() {
 
@@ -31,6 +37,9 @@ public class Elements {
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);
         ElementRegistry.register(SPLASH_TEXT);
+        ElementRegistry.register(ANIMATION);
+        ElementRegistry.register(SLIDESHOW);
+        ElementRegistry.register(SHAPE);
 
     }
 

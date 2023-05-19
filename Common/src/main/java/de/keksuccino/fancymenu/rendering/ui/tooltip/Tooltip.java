@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.rendering.ui.tooltip;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -46,7 +47,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     protected Integer y = null;
     protected int textBorderSize = 5;
     protected int mouseOffset = 12;
-    protected LocalTexture backgroundTexture = null;
+    protected WrappedTexture backgroundTexture = null;
     protected Color backgroundColor = null;
     protected Color borderColor = null;
     protected boolean vanillaLike = true;
@@ -289,22 +290,23 @@ public class Tooltip extends GuiComponent implements Renderable {
         return this.mouseOffset;
     }
 
-    public Tooltip setBackgroundTexture(ResourceLocation texture) {
-        this.backgroundTexture = LocalTexture.create(texture);
+    public Tooltip setBackgroundTexture(@NotNull ResourceLocation texture) {
+        this.backgroundTexture = WrappedTexture.create(texture);
         this.backgroundColor = null;
-        this.vanillaLike = (texture == null);
+        this.vanillaLike = false;
         return this;
     }
 
-    public LocalTexture getBackgroundTexture() {
+    @Nullable
+    public WrappedTexture getBackgroundTexture() {
         return backgroundTexture;
     }
 
-    public Tooltip setBackgroundColor(Color backgroundColor, @Nullable Color borderColor) {
+    public Tooltip setBackgroundColor(@NotNull Color backgroundColor, @Nullable Color borderColor) {
         this.backgroundColor = backgroundColor;
         this.borderColor = borderColor;
         this.backgroundTexture = null;
-        this.vanillaLike = (backgroundColor == null);
+        this.vanillaLike = false;
         return this;
     }
 
@@ -312,10 +314,12 @@ public class Tooltip extends GuiComponent implements Renderable {
         return this.setBackgroundColor(DEFAULT_BACKGROUND_COLOR, DEFAULT_BORDER_COLOR);
     }
 
+    @Nullable
     public Color getBackgroundColor() {
         return this.backgroundColor;
     }
 
+    @Nullable
     public Color getBorderColor() {
         return this.borderColor;
     }

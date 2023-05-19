@@ -91,13 +91,13 @@ public class LayoutEditorUI extends UIBase {
 			// LAYOUT TAB
 			this.layoutMenu.getContextMenu().setAutoclose(true);
 			this.topMenuBar.addChild(this.layoutMenu.getContextMenu(), "fm.editor.ui.tab.layout", ElementAlignment.LEFT);
-			OverlayButton layoutTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("helper.editor.ui.layout"), true, (press) -> {
+			OverlayButton layoutTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("fancymenu.editor.layout"), true, (press) -> {
 				layoutMenu.getContextMenu().setParentButton((AdvancedButton)press);
 				layoutMenu.openMenu(press.x, press.y + press.getHeight());
 			});
 			this.topMenuBar.addElement(layoutTabButton, "fm.editor.ui.tab.layout", ElementAlignment.LEFT, false);
 
-			this.layoutMenu.addClickableEntry("new_layout", false, Component.translatable("helper.editor.ui.layout.new"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.layoutMenu.addClickableEntry("new_layout", false, Component.translatable("fancymenu.editor.layout.new"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.displayUnsavedWarning((call) -> {
 					if (call) {
 						SoundRegistry.stopSounds();
@@ -109,16 +109,16 @@ public class LayoutEditorUI extends UIBase {
 
 			AdvancedContextMenu openLayoutMenu = this.buildOpenLayoutContextMenu();
 			openLayoutMenu.getContextMenu().setAutoclose(true);
-			this.layoutMenu.addClickableEntry("open_layout", false, Component.translatable("helper.editor.ui.layout.open"), openLayoutMenu, Boolean.class, (entry, inherited, pass) -> {
+			this.layoutMenu.addClickableEntry("open_layout", false, Component.translatable("fancymenu.editor.layout.open"), openLayoutMenu, Boolean.class, (entry, inherited, pass) -> {
 				openLayoutMenu.getContextMenu().setParentButton(entry.getButton());
 				openLayoutMenu.openMenu(0, entry.getButton().y);
 			});
 
-			this.layoutMenu.addClickableEntry("save_layout", false, Component.translatable("helper.editor.ui.layout.save"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.layoutMenu.addClickableEntry("save_layout", false, Component.translatable("fancymenu.editor.layout.save"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.saveLayout();
 			});
 
-			this.layoutMenu.addClickableEntry("save_layout_as", false, Component.translatable("helper.editor.ui.layout.saveas"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.layoutMenu.addClickableEntry("save_layout_as", false, Component.translatable("fancymenu.editor.layout.saveas"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.saveLayoutAs();
 			});
 
@@ -126,7 +126,7 @@ public class LayoutEditorUI extends UIBase {
 
 			AdvancedContextMenu layoutPropertiesMenu = this.buildEditorRightClickContextMenu();
 			layoutPropertiesMenu.getContextMenu().setAutoclose(true);
-			this.layoutMenu.addClickableEntry("layout_properties", false, Component.translatable("helper.editor.ui.layout.properties"), layoutPropertiesMenu, Boolean.class, (entry, inherited, pass) -> {
+			this.layoutMenu.addClickableEntry("layout_properties", false, Component.translatable("fancymenu.editor.layout.properties"), layoutPropertiesMenu, Boolean.class, (entry, inherited, pass) -> {
 				layoutPropertiesMenu.getContextMenu().setParentButton(entry.getButton());
 				layoutPropertiesMenu.openMenu(0, entry.getButton().y);
 			});
@@ -134,13 +134,13 @@ public class LayoutEditorUI extends UIBase {
 			// EDIT TAB
 			this.editMenu.getContextMenu().setAutoclose(true);
 			this.topMenuBar.addChild(this.editMenu.getContextMenu(), "fm.editor.ui.tab.edit", ElementAlignment.LEFT);
-			OverlayButton editTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("helper.editor.ui.edit"), true, (press) -> {
+			OverlayButton editTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("fancymenu.editor.edit"), true, (press) -> {
 				editMenu.getContextMenu().setParentButton((AdvancedButton)press);
 				editMenu.openMenu(press.x, press.y + press.getHeight());
 			});
 			this.topMenuBar.addElement(editTabButton, "fm.editor.ui.tab.edit", ElementAlignment.LEFT, false);
 
-			this.editMenu.addClickableEntry("undo_action", false, Component.translatable("helper.editor.ui.edit.undo"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.editMenu.addClickableEntry("undo_action", false, Component.translatable("fancymenu.editor.edit.undo"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.stepBack();
 				try {
 					if (Minecraft.getInstance().screen != null) ((LayoutEditorScreen)Minecraft.getInstance().screen).ui.topMenuBar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getContextMenu().getX(), editMenu.getContextMenu().getY());
@@ -149,7 +149,7 @@ public class LayoutEditorUI extends UIBase {
 				}
 			});
 
-			this.editMenu.addClickableEntry("redo_action", false, Component.translatable("helper.editor.ui.edit.redo"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.editMenu.addClickableEntry("redo_action", false, Component.translatable("fancymenu.editor.edit.redo"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.stepForward();
 				try {
 					if (Minecraft.getInstance().screen != null) ((LayoutEditorScreen)Minecraft.getInstance().screen).ui.topMenuBar.getChild("fm.editor.ui.tab.edit").openMenuAt(editMenu.getContextMenu().getX(), editMenu.getContextMenu().getY());
@@ -160,11 +160,11 @@ public class LayoutEditorUI extends UIBase {
 
 			this.editMenu.addSeparatorEntry("separator_1", false);
 
-			this.editMenu.addClickableEntry("copy", false, Component.translatable("helper.editor.ui.edit.copy"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.editMenu.addClickableEntry("copy", false, Component.translatable("fancymenu.editor.edit.copy"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.copyElementsToClipboard(this.editor.getSelectedElements().toArray(new AbstractEditorElement[0]));
 			});
 
-			this.editMenu.addClickableEntry("paste", false, Component.translatable("helper.editor.ui.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.editMenu.addClickableEntry("paste", false, Component.translatable("fancymenu.editor.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.pasteElementsFromClipboard();
 			});
@@ -172,7 +172,7 @@ public class LayoutEditorUI extends UIBase {
 			// ELEMENT TAB
 			this.elementMenu.getContextMenu().setAutoclose(true);
 			this.topMenuBar.addChild(this.elementMenu.getContextMenu(), "fm.editor.ui.tab.element", ElementAlignment.LEFT);
-			OverlayButton elementTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("helper.editor.ui.element"), true, (press) -> {
+			OverlayButton elementTabButton = new OverlayButton(0, 0, 0, 0, Component.translatable("fancymenu.editor.element"), true, (press) -> {
 				elementMenu.getContextMenu().setParentButton((AdvancedButton)press);
 				elementMenu.openMenu(press.x, press.y + press.getHeight());
 			});
@@ -180,18 +180,18 @@ public class LayoutEditorUI extends UIBase {
 
 			AdvancedContextMenu newElementMenu = this.buildNewElementContextMenu();
 			newElementMenu.getContextMenu().setAutoclose(true);
-			this.elementMenu.addClickableEntry("new_element", false, Component.translatable("helper.editor.ui.element.new"), newElementMenu, Boolean.class, (entry, inherited, pass) -> {
+			this.elementMenu.addClickableEntry("new_element", false, Component.translatable("fancymenu.editor.element.new"), newElementMenu, Boolean.class, (entry, inherited, pass) -> {
 				newElementMenu.getContextMenu().setParentButton(entry.getButton());
 				newElementMenu.openMenu(0, entry.getButton().y);
 			});
 
-			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.helper.editor.ui.element.deleted_vanilla_elements"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), null, Boolean.class, (entry, inherited, pass) -> {
 				AdvancedContextMenu hiddenVanillaMenu = this.buildHiddenVanillaElementContextMenu();
 				hiddenVanillaMenu.getContextMenu().setAutoclose(true);
 				this.elementMenu.getContextMenu().addChild(hiddenVanillaMenu.getContextMenu());
 				hiddenVanillaMenu.getContextMenu().setParentButton(entry.getButton());
 				hiddenVanillaMenu.openMenu(0, entry.getButton().y);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc")));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.element.deleted_vanilla_elements.desc")));
 
 			// CLOSE GUI BUTTON TAB
 			AdvancedImageButton exitButton = new AdvancedImageButton(20, 20, 0, 0, CLOSE_BUTTON_TEXTURE, true, (press) -> {
@@ -219,7 +219,7 @@ public class LayoutEditorUI extends UIBase {
 				@Override
 				@SuppressWarnings("all")
 				public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-					TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.editor.ui.exit.desc")), false, true);
+					TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.exit.desc")), false, true);
 					this.width = this.height;
 					super.render(pose, mouseX, mouseY, partial);
 				}
@@ -246,7 +246,7 @@ public class LayoutEditorUI extends UIBase {
 
 	protected void displayUnsavedWarning(Consumer<Boolean> callback) {
 		PopupHandler.displayPopup(
-				new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, callback, LocalizationUtils.splitLocalizedStringLines("helper.editor.ui.unsavedwarning"))
+				new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, callback, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.warning.unsaved"))
 		);
 	}
 
@@ -294,7 +294,7 @@ public class LayoutEditorUI extends UIBase {
 			}
 
 			if (enabled.isEmpty() && disabled.isEmpty()) {
-				menu.addClickableEntry("empty", false, Component.translatable("helper.creator.empty"), null, Boolean.class, (entry, inherited, pass) -> {});
+				menu.addClickableEntry("empty", false, Component.translatable("fancymenu.editor.empty"), null, Boolean.class, (entry, inherited, pass) -> {});
 			}
 
 		} catch (Exception ex) {
@@ -476,15 +476,15 @@ public class LayoutEditorUI extends UIBase {
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
 					if (this.editor.layout.randomMode) {
-						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.on"));
+						e.setLabel(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.on"));
 					} else {
-						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.off"));
+						e.setLabel(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.off"));
 					}
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.btn.desc")));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")));
 
-			menu.addClickableEntry("random_mode_group", false, Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), null, Boolean.class, (entry, inherited, pass) -> {
-				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.creator.layoutoptions.randommode.setgroup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+			menu.addClickableEntry("random_mode_group", false, Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), null, Boolean.class, (entry, inherited, pass) -> {
+				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 					if (call != null) {
 						if (!MathUtils.isInteger(call)) {
 							call = "1";
@@ -503,7 +503,7 @@ public class LayoutEditorUI extends UIBase {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
 					e.getButton().active = this.editor.layout.randomMode;
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc")));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc")));
 
 			menu.addClickableEntry("random_mode_first_time", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -511,16 +511,16 @@ public class LayoutEditorUI extends UIBase {
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
 					if (this.editor.layout.randomOnlyFirstTime) {
-						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on"));
+						e.setLabel(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.on"));
 					} else {
-						e.setLabel(Component.translatable("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off"));
+						e.setLabel(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.off"));
 					}
 				}
 			}).setTicker((entry) -> {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
 					e.getButton().active = this.editor.layout.randomMode;
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.btn.desc")));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc")));
 
 			menu.addSeparatorEntry("separator_4", false);
 
@@ -574,15 +574,15 @@ public class LayoutEditorUI extends UIBase {
 			});
 
 			// FORCE GUI SCALE
-			menu.addClickableEntry("forced_scale", false, Component.translatable("helper.creator.rightclick.scale"), null, Boolean.class, (entry, inherited, pass) -> {
-				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+			menu.addClickableEntry("forced_scale", false, Component.translatable("fancymenu.editor.rightclick.scale"), null, Boolean.class, (entry, inherited, pass) -> {
+				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.editor.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 					if (call != null) {
 						int s = 0;
 						if (MathUtils.isInteger(call)) {
 							s = Integer.parseInt(call);
 						}
 						if (s < 0) {
-							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {}, LocalizationUtils.splitLocalizedStringLines("helper.creator.rightclick.scale.invalid")));
+							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, () -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.rightclick.scale.invalid")));
 						} else {
 							if (this.editor.layout.forcedScale != s) {
 								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -666,7 +666,7 @@ public class LayoutEditorUI extends UIBase {
 			menu.addSeparatorEntry("separator_8", false);
 
 			// PASTE
-			menu.addClickableEntry("paste_elements", false, Component.translatable("helper.editor.ui.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
+			menu.addClickableEntry("paste_elements", false, Component.translatable("fancymenu.editor.edit.paste"), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.editor.pasteElementsFromClipboard();
 			}).setTicker((entry) -> {
@@ -678,7 +678,7 @@ public class LayoutEditorUI extends UIBase {
 			// NEW ELEMENT
 			AdvancedContextMenu newElementMenu = this.buildNewElementContextMenu();
 			newElementMenu.getContextMenu().setAutoclose(true);
-			menu.addClickableEntry("new_element", false, Component.translatable("helper.editor.ui.layoutproperties.newelement"), newElementMenu, Boolean.class, (entry, inherited, pass) -> {
+			menu.addClickableEntry("new_element", false, Component.translatable("fancymenu.editor.layoutproperties.newelement"), newElementMenu, Boolean.class, (entry, inherited, pass) -> {
 				newElementMenu.getContextMenu().setParentButton(entry.getButton());
 				newElementMenu.openMenu(0, entry.getButton().y);
 			});
@@ -700,7 +700,7 @@ public class LayoutEditorUI extends UIBase {
 
 			// DUMMY BUTTON: INSTALL AUDIO EXTENSION
 			if (!FancyMenu.isAudioExtensionLoaded()) {
-				menu.addClickableEntry("install_audio_extension", false, Component.translatable("helper.creator.add.audio"), null, Boolean.class, (entry, inherited, pass) -> {
+				menu.addClickableEntry("install_audio_extension", false, Component.translatable("fancymenu.editor.add.audio"), null, Boolean.class, (entry, inherited, pass) -> {
 					ActionExecutor.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
 				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.extension.dummy.audio.btn.desc")));
 			}

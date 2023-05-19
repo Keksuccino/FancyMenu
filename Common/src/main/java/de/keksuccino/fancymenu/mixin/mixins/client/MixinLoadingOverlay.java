@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.customization.layer.layers.TitleScreenLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.LoadingOverlay;
@@ -53,9 +52,10 @@ public abstract class MixinLoadingOverlay extends GuiComponent {
 	private void afterRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
 			//This is to correctly render the title menu
-			if (this.menuHandler instanceof TitleScreenLayer) {
-				Minecraft.getInstance().screen.renderBackground(matrix);
-			}
+			//TODO check later
+//			if (this.menuHandler instanceof TitleScreenLayer) {
+//				Minecraft.getInstance().screen.renderBackground(matrix);
+//			}
 			//Manually call onRenderPost of the screen's menu handler, because it doesn't get called automatically in the loading screen
 			this.menuHandler.onRenderPost(new RenderScreenEvent.Post(Minecraft.getInstance().screen, matrix, mouseX, mouseY, partial));
 		}

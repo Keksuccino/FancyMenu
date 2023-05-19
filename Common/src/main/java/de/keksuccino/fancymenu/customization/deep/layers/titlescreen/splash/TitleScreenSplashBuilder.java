@@ -1,39 +1,55 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.splash;
 
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class TitleScreenSplashBuilder extends DeepElementBuilder {
+public class TitleScreenSplashBuilder extends DeepElementBuilder<TitleScreenLayer, TitleScreenSplashDeepElement, TitleScreenSplashDeepEditorElement> {
 
-    public TitleScreenSplashBuilder(DeepScreenCustomizationLayer parentLayer) {
-        super("title_screen_splash", parentLayer);
+    public TitleScreenSplashBuilder(TitleScreenLayer layer) {
+        super("title_screen_splash", layer);
     }
 
     @Override
-    public AbstractDeepElement constructDefaultItemInstance() {
-        TitleScreenSplashItemAbstract i = new TitleScreenSplashItemAbstract(this, new PropertyContainer(""));
-        i.anchorPoint = "original";
+    public @NotNull TitleScreenSplashDeepElement buildDefaultInstance() {
+        TitleScreenSplashDeepElement i = new TitleScreenSplashDeepElement(this);
+        i.anchorPoint = ElementAnchorPoints.VANILLA;
         return i;
     }
 
     @Override
-    public AbstractDeepElement constructCustomizedItemInstance(PropertyContainer serializedItem) {
-        return new TitleScreenSplashItemAbstract(this, serializedItem);
+    public TitleScreenSplashDeepElement deserializeElement(@NotNull SerializedElement serialized) {
+        return this.buildDefaultInstance();
     }
 
     @Override
-    public AbstractDeepEditorElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
-        return new TitleScreenSplashLayoutElementAbstractDeepEditor(item.parentElement, item, handler);
+    protected SerializedElement serializeElement(@NotNull TitleScreenSplashDeepElement element, @NotNull SerializedElement serializeTo) {
+        return serializeTo;
     }
 
     @Override
-    public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash");
+    public void stackElements(@NotNull TitleScreenSplashDeepElement element, @NotNull TitleScreenSplashDeepElement stack) {
+    }
+
+    @Override
+    public @NotNull TitleScreenSplashDeepEditorElement wrapIntoEditorElement(@NotNull TitleScreenSplashDeepElement element, @NotNull LayoutEditorScreen editor) {
+        return new TitleScreenSplashDeepEditorElement(element, editor);
+    }
+
+    @Override
+    public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
+        return Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash");
+    }
+
+    @Override
+    public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
+        return null;
     }
 
 }

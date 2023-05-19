@@ -1,7 +1,7 @@
 
 package de.keksuccino.fancymenu.customization.action;
 
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,9 +39,9 @@ public class LegacyActions {
         List<Action> actions = new ArrayList<>();
         List<String> actionIdentifiers = getLegacyIdentifiers();
         for (String s : actionIdentifiers) {
-            String actionDescKey = "helper.creator.custombutton.config.actiontype." + s + ".desc";
-            String valueDescKey = "helper.creator.custombutton.config.actiontype." + s + ".desc.value";
-            String valueExampleKey = "helper.creator.custombutton.config.actiontype." + s + ".desc.value.example";
+            String actionDescKey = "fancymenu.editor.custombutton.config.actiontype." + s + ".desc";
+            String valueDescKey = "fancymenu.editor.custombutton.config.actiontype." + s + ".desc.value";
+            String valueExampleKey = "fancymenu.editor.custombutton.config.actiontype." + s + ".desc.value.example";
             actions.add(buildContainer(s, actionDescKey, valueDescKey, valueExampleKey));
         }
         return actions;
@@ -51,7 +51,7 @@ public class LegacyActions {
         return new Action(identifier) {
             @Override
             public boolean hasValue() {
-                return !valueDescLocalizationKey.equals(Locals.localize(valueDescLocalizationKey));
+                return !valueDescLocalizationKey.equals(I18n.get(valueDescLocalizationKey));
             }
             @Override
             public void execute(String value) {
@@ -60,20 +60,20 @@ public class LegacyActions {
             @Override
             public String getActionDescription() {
                 if (descLocalizationKey != null) {
-                    return Locals.localize(descLocalizationKey);
+                    return I18n.get(descLocalizationKey);
                 }
                 return null;
             }
             @Override
             public String getValueDescription() {
                 if (valueDescLocalizationKey != null) {
-                    return Locals.localize(valueDescLocalizationKey);
+                    return I18n.get(valueDescLocalizationKey);
                 }
                 return null;
             }
             @Override
             public String getValueExample() {
-                return Locals.localize(valueExampleKey);
+                return I18n.get(valueExampleKey);
             }
         };
     }

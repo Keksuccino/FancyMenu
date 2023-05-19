@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.widget.Button;
-import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +45,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
         if (buttonAction != null) {
             if (buttonAction.contains("%btnaction_splitter_fm%")) {
-                for (String s : StringUtils.splitLines(buttonAction, "%btnaction_splitter_fm%")) {
+                for (String s : LocalizationUtils.splitLocalizedStringLines(buttonAction, "%btnaction_splitter_fm%")) {
                     if (s.length() > 0) {
                         String action = s;
                         String value = null;
@@ -169,7 +169,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("helper.creator.add.button");
+        return Component.translatable("fancymenu.editor.add.button");
     }
 
     @Override

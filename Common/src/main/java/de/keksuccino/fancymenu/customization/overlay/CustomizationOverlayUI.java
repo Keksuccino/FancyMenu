@@ -14,6 +14,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
@@ -44,8 +46,8 @@ import de.keksuccino.konkrete.gui.screens.ConfigScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
@@ -97,34 +99,33 @@ public class CustomizationOverlayUI extends UIBase {
 			currentMenu.setAutoclose(true);
 			bar.addChild(currentMenu, "fm.ui.tab.current", ElementAlignment.LEFT);
 
-			String toggleLabel = Locals.localize("helper.popup.togglecustomization.enable");
+			String toggleLabel = I18n.get("fancymenu.overlay.ui.customization.off");
 			if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
-				toggleLabel = Locals.localize("helper.popup.togglecustomization.disable");
+				toggleLabel = I18n.get("fancymenu.overlay.ui.customization.on");
 			}
 			OverlayButton toggleCustomizationButton = new OverlayButton(0, 0, 0, 0, toggleLabel, true, (press) -> {
 				if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
-					press.setMessage(Component.literal(Locals.localize("helper.popup.togglecustomization.enable")));
+					press.setMessage(Component.literal(I18n.get("fancymenu.overlay.ui.customization.off")));
 					ScreenCustomization.disableCustomizationForScreen(Minecraft.getInstance().screen);
 					ScreenCustomization.reloadFancyMenu();
 				} else {
-					press.setMessage(Component.literal(Locals.localize("helper.popup.togglecustomization.disable")));
+					press.setMessage(Component.literal(I18n.get("fancymenu.overlay.ui.customization.on")));
 					ScreenCustomization.enableCustomizationForScreen(Minecraft.getInstance().screen);
 					ScreenCustomization.reloadFancyMenu();
 				}
 			});
-			toggleCustomizationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.onoff.btndesc"), "%n%"));
+			toggleCustomizationButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customization.onoff.btndesc")));
 			currentMenu.addContent(toggleCustomizationButton);
 
 			ContextMenu layoutsMenu = new ContextMenu();
 			layoutsMenu.setAutoclose(true);
 			currentMenu.addChild(layoutsMenu);
 
-			OverlayButton newLayoutButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.new"), true, (press) -> {
-				LayoutEditorScreen.isActive = true;
+			OverlayButton newLayoutButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current.layouts.new"), true, (press) -> {
 				Screen s = Minecraft.getInstance().screen;
-				Minecraft.getInstance().setScreen(new LayoutEditorScreen(s));
-				ScreenCustomization.stopSounds();
-				ScreenCustomization.resetSounds();
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(s, null));
+				SoundRegistry.stopSounds();
+				SoundRegistry.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 					if (r instanceof AdvancedAnimation) {
 						((AdvancedAnimation)r).stopAudio();
@@ -134,28 +135,28 @@ public class CustomizationOverlayUI extends UIBase {
 					}
 				}
 			});
-			newLayoutButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.new.desc"), "%n%"));
+			newLayoutButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.current.layouts.new.desc")));
 			layoutsMenu.addContent(newLayoutButton);
 
 			ManageLayoutsContextMenu manageLayoutsMenu = new ManageLayoutsContextMenu(false);
 			manageLayoutsMenu.setAutoclose(true);
 			layoutsMenu.addChild(manageLayoutsMenu);
 
-			OverlayButton manageLayoutsButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.manage"), true, (press) -> {
+			OverlayButton manageLayoutsButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current.layouts.manage"), true, (press) -> {
 				manageLayoutsMenu.setParentButton((AdvancedButton) press);
 				manageLayoutsMenu.openMenuAt(press);
 			});
-			manageLayoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.desc"), "%n%"));
+			manageLayoutsButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.current.layouts.manage.desc")));
 			layoutsMenu.addContent(manageLayoutsButton);
 
-			OverlayButton layoutsButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts"), true, (press) -> {
+			OverlayButton layoutsButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current.layouts"), true, (press) -> {
 				layoutsMenu.setParentButton((AdvancedButton) press);
 				layoutsMenu.openMenuAt(0, press.y);
 			});
 			if (!ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
 				layoutsButton.active = false;
 			}
-			layoutsButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.desc"), "%n%"));
+			layoutsButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.current.layouts.desc")));
 			currentMenu.addContent(layoutsButton);
 
 			ContextMenu advancedMenu = new ContextMenu();
@@ -166,9 +167,9 @@ public class CustomizationOverlayUI extends UIBase {
 			overrideMenu.setAutoclose(true);
 			advancedMenu.addChild(overrideMenu);
 
-			String overrLabel = Locals.localize("helper.buttons.tools.overridemenu");
+			String overrLabel = I18n.get("fancymenu.ui.overridemenu");
 			if (ScreenCustomization.isOverridingOtherScreen(Minecraft.getInstance().screen)) {
-				overrLabel = Locals.localize("helper.buttons.tools.resetoverride");
+				overrLabel = I18n.get("fancymenu.ui.resetoverride");
 			}
 			OverlayButton overrideButton = new OverlayButton(0, 0, 0, 0, overrLabel, true, (press) -> {
 
@@ -243,34 +244,34 @@ public class CustomizationOverlayUI extends UIBase {
 					}
 				}
 			});
-			overrideButton.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.overridewith.btndesc"), "%n%"));
+			overrideButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customization.overridewith.btndesc")));
 			if (!(Minecraft.getInstance().screen instanceof CustomGuiBase)) {
 				advancedMenu.addContent(overrideButton);
 			} else if (((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen() != null) {
 				advancedMenu.addContent(overrideButton);
 			}
 
-			OverlayButton advancedButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.current.advanced"), true, (press) -> {
+			OverlayButton advancedButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current.advanced"), true, (press) -> {
 				advancedMenu.setParentButton((AdvancedButton) press);
 				advancedMenu.openMenuAt(0, press.y);
 			});
 			if (!ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
 				advancedButton.active = false;
 			}
-			advancedButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.advanced.desc"), "%n%"));
+			advancedButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.current.advanced.desc")));
 			if (FancyMenu.getConfig().getOrDefault("advancedmode", false)) {
 				currentMenu.addContent(advancedButton);
 			}
 
-			OverlayButton closeCustomGuiButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
+			OverlayButton closeCustomGuiButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.misc.closegui"), true, (press) -> {
 				Minecraft.getInstance().setScreen(null);
 			});
-			closeCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
+			closeCustomGuiButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.misc.closegui.desc")));
 			if ((Minecraft.getInstance().screen instanceof CustomGuiBase) && (((CustomGuiBase)Minecraft.getInstance().screen).getOverriddenScreen() == null)) {
 				currentMenu.addContent(closeCustomGuiButton);
 			}
 
-			OverlayButton currentTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.current"), true, (press) -> {
+			OverlayButton currentTab = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current"), true, (press) -> {
 				currentMenu.setParentButton((AdvancedButton) press);
 				currentMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
@@ -282,11 +283,10 @@ public class CustomizationOverlayUI extends UIBase {
 			universalLayoutsMenu.setAutoclose(true);
 			bar.addChild(universalLayoutsMenu, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT);
 
-			OverlayButton newUniversalLayoutButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts.new"), true, (press) -> {
-				LayoutEditorScreen.isActive = true;
-				Minecraft.getInstance().setScreen(new LayoutEditorScreen(new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null)));
-				ScreenCustomization.stopSounds();
-				ScreenCustomization.resetSounds();
+			OverlayButton newUniversalLayoutButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.universal_layouts.new"), true, (press) -> {
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(null, null));
+				SoundRegistry.stopSounds();
+				SoundRegistry.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 					if (r instanceof AdvancedAnimation) {
 						((AdvancedAnimation)r).stopAudio();
@@ -302,17 +302,17 @@ public class CustomizationOverlayUI extends UIBase {
 			manageUniversalLayoutsMenu.setAutoclose(true);
 			universalLayoutsMenu.addChild(manageUniversalLayoutsMenu);
 
-			OverlayButton manageUniversalLayoutsButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts.manage"), true, (press) -> {
+			OverlayButton manageUniversalLayoutsButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.universal_layouts.manage"), true, (press) -> {
 				manageUniversalLayoutsMenu.setParentButton((AdvancedButton) press);
 				manageUniversalLayoutsMenu.openMenuAt(press);
 			});
 			universalLayoutsMenu.addContent(manageUniversalLayoutsButton);
 
-			OverlayButton universalLayoutsTabButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.universal_layouts"), true, (press) -> {
+			OverlayButton universalLayoutsTabButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.universal_layouts"), true, (press) -> {
 				universalLayoutsMenu.setParentButton((AdvancedButton) press);
 				universalLayoutsMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
-			universalLayoutsTabButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.universal_layouts.btn.desc"), "%n%"));
+			universalLayoutsTabButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.ui.universal_layouts.btn.desc")));
 			bar.addElement(universalLayoutsTabButton, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT, false);
 			/** UNIVERSAL LAYOUTS END **/
 
@@ -321,17 +321,17 @@ public class CustomizationOverlayUI extends UIBase {
 			setupMenu.setAutoclose(true);
 			bar.addChild(setupMenu, "fm.ui.tab.setup_import_export", ElementAlignment.LEFT);
 
-			OverlayButton setupTab = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup"), true, (press) -> {
+			OverlayButton setupTab = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.setup"), true, (press) -> {
 				setupMenu.setParentButton((AdvancedButton) press);
 				setupMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
 			bar.addElement(setupTab, "fm.ui.tab.setup_import_export", ElementAlignment.LEFT, false);
 
 			//Export Button
-			OverlayButton exportSetupButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup.export"), true, (press) -> {
+			OverlayButton exportSetupButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.setup.export"), true, (press) -> {
 				SetupSharingHandler.exportSetup();
 			});
-			exportSetupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.export.btn.desc"), "%n%"));
+			exportSetupButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.ui.setup.export.btn.desc")));
 			setupMenu.addContent(exportSetupButton);
 
 			//Import Menu
@@ -340,25 +340,25 @@ public class CustomizationOverlayUI extends UIBase {
 			setupMenu.addChild(importMenu);
 
 			//Import Button
-			OverlayButton importSetupButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup.import"), true, (press) -> {
+			OverlayButton importSetupButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.setup.import"), true, (press) -> {
 				importMenu.setParentButton((AdvancedButton) press);
 				importMenu.openMenuAt(0, press.y);
 			});
-			importSetupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.import.btn.desc"), "%n%"));
+			importSetupButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.ui.setup.import.btn.desc")));
 			setupMenu.addContent(importSetupButton);
 
 			//Import -> Choose From Saved Setups
-			OverlayButton chooseFromSavedButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved"), true, (press) -> {
+			OverlayButton chooseFromSavedButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved"), true, (press) -> {
 				SetupSharingHandler.importSetupFromSavedSetups();
 			});
-			chooseFromSavedButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.choosefromsaved.btn.desc"), "%n%"));
+			chooseFromSavedButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.setupsharing.import.choosefromsaved.btn.desc")));
 			importMenu.addContent(chooseFromSavedButton);
 
 			//Import -> Enter Path
-			OverlayButton enterPathButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.setupsharing.import.choosefrompath"), true, (press) -> {
+			OverlayButton enterPathButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.setupsharing.import.choosefrompath"), true, (press) -> {
 				SetupSharingHandler.importSetup();
 			});
-			enterPathButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.setupsharing.import.choosefrompath.btn.desc"), "%n%"));
+			enterPathButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.setupsharing.import.choosefrompath.btn.desc")));
 			importMenu.addContent(enterPathButton);
 
 			//Restore Menu
@@ -367,11 +367,11 @@ public class CustomizationOverlayUI extends UIBase {
 			setupMenu.addChild(restoreMenu);
 
 			//Restore Button
-			OverlayButton restoreButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.setup.restore"), true, (press) -> {
+			OverlayButton restoreButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.setup.restore"), true, (press) -> {
 				restoreMenu.setParentButton((AdvancedButton) press);
 				restoreMenu.openMenuAt(0, press.y);
 			});
-			restoreButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.restore.btn.desc"), "%n%"));
+			restoreButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.ui.setup.restore.btn.desc")));
 			setupMenu.addContent(restoreButton);
 
 			//Add entries to restore menu
@@ -396,7 +396,7 @@ public class CustomizationOverlayUI extends UIBase {
 							FMYesNoPopup backupConfirmPop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 								if (call) {
 									new Thread(() -> {
-										SetupSharingHandler.StatusPopup restoreBlockerPopup = new SetupSharingHandler.StatusPopup(Locals.localize("fancymenu.helper.setupsharing.restore.restoring"));
+										SetupSharingHandler.StatusPopup restoreBlockerPopup = new SetupSharingHandler.StatusPopup(I18n.get("fancymenu.helper.setupsharing.restore.restoring"));
 										PopupHandler.displayPopup(restoreBlockerPopup);
 										try {
 											try {
@@ -418,7 +418,7 @@ public class CustomizationOverlayUI extends UIBase {
 														org.apache.commons.io.FileUtils.copyDirectory(backupInstance, home);
 														FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, () -> {
 															ScreenCustomization.reloadFancyMenu();
-														}, Locals.localize("fancymenu.helper.setupsharing.restore.success"));
+														}, I18n.get("fancymenu.helper.setupsharing.restore.success"));
 														PopupHandler.displayPopup(pop);
 													}
 												}
@@ -434,16 +434,16 @@ public class CustomizationOverlayUI extends UIBase {
 													}
 												}
 												ScreenCustomization.reloadFancyMenu();
-											}, Locals.localize("fancymenu.helper.setupsharing.restore.error"));
+											}, I18n.get("fancymenu.helper.setupsharing.restore.error"));
 											PopupHandler.displayPopup(pop);
 										}
 										restoreBlockerPopup.setDisplayed(false);
 									}).start();
 								}
-							}, Locals.localize("fancymenu.helper.setupsharing.restore.confirm"));
+							}, I18n.get("fancymenu.helper.setupsharing.restore.confirm"));
 							PopupHandler.displayPopup(backupConfirmPop);
 						});
-						backupEntryButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.setup.restore.entry.btn.desc"), "%n%"));
+						backupEntryButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.ui.setup.restore.entry.btn.desc")));
 						restoreMenu.addContent(backupEntryButton);
 						hasContent = true;
 					}
@@ -462,28 +462,28 @@ public class CustomizationOverlayUI extends UIBase {
 			customGuiMenu.setAutoclose(true);
 			bar.addChild(customGuiMenu, "fm.ui.tab.customguis", ElementAlignment.LEFT);
 
-			OverlayButton newCustomGuiButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis.new"), true, (press) -> {
+			OverlayButton newCustomGuiButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.customguis.new"), true, (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
 						PopupHandler.displayPopup(new CreateCustomGuiPopup());
 					}
-				}, Locals.localize("helper.ui.customguis.new.sure")));
+				}, I18n.get("fancymenu.overlay.ui.customguis.new.sure")));
 			});
-			newCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.customguis.new.desc"), "%n%"));
+			newCustomGuiButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customguis.new.desc")));
 			customGuiMenu.addContent(newCustomGuiButton);
 
 			ManageCustomGuiContextMenu manageCustomGuiMenu = new ManageCustomGuiContextMenu();
 			manageCustomGuiMenu.setAutoclose(true);
 			customGuiMenu.addChild(manageCustomGuiMenu);
 
-			OverlayButton manageCustomGuiButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis.manage"), true, (press) -> {
+			OverlayButton manageCustomGuiButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.customguis.manage"), true, (press) -> {
 				manageCustomGuiMenu.setParentButton((AdvancedButton) press);
 				manageCustomGuiMenu.openMenuAt(0, press.y);
 			});
-			manageCustomGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.customguis.manage.desc"), "%n%"));
+			manageCustomGuiButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customguis.manage.desc")));
 			customGuiMenu.addContent(manageCustomGuiButton);
 
-			OverlayButton customGuiTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis"), true, (press) -> {
+			OverlayButton customGuiTab = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.customguis"), true, (press) -> {
 				customGuiMenu.setParentButton((AdvancedButton) press);
 				customGuiMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
@@ -497,28 +497,28 @@ public class CustomizationOverlayUI extends UIBase {
 			toolsMenu.setAutoclose(true);
 			bar.addChild(toolsMenu, "fm.ui.tab.tools", ElementAlignment.LEFT);
 
-			OverlayButton menuInfoButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.tools.menuinfo.off"), true, (press) -> {
+			OverlayButton menuInfoButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.tools.menuinfo.off"), true, (press) -> {
 				if (showMenuInfo) {
 					showMenuInfo = false;
-					((AdvancedButton)press).setMessage(Locals.localize("helper.ui.tools.menuinfo.off"));
+					((AdvancedButton)press).setMessage(I18n.get("fancymenu.overlay.ui.tools.menuinfo.off"));
 				} else {
 					showMenuInfo = true;
-					((AdvancedButton)press).setMessage(Locals.localize("helper.ui.tools.menuinfo.on"));
+					((AdvancedButton)press).setMessage(I18n.get("fancymenu.overlay.ui.tools.menuinfo.on"));
 				}
 			});
 			if (showMenuInfo) {
-				menuInfoButton.setMessage(Locals.localize("helper.ui.tools.menuinfo.on"));
+				menuInfoButton.setMessage(I18n.get("fancymenu.overlay.ui.tools.menuinfo.on"));
 			}
-			menuInfoButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.menuinfo.desc"), "%n%"));
+			menuInfoButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.tools.menuinfo.desc")));
 			toolsMenu.addContent(menuInfoButton);
 
-			OverlayButton buttonInfoButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.tools.buttoninfo.off"), true, (press) -> {
+			OverlayButton buttonInfoButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.tools.buttoninfo.off"), true, (press) -> {
 				if (showButtonInfo) {
 					showButtonInfo = false;
-					((AdvancedButton)press).setMessage(Locals.localize("helper.ui.tools.buttoninfo.off"));
+					((AdvancedButton)press).setMessage(I18n.get("fancymenu.overlay.ui.tools.buttoninfo.off"));
 				} else {
 					showButtonInfo = true;
-					((AdvancedButton)press).setMessage(Locals.localize("helper.ui.tools.buttoninfo.on"));
+					((AdvancedButton)press).setMessage(I18n.get("fancymenu.overlay.ui.tools.buttoninfo.on"));
 				}
 			}) {
 				@Override
@@ -526,31 +526,31 @@ public class CustomizationOverlayUI extends UIBase {
 					Screen current = Minecraft.getInstance().screen;
 					if ((current != null) && ScreenCustomization.isCustomizationEnabledForScreen(current)) {
 						this.active = true;
-						this.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.tools.buttoninfo.desc"), "%n%"));
+						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.tools.buttoninfo.desc")));
 					} else {
 						this.active = false;
-						this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations"), "%n%"));
+						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations")));
 					}
 					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 				}
 			};
 			if (showButtonInfo) {
-				buttonInfoButton.setMessage(Locals.localize("helper.ui.tools.buttoninfo.on"));
+				buttonInfoButton.setMessage(I18n.get("fancymenu.overlay.ui.tools.buttoninfo.on"));
 			}
 			toolsMenu.addContent(buttonInfoButton);
 
-			OverlayButton clearVariablesButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.tools.clear_variables"), true, (press) -> {
+			OverlayButton clearVariablesButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.fancymenu.overlay.ui.tools.clear_variables"), true, (press) -> {
 				FMYesNoPopup p = new FMYesNoPopup(300, new Color(0,0,0,0), 240, (call) -> {
 					if (call) {
 						VariableHandler.clearVariables();
 					}
-				}, StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.confirm"), "%n%"));
+				}, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.tools.clear_variables.confirm")));
 				PopupHandler.displayPopup(p);
 			});
-			clearVariablesButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.tools.clear_variables.desc"), "%n%"));
+			clearVariablesButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.tools.clear_variables.desc")));
 			toolsMenu.addContent(clearVariablesButton);
 
-			OverlayButton toolsTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.tools"), true, (press) -> {
+			OverlayButton toolsTab = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.tools"), true, (press) -> {
 				toolsMenu.setParentButton((AdvancedButton) press);
 				toolsMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
@@ -562,35 +562,35 @@ public class CustomizationOverlayUI extends UIBase {
 			miscMenu.setAutoclose(true);
 			bar.addChild(miscMenu, "fm.ui.tab.misc", ElementAlignment.LEFT);
 
-			OverlayButton closeGuiButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.closegui"), true, (press) -> {
+			OverlayButton closeGuiButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.misc.closegui"), true, (press) -> {
 				Minecraft.getInstance().setScreen(null);
 			});
-			closeGuiButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
+			closeGuiButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.misc.closegui.desc")));
 			miscMenu.addContent(closeGuiButton);
 
-			OverlayButton openWorldLoadingScreenButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openworldloading"), true, (press) -> {
+			OverlayButton openWorldLoadingScreenButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.misc.openworldloading"), true, (press) -> {
 				LevelLoadingScreen wl = new LevelLoadingScreen(new StoringChunkProgressListener(0));
 				Minecraft.getInstance().setScreen(wl);
 			});
-			openWorldLoadingScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openworldloading.desc"), "%n%"));
+			openWorldLoadingScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.misc.openworldloading.desc")));
 			miscMenu.addContent(openWorldLoadingScreenButton);
 
-			OverlayButton openMessageScreenButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.misc.openmessagescreen"), true, (press) -> {
+			OverlayButton openMessageScreenButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.misc.openmessagescreen"), true, (press) -> {
 				Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Component.literal("hello ・ω・")));
 			});
-			openMessageScreenButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.openmessagescreen.desc"), "%n%"));
+			openMessageScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.misc.openmessagescreen.desc")));
 			miscMenu.addContent(openMessageScreenButton);
 
-			OverlayButton openProgressScreenButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_progress_screen"), true, (press) -> {
+			OverlayButton openProgressScreenButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.fancymenu.overlay.ui.misc.open_progress_screen"), true, (press) -> {
 				ProgressScreen s = new ProgressScreen(false);
 				s.progressStage(Component.literal("dummy stage name"));
 				s.progressStagePercentage(50);
 				Minecraft.getInstance().setScreen(s);
 			});
-			openProgressScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_progress_screen.btn.desc"), "%n%"));
+			openProgressScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.misc.open_progress_screen.btn.desc")));
 			miscMenu.addContent(openProgressScreenButton);
 
-			OverlayButton openReceivingLevelScreenButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen"), true, (press) -> {
+			OverlayButton openReceivingLevelScreenButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen"), true, (press) -> {
 				ReceivingLevelScreen s = new ReceivingLevelScreen();
 				Minecraft.getInstance().setScreen(s);
 			}) {
@@ -604,10 +604,10 @@ public class CustomizationOverlayUI extends UIBase {
 					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 				}
 			};
-			openReceivingLevelScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen.btn.desc"), "%n%"));
+			openReceivingLevelScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen.btn.desc")));
 			miscMenu.addContent(openReceivingLevelScreenButton);
 
-			OverlayButton openConnectScreenButton = new OverlayButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_connect_screen"), true, (press) -> {
+			OverlayButton openConnectScreenButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.fancymenu.overlay.ui.misc.open_connect_screen"), true, (press) -> {
 				ConnectScreen.startConnecting(new TitleScreen(), Minecraft.getInstance(), new ServerAddress("%fancymenu_dummy_address%", 25565), null);
 			}) {
 				@Override
@@ -620,10 +620,10 @@ public class CustomizationOverlayUI extends UIBase {
 					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 				}
 			};
-			openConnectScreenButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.ui.misc.open_connect_screen.btn.desc"), "%n%"));
+			openConnectScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.misc.open_connect_screen.btn.desc")));
 			miscMenu.addContent(openConnectScreenButton);
 
-			OverlayButton miscTab = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.misc"), true, (press) -> {
+			OverlayButton miscTab = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.misc"), true, (press) -> {
 				miscMenu.setParentButton((AdvancedButton) press);
 				miscMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
@@ -643,7 +643,7 @@ public class CustomizationOverlayUI extends UIBase {
 			closeGuiButtonTab.ignoreLeftMouseDownClickBlock = true;
 			closeGuiButtonTab.ignoreBlockedInput = true;
 			closeGuiButtonTab.enableRightclick = true;
-			closeGuiButtonTab.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.misc.closegui.desc"), "%n%"));
+			closeGuiButtonTab.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.misc.closegui.desc")));
 			bar.addElement(closeGuiButtonTab, "fm.ui.tab.closegui", ElementAlignment.RIGHT, false);
 			/** CLOSE GUI BUTTON END **/
 
@@ -660,7 +660,7 @@ public class CustomizationOverlayUI extends UIBase {
 			reloadButtonTab.ignoreLeftMouseDownClickBlock = true;
 			reloadButtonTab.ignoreBlockedInput = true;
 			reloadButtonTab.enableRightclick = true;
-			reloadButtonTab.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.reload.desc"), "%n%"));
+			reloadButtonTab.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.reload.desc")));
 			bar.addElement(reloadButtonTab, "fm.ui.tab.reload", ElementAlignment.RIGHT, false);
 			/** RELOAD BUTTON END **/
 
@@ -670,7 +670,7 @@ public class CustomizationOverlayUI extends UIBase {
 					if (!extended) {
 						((AdvancedImageButton)expandButton).setImage(MenuBar.EXPAND_BTN_TEXTURE);
 						
-						expandButton.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
+						expandButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.menubar.expand")));
 					}
 				}
 			}
@@ -688,7 +688,7 @@ public class CustomizationOverlayUI extends UIBase {
 			if (bar != null) {
 				if (!PopupHandler.isPopupActive()) {
 					if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-						if (!(screen instanceof LayoutEditorScreen) && !(screen instanceof ConfigScreen) && !(screen instanceof GameIntroScreen) && AnimationHandler.isReady() && ScreenCustomization.isValidScreen(screen)) {
+						if (!(screen instanceof LayoutEditorScreen) && !(screen instanceof ConfigScreen) && !(screen instanceof GameIntroScreen) && AnimationHandler.isReady() && !ScreenCustomization.isScreenBlacklisted(screen)) {
 
 							RenderUtils.setZLevelPre(matrix, 400);
 
@@ -721,7 +721,7 @@ public class CustomizationOverlayUI extends UIBase {
 				if (d.getButton().isHoveredOrFocused()) {
 					isButtonHovered = true;
 					long id = d.getId();
-					String idString = Locals.localize("helper.buttoninfo.idnotfound");
+					String idString = I18n.get("fancymenu.overlay.buttoninfo.idnotfound");
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
@@ -729,17 +729,17 @@ public class CustomizationOverlayUI extends UIBase {
 						idString = d.getCompatibilityId();
 					}
 					List<String> info = new ArrayList<>();
-					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
+					int width = Minecraft.getInstance().font.width(I18n.get("fancymenu.overlay.buttoninfo")) + 10;
 					long now = System.currentTimeMillis();
-					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
-					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().getWidth());
-					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().getHeight());
-					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
+					info.add("§f" + I18n.get("fancymenu.overlay.buttoninfo.id") + ": " + idString);
+					info.add("§f" + I18n.get("fancymenu.guicomponents.width") + ": " + d.getButton().getWidth());
+					info.add("§f" + I18n.get("fancymenu.guicomponents.height") + ": " + d.getButton().getHeight());
+					info.add("§f" + I18n.get("fancymenu.overlay.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
 					info.add("");
 					if (lastButtonInfoRightClick + 2000 < now) {
-						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator"));
+						info.add(I18n.get("fancymenu.helper.button_info.copy_locator"));
 					} else {
-						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator.copied"));
+						info.add(I18n.get("fancymenu.helper.button_info.copy_locator.copied"));
 					}
 					if (MouseInput.isRightMouseDown()) {
 						Screen current = Minecraft.getInstance().screen;
@@ -766,7 +766,7 @@ public class CustomizationOverlayUI extends UIBase {
 					}
 					fill(matrix, x, y, x + width + 10, y + 100, BUTTON_INFO_BACKGROUND_COLOR.getRGB());
 					RenderSystem.enableBlend();
-					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
+					drawString(matrix, Minecraft.getInstance().font, "§f§l" + I18n.get("fancymenu.overlay.buttoninfo"), x + 10, y + 10, -1);
 					int i2 = 20;
 					for (String s : info) {
 						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
@@ -787,10 +787,10 @@ public class CustomizationOverlayUI extends UIBase {
 	protected static void renderButtonInfoWarning(PoseStack matrix, Screen screen) {
 		if (showButtonInfo && !ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
 			List<String> info = new ArrayList<>();
-			int width = Minecraft.getInstance().font.width(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
+			int width = Minecraft.getInstance().font.width(I18n.get("fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
 
-			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2"));
-			info.add(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3"));
+			info.add(I18n.get("fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2"));
+			info.add(I18n.get("fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3"));
 
 			for (String s : info) {
 				int i = Minecraft.getInstance().font.width(s) + 10;
@@ -818,7 +818,7 @@ public class CustomizationOverlayUI extends UIBase {
 			fill(matrix, x, y, x + width + 10, y + 60, WARNING_COLOR.getRGB());
 
 			RenderSystem.enableBlend();
-			drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
+			drawString(matrix, Minecraft.getInstance().font, "§f§l" + I18n.get("fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
 
 			int i2 = 20;
 			for (String s : info) {
@@ -836,7 +836,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	protected static void renderMenuInfo(PoseStack matrix, Screen screen) {
 		if (showMenuInfo) {
-			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
+			String infoTitle = "§f§l" + I18n.get("fancymenu.overlay.menuinfo.identifier") + ":";
 			String id = "";
 			if (screen instanceof CustomGuiBase) {
 				id = ((CustomGuiBase)screen).getIdentifier();
@@ -862,7 +862,7 @@ public class CustomizationOverlayUI extends UIBase {
 			if (tick == 0) {
 				drawString(matrix, Minecraft.getInstance().font, "§f" + id, 5, h + 13, 0);
 			} else {
-				drawString(matrix, Minecraft.getInstance().font, "§a" + Locals.localize("helper.menuinfo.idcopied"), 5, h + 13, 0);
+				drawString(matrix, Minecraft.getInstance().font, "§a" + I18n.get("fancymenu.overlay.menuinfo.idcopied"), 5, h + 13, 0);
 			}
 
 			MouseInput.setRenderScale(getUIScale());
@@ -900,9 +900,9 @@ public class CustomizationOverlayUI extends UIBase {
 			return;
 		}
 		if (Minecraft.getInstance().options.forceUnicodeFont().get()) {
-			String title = Locals.localize("helper.ui.warning");
+			String title = I18n.get("fancymenu.overlay.ui.warning");
 			int w = Minecraft.getInstance().font.width(title);
-			String[] lines = StringUtils.splitLines(Locals.localize("helper.ui.warning.unicode"), "%n%");
+			String[] lines = LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.warning.unicode"));
 			for (String s : lines) {
 				int w2 = Minecraft.getInstance().font.width(s);
 				if (w2 > w) {
@@ -974,20 +974,20 @@ public class CustomizationOverlayUI extends UIBase {
 			List<String> l = CustomGuiLoader.getCustomGuis();
 			if (!l.isEmpty()) {
 
-				this.addContent(new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.openbyname"), true, (press) -> {
-					PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.buttons.tools.customguis.openbyname"), null, 240, (call) -> {
+				this.addContent(new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.ui.customguis.openbyname"), true, (press) -> {
+					PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.ui.customguis.openbyname"), null, 240, (call) -> {
 						if (call != null) {
 							if (CustomGuiLoader.guiExists(call)) {
 								Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(call, Minecraft.getInstance().screen, null));
 							} else {
-								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.buttons.tools.customguis.invalididentifier")));
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.ui.customguis.invalididentifier")));
 							}
 						}
 					}));
 				}));
 
-				this.addContent(new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.deletebyname"), true, (press) -> {
-					PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.buttons.tools.customguis.deletebyname"), null, 240, (call) -> {
+				this.addContent(new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.ui.customguis.deletebyname"), true, (press) -> {
+					PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.ui.customguis.deletebyname"), null, 240, (call) -> {
 						if (call != null) {
 							if (CustomGuiLoader.guiExists(call)) {
 								PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call2) -> {
@@ -1012,9 +1012,9 @@ public class CustomizationOverlayUI extends UIBase {
 											ScreenCustomization.reloadFancyMenu();
 										}
 									}
-								}, Locals.localize("helper.buttons.tools.customguis.sure")));
+								}, I18n.get("fancymenu.ui.customguis.sure")));
 							} else {
-								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.buttons.tools.customguis.invalididentifier")));
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.ui.customguis.invalididentifier")));
 							}
 						}
 					}));
@@ -1047,14 +1047,14 @@ public class CustomizationOverlayUI extends UIBase {
 		public void openMenuAt(int x, int y, String customGuiIdentifier) {
 			this.content.clear();
 
-			OverlayButton openMenuButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.open"), (press) -> {
+			OverlayButton openMenuButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.ui.customguis.open"), (press) -> {
 				if (CustomGuiLoader.guiExists(customGuiIdentifier)) {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(customGuiIdentifier, Minecraft.getInstance().screen, null));
 				}
 			});
 			this.addContent(openMenuButton);
 
-			OverlayButton deleteMenuButton = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.delete"), (press) -> {
+			OverlayButton deleteMenuButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.ui.customguis.delete"), (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
 						if (CustomGuiLoader.guiExists(customGuiIdentifier)) {
@@ -1077,7 +1077,7 @@ public class CustomizationOverlayUI extends UIBase {
 							ScreenCustomization.reloadFancyMenu();
 						}
 					}
-				}, Locals.localize("helper.buttons.tools.customguis.sure")));
+				}, I18n.get("fancymenu.ui.customguis.sure")));
 			});
 			this.addContent(deleteMenuButton);
 
@@ -1111,80 +1111,52 @@ public class CustomizationOverlayUI extends UIBase {
 				identifier = "%fancymenu:universal_layout%";
 			}
 
-			List<PropertyContainerSet> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
+			List<Layout> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
 			if (!this.isUniversal) {
-				List<PropertyContainerSet> sets = new ArrayList<>();
-				for (PropertyContainerSet s : enabled) {
-					List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
-					if (!metas.isEmpty()) {
-						PropertyContainer meta = metas.get(0);
-						String id = meta.getValue("identifier");
-						if (!id.equals("%fancymenu:universal_layout%")) {
-							sets.add(s);
-						}
+				List<Layout> sets = new ArrayList<>();
+				for (Layout s : enabled) {
+					if (!s.menuIdentifier.equals("%fancymenu:universal_layout%")) {
+						sets.add(s);
 					}
 				}
 				enabled = sets;
 			}
 			if (!enabled.isEmpty()) {
-				for (PropertyContainerSet s : enabled) {
-					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
-					if (secs.isEmpty()) {
-						secs = s.getSectionsOfType("type-meta");
-					}
-					if (!secs.isEmpty()) {
-						String name = "<missing name>";
-						PropertyContainer meta = secs.get(0);
-						File f = new File(meta.getValue("path"));
-						if (f.isFile()) {
-							name = Files.getNameWithoutExtension(f.getName());
-
-							int totalactions = s.getContainers().size() - 1;
+				for (Layout s : enabled) {
+					if (s.layoutFile != null) {
+						if (s.layoutFile.isFile()) {
+							String name = Files.getNameWithoutExtension(s.layoutFile.getName());
 							OverlayButton layoutEntryBtn = new OverlayButton(0, 0, 0, 0, "§a" + name, (press) -> {
 								this.manageSubPopup.setParentButton((AdvancedButton) press);
-								this.manageSubPopup.openMenuAt(0, press.y, f, false);
+								this.manageSubPopup.openMenuAt(0, press.y, s, false);
 							});
-							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.enabled"), "" + totalactions), "%n%"));
+							layoutEntryBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customization.managelayouts.layout.btndesc", I18n.get("fancymenu.overlay.ui.customization.managelayouts.enabled"))));
 							this.addContent(layoutEntryBtn);
 						}
 					}
 				}
 			}
 
-			List<PropertyContainerSet> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
+			List<Layout> disabled = LayoutHandler.getDisabledLayoutsForMenuIdentifier(identifier);
 			if (!this.isUniversal) {
-				List<PropertyContainerSet> sets = new ArrayList<>();
-				for (PropertyContainerSet s : disabled) {
-					List<PropertyContainer> metas = s.getSectionsOfType("customization-meta");
-					if (!metas.isEmpty()) {
-						PropertyContainer meta = metas.get(0);
-						String id = meta.getValue("identifier");
-						if (!id.equals("%fancymenu:universal_layout%")) {
-							sets.add(s);
-						}
+				List<Layout> sets = new ArrayList<>();
+				for (Layout s : disabled) {
+					if (!s.menuIdentifier.equals("%fancymenu:universal_layout%")) {
+						sets.add(s);
 					}
 				}
 				disabled = sets;
 			}
 			if (!disabled.isEmpty()) {
-				for (PropertyContainerSet s : disabled) {
-					List<PropertyContainer> secs = s.getSectionsOfType("customization-meta");
-					if (secs.isEmpty()) {
-						secs = s.getSectionsOfType("type-meta");
-					}
-					if (!secs.isEmpty()) {
-						String name = "<missing name>";
-						PropertyContainer meta = secs.get(0);
-						File f = new File(meta.getValue("path"));
-						if (f.isFile()) {
-							name = Files.getNameWithoutExtension(f.getName());
-
-							int totalactions = s.getContainers().size() - 1;
+				for (Layout s : disabled) {
+					if (s.layoutFile != null) {
+						if (s.layoutFile.isFile()) {
+							String name = Files.getNameWithoutExtension(s.layoutFile.getName());
 							OverlayButton layoutEntryBtn = new OverlayButton(0, 0, 0, 0, "§c" + name, (press) -> {
 								this.manageSubPopup.setParentButton((AdvancedButton) press);
-								this.manageSubPopup.openMenuAt(0, press.y, f, true);
+								this.manageSubPopup.openMenuAt(0, press.y, s, true);
 							});
-							layoutEntryBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.layout.btndesc", Locals.localize("helper.buttons.customization.managelayouts.disabled"), "" + totalactions), "%n%"));
+							layoutEntryBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customization.managelayouts.layout.btndesc", I18n.get("fancymenu.overlay.ui.customization.managelayouts.disabled"))));
 							this.addContent(layoutEntryBtn);
 						}
 					}
@@ -1192,7 +1164,7 @@ public class CustomizationOverlayUI extends UIBase {
 			}
 
 			if (enabled.isEmpty() && disabled.isEmpty()) {
-				OverlayButton emptyBtn = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), (press) -> {});
+				OverlayButton emptyBtn = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.editor.empty"), (press) -> {});
 				this.addContent(emptyBtn);
 			}
 
@@ -1231,56 +1203,58 @@ public class CustomizationOverlayUI extends UIBase {
 
 	private static class ManageLayoutsSubContextMenu extends ContextMenu {
 
-		public void openMenuAt(int x, int y, File layout, boolean disabled) {
+		public void openMenuAt(int x, int y, Layout layout, boolean disabled) {
 
 			this.content.clear();
 
-			String toggleLabel = Locals.localize("helper.buttons.customization.managelayouts.disable");
+			if ((layout == null) || (layout.layoutFile == null)) return;
+
+			String toggleLabel = I18n.get("fancymenu.overlay.ui.customization.managelayouts.disable");
 			if (disabled) {
-				toggleLabel = Locals.localize("helper.buttons.customization.managelayouts.enable");
+				toggleLabel = I18n.get("fancymenu.overlay.ui.customization.managelayouts.enable");
 			}
 			OverlayButton toggleLayoutBtn = new OverlayButton(0, 0, 0, 0, toggleLabel, (press) -> {
 				if (disabled) {
-					String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(layout.getName()), "txt");
-					FileUtils.copyFile(layout, new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name));
-					layout.delete();
+					String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
+					FileUtils.copyFile(layout.layoutFile, new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name));
+					layout.layoutFile.delete();
 				} else {
 					String disPath = FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled";
-					String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(layout.getName()), "txt");
-					FileUtils.copyFile(layout, new File(disPath + "/" + name));
-					layout.delete();
+					String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
+					FileUtils.copyFile(layout.layoutFile, new File(disPath + "/" + name));
+					layout.layoutFile.delete();
 				}
 				ScreenCustomization.reloadFancyMenu();
 			});
 			this.addContent(toggleLayoutBtn);
 
-			OverlayButton editLayoutBtn = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.ui.current.layouts.manage.edit"), (press) -> {
+			OverlayButton editLayoutBtn = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current.layouts.manage.edit"), (press) -> {
 				Screen s = Minecraft.getInstance().screen;
 				if ((this.parent != null) && (this.parent instanceof ManageLayoutsContextMenu)) {
 					if (((ManageLayoutsContextMenu)this.parent).isUniversal) {
 						s = new CustomGuiBase("", "%fancymenu:universal_layout%", true, Minecraft.getInstance().screen, null);
 					}
 				}
-				LayoutHandler.openLayoutEditor(s, layout);
+				LayoutHandler.openLayoutEditor(layout, s);
 			});
-			editLayoutBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.layouts.manage.edit.desc"), "%n%"));
+			editLayoutBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.current.layouts.manage.edit.desc")));
 			this.addContent(editLayoutBtn);
 
-			OverlayButton openInTextEditorBtn = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.openintexteditor"), (press) -> {
-				ScreenCustomization.openFile(layout);
+			OverlayButton openInTextEditorBtn = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.customization.managelayouts.openintexteditor"), (press) -> {
+				ScreenCustomization.openFile(layout.layoutFile);
 			});
-			openInTextEditorBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.buttons.customization.managelayouts.openintexteditor.desc"), "%n%"));
+			openInTextEditorBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customization.managelayouts.openintexteditor.desc")));
 			this.addContent(openInTextEditorBtn);
 
-			OverlayButton deleteLayoutBtn = new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.customization.managelayouts.delete"), (press) -> {
+			OverlayButton deleteLayoutBtn = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.customization.managelayouts.delete"), (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
-						if (layout.exists()) {
-							layout.delete();
+						if (layout.layoutFile.exists()) {
+							layout.layoutFile.delete();
 							ScreenCustomization.reloadFancyMenu();
 						}
 					}
-				}, Locals.localize("helper.buttons.customization.managelayouts.delete.msg"), "", "", "", ""));
+				}, I18n.get("fancymenu.overlay.ui.customization.managelayouts.delete.msg"), "", "", "", ""));
 				ScreenCustomization.reloadFancyMenu();
 			});
 			this.addContent(deleteLayoutBtn);
@@ -1301,13 +1275,13 @@ public class CustomizationOverlayUI extends UIBase {
 
 			if (!l.isEmpty()) {
 
-				this.addContent(new OverlayButton(0, 0, 0, 0, Locals.localize("helper.buttons.tools.customguis.pickbyname"), true, (press) -> {
-					PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.buttons.tools.customguis.pickbyname"), null, 240, (call) -> {
+				this.addContent(new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.ui.customguis.pickbyname"), true, (press) -> {
+					PopupHandler.displayPopup(new TextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.ui.customguis.pickbyname"), null, 240, (call) -> {
 						if (call != null) {
 							if (CustomGuiLoader.guiExists(call)) {
 								onOverrideWithCustomGui(Minecraft.getInstance().screen, call);
 							} else {
-								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.buttons.tools.customguis.invalididentifier")));
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.ui.customguis.invalididentifier")));
 							}
 						}
 					}));
@@ -1328,7 +1302,7 @@ public class CustomizationOverlayUI extends UIBase {
 				}
 
 			} else {
-				this.addContent(new OverlayButton(0, 0, 0, 0, Locals.localize("helper.creator.empty"), true, (press) -> {}));
+				this.addContent(new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.editor.empty"), true, (press) -> {}));
 			}
 
 			super.openMenuAt(x, y);

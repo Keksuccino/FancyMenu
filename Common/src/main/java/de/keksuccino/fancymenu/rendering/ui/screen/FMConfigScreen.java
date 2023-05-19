@@ -3,13 +3,13 @@ package de.keksuccino.fancymenu.rendering.ui.screen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.config.ConfigEntry;
 import de.keksuccino.konkrete.gui.screens.ConfigScreen;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.gui.screens.Screen;
 
 public class FMConfigScreen extends ConfigScreen {
 
 	public FMConfigScreen(Screen parent) {
-		super(FancyMenu.getConfig(), Locals.localize("FancyMenu.getConfig()"), parent);
+		super(FancyMenu.getConfig(), I18n.get("FancyMenu.getConfig()"), parent);
 	}
 	
 	@Override
@@ -17,12 +17,12 @@ public class FMConfigScreen extends ConfigScreen {
 		super.init();
 		
 		for (String s : this.config.getCategorys()) {
-			this.setCategoryDisplayName(s, Locals.localize("FancyMenu.getConfig().categories." + s));
+			this.setCategoryDisplayName(s, I18n.get("FancyMenu.getConfig().categories." + s));
 		}
 		
 		for (ConfigEntry e : this.config.getAllAsEntry()) {
-			this.setValueDisplayName(e.getName(), Locals.localize("FancyMenu.getConfig()." + e.getName()));
-			this.setValueDescription(e.getName(), Locals.localize("FancyMenu.getConfig()." + e.getName() + ".desc"));
+			this.setValueDisplayName(e.getName(), I18n.get("FancyMenu.getConfig()." + e.getName()));
+			this.setValueDescription(e.getName(), I18n.get("FancyMenu.getConfig()." + e.getName() + ".desc"));
 		}
 		
 	}

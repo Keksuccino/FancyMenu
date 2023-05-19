@@ -1,37 +1,52 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copyright;
 
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class TitleScreenForgeCopyrightBuilder extends DeepElementBuilder {
+public class TitleScreenForgeCopyrightBuilder extends DeepElementBuilder<TitleScreenLayer, TitleScreenForgeCopyrightDeepElement, TitleScreenForgeCopyrightDeepEditorElement> {
 
-    public TitleScreenForgeCopyrightBuilder(DeepScreenCustomizationLayer parentLayer) {
-        super("title_screen_forge_copyright", parentLayer);
+    public TitleScreenForgeCopyrightBuilder(TitleScreenLayer layer) {
+        super("title_screen_forge_copyright", layer);
     }
 
     @Override
-    public AbstractDeepElement constructDefaultItemInstance() {
-        return new TitleScreenForgeCopyrightItemAbstract(this, new PropertyContainer(""));
+    public @NotNull TitleScreenForgeCopyrightDeepElement buildDefaultInstance() {
+        return new TitleScreenForgeCopyrightDeepElement(this);
     }
 
     @Override
-    public AbstractDeepElement constructCustomizedItemInstance(PropertyContainer serializedItem) {
-        return new TitleScreenForgeCopyrightItemAbstract(this, serializedItem);
+    public TitleScreenForgeCopyrightDeepElement deserializeElement(@NotNull SerializedElement serialized) {
+        return this.buildDefaultInstance();
     }
 
     @Override
-    public AbstractDeepEditorElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
-        return new TitleScreenForgeCopyrightLayoutElementAbstractDeepEditor(item.parentElement, item, handler);
+    protected SerializedElement serializeElement(@NotNull TitleScreenForgeCopyrightDeepElement element, @NotNull SerializedElement serializeTo) {
+        return serializeTo;
     }
 
     @Override
-    public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright");
+    public void stackElements(@NotNull TitleScreenForgeCopyrightDeepElement element, @NotNull TitleScreenForgeCopyrightDeepElement stack) {
+    }
+
+    @Override
+    public @NotNull TitleScreenForgeCopyrightDeepEditorElement wrapIntoEditorElement(@NotNull TitleScreenForgeCopyrightDeepElement element, @NotNull LayoutEditorScreen editor) {
+        return new TitleScreenForgeCopyrightDeepEditorElement(element, editor);
+    }
+
+    @Override
+    public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
+        return Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright");
+    }
+
+    @Override
+    public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
+        return null;
     }
 
 }

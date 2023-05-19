@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +33,7 @@ public class UsedRamPlaceholder extends Placeholder {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.variables.usedram");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.usedram");
     }
 
     @Override
@@ -43,7 +43,7 @@ public class UsedRamPlaceholder extends Placeholder {
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
     }
 
     @Override

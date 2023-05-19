@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -59,7 +60,7 @@ public class SplashTextElement extends AbstractElement {
 
     protected void updateSplash() {
 
-        if (this.source == null) return;
+        if ((this.sourceMode != SourceMode.VANILLA) && (this.source == null)) return;
 
         if (this.getBuilder().isNewMenu && this.refreshOnMenuReload) {
             this.refresh();

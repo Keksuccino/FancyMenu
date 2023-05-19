@@ -14,7 +14,7 @@
 //import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 //import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 //import de.keksuccino.konkrete.annotations.OptifineFix;
-//import de.keksuccino.konkrete.input.StringUtils;
+//import de.keksuccino.fancymenu.utils.LocalizationUtils;
 //import de.keksuccino.fancymenu.properties.PropertyContainer;
 //import de.keksuccino.konkrete.rendering.RenderUtils;
 //import de.keksuccino.fancymenu.rendering.texture.TextureHandler;

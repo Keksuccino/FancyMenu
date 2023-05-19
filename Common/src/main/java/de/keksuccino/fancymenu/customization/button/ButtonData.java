@@ -9,7 +9,6 @@ public class ButtonData {
 
 	private final long id;
 	protected String compatibilityId;
-	private final String key;
 	private final AbstractWidget button;
 	private final Screen screen;
 	
@@ -18,11 +17,9 @@ public class ButtonData {
 	public int y;
 	public int width;
 	public int height;
-	public boolean hasHoverLabel = false;
 
-	public ButtonData(AbstractWidget button, long id, @Nullable String key, Screen fromScreen) {
+	public ButtonData(AbstractWidget button, long id, Screen fromScreen) {
 		this.id = id;
-		this.key = key;
 		this.button = button;
 		this.screen = fromScreen;
 		this.label = button.getMessage().getString();
@@ -31,6 +28,11 @@ public class ButtonData {
 		this.width = button.getWidth();
 		this.height = button.getHeight();
 	}
+
+	@Deprecated
+	public ButtonData(AbstractWidget button, long id, @Nullable String key, Screen fromScreen) {
+		this(button, id, fromScreen);
+	}
 	
 	public AbstractWidget getButton() {
 		return button;
@@ -38,10 +40,6 @@ public class ButtonData {
 	
 	public Screen getScreen() {
 		return screen;
-	}
-	
-	public String getKey() {
-		return key;
 	}
 
 	public long getId() {

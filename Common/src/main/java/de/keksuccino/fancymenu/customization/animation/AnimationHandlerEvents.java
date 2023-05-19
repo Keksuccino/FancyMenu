@@ -1,10 +1,8 @@
 package de.keksuccino.fancymenu.customization.animation;
 
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -17,20 +15,17 @@ public class AnimationHandlerEvents {
 	@EventListener
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		//Stopping audio and resetting to intro (if enabled) for all advanced animations when changing the screen
-		if (ScreenCustomization.isValidScreen(e.getScreen())) {
-			if (AnimationHandler.isReady() && (this.lastScreen != e.getScreen()) && !LayoutEditorScreen.isActive) {
-				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-					if (r instanceof AdvancedAnimation) {
-						((AdvancedAnimation)r).stopAudio();
-						if (((AdvancedAnimation)r).replayIntro()) {
-							((AdvancedAnimation)r).resetAnimation();
-						}
+		if (AnimationHandler.isReady() && (this.lastScreen != e.getScreen())) {
+			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+				if (r instanceof AdvancedAnimation a) {
+					a.stopAudio();
+					if (a.replayIntro()) {
+						r.resetAnimation();
 					}
 				}
 			}
-
-			this.lastScreen = e.getScreen();
 		}
+		this.lastScreen = e.getScreen();
 		this.idle = false;
 	}
 	

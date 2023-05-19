@@ -17,8 +17,8 @@ import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -57,7 +57,7 @@ public class MenuBar extends UIBase {
 				super.render(matrix, mouseX, mouseY, partialTicks);
 			}
 		};
-		fmBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.settings"), "%n%"));
+		fmBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.menubar.settings")));
 		this.addElement(fmBtn, "menubar.default.fancymenubtn", ElementAlignment.LEFT, true);
 
 		//Add default expand button
@@ -66,10 +66,10 @@ public class MenuBar extends UIBase {
 			
 			if (this.expanded) {
 				((AdvancedImageButton)press).setImage(SHRINK_BTN_TEXTURE);
-				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.shrink"), "%n%"));
+				((AdvancedButton)press).setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.menubar.shrink")));
 			} else {
 				((AdvancedImageButton)press).setImage(EXPAND_BTN_TEXTURE);
-				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
+				((AdvancedButton)press).setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.menubar.expand")));
 			}
 			
 		}) {
@@ -80,7 +80,7 @@ public class MenuBar extends UIBase {
 			}
 		};
 		
-		expandBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.shrink"), "%n%"));
+		expandBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.menubar.shrink")));
 		this.addElement(expandBtn, "menubar.default.extendbtn", ElementAlignment.RIGHT, true);
 		
 	}

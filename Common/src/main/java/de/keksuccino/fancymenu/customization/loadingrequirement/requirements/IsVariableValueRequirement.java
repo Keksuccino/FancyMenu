@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -41,12 +41,12 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.visibilityrequirement.is_variable_value");
+        return I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.visibilityrequirement.is_variable_value.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value.desc")));
     }
 
     @Override
@@ -56,7 +56,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return Locals.localize("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc");
+        return I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc");
     }
 
     @Override

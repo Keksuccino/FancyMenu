@@ -5,9 +5,10 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.json.JsonUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
@@ -194,17 +195,17 @@ public class JsonPlaceholder extends Placeholder {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.placeholder.json");
+        return I18n.get("fancymenu.helper.placeholder.json");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.placeholder.json.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.placeholder.json.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.advanced");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced");
     }
 
     @Override

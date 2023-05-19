@@ -12,11 +12,12 @@ import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
+import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.sound.SoundHandler;
@@ -91,7 +92,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
 
     protected void tick() {
         if ((this.tooltip != null) && (this.getButton() != null) && this.getButton().isHoveredOrFocused()) {
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(this.tooltip), "%n%")), false, true);
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.create(LocalizationUtils.splitLocalizedStringLines(PlaceholderParser.replacePlaceholders(this.tooltip))), false, true);
         }
         if ((this.label != null) && (this.getButton() != null)) {
             this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.label)));
@@ -141,11 +142,8 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        ExternalTextureResourceLocation back = TextureHandler.INSTANCE.getTexture(f.getPath());
+                        LocalTexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
-                            if (!back.isReady()) {
-                                back.loadTexture();
-                            }
                             if (this.button instanceof AdvancedButton) {
                                 ((AdvancedButton)this.button).setBackgroundNormal(back.getResourceLocation());
                             } else {
@@ -193,11 +191,8 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        ExternalTextureResourceLocation back = TextureHandler.INSTANCE.getTexture(f.getPath());
+                        LocalTexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
-                            if (!back.isReady()) {
-                                back.loadTexture();
-                            }
                             if (this.button instanceof AdvancedButton) {
                                 ((AdvancedButton)this.button).setBackgroundHover(back.getResourceLocation());
                             } else if (this.button.isHoveredOrFocused()) {

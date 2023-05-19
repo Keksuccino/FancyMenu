@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer<?>, E extends AbstractDeepElement, L extends AbstractDeepEditorElement> extends ElementBuilder<E, L> implements IElementStacker<E> {
+public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer, E extends AbstractDeepElement, L extends AbstractDeepEditorElement> extends ElementBuilder<E, L> implements IElementStacker<E> {
 
     public final D layer;
 

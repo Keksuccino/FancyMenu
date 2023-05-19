@@ -19,8 +19,8 @@
 //import de.keksuccino.konkrete.input.CharacterFilter;
 //import de.keksuccino.konkrete.input.KeyboardHandler;
 //import de.keksuccino.konkrete.input.MouseInput;
-//import de.keksuccino.konkrete.input.StringUtils;
-//import de.keksuccino.konkrete.localization.Locals;
+//import de.keksuccino.fancymenu.utils.LocalizationUtils;
+//import net.minecraft.client.resources.language.I18n;
 //import de.keksuccino.konkrete.math.MathUtils;
 //import de.keksuccino.fancymenu.properties.PropertiesSection;
 //import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -106,23 +106,23 @@
 //		this.rightClickContextMenu.setAlwaysOnTop(true);
 //
 //		if (this.settings.isElementIdCopyButtonEnabled()) {
-//			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.copyid"), true, (press) -> {
+//			AdvancedButton copyIdButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.copyid"), true, (press) -> {
 //				if (!(this instanceof LayoutVanillaButton)) {
 //					Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
 //				} else {
 //					Minecraft.getInstance().keyboardHandler.setClipboard("vanillabtn:" + ((LayoutVanillaButton)this).getButtonId());
 //				}
 //			});
-//			copyIdButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.copyid.btn.desc"), "%n%"));
+//			copyIdButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.copyid.btn.desc")));
 //			this.rightClickContextMenu.addContent(copyIdButton);
 //		}
 //
 //		if (this instanceof LayoutVanillaButton) {
-//			AdvancedButton copyLocatorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.vanilla_button.copy_locator"), true, (press) -> {
+//			AdvancedButton copyLocatorButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.vanilla_button.copy_locator"), true, (press) -> {
 //				String locator = this.editor.getScreenToCustomizeIdentifier() + ":" + ((LayoutVanillaButton)this).getButtonId();
 //				Minecraft.getInstance().keyboardHandler.setClipboard(locator);
 //			});
-//			copyLocatorButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc"), "%n%"));
+//			copyLocatorButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")));
 //			this.rightClickContextMenu.addContent(copyLocatorButton);
 //		}
 //
@@ -137,7 +137,7 @@
 //			if (this.settings.isElementAnchorPointAllowed()) {
 //				Button anchorElementButton = new Button(0, 0, 0, 16, ElementAnchorPoint.ELEMENT.getDisplayName(), (press) -> {
 //					this.editor.setObjectFocused(this, false, true);
-//					FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
+//					FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
 //						if (call != null) {
 //							AbstractEditorElementOld l = this.editor.getElementByInstanceIdentifier(call);
 //							if (l != null) {
@@ -146,7 +146,7 @@
 //								this.element.anchorPointElement = l.element;
 //								this.setAnchorPoint(ElementAnchorPoint.ELEMENT);
 //							} else {
-//								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+//								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
 //							}
 //						}
 //					});
@@ -156,7 +156,7 @@
 //					PopupHandler.displayPopup(pop);
 //					anchorPointContext.closeMenu();
 //				});
-//				anchorElementButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.orientation.element.btn.desc"), "%n%"));
+//				anchorElementButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.orientation.element.btn.desc")));
 //				anchorPointContext.addContent(anchorElementButton);
 //			}
 //
@@ -174,7 +174,7 @@
 //				}
 //			}
 //
-//			AdvancedButton anchorPointButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.setorientation"), true, (press) -> {
+//			AdvancedButton anchorPointButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.setorientation"), true, (press) -> {
 //				anchorPointContext.setParentButton((AdvancedButton) press);
 //				anchorPointContext.openMenuAt(0, press.y);
 //			}) {
@@ -184,7 +184,7 @@
 //					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //				}
 //			};
-//			anchorPointButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
+//			anchorPointButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.items.orientation.btndesc")));
 //			this.rightClickContextMenu.addContent(anchorPointButton);
 //
 //		}
@@ -201,18 +201,18 @@
 //				@Override
 //				public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //					if ((element.advancedX != null) || (element.advancedY != null)) {
-//						this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.active"));
+//						this.setMessage(I18n.get("fancymenu.helper.editor.items.features.advanced_positioning.active"));
 //					} else {
-//						this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning"));
+//						this.setMessage(I18n.get("fancymenu.helper.editor.items.features.advanced_positioning"));
 //					}
 //					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //				}
 //			};
-//			advancedPositioningButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.desc"), "%n%"));
+//			advancedPositioningButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.features.advanced_positioning.desc")));
 //			this.rightClickContextMenu.addContent(advancedPositioningButton);
 //
-//			AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-//				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.editor, null, (call) -> {
+//			AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
+//				TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.editor, null, (call) -> {
 //					if (call != null) {
 //						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //						if (call.replace(" ", "").equals("")) {
@@ -233,8 +233,8 @@
 //			});
 //			advancedPositioningMenu.addContent(advancedPosXButton);
 //
-//			AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-//				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.editor, null, (call) -> {
+//			AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
+//				TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.editor, null, (call) -> {
 //					if (call != null) {
 //						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //						if (call.replace(" ", "").equals("")) {
@@ -268,18 +268,18 @@
 //				@Override
 //				public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //					if ((element.advancedWidth != null) || (element.advancedHeight != null)) {
-//						this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.active"));
+//						this.setMessage(I18n.get("fancymenu.helper.editor.items.features.advanced_sizing.active"));
 //					} else {
-//						this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing"));
+//						this.setMessage(I18n.get("fancymenu.helper.editor.items.features.advanced_sizing"));
 //					}
 //					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //				}
 //			};
-//			advancedSizingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.desc"), "%n%"));
+//			advancedSizingButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.features.advanced_sizing.desc")));
 //			this.rightClickContextMenu.addContent(advancedSizingButton);
 //
-//			AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-//				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.editor, null, (call) -> {
+//			AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
+//				TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.editor, null, (call) -> {
 //					if (call != null) {
 //						if (call.replace(" ", "").equals("")) {
 //							if ((this.element.advancedWidth != null) || (this.element.width != 50)) {
@@ -309,8 +309,8 @@
 //			});
 //			advancedSizingMenu.addContent(advancedWidthButton);
 //
-//			AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-//				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.editor, null, (call) -> {
+//			AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
+//				TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.editor, null, (call) -> {
 //					if (call != null) {
 //						if (call.replace(" ", "").equals("")) {
 //							if ((this.element.advancedHeight != null) || (this.element.height != 50)) {
@@ -345,7 +345,7 @@
 //		layersMenu.setAutoclose(true);
 //		this.rightClickContextMenu.addChild(layersMenu);
 //
-//		AdvancedButton layersButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.element.general.pick_element"), true, (press) -> {
+//		AdvancedButton layersButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.element.general.pick_element"), true, (press) -> {
 //			layersMenu.getContent().clear();
 //			for (AbstractEditorElementOld o : this.hoveredLayers) {
 //				String label = o.element.builder.getDisplayName().getString();
@@ -377,14 +377,14 @@
 //					this.active = element.advancedWidth == null;
 //					this.active = isOrientationSupportedByStretchAction(!element.stretchX, element.stretchY);
 //					if (element.stretchX && this.active) {
-//						this.setMessage(Locals.localize("helper.creator.object.stretch.x.on"));
+//						this.setMessage(I18n.get("fancymenu.editor.object.stretch.x.on"));
 //					} else {
-//						this.setMessage(Locals.localize("helper.creator.object.stretch.x.off"));
+//						this.setMessage(I18n.get("fancymenu.editor.object.stretch.x.off"));
 //					}
 //					if (this.active) {
-//						this.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.stretch.x.desc"), "%n%"));
+//						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.stretch.x.desc")));
 //					} else {
-//						this.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.stretch.not_supported"), "%n%"));
+//						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.stretch.not_supported")));
 //					}
 //					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //				}
@@ -402,14 +402,14 @@
 //					this.active = element.advancedHeight == null;
 //					this.active = isOrientationSupportedByStretchAction(element.stretchX, !element.stretchY);
 //					if (element.stretchY && this.active) {
-//						this.setMessage(Locals.localize("helper.creator.object.stretch.y.on"));
+//						this.setMessage(I18n.get("fancymenu.editor.object.stretch.y.on"));
 //					} else {
-//						this.setMessage(Locals.localize("helper.creator.object.stretch.y.off"));
+//						this.setMessage(I18n.get("fancymenu.editor.object.stretch.y.off"));
 //					}
 //					if (this.active) {
-//						this.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.stretch.y.desc"), "%n%"));
+//						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.stretch.y.desc")));
 //					} else {
-//						this.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.stretch.not_supported"), "%n%"));
+//						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.stretch.not_supported")));
 //					}
 //					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //				}
@@ -420,50 +420,50 @@
 //		this.rightClickContextMenu.addSeparator();
 //
 //		if (this.settings.isLoadingRequirementsEnabled()) {
-//			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
+//			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
 //				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer, (call) -> {});
 //				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //				Minecraft.getInstance().setScreen(s);
 //			});
-//			loadingRequirementsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements.desc"), "%n%"));
+//			loadingRequirementsButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")));
 //			this.rightClickContextMenu.addContent(loadingRequirementsButton);
 //		}
 //
 //		this.rightClickContextMenu.addSeparator();
 //
 //		if (this.settings.isOrderable()) {
-//			AdvancedButton moveUpButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.moveup"), (press) -> {
+//			AdvancedButton moveUpButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.object.moveup"), (press) -> {
 //				AbstractEditorElementOld o = this.editor.moveUp(this);
 //				if (o != null) {
-//					((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.moveup.desc", Locals.localize("helper.creator.object.moveup.desc.subtext", o.element.builder.getDisplayName().getString())), "%n%"));
+//					((AdvancedButton)press).setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.moveup.desc", I18n.get("fancymenu.editor.object.moveup.desc.subtext", o.element.builder.getDisplayName().getString()))));
 //				}
 //			});
-//			moveUpButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.moveup.desc", ""), "%n%"));
+//			moveUpButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.moveup.desc", "")));
 //			this.rightClickContextMenu.addContent(moveUpButton);
 //
-//			AdvancedButton moveDownButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.object.movedown"), (press) -> {
+//			AdvancedButton moveDownButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.object.movedown"), (press) -> {
 //				AbstractEditorElementOld o = this.editor.moveDown(this);
 //				if (o != null) {
 //					if (o instanceof LayoutVanillaButton) {
-//						((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", Locals.localize("helper.creator.object.movedown.desc.subtext.vanillabutton")), "%n%"));
+//						((AdvancedButton)press).setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.movedown.desc", I18n.get("fancymenu.editor.object.movedown.desc.subtext.vanillabutton"))));
 //					} else {
-//						((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", Locals.localize("helper.creator.object.movedown.desc.subtext", o.element.builder.getDisplayName().getString())), "%n%"));
+//						((AdvancedButton)press).setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.movedown.desc", I18n.get("fancymenu.editor.object.movedown.desc.subtext", o.element.builder.getDisplayName().getString()))));
 //					}
 //				}
 //			});
-//			moveDownButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.object.movedown.desc", ""), "%n%"));
+//			moveDownButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.object.movedown.desc", "")));
 //			this.rightClickContextMenu.addContent(moveDownButton);
 //		}
 //
 //		if (this.settings.isCopyable()) {
-//			AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.editor.ui.edit.copy"), (press) -> {
+//			AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.edit.copy"), (press) -> {
 //				this.editor.copySelectedElements();
 //			});
 //			this.rightClickContextMenu.addContent(copyButton);
 //		}
 //
 //		if (this.settings.isDestroyable()) {
-//			AdvancedButton destroyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delete"), true, (press) -> {
+//			AdvancedButton destroyButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.delete"), true, (press) -> {
 //				this.destroyElement();
 //			});
 //			this.rightClickContextMenu.addContent(destroyButton);
@@ -475,33 +475,33 @@
 //		delayMenu.setAutoclose(true);
 //		this.rightClickContextMenu.addChild(delayMenu);
 //
-//		String tdLabel = Locals.localize("helper.creator.items.delay.off");
+//		String tdLabel = I18n.get("fancymenu.editor.items.delay.off");
 //		if (this.element.delayAppearance) {
-//			tdLabel = Locals.localize("helper.creator.items.delay.everytime");
+//			tdLabel = I18n.get("fancymenu.editor.items.delay.everytime");
 //		}
 //		if (this.element.delayAppearance && !this.element.delayAppearanceEverytime) {
-//			tdLabel = Locals.localize("helper.creator.items.delay.firsttime");
+//			tdLabel = I18n.get("fancymenu.editor.items.delay.firsttime");
 //		}
 //		AdvancedButton toggleDelayButton = new AdvancedButton(0, 0, 0, 0, tdLabel, true, (press) -> {
 //			this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 //			if (!this.element.delayAppearance) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.delay.firsttime"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.delay.firsttime"));
 //				this.element.delayAppearance = true;
 //				this.element.delayAppearanceEverytime = false;
 //			} else if (this.element.delayAppearance && !this.element.delayAppearanceEverytime) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.delay.everytime"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.delay.everytime"));
 //				this.element.delayAppearance = true;
 //				this.element.delayAppearanceEverytime = true;
 //			} else if (this.element.delayAppearance && this.element.delayAppearanceEverytime) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.delay.off"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.delay.off"));
 //				this.element.delayAppearance = false;
 //				this.element.delayAppearanceEverytime = false;
 //			}
 //		});
 //		delayMenu.addContent(toggleDelayButton);
 //
-//		AdvancedButton delaySecondsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay.seconds"), true, (press) -> {
-//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + Locals.localize("helper.creator.items.delay.seconds"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+//		AdvancedButton delaySecondsButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.delay.seconds"), true, (press) -> {
+//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + I18n.get("fancymenu.editor.items.delay.seconds"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 //				if (call != null) {
 //					if (!call.equals("" + this.element.appearanceDelayInSeconds)) {
 //						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -526,16 +526,16 @@
 //
 //		delayMenu.addSeparator();
 //
-//		String fiLabel = Locals.localize("helper.creator.items.delay.fadein.off");
+//		String fiLabel = I18n.get("fancymenu.editor.items.delay.fadein.off");
 //		if (this.element.delayAppearance && this.element.fadeIn) {
-//			fiLabel = Locals.localize("helper.creator.items.delay.fadein.on");
+//			fiLabel = I18n.get("fancymenu.editor.items.delay.fadein.on");
 //		}
 //		AdvancedButton toggleFadeButton = new AdvancedButton(0, 0, 0, 0, fiLabel, true, (press) -> {
 //			if (!this.element.fadeIn) {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.delay.fadein.on"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.delay.fadein.on"));
 //				this.element.fadeIn = true;
 //			} else {
-//				((AdvancedButton)press).setMessage(Locals.localize("helper.creator.items.delay.fadein.off"));
+//				((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.delay.fadein.off"));
 //				this.element.fadeIn = false;
 //			}
 //		}) {
@@ -549,8 +549,8 @@
 //			delayMenu.addContent(toggleFadeButton);
 //		}
 //
-//		AdvancedButton fadeSpeedButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay.fadein.speed"), true, (press) -> {
-//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + Locals.localize("helper.creator.items.delay.fadein.speed"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+//		AdvancedButton fadeSpeedButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.delay.fadein.speed"), true, (press) -> {
+//			FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + I18n.get("fancymenu.editor.items.delay.fadein.speed"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 //				if (call != null) {
 //					if (!call.equals("" + this.element.fadeInSpeed)) {
 //						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -575,7 +575,7 @@
 //			delayMenu.addContent(fadeSpeedButton);
 //		}
 //
-//		AdvancedButton delayButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.items.delay"), true, (press) -> {
+//		AdvancedButton delayButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.delay"), true, (press) -> {
 //			delayMenu.setParentButton((AdvancedButton) press);
 //			delayMenu.openMenuAt(0, press.y);
 //		});
@@ -875,12 +875,12 @@
 //
 //		//Render pos and size values
 //		RenderUtils.setScale(matrix, 0.5F);
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.element.anchorPoint, this.element.getX()*2, (this.element.getY()*2) - 26, -1);
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.element.getX(), this.element.getX()*2, (this.element.getY()*2) - 17, -1);
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.element.getWidth(), this.element.getX()*2, (this.element.getY()*2) - 8, -1);
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.orientation") + ": " + this.element.anchorPoint, this.element.getX()*2, (this.element.getY()*2) - 26, -1);
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.posx") + ": " + this.element.getX(), this.element.getX()*2, (this.element.getY()*2) - 17, -1);
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.width") + ": " + this.element.getWidth(), this.element.getX()*2, (this.element.getY()*2) - 8, -1);
 //
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.element.getY(), ((this.element.getX() + this.element.getWidth())*2)+3, ((this.element.getY() + this.element.getHeight())*2) - 14, -1);
-//		drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.element.getHeight(), ((this.element.getX() + this.element.getWidth())*2)+3, ((this.element.getY() + this.element.getHeight())*2) - 5, -1);
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.posy") + ": " + this.element.getY(), ((this.element.getX() + this.element.getWidth())*2)+3, ((this.element.getY() + this.element.getHeight())*2) - 14, -1);
+//		drawString(matrix, Minecraft.getInstance().font, I18n.get("fancymenu.editor.items.border.height") + ": " + this.element.getHeight(), ((this.element.getX() + this.element.getWidth())*2)+3, ((this.element.getY() + this.element.getHeight())*2) - 5, -1);
 //		RenderUtils.postScale(matrix);
 //	}
 //
@@ -1089,7 +1089,7 @@
 //				if (call) {
 //					this.editor.deleteContentQueue.add(this);
 //				}
-//			}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteobject"), "", "", "", "", ""));
+//			}, "§c§l" + I18n.get("fancymenu.editor.messages.sure"), "", I18n.get("fancymenu.editor.deleteobject"), "", "", "", "", ""));
 //		} else {
 //			this.editor.deleteContentQueue.add(this);
 //		}

@@ -1,391 +1,391 @@
 
-helper.button.buttoninfo = Button Info
+fancymenu.overlay.buttoninfo = Button Info
 
-helper.menuinfo.identifier = Menu Identifier
+fancymenu.overlay.menuinfo.identifier = Menu Identifier
 
-helper.buttoninfo.idnotfound = <id not found>
-helper.buttoninfo.keynotfound = <button has no key>
+fancymenu.overlay.buttoninfo.idnotfound = <id not found>
+fancymenu.overlay.buttoninfo.keynotfound = <button has no key>
 helper.buttoninfo
-helper.buttoninfo.id = ID
-helper.buttoninfo.key = Key
-helper.buttoninfo.labelwidth = Label Width
+fancymenu.overlay.buttoninfo.id = ID
+fancymenu.overlay.buttoninfo.key = Key
+fancymenu.overlay.buttoninfo.labelwidth = Label Width
 
 
-helper.creator.messages.sure = Are you sure?
-helper.creator.empty = EMPTY
+fancymenu.editor.messages.sure = Are you sure?
+fancymenu.editor.empty = EMPTY
 
 
-helper.creator.audioalreadyloaded.title = Audio already loaded!
-helper.creator.audioalreadyloaded.desc = The audio you want to add is already part of this layout!%n%%n%You can't add the same audio multiple times.
+fancymenu.editor.audioalreadyloaded.title = Audio already loaded!
+fancymenu.editor.audioalreadyloaded.desc = The audio you want to add is already part of this layout!%n%%n%You can't add the same audio multiple times.
 
-helper.creator.invalidaudio.title = Invalid audio file!
-helper.creator.invalidaudio.desc = The file you want to load does not exist or has an unsupported file type.%n%%n%Please check your file path and be sure that your file is a valid WAV audio file!
+fancymenu.editor.invalidaudio.title = Invalid audio file!
+fancymenu.editor.invalidaudio.desc = The file you want to load does not exist or has an unsupported file type.%n%%n%Please check your file path and be sure that your file is a valid WAV audio file!
 
-helper.creator.invalidimage.title = Invalid image file!
-helper.creator.invalidimage.desc = The image you want to load does not exist or has an unsupported file type.%n%%n%Supported file types are JPG/JPEG, PNG and GIF.
-
-
-helper.creator.animationnotfound.title = Animation not found!
-helper.creator.animationnotfound.desc = The animation you want to add does not exist.%n%%n%Maybe you forgot to add all mandatory variables to its properties?%n%%n%Always keep in mind that you have to restart your game%n%after you've added a new animation to the animations folder.
-
-helper.creator.texttooshort.title = Text too short!
-helper.creator.texttooshort.desc = Your text needs at least one character to be a text!%n%Otherwise..it...would be nothing.%n%%n%Nobody wants to be nothing, so don't do that to your text!
-
-helper.creator.cannotdelete.title = Element can't be deleted!
-helper.creator.cannotdelete.desc = Sorry, but you cannot delete this element.%n%%n%You will need to learn how to live with it..
+fancymenu.editor.invalidimage.title = Invalid image file!
+fancymenu.editor.invalidimage.desc = The image you want to load does not exist or has an unsupported file type.%n%%n%Supported file types are JPG/JPEG, PNG and GIF.
 
 
-helper.creator.layoutoptions.renderorder = Rendering Order
-helper.creator.layoutoptions.renderorder.background = Background
-helper.creator.layoutoptions.renderorder.foreground = Foreground
+fancymenu.editor.animationnotfound.title = Animation not found!
+fancymenu.editor.animationnotfound.desc = The animation you want to add does not exist.%n%%n%Maybe you forgot to add all mandatory variables to its properties?%n%%n%Always keep in mind that you have to restart your game%n%after you've added a new animation to the animations folder.
 
-helper.creator.layoutoptions.version.mc = Minecraft Version
-helper.creator.layoutoptions.version.fm = FancyMenu Version
-helper.creator.layoutoptions.version.minimum = Set Minimum
-helper.creator.layoutoptions.version.minimum.mc = Minimum Minecraft Version
-helper.creator.layoutoptions.version.minimum.fm = Minimum FancyMenu Version
-helper.creator.layoutoptions.version.maximum = Set Maximum
-helper.creator.layoutoptions.version.maximum.mc = Maximum Minecraft Version
-helper.creator.layoutoptions.version.maximum.fm = Maximum FancyMenu Version
+fancymenu.editor.texttooshort.title = Text too short!
+fancymenu.editor.texttooshort.desc = Your text needs at least one character to be a text!%n%Otherwise..it...would be nothing.%n%%n%Nobody wants to be nothing, so don't do that to your text!
 
-helper.creator.layoutoptions.resetbackground = Reset Background
-
-helper.creator.layoutoptions.requiredmods = Required Mods
-helper.creator.layoutoptions.requiredmods.desc = Required Mods [modid, separated by commas]
-
-helper.creator.close = Do you really want to close the layout creator?
-
-helper.creator.audio.delete = Delete
-helper.creator.audio.delete.msg = Do you really want to delete this audio?
-
-helper.creator.add.image = Image
-
-helper.creator.add.animation = Animation
-helper.creator.add.animation.entername = Add By Name
-helper.creator.add.animation.entername.title = Animation Name
-
-helper.creator.add.text = Text
-helper.creator.add.text.newtext = New Text
-
-helper.creator.add.button = Button
-helper.creator.add.button.label = Button Label
-
-helper.creator.add.audio = Audio
-
-helper.creator.vanillabutton.autoclick = Automatic Button Clicks
-helper.creator.vanillabutton.autoclick.popup = Automatic Button Clicks
-
-helper.creator.backgroundoptions = Background Options
-helper.creator.backgroundoptions.backgroundanimation = Background Animations
-helper.creator.backgroundoptions.backgroundimage = Background Image
-helper.creator.backgroundoptions.chooseimage = Choose Image
-
-helper.creator.custombutton.config = Button Action
-helper.creator.custombutton.config.actionvalue = Action Value [{}]
-helper.creator.custombutton.config.actiontype = Action Type
-helper.creator.custombutton.config.actiontype.sendmessage.desc = Send a chat message or command.
-helper.creator.custombutton.config.actiontype.sendmessage.desc.value = Message/Command
-helper.creator.custombutton.config.actiontype.openlink.desc = Open a link in your default browser.
-helper.creator.custombutton.config.actiontype.openlink.desc.value = Link
-helper.creator.custombutton.config.actiontype.quitgame.desc = Quit minecraft.
-helper.creator.custombutton.config.actiontype.joinserver.desc = Join a minecraft server.
-helper.creator.custombutton.config.actiontype.joinserver.desc.value = Server IP
-helper.creator.custombutton.config.actiontype.loadworld.desc = Load a minecraft world.
-helper.creator.custombutton.config.actiontype.loadworld.desc.value = World folder name
-helper.creator.custombutton.config.actiontype.openfile.desc = Open a file or folder.
-helper.creator.custombutton.config.actiontype.openfile.desc.value = Path
-helper.creator.custombutton.config.actiontype.prevbackground.desc = Switch to the previous menu background.
-helper.creator.custombutton.config.actiontype.nextbackground.desc = Switch to the next menu background.
-
-helper.creator.items.setorientation = Set Orientation
-helper.creator.items.delete = Delete
-helper.creator.items.border.posx = posX
-helper.creator.items.border.posy = posY
-helper.creator.items.border.orientation = orientation
-helper.creator.items.border.width = width
-helper.creator.items.border.height = height
-
-helper.creator.items.button.editlabel = Edit Label
-
-helper.creator.items.vanillabutton.resetorientation = Reset Orientation
-
-helper.creator.items.string.setscale = Set Scale
-helper.creator.items.string.setshadow = Shadow: §cOff
-helper.creator.items.string.setnoshadow = Shadow: §aOn
-helper.creator.items.string.edit = Edit Content
-helper.creator.items.string.border.scale = scale
-
-helper.creator.items.string.scale.invalidvalue.title = Invalid Value!
-helper.creator.items.string.scale.invalidvalue.desc = The value you want to set is not a valid scale value!%n%%n%Scale value examples: 1.0, 2.0, 0.5
-
-helper.creator.deleteobject = Do you really want to §lDELETE §rthis element?
-
-helper.creator.choosefile.enterorchoose = §lEnter Path Or Choose File
-helper.creator.choosefile.choose = Choose File
-
-helper.creator.webstring.multiline = Multilined: §cOff
-helper.creator.webstring.nomultiline = Multilined: §aOn
-
-helper.creator.web.invalidurl = §c§lInvalid URL!%n%%n%This URL is not a valid URL or does not exists!
-helper.creator.web.enterurl = Enter URL
-
-helper.creator.add.webimage = Web Image
-helper.creator.add.webtext = Web Text
+fancymenu.editor.cannotdelete.title = Element can't be deleted!
+fancymenu.editor.cannotdelete.desc = Sorry, but you cannot delete this element.%n%%n%You will need to learn how to live with it..
 
 
+fancymenu.editor.layoutoptions.renderorder = Rendering Order
+fancymenu.editor.layoutoptions.renderorder.background = Background
+fancymenu.editor.layoutoptions.renderorder.foreground = Foreground
 
-helper.creator.items.button.hoverlabel = Hoverlabel
-helper.creator.items.button.hoverlabel.reset = Reset Hoverlabel
-helper.creator.items.button.hoversound = Hoversound
-helper.creator.items.button.hoversound.reset = Reset Hoversound
+fancymenu.editor.layoutoptions.version.mc = Minecraft Version
+fancymenu.editor.layoutoptions.version.fm = FancyMenu Version
+fancymenu.editor.layoutoptions.version.minimum = Set Minimum
+fancymenu.editor.layoutoptions.version.minimum.mc = Minimum Minecraft Version
+fancymenu.editor.layoutoptions.version.minimum.fm = Minimum FancyMenu Version
+fancymenu.editor.layoutoptions.version.maximum = Set Maximum
+fancymenu.editor.layoutoptions.version.maximum.mc = Maximum Minecraft Version
+fancymenu.editor.layoutoptions.version.maximum.fm = Maximum FancyMenu Version
+
+fancymenu.editor.layoutoptions.resetbackground = Reset Background
+
+fancymenu.editor.layoutoptions.requiredmods = Required Mods
+fancymenu.editor.layoutoptions.requiredmods.desc = Required Mods [modid, separated by commas]
+
+fancymenu.editor.close = Do you really want to close the layout creator?
+
+fancymenu.editor.audio.delete = Delete
+fancymenu.editor.audio.delete.msg = Do you really want to delete this audio?
+
+fancymenu.editor.add.image = Image
+
+fancymenu.editor.add.animation = Animation
+fancymenu.editor.add.animation.entername = Add By Name
+fancymenu.editor.add.animation.entername.title = Animation Name
+
+fancymenu.editor.add.text = Text
+fancymenu.editor.add.text.newtext = New Text
+
+fancymenu.editor.add.button = Button
+fancymenu.editor.add.button.label = Button Label
+
+fancymenu.editor.add.audio = Audio
+
+fancymenu.editor.vanillabutton.autoclick = Automatic Button Clicks
+fancymenu.editor.vanillabutton.autoclick.popup = Automatic Button Clicks
+
+fancymenu.editor.backgroundoptions = Background Options
+fancymenu.editor.backgroundoptions.backgroundanimation = Background Animations
+fancymenu.editor.backgroundoptions.backgroundimage = Background Image
+fancymenu.editor.backgroundoptions.chooseimage = Choose Image
+
+fancymenu.editor.custombutton.config = Button Action
+fancymenu.editor.custombutton.config.actionvalue = Action Value [{}]
+fancymenu.editor.custombutton.config.actiontype = Action Type
+fancymenu.editor.custombutton.config.actiontype.sendmessage.desc = Send a chat message or command.
+fancymenu.editor.custombutton.config.actiontype.sendmessage.desc.value = Message/Command
+fancymenu.editor.custombutton.config.actiontype.openlink.desc = Open a link in your default browser.
+fancymenu.editor.custombutton.config.actiontype.openlink.desc.value = Link
+fancymenu.editor.custombutton.config.actiontype.quitgame.desc = Quit minecraft.
+fancymenu.editor.custombutton.config.actiontype.joinserver.desc = Join a minecraft server.
+fancymenu.editor.custombutton.config.actiontype.joinserver.desc.value = Server IP
+fancymenu.editor.custombutton.config.actiontype.loadworld.desc = Load a minecraft world.
+fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value = World folder name
+fancymenu.editor.custombutton.config.actiontype.openfile.desc = Open a file or folder.
+fancymenu.editor.custombutton.config.actiontype.openfile.desc.value = Path
+fancymenu.editor.custombutton.config.actiontype.prevbackground.desc = Switch to the previous menu background.
+fancymenu.editor.custombutton.config.actiontype.nextbackground.desc = Switch to the next menu background.
+
+fancymenu.editor.items.setorientation = Set Orientation
+fancymenu.editor.items.delete = Delete
+fancymenu.editor.items.border.posx = posX
+fancymenu.editor.items.border.posy = posY
+fancymenu.editor.items.border.orientation = orientation
+fancymenu.editor.items.border.width = width
+fancymenu.editor.items.border.height = height
+
+fancymenu.editor.items.button.editlabel = Edit Label
+
+fancymenu.editor.items.vanillabutton.resetorientation = Reset Orientation
+
+fancymenu.editor.items.string.setscale = Set Scale
+fancymenu.editor.items.string.setshadow = Shadow: §cOff
+fancymenu.editor.items.string.setnoshadow = Shadow: §aOn
+fancymenu.editor.items.string.edit = Edit Content
+fancymenu.editor.items.string.border.scale = scale
+
+fancymenu.editor.items.string.scale.invalidvalue.title = Invalid Value!
+fancymenu.editor.items.string.scale.invalidvalue.desc = The value you want to set is not a valid scale value!%n%%n%Scale value examples: 1.0, 2.0, 0.5
+
+fancymenu.editor.deleteobject = Do you really want to §lDELETE §rthis element?
+
+fancymenu.editor.choosefile.enterorchoose = §lEnter Path Or Choose File
+fancymenu.editor.choosefile.choose = Choose File
+
+fancymenu.editor.webstring.multiline = Multilined: §cOff
+fancymenu.editor.webstring.nomultiline = Multilined: §aOn
+
+fancymenu.editor.web.invalidurl = §c§lInvalid URL!%n%%n%This URL is not a valid URL or does not exists!
+fancymenu.editor.web.enterurl = Enter URL
+
+fancymenu.editor.add.webimage = Web Image
+fancymenu.editor.add.webtext = Web Text
 
 
-helper.creator.backgroundoptions.panorama = Wide
 
-helper.creator.textures.invalidcharacters = §c§lInvalid characters!%n%%n%%n%The filename of your image contains invalid characters!%n%%n%Please only use characters "a-z", "0-9", ".", "_" and "-".%n%Spaces, uppercase letters and any other special characters are unsupported.
+fancymenu.editor.items.button.hoverlabel = Hoverlabel
+fancymenu.editor.items.button.hoverlabel.reset = Reset Hoverlabel
+fancymenu.editor.items.button.hoversound = Hoversound
+fancymenu.editor.items.button.hoversound.reset = Reset Hoversound
 
-helper.buttons.tools.overridemenu = Override With
-helper.buttons.tools.resetoverride = Reset Override
 
-helper.buttons.tools.customguis = Custom GUIs
-helper.buttons.tools.customguis.open = Open GUI
-helper.buttons.tools.customguis.delete = Delete GUI
-helper.buttons.tools.customguis.pickbyname = Pick By Name
-helper.buttons.tools.customguis.openbyname = Open By Name
-helper.buttons.tools.customguis.deletebyname = Delete By Name
-helper.buttons.tools.customguis.sure = §c§lAre you sure?%n%%n%%n%Do you really want to §ldelete §rthis GUI?%n%%n%§lThis action cannot be undone!%n% %n% %n% %n%
-helper.buttons.tools.customguis.invalididentifier = §c§lInvalid identifier!%n%%n%%n%No custom GUI found with this identifier!%n% %n% %n% %n%
+fancymenu.editor.backgroundoptions.panorama = Wide
 
-helper.buttons.tools.creategui = Create GUI
-helper.buttons.tools.creategui.allowesc = Allow
-helper.buttons.tools.creategui.donotallowesc = Don't Allow
-helper.buttons.tools.creategui.invalididentifier = §cInvalid identifier!
-helper.buttons.tools.creategui.identifieralreadyused = §cIdentifier already in use! Please choose another one!
-helper.buttons.tools.creategui.allowescdesc = Allow ESC To Close Menu
-helper.buttons.tools.creategui.menuidentifier = Menu Identifier
-helper.buttons.tools.creategui.menutitle = Menu Title (Optional)
-helper.buttons.tools.creategui.create = Create
+fancymenu.editor.textures.invalidcharacters = §c§lInvalid characters!%n%%n%%n%The filename of your image contains invalid characters!%n%%n%Please only use characters "a-z", "0-9", ".", "_" and "-".%n%Spaces, uppercase letters and any other special characters are unsupported.
 
-gameintro.skip = PRESS SPACE TO SKIP
+fancymenu.ui.overridemenu = Override With
+fancymenu.ui.resetoverride = Reset Override
+
+fancymenu.ui.customguis = Custom GUIs
+fancymenu.ui.customguis.open = Open GUI
+fancymenu.ui.customguis.delete = Delete GUI
+fancymenu.ui.customguis.pickbyname = Pick By Name
+fancymenu.ui.customguis.openbyname = Open By Name
+fancymenu.ui.customguis.deletebyname = Delete By Name
+fancymenu.ui.customguis.sure = §c§lAre you sure?%n%%n%%n%Do you really want to §ldelete §rthis GUI?%n%%n%§lThis action cannot be undone!%n% %n% %n% %n%
+fancymenu.ui.customguis.invalididentifier = §c§lInvalid identifier!%n%%n%%n%No custom GUI found with this identifier!%n% %n% %n% %n%
+
+fancymenu.ui.creategui = Create GUI
+fancymenu.ui.creategui.allowesc = Allow
+fancymenu.ui.creategui.donotallowesc = Don't Allow
+fancymenu.ui.creategui.invalididentifier = §cInvalid identifier!
+fancymenu.ui.creategui.identifieralreadyused = §cIdentifier already in use! Please choose another one!
+fancymenu.ui.creategui.allowescdesc = Allow ESC To Close Menu
+fancymenu.ui.creategui.menuidentifier = Menu Identifier
+fancymenu.ui.creategui.menutitle = Menu Title (Optional)
+fancymenu.ui.creategui.create = Create
+
+fancymenu.gameintro.skip = PRESS SPACE TO SKIP
 
 fancymenu.element.general.pick_element = Pick Element
 fancymenu.element.general.pick_element.desc = List will all elements at the position%n%of the mouse cursor when%n%you opened this context menu.%n%%n%Useful for when you need to%n%select an element that's behind%n%another one.
 
-customization.items.webstring.unabletoload = Unable to load web text! Invalid URL or not connected to internet!
+fancymenu.elements.webstring.unabletoload = Unable to load web text! Invalid URL or not connected to internet!
 
-helper.creator.custombutton.config.actiontype.opencustomgui.desc = Opens a Custom GUI.
-helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Menu Identifier
-
-
-custombuttons.action.opengui.cannotopengui = §c§lUnable To Open GUI!%n%%n%%n%The GUI you want to open either does not exist or isn't supported!%n%%n%If this is an existing GUI, please contact the developer of FancyMenu to add support for it.
-
-helper.creator.custombutton.config.actiontype.opengui.desc = Opens a GUI by its menu identifier.%n%%n%Supports vanilla/mod GUIs and%n%custom GUIs made with FancyMenu.
-helper.creator.custombutton.config.actiontype.opengui.desc.value = Menu Identifier
+fancymenu.editor.custombutton.config.actiontype.opencustomgui.desc = Opens a Custom GUI.
+fancymenu.editor.custombutton.config.actiontype.opencustomgui.desc.value = Menu Identifier
 
 
-helper.creator.windowsize = Window Size Restrictions
-helper.creator.windowsize.biggerthan = Bigger Than
-helper.creator.windowsize.smallerthan = Smaller Than
-helper.creator.windowsize.biggerthan.desc = Only Enable Layout if Window is Bigger Than X
-helper.creator.windowsize.smallerthan.desc = Only Enable Layout if Window is Smaller Than X
-helper.creator.windowsize.currentwidth = Current Window Width
-helper.creator.windowsize.currentheight = Current Window Height
+fancymenu.custombuttons.action.opengui.cannotopengui = §c§lUnable To Open GUI!%n%%n%%n%The GUI you want to open either does not exist or isn't supported!%n%%n%If this is an existing GUI, please contact the developer of FancyMenu to add support for it.
 
-helper.menuinfo.idcopied = Copied to clipboard!
+fancymenu.editor.custombutton.config.actiontype.opengui.desc = Opens a GUI by its menu identifier.%n%%n%Supports vanilla/mod GUIs and%n%custom GUIs made with FancyMenu.
+fancymenu.editor.custombutton.config.actiontype.opengui.desc.value = Menu Identifier
 
 
-helper.creator.custombutton.config.actiontype.movefile.desc = Moves a file to a new path.
-helper.creator.custombutton.config.actiontype.movefile.desc.value = Filepath + new path, separated by ';'
-helper.creator.custombutton.config.actiontype.copyfile.desc = Copies a file to a path.
-helper.creator.custombutton.config.actiontype.copyfile.desc.value = Filepath + target path, separated by ';'
-helper.creator.custombutton.config.actiontype.deletefile.desc = Deletes a file.
-helper.creator.custombutton.config.actiontype.deletefile.desc.value = Filepath
-helper.creator.custombutton.config.actiontype.renamefile.desc = Renames a file.
-helper.creator.custombutton.config.actiontype.renamefile.desc.value = Filepath + new filename with type
-helper.creator.custombutton.config.actiontype.reloadmenu.desc = Reloads the currently displayed menu.
-helper.creator.custombutton.config.actiontype.runscript.desc = Runs a button script.
-helper.creator.custombutton.config.actiontype.runscript.desc.value = Script filename without filetype
-helper.creator.custombutton.config.actiontype.downloadfile.desc = Downloads a file to a path.
-helper.creator.custombutton.config.actiontype.downloadfile.desc.value = URL + download path, separated by ';'
-helper.creator.custombutton.config.actiontype.unpackzip.desc = Unpacks a ZIP file to a path.
-helper.creator.custombutton.config.actiontype.unpackzip.desc.value = Filepath + target path, separated by ';'
+fancymenu.editor.windowsize = Window Size Restrictions
+fancymenu.editor.windowsize.biggerthan = Bigger Than
+fancymenu.editor.windowsize.smallerthan = Smaller Than
+fancymenu.editor.windowsize.biggerthan.desc = Only Enable Layout if Window is Bigger Than X
+fancymenu.editor.windowsize.smallerthan.desc = Only Enable Layout if Window is Smaller Than X
+fancymenu.editor.windowsize.currentwidth = Current Window Width
+fancymenu.editor.windowsize.currentheight = Current Window Height
 
-helper.creator.custombutton.config.actionvalue.example = Example: {}
-
-helper.creator.custombutton.config.actiontype.openlink.desc.value.example = https://example.com
-helper.creator.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all! This is an example!
-helper.creator.custombutton.config.actiontype.joinserver.desc.value.example = mc.exampleserver.com
-helper.creator.custombutton.config.actiontype.loadworld.desc.value.example = example_world_name
-helper.creator.custombutton.config.actiontype.opencustomgui.desc.value.example = example_custom_gui_identifier
-helper.creator.custombutton.config.actiontype.opengui.desc.value.example = example.menu.identifier
-helper.creator.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/example.txt
-helper.creator.custombutton.config.actiontype.movefile.desc.value.example = resources/example.jpg;folder/moveto/example.jpg
-helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = resources/example.jpg;some_folder/example_copy.jpg
-helper.creator.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/example.gif
-helper.creator.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/example.jpg;new_name_example.jpg
-helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://example_hoster.com/layout.zip;download/layout.zip
-helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = resources/example.zip;resources/unpacked/
-helper.creator.custombutton.config.actiontype.runscript.desc.value.example = example_script_name
-
-helper.creator.rightclick.scale = Force GUI Scale
-helper.creator.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than 0!
-
-helper.creator.items.button.resetlabel = Reset Label
-
-helper.creator.items.custombutton.onlydisplayin = Only Display In
-helper.creator.items.custombutton.onlydisplayin.outgame = Outgame
-helper.creator.items.custombutton.onlydisplayin.singleplayer = Singleplayer
-helper.creator.items.custombutton.onlydisplayin.multiplayer = Multiplayer
-helper.creator.items.custombutton.onlydisplayin.reset = RESET
-
-helper.creator.items.button.clicksound = Set Clicksound
-helper.creator.items.button.clicksound.reset = Reset Clicksound
-
-helper.popup.togglecustomization.enable = Customization: §cOff
-helper.popup.togglecustomization.disable = Customization: §aOn
-
-helper.creator.object.stretch.not_supported = You currently can't do that,%n%because the positioning or%n%sizing of this element does not%n%support stretching.%n%%n%Try to change the orientation%n%and disable advanced sizing.
-helper.creator.object.stretch.x.on = Stretch Horizontally: §aOn
-helper.creator.object.stretch.x.off = Stretch Horizontally: §cOff
-helper.creator.object.stretch.x.desc = Will stretch the element to the%n%width of the screen.
-helper.creator.object.stretch.y.on = Stretch Vertically: §aOn
-helper.creator.object.stretch.y.off = Stretch Vertically: §cOff
-helper.creator.object.stretch.y.desc = Will stretch the element to the%n%height of the screen.
-
-helper.creator.object.stretch.unsupportedorientation = §c§lUnsupported Orientation!%n%%n%%n%The current orientation of this element is not supported by this stretch action.%n%%n%§lSupported Orientations: {}
-
-helper.creator.backgroundoptions.backgroundpanorama = Background Panorama
-helper.creator.backgroundoptions.panoramas = Panoramas
-helper.creator.backgroundoptions.panoramas.set = Set Background
-helper.creator.backgroundoptions.panoramas.set.desc = Sets the selected panorama%n%as active background panorama.
-helper.creator.backgroundoptions.panoramas.clear = Clear
-helper.creator.backgroundoptions.panoramas.clear.desc = Removes the currently%n%active background panorama.
-
-helper.creator.items.button.btndescription = Tooltip
-helper.creator.items.button.btndescription.desc = Tooltip to display%n%when the button is getting hovered.
-
-helper.buttons.customization.onoff.btndesc = Toggle customizations%n%for the current menu.%n%%n%§cThis needs to be enabled for%n%§clayouts to work!
-helper.buttons.customization.overridewith.btndesc = Override the current menu%n%with one of your own custom GUIs.%n%%n%§cIMPORTANT:%n%Shouldn't be used if you%n%just want to edit the look%n%of an existing menu.%n%%n%To edit a menu, create%n%a layout instead!
+fancymenu.overlay.menuinfo.idcopied = Copied to clipboard!
 
 
-helper.buttons.customization.managelayouts = Manage Layouts
-helper.buttons.customization.managelayouts.enable = §aEnable §rLayout
-helper.buttons.customization.managelayouts.enabled = §aEnabled
-helper.buttons.customization.managelayouts.disable = §cDisable §rLayout
-helper.buttons.customization.managelayouts.disabled = §cDisabled
-helper.buttons.customization.managelayouts.delete = Delete Layout
-helper.buttons.customization.managelayouts.delete.msg = §c§lAre you sure?%n%%n%%n%Do you really want to §c§ldelete §rthis layout?%n%%n%§c§lThis action cannot be undone!
-helper.buttons.customization.managelayouts.layout.btndesc = §lLayout Info:%n%%n%Status: {}%n%Customization Actions: {}%n%%n%§cLeftclick for more options!
+fancymenu.editor.custombutton.config.actiontype.movefile.desc = Moves a file to a new path.
+fancymenu.editor.custombutton.config.actiontype.movefile.desc.value = Filepath + new path, separated by ';'
+fancymenu.editor.custombutton.config.actiontype.copyfile.desc = Copies a file to a path.
+fancymenu.editor.custombutton.config.actiontype.copyfile.desc.value = Filepath + target path, separated by ';'
+fancymenu.editor.custombutton.config.actiontype.deletefile.desc = Deletes a file.
+fancymenu.editor.custombutton.config.actiontype.deletefile.desc.value = Filepath
+fancymenu.editor.custombutton.config.actiontype.renamefile.desc = Renames a file.
+fancymenu.editor.custombutton.config.actiontype.renamefile.desc.value = Filepath + new filename with type
+fancymenu.editor.custombutton.config.actiontype.reloadmenu.desc = Reloads the currently displayed menu.
+fancymenu.editor.custombutton.config.actiontype.runscript.desc = Runs a button script.
+fancymenu.editor.custombutton.config.actiontype.runscript.desc.value = Script filename without filetype
+fancymenu.editor.custombutton.config.actiontype.downloadfile.desc = Downloads a file to a path.
+fancymenu.editor.custombutton.config.actiontype.downloadfile.desc.value = URL + download path, separated by ';'
+fancymenu.editor.custombutton.config.actiontype.unpackzip.desc = Unpacks a ZIP file to a path.
+fancymenu.editor.custombutton.config.actiontype.unpackzip.desc.value = Filepath + target path, separated by ';'
 
-helper.creator.object.moveup = Move Above
-helper.creator.object.moveup.desc = Moves the element one layer up.%n%%n%§cIMPORTANT:%n%Focused elements are always on top,%n%so you will not see the effect%n%until you unfocus the element.{}
-helper.creator.object.moveup.desc.subtext = %n%%n%§6§lLast Action:%n%Moved above §7{}
-helper.creator.object.movedown = Move Below
-helper.creator.object.movedown.desc = Moves the element one layer down.%n%%n%§cIMPORTANT:%n%Focused elements are always on top,%n%so you will not see the effect%n%until you unfocus the element.{}
-helper.creator.object.movedown.desc.subtext = %n%%n%§6§lLast Action:%n%Moved behind §7{}
+fancymenu.editor.custombutton.config.actionvalue.example = Example: {}
 
-helper.buttons.customization.managelayouts.openintexteditor = Open In Text Editor
-helper.buttons.customization.managelayouts.openintexteditor.desc = Opens this layout in%n%your default text editor.%n%%n%§cIMPORTANT:%n%You need to click the "Reload"%n%button, after manually changing%n%things in layout files!
+fancymenu.editor.custombutton.config.actiontype.openlink.desc.value.example = https://example.com
+fancymenu.editor.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all! This is an example!
+fancymenu.editor.custombutton.config.actiontype.joinserver.desc.value.example = mc.exampleserver.com
+fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value.example = example_world_name
+fancymenu.editor.custombutton.config.actiontype.opencustomgui.desc.value.example = example_custom_gui_identifier
+fancymenu.editor.custombutton.config.actiontype.opengui.desc.value.example = example.menu.identifier
+fancymenu.editor.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/example.txt
+fancymenu.editor.custombutton.config.actiontype.movefile.desc.value.example = resources/example.jpg;folder/moveto/example.jpg
+fancymenu.editor.custombutton.config.actiontype.copyfile.desc.value.example = resources/example.jpg;some_folder/example_copy.jpg
+fancymenu.editor.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/example.gif
+fancymenu.editor.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/example.jpg;new_name_example.jpg
+fancymenu.editor.custombutton.config.actiontype.downloadfile.desc.value.example = https://example_hoster.com/layout.zip;download/layout.zip
+fancymenu.editor.custombutton.config.actiontype.unpackzip.desc.value.example = resources/example.zip;resources/unpacked/
+fancymenu.editor.custombutton.config.actiontype.runscript.desc.value.example = example_script_name
 
-helper.creator.opencloseaudio = Open/Close Sound
-helper.creator.opencloseaudio.desc = Play a sound when the menu is getting%n%opened or closed.
-helper.creator.opencloseaudio.reset.desc = Will reset this sound.
-helper.creator.openaudio = Menu Open Sound
-helper.creator.openaudio.reset = Reset Open Sound
-helper.creator.openaudio.desc = Will play a sound when opening the menu.
-helper.creator.closeaudio = Menu Close Sound
-helper.creator.closeaudio.reset = Reset Close Sound
-helper.creator.closeaudio.desc = Will play a sound when closing the menu.
+fancymenu.editor.rightclick.scale = Force GUI Scale
+fancymenu.editor.rightclick.scale.invalid = §c§lInvalid Scale!%n%%n%%n%Scale values need to be bigger than 0!
 
-helper.creator.deleteselectedobjects = Do you really want to §lDELETE §rall selected elements?
+fancymenu.editor.items.button.resetlabel = Reset Label
 
-helper.creator.multiselect.object.deleteall = Delete All
-helper.creator.multiselect.object.deleteall.btndesc = Will delete all selected elements.
-helper.creator.multiselect.object.stretchall = Stretch All
-helper.creator.multiselect.object.stretchall.btndesc = Stretch all §lstretchable §relements%n%to the menu width or height.
-helper.creator.multiselect.vanillabutton.resetorientation = Reset Orientation
-helper.creator.multiselect.vanillabutton.resetorientation.btndesc = Will reset the orientation%n%for all selected vanilla buttons.
-helper.creator.multiselect.vanillabutton.hideall = Hide All
-helper.creator.multiselect.vanillabutton.hideall.btndesc = Will hide all selected vanilla buttons.
-helper.creator.multiselect.button.buttontexture.btndesc = Set normal and hover textures%n%for all selected buttons.
-helper.creator.multiselect.button.clicksound.btndesc = Will set the clicksound%n%for all selected buttons.
-helper.creator.multiselect.button.clicksound.reset.btndesc = Will reset the clicksound%n%for all selected buttons.
-helper.creator.multiselect.button.hoversound.btndesc = Will set the hoversound%n%for all selected buttons.
-helper.creator.multiselect.button.hoversound.reset.btndesc = Will reset the hoversound%n%for all selected buttons.
+fancymenu.editor.items.custombutton.onlydisplayin = Only Display In
+fancymenu.editor.items.custombutton.onlydisplayin.outgame = Outgame
+fancymenu.editor.items.custombutton.onlydisplayin.singleplayer = Singleplayer
+fancymenu.editor.items.custombutton.onlydisplayin.multiplayer = Multiplayer
+fancymenu.editor.items.custombutton.onlydisplayin.reset = RESET
 
-helper.creator.add.playerentity = Player Entity
+fancymenu.editor.items.button.clicksound = Set Clicksound
+fancymenu.editor.items.button.clicksound.reset = Reset Clicksound
 
-helper.creator.items.playerentity.setscale = Set Scale
-helper.creator.items.playerentity.playername = Player Name
-helper.creator.items.playerentity.playername.auto = Auto
-helper.creator.items.playerentity.playername.setname = Set Name
-helper.creator.items.playerentity.skin = Set Skin
-helper.creator.items.playerentity.cape = Set Cape
-helper.creator.items.playerentity.texture.local = Local Texture
-helper.creator.items.playerentity.texture.url = URL
-helper.creator.items.playerentity.rotation = Rotation
-helper.creator.items.playerentity.rotation.auto = Auto Rotation
-helper.creator.items.playerentity.rotation.custom = Custom Rotation
-helper.creator.items.playerentity.rotation.custom.bodyx = Horizontal Body Rotation
-helper.creator.items.playerentity.rotation.custom.bodyy = Vertical Body Rotation
-helper.creator.items.playerentity.rotation.custom.headx = Horizontal Head Rotation
-helper.creator.items.playerentity.rotation.custom.heady = Vertical Head Rotation
-helper.creator.items.playerentity.showname.off = Show Name: §cOff
-helper.creator.items.playerentity.showname.on = Show Name: §aOn
-helper.creator.items.playerentity.crouching.off = Crouching: §cOff
-helper.creator.items.playerentity.crouching.on = Crouching: §aOn
-helper.creator.items.playerentity.parrot.off = Show Parrot: §cOff
-helper.creator.items.playerentity.parrot.on = Show Parrot: §aOn
-helper.creator.items.playerentity.slim.off = Slim Skin: §cOff
-helper.creator.items.playerentity.slim.on = Slim Skin: §aOn
+fancymenu.overlay.ui.customization.off = Customization: §cOff
+fancymenu.overlay.ui.customization.on = Customization: §aOn
 
-helper.creator.items.playerentity.setscale.btndesc = Set the scale of the player.
-helper.creator.items.playerentity.playername.btndesc = Set the name of the player.
-helper.creator.items.playerentity.playername.auto.btndesc = Will automatically set the player%n%to the client user.
-helper.creator.items.playerentity.playername.setname.btndesc = Manually set the player name.%n%%n%This doesn't have to be an%n%existing user.
-helper.creator.items.playerentity.skin.btndesc = Set the skin texture of the player.%n%%n%This skin is prioritized over%n%the normal player skin.
-helper.creator.items.playerentity.cape.btndesc = Set the cape texture of the player.%n%%n%This cape is prioritized over%n%the normal player cape.
-helper.creator.items.playerentity.rotation.btndesc = Set the body and head rotation.
-helper.creator.items.playerentity.rotation.auto.btndesc = Player will follow the mouse cursor.
-helper.creator.items.playerentity.rotation.custom.btndesc = Set a custom player rotation.
-helper.creator.items.playerentity.showname.btndesc = Set the player name visibility.
-helper.creator.items.playerentity.crouching.btndesc = Set if the player should crouch or not.
-helper.creator.items.playerentity.parrot.btndesc = ARRR!
-helper.creator.items.playerentity.slim.btndesc = Set if the player should have%n%the slim skin layout.%n%%n%Slim skins have thinner arms.
+fancymenu.editor.object.stretch.not_supported = You currently can't do that,%n%because the positioning or%n%sizing of this element does not%n%support stretching.%n%%n%Try to change the orientation%n%and disable advanced sizing.
+fancymenu.editor.object.stretch.x.on = Stretch Horizontally: §aOn
+fancymenu.editor.object.stretch.x.off = Stretch Horizontally: §cOff
+fancymenu.editor.object.stretch.x.desc = Will stretch the element to the%n%width of the screen.
+fancymenu.editor.object.stretch.y.on = Stretch Vertically: §aOn
+fancymenu.editor.object.stretch.y.off = Stretch Vertically: §cOff
+fancymenu.editor.object.stretch.y.desc = Will stretch the element to the%n%height of the screen.
 
-helper.creator.items.playerentity.texture.invalidtexture.title = Invalid Texture!
-helper.creator.items.playerentity.texture.invalidtexture.desc = This texture either doesn't exist or is not a valid texture file.%n%%n%§lSupported File Types: §rPNG
+fancymenu.editor.object.stretch.unsupportedorientation = §c§lUnsupported Orientation!%n%%n%%n%The current orientation of this element is not supported by this stretch action.%n%%n%§lSupported Orientations: {}
 
-popup.apply = Apply
+fancymenu.editor.backgroundoptions.backgroundpanorama = Background Panorama
+fancymenu.editor.backgroundoptions.panoramas = Panoramas
+fancymenu.editor.backgroundoptions.panoramas.set = Set Background
+fancymenu.editor.backgroundoptions.panoramas.set.desc = Sets the selected panorama%n%as active background panorama.
+fancymenu.editor.backgroundoptions.panoramas.clear = Clear
+fancymenu.editor.backgroundoptions.panoramas.clear.desc = Removes the currently%n%active background panorama.
 
-helper.creator.items.orientation.btndesc = Sets the origin point from%n%where this elements's position%n%will be calculated.%n%%n%§cNOTE:%n%You can see how an element%n%is affected by its orientation%n%when you resize the editor%n%window after changing the%n%orientation.
+fancymenu.editor.items.button.btndescription = Tooltip
+fancymenu.editor.items.button.btndescription.desc = Tooltip to display%n%when the button is getting hovered.
 
-helper.creator.add.slideshow = Slideshow
-helper.creator.add.slideshow.entername = Add By Name
-helper.creator.add.slideshow.entername.title = Enter Slideshow Name
-
-helper.creator.backgroundoptions.backgroundslideshow = Background Slideshow
-helper.creator.backgroundoptions.backgroundslideshow.set = Set Background
-helper.creator.backgroundoptions.backgroundslideshow.set.desc = Sets the selected slideshow%n%as active background slideshow.
-helper.creator.backgroundoptions.backgroundslideshow.clear = Clear
-helper.creator.backgroundoptions.backgroundslideshow.clear.desc = Removes the currently%n%active background slideshow.
+fancymenu.overlay.ui.customization.onoff.btndesc = Toggle customizations%n%for the current menu.%n%%n%§cThis needs to be enabled for%n%§clayouts to work!
+fancymenu.overlay.ui.customization.overridewith.btndesc = Override the current menu%n%with one of your own custom GUIs.%n%%n%§cIMPORTANT:%n%Shouldn't be used if you%n%just want to edit the look%n%of an existing menu.%n%%n%To edit a menu, create%n%a layout instead!
 
 
-helper.creator.slideshownotfound = §c§lSlideshow not found!%n%%n%The entered slideshow does not exist!%n%Maybe a typo in the slideshow name?
+fancymenu.overlay.ui.customization.managelayouts = Manage Layouts
+fancymenu.overlay.ui.customization.managelayouts.enable = §aEnable §rLayout
+fancymenu.overlay.ui.customization.managelayouts.enabled = §aEnabled
+fancymenu.overlay.ui.customization.managelayouts.disable = §cDisable §rLayout
+fancymenu.overlay.ui.customization.managelayouts.disabled = §cDisabled
+fancymenu.overlay.ui.customization.managelayouts.delete = Delete Layout
+fancymenu.overlay.ui.customization.managelayouts.delete.msg = §c§lAre you sure?%n%%n%%n%Do you really want to §c§ldelete §rthis layout?%n%%n%§c§lThis action cannot be undone!
+fancymenu.overlay.ui.customization.managelayouts.layout.btndesc = §lLayout Info:%n%%n%Status: {}%n%Customization Actions: {}%n%%n%§cLeftclick for more options!
+
+fancymenu.editor.object.moveup = Move Above
+fancymenu.editor.object.moveup.desc = Moves the element one layer up.%n%%n%§cIMPORTANT:%n%Focused elements are always on top,%n%so you will not see the effect%n%until you unfocus the element.{}
+fancymenu.editor.object.moveup.desc.subtext = %n%%n%§6§lLast Action:%n%Moved above §7{}
+fancymenu.editor.object.movedown = Move Below
+fancymenu.editor.object.movedown.desc = Moves the element one layer down.%n%%n%§cIMPORTANT:%n%Focused elements are always on top,%n%so you will not see the effect%n%until you unfocus the element.{}
+fancymenu.editor.object.movedown.desc.subtext = %n%%n%§6§lLast Action:%n%Moved behind §7{}
+
+fancymenu.overlay.ui.customization.managelayouts.openintexteditor = Open In Text Editor
+fancymenu.overlay.ui.customization.managelayouts.openintexteditor.desc = Opens this layout in%n%your default text editor.%n%%n%§cIMPORTANT:%n%You need to click the "Reload"%n%button, after manually changing%n%things in layout files!
+
+fancymenu.editor.opencloseaudio = Open/Close Sound
+fancymenu.editor.opencloseaudio.desc = Play a sound when the menu is getting%n%opened or closed.
+fancymenu.editor.opencloseaudio.reset.desc = Will reset this sound.
+fancymenu.editor.openaudio = Menu Open Sound
+fancymenu.editor.openaudio.reset = Reset Open Sound
+fancymenu.editor.openaudio.desc = Will play a sound when opening the menu.
+fancymenu.editor.closeaudio = Menu Close Sound
+fancymenu.editor.closeaudio.reset = Reset Close Sound
+fancymenu.editor.closeaudio.desc = Will play a sound when closing the menu.
+
+fancymenu.editor.deleteselectedobjects = Do you really want to §lDELETE §rall selected elements?
+
+fancymenu.editor.multiselect.object.deleteall = Delete All
+fancymenu.editor.multiselect.object.deleteall.btndesc = Will delete all selected elements.
+fancymenu.editor.multiselect.object.stretchall = Stretch All
+fancymenu.editor.multiselect.object.stretchall.btndesc = Stretch all §lstretchable §relements%n%to the menu width or height.
+fancymenu.editor.multiselect.vanillabutton.resetorientation = Reset Orientation
+fancymenu.editor.multiselect.vanillabutton.resetorientation.btndesc = Will reset the orientation%n%for all selected vanilla buttons.
+fancymenu.editor.multiselect.vanillabutton.hideall = Hide All
+fancymenu.editor.multiselect.vanillabutton.hideall.btndesc = Will hide all selected vanilla buttons.
+fancymenu.editor.multiselect.button.buttontexture.btndesc = Set normal and hover textures%n%for all selected buttons.
+fancymenu.editor.multiselect.button.clicksound.btndesc = Will set the clicksound%n%for all selected buttons.
+fancymenu.editor.multiselect.button.clicksound.reset.btndesc = Will reset the clicksound%n%for all selected buttons.
+fancymenu.editor.multiselect.button.hoversound.btndesc = Will set the hoversound%n%for all selected buttons.
+fancymenu.editor.multiselect.button.hoversound.reset.btndesc = Will reset the hoversound%n%for all selected buttons.
+
+fancymenu.editor.add.playerentity = Player Entity
+
+fancymenu.editor.items.playerentity.setscale = Set Scale
+fancymenu.editor.items.playerentity.playername = Player Name
+fancymenu.editor.items.playerentity.playername.auto = Auto
+fancymenu.editor.items.playerentity.playername.setname = Set Name
+fancymenu.editor.items.playerentity.skin = Set Skin
+fancymenu.editor.items.playerentity.cape = Set Cape
+fancymenu.editor.items.playerentity.texture.local = Local Texture
+fancymenu.editor.items.playerentity.texture.url = URL
+fancymenu.editor.items.playerentity.rotation = Rotation
+fancymenu.editor.items.playerentity.rotation.auto = Auto Rotation
+fancymenu.editor.items.playerentity.rotation.custom = Custom Rotation
+fancymenu.editor.items.playerentity.rotation.custom.bodyx = Horizontal Body Rotation
+fancymenu.editor.items.playerentity.rotation.custom.bodyy = Vertical Body Rotation
+fancymenu.editor.items.playerentity.rotation.custom.headx = Horizontal Head Rotation
+fancymenu.editor.items.playerentity.rotation.custom.heady = Vertical Head Rotation
+fancymenu.editor.items.playerentity.showname.off = Show Name: §cOff
+fancymenu.editor.items.playerentity.showname.on = Show Name: §aOn
+fancymenu.editor.items.playerentity.crouching.off = Crouching: §cOff
+fancymenu.editor.items.playerentity.crouching.on = Crouching: §aOn
+fancymenu.editor.items.playerentity.parrot.off = Show Parrot: §cOff
+fancymenu.editor.items.playerentity.parrot.on = Show Parrot: §aOn
+fancymenu.editor.items.playerentity.slim.off = Slim Skin: §cOff
+fancymenu.editor.items.playerentity.slim.on = Slim Skin: §aOn
+
+fancymenu.editor.items.playerentity.setscale.btndesc = Set the scale of the player.
+fancymenu.editor.items.playerentity.playername.btndesc = Set the name of the player.
+fancymenu.editor.items.playerentity.playername.auto.btndesc = Will automatically set the player%n%to the client user.
+fancymenu.editor.items.playerentity.playername.setname.btndesc = Manually set the player name.%n%%n%This doesn't have to be an%n%existing user.
+fancymenu.editor.items.playerentity.skin.btndesc = Set the skin texture of the player.%n%%n%This skin is prioritized over%n%the normal player skin.
+fancymenu.editor.items.playerentity.cape.btndesc = Set the cape texture of the player.%n%%n%This cape is prioritized over%n%the normal player cape.
+fancymenu.editor.items.playerentity.rotation.btndesc = Set the body and head rotation.
+fancymenu.editor.items.playerentity.rotation.auto.btndesc = Player will follow the mouse cursor.
+fancymenu.editor.items.playerentity.rotation.custom.btndesc = Set a custom player rotation.
+fancymenu.editor.items.playerentity.showname.btndesc = Set the player name visibility.
+fancymenu.editor.items.playerentity.crouching.btndesc = Set if the player should crouch or not.
+fancymenu.editor.items.playerentity.parrot.btndesc = ARRR!
+fancymenu.editor.items.playerentity.slim.btndesc = Set if the player should have%n%the slim skin layout.%n%%n%Slim skins have thinner arms.
+
+fancymenu.editor.items.playerentity.texture.invalidtexture.title = Invalid Texture!
+fancymenu.editor.items.playerentity.texture.invalidtexture.desc = This texture either doesn't exist or is not a valid texture file.%n%%n%§lSupported File Types: §rPNG
+
+fancymenu.guicomponents.apply = Apply
+
+fancymenu.editor.items.orientation.btndesc = Sets the origin point from%n%where this elements's position%n%will be calculated.%n%%n%§cNOTE:%n%You can see how an element%n%is affected by its orientation%n%when you resize the editor%n%window after changing the%n%orientation.
+
+fancymenu.editor.add.slideshow = Slideshow
+fancymenu.editor.add.slideshow.entername = Add By Name
+fancymenu.editor.add.slideshow.entername.title = Enter Slideshow Name
+
+fancymenu.editor.backgroundoptions.backgroundslideshow = Background Slideshow
+fancymenu.editor.backgroundoptions.backgroundslideshow.set = Set Background
+fancymenu.editor.backgroundoptions.backgroundslideshow.set.desc = Sets the selected slideshow%n%as active background slideshow.
+fancymenu.editor.backgroundoptions.backgroundslideshow.clear = Clear
+fancymenu.editor.backgroundoptions.backgroundslideshow.clear.desc = Removes the currently%n%active background slideshow.
 
 
-helper.creator.add.shapes = Shape
-helper.creator.add.shapes.rectangle = Rectangle
-
-helper.creator.items.shape.color = Color
-helper.creator.items.shape.color.btndesc = Set the HEX color of the shape.%n%%n%§cNOTE:%n%You can use HEX colors to%n%set the element opacity!
-
-helper.creator.object.movedown.desc.subtext.vanillabutton = %n%%n%§cYou can't move elements behind%n%§cvanilla buttons.%n%%n%Instead, you can set the layout%n%§lrendering order§r to '§lbackground§r'%n%to render all elements behind%n%default menu content like%n%vanilla buttons.%n%%n%§lRightclick §rthe editor background%n%to set the §lrendering order§r!
+fancymenu.editor.slideshownotfound = §c§lSlideshow not found!%n%%n%The entered slideshow does not exist!%n%Maybe a typo in the slideshow name?
 
 
-helper.menubar.expand = Expand Menu Bar%n%%n%§cTo hide the bar, press §nCTRL + ALT + C§r§c.%n%§cIf that doesn't work, check your%n%§cMinecraft controls settings.
-helper.menubar.shrink = Shrink Menu Bar%n%%n%§cTo hide the bar, press §nCTRL + ALT + C§r§c.%n%§cIf that doesn't work, check your%n%§cMinecraft controls settings.
-helper.menubar.settings = FancyMenu Settings
+fancymenu.editor.add.shape = Shape
+fancymenu.editor.add.shape.rectangle = Rectangle
+
+fancymenu.editor.items.shape.color = Color
+fancymenu.editor.items.shape.color.btndesc = Set the HEX color of the shape.%n%%n%§cNOTE:%n%You can use HEX colors to%n%set the element opacity!
+
+fancymenu.editor.object.movedown.desc.subtext.vanillabutton = %n%%n%§cYou can't move elements behind%n%§cvanilla buttons.%n%%n%Instead, you can set the layout%n%§lrendering order§r to '§lbackground§r'%n%to render all elements behind%n%default menu content like%n%vanilla buttons.%n%%n%§lRightclick §rthe editor background%n%to set the §lrendering order§r!
+
+
+fancymenu.overlay.ui.menubar.expand = Expand Menu Bar%n%%n%§cTo hide the bar, press §nCTRL + ALT + C§r§c.%n%§cIf that doesn't work, check your%n%§cMinecraft controls settings.
+fancymenu.overlay.ui.menubar.shrink = Shrink Menu Bar%n%%n%§cTo hide the bar, press §nCTRL + ALT + C§r§c.%n%§cIf that doesn't work, check your%n%§cMinecraft controls settings.
+fancymenu.overlay.ui.menubar.settings = FancyMenu Settings
 
 FancyMenu.getConfig() = FancyMenu Settings
 
@@ -501,121 +501,121 @@ FancyMenu.getConfig().editordeleteconfirmation.desc = If a confirmation popup sh
 
 FancyMenu.getConfig().uiscale.desc = The scale of the FancyMenu customization UI.
 
-helper.ui.dynamicvariabletextfield.variables.desc = §lPlaceholder Text Values%n%%n%Insert placeholders into the text%n%that will later be replaced with%n%real values like%n%the player name or the MC version.%n%%n%§l§cIMPORTANT:%n%You will see these values as%n%placeholders in the editor and%n%as real values in the actual menu.
-helper.ui.dynamicvariabletextfield.variables.playername = Player Name
-helper.ui.dynamicvariabletextfield.variables.playername.desc = Gets the player name.
-helper.ui.dynamicvariabletextfield.variables.playeruuid = Player UUID
-helper.ui.dynamicvariabletextfield.variables.playeruuid.desc = Gets the player UUID.
-helper.ui.dynamicvariabletextfield.variables.mcversion = Minecraft Version
-helper.ui.dynamicvariabletextfield.variables.mcversion.desc = Gets the Minecraft version.
-helper.ui.dynamicvariabletextfield.variables.forgeversion = Mod Loader Version
-helper.ui.dynamicvariabletextfield.variables.forgeversion.desc = Gets the mod loader version.
-helper.ui.dynamicvariabletextfield.variables.modversion = Mod Version
-helper.ui.dynamicvariabletextfield.variables.modversion.desc = Gets the version of a mod my its mod ID.%n%%n%Just replace 'some_mod_id' in the placeholder%n%with an existing mod ID.
-helper.ui.dynamicvariabletextfield.variables.totalmods = Total Mods Count
-helper.ui.dynamicvariabletextfield.variables.totalmods.desc = Gets the total mods count.%n%This includes disabled mods.
-helper.ui.dynamicvariabletextfield.variables.loadedmods = Active Mods Count
-helper.ui.dynamicvariabletextfield.variables.loadedmods.desc = Gets the active mods count.%n%This doesn't include disabled mods.
+fancymenu.editor.dynamicvariabletextfield.variables.desc = §lPlaceholder Text Values%n%%n%Insert placeholders into the text%n%that will later be replaced with%n%real values like%n%the player name or the MC version.%n%%n%§l§cIMPORTANT:%n%You will see these values as%n%placeholders in the editor and%n%as real values in the actual menu.
+fancymenu.editor.dynamicvariabletextfield.variables.playername = Player Name
+fancymenu.editor.dynamicvariabletextfield.variables.playername.desc = Gets the player name.
+fancymenu.editor.dynamicvariabletextfield.variables.playeruuid = Player UUID
+fancymenu.editor.dynamicvariabletextfield.variables.playeruuid.desc = Gets the player UUID.
+fancymenu.editor.dynamicvariabletextfield.variables.mcversion = Minecraft Version
+fancymenu.editor.dynamicvariabletextfield.variables.mcversion.desc = Gets the Minecraft version.
+fancymenu.editor.dynamicvariabletextfield.variables.forgeversion = Mod Loader Version
+fancymenu.editor.dynamicvariabletextfield.variables.forgeversion.desc = Gets the mod loader version.
+fancymenu.editor.dynamicvariabletextfield.variables.modversion = Mod Version
+fancymenu.editor.dynamicvariabletextfield.variables.modversion.desc = Gets the version of a mod my its mod ID.%n%%n%Just replace 'some_mod_id' in the placeholder%n%with an existing mod ID.
+fancymenu.editor.dynamicvariabletextfield.variables.totalmods = Total Mods Count
+fancymenu.editor.dynamicvariabletextfield.variables.totalmods.desc = Gets the total mods count.%n%This includes disabled mods.
+fancymenu.editor.dynamicvariabletextfield.variables.loadedmods = Active Mods Count
+fancymenu.editor.dynamicvariabletextfield.variables.loadedmods.desc = Gets the active mods count.%n%This doesn't include disabled mods.
 
-helper.creator.items.string.alignment = Alignment
-helper.creator.items.string.alignment.desc = Sets the text alignment.%n%%n%§cUseful when the text width is%n%§cnot always the same, like for%n%§cplaceholder text values.
-helper.creator.items.string.alignment.left = Left
-helper.creator.items.string.alignment.right = Right
-helper.creator.items.string.alignment.centered = Centered
+fancymenu.editor.items.string.alignment = Alignment
+fancymenu.editor.items.string.alignment.desc = Sets the text alignment.%n%%n%§cUseful when the text width is%n%§cnot always the same, like for%n%§cplaceholder text values.
+fancymenu.editor.items.string.alignment.left = Left
+fancymenu.editor.items.string.alignment.right = Right
+fancymenu.editor.items.string.alignment.centered = Centered
 
-helper.creator.items.string.border.alignment = alignment
+fancymenu.editor.items.string.border.alignment = alignment
 
-helper.creator.custombutton.config.actiontype.runcmd.desc = Runs a CMD/Terminal command.%n%Supports per-OS commands,%n%like in the example.
-helper.creator.custombutton.config.actiontype.runcmd.desc.value = Command
-helper.creator.custombutton.config.actiontype.runcmd.desc.value.example = [windows:run.bat]; [macos:./Run]; [linux:./run.sh];
+fancymenu.editor.custombutton.config.actiontype.runcmd.desc = Runs a CMD/Terminal command.%n%Supports per-OS commands,%n%like in the example.
+fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value = Command
+fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value.example = [windows:run.bat]; [macos:./Run]; [linux:./run.sh];
 
-helper.creator.custombutton.config.actiontype.closegui.desc = Closes the displayed GUI.
+fancymenu.editor.custombutton.config.actiontype.closegui.desc = Closes the displayed GUI.
 
-helper.ui.current = Current Menu
-helper.ui.current.layouts = Layouts
-helper.ui.current.layouts.desc = Create and manage your layouts for this menu.
-helper.ui.current.layouts.new = New
-helper.ui.current.layouts.new.desc = Create a new layout for this menu.
-helper.ui.current.layouts.manage = Manage Layouts
-helper.ui.current.layouts.manage.desc = Manage your existing layouts for this menu.
-helper.ui.current.layouts.manage.edit = Edit
-helper.ui.current.layouts.manage.edit.desc = Edit this layout in the layout editor.
-helper.ui.current.advanced = Advanced
-helper.ui.current.advanced.desc = Contains tools for advanced users.%n%%n%§c§lWARNING:%n%This stuff can §cbreak things%n%and is not needed in most cases!
+fancymenu.overlay.ui.current = Current Menu
+fancymenu.overlay.ui.current.layouts = Layouts
+fancymenu.overlay.ui.current.layouts.desc = Create and manage your layouts for this menu.
+fancymenu.overlay.ui.current.layouts.new = New
+fancymenu.overlay.ui.current.layouts.new.desc = Create a new layout for this menu.
+fancymenu.overlay.ui.current.layouts.manage = Manage Layouts
+fancymenu.overlay.ui.current.layouts.manage.desc = Manage your existing layouts for this menu.
+fancymenu.overlay.ui.current.layouts.manage.edit = Edit
+fancymenu.overlay.ui.current.layouts.manage.edit.desc = Edit this layout in the layout editor.
+fancymenu.overlay.ui.current.advanced = Advanced
+fancymenu.overlay.ui.current.advanced.desc = Contains tools for advanced users.%n%%n%§c§lWARNING:%n%This stuff can §cbreak things%n%and is not needed in most cases!
 
-helper.ui.customguis = Custom GUIs
-helper.ui.customguis.new = New
-helper.ui.customguis.new.desc = Create an §cempty §rGUI and%n%fill it with things.
-helper.ui.customguis.new.sure = §c§lAre you sure?%n%%n%%n%Do you really want to create a new §lempty §rGUI?%n%%n%§cThis is §lnot §r§cthe same as customizing%n%§can existing menu!%n%%n%If you want to customize an exiting menu,%n%create a §llayout §rinstead.%n% %n% %n%
-helper.ui.customguis.manage = Manage GUIs
-helper.ui.customguis.manage.desc = Manage your existing GUIs.
+fancymenu.overlay.ui.customguis = Custom GUIs
+fancymenu.overlay.ui.customguis.new = New
+fancymenu.overlay.ui.customguis.new.desc = Create an §cempty §rGUI and%n%fill it with things.
+fancymenu.overlay.ui.customguis.new.sure = §c§lAre you sure?%n%%n%%n%Do you really want to create a new §lempty §rGUI?%n%%n%§cThis is §lnot §r§cthe same as customizing%n%§can existing menu!%n%%n%If you want to customize an exiting menu,%n%create a §llayout §rinstead.%n% %n% %n%
+fancymenu.overlay.ui.customguis.manage = Manage GUIs
+fancymenu.overlay.ui.customguis.manage.desc = Manage your existing GUIs.
 
-helper.ui.tools = Tools
-helper.ui.tools.menuinfo.off = Menu Info: §cOff
-helper.ui.tools.menuinfo.on = Menu Info: §aOn
-helper.ui.tools.menuinfo.desc = Show the menu identifier of this menu.%n%%n%You can left-click the identifier%n%to copy it.
-helper.ui.tools.buttoninfo.off = Button Info: §cOff
-helper.ui.tools.buttoninfo.on = Button Info: §aOn
-helper.ui.tools.buttoninfo.desc = Show information about vanilla buttons%n%when hovering them.%n%%n%Has no effect on custom buttons.
+fancymenu.overlay.ui.tools = Tools
+fancymenu.overlay.ui.tools.menuinfo.off = Menu Info: §cOff
+fancymenu.overlay.ui.tools.menuinfo.on = Menu Info: §aOn
+fancymenu.overlay.ui.tools.menuinfo.desc = Show the menu identifier of this menu.%n%%n%You can left-click the identifier%n%to copy it.
+fancymenu.overlay.ui.tools.buttoninfo.off = Button Info: §cOff
+fancymenu.overlay.ui.tools.buttoninfo.on = Button Info: §aOn
+fancymenu.overlay.ui.tools.buttoninfo.desc = Show information about vanilla buttons%n%when hovering them.%n%%n%Has no effect on custom buttons.
 
-helper.ui.misc = Miscellaneous
-helper.ui.misc.closegui = §cCLOSE MENU
-helper.ui.misc.closegui.desc = Close the current menu.
-helper.ui.misc.openworldloading = Open Level Loading Screen
-helper.ui.misc.openworldloading.desc = Will open a dummy instance of%n%the level loading screen, that%n%is used for loading into worlds.%n%%n%Allows you to customize this screen.
-helper.ui.misc.openmessagescreen = Open Dirt Message Screen
-helper.ui.misc.openmessagescreen.desc = Will open a dummy instance of%n%the dirt message screen, that%n%is used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.
+fancymenu.overlay.ui.misc = Miscellaneous
+fancymenu.overlay.ui.misc.closegui = §cCLOSE MENU
+fancymenu.overlay.ui.misc.closegui.desc = Close the current menu.
+fancymenu.overlay.ui.misc.openworldloading = Open Level Loading Screen
+fancymenu.overlay.ui.misc.openworldloading.desc = Will open a dummy instance of%n%the level loading screen, that%n%is used for loading into worlds.%n%%n%Allows you to customize this screen.
+fancymenu.overlay.ui.misc.openmessagescreen = Open Dirt Message Screen
+fancymenu.overlay.ui.misc.openmessagescreen.desc = Will open a dummy instance of%n%the dirt message screen, that%n%is used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.
 
-helper.ui.reload.desc = Reload FancyMenu.%n%%n%§lWill reload:%n%- Panoramas%n%- Slideshows%n%- Mod Config%n%- Layouts%n%%n%§c§lWill NOT reload:%n%- Animations
+fancymenu.overlay.ui.reload.desc = Reload FancyMenu.%n%%n%§lWill reload:%n%- Panoramas%n%- Slideshows%n%- Mod Config%n%- Layouts%n%%n%§c§lWill NOT reload:%n%- Animations
 
-helper.editor.ui.unsavedwarning = §c§lAre you sure?%n%%n%%n%All unsaved changes for the current layout%n%will get lost!%n% %n% %n%
+fancymenu.editor.warning.unsaved = §c§lAre you sure?%n%%n%%n%All unsaved changes for the current layout%n%will get lost!%n% %n% %n%
 
-helper.editor.ui.layout = Layout
-helper.editor.ui.layout.new = New
-helper.editor.ui.layout.open = Open
-helper.editor.ui.layout.save = Save
-helper.editor.ui.layout.saveas = Save As
-helper.editor.ui.layout.saveas.entername = §lEnter Layout Name
-helper.editor.ui.layout.saveas.failed = §c§lSaving Failed!%n%%n%%n%Unsupported layout name or layout already exists!%n% %n% %n%
-helper.editor.ui.layout.properties = Properties
+fancymenu.editor.layout = Layout
+fancymenu.editor.layout.new = New
+fancymenu.editor.layout.open = Open
+fancymenu.editor.layout.save = Save
+fancymenu.editor.layout.saveas = Save As
+fancymenu.editor.layout.saveas.entername = §lEnter Layout Name
+fancymenu.editor.layout.saveas.failed = §c§lSaving Failed!%n%%n%%n%Unsupported layout name or layout already exists!%n% %n% %n%
+fancymenu.editor.layout.properties = Properties
 
-helper.editor.ui.edit = Edit
-helper.editor.ui.edit.undo = Undo
-helper.editor.ui.edit.redo = Redo
-helper.editor.ui.edit.copy = Copy
-helper.editor.ui.edit.paste = Paste
+fancymenu.editor.edit = Edit
+fancymenu.editor.edit.undo = Undo
+fancymenu.editor.edit.redo = Redo
+fancymenu.editor.edit.copy = Copy
+fancymenu.editor.edit.paste = Paste
 
-helper.editor.ui.element = Element
-helper.editor.ui.element.new = New
-helper.editor.ui.element.manageaudio = Manage Audios
-helper.editor.ui.element.manageaudio.loop.on = Loop: §aOn
-helper.editor.ui.element.manageaudio.loop.off = Loop: §cOff
-helper.editor.ui.element.deletedvanillabuttons = Deleted Vanilla Buttons
-helper.editor.ui.element.deletedvanillabuttons.entry.desc = Leftclick to undo deletion.
+fancymenu.editor.element = Element
+fancymenu.editor.element.new = New
+fancymenu.editor.element.manageaudio = Manage Audios
+fancymenu.editor.element.manageaudio.loop.on = Loop: §aOn
+fancymenu.editor.element.manageaudio.loop.off = Loop: §cOff
+fancymenu.editor.element.deletedvanillabuttons = Deleted Vanilla Buttons
+fancymenu.editor.element.deletedvanillabuttons.entry.desc = Leftclick to undo deletion.
 
-helper.editor.ui.exit = Exit
-helper.editor.ui.exit.desc = Close the editor.
+fancymenu.editor.exit = Exit
+fancymenu.editor.exit.desc = Close the editor.
 
-helper.editor.ui.layoutproperties.newelement = New Element
+fancymenu.editor.layoutproperties.newelement = New Element
 
-helper.ui.warning = §lWarning!
-helper.ui.warning.unicode = Unicode fonts are not fully supported by the FancyMenu UI!%n%Please consider turning unicode fonts off in the language settings!
+fancymenu.overlay.ui.warning = §lWarning!
+fancymenu.overlay.ui.warning.unicode = Unicode fonts are not fully supported by the FancyMenu UI!%n%Please consider turning unicode fonts off in the language settings!
 
-helper.creator.error.invalidfile = §c§lError!%n%%n%%n%Invalid or non-existent file!%n% %n% %n% %n%
+fancymenu.editor.error.invalidfile = §c§lError!%n%%n%%n%Invalid or non-existent file!%n% %n% %n% %n%
 
-helper.creator.add.splash = Splash Text
-helper.creator.add.splash.single = Single Splash Text
-helper.creator.add.splash.single.desc = Enter the splash text content.
-helper.creator.add.splash.multi = Multi Splash Text
-helper.creator.add.splash.multi.desc = Choose a text file with splash texts.
+fancymenu.editor.add.splash = Splash Text
+fancymenu.editor.add.splash.single = Single Splash Text
+fancymenu.editor.add.splash.single.desc = Enter the splash text content.
+fancymenu.editor.add.splash.multi = Multi Splash Text
+fancymenu.editor.add.splash.multi.desc = Choose a text file with splash texts.
 
-helper.creator.items.splash.bounce.on = Bouncing: §aOn
-helper.creator.items.splash.bounce.off = Bouncing: §cOff
-helper.creator.items.splash.refresh.on = Refreshing: §aOn
-helper.creator.items.splash.refresh.off = Refreshing: §cOff
-helper.creator.items.splash.refresh.desc = Pick a new splash everytime the menu%n%is getting reloaded or openend.
-helper.creator.items.splash.basecolor = Base Color
-helper.creator.items.splash.rotation = Rotation
+fancymenu.editor.items.splash.bounce.on = Bouncing: §aOn
+fancymenu.editor.items.splash.bounce.off = Bouncing: §cOff
+fancymenu.editor.items.splash.refresh.on = Refreshing: §aOn
+fancymenu.editor.items.splash.refresh.off = Refreshing: §cOff
+fancymenu.editor.items.splash.refresh.desc = Pick a new splash everytime the menu%n%is getting reloaded or openend.
+fancymenu.editor.items.splash.basecolor = Base Color
+fancymenu.editor.items.splash.rotation = Rotation
 
 fancymenu.element.general.appearance_delay = Delay Appearance
 fancymenu.element.general.appearance_delay.no_delay = Delay: §cNo Delay
@@ -626,19 +626,19 @@ fancymenu.element.general.appearance_delay.fade_in.off = Fade-In: §cOff
 fancymenu.element.general.appearance_delay.fade_in.on = Fade-In: §aOn
 fancymenu.element.general.appearance_delay.fade_in.speed = Set Fade-In Speed
 
-fancymenu.helper.creator.layoutoptions.randommode.on = Random Mode: §aOn
-fancymenu.helper.creator.layoutoptions.randommode.off = Random Mode: §cOff
-fancymenu.helper.creator.layoutoptions.randommode.btn.desc = Pick a random layout of the same%n%group when the menu gets opened.%n%%n%Can be used to randomize%n%backgrounds and other elements.
-fancymenu.helper.creator.layoutoptions.randommode.setgroup = Set Random Group
-fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc = Set the group of this random layout.%n%One layout per group gets picked%n%when the menu gets opened.
-fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on = Randomize Only First Time: §aOn
-fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off = Randomize Only First Time: §cOff
-fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.btn.desc = If layouts of this random group%n%should be random everytime the%n%menu gets opened or if only one layout%n%should be picked the first time%n%the menu gets opened.
+fancymenu.fancymenu.editor.layoutoptions.randommode.on = Random Mode: §aOn
+fancymenu.fancymenu.editor.layoutoptions.randommode.off = Random Mode: §cOff
+fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc = Pick a random layout of the same%n%group when the menu gets opened.%n%%n%Can be used to randomize%n%backgrounds and other elements.
+fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup = Set Random Group
+fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc = Set the group of this random layout.%n%One layout per group gets picked%n%when the menu gets opened.
+fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.on = Randomize Only First Time: §aOn
+fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.off = Randomize Only First Time: §cOff
+fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc = If layouts of this random group%n%should be random everytime the%n%menu gets opened or if only one layout%n%should be picked the first time%n%the menu gets opened.
 
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.set = Set Background
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.set.desc = Sets the selected animation%n%as active background animation.
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear = Clear
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear.desc = Removes the currently%n%active background animation.
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.set = Set Background
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.set.desc = Sets the selected animation%n%as active background animation.
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.clear = Clear
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.clear.desc = Removes the currently%n%active background animation.
 
 fancymenu.helper.editor.items.buttons.buttonbackground = Button Background
 fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground = Normal Background
@@ -732,8 +732,8 @@ fancymenu.helper.editor.items.visibilityrequirements.serveronline.valuename = Se
 fancymenu.helper.editor.items.copyid = Copy Element ID
 fancymenu.helper.editor.items.copyid.btn.desc = Copy the ID of this element, to use%n%it in visibility requirements, etc.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.local = Localize Text
-fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace 'localization.key' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.com
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.local = Localize Text
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.local.desc = Localizes a text by the given key.%n%%n%Just replace 'localization.key' in the%n%placeholder with a localization key.%n%%n%§cCheck the wiki for how to add%n%§cyour own text localizations!%n%%n%§cWiki: fm.keksuccino.com
 
 FancyMenu.getConfig().showgrid = Show Grid
 FancyMenu.getConfig().showgrid.desc = Add a grid to the editor for easier aligning.
@@ -750,33 +750,33 @@ fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2 = This sh
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3 = If you made it in the current window size, just leave the values like they are.
 fancymenu.helper.editor.properties.autoscale.error = §c§lSomething went wront!%n%%n%Setting base size for auto-scaling failed!%n%Please check if both values are §lbigger than 0%n%and that they are §lvalid numbers§r.%n% %n% %n% %n% %n%
 
-fancymenu.helper.ui.dynamicvariabletextfield.categories.other = Other
-fancymenu.helper.ui.dynamicvariabletextfield.categories.server = Server
-fancymenu.helper.ui.dynamicvariabletextfield.categories.realtime = Real Life Time
-fancymenu.helper.ui.dynamicvariabletextfield.categories.player = Player
-fancymenu.helper.ui.dynamicvariabletextfield.categories.client = Client
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other = Other
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.server = Server
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.realtime = Real Life Time
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.player = Player
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client = Client
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeyear = Year
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimemonth = Month
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeday = Day
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimehour = Hour
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeminute = Minute
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimesecond = Second
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeyear = Year
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimemonth = Month
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeday = Day
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimehour = Hour
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeminute = Minute
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimesecond = Second
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd = Server MOTD
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd.desc = Gets the MOTD of a server.%n%Just replace 'someserver.com:25565'%n%with the actual server IP%n%and '1' with the MOTD line.%n%MOTDs only have 2 lines, so%n%the only valid line values are%n%'1' and '2'.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping = Server PING
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping.desc = Gets the ping to a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount = Server Player Count
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount.desc = Gets the player count of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus = Server Status
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus.desc = Gets the status (online/offline) of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion = Server Version
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion.desc = Gets the MC version of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.servermotd = Server MOTD
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.servermotd.desc = Gets the MOTD of a server.%n%Just replace 'someserver.com:25565'%n%with the actual server IP%n%and '1' with the MOTD line.%n%MOTDs only have 2 lines, so%n%the only valid line values are%n%'1' and '2'.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverping = Server PING
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverping.desc = Gets the ping to a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverplayercount = Server Player Count
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverplayercount.desc = Gets the player count of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverstatus = Server Status
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverstatus.desc = Gets the status (online/offline) of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverversion = Server Version
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverversion.desc = Gets the MC version of a server.%n%%n%Just replace 'someserver.com:25565' in the%n%placeholder with a valid server IP.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.percentram = Used RAM in %
-fancymenu.helper.ui.dynamicvariabletextfield.variables.usedram = Used RAM in MB
-fancymenu.helper.ui.dynamicvariabletextfield.variables.maxram = Max RAM in MB
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.percentram = Used RAM in %
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.usedram = Used RAM in MB
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.maxram = Max RAM in MB
 
 fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground = Set Background
 fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc = Set an image, animation, panorama%n%or slideshow as background.
@@ -836,21 +836,21 @@ fancymenu.helper.ui.setup.restore.entry.btn.desc = Left-click to restore backup.
 fancymenu.commands.openguiscreen.error = An error happened while trying to open the GUI.
 fancymenu.commands.openguiscreen.cannotopen = Unable to open GUI! The GUI you want to open either does not exist or isn't supported! If this is a vanilla GUI, please contact the developer of FancyMenu to add support for it.
 
-helper.creator.custombutton.config.actiontype.copytoclipboard.desc = Copy text to the clipboard.
-helper.creator.custombutton.config.actiontype.copytoclipboard.desc.value = Text
-helper.creator.custombutton.config.actiontype.copytoclipboard.desc.value.example = This text got copied to your clipboard!
+fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc = Copy text to the clipboard.
+fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value = Text
+fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value.example = This text got copied to your clipboard!
 
 FancyMenu.getConfig().forcefullscreen = Force Fullscreen
 FancyMenu.getConfig().forcefullscreen.desc = Forces the window to fullscreen on start.%n%Users will still be able to%n%go out of fullscreen later.
 
-helper.creator.custombutton.config.actiontype.mimicbutton.desc = Mimic the click behaviour/action%n%of a vanilla/mod button.%n%%n%You need the §lbutton locator §rof%n%the button you want to mimic.%n%%n%How to get the §llocator §rof a button:%n%%n%§l1. §rLeave the editor%n%§l2. §rEnable §lTools -> Button Info%n%§l3. §rHover over the target button%n%§l4. §rRight-click the button
-helper.creator.custombutton.config.actiontype.mimicbutton.desc.value = Button Locator
-helper.creator.custombutton.config.actiontype.mimicbutton.desc.value.example = some.menu.identifier:505280
+fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc = Mimic the click behaviour/action%n%of a vanilla/mod button.%n%%n%You need the §lbutton locator §rof%n%the button you want to mimic.%n%%n%How to get the §llocator §rof a button:%n%%n%§l1. §rLeave the editor%n%§l2. §rEnable §lTools -> Button Info%n%§l3. §rHover over the target button%n%§l4. §rRight-click the button
+fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc.value = Button Locator
+fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc.value.example = some.menu.identifier:505280
 
 fancymenu.custombutton.action.mimicbutton.unabletoexecute = §c§lError!%n%%n%Unable to execute button action!%n%%n%Invalid button locator or unable to%n%open parent screen of button.%n% %n% %n% %n%
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel = Vanilla Button Label
-fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Get the label of a vanilla button.%n%%n%Replace 'some.menu.identifier:505280' with%n%the correct button locator%n%of the target button.%n%%n%The button locator is a combination%n%of the menu identifier of the menu%n%the button is in and the %n%ID of the button, separated%n%by a colon.%n%%n%§cYou can right-click a button%n%§cin the editor to copy its locator.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel = Vanilla Button Label
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Get the label of a vanilla button.%n%%n%Replace 'some.menu.identifier:505280' with%n%the correct button locator%n%of the target button.%n%%n%The button locator is a combination%n%of the menu identifier of the menu%n%the button is in and the %n%ID of the button, separated%n%by a colon.%n%%n%§cYou can right-click a button%n%§cin the editor to copy its locator.
 
 fancymenu.helper.editor.windowsizerestrictions.reset = Reset Window Size Restrictions
 fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc = Reset/remove all window size restrictions.
@@ -864,10 +864,10 @@ FancyMenu.getConfig().show_server_icons.desc = If the server icons should be vis
 FancyMenu.getConfig().show_world_icons = Show World Icons
 FancyMenu.getConfig().show_world_icons.desc = If the world icons should be visible.
 
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations = §cYou need to enable customizations%n%§cfor the current menu, to use this tool!
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1 = §lWarning!
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = You need to enable customizations for
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = the current menu before using the §lButton Info §rtool!
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations = §cYou need to enable customizations%n%§cfor the current menu, to use this tool!
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1 = §lWarning!
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = You need to enable customizations for
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = the current menu before using the §lButton Info §rtool!
 
 fancymenu.helper.editor.items.visibilityrequirements.guiscale = Is GUI Scale
 fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Check if the current GUI scale is X.%n%%n%You can check for bigger than ('>'),%n%smaller than ('<') and equals X.%n%%n%For example, if you want to check%n%if the scale is smaller than 3.20,%n%type '<3.20' (without the '').%n%To check if the scale is equal to 1.0,%n%just type '1.0' (without the '').%n%When checking if the scale is bigger than 2.20,%n%type '>2.20' (without the '').
@@ -888,19 +888,19 @@ fancymenu.helper.editor.backgrounds.custom.clearbackground.desc = Clear the curr
 fancymenu.helper.editor.extension.dummy.audio.btn.desc = §6You need to install the%n%§6§lAudio Extension §r§6to use this%n%§6element.%n%%n%§cClick on the button to%n%§copen the download page.
 fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc = §c§lDEPRECATED!%n%%n%§cThis is part of the old%n%§caudio system and gets removed%n%§cvery soon!%n%%n%§cFor more information, read%n%§cthe tooltip of the button%n%§cto add a new audio element.
 
-helper.creator.custombutton.config.actiontype.join_last_world.desc = Join the last world/server.
+fancymenu.editor.custombutton.config.actiontype.join_last_world.desc = Join the last world/server.
 
 fancymenu.helper.ui.universal_layouts = Universal Layouts
 fancymenu.helper.ui.universal_layouts.btn.desc = Universal layouts are layouts%n%that get applied to every%n%customizable menu instead of%n%just one menu.%n%%n%They can be used to apply%n%background images, sounds, etc.%n%to all menus at once.
 fancymenu.helper.ui.universal_layouts.new = New Layout
 fancymenu.helper.ui.universal_layouts.manage = Manage Layouts
 
-fancymenu.helper.ui.misc.open_progress_screen = Open Progress Screen
-fancymenu.helper.ui.misc.open_progress_screen.btn.desc = Will open a dummy instance of%n%the progress screen, that is%n%used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.
-fancymenu.helper.ui.misc.receiving_level_screen = Open Receiving Level Screen
-fancymenu.helper.ui.misc.receiving_level_screen.btn.desc = Will open a dummy instance of%n%the receiving level screen, that%n%is used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
-fancymenu.helper.ui.misc.open_connect_screen = Open Connect Screen
-fancymenu.helper.ui.misc.open_connect_screen.btn.desc = Will open a dummy instance of%n%the connect screen, that is%n%used for joining servers.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
+fancymenu.fancymenu.overlay.ui.misc.open_progress_screen = Open Progress Screen
+fancymenu.fancymenu.overlay.ui.misc.open_progress_screen.btn.desc = Will open a dummy instance of%n%the progress screen, that is%n%used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.
+fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen = Open Receiving Level Screen
+fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen.btn.desc = Will open a dummy instance of%n%the receiving level screen, that%n%is used for joining servers and%n%loading into worlds.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
+fancymenu.fancymenu.overlay.ui.misc.open_connect_screen = Open Connect Screen
+fancymenu.fancymenu.overlay.ui.misc.open_connect_screen.btn.desc = Will open a dummy instance of%n%the connect screen, that is%n%used for joining servers.%n%%n%Allows you to customize this screen.%n%%n%§cYou can only open this screen%n%§cwhile not in a world%n%§cor on a server!
 
 fancymenu.helper.editor.layoutoptions.universal_layout.options = Universal Layout Options
 fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier = Input Menu Identifier:
@@ -920,8 +920,8 @@ fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.c
 
 fancymenu.guicomponents.back = Back
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext = Random Text From TXT File
-fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc = Picks a random text from a TXT file.%n%%n%Supports custom change intervals for texts.%n%%n%Just replace 'randomtexts.txt' with%n%the path to your TXT file%n%and replace '10' with the%n%change interval in seconds.%n%An interval of 0 will make it%n%pick a text only once per session.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext = Random Text From TXT File
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext.desc = Picks a random text from a TXT file.%n%%n%Supports custom change intervals for texts.%n%%n%Just replace 'randomtexts.txt' with%n%the path to your TXT file%n%and replace '10' with the%n%change interval in seconds.%n%An interval of 0 will make it%n%pick a text only once per session.
 
 fancymenu.helper.editor.items.visibilityrequirements.realtimeday = Is Real Time Day
 fancymenu.helper.editor.items.visibilityrequirements.realtimeday.desc = Check if the real time's current day is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one day%n%at once.
@@ -933,8 +933,8 @@ fancymenu.helper.editor.items.visibilityrequirements.realtimeyear = Is Real Time
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.desc = Check if the real time's current year is X.%n%%n%You can separate multiple values by comma,%n%to check for more than one year%n%at once.
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.valuename = Real Time Year(s) (Separate Values By Comma)
 
-fancymenu.helper.editor.ui.element.deleted_vanilla_elements = Deleted Vanilla Elements
-fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc = Manage all deleted vanilla elements.
+fancymenu.fancymenu.editor.element.deleted_vanilla_elements = Deleted Vanilla Elements
+fancymenu.fancymenu.editor.element.deleted_vanilla_elements.desc = Manage all deleted vanilla elements.
 
 fancymenu.helper.editor.element.vanilla.delete.confirm = §c§lImportant%n%%n%Deleting a vanilla element will completely hide it.%n%To make it visible again, click on §lElement -> Deleted Vanilla Elements§r.%n% %n% %n% %n%
 
@@ -977,9 +977,9 @@ fancymenu.helper.visibilityrequirement.is_layout_enabled = Is Layout Enabled
 fancymenu.helper.visibilityrequirement.is_layout_enabled.desc = Check if a menu layout is enabled.
 fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc = Layout Name
 
-fancymenu.helper.ui.tools.clear_variables = Clear Stored Variables
-fancymenu.helper.ui.tools.clear_variables.desc = Will clear ALL stored values!%n%%n%§cThis cannot be undone!
-fancymenu.helper.ui.tools.clear_variables.confirm = §c§lAre you sure?%n%%n%Do you really want to §lclear/reset §rALL stored variables?%n%%n%§lThis action cannot be undone!%n% %n% %n% %n%
+fancymenu.fancymenu.overlay.ui.tools.clear_variables = Clear Stored Variables
+fancymenu.fancymenu.overlay.ui.tools.clear_variables.desc = Will clear ALL stored values!%n%%n%§cThis cannot be undone!
+fancymenu.fancymenu.overlay.ui.tools.clear_variables.confirm = §c§lAre you sure?%n%%n%Do you really want to §lclear/reset §rALL stored variables?%n%%n%§lThis action cannot be undone!%n% %n% %n% %n%
 
 fancymenu.helper.buttonaction.toggle_layout.desc = Toggle a menu layout (Enable/Disable)%n%by its name.
 fancymenu.helper.buttonaction.toggle_layout.value.desc = Layout Name
@@ -1121,16 +1121,16 @@ FancyMenu.getConfig().allow_level_registry_interactions.desc = Allow interaction
 FancyMenu.getConfig().show_unicode_warning = Show Unicode Warning
 FancyMenu.getConfig().show_unicode_warning.desc = If the red warning should be%n%visible telling you that unicode%n%fonts aren't fully compatible%n%with the FancyMenu UI.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth = Screen Width
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth.desc = The width of the current menu.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiheight = Screen Height
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiheight.desc = The height of the current menu.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth = Screen Width
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth.desc = The width of the current menu.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiheight = Screen Height
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiheight.desc = The height of the current menu.
 
 fancymenu.helper.placeholder.stringify = Stringify
 fancymenu.helper.placeholder.stringify.desc = Stringifies a text by escaping all%n%syntax characters ( " { } ).%n%%n%This is useful when nesting other%n%placeholders as value. If the%n%replaced nested placeholder could%n%contain syntax characters that aren't%n%part of another placeholder, you need%n%to escape them.%n%%n%§cPlaceholders in the value will be%n%§creplaced first, so you don't need%n%§cto worry about them getting stringified.
 
-fancymenu.helper.ui.dynamicvariabletextfield.categories.advanced = Advanced
-fancymenu.helper.ui.dynamicvariabletextfield.categories.gui = GUI
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced = Advanced
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui = GUI
 
 fancymenu.helper.placeholder.elementheight = Element Height
 fancymenu.helper.placeholder.elementheight.desc = Gets the height of an element%n%by its element ID.%n%%n%Just replace 'some.element.id' with%n%the actual element ID.%n%%n%§cYou can get the ID of elements%n%§cby right-clicking them in the editor.

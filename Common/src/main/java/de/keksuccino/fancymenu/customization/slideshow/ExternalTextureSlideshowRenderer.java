@@ -10,20 +10,20 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	
-	protected List<ExternalTextureResourceLocation> images = new ArrayList<>();
-	protected ExternalTextureResourceLocation overlay_texture;
+	protected List<LocalTexture> images = new ArrayList<>();
+	protected LocalTexture overlayTexture;
 	protected String name = null;
 	public String dir;
 	protected boolean prepared = false;
@@ -45,8 +45,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 
 	public float slideshowOpacity = 1.0F;
 	
-	protected ExternalTextureResourceLocation previous;
-	protected ExternalTextureResourceLocation current;
+	protected LocalTexture previous;
+	protected LocalTexture current;
 
 	public ExternalTextureSlideshowRenderer(String slideshowDir) {
 		this.dir = slideshowDir;
@@ -60,11 +60,6 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 				List<PropertyContainer> l = s.getSectionsOfType("slideshow-meta");
 				if ((l != null) && !l.isEmpty()) {
 					this.name = l.get(0).getValue("name");
-					if (this.name == null) {
-						System.out.println("############## ERROR [FANCYMENU] ##############");
-						System.out.println("Missing 'name' value in properties file for slideshow: " + this.dir);
-						System.out.println("###############################################");
-					}
 					
 					String dur = l.get(0).getValue("duration");
 					if ((dur != null) && MathUtils.isDouble(dur)) {
@@ -100,21 +95,9 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 						this.height = Integer.parseInt(sh);
 					}
 					
-				} else {
-					System.out.println("############## ERROR [FANCYMENU] ##############");
-					System.out.println("Missing 'slideshow-meta' section in properties file for slideshow: " + this.dir);
-					System.out.println("###############################################");
 				}
-			} else {
-				System.out.println("############## ERROR [FANCYMENU] ##############");
-				System.out.println("An error happened while trying to get properties for slideshow: " + this.dir);
-				System.out.println("###############################################");
 			}
 			
-		} else {
-			System.out.println("############## ERROR [FANCYMENU] ##############");
-			System.out.println("Properties file not found for slideshow: " + this.dir);
-			System.out.println("###############################################");
 		}
 	}
 	
@@ -135,7 +118,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					for (String s : images) {
 						File f = new File(imagesDir.getPath() + "/" + s);
 						if (f.exists() && f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".png"))) {
-							ExternalTextureResourceLocation r = TextureHandler.INSTANCE.getTexture(f.getPath());
+							LocalTexture r = TextureHandler.INSTANCE.getTexture(f.getPath());
 							this.images.add(r);
 						}
 					}
@@ -146,7 +129,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					
 					File overlay = new File(this.dir + "/overlay.png");
 					if (overlay.exists()) {
-						this.overlay_texture = new ExternalTextureResourceLocation(overlay.getPath());
+						this.overlayTexture = LocalTexture.create(overlay.getPath());
 					}
 					
 				}
@@ -224,9 +207,6 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 
 	protected void renderPrevious(PoseStack matrix) {
 		if ((this.previous != null) && (this.current != this.previous)) {
-			if (!this.previous.isReady()) {
-				this.previous.loadTexture();
-			}
 			matrix.pushPose();
 			RenderSystem.enableBlend();
 			float o = this.opacity;
@@ -246,9 +226,6 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 
 	protected void renderCurrent(PoseStack matrix) {
 		if (this.current != null) {
-			if (!this.current.isReady()) {
-				this.current.loadTexture();
-			}
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ResourceLocation r = this.current.getResourceLocation();
@@ -260,13 +237,10 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	}
 
 	protected void renderOverlay(PoseStack matrix) {
-		if (this.overlay_texture != null) {
-			if (!this.overlay_texture.isReady()) {
-				this.overlay_texture.loadTexture();
-			}
+		if (this.overlayTexture != null) {
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			ResourceLocation r = this.overlay_texture.getResourceLocation();
+			ResourceLocation r = this.overlayTexture.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);

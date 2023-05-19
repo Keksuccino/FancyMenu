@@ -11,8 +11,8 @@ import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -49,18 +49,18 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.off"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.on"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        copyClientPlayerButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.desc"), "%n%"));
+//        copyClientPlayerButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.desc")));
 //        this.rightClickContextMenu.addContent(copyClientPlayerButton);
 //
-//        AdvancedButton setPlayerNameButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name"), true, (press) -> {
-//            TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name")), this.editor, null, (call) -> {
+//        AdvancedButton setPlayerNameButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.set_player_name"), true, (press) -> {
+//            TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.playerentity.set_player_name")), this.editor, null, (call) -> {
 //                if (call != null) {
 //                    if (!call.equals(item.playerName)) {
 //                        this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -84,10 +84,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.set_player_name.desc")));
 //                } else {
 //                    this.active = false;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled")));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -110,16 +110,16 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.skin.auto.desc")));
 //                    if (!item.autoSkin) {
-//                        this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.off"));
+//                        this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.skin.auto.off"));
 //                    } else {
-//                        this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.on"));
+//                        this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.skin.auto.on"));
 //                    }
 //                } else {
 //                    this.active = false;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"), "%n%"));
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.off"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled")));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.skin.auto.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -128,7 +128,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //
 //        ContextMenu setSkinMenu = new ContextMenu();
 //        this.rightClickContextMenu.addChild(setSkinMenu);
-//        AdvancedButton setSkinButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set"), true, (press) -> {
+//        AdvancedButton setSkinButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.skin.set"), true, (press) -> {
 //            setSkinMenu.setParentButton((AdvancedButton) press);
 //            setSkinMenu.openMenuAt(0, press.y);
 //        }) {
@@ -136,14 +136,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer && !item.autoSkin) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.skin.set.desc")));
 //                } else {
 //                    this.active = false;
 //                    if (item.autoSkin) {
-//                        this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled"), "%n%"));
+//                        this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled")));
 //                    }
 //                    if (item.copyClientPlayer) {
-//                        this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"), "%n%"));
+//                        this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled")));
 //                    }
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -151,7 +151,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //        };
 //        this.rightClickContextMenu.addContent(setSkinButton);
 //
-//        AdvancedButton setLocalSkinButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.local"), true, (press) -> {
+//        AdvancedButton setLocalSkinButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.skin.set.local"), true, (press) -> {
 //            ChooseFilePopup p = new ChooseFilePopup((call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
@@ -175,10 +175,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //                                    item.setSkinTextureBySource(call, false);
 //                                }
 //                            } else {
-//                                LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+//                                UIBase.displayNotification(I18n.get("fancymenu.editor.textures.invalidcharacters"), "", "", "", "", "", "");
 //                            }
 //                        } else {
-//                            LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.items.playerentity.texture.invalidtexture.title"), "", Locals.localize("helper.creator.items.playerentity.texture.invalidtexture.desc"), "", "", "", "", "", "");
+//                            UIBase.displayNotification("§c§l" + I18n.get("fancymenu.editor.items.playerentity.texture.invalidtexture.title"), "", I18n.get("fancymenu.editor.items.playerentity.texture.invalidtexture.desc"), "", "", "", "", "", "");
 //                        }
 //                    }
 //                }
@@ -190,8 +190,8 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //        });
 //        setSkinMenu.addContent(setLocalSkinButton);
 //
-//        AdvancedButton setWebSkinButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web"), true, (press) -> {
-//            TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.web")), this.editor, null, (call) -> {
+//        AdvancedButton setWebSkinButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.skin.set.web"), true, (press) -> {
+//            TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.playerentity.skin.set.web")), this.editor, null, (call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
 //                        if (!call.equals(item.skinUrl)) {
@@ -221,21 +221,21 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer && !item.autoSkin) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.slim.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.slim.desc")));
 //                    if (item.slim) {
-//                        this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.slim.on"));
+//                        this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.slim.on"));
 //                    } else {
-//                        this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.slim.off"));
+//                        this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.slim.off"));
 //                    }
 //                } else {
 //                    this.active = false;
 //                    if (item.autoSkin) {
-//                        this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled"), "%n%"));
+//                        this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled")));
 //                    }
 //                    if (item.copyClientPlayer) {
-//                        this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"), "%n%"));
+//                        this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled")));
 //                    }
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.slim.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.slim.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -258,16 +258,16 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.auto.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.cape.auto.desc")));
 //                    if (!item.autoCape) {
-//                        this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.auto.off"));
+//                        this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.cape.auto.off"));
 //                    } else {
-//                        this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.auto.on"));
+//                        this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.cape.auto.on"));
 //                    }
 //                } else {
 //                    this.active = false;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"), "%n%"));
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.auto.off"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled")));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.cape.auto.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -276,7 +276,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //
 //        ContextMenu setCapeMenu = new ContextMenu();
 //        this.rightClickContextMenu.addChild(setCapeMenu);
-//        AdvancedButton setCapeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set"), true, (press) -> {
+//        AdvancedButton setCapeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.cape.set"), true, (press) -> {
 //            setCapeMenu.setParentButton((AdvancedButton) press);
 //            setCapeMenu.openMenuAt(0, press.y);
 //        }) {
@@ -284,14 +284,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.copyClientPlayer && !item.autoCape) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.cape.set.desc")));
 //                } else {
 //                    this.active = false;
 //                    if (item.autoCape) {
-//                        this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.auto.blocked_until_disabled"), "%n%"));
+//                        this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.cape.auto.blocked_until_disabled")));
 //                    }
 //                    if (item.copyClientPlayer) {
-//                        this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"), "%n%"));
+//                        this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled")));
 //                    }
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -299,7 +299,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //        };
 //        this.rightClickContextMenu.addContent(setCapeButton);
 //
-//        AdvancedButton setLocalCapeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.local"), true, (press) -> {
+//        AdvancedButton setLocalCapeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.cape.set.local"), true, (press) -> {
 //            ChooseFilePopup p = new ChooseFilePopup((call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
@@ -323,10 +323,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //                                    item.setCapeTextureBySource(call, false);
 //                                }
 //                            } else {
-//                                LayoutEditorScreen.displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+//                                UIBase.displayNotification(I18n.get("fancymenu.editor.textures.invalidcharacters"), "", "", "", "", "", "");
 //                            }
 //                        } else {
-//                            LayoutEditorScreen.displayNotification("§c§l" + Locals.localize("helper.creator.items.playerentity.texture.invalidtexture.title"), "", Locals.localize("helper.creator.items.playerentity.texture.invalidtexture.desc"), "", "", "", "", "", "");
+//                            UIBase.displayNotification("§c§l" + I18n.get("fancymenu.editor.items.playerentity.texture.invalidtexture.title"), "", I18n.get("fancymenu.editor.items.playerentity.texture.invalidtexture.desc"), "", "", "", "", "", "");
 //                        }
 //                    }
 //                }
@@ -338,8 +338,8 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //        });
 //        setCapeMenu.addContent(setLocalCapeButton);
 //
-//        AdvancedButton setWebCapeButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web"), true, (press) -> {
-//            TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.web")), this.editor, null, (call) -> {
+//        AdvancedButton setWebCapeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.cape.set.web"), true, (press) -> {
+//            TextEditorScreen s = new TextEditorScreen(Component.literal(I18n.get("fancymenu.helper.editor.items.playerentity.cape.set.web")), this.editor, null, (call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
 //                        if (!call.equals(item.capeUrl)) {
@@ -370,27 +370,27 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.followMouse) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.off"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.on"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        followMouseButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.desc"), "%n%"));
+//        followMouseButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.desc")));
 //        this.rightClickContextMenu.addContent(followMouseButton);
 //
-//        AdvancedButton customRotationButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.custom"), true, (press) -> {
+//        AdvancedButton customRotationButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.rotation.custom"), true, (press) -> {
 //            Minecraft.getInstance().setScreen(new PlayerEntityRotationScreen(this.editor, item));
 //        }) {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (!item.followMouse) {
 //                    this.active = true;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.custom.desc"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.rotation.custom.desc")));
 //                } else {
 //                    this.active = false;
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.custom.disabled"), "%n%"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.rotation.custom.disabled")));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -399,8 +399,8 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //
 //        this.rightClickContextMenu.addSeparator();
 //
-//        AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.playerentity.scale"), true, (press) -> {
-//            FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + Locals.localize("fancymenu.helper.editor.items.playerentity.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+//        AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.helper.editor.items.playerentity.scale"), true, (press) -> {
+//            FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.helper.editor.items.playerentity.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 //                if (call != null) {
 //                    if (!call.replace(" ", "").equals("")) {
 //                        if (MathUtils.isInteger(call)) {
@@ -422,7 +422,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            t.setText("" + item.scale);
 //            PopupHandler.displayPopup(t);
 //        });
-//        scaleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.scale.desc"), "%n%"));
+//        scaleButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.scale.desc")));
 //        this.rightClickContextMenu.addContent(scaleButton);
 //
 //        AdvancedButton crouchingButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
@@ -436,14 +436,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (item.crouching) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.crouching.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.crouching.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.crouching.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.crouching.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        crouchingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.crouching.desc"), "%n%"));
+//        crouchingButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.crouching.desc")));
 //        this.rightClickContextMenu.addContent(crouchingButton);
 //
 //        AdvancedButton showNameButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
@@ -457,14 +457,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (item.showPlayerName) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.show_name.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.show_name.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.show_name.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.show_name.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        showNameButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.show_name.desc"), "%n%"));
+//        showNameButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.show_name.desc")));
 //        this.rightClickContextMenu.addContent(showNameButton);
 //
 //        this.rightClickContextMenu.addSeparator();
@@ -480,14 +480,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (item.hasParrotOnShoulder) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.parrot.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.parrot.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        parrotButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot.desc"), "%n%"));
+//        parrotButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.parrot.desc")));
 //        this.rightClickContextMenu.addContent(parrotButton);
 //
 //        AdvancedButton parrotOnLeftButton = new AdvancedButton(0, 0, 0, 0, "", true, (press) -> {
@@ -501,14 +501,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (item.parrotOnLeftShoulder) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot_left.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.parrot_left.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot_left.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.parrot_left.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        parrotOnLeftButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot_left.desc"), "%n%"));
+//        parrotOnLeftButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.parrot_left.desc")));
 //        this.rightClickContextMenu.addContent(parrotOnLeftButton);
 //
 //        this.rightClickContextMenu.addSeparator();
@@ -524,14 +524,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (item.isBaby) {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.baby.on"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.baby.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.baby.off"));
+//                    this.setMessage(I18n.get("fancymenu.helper.editor.items.playerentity.baby.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        babyButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.baby.desc"), "%n%"));
+//        babyButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.playerentity.baby.desc")));
 //        this.rightClickContextMenu.addContent(babyButton);
 
     }

@@ -4,7 +4,7 @@ package de.keksuccino.fancymenu.rendering.ui.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -29,13 +29,13 @@ public class ConfirmationScreen extends Screen {
         this.callback = callback;
         this.text = text;
 
-        this.confirmButton = new AdvancedButton(0, 0, 150, 20, "§a" + Locals.localize("fancymenu.guicomponents.confirm"), true, (button) -> {
+        this.confirmButton = new AdvancedButton(0, 0, 150, 20, "§a" + I18n.get("fancymenu.guicomponents.confirm"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(true);
         });
         UIBase.applyDefaultButtonSkinTo(this.confirmButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 150, 20, "§c" + Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new AdvancedButton(0, 0, 150, 20, "§c" + I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(false);
         });

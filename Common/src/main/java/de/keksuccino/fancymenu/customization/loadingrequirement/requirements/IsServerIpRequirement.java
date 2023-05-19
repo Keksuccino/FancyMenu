@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 
 import javax.annotation.Nullable;
@@ -46,12 +46,12 @@ public class IsServerIpRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.visibilityrequirement.is_server_ip");
+        return I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.visibilityrequirement.is_server_ip.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip.desc")));
     }
 
     @Override
@@ -61,7 +61,7 @@ public class IsServerIpRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return Locals.localize("fancymenu.helper.visibilityrequirement.is_server_ip.value.desc");
+        return I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip.value.desc");
     }
 
     @Override

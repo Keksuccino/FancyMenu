@@ -4,8 +4,8 @@ import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -65,12 +65,12 @@ public class IsModLoadedRequirement extends LoadingRequirement {
 
     @Override
     public @NotNull String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.modloaded");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.modloaded");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.visibilityrequirements.modloaded.desc")));
     }
 
     @Override
@@ -80,7 +80,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename");
     }
 
     @Override

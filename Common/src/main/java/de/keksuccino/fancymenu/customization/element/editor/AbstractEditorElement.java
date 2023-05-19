@@ -140,14 +140,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isAnchorPointChangeable()) {
 
 			AdvancedContextMenu anchorPointMenu = new AdvancedContextMenu();
-			this.menu.addClickableEntry("anchor_point", true, Component.translatable("helper.creator.items.setorientation"), anchorPointMenu, Boolean.class, (entry, inherited, pass) -> {
+			this.menu.addClickableEntry("anchor_point", true, Component.translatable("fancymenu.editor.items.setorientation"), anchorPointMenu, Boolean.class, (entry, inherited, pass) -> {
 				if (inherited == null) {
 					anchorPointMenu.getContextMenu().setParentButton(entry.getButton());
 					anchorPointMenu.openMenu(0, entry.getButton().y);
 				}
 				pass.accept(true);
 			})
-			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.items.orientation.btndesc")))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
 			.setTicker((entry) -> {
 				((AdvancedContextMenu.ClickableMenuEntry<?>)entry).getButton().active = (element.advancedX == null) && (element.advancedY == null);
 			});
@@ -338,14 +338,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.element.stretchX = !this.element.stretchX;
 			})
-			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.stretch.x.desc")))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.x.desc")))
 			.setTicker((entry) -> {
 				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
 				e.getButton().active = element.advancedWidth == null;
 				if (element.stretchX && e.getButton().active) {
-					e.setLabel(Component.translatable("helper.creator.object.stretch.x.on"));
+					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.x.on"));
 				} else {
-					e.setLabel(Component.translatable("helper.creator.object.stretch.x.off"));
+					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.x.off"));
 				}
 			});
 
@@ -353,14 +353,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.element.stretchY = !this.element.stretchY;
 			})
-			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.stretch.y.desc")))
+			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.y.desc")))
 			.setTicker((entry) -> {
 				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
 				e.getButton().active = element.advancedHeight == null;
 				if (element.stretchY && e.getButton().active) {
-					e.setLabel(Component.translatable("helper.creator.object.stretch.y.on"));
+					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.y.on"));
 				} else {
-					e.setLabel(Component.translatable("helper.creator.object.stretch.y.off"));
+					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.y.off"));
 				}
 			});
 
@@ -382,19 +382,19 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isOrderable()) {
 
-			this.menu.addClickableEntry("move_up_element", false, Component.translatable("helper.creator.object.moveup"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.menu.addClickableEntry("move_up_element", false, Component.translatable("fancymenu.editor.object.moveup"), null, Boolean.class, (entry, inherited, pass) -> {
 				AbstractEditorElement o = this.editor.moveElementUp(this);
 				if (o != null) {
-					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.moveup.desc", I18n.get("helper.creator.object.moveup.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
+					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc", I18n.get("fancymenu.editor.object.moveup.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.moveup.desc")));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")));
 
-			this.menu.addClickableEntry("move_down_element", false, Component.translatable("helper.creator.object.movedown"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.menu.addClickableEntry("move_down_element", false, Component.translatable("fancymenu.editor.object.movedown"), null, Boolean.class, (entry, inherited, pass) -> {
 				AbstractEditorElement o = this.editor.moveElementDown(this);
 				if (o != null) {
-					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.movedown.desc", I18n.get("helper.creator.object.movedown.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
+					((AdvancedContextMenu.ClickableMenuEntry<?>)entry).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc", I18n.get("fancymenu.editor.object.movedown.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("helper.creator.object.movedown.desc")));
+			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")));
 
 		}
 
@@ -402,7 +402,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isCopyable()) {
 
-			this.menu.addClickableEntry("copy_element", true, Component.translatable("helper.editor.ui.edit.copy"), null, List.class, (entry, inherited, pass) -> {
+			this.menu.addClickableEntry("copy_element", true, Component.translatable("fancymenu.editor.edit.copy"), null, List.class, (entry, inherited, pass) -> {
 				List<AbstractEditorElement> elements = (inherited != null) ? inherited : new ArrayList<>();
 				elements.add(this);
 				if (entry.isLastInStack()) {
@@ -416,7 +416,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isDestroyable()) {
 
-			this.menu.addClickableEntry("delete_element", true, Component.translatable("helper.creator.items.delete"), null, Boolean.class, (entry, inherited, pass) -> {
+			this.menu.addClickableEntry("delete_element", true, Component.translatable("fancymenu.editor.items.delete"), null, Boolean.class, (entry, inherited, pass) -> {
 				if (inherited == null) {
 					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					pass.accept(this.deleteElement());

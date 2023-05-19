@@ -38,7 +38,7 @@
 //import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 //import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 //import de.keksuccino.konkrete.input.*;
-//import de.keksuccino.konkrete.localization.Locals;
+//import net.minecraft.client.resources.language.I18n;
 //import de.keksuccino.fancymenu.properties.PropertyContainer;
 //import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 //import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -1101,10 +1101,10 @@
 //				this.addContent(new LayoutTexture(i, this));
 //
 //			} else {
-//				displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+//				displayNotification(I18n.get("fancymenu.editor.textures.invalidcharacters"), "", "", "", "", "", "");
 //			}
 //		} else {
-//			displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+//			displayNotification("§c§l" + I18n.get("fancymenu.editor.invalidimage.title"), "", I18n.get("fancymenu.editor.invalidimage.desc"), "", "", "", "", "", "");
 //		}
 //	}
 //
@@ -1140,7 +1140,7 @@
 //			this.addContent(new LayoutSlideshow(i, this));
 //
 //		} else {
-//			displayNotification(Locals.localize("helper.creator.slideshownotfound"), "", "", "", "");
+//			displayNotification(I18n.get("fancymenu.editor.slideshownotfound"), "", "", "", "");
 //		}
 //	}
 //
@@ -1180,7 +1180,7 @@
 //			this.addContent(new LayoutSplashText(i, this));
 //
 //		} else {
-//			displayNotification(Locals.localize("helper.creator.error.invalidfile"));
+//			displayNotification(I18n.get("fancymenu.editor.error.invalidfile"));
 //		}
 //	}
 //
@@ -1201,7 +1201,7 @@
 //			this.addContent(new LayoutSplashText(i, this));
 //
 //		} else {
-//			displayNotification("§c§l" + Locals.localize("helper.creator.texttooshort.title"), "", Locals.localize("helper.creator.texttooshort.desc"), "", "", "", "");
+//			displayNotification("§c§l" + I18n.get("fancymenu.editor.texttooshort.title"), "", I18n.get("fancymenu.editor.texttooshort.desc"), "", "", "", "");
 //		}
 //	}
 //
@@ -1226,7 +1226,7 @@
 //			this.addContent(new LayoutAnimation(i, this));
 //
 //		} else {
-//			displayNotification("§c§l" + Locals.localize("helper.creator.animationnotfound.title"), "", Locals.localize("helper.creator.animationnotfound.desc"), "", "", "");
+//			displayNotification("§c§l" + I18n.get("fancymenu.editor.animationnotfound.title"), "", I18n.get("fancymenu.editor.animationnotfound.desc"), "", "", "");
 //		}
 //	}
 //
@@ -1268,7 +1268,7 @@
 //			StringCustomizationItem i = new StringCustomizationItem(s);
 //			this.addContent(new LayoutString(i, this));
 //		} else {
-//			displayNotification("§c§l" + Locals.localize("helper.creator.texttooshort.title"), "", Locals.localize("helper.creator.texttooshort.desc"), "", "", "", "");
+//			displayNotification("§c§l" + I18n.get("fancymenu.editor.texttooshort.title"), "", I18n.get("fancymenu.editor.texttooshort.desc"), "", "", "", "");
 //		}
 //	}
 //
@@ -1290,11 +1290,11 @@
 //					SoundHandler.playSound(path);
 //					this.audio.put(path, false);
 //				} else {
-//					displayNotification("§c§l" + Locals.localize("helper.creator.audioalreadyloaded.title"), "", Locals.localize("helper.creator.audioalreadyloaded.desc"), "", "", "", "", "", "");
+//					displayNotification("§c§l" + I18n.get("fancymenu.editor.audioalreadyloaded.title"), "", I18n.get("fancymenu.editor.audioalreadyloaded.desc"), "", "", "", "", "", "");
 //				}
 //
 //			} else {
-//				displayNotification("§c§l" + Locals.localize("helper.creator.invalidaudio.title"), "", Locals.localize("helper.creator.invalidaudio.desc"), "", "", "", "", "", "");
+//				displayNotification("§c§l" + I18n.get("fancymenu.editor.invalidaudio.title"), "", I18n.get("fancymenu.editor.invalidaudio.desc"), "", "", "", "", "", "");
 //			}
 //		}
 //	}
@@ -1359,10 +1359,10 @@
 //					this.customMenuBackground = null;
 //
 //				} else {
-//					displayNotification(Locals.localize("helper.creator.textures.invalidcharacters"), "", "", "", "", "", "");
+//					displayNotification(I18n.get("fancymenu.editor.textures.invalidcharacters"), "", "", "", "", "", "");
 //				}
 //			} else {
-//				displayNotification("§c§l" + Locals.localize("helper.creator.invalidimage.title"), "", Locals.localize("helper.creator.invalidimage.desc"), "", "", "", "", "", "");
+//				displayNotification("§c§l" + I18n.get("fancymenu.editor.invalidimage.title"), "", I18n.get("fancymenu.editor.invalidimage.desc"), "", "", "", "", "", "");
 //			}
 //		}
 //	}
@@ -1376,7 +1376,7 @@
 //				if (l.get(0).isDestroyable()) {
 //					l.get(0).destroyElement();
 //				} else {
-//					displayNotification("§c§l" + Locals.localize("helper.creator.cannotdelete.title"), "", Locals.localize("helper.creator.cannotdelete.desc"), "", "", "");
+//					displayNotification("§c§l" + I18n.get("fancymenu.editor.cannotdelete.title"), "", I18n.get("fancymenu.editor.cannotdelete.desc"), "", "", "");
 //				}
 //			}
 //			if (l.size() > 1) {
@@ -1385,7 +1385,7 @@
 //						if (call) {
 //							this.deleteContentQueue.addAll(l);
 //						}
-//					}, "§c§l" + Locals.localize("helper.creator.messages.sure"), "", Locals.localize("helper.creator.deleteselectedobjects"), "", "", "", "", ""));
+//					}, "§c§l" + I18n.get("fancymenu.editor.messages.sure"), "", I18n.get("fancymenu.editor.deleteselectedobjects"), "", "", "", "", ""));
 //				} else {
 //					this.deleteContentQueue.addAll(l);
 //				}
@@ -1469,7 +1469,7 @@
 //	}
 //
 //	public void saveLayoutAs() {
-//		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), CharacterFilter.getBasicFilenameCharacterFilter(), 240, (call) -> {
+//		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.editor.layout.saveas.entername"), CharacterFilter.getBasicFilenameCharacterFilter(), 240, (call) -> {
 //			try {
 //
 //				if ((call != null) && (call.length() > 0)) {
@@ -1478,7 +1478,7 @@
 //					File f = new File(file);
 //					if (!f.exists()) {
 //						if (!LayoutHandler.saveLayoutToFile(this.getAllProperties(), file)) {
-//							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.editor.layout.saveas.failed")));
 //						} else {
 //							LayoutEditorHistory.Snapshot snap = this.history.createSnapshot();
 //
@@ -1493,15 +1493,15 @@
 //							Minecraft.getInstance().setScreen(neweditor);
 //						}
 //					} else {
-//						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.editor.layout.saveas.failed")));
 //					}
 //				} else {
-//					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.editor.layout.saveas.failed")));
 //				}
 //
 //			} catch (Exception e) {
 //				e.printStackTrace();
-//				PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//				PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.editor.layout.saveas.failed")));
 //			}
 //		}));
 //	}

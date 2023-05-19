@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -55,18 +55,18 @@ public class TextEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.source_mode.mode.local"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.source_mode.mode.local"));
 //                }
 //                if (i.sourceMode == TextElement.SourceMode.WEB_SOURCE) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.source_mode.mode.web"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.source_mode.mode.web"));
 //                }
 //                if (i.sourceMode == TextElement.SourceMode.DIRECT) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.source_mode.mode.direct"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.source_mode.mode.direct"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        toggleSourceModeButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.source_mode.desc"), "%n%"));
+//        toggleSourceModeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.source_mode.desc")));
 //        this.rightClickContextMenu.addContent(toggleSourceModeButton);
 //
 //        //SET SOURCE BUTTON
@@ -102,7 +102,7 @@ public class TextEditorElement extends AbstractEditorElement {
 //            if ((i.sourceMode == TextElement.SourceMode.DIRECT) || (i.sourceMode == TextElement.SourceMode.WEB_SOURCE)) {
 //                TextEditorScreen s = new TextEditorScreen(press.getMessage(), this.editor, null, (call) -> {
 //                    if (call != null) {
-//                        call = call.replace("\n", "%n%");
+//                        call = call.replace("\n");
 //                        if (call.length() == 0) {
 //                            if (i.source != null) {
 //                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -133,18 +133,18 @@ public class TextEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.set_source.local"));
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.set_source.local.desc"), "%n%"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.set_source.local"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.set_source.local.desc")));
 //                }
 //                if (i.sourceMode == TextElement.SourceMode.WEB_SOURCE) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.set_source.web"));
-//                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.set_source.web.desc"), "%n%"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.set_source.web"));
+//                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.set_source.web.desc")));
 //                }
 //                if (i.sourceMode == TextElement.SourceMode.DIRECT) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.set_source.direct"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.set_source.direct"));
 //                    List<String> l = new ArrayList<>();
-//                    for (String s : StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.set_source.direct.desc"), "%n%")) {
-//                        l.add(s.replace("<line_break_code>", "%n%"));
+//                    for (String s : LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.set_source.direct.desc"))) {
+//                        l.add(s.replace("<line_break_code>"));
 //                    }
 //                    this.setDescription(l.toArray(new String[0]));
 //                }
@@ -169,13 +169,13 @@ public class TextEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.caseMode == TextElement.CaseMode.NORMAL) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.case_mode.normal"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.case_mode.normal"));
 //                }
 //                if (i.caseMode == TextElement.CaseMode.ALL_LOWER) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.case_mode.lower"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.case_mode.lower"));
 //                }
 //                if (i.caseMode == TextElement.CaseMode.ALL_UPPER) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.case_mode.upper"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.case_mode.upper"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -183,8 +183,8 @@ public class TextEditorElement extends AbstractEditorElement {
 //        this.rightClickContextMenu.addContent(caseModeButton);
 //
 //        //SCALE BUTTON
-//        AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scale"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.text.scale"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
+//        AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scale"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.text.scale"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
 //                if (call != null) {
 //                    if (MathUtils.isFloat(call)) {
 //                        float s = Float.parseFloat(call);
@@ -220,9 +220,9 @@ public class TextEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.shadow) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.shadow.on"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.shadow.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.shadow.off"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.shadow.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -242,13 +242,13 @@ public class TextEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.alignment == AbstractElement.Alignment.LEFT) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.alignment.left"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.alignment.left"));
 //                }
 //                if (i.alignment == AbstractElement.Alignment.CENTERED) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.alignment.center"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.alignment.center"));
 //                }
 //                if (i.alignment == AbstractElement.Alignment.RIGHT) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.alignment.right"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.alignment.right"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
@@ -256,8 +256,8 @@ public class TextEditorElement extends AbstractEditorElement {
 //        this.rightClickContextMenu.addContent(alignmentButton);
 //
 //        //BASE COLOR BUTTON
-//        AdvancedButton baseColorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.base_color"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.text.base_color"), null, 240, (call) -> {
+//        AdvancedButton baseColorButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.base_color"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.text.base_color"), null, 240, (call) -> {
 //                if (call != null) {
 //                    if (call.replace(" ", "").equals("")) {
 //                        if (i.baseColorHex != null) {
@@ -286,12 +286,12 @@ public class TextEditorElement extends AbstractEditorElement {
 //            }
 //            PopupHandler.displayPopup(p);
 //        });
-//        baseColorButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.base_color.desc"), "%n%"));
+//        baseColorButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.base_color.desc")));
 //        this.rightClickContextMenu.addContent(baseColorButton);
 //
 //        //TEXT BORDER BUTTON
-//        AdvancedButton textBorderButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.text_border"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.text.text_border"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+//        AdvancedButton textBorderButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.text_border"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.text.text_border"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 //                if (call != null) {
 //                    if (MathUtils.isInteger(call)) {
 //                        int border = Integer.parseInt(call);
@@ -314,12 +314,12 @@ public class TextEditorElement extends AbstractEditorElement {
 //            p.setText("" + i.textBorder);
 //            PopupHandler.displayPopup(p);
 //        });
-//        textBorderButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.text_border.desc"), "%n%"));
+//        textBorderButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.text_border.desc")));
 //        this.rightClickContextMenu.addContent(textBorderButton);
 //
 //        //LINE SPACING BUTTON
-//        AdvancedButton lineSpacingButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.line_spacing"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.text.line_spacing"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
+//        AdvancedButton lineSpacingButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.line_spacing"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.text.line_spacing"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
 //                if (call != null) {
 //                    if (MathUtils.isInteger(call)) {
 //                        int spacing = Integer.parseInt(call);
@@ -358,28 +358,28 @@ public class TextEditorElement extends AbstractEditorElement {
 //            @Override
 //            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (i.enableScrolling) {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.scrolling.on"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.scrolling.on"));
 //                } else {
-//                    this.setMessage(Locals.localize("fancymenu.customization.items.text.scrolling.off"));
+//                    this.setMessage(I18n.get("fancymenu.customization.items.text.scrolling.off"));
 //                }
 //                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
 //            }
 //        };
-//        scrollingButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.scrolling.desc"), "%n%"));
+//        scrollingButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.scrolling.desc")));
 //        this.rightClickContextMenu.addContent(scrollingButton);
 //
 //        ContextMenu grabberTextureMenu = new ContextMenu();
 //        this.rightClickContextMenu.addChild(grabberTextureMenu);
 //
 //        //GRABBER TEXTURE BUTTON
-//        AdvancedButton grabberTextureButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scroll_grabber_texture"), true, (press) -> {
+//        AdvancedButton grabberTextureButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scroll_grabber_texture"), true, (press) -> {
 //            grabberTextureMenu.setParentButton((AdvancedButton) press);
 //            grabberTextureMenu.openMenuAt(0, press.y);
 //        });
 //        this.rightClickContextMenu.addContent(grabberTextureButton);
 //
 //        //GRABBER NORMAL TEXTURE BUTTON
-//        AdvancedButton grabberNormalTextureButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scroll_grabber_texture.normal"), (press) -> {
+//        AdvancedButton grabberNormalTextureButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scroll_grabber_texture.normal"), (press) -> {
 //            ChooseFilePopup p = new ChooseFilePopup((call) -> {
 //                if (call != null) {
 //                    if (call.length() == 0) {
@@ -404,7 +404,7 @@ public class TextEditorElement extends AbstractEditorElement {
 //        grabberTextureMenu.addContent(grabberNormalTextureButton);
 //
 //        //GRABBER HOVER TEXTURE BUTTON
-//        AdvancedButton grabberHoverTextureButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scroll_grabber_texture.hover"), (press) -> {
+//        AdvancedButton grabberHoverTextureButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scroll_grabber_texture.hover"), (press) -> {
 //            ChooseFilePopup p = new ChooseFilePopup((call) -> {
 //                if (call != null) {
 //                    if (call.length() == 0) {
@@ -432,16 +432,16 @@ public class TextEditorElement extends AbstractEditorElement {
 //        this.rightClickContextMenu.addChild(grabberColorMenu);
 //
 //        //GRABBER COLOR BUTTON
-//        AdvancedButton grabberColorButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scroll_grabber_color"), true, (press) -> {
+//        AdvancedButton grabberColorButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scroll_grabber_color"), true, (press) -> {
 //            grabberColorMenu.setParentButton((AdvancedButton) press);
 //            grabberColorMenu.openMenuAt(0, press.y);
 //        });
-//        grabberColorButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.scroll_grabber_color.desc"), "%n%"));
+//        grabberColorButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.text.scroll_grabber_color.desc")));
 //        this.rightClickContextMenu.addContent(grabberColorButton);
 //
 //        //GRABBER COLOR NORMAL BUTTON
-//        AdvancedButton grabberColorNormalButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scroll_grabber_color.normal"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.text.scroll_grabber_color.normal"), null, 240, (call) -> {
+//        AdvancedButton grabberColorNormalButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scroll_grabber_color.normal"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.text.scroll_grabber_color.normal"), null, 240, (call) -> {
 //                if (call != null) {
 //                    if (call.replace(" ", "").equals("")) {
 //                        if (i.scrollGrabberColorHexNormal != null) {
@@ -473,8 +473,8 @@ public class TextEditorElement extends AbstractEditorElement {
 //        grabberColorMenu.addContent(grabberColorNormalButton);
 //
 //        //GRABBER COLOR HOVER BUTTON
-//        AdvancedButton grabberColorHoverButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.text.scroll_grabber_color.hover"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), Locals.localize("fancymenu.customization.items.text.scroll_grabber_color.hover"), null, 240, (call) -> {
+//        AdvancedButton grabberColorHoverButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.text.scroll_grabber_color.hover"), (press) -> {
+//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.text.scroll_grabber_color.hover"), null, 240, (call) -> {
 //                if (call != null) {
 //                    if (call.replace(" ", "").equals("")) {
 //                        if (i.scrollGrabberColorHexHover != null) {

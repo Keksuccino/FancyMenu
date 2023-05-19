@@ -20,24 +20,24 @@ import net.minecraft.world.entity.player.Player;
 
 public class GuiConstructor {
 	
-	private static Map<Class<?>, Object> parameters = new HashMap<Class<?>, Object>();
+	private static final Map<Class<?>, Object> PARAMETERS = new HashMap<>();
 	
 	public static void init() {
 		
-		parameters.put(Minecraft.class, Minecraft.getInstance());
-		parameters.put(Screen.class, null);
-		parameters.put(Options.class, Minecraft.getInstance().options);
-		parameters.put(LanguageManager.class, Minecraft.getInstance().getLanguageManager());
-		parameters.put(Boolean.class, true);
-		parameters.put(Player.class, null);
-		parameters.put(String.class, "");
-		parameters.put(ClientAdvancements.class, null);
-		parameters.put(Component.class, Component.literal(""));
-		parameters.put(boolean.class, true);
-		parameters.put(int.class, 0);
-		parameters.put(long.class, 0L);
-		parameters.put(double.class, 0D);
-		parameters.put(float.class, 0F);
+		PARAMETERS.put(Minecraft.class, Minecraft.getInstance());
+		PARAMETERS.put(Screen.class, null);
+		PARAMETERS.put(Options.class, Minecraft.getInstance().options);
+		PARAMETERS.put(LanguageManager.class, Minecraft.getInstance().getLanguageManager());
+		PARAMETERS.put(Boolean.class, true);
+		PARAMETERS.put(Player.class, null);
+		PARAMETERS.put(String.class, "");
+		PARAMETERS.put(ClientAdvancements.class, null);
+		PARAMETERS.put(Component.class, Component.literal(""));
+		PARAMETERS.put(boolean.class, true);
+		PARAMETERS.put(int.class, 0);
+		PARAMETERS.put(long.class, 0L);
+		PARAMETERS.put(double.class, 0D);
+		PARAMETERS.put(float.class, 0F);
 		
 	}
 	
@@ -49,17 +49,17 @@ public class GuiConstructor {
 			}
 
 			//Update last screen
-			parameters.put(Screen.class, Minecraft.getInstance().screen);
+			PARAMETERS.put(Screen.class, Minecraft.getInstance().screen);
 			//Update player
-			parameters.put(Player.class, Minecraft.getInstance().player);
+			PARAMETERS.put(Player.class, Minecraft.getInstance().player);
 			if ((Minecraft.getInstance().player != null) && (Minecraft.getInstance().player.connection != null)) {
-				parameters.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
+				PARAMETERS.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
 
 			Class<?> gui = Class.forName(identifier, false, GuiConstructor.class.getClassLoader());
-			if ((gui != null) && Screen.class.isAssignableFrom(gui)) {
+			if (Screen.class.isAssignableFrom(gui)) {
 				Constructor<?>[] constructors = gui.getConstructors();
-				if ((constructors != null) && (constructors.length > 0)) {
+				if (constructors.length > 0) {
 					Constructor<?> con = null;
 					//Try to find constructor without parameters
 					for (Constructor<?> constructor : constructors) {
@@ -81,7 +81,7 @@ public class GuiConstructor {
 						Class<?>[] params = con.getParameterTypes();
 						List<Object> paramInstances = new ArrayList<>();
 						for (Class<?> p : params) {
-							paramInstances.add(parameters.get(p));
+							paramInstances.add(PARAMETERS.get(p));
 						}
 						return createNewInstance(con, paramInstances, gui);
 					}
@@ -98,7 +98,7 @@ public class GuiConstructor {
 
 	private static boolean supportsAllParameters(Class<?>[] params) {
 		for (Class<?> par : params) {
-			if (!parameters.containsKey(par)) {
+			if (!PARAMETERS.containsKey(par)) {
 				return false;
 			}
 		}
@@ -124,8 +124,8 @@ public class GuiConstructor {
 	}
 	
 	public static Object findParameterOfType(Class<?> type) {
-		if (parameters.containsKey(type)) {
-			return parameters.get(type);
+		if (PARAMETERS.containsKey(type)) {
+			return PARAMETERS.get(type);
 		}
 		return null;
 	}

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
@@ -36,12 +37,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
         if (!this.loaded) {
             try {
 
-                if (Minecraft.getInstance().getTextureManager() == null) {
-                    LOGGER.error("[FANCYMENU] Can't load texture '" + this.path + "'! Minecraft TextureManager instance not ready yet!");
-                    return;
-                }
-
-                ExternalTextureResourceLocation exRL = TextureHandler.INSTANCE.getTexture(this.path);
+                LocalTexture exRL = TextureHandler.INSTANCE.getTexture(this.path);
                 if (exRL != null) {
                     ResourceLocation loc = exRL.getResourceLocation();
                     if (loc != null) {

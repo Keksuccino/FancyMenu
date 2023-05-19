@@ -70,7 +70,7 @@ public interface IElementFactory {
 
         if (deepElements != null) {
             //Add missing deep element instances
-            DeepScreenCustomizationLayer<?> deepScreenCustomizationLayer = (menuIdentifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(menuIdentifier) : null;
+            DeepScreenCustomizationLayer deepScreenCustomizationLayer = (menuIdentifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(menuIdentifier) : null;
             if (deepScreenCustomizationLayer != null) {
                 for (DeepElementBuilder<?, ?, ?> builder : deepScreenCustomizationLayer.getBuilders()) {
                     if (!unstackedDeepElements.containsKey(builder)) {

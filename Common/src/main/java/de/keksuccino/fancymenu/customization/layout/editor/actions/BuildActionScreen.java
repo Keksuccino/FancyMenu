@@ -11,8 +11,8 @@ import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextListScro
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -37,7 +37,7 @@ public class BuildActionScreen extends Screen {
 
     public BuildActionScreen(@Nullable Screen parentScreen, @Nullable ManageActionsScreen.ActionInstance instanceToEdit, @NotNull Consumer<ManageActionsScreen.ActionInstance> callback) {
 
-        super((instanceToEdit != null) ? Component.literal(Locals.localize("fancymenu.editor.action.screens.edit_action")) : Component.literal(Locals.localize("fancymenu.editor.action.screens.add_action")));
+        super((instanceToEdit != null) ? Component.literal(I18n.get("fancymenu.editor.action.screens.edit_action")) : Component.literal(I18n.get("fancymenu.editor.action.screens.add_action")));
 
         this.parentScreen = parentScreen;
         this.instance = (instanceToEdit != null) ? instanceToEdit : new ManageActionsScreen.ActionInstance(null, null);
@@ -55,7 +55,7 @@ public class BuildActionScreen extends Screen {
             }
         }
 
-        this.editValueButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.action.screens.build_screen.edit_value"), true, (button) -> {
+        this.editValueButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.build_screen.edit_value"), true, (button) -> {
             TextEditorScreen s = new TextEditorScreen(Component.literal(this.instance.action.getValueDescription()), this, null, (call) -> {
                 if (call != null) {
                     this.instance.value = call;
@@ -76,9 +76,9 @@ public class BuildActionScreen extends Screen {
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 Action b = BuildActionScreen.this.instance.action;
                 if ((b != null) && !b.hasValue()) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value")));
                 } else {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal")));
                 }
                 if ((b == null) || !b.hasValue()) {
                     this.active = false;
@@ -90,17 +90,17 @@ public class BuildActionScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.editValueButton);
 
-        this.doneButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instance);
         }) {
             @Override
             public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 if (BuildActionScreen.this.instance.action == null) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.finish.no_action_selected"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
                 } else if ((BuildActionScreen.this.instance.value == null) && BuildActionScreen.this.instance.action.hasValue()) {
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.action.screens.build_screen.finish.no_value_set"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.build_screen.finish.no_value_set")));
                     this.active = false;
                 } else {
                     this.setDescription((String[])null);
@@ -111,7 +111,7 @@ public class BuildActionScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.isEdit) {
                 this.callback.accept(this.instance);
@@ -155,7 +155,7 @@ public class BuildActionScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(matrix, titleComp, 20, 20, -1);
 
-        this.font.draw(matrix, Locals.localize("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, -1);
+        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, -1);
 
         this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionsListScrollArea.setHeight(this.height - 85, true);
@@ -163,7 +163,7 @@ public class BuildActionScreen extends Screen {
         this.actionsListScrollArea.setY(50 + 15, true);
         this.actionsListScrollArea.render(matrix, mouseX, mouseY, partial);
 
-        String descLabelString = Locals.localize("fancymenu.editor.action.screens.build_screen.action_description");
+        String descLabelString = I18n.get("fancymenu.editor.action.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabelString);
         this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, -1);
 
@@ -198,7 +198,7 @@ public class BuildActionScreen extends Screen {
         this.actionDescriptionScrollArea.clearEntries();
 
         if ((action != null) && (action.getActionDescription() != null)) {
-            for (String s : StringUtils.splitLines(action.getActionDescription(), "%n%")) {
+            for (String s : LocalizationUtils.splitLocalizedStringLines(action.getActionDescription())) {
                 TextScrollAreaEntry e = new TextScrollAreaEntry(this.actionDescriptionScrollArea, Component.literal(s), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());

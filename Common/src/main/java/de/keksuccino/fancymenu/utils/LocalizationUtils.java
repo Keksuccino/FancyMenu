@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.utils;
 
-import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +21,7 @@ public class LocalizationUtils {
 
     @NotNull
     public static String[] splitLocalizedStringLines(@NotNull String localizationKey, String... placeholderReplacements) {
-        return StringUtils.splitLines(I18n.get(localizationKey, (Object[]) placeholderReplacements), "\n");
+        return LocalizationUtils.splitLocalizedStringLines(I18n.get(localizationKey, (Object[]) placeholderReplacements), "\n");
     }
 
 }

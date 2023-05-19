@@ -7,8 +7,8 @@
 //import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 //import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 //import de.keksuccino.konkrete.input.MouseInput;
-//import de.keksuccino.konkrete.input.StringUtils;
-//import de.keksuccino.konkrete.localization.Locals;
+//import de.keksuccino.fancymenu.utils.LocalizationUtils;
+//import net.minecraft.client.resources.language.I18n;
 //import de.keksuccino.fancymenu.properties.PropertyContainer;
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
@@ -90,9 +90,9 @@
 //                    if (FancyMenu.getConfig().getOrDefault("showvanillamovewarning", true)) {
 //                        FMNotificationPopup p;
 //                        if (this.orientationCanBeChanged) {
-//                            p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.orientation_needed"), "%n%"));
+//                            p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.element.vanilla.orientation_needed")));
 //                        } else {
-//                            p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.moving_not_allowed"), "%n%"));
+//                            p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.element.moving_not_allowed")));
 //                        }
 //                        PopupHandler.displayPopup(p);
 //                    }
@@ -144,7 +144,7 @@
 //    public void destroyElement() {
 //        if (this.isDestroyable()) {
 //            if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
-//                FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
+//                FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.element.vanilla.delete.confirm")));
 //                PopupHandler.displayPopup(pop);
 //            }
 //            if (!this.getDeepCustomizationItem().deepElementHidden) {

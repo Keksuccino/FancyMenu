@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.sy
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 
 import javax.annotation.Nullable;
@@ -34,17 +34,17 @@ public class IsOsMacOSRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.osmac");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.osmac");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.osmac.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.visibilityrequirements.osmac.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.editor.loading_requirement.category.system");
+        return I18n.get("fancymenu.editor.loading_requirement.category.system");
     }
 
     @Override

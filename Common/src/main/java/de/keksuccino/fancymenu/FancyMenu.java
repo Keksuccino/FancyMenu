@@ -8,17 +8,23 @@ import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
-import de.keksuccino.konkrete.localization.Locals;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
+
+	//TODO NOCH NICHT KOMPLETT: Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
+	// - Visibility Requirements (v1 stuff zu loading requirements machen)
+	// - Actions
+
+	//TODO Title Screen Mixins für customization adden <---------------------------------------------
+	// - BackgroundRenderEvent nach rendern von panorama back callen
+	// - alle elemente entfernen, die durch Deep Cuz elemente ersetzt wurden
 
 	//TODO "not_allowed.png" textur ersetzen
 
@@ -28,17 +34,7 @@ public class FancyMenu {
 
 	//TODO GameIntro stuff komplett reworken/rewriten
 
-	//TODO Altes Tooltip rendering fixen (am besten mit neuer engine ersetzen)
-
 	//TODO Alle dirs aus FancyMenu class nach MenuCustomization verschieben
-
-	//TODO Konkrete Locals zu I18n porten (nur noch mit I18n arbeiten)
-
-	//TODO Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
-	// - Items & Elements
-	// - Placeholder
-	// - Menu Background Types
-	// - Visibility Requirements (v1 stuff zu loading requirements machen)
 
 	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
@@ -90,7 +86,7 @@ public class FancyMenu {
 
 //				EventHandler.INSTANCE.registerListenersOf(new Test());
 
-				if (isOptifineCompatibilityMode()) {
+				if (isOptiFineLoaded()) {
 					LOGGER.info("[FANCYMENU] OptiFine compatibility mode enabled!");
 				}
 
@@ -112,8 +108,6 @@ public class FancyMenu {
 
 		try {
 
-			initLocals();
-
 			SetupSharingHandler.init();
 
 			CustomLocalsHandler.loadLocalizations();
@@ -125,26 +119,6 @@ public class FancyMenu {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-
-	}
-
-	private static void initLocals() {
-
-		String baseresdir = "fmlocals/";
-		File f = new File(MOD_DIR.getPath() + "/locals");
-		if (!f.exists()) {
-			f.mkdirs();
-		}
-		
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "en_us.local"), "en_us", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "de_de.local"), "de_de", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pl_pl.local"), "pl_pl", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "pt_br.local"), "pt_br", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "zh_cn.local"), "zh_cn", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "uk_ua.local"), "uk_ua", f.getPath());
-		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "ru_ru.local"), "ru_ru", f.getPath());
-		
-		Locals.getLocalsFromDir(f.getPath());
 
 	}
 
@@ -251,33 +225,8 @@ public class FancyMenu {
 		return SLIDESHOW_DIR;
 	}
 
-	@Deprecated
-	public static boolean isOptifineLoaded() {
-		return isOptifineCompatibilityMode();
-	}
-
-	public static boolean isOptifineCompatibilityMode() {
+	public static boolean isOptiFineLoaded() {
 		return Konkrete.isOptifineLoaded;
-	}
-
-	public static boolean isDrippyLoadingScreenLoaded() {
-		try {
-			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen", false, FancyMenu.class.getClassLoader());
-			return true;
-		} catch (Exception e) {}
-		return false;
-	}
-
-	public static boolean isKonkreteLoaded() {
-		try {
-			Class.forName("de.keksuccino.konkrete.Konkrete", false, FancyMenu.class.getClassLoader());
-			return true;
-		} catch (Exception e) {}
-		return false;
-	}
-
-	public static String getMinecraftVersion() {
-		return SharedConstants.getCurrentVersion().getName();
 	}
 
 	public static boolean isAudioExtensionLoaded() {
@@ -286,6 +235,10 @@ public class FancyMenu {
 			return true;
 		} catch (Exception ignored) {}
 		return false;
+	}
+
+	public static String getMinecraftVersion() {
+		return SharedConstants.getCurrentVersion().getName();
 	}
 
 	public static File getGameDirectory() {

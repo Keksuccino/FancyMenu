@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -31,16 +32,16 @@ public class AutoScalingPopup extends FMPopup {
 
     public AutoScalingPopup(LayoutEditorScreen parent, @Nullable Consumer<Boolean> callback) {
         super(240);
-
+        
         this.callback = callback;
         this.parent = parent;
 
-        this.cancelButton = new AdvancedButton(0, 0, 80, 20, Locals.localize("popup.yesno.cancel"), true, (press) -> {
+        this.cancelButton = new AdvancedButton(0, 0, 80, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (press) -> {
             this.onCancelButtonPressed();
         });
         this.addButton(cancelButton);
 
-        this.doneButton = new AdvancedButton(0, 0, 80, 20, Locals.localize("popup.done"), true, (press) -> {
+        this.doneButton = new AdvancedButton(0, 0, 80, 20, I18n.get("fancymenu.guicomponents.done"), true, (press) -> {
             this.onDoneButtonPressed();
         });
         this.addButton(doneButton);
@@ -64,22 +65,22 @@ public class AutoScalingPopup extends FMPopup {
         int screenCenterX = renderIn.width / 2;
         int screenCenterY = renderIn.height / 2;
 
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1"), screenCenterX, screenCenterY - 90, -1);
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2"), screenCenterX, screenCenterY - 80, -1);
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3"), screenCenterX, screenCenterY - 70, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1"), screenCenterX, screenCenterY - 90, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2"), screenCenterX, screenCenterY - 80, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3"), screenCenterX, screenCenterY - 70, -1);
 
-        drawCenteredString(matrix, font, Locals.localize("general.width"), screenCenterX, screenCenterY - 50, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.guicomponents.width"), screenCenterX, screenCenterY - 50, -1);
         this.widthTextField.x = screenCenterX - (this.widthTextField.getWidth() / 2);
         this.widthTextField.y = screenCenterY - 35;
         this.widthTextField.render(matrix, mouseX, mouseY, partial);
 
-        drawCenteredString(matrix, font, Locals.localize("general.height"), screenCenterX, screenCenterY - 5, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.guicomponents.height"), screenCenterX, screenCenterY - 5, -1);
         this.heightTextField.x = screenCenterX - (this.heightTextField.getWidth() / 2);
         this.heightTextField.y = screenCenterY + 10;
         this.heightTextField.render(matrix, mouseX, mouseY, partial);
 
-        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), screenCenterX, screenCenterY + 45, -1);
-        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), screenCenterX, screenCenterY + 55, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.editor.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), screenCenterX, screenCenterY + 45, -1);
+        drawCenteredString(matrix, font, I18n.get("fancymenu.editor.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), screenCenterX, screenCenterY + 55, -1);
 
         this.doneButton.x = screenCenterX - this.doneButton.getWidth() - 5;
         this.doneButton.y = screenCenterY + 80;
@@ -97,16 +98,16 @@ public class AutoScalingPopup extends FMPopup {
                 int h = Integer.parseInt(this.heightTextField.getValue());
                 if ((w > 0) && (h > 0)) {
                     this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
-                    this.parent.autoScalingWidth = w;
-                    this.parent.autoScalingHeight = h;
+                    this.parent.layout.autoScalingWidth = w;
+                    this.parent.layout.autoScalingHeight = h;
                     this.answerCallback(true);
                 } else {
                     this.answerCallback(false);
-                    LayoutEditorScreen.displayNotification(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.error"), "%n%"));
+                    UIBase.displayNotification(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.properties.autoscale.error")));
                 }
             } else {
                 this.answerCallback(false);
-                LayoutEditorScreen.displayNotification(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.properties.autoscale.error"), "%n%"));
+                UIBase.displayNotification(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.properties.autoscale.error")));
             }
         } catch (Exception e) {
             e.printStackTrace();

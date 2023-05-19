@@ -5,7 +5,9 @@ import java.awt.Color;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -108,6 +110,10 @@ public class UIBase extends GuiComponent {
 		if (renderBottom) {
 			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor.getRGB());
 		}
+	}
+
+	public static void displayNotification(String... notification) {
+		PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, notification));
 	}
 
 	@Deprecated

@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor.ActionContainer;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -67,7 +67,7 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
         if (isEditor()) {
             RenderSystem.enableBlend();
             fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), Color.ORANGE.getRGB());
-            drawCenteredString(pose, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.customization.items.ticker"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            drawCenteredString(pose, Minecraft.getInstance().font, "§l" + I18n.get("fancymenu.customization.items.ticker"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
         } else if (!this.isAsync) {
             this.tick();
         }

@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -76,9 +76,9 @@ public class VariableCommand {
                 if (getOrSet.equalsIgnoreCase("get")) {
                     String s = VariableHandler.getVariable(variableName);
                     if (s != null) {
-                        stack.sendSuccess(Component.literal(Locals.localize("fancymenu.commands.variable.get.success", s)), false);
+                        stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
                     } else {
-                        stack.sendFailure(Component.literal(Locals.localize("fancymenu.commands.variable.not_found")));
+                        stack.sendFailure(Component.literal(I18n.get("fancymenu.commands.variable.not_found")));
                     }
                 }
             } catch (Exception e) {
@@ -95,7 +95,7 @@ public class VariableCommand {
                 if (getOrSet.equalsIgnoreCase("set")) {
                     VariableHandler.setVariable(variableName, setToValue);
                     if (sendFeedback) {
-                        stack.sendSuccess(Component.literal(Locals.localize("fancymenu.commands.variable.set.success", setToValue)), false);
+                        stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)), false);
                     }
                 }
             } catch (Exception e) {

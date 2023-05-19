@@ -78,12 +78,12 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.slider");
+        return Component.translatable("fancymenu.editor.add.image");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.add.image.desc");
     }
 
 }

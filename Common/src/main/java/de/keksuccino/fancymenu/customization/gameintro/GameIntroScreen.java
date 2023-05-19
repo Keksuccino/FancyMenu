@@ -7,9 +7,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.StringUtils;
+import net.minecraft.client.resources.language.I18n;
+import de.keksuccino.konkrete.input.KeyboardHandler;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -91,7 +92,7 @@ public class GameIntroScreen extends Screen {
 			RenderSystem.enableBlend();
 			matrix.pushPose();
 			matrix.scale(1.05F, 1.05F, 1.05F);
-			String text = Locals.localize("gameintro.skip");
+			String text = I18n.get("fancymenu.gameintro.skip");
 			String customtext = StringUtils.convertFormatCodes(FancyMenu.getConfig().getOrDefault("customgameintroskiptext", ""), "&", "§");
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;

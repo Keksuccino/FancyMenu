@@ -12,8 +12,8 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -40,14 +40,14 @@ public class ManageRequirementsScreen extends Screen {
 
     public ManageRequirementsScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
 
-        super(Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
+        super(Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
 
         this.parentScreen = parentScreen;
         this.container = container;
         this.callback = callback;
         this.updateRequirementsScrollArea();
 
-        this.addRequirementButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.loading_requirement.screens.add_requirement"), true, (button) -> {
+        this.addRequirementButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_requirement"), true, (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this, this.container, null, (call) -> {
                 if (call != null) {
                     this.container.addInstance(call);
@@ -56,10 +56,10 @@ public class ManageRequirementsScreen extends Screen {
             });
             Minecraft.getInstance().setScreen(s);
         });
-        this.addRequirementButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.add_requirement.desc"), "%n%"));
+        this.addRequirementButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.add_requirement.desc")));
         UIBase.applyDefaultButtonSkinTo(this.addRequirementButton);
 
-        this.addGroupButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.editor.loading_requirement.screens.add_group"), true, (button) -> {
+        this.addGroupButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_group"), true, (button) -> {
             BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this, this.container, null, (call) -> {
                 if (call != null) {
                     this.container.addGroup(call);
@@ -68,7 +68,7 @@ public class ManageRequirementsScreen extends Screen {
             });
             Minecraft.getInstance().setScreen(s);
         });
-        this.addGroupButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.add_group.desc"), "%n%"));
+        this.addGroupButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.add_group.desc")));
         UIBase.applyDefaultButtonSkinTo(this.addGroupButton);
 
         this.editButton = new AdvancedButton(0, 0, 150, 20, "", true, (button) -> {
@@ -94,16 +94,16 @@ public class ManageRequirementsScreen extends Screen {
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
-                    this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected"), "%n%"));
+                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected")));
                     this.active = false;
                 } else {
                     if (s.isInstanceSelected()) {
-                        this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_requirement"));
+                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.edit_requirement"));
                     } else {
-                        this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.edit_group"));
+                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.edit_group"));
                     }
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.edit.desc"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.edit.desc")));
                     this.active = true;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -120,7 +120,7 @@ public class ManageRequirementsScreen extends Screen {
                         this.container.removeInstance(i);
                         this.updateRequirementsScrollArea();
                     }
-                }, StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.remove_requirement.confirm"), "%n%"));
+                }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement.confirm")));
             } else if (this.isGroupSelected()) {
                 LoadingRequirementGroup g = this.getSelectedGroup();
                 s = new ConfirmationScreen(this, (call) -> {
@@ -128,7 +128,7 @@ public class ManageRequirementsScreen extends Screen {
                         this.container.removeGroup(g);
                         this.updateRequirementsScrollArea();
                     }
-                }, StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.remove_group.confirm"), "%n%"));
+                }, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.remove_group.confirm")));
             }
             if (s != null) {
                 Minecraft.getInstance().setScreen(s);
@@ -138,16 +138,16 @@ public class ManageRequirementsScreen extends Screen {
             public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
-                    this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected"), "%n%"));
+                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected")));
                     this.active = false;
                 } else {
                     if (s.isInstanceSelected()) {
-                        this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.remove_requirement"));
+                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement"));
                     } else {
-                        this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.remove_group"));
+                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.remove_group"));
                     }
-                    this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc"), "%n%"));
+                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc")));
                     this.active = true;
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
@@ -155,7 +155,7 @@ public class ManageRequirementsScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
-        this.doneButton = new AdvancedButton(0, 0, 150, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.container);
         });
@@ -189,7 +189,7 @@ public class ManageRequirementsScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(matrix, titleComp, 20, 20, -1);
 
-        this.font.draw(matrix, Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups"), 20, 50, -1);
+        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups"), 20, 50, -1);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -270,7 +270,7 @@ public class ManageRequirementsScreen extends Screen {
         public LoadingRequirementGroup group;
 
         public RequirementGroupEntry(ScrollArea parent, LoadingRequirementGroup group) {
-            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(" (" + Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB()))), LISTING_DOT_ORANGE, (entry) -> {});
+            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(" (" + I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB()))), LISTING_DOT_ORANGE, (entry) -> {});
             this.group = group;
             this.setHeight(this.getHeight() + (HEADER_FOOTER_HEIGHT * 2));
         }
@@ -296,10 +296,10 @@ public class ManageRequirementsScreen extends Screen {
             this.lineHeight = lineHeight;
 
             this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
-            String modeString = (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) ? Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.mode.normal") : Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.mode.opposite");
-            this.modeComponent = Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
-            String valueString = (this.instance.value != null) ? this.instance.value : Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.value.none");
-            this.valueComponent = Component.literal(Locals.localize("fancymenu.editor.loading_requirement.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
+            String modeString = (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) ? I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode.normal") : I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode.opposite");
+            this.modeComponent = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
+            String valueString = (this.instance.value != null) ? this.instance.value : I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.value.none");
+            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 3) + (HEADER_FOOTER_HEIGHT * 2));

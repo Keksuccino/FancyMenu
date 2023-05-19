@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.client;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.platform.Services;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,17 +37,17 @@ public class ModVersionPlaceholder extends Placeholder {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("helper.ui.dynamicvariabletextfield.variables.modversion");
+        return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.modversion");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("helper.ui.dynamicvariabletextfield.variables.modversion.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.modversion.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.client");
+        return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client");
     }
 
     @Override

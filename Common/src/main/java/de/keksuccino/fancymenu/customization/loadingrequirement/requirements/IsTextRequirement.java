@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -131,12 +131,12 @@ public class IsTextRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.is_text");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_text");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.is_text.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_text.desc")));
     }
 
     @Override
@@ -146,7 +146,7 @@ public class IsTextRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename");
     }
 
     @Override

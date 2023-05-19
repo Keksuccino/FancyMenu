@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.slider.RangeSliderButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -53,7 +53,7 @@ public class PlayerEntityRotationScreen extends Screen {
         }) {
             @Override
             public String getSliderMessageWithoutPrefixSuffix() {
-                return Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.bodyx", super.getSliderMessageWithoutPrefixSuffix());
+                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.bodyx", super.getSliderMessageWithoutPrefixSuffix());
             }
         };
         this.bodyYSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.bodyRotationY, (slider) -> {
@@ -61,7 +61,7 @@ public class PlayerEntityRotationScreen extends Screen {
         }) {
             @Override
             public String getSliderMessageWithoutPrefixSuffix() {
-                return Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.bodyy", super.getSliderMessageWithoutPrefixSuffix());
+                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.bodyy", super.getSliderMessageWithoutPrefixSuffix());
             }
         };
         this.headXSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.headRotationX, (slider) -> {
@@ -69,7 +69,7 @@ public class PlayerEntityRotationScreen extends Screen {
         }) {
             @Override
             public String getSliderMessageWithoutPrefixSuffix() {
-                return Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.headx", super.getSliderMessageWithoutPrefixSuffix());
+                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.headx", super.getSliderMessageWithoutPrefixSuffix());
             }
         };
         this.headYSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.headRotationY, (slider) -> {
@@ -77,17 +77,17 @@ public class PlayerEntityRotationScreen extends Screen {
         }) {
             @Override
             public String getSliderMessageWithoutPrefixSuffix() {
-                return Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.heady", super.getSliderMessageWithoutPrefixSuffix());
+                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.heady", super.getSliderMessageWithoutPrefixSuffix());
             }
         };
 
-        this.doneButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (press) -> {
+        this.doneButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (press) -> {
             this.applyChanges();
             this.onClose();
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (press) -> {
+        this.cancelButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (press) -> {
             this.onClose();
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);

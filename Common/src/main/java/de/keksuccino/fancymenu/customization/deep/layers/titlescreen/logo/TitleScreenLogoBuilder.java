@@ -1,37 +1,52 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.logo;
 
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
+import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.TitleScreenLayer;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.konkrete.localization.Locals;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class TitleScreenLogoBuilder extends DeepElementBuilder {
+public class TitleScreenLogoBuilder extends DeepElementBuilder<TitleScreenLayer, TitleScreenLogoDeepElement, TitleScreenLogoDeepEditorElement> {
 
-    public TitleScreenLogoBuilder(DeepScreenCustomizationLayer parentLayer) {
-        super("title_screen_logo", parentLayer);
+    public TitleScreenLogoBuilder(TitleScreenLayer layer) {
+        super("title_screen_logo", layer);
     }
 
     @Override
-    public AbstractDeepElement constructDefaultItemInstance() {
-        return new TitleScreenLogoItemAbstract(this, new PropertyContainer(""));
+    public @NotNull TitleScreenLogoDeepElement buildDefaultInstance() {
+        return new TitleScreenLogoDeepElement(this);
     }
 
     @Override
-    public AbstractDeepElement constructCustomizedItemInstance(PropertyContainer serializedItem) {
-        return new TitleScreenLogoItemAbstract(this, serializedItem);
+    public TitleScreenLogoDeepElement deserializeElement(@NotNull SerializedElement serialized) {
+        return this.buildDefaultInstance();
     }
 
     @Override
-    public AbstractDeepEditorElement constructEditorElementInstance(AbstractDeepElement item, LayoutEditorScreen handler) {
-        return new TitleScreenLogoLayoutElementAbstractDeepEditor(item.parentElement, item, handler);
+    protected SerializedElement serializeElement(@NotNull TitleScreenLogoDeepElement element, @NotNull SerializedElement serializeTo) {
+        return serializeTo;
     }
 
     @Override
-    public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.logo");
+    public void stackElements(@NotNull TitleScreenLogoDeepElement element, @NotNull TitleScreenLogoDeepElement stack) {
+    }
+
+    @Override
+    public @NotNull TitleScreenLogoDeepEditorElement wrapIntoEditorElement(@NotNull TitleScreenLogoDeepElement element, @NotNull LayoutEditorScreen editor) {
+        return new TitleScreenLogoDeepEditorElement(element, editor);
+    }
+
+    @Override
+    public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
+        return Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.logo");
+    }
+
+    @Override
+    public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
+        return null;
     }
 
 }

@@ -20,13 +20,21 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.Elements;
+import de.keksuccino.fancymenu.customization.element.elements.animation.AnimationElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement;
+import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
+import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
+import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.misc.Legacy;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
@@ -58,7 +66,7 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
     @Nullable
-    public DeepScreenCustomizationLayer<?> deepScreenCustomizationLayer = null;
+    public DeepScreenCustomizationLayer deepScreenCustomizationLayer = null;
 
     public PropertyContainerSet serialize() {
 
@@ -498,8 +506,6 @@ public class Layout extends LayoutBase {
     @NotNull
     protected static List<SerializedElement> convertLegacyElements(PropertyContainerSet layout) {
 
-        //TODO convert legacy items to new format
-
         List<SerializedElement> elements = new ArrayList<>();
 
         for (PropertyContainer sec : layout.getSectionsOfType("customization")) {
@@ -508,68 +514,83 @@ public class Layout extends LayoutBase {
             if (action != null) {
 
                 if (action.equalsIgnoreCase("addtexture")) {
-//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                        backgroundElements.add(new TextureCustomizationItem(sec));
-//                    } else {
-//                        foregroundElements.add(new TextureCustomizationItem(sec));
-//                    }
+                    ImageElement e = Elements.IMAGE.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        e.sourceMode = ImageElement.SourceMode.LOCAL;
+                        e.source = sec.getValue("path");
+                        elements.add(Elements.IMAGE.serializeElementInternal(e));
+                    }
                 }
 
                 if (action.equalsIgnoreCase("addwebtexture")) {
-//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                        backgroundElements.add(new WebTextureCustomizationItem(sec));
-//                    } else {
-//                        foregroundElements.add(new WebTextureCustomizationItem(sec));
-//                    }
+                    ImageElement e = Elements.IMAGE.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        e.sourceMode = ImageElement.SourceMode.WEB;
+                        e.source = sec.getValue("url");
+                        elements.add(Elements.IMAGE.serializeElementInternal(e));
+                    }
                 }
 
                 if (action.equalsIgnoreCase("addanimation")) {
-//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                        backgroundElements.add(new AnimationCustomizationItem(sec));
-//                    } else {
-//                        foregroundElements.add(new AnimationCustomizationItem(sec));
-//                    }
+                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        e.animationName = sec.getValue("name");
+                        elements.add(Elements.ANIMATION.serializeElementInternal(e));
+                    }
                 }
 
                 if (action.equalsIgnoreCase("addshape")) {
-//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                        backgroundElements.add(new ShapeCustomizationItem(sec));
-//                    } else {
-//                        foregroundElements.add(new ShapeCustomizationItem(sec));
-//                    }
+                    ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        e.color = DrawableColor.create(sec.getValue("color"));
+                        if (e.color == null) {
+                            e.color = DrawableColor.create(255, 255, 255);
+                        }
+                        elements.add(Elements.SHAPE.serializeElementInternal(e));
+                    }
                 }
 
                 if (action.equalsIgnoreCase("addslideshow")) {
-//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                        backgroundElements.add(new SlideshowCustomizationItem(sec));
-//                    } else {
-//                        foregroundElements.add(new SlideshowCustomizationItem(sec));
-//                    }
+                    SlideshowElement e = Elements.SLIDESHOW.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        e.slideshowName = sec.getValue("name");
+                        elements.add(Elements.SLIDESHOW.serializeElementInternal(e));
+                    }
                 }
 
                 if (action.equalsIgnoreCase("addbutton")) {
-//                    ButtonCustomizationItem i = new ButtonCustomizationItem(sec);
-//
-//                    if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                        backgroundElements.add(i);
-//                    } else {
-//                        foregroundElements.add(i);
-//                    }
+                    ButtonElement e = Elements.BUTTON.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        elements.add(Elements.BUTTON.serializeElementInternal(e));
+                    }
                 }
 
                 if (action.equalsIgnoreCase("addsplash")) {
-                    String path = sec.getValue("splashfilepath");
-                    String text = sec.getValue("text");
-                    if ((path != null) || (text != null)) {
-
-//                        SplashTextCustomizationItem i = new SplashTextCustomizationItem(sec);
-//
-//                        if ((renderOrder != null) && renderOrder.equalsIgnoreCase("background")) {
-//                            backgroundElements.add(i);
-//                        } else {
-//                            foregroundElements.add(i);
-//                        }
-
+                    SplashTextElement e = Elements.SPLASH_TEXT.deserializeElementInternal(convertSectionToElement(sec));
+                    if (e != null) {
+                        String text = sec.getValue("text");
+                        if (text != null) {
+                            e.source = text;
+                            e.sourceMode = SplashTextElement.SourceMode.DIRECT_TEXT;
+                        }
+                        String path = sec.getValue("splashfilepath");
+                        if (path != null) {
+                            e.source = path;
+                            e.sourceMode = SplashTextElement.SourceMode.TEXT_FILE;
+                        }
+                        String vanillaLikeString = sec.getValue("vanilla-like");
+                        if ((vanillaLikeString != null) && vanillaLikeString.equals("true")) {
+                            e.source = null;
+                            e.sourceMode = SplashTextElement.SourceMode.VANILLA;
+                        }
+                        String baseColor = sec.getValue("basecolor");
+                        if (baseColor != null) {
+                            e.baseColor = DrawableColor.create(baseColor);
+                            if (e.baseColor == null) {
+                                e.baseColor = DrawableColor.create(255, 255, 255);
+                            }
+                        }
+                        elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
                     }
                 }
 

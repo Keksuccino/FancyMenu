@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
 import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
@@ -47,11 +47,11 @@ public class OpenGuiScreenCommand {
                         Minecraft.getInstance().setScreen(s);
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 } else {
-                    stack.sendError(Component.literal(Locals.localize("fancymenu.commands.openguiscreen.cannotopen")));
+                    stack.sendError(Component.literal(I18n.get("fancymenu.commands.openguiscreen.cannotopen")));
                 }
             }
         } catch (Exception e) {
-            stack.sendError(Component.literal(Locals.localize("fancymenu.commands.openguiscreen.error")));
+            stack.sendError(Component.literal(I18n.get("fancymenu.commands.openguiscreen.error")));
             e.printStackTrace();
         }
         return 1;

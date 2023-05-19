@@ -1,387 +1,387 @@
 
-helper.button.buttoninfo = Информация о кнопке
+fancymenu.overlay.buttoninfo = Информация о кнопке
 
-helper.menuinfo.identifier = Идентификатор меню
+fancymenu.overlay.menuinfo.identifier = Идентификатор меню
 
-helper.buttoninfo.idnotfound = <идентификатор не найден>
-helper.buttoninfo.keynotfound = <кнопка не имеет ключа>
+fancymenu.overlay.buttoninfo.idnotfound = <идентификатор не найден>
+fancymenu.overlay.buttoninfo.keynotfound = <кнопка не имеет ключа>
 helper.buttoninfo
-helper.buttoninfo.id = ID
-helper.buttoninfo.key = Ключ
-helper.buttoninfo.labelwidth = Ширина текста
+fancymenu.overlay.buttoninfo.id = ID
+fancymenu.overlay.buttoninfo.key = Ключ
+fancymenu.overlay.buttoninfo.labelwidth = Ширина текста
 
 
-helper.creator.messages.sure = Ты уверен?
-helper.creator.empty = пустой
+fancymenu.editor.messages.sure = Ты уверен?
+fancymenu.editor.empty = пустой
 
 
-helper.creator.audioalreadyloaded.title = Аудио уже загружено!
-helper.creator.audioalreadyloaded.desc = Звук, который вы хотите добавить, уже является частью этого макета!%n%%n%Вы не можете добавлять один и тот же звук несколько раз.
+fancymenu.editor.audioalreadyloaded.title = Аудио уже загружено!
+fancymenu.editor.audioalreadyloaded.desc = Звук, который вы хотите добавить, уже является частью этого макета!%n%%n%Вы не можете добавлять один и тот же звук несколько раз.
 
-helper.creator.invalidaudio.title = Недопустимый аудиофайл!
-helper.creator.invalidaudio.desc = Файл, который вы хотите загрузить, не существует или имеет неподдерживаемый тип файла.%n%%n%Пожалуйста, проверьте путь к вашему файлу и убедитесь, что ваш файл является допустимым аудиофайлом WAV!
+fancymenu.editor.invalidaudio.title = Недопустимый аудиофайл!
+fancymenu.editor.invalidaudio.desc = Файл, который вы хотите загрузить, не существует или имеет неподдерживаемый тип файла.%n%%n%Пожалуйста, проверьте путь к вашему файлу и убедитесь, что ваш файл является допустимым аудиофайлом WAV!
 
-helper.creator.invalidimage.title = Недопустимый файл изображения!
-helper.creator.invalidimage.desc = Изображение, которое вы хотите загрузить, не существует или имеет неподдерживаемый тип файла.%n%%n%Поддерживаемые типы файлов - JPG/JPEG, PNG и GIF.
-
-
-helper.creator.animationnotfound.title = Анимация не найдена!
-helper.creator.animationnotfound.desc = Анимация, которую вы хотите добавить, не существует.%n%%n%Может быть, вы забыли добавить все обязательные переменные в его свойства?%n%%n%Всегда имейте в виду, что вам придется перезапустить свою игру%n%после того, как вы добавите новую анимацию в папку animations.
-
-helper.creator.texttooshort.title = Текст слишком короткий!
-helper.creator.texttooshort.desc = Чтобы ваш текст был текстом, нужен хотя бы один символ!%n%Иначе... это... было бы пустым.%n%%n%Никто не хочет быть пустым, так что не делайте этого со своим текстом!
-
-helper.creator.cannotdelete.title = Элемент не может быть удален!
-helper.creator.cannotdelete.desc = Извините, но вы не можете удалить этот элемент.%n%%n%Вам нужно будет научиться жить с этим.
+fancymenu.editor.invalidimage.title = Недопустимый файл изображения!
+fancymenu.editor.invalidimage.desc = Изображение, которое вы хотите загрузить, не существует или имеет неподдерживаемый тип файла.%n%%n%Поддерживаемые типы файлов - JPG/JPEG, PNG и GIF.
 
 
-helper.creator.layoutoptions.renderorder = Порядок рендеринга
-helper.creator.layoutoptions.renderorder.background = Фон
-helper.creator.layoutoptions.renderorder.foreground = Передний план
+fancymenu.editor.animationnotfound.title = Анимация не найдена!
+fancymenu.editor.animationnotfound.desc = Анимация, которую вы хотите добавить, не существует.%n%%n%Может быть, вы забыли добавить все обязательные переменные в его свойства?%n%%n%Всегда имейте в виду, что вам придется перезапустить свою игру%n%после того, как вы добавите новую анимацию в папку animations.
 
-helper.creator.layoutoptions.version.mc = Minecraft Версия
-helper.creator.layoutoptions.version.fm = FancyMenu Версия
-helper.creator.layoutoptions.version.minimum = Установленный минимум
-helper.creator.layoutoptions.version.minimum.mc = Минимальная Minecraft Версия
-helper.creator.layoutoptions.version.minimum.fm = Минимальная FancyMenu Версия
-helper.creator.layoutoptions.version.maximum = Установить максимум
-helper.creator.layoutoptions.version.maximum.mc = Максимальная Minecraft Версия
-helper.creator.layoutoptions.version.maximum.fm = Максимальная FancyMenu Версия
+fancymenu.editor.texttooshort.title = Текст слишком короткий!
+fancymenu.editor.texttooshort.desc = Чтобы ваш текст был текстом, нужен хотя бы один символ!%n%Иначе... это... было бы пустым.%n%%n%Никто не хочет быть пустым, так что не делайте этого со своим текстом!
 
-helper.creator.layoutoptions.resetbackground = Сброс фона
-
-helper.creator.layoutoptions.requiredmods = Требуемые моды
-helper.creator.layoutoptions.requiredmods.desc = Требуемые моды [идентификатор мода, разделенный запятыми]
-
-helper.creator.close = Вы действительно хотите закрыть редактор макетов?
-
-helper.creator.audio.delete = Удалить
-helper.creator.audio.delete.msg = Вы действительно хотите удалить это аудио?
-
-helper.creator.add.image = Изображение
-
-helper.creator.add.animation = Анимация
-helper.creator.add.animation.entername = Добавить по имени
-helper.creator.add.animation.entername.title = Название анимации
-
-helper.creator.add.text = Текст
-helper.creator.add.text.newtext = Новый текст
-
-helper.creator.add.button = Кнопка
-helper.creator.add.button.label = Текст на кнопке
-
-helper.creator.add.audio = Аудио
-
-helper.creator.vanillabutton.autoclick = Автоматическое нажатие кнопок
-helper.creator.vanillabutton.autoclick.popup = Автоматическое нажатие кнопок
-
-helper.creator.backgroundoptions = Параметры фона
-helper.creator.backgroundoptions.backgroundanimation = Фоновая анимация
-helper.creator.backgroundoptions.backgroundimage = Фоновое изображение
-helper.creator.backgroundoptions.chooseimage = Выберите изображение
-
-helper.creator.custombutton.config = Действие кнопки
-helper.creator.custombutton.config.actionvalue = Значение действия [{}]
-helper.creator.custombutton.config.actiontype = Тип действия
-helper.creator.custombutton.config.actiontype.sendmessage.desc = Отправить сообщение в чате или команду.
-helper.creator.custombutton.config.actiontype.sendmessage.desc.value = Сообщение/Команда
-helper.creator.custombutton.config.actiontype.openlink.desc = Открыть ссылку в вашем браузере по умолчанию.
-helper.creator.custombutton.config.actiontype.openlink.desc.value = Ссылка
-helper.creator.custombutton.config.actiontype.quitgame.desc = Выйди из minecraft.
-helper.creator.custombutton.config.actiontype.joinserver.desc = Присоединиться к серверу minecraft.
-helper.creator.custombutton.config.actiontype.joinserver.desc.value = IP-адрес сервера
-helper.creator.custombutton.config.actiontype.loadworld.desc = Загрузить мир minecraft.
-helper.creator.custombutton.config.actiontype.loadworld.desc.value = Имя папки мира
-helper.creator.custombutton.config.actiontype.openfile.desc = Откройте файл или папку.
-helper.creator.custombutton.config.actiontype.openfile.desc.value = Путь
-helper.creator.custombutton.config.actiontype.prevbackground.desc = Переключиться на предыдущий фон меню.
-helper.creator.custombutton.config.actiontype.nextbackground.desc = Переключиться на следующий фон меню.
-
-helper.creator.items.setorientation = Установить ориентацию
-helper.creator.items.delete = Удалить
-helper.creator.items.border.posx = позиция X
-helper.creator.items.border.posy = позиция Y
-helper.creator.items.border.orientation = ориентация
-helper.creator.items.border.width = ширина
-helper.creator.items.border.height = высота
-
-helper.creator.items.button.editlabel = Редактировать текст
-
-helper.creator.items.vanillabutton.resetorientation = Сбросить ориентацию
-
-helper.creator.items.string.setscale = Установить масштаб
-helper.creator.items.string.setshadow = Тень: §cВыкл
-helper.creator.items.string.setnoshadow = Тень: §aВкл
-helper.creator.items.string.edit = Редактировать содержимое
-helper.creator.items.string.border.scale = масштаб
-
-helper.creator.items.string.scale.invalidvalue.title = Недопустимое значение!
-helper.creator.items.string.scale.invalidvalue.desc = Значение, которое вы хотите установить, не является допустимым значением шкалы!%n%%n%Примеры значений шкалы: 1.0, 2.0, 0.5
-
-helper.creator.deleteobject = Ты действительно хочешь §lУДАЛИТЬ §rэтот элемент?
-
-helper.creator.choosefile.enterorchoose = §lВвести Путь Или Выберите Файл
-helper.creator.choosefile.choose = Выбрать файл
-
-helper.creator.webstring.multiline = Многострочный: §cВыкл
-helper.creator.webstring.nomultiline = Многострочный: §aВкл
-
-helper.creator.web.invalidurl = §c§lНедопустимый URL-адрес!%n%%n%Этот URL-адрес не является допустимым URL-адресом или не существует!
-helper.creator.web.enterurl = Ввести URL-адрес
-
-helper.creator.add.webimage = Веб-изображение
-helper.creator.add.webtext = Веб-текст
+fancymenu.editor.cannotdelete.title = Элемент не может быть удален!
+fancymenu.editor.cannotdelete.desc = Извините, но вы не можете удалить этот элемент.%n%%n%Вам нужно будет научиться жить с этим.
 
 
+fancymenu.editor.layoutoptions.renderorder = Порядок рендеринга
+fancymenu.editor.layoutoptions.renderorder.background = Фон
+fancymenu.editor.layoutoptions.renderorder.foreground = Передний план
 
-helper.creator.items.button.hoverlabel = Текст при наведении
-helper.creator.items.button.hoverlabel.reset = Сброс текста при наведении
-helper.creator.items.button.hoversound = Звук при наведения
-helper.creator.items.button.hoversound.reset = Сброс звука при наведения
+fancymenu.editor.layoutoptions.version.mc = Minecraft Версия
+fancymenu.editor.layoutoptions.version.fm = FancyMenu Версия
+fancymenu.editor.layoutoptions.version.minimum = Установленный минимум
+fancymenu.editor.layoutoptions.version.minimum.mc = Минимальная Minecraft Версия
+fancymenu.editor.layoutoptions.version.minimum.fm = Минимальная FancyMenu Версия
+fancymenu.editor.layoutoptions.version.maximum = Установить максимум
+fancymenu.editor.layoutoptions.version.maximum.mc = Максимальная Minecraft Версия
+fancymenu.editor.layoutoptions.version.maximum.fm = Максимальная FancyMenu Версия
+
+fancymenu.editor.layoutoptions.resetbackground = Сброс фона
+
+fancymenu.editor.layoutoptions.requiredmods = Требуемые моды
+fancymenu.editor.layoutoptions.requiredmods.desc = Требуемые моды [идентификатор мода, разделенный запятыми]
+
+fancymenu.editor.close = Вы действительно хотите закрыть редактор макетов?
+
+fancymenu.editor.audio.delete = Удалить
+fancymenu.editor.audio.delete.msg = Вы действительно хотите удалить это аудио?
+
+fancymenu.editor.add.image = Изображение
+
+fancymenu.editor.add.animation = Анимация
+fancymenu.editor.add.animation.entername = Добавить по имени
+fancymenu.editor.add.animation.entername.title = Название анимации
+
+fancymenu.editor.add.text = Текст
+fancymenu.editor.add.text.newtext = Новый текст
+
+fancymenu.editor.add.button = Кнопка
+fancymenu.editor.add.button.label = Текст на кнопке
+
+fancymenu.editor.add.audio = Аудио
+
+fancymenu.editor.vanillabutton.autoclick = Автоматическое нажатие кнопок
+fancymenu.editor.vanillabutton.autoclick.popup = Автоматическое нажатие кнопок
+
+fancymenu.editor.backgroundoptions = Параметры фона
+fancymenu.editor.backgroundoptions.backgroundanimation = Фоновая анимация
+fancymenu.editor.backgroundoptions.backgroundimage = Фоновое изображение
+fancymenu.editor.backgroundoptions.chooseimage = Выберите изображение
+
+fancymenu.editor.custombutton.config = Действие кнопки
+fancymenu.editor.custombutton.config.actionvalue = Значение действия [{}]
+fancymenu.editor.custombutton.config.actiontype = Тип действия
+fancymenu.editor.custombutton.config.actiontype.sendmessage.desc = Отправить сообщение в чате или команду.
+fancymenu.editor.custombutton.config.actiontype.sendmessage.desc.value = Сообщение/Команда
+fancymenu.editor.custombutton.config.actiontype.openlink.desc = Открыть ссылку в вашем браузере по умолчанию.
+fancymenu.editor.custombutton.config.actiontype.openlink.desc.value = Ссылка
+fancymenu.editor.custombutton.config.actiontype.quitgame.desc = Выйди из minecraft.
+fancymenu.editor.custombutton.config.actiontype.joinserver.desc = Присоединиться к серверу minecraft.
+fancymenu.editor.custombutton.config.actiontype.joinserver.desc.value = IP-адрес сервера
+fancymenu.editor.custombutton.config.actiontype.loadworld.desc = Загрузить мир minecraft.
+fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value = Имя папки мира
+fancymenu.editor.custombutton.config.actiontype.openfile.desc = Откройте файл или папку.
+fancymenu.editor.custombutton.config.actiontype.openfile.desc.value = Путь
+fancymenu.editor.custombutton.config.actiontype.prevbackground.desc = Переключиться на предыдущий фон меню.
+fancymenu.editor.custombutton.config.actiontype.nextbackground.desc = Переключиться на следующий фон меню.
+
+fancymenu.editor.items.setorientation = Установить ориентацию
+fancymenu.editor.items.delete = Удалить
+fancymenu.editor.items.border.posx = позиция X
+fancymenu.editor.items.border.posy = позиция Y
+fancymenu.editor.items.border.orientation = ориентация
+fancymenu.editor.items.border.width = ширина
+fancymenu.editor.items.border.height = высота
+
+fancymenu.editor.items.button.editlabel = Редактировать текст
+
+fancymenu.editor.items.vanillabutton.resetorientation = Сбросить ориентацию
+
+fancymenu.editor.items.string.setscale = Установить масштаб
+fancymenu.editor.items.string.setshadow = Тень: §cВыкл
+fancymenu.editor.items.string.setnoshadow = Тень: §aВкл
+fancymenu.editor.items.string.edit = Редактировать содержимое
+fancymenu.editor.items.string.border.scale = масштаб
+
+fancymenu.editor.items.string.scale.invalidvalue.title = Недопустимое значение!
+fancymenu.editor.items.string.scale.invalidvalue.desc = Значение, которое вы хотите установить, не является допустимым значением шкалы!%n%%n%Примеры значений шкалы: 1.0, 2.0, 0.5
+
+fancymenu.editor.deleteobject = Ты действительно хочешь §lУДАЛИТЬ §rэтот элемент?
+
+fancymenu.editor.choosefile.enterorchoose = §lВвести Путь Или Выберите Файл
+fancymenu.editor.choosefile.choose = Выбрать файл
+
+fancymenu.editor.webstring.multiline = Многострочный: §cВыкл
+fancymenu.editor.webstring.nomultiline = Многострочный: §aВкл
+
+fancymenu.editor.web.invalidurl = §c§lНедопустимый URL-адрес!%n%%n%Этот URL-адрес не является допустимым URL-адресом или не существует!
+fancymenu.editor.web.enterurl = Ввести URL-адрес
+
+fancymenu.editor.add.webimage = Веб-изображение
+fancymenu.editor.add.webtext = Веб-текст
 
 
-helper.creator.backgroundoptions.panorama = Широкий
 
-helper.creator.textures.invalidcharacters = §c§lНедопустимые символы!%n%%n%%n%Имя файла вашего изображения содержит недопустимые символы!%n%%n%Пожалуйста, используйте только символы "a-z", "0-9", ".", "_" и "-".%n%Пробелы, заглавные буквы и любые другие специальные символы не поддерживаются.
+fancymenu.editor.items.button.hoverlabel = Текст при наведении
+fancymenu.editor.items.button.hoverlabel.reset = Сброс текста при наведении
+fancymenu.editor.items.button.hoversound = Звук при наведения
+fancymenu.editor.items.button.hoversound.reset = Сброс звука при наведения
 
-helper.buttons.tools.overridemenu = Переопределение с помощью
-helper.buttons.tools.resetoverride = Сброс переопределения
 
-helper.buttons.tools.customguis = Пользовательские графические интерфейсы
-helper.buttons.tools.customguis.open = Откройте графический интерфейс
-helper.buttons.tools.customguis.delete = Удалить графический интерфейс
-helper.buttons.tools.customguis.pickbyname = Выберите по имени
-helper.buttons.tools.customguis.openbyname = Открыть по имени
-helper.buttons.tools.customguis.deletebyname = Удалить по имени
-helper.buttons.tools.customguis.sure = §c§lТы уверен?%n%%n%%n%Ты действительно хочешь §lудалить §rэтот графический интерфейс?%n%%n%§lЭто действие не может быть отменено!%n% %n% %n% %n%
-helper.buttons.tools.customguis.invalididentifier = §c§lНедопустимый идентификатор!%n%%n%%n%Пользовательский графический интерфейс с этим идентификатором не найден!%n% %n% %n% %n%
+fancymenu.editor.backgroundoptions.panorama = Широкий
 
-helper.buttons.tools.creategui = Создать графический интерфейс
-helper.buttons.tools.creategui.allowesc = Разрешать
-helper.buttons.tools.creategui.donotallowesc = Не разрешать
-helper.buttons.tools.creategui.invalididentifier = §cНедопустимый идентификатор!
-helper.buttons.tools.creategui.identifieralreadyused = §cИдентификатор уже используется! Пожалуйста, выберите другой!
-helper.buttons.tools.creategui.allowescdesc = Разрешить ESC Закрыть Меню
-helper.buttons.tools.creategui.menuidentifier = Идентификатор меню
-helper.buttons.tools.creategui.menutitle = Название меню (необязательно)
-helper.buttons.tools.creategui.create = Создавать
+fancymenu.editor.textures.invalidcharacters = §c§lНедопустимые символы!%n%%n%%n%Имя файла вашего изображения содержит недопустимые символы!%n%%n%Пожалуйста, используйте только символы "a-z", "0-9", ".", "_" и "-".%n%Пробелы, заглавные буквы и любые другие специальные символы не поддерживаются.
 
-gameintro.skip = НАЖМИТЕ SPACE, ЧТОБЫ ПРОПУСТИТЬ
+fancymenu.ui.overridemenu = Переопределение с помощью
+fancymenu.ui.resetoverride = Сброс переопределения
+
+fancymenu.ui.customguis = Пользовательские графические интерфейсы
+fancymenu.ui.customguis.open = Откройте графический интерфейс
+fancymenu.ui.customguis.delete = Удалить графический интерфейс
+fancymenu.ui.customguis.pickbyname = Выберите по имени
+fancymenu.ui.customguis.openbyname = Открыть по имени
+fancymenu.ui.customguis.deletebyname = Удалить по имени
+fancymenu.ui.customguis.sure = §c§lТы уверен?%n%%n%%n%Ты действительно хочешь §lудалить §rэтот графический интерфейс?%n%%n%§lЭто действие не может быть отменено!%n% %n% %n% %n%
+fancymenu.ui.customguis.invalididentifier = §c§lНедопустимый идентификатор!%n%%n%%n%Пользовательский графический интерфейс с этим идентификатором не найден!%n% %n% %n% %n%
+
+fancymenu.ui.creategui = Создать графический интерфейс
+fancymenu.ui.creategui.allowesc = Разрешать
+fancymenu.ui.creategui.donotallowesc = Не разрешать
+fancymenu.ui.creategui.invalididentifier = §cНедопустимый идентификатор!
+fancymenu.ui.creategui.identifieralreadyused = §cИдентификатор уже используется! Пожалуйста, выберите другой!
+fancymenu.ui.creategui.allowescdesc = Разрешить ESC Закрыть Меню
+fancymenu.ui.creategui.menuidentifier = Идентификатор меню
+fancymenu.ui.creategui.menutitle = Название меню (необязательно)
+fancymenu.ui.creategui.create = Создавать
+
+fancymenu.gameintro.skip = НАЖМИТЕ SPACE, ЧТОБЫ ПРОПУСТИТЬ
 
 fancymenu.element.general.pick_element = Выберите элемент
 
-customization.items.webstring.unabletoload = Не удается загрузить веб-текст! Неверный URL-адрес или не подключен к Интернету!
+fancymenu.elements.webstring.unabletoload = Не удается загрузить веб-текст! Неверный URL-адрес или не подключен к Интернету!
 
-helper.creator.custombutton.config.actiontype.opencustomgui.desc = Открывает пользовательский графический интерфейс.
-helper.creator.custombutton.config.actiontype.opencustomgui.desc.value = Идентификатор меню
-
-
-custombuttons.action.opengui.cannotopengui = §c§lНе удается открыть графический интерфейс!%n%%n%%n%Графический интерфейс, который вы хотите открыть, либо не существует, либо не поддерживается!%n%%n%Если это существующий графический интерфейс, пожалуйста, свяжитесь с разработчиком Fancy Menu, чтобы добавить для него поддержку.
-
-helper.creator.custombutton.config.actiontype.opengui.desc = Открывает графический интерфейс по идентификатору его меню.%n%%n%Поддерживает графические интерфейсы vanilla/mod и%n%пользовательские графические интерфейсы, созданные с FancyMenu.
-helper.creator.custombutton.config.actiontype.opengui.desc.value = Идентификатор меню
+fancymenu.editor.custombutton.config.actiontype.opencustomgui.desc = Открывает пользовательский графический интерфейс.
+fancymenu.editor.custombutton.config.actiontype.opencustomgui.desc.value = Идентификатор меню
 
 
-helper.creator.windowsize = Ограничения по размеру окна
-helper.creator.windowsize.biggerthan = Больше, чем
-helper.creator.windowsize.smallerthan = Меньше, чем
-helper.creator.windowsize.biggerthan.desc = Включать макет только в том случае, если окно больше, чем X
-helper.creator.windowsize.smallerthan.desc = Включать макет только в том случае, если окно меньше, чем X
-helper.creator.windowsize.currentwidth = Текущая ширина окна
-helper.creator.windowsize.currentheight = Текущая высота окна
+fancymenu.custombuttons.action.opengui.cannotopengui = §c§lНе удается открыть графический интерфейс!%n%%n%%n%Графический интерфейс, который вы хотите открыть, либо не существует, либо не поддерживается!%n%%n%Если это существующий графический интерфейс, пожалуйста, свяжитесь с разработчиком Fancy Menu, чтобы добавить для него поддержку.
 
-helper.menuinfo.idcopied = Скопировано в буфер обмена!
+fancymenu.editor.custombutton.config.actiontype.opengui.desc = Открывает графический интерфейс по идентификатору его меню.%n%%n%Поддерживает графические интерфейсы vanilla/mod и%n%пользовательские графические интерфейсы, созданные с FancyMenu.
+fancymenu.editor.custombutton.config.actiontype.opengui.desc.value = Идентификатор меню
 
 
-helper.creator.custombutton.config.actiontype.movefile.desc = Перенести файл по новому пути.
-helper.creator.custombutton.config.actiontype.movefile.desc.value = Путь к файлу + новый путь, разделенный ';'
-helper.creator.custombutton.config.actiontype.copyfile.desc = Копирует файл по пути.
-helper.creator.custombutton.config.actiontype.copyfile.desc.value = Путь к файлу + целевой путь, разделенный ';'
-helper.creator.custombutton.config.actiontype.deletefile.desc = Удалить файл.
-helper.creator.custombutton.config.actiontype.deletefile.desc.value = Путь к файлу
-helper.creator.custombutton.config.actiontype.renamefile.desc = Переименовать файлу.
-helper.creator.custombutton.config.actiontype.renamefile.desc.value = Путь к файлу + новое имя файла с типом
-helper.creator.custombutton.config.actiontype.reloadmenu.desc = Перезагрузить отображаемое в данный момент меню.
-helper.creator.custombutton.config.actiontype.runscript.desc = Запускает скрипт кнопки.
-helper.creator.custombutton.config.actiontype.runscript.desc.value = Имя файла скрипта без типа файла
-helper.creator.custombutton.config.actiontype.downloadfile.desc = Загружает файл по указанному пути.
-helper.creator.custombutton.config.actiontype.downloadfile.desc.value = URL + путь к загрузке, разделенный ';'
-helper.creator.custombutton.config.actiontype.unpackzip.desc = Распаковывает ZIP-файл по пути.
-helper.creator.custombutton.config.actiontype.unpackzip.desc.value = Путь к файлу + целевой путь, разделенный ';'
+fancymenu.editor.windowsize = Ограничения по размеру окна
+fancymenu.editor.windowsize.biggerthan = Больше, чем
+fancymenu.editor.windowsize.smallerthan = Меньше, чем
+fancymenu.editor.windowsize.biggerthan.desc = Включать макет только в том случае, если окно больше, чем X
+fancymenu.editor.windowsize.smallerthan.desc = Включать макет только в том случае, если окно меньше, чем X
+fancymenu.editor.windowsize.currentwidth = Текущая ширина окна
+fancymenu.editor.windowsize.currentheight = Текущая высота окна
 
-helper.creator.custombutton.config.actionvalue.example = Пример: {}
-
-helper.creator.custombutton.config.actiontype.openlink.desc.value.example = https://google.com
-helper.creator.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all!
-helper.creator.custombutton.config.actiontype.joinserver.desc.value.example = mc.coolserver.com
-helper.creator.custombutton.config.actiontype.loadworld.desc.value.example = myworld
-helper.creator.custombutton.config.actiontype.opencustomgui.desc.value.example = coolcustomgui
-helper.creator.custombutton.config.actiontype.opengui.desc.value.example = some.menu.identifier
-helper.creator.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/changelog.txt
-helper.creator.custombutton.config.actiontype.movefile.desc.value.example = resources/image.jpg;folder/moveto/image.jpg
-helper.creator.custombutton.config.actiontype.copyfile.desc.value.example = resources/image.jpg;some_folder/imagecopy.jpg
-helper.creator.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/rickroll.gif
-helper.creator.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/image.jpg;newimagename.jpg
-helper.creator.custombutton.config.actiontype.downloadfile.desc.value.example = https://hoster.com/layout.zip;download/layout.zip
-helper.creator.custombutton.config.actiontype.unpackzip.desc.value.example = resources/archive.zip;resources/unpacked/
-helper.creator.custombutton.config.actiontype.runscript.desc.value.example = coolscript
-
-helper.creator.rightclick.scale = Шкала графического интерфейса
-helper.creator.rightclick.scale.invalid = §c§lНедопустимый масштаб!%n%%n%%n%Значения масштаба должны быть больше, чем 0!
-
-helper.creator.items.button.resetlabel = Сбросить текст
+fancymenu.overlay.menuinfo.idcopied = Скопировано в буфер обмена!
 
 
-helper.creator.items.custombutton.onlydisplayin = Отображать только в
-helper.creator.items.custombutton.onlydisplayin.outgame = Вне игры
-helper.creator.items.custombutton.onlydisplayin.singleplayer = Одиночная игра
-helper.creator.items.custombutton.onlydisplayin.multiplayer = Мультиплеер
-helper.creator.items.custombutton.onlydisplayin.reset = СБРОС
+fancymenu.editor.custombutton.config.actiontype.movefile.desc = Перенести файл по новому пути.
+fancymenu.editor.custombutton.config.actiontype.movefile.desc.value = Путь к файлу + новый путь, разделенный ';'
+fancymenu.editor.custombutton.config.actiontype.copyfile.desc = Копирует файл по пути.
+fancymenu.editor.custombutton.config.actiontype.copyfile.desc.value = Путь к файлу + целевой путь, разделенный ';'
+fancymenu.editor.custombutton.config.actiontype.deletefile.desc = Удалить файл.
+fancymenu.editor.custombutton.config.actiontype.deletefile.desc.value = Путь к файлу
+fancymenu.editor.custombutton.config.actiontype.renamefile.desc = Переименовать файлу.
+fancymenu.editor.custombutton.config.actiontype.renamefile.desc.value = Путь к файлу + новое имя файла с типом
+fancymenu.editor.custombutton.config.actiontype.reloadmenu.desc = Перезагрузить отображаемое в данный момент меню.
+fancymenu.editor.custombutton.config.actiontype.runscript.desc = Запускает скрипт кнопки.
+fancymenu.editor.custombutton.config.actiontype.runscript.desc.value = Имя файла скрипта без типа файла
+fancymenu.editor.custombutton.config.actiontype.downloadfile.desc = Загружает файл по указанному пути.
+fancymenu.editor.custombutton.config.actiontype.downloadfile.desc.value = URL + путь к загрузке, разделенный ';'
+fancymenu.editor.custombutton.config.actiontype.unpackzip.desc = Распаковывает ZIP-файл по пути.
+fancymenu.editor.custombutton.config.actiontype.unpackzip.desc.value = Путь к файлу + целевой путь, разделенный ';'
 
-helper.creator.items.button.clicksound = Установите звук щелчка
-helper.creator.items.button.clicksound.reset = Сброс звука щелчка
+fancymenu.editor.custombutton.config.actionvalue.example = Пример: {}
 
-helper.popup.togglecustomization.enable = Кастомизация: §cВыкл
-helper.popup.togglecustomization.disable = Кастомизация: §aВкл
+fancymenu.editor.custombutton.config.actiontype.openlink.desc.value.example = https://google.com
+fancymenu.editor.custombutton.config.actiontype.sendmessage.desc.value.example = Hello @all!
+fancymenu.editor.custombutton.config.actiontype.joinserver.desc.value.example = mc.coolserver.com
+fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value.example = myworld
+fancymenu.editor.custombutton.config.actiontype.opencustomgui.desc.value.example = coolcustomgui
+fancymenu.editor.custombutton.config.actiontype.opengui.desc.value.example = some.menu.identifier
+fancymenu.editor.custombutton.config.actiontype.openfile.desc.value.example = config/fancymenu/changelog.txt
+fancymenu.editor.custombutton.config.actiontype.movefile.desc.value.example = resources/image.jpg;folder/moveto/image.jpg
+fancymenu.editor.custombutton.config.actiontype.copyfile.desc.value.example = resources/image.jpg;some_folder/imagecopy.jpg
+fancymenu.editor.custombutton.config.actiontype.deletefile.desc.value.example = config/fancymenu/rickroll.gif
+fancymenu.editor.custombutton.config.actiontype.renamefile.desc.value.example = config/fancymenu/image.jpg;newimagename.jpg
+fancymenu.editor.custombutton.config.actiontype.downloadfile.desc.value.example = https://hoster.com/layout.zip;download/layout.zip
+fancymenu.editor.custombutton.config.actiontype.unpackzip.desc.value.example = resources/archive.zip;resources/unpacked/
+fancymenu.editor.custombutton.config.actiontype.runscript.desc.value.example = coolscript
 
-helper.creator.object.stretch = Растяжение
-helper.creator.object.stretch.x = К ширине экрана
-helper.creator.object.stretch.y = К высоте экрана
+fancymenu.editor.rightclick.scale = Шкала графического интерфейса
+fancymenu.editor.rightclick.scale.invalid = §c§lНедопустимый масштаб!%n%%n%%n%Значения масштаба должны быть больше, чем 0!
 
-helper.creator.object.stretch.unsupportedorientation = §c§lНеподдерживаемая ориентация!%n%%n%%n%Текущая ориентация этого элемента не поддерживается этим действием растяжения.%n%%n%§lПоддерживаемые ориентации: {}
-
-helper.creator.backgroundoptions.backgroundpanorama = Фоновая панорама
-helper.creator.backgroundoptions.panoramas = Панорамы
-helper.creator.backgroundoptions.panoramas.set = Установить фон
-helper.creator.backgroundoptions.panoramas.set.desc = Устанавливает выбранную панораму%n%в качестве активной фоновой панорамы.
-helper.creator.backgroundoptions.panoramas.clear = Очистить
-helper.creator.backgroundoptions.panoramas.clear.desc = Удаляет текущую%n%активную фоновую панораму.
-
-helper.creator.items.button.btndescription = Подсказка
-helper.creator.items.button.btndescription.desc = Всплывающая подсказка для отображения%n%при наведении курсора мыши на кнопку.%n%%n%Используйте код формата '#n#' для новой строки.
-
-helper.buttons.customization.onoff.btndesc = Переключить настройки%n%для текущего меню.%n%%n%§cЭто должно быть включено, чтобы%n%§cмакеты работали!
-helper.buttons.customization.overridewith.btndesc = Замените текущее меню%n%одним из ваших собственных пользовательских интерфейсов.%n%%n%§cВАЖНО:%n%Не следует использовать, если вы%n%просто хотите отредактировать внешний вид %n%из существующего меню.%n%%n%Чтобы отредактировать меню,%n%вместо этого создайте макет!
-
-
-helper.buttons.customization.managelayouts = Управление макетами
-helper.buttons.customization.managelayouts.enable = §aВключить §rРасположение
-helper.buttons.customization.managelayouts.enabled = §aВкло
-helper.buttons.customization.managelayouts.disable = §cОтключить §rРасположение
-helper.buttons.customization.managelayouts.disabled = §cВыкл
-helper.buttons.customization.managelayouts.delete = Удалить макет
-helper.buttons.customization.managelayouts.delete.msg = §c§lТы уверен?%n%%n%%n%Вы действительно хотите §c§lудалить §rэтот макет?%n%%n%§c§lЭто действие нельзя отменить!
-helper.buttons.customization.managelayouts.layout.btndesc = §lLayout Info:%n%%n%Status: {}%n%Customization Actions: {}%n%%n%§cЭто действие нельзя отменить!
-
-helper.creator.object.moveup = Переместить выше
-helper.creator.object.moveup.desc = Перемещает элемент на один слой вверх.%n%%n%§cВАЖНО:%n%Сфокусированные элементы всегда находятся сверху,%n%поэтому вы не увидите эффекта,%n%пока не расфокусируете элемент.{}
-helper.creator.object.moveup.desc.subtext = %n%%n%§6§lПоследнее действие:%n%Перемещено выше §7{}
-helper.creator.object.movedown = Переместить ниже
-helper.creator.object.movedown.desc = Перемещает элемент на один слой вниз.%n%%n%§cВАЖНО:%n%Сфокусированные элементы всегда находятся сверху,%n%поэтому вы не увидите эффекта,%n%пока не расфокусируете элемент.{}
-helper.creator.object.movedown.desc.subtext = %n%%n%§6§lПоследнее действие:%n%Перемещено ниже §7{}
-
-helper.buttons.customization.managelayouts.openintexteditor = Открыть в Текстовом редакторе
-helper.buttons.customization.managelayouts.openintexteditor.desc = Открывает этот макет в%n%вашем текстовом редакторе по умолчанию.%n%%n%§cВАЖНО:%n%Вам нужно нажать кнопку "Перезагрузить"%n%после ручного изменения%n%вещей в файлах макета!
-
-helper.creator.opencloseaudio = Звук открытия/закрытия
-helper.creator.opencloseaudio.desc = Воспроизводит звук, когда%n%меню открывается или закрывается.
-helper.creator.opencloseaudio.reset.desc = Сбросить этот звук.
-helper.creator.openaudio = Звук открытия меню
-helper.creator.openaudio.reset = Сброс звука открытия
-helper.creator.openaudio.desc = Будет воспроизводиться звук при открытии меню.
-helper.creator.closeaudio = Звук закрытия меню
-helper.creator.closeaudio.reset = Сброс звука закрытия
-helper.creator.closeaudio.desc = Будет воспроизводиться звук при закрытии меню.
-
-helper.creator.deleteselectedobjects = Ты действительно хочешь §lУДАЛИТЬ §rвсе выбранные элементы?
-
-helper.creator.multiselect.object.deleteall = Удалить все
-helper.creator.multiselect.object.deleteall.btndesc = Удалит все выбранные элементы.
-helper.creator.multiselect.object.stretchall = Растягивать все
-helper.creator.multiselect.object.stretchall.btndesc = Растяните все §lрастягиваемые §rэлементы%n%по ширине или высоте меню.
-helper.creator.multiselect.vanillabutton.resetorientation = Сбросить ориентацию
-helper.creator.multiselect.vanillabutton.resetorientation.btndesc = Сбросит ориентацию%n%для всех выбранных кнопок vanilla.
-helper.creator.multiselect.vanillabutton.hideall = Скрыть все
-helper.creator.multiselect.vanillabutton.hideall.btndesc = Скроет все выбранные кнопки vanilla.
-helper.creator.multiselect.button.buttontexture.btndesc = Установит обычные текстуры и текстуры наведения курсора%n%для всех выбранных кнопок.
-helper.creator.multiselect.button.clicksound.btndesc = Установит звук щелчка%n%для всех выбранных кнопок.
-helper.creator.multiselect.button.clicksound.reset.btndesc = Сбросит звук нажатия%n%для всех выбранных кнопок.
-helper.creator.multiselect.button.hoversound.btndesc = Установит звук наведения%n%для всех выбранных кнопок.
-helper.creator.multiselect.button.hoversound.reset.btndesc = Сбросит звук наведения%n%для всех выбранных кнопок.
-
-helper.creator.add.playerentity = Сущность игрока
-
-helper.creator.items.playerentity.setscale = Установить масштаб
-helper.creator.items.playerentity.playername = Имя игрока
-helper.creator.items.playerentity.playername.auto = Авто
-helper.creator.items.playerentity.playername.setname = Установить имя
-helper.creator.items.playerentity.skin = Установить скин
-helper.creator.items.playerentity.cape = Установить плащ
-helper.creator.items.playerentity.texture.local = Локальная текстура
-helper.creator.items.playerentity.texture.url = URL
-helper.creator.items.playerentity.rotation = Вращение
-helper.creator.items.playerentity.rotation.auto = Автоматическое вращение
-helper.creator.items.playerentity.rotation.custom = Пользовательское вращение
-helper.creator.items.playerentity.rotation.custom.bodyx = Горизонтальное вращение тела
-helper.creator.items.playerentity.rotation.custom.bodyy = Вертикальное вращение тела
-helper.creator.items.playerentity.rotation.custom.headx = Горизонтальное вращение головы
-helper.creator.items.playerentity.rotation.custom.heady = Вертикальное вращение головы
-helper.creator.items.playerentity.showname.off = Показать название: §cВыкл
-helper.creator.items.playerentity.showname.on = Показать название: §aВкл
-helper.creator.items.playerentity.crouching.off = Приседание: §cВыкл
-helper.creator.items.playerentity.crouching.on = Приседание: §aВкл
-helper.creator.items.playerentity.parrot.off = Показать попугая: §cВыкл
-helper.creator.items.playerentity.parrot.on = Показать попугая: §aВкл
-helper.creator.items.playerentity.slim.off = Тонкий скин: §cВыкл
-helper.creator.items.playerentity.slim.on = Тонкий скин: §aВкл
-
-helper.creator.items.playerentity.setscale.btndesc = Установить масштаб игрока.
-helper.creator.items.playerentity.playername.btndesc = Установить имя игрока.
-helper.creator.items.playerentity.playername.auto.btndesc = Автоматически установит значение игрока%n%для пользователя клиента.
-helper.creator.items.playerentity.playername.setname.btndesc = Установит имя игрока вручную.%n%%n%Это не обязательно должен быть%n%существующий пользователь.
-helper.creator.items.playerentity.skin.btndesc = Установит текстуру скина игрока.%n%%n%Этот скин имеет приоритет перед%n%обычным скином игрока.
-helper.creator.items.playerentity.cape.btndesc = Установит текстуру плаща игрока.%n%%n%Этот Плащ имеет приоритет перед%n%обычным плащем игрока.
-helper.creator.items.playerentity.rotation.btndesc = Установит вращение тела и головы.
-helper.creator.items.playerentity.rotation.auto.btndesc = Игрок будет следовать за курсором мыши.
-helper.creator.items.playerentity.rotation.custom.btndesc = Установит пользовательскую ротацию игроков.
-helper.creator.items.playerentity.showname.btndesc = Установит видимость имени игрока.
-helper.creator.items.playerentity.crouching.btndesc = Установит, должен ли игрок приседать или нет.
-helper.creator.items.playerentity.parrot.btndesc = АРРР!
-helper.creator.items.playerentity.slim.btndesc = Установит, должен ли игрок иметь%n%макет тонкого скина%n%%n%У тонкого скина руки тоньше.
-
-helper.creator.items.playerentity.texture.invalidtexture.title = Недопустимая текстура!
-helper.creator.items.playerentity.texture.invalidtexture.desc = Эта текстура либо не существует, либо не является допустимым файлом текстуры.%n%%n%§lПоддерживаемые типы файлов: §rPNG
-
-popup.apply = Применить
-
-helper.creator.items.orientation.btndesc = Задает исходную точку, из%n%котрой будет вычисляться положение этого элемента.%n%%n%§cПРИМЕЧАНИЕ:%n%Вы можете увидеть, как на элемент%n%влияет его ориентация,%n%когда вы открываете окно редактора%n%после изменения ориентации.
-
-helper.creator.add.slideshow = Слайд-шоу
-helper.creator.add.slideshow.entername = Добавить по имени
-helper.creator.add.slideshow.entername.title = Введите название слайд-шоу
-
-helper.creator.backgroundoptions.backgroundslideshow = Фоновое слайд-шоу
-helper.creator.backgroundoptions.backgroundslideshow.set = Установить фон
-helper.creator.backgroundoptions.backgroundslideshow.set.desc = Устанавливает выбранное слайд-шоу%n%в качестве активного фонового слайд-шоу.
-helper.creator.backgroundoptions.backgroundslideshow.clear = Удалить
-helper.creator.backgroundoptions.backgroundslideshow.clear.desc = Удаляет текущее%n%активное фоновое слайд-шоу.
+fancymenu.editor.items.button.resetlabel = Сбросить текст
 
 
-helper.creator.slideshownotfound = §c§lСлайд-шоу не найдено!%n%%n%Введенное слайд-шоу не существует!%n%Может быть, опечатка в названии слайд-шоу?
+fancymenu.editor.items.custombutton.onlydisplayin = Отображать только в
+fancymenu.editor.items.custombutton.onlydisplayin.outgame = Вне игры
+fancymenu.editor.items.custombutton.onlydisplayin.singleplayer = Одиночная игра
+fancymenu.editor.items.custombutton.onlydisplayin.multiplayer = Мультиплеер
+fancymenu.editor.items.custombutton.onlydisplayin.reset = СБРОС
+
+fancymenu.editor.items.button.clicksound = Установите звук щелчка
+fancymenu.editor.items.button.clicksound.reset = Сброс звука щелчка
+
+fancymenu.overlay.ui.customization.off = Кастомизация: §cВыкл
+fancymenu.overlay.ui.customization.on = Кастомизация: §aВкл
+
+fancymenu.editor.object.stretch = Растяжение
+fancymenu.editor.object.stretch.x = К ширине экрана
+fancymenu.editor.object.stretch.y = К высоте экрана
+
+fancymenu.editor.object.stretch.unsupportedorientation = §c§lНеподдерживаемая ориентация!%n%%n%%n%Текущая ориентация этого элемента не поддерживается этим действием растяжения.%n%%n%§lПоддерживаемые ориентации: {}
+
+fancymenu.editor.backgroundoptions.backgroundpanorama = Фоновая панорама
+fancymenu.editor.backgroundoptions.panoramas = Панорамы
+fancymenu.editor.backgroundoptions.panoramas.set = Установить фон
+fancymenu.editor.backgroundoptions.panoramas.set.desc = Устанавливает выбранную панораму%n%в качестве активной фоновой панорамы.
+fancymenu.editor.backgroundoptions.panoramas.clear = Очистить
+fancymenu.editor.backgroundoptions.panoramas.clear.desc = Удаляет текущую%n%активную фоновую панораму.
+
+fancymenu.editor.items.button.btndescription = Подсказка
+fancymenu.editor.items.button.btndescription.desc = Всплывающая подсказка для отображения%n%при наведении курсора мыши на кнопку.%n%%n%Используйте код формата '#n#' для новой строки.
+
+fancymenu.overlay.ui.customization.onoff.btndesc = Переключить настройки%n%для текущего меню.%n%%n%§cЭто должно быть включено, чтобы%n%§cмакеты работали!
+fancymenu.overlay.ui.customization.overridewith.btndesc = Замените текущее меню%n%одним из ваших собственных пользовательских интерфейсов.%n%%n%§cВАЖНО:%n%Не следует использовать, если вы%n%просто хотите отредактировать внешний вид %n%из существующего меню.%n%%n%Чтобы отредактировать меню,%n%вместо этого создайте макет!
 
 
-helper.creator.add.shapes = Форма
-helper.creator.add.shapes.rectangle = Прямоугольник
+fancymenu.overlay.ui.customization.managelayouts = Управление макетами
+fancymenu.overlay.ui.customization.managelayouts.enable = §aВключить §rРасположение
+fancymenu.overlay.ui.customization.managelayouts.enabled = §aВкло
+fancymenu.overlay.ui.customization.managelayouts.disable = §cОтключить §rРасположение
+fancymenu.overlay.ui.customization.managelayouts.disabled = §cВыкл
+fancymenu.overlay.ui.customization.managelayouts.delete = Удалить макет
+fancymenu.overlay.ui.customization.managelayouts.delete.msg = §c§lТы уверен?%n%%n%%n%Вы действительно хотите §c§lудалить §rэтот макет?%n%%n%§c§lЭто действие нельзя отменить!
+fancymenu.overlay.ui.customization.managelayouts.layout.btndesc = §lLayout Info:%n%%n%Status: {}%n%Customization Actions: {}%n%%n%§cЭто действие нельзя отменить!
 
-helper.creator.items.shape.color = Цвет
-helper.creator.items.shape.color.btndesc = Установите HEX-цвет фигуры.%n%%n%§cПРИМЕЧАНИЕ:%n%Вы можете использовать HEX-цвета, чтобы%n%установить непрозрачность элемента!
+fancymenu.editor.object.moveup = Переместить выше
+fancymenu.editor.object.moveup.desc = Перемещает элемент на один слой вверх.%n%%n%§cВАЖНО:%n%Сфокусированные элементы всегда находятся сверху,%n%поэтому вы не увидите эффекта,%n%пока не расфокусируете элемент.{}
+fancymenu.editor.object.moveup.desc.subtext = %n%%n%§6§lПоследнее действие:%n%Перемещено выше §7{}
+fancymenu.editor.object.movedown = Переместить ниже
+fancymenu.editor.object.movedown.desc = Перемещает элемент на один слой вниз.%n%%n%§cВАЖНО:%n%Сфокусированные элементы всегда находятся сверху,%n%поэтому вы не увидите эффекта,%n%пока не расфокусируете элемент.{}
+fancymenu.editor.object.movedown.desc.subtext = %n%%n%§6§lПоследнее действие:%n%Перемещено ниже §7{}
 
-helper.creator.object.movedown.desc.subtext.vanillabutton = %n%%n%§cВы не можете перемещать элементы за%n%§cvanilla кнопками.%n%%n%Вместо этого вы можете установить для макета%n%§lпорядок рендеринга §rзначение '§lфона§r'%n% чтобы отобразить все элементы за содержимым меню%n%по умолчанию, например, кнопки%n%vanilla.%n%%n%§lЩелкните правой кнопкой мыши §rфон §rредактора%n% чтобы задать §lпорядок отображения§r!
+fancymenu.overlay.ui.customization.managelayouts.openintexteditor = Открыть в Текстовом редакторе
+fancymenu.overlay.ui.customization.managelayouts.openintexteditor.desc = Открывает этот макет в%n%вашем текстовом редакторе по умолчанию.%n%%n%§cВАЖНО:%n%Вам нужно нажать кнопку "Перезагрузить"%n%после ручного изменения%n%вещей в файлах макета!
+
+fancymenu.editor.opencloseaudio = Звук открытия/закрытия
+fancymenu.editor.opencloseaudio.desc = Воспроизводит звук, когда%n%меню открывается или закрывается.
+fancymenu.editor.opencloseaudio.reset.desc = Сбросить этот звук.
+fancymenu.editor.openaudio = Звук открытия меню
+fancymenu.editor.openaudio.reset = Сброс звука открытия
+fancymenu.editor.openaudio.desc = Будет воспроизводиться звук при открытии меню.
+fancymenu.editor.closeaudio = Звук закрытия меню
+fancymenu.editor.closeaudio.reset = Сброс звука закрытия
+fancymenu.editor.closeaudio.desc = Будет воспроизводиться звук при закрытии меню.
+
+fancymenu.editor.deleteselectedobjects = Ты действительно хочешь §lУДАЛИТЬ §rвсе выбранные элементы?
+
+fancymenu.editor.multiselect.object.deleteall = Удалить все
+fancymenu.editor.multiselect.object.deleteall.btndesc = Удалит все выбранные элементы.
+fancymenu.editor.multiselect.object.stretchall = Растягивать все
+fancymenu.editor.multiselect.object.stretchall.btndesc = Растяните все §lрастягиваемые §rэлементы%n%по ширине или высоте меню.
+fancymenu.editor.multiselect.vanillabutton.resetorientation = Сбросить ориентацию
+fancymenu.editor.multiselect.vanillabutton.resetorientation.btndesc = Сбросит ориентацию%n%для всех выбранных кнопок vanilla.
+fancymenu.editor.multiselect.vanillabutton.hideall = Скрыть все
+fancymenu.editor.multiselect.vanillabutton.hideall.btndesc = Скроет все выбранные кнопки vanilla.
+fancymenu.editor.multiselect.button.buttontexture.btndesc = Установит обычные текстуры и текстуры наведения курсора%n%для всех выбранных кнопок.
+fancymenu.editor.multiselect.button.clicksound.btndesc = Установит звук щелчка%n%для всех выбранных кнопок.
+fancymenu.editor.multiselect.button.clicksound.reset.btndesc = Сбросит звук нажатия%n%для всех выбранных кнопок.
+fancymenu.editor.multiselect.button.hoversound.btndesc = Установит звук наведения%n%для всех выбранных кнопок.
+fancymenu.editor.multiselect.button.hoversound.reset.btndesc = Сбросит звук наведения%n%для всех выбранных кнопок.
+
+fancymenu.editor.add.playerentity = Сущность игрока
+
+fancymenu.editor.items.playerentity.setscale = Установить масштаб
+fancymenu.editor.items.playerentity.playername = Имя игрока
+fancymenu.editor.items.playerentity.playername.auto = Авто
+fancymenu.editor.items.playerentity.playername.setname = Установить имя
+fancymenu.editor.items.playerentity.skin = Установить скин
+fancymenu.editor.items.playerentity.cape = Установить плащ
+fancymenu.editor.items.playerentity.texture.local = Локальная текстура
+fancymenu.editor.items.playerentity.texture.url = URL
+fancymenu.editor.items.playerentity.rotation = Вращение
+fancymenu.editor.items.playerentity.rotation.auto = Автоматическое вращение
+fancymenu.editor.items.playerentity.rotation.custom = Пользовательское вращение
+fancymenu.editor.items.playerentity.rotation.custom.bodyx = Горизонтальное вращение тела
+fancymenu.editor.items.playerentity.rotation.custom.bodyy = Вертикальное вращение тела
+fancymenu.editor.items.playerentity.rotation.custom.headx = Горизонтальное вращение головы
+fancymenu.editor.items.playerentity.rotation.custom.heady = Вертикальное вращение головы
+fancymenu.editor.items.playerentity.showname.off = Показать название: §cВыкл
+fancymenu.editor.items.playerentity.showname.on = Показать название: §aВкл
+fancymenu.editor.items.playerentity.crouching.off = Приседание: §cВыкл
+fancymenu.editor.items.playerentity.crouching.on = Приседание: §aВкл
+fancymenu.editor.items.playerentity.parrot.off = Показать попугая: §cВыкл
+fancymenu.editor.items.playerentity.parrot.on = Показать попугая: §aВкл
+fancymenu.editor.items.playerentity.slim.off = Тонкий скин: §cВыкл
+fancymenu.editor.items.playerentity.slim.on = Тонкий скин: §aВкл
+
+fancymenu.editor.items.playerentity.setscale.btndesc = Установить масштаб игрока.
+fancymenu.editor.items.playerentity.playername.btndesc = Установить имя игрока.
+fancymenu.editor.items.playerentity.playername.auto.btndesc = Автоматически установит значение игрока%n%для пользователя клиента.
+fancymenu.editor.items.playerentity.playername.setname.btndesc = Установит имя игрока вручную.%n%%n%Это не обязательно должен быть%n%существующий пользователь.
+fancymenu.editor.items.playerentity.skin.btndesc = Установит текстуру скина игрока.%n%%n%Этот скин имеет приоритет перед%n%обычным скином игрока.
+fancymenu.editor.items.playerentity.cape.btndesc = Установит текстуру плаща игрока.%n%%n%Этот Плащ имеет приоритет перед%n%обычным плащем игрока.
+fancymenu.editor.items.playerentity.rotation.btndesc = Установит вращение тела и головы.
+fancymenu.editor.items.playerentity.rotation.auto.btndesc = Игрок будет следовать за курсором мыши.
+fancymenu.editor.items.playerentity.rotation.custom.btndesc = Установит пользовательскую ротацию игроков.
+fancymenu.editor.items.playerentity.showname.btndesc = Установит видимость имени игрока.
+fancymenu.editor.items.playerentity.crouching.btndesc = Установит, должен ли игрок приседать или нет.
+fancymenu.editor.items.playerentity.parrot.btndesc = АРРР!
+fancymenu.editor.items.playerentity.slim.btndesc = Установит, должен ли игрок иметь%n%макет тонкого скина%n%%n%У тонкого скина руки тоньше.
+
+fancymenu.editor.items.playerentity.texture.invalidtexture.title = Недопустимая текстура!
+fancymenu.editor.items.playerentity.texture.invalidtexture.desc = Эта текстура либо не существует, либо не является допустимым файлом текстуры.%n%%n%§lПоддерживаемые типы файлов: §rPNG
+
+fancymenu.guicomponents.apply = Применить
+
+fancymenu.editor.items.orientation.btndesc = Задает исходную точку, из%n%котрой будет вычисляться положение этого элемента.%n%%n%§cПРИМЕЧАНИЕ:%n%Вы можете увидеть, как на элемент%n%влияет его ориентация,%n%когда вы открываете окно редактора%n%после изменения ориентации.
+
+fancymenu.editor.add.slideshow = Слайд-шоу
+fancymenu.editor.add.slideshow.entername = Добавить по имени
+fancymenu.editor.add.slideshow.entername.title = Введите название слайд-шоу
+
+fancymenu.editor.backgroundoptions.backgroundslideshow = Фоновое слайд-шоу
+fancymenu.editor.backgroundoptions.backgroundslideshow.set = Установить фон
+fancymenu.editor.backgroundoptions.backgroundslideshow.set.desc = Устанавливает выбранное слайд-шоу%n%в качестве активного фонового слайд-шоу.
+fancymenu.editor.backgroundoptions.backgroundslideshow.clear = Удалить
+fancymenu.editor.backgroundoptions.backgroundslideshow.clear.desc = Удаляет текущее%n%активное фоновое слайд-шоу.
 
 
-helper.menubar.expand = Развернуть строку меню
-helper.menubar.shrink = Уменьшить строку меню
-helper.menubar.settings = FancyMenu настройки
+fancymenu.editor.slideshownotfound = §c§lСлайд-шоу не найдено!%n%%n%Введенное слайд-шоу не существует!%n%Может быть, опечатка в названии слайд-шоу?
+
+
+fancymenu.editor.add.shape = Форма
+fancymenu.editor.add.shape.rectangle = Прямоугольник
+
+fancymenu.editor.items.shape.color = Цвет
+fancymenu.editor.items.shape.color.btndesc = Установите HEX-цвет фигуры.%n%%n%§cПРИМЕЧАНИЕ:%n%Вы можете использовать HEX-цвета, чтобы%n%установить непрозрачность элемента!
+
+fancymenu.editor.object.movedown.desc.subtext.vanillabutton = %n%%n%§cВы не можете перемещать элементы за%n%§cvanilla кнопками.%n%%n%Вместо этого вы можете установить для макета%n%§lпорядок рендеринга §rзначение '§lфона§r'%n% чтобы отобразить все элементы за содержимым меню%n%по умолчанию, например, кнопки%n%vanilla.%n%%n%§lЩелкните правой кнопкой мыши §rфон §rредактора%n% чтобы задать §lпорядок отображения§r!
+
+
+fancymenu.overlay.ui.menubar.expand = Развернуть строку меню
+fancymenu.overlay.ui.menubar.shrink = Уменьшить строку меню
+fancymenu.overlay.ui.menubar.settings = FancyMenu настройки
 
 FancyMenu.getConfig() = FancyMenu настройки
 
@@ -497,144 +497,144 @@ FancyMenu.getConfig().editordeleteconfirmation.desc = Если при удале
 
 FancyMenu.getConfig().uiscale.desc = Масштаб пользовательского интерфейса настройки FancyMenu .
 
-helper.ui.dynamicvariabletextfield.variables.desc = §lТекстовые значения-заполнители%n%%n%Вставит в текст заполнители,%n%которые позже будут заменены%n%реальными значениями, такими как%n%имя игрока или версия MC.%n%%n%§l§cВАЖНО:%n%Вы увидите эти значения как%n%заполнители в редакторе и%n%как реальные значения в актуальном меню.
-helper.ui.dynamicvariabletextfield.variables.playername = Имя игрока
-helper.ui.dynamicvariabletextfield.variables.playername.desc = Получает имя игрока.
-helper.ui.dynamicvariabletextfield.variables.playeruuid = UUID игрока
-helper.ui.dynamicvariabletextfield.variables.playeruuid.desc = Получает UUID игрока.
-helper.ui.dynamicvariabletextfield.variables.mcversion = Версия для Minecraft
-helper.ui.dynamicvariabletextfield.variables.mcversion.desc = Получает версию Minecraft.
-helper.ui.dynamicvariabletextfield.variables.forgeversion = Версия загрузчика модов
-helper.ui.dynamicvariabletextfield.variables.forgeversion.desc = Получает версию загрузчика модов.
-helper.ui.dynamicvariabletextfield.variables.modversion = Версия мода
-helper.ui.dynamicvariabletextfield.variables.modversion.desc = Получает версию мода и его идентификатор мода.%n%%n%Просто замените 'some_mod_id' в заполнителе на%n%существующий идентификатор мода.
-helper.ui.dynamicvariabletextfield.variables.totalmods = Общее количество модов
-helper.ui.dynamicvariabletextfield.variables.totalmods.desc = Получает общее количество модов.%n%Сюда входят отключенные моды.
-helper.ui.dynamicvariabletextfield.variables.loadedmods = Количество активных модов
-helper.ui.dynamicvariabletextfield.variables.loadedmods.desc = Получает количество активных модов.%n%Это не включает отключенные моды.
+fancymenu.editor.dynamicvariabletextfield.variables.desc = §lТекстовые значения-заполнители%n%%n%Вставит в текст заполнители,%n%которые позже будут заменены%n%реальными значениями, такими как%n%имя игрока или версия MC.%n%%n%§l§cВАЖНО:%n%Вы увидите эти значения как%n%заполнители в редакторе и%n%как реальные значения в актуальном меню.
+fancymenu.editor.dynamicvariabletextfield.variables.playername = Имя игрока
+fancymenu.editor.dynamicvariabletextfield.variables.playername.desc = Получает имя игрока.
+fancymenu.editor.dynamicvariabletextfield.variables.playeruuid = UUID игрока
+fancymenu.editor.dynamicvariabletextfield.variables.playeruuid.desc = Получает UUID игрока.
+fancymenu.editor.dynamicvariabletextfield.variables.mcversion = Версия для Minecraft
+fancymenu.editor.dynamicvariabletextfield.variables.mcversion.desc = Получает версию Minecraft.
+fancymenu.editor.dynamicvariabletextfield.variables.forgeversion = Версия загрузчика модов
+fancymenu.editor.dynamicvariabletextfield.variables.forgeversion.desc = Получает версию загрузчика модов.
+fancymenu.editor.dynamicvariabletextfield.variables.modversion = Версия мода
+fancymenu.editor.dynamicvariabletextfield.variables.modversion.desc = Получает версию мода и его идентификатор мода.%n%%n%Просто замените 'some_mod_id' в заполнителе на%n%существующий идентификатор мода.
+fancymenu.editor.dynamicvariabletextfield.variables.totalmods = Общее количество модов
+fancymenu.editor.dynamicvariabletextfield.variables.totalmods.desc = Получает общее количество модов.%n%Сюда входят отключенные моды.
+fancymenu.editor.dynamicvariabletextfield.variables.loadedmods = Количество активных модов
+fancymenu.editor.dynamicvariabletextfield.variables.loadedmods.desc = Получает количество активных модов.%n%Это не включает отключенные моды.
 
-helper.creator.items.string.alignment = Выравнивание
-helper.creator.items.string.alignment.desc = Задает выравнивание текста.%n%%n%§cполезно, когда ширина%n%§cтекста не всегда одинакова, например, для значений %n%§cтекста-заполнителя.
-helper.creator.items.string.alignment.left = Слева
-helper.creator.items.string.alignment.right = Справа
-helper.creator.items.string.alignment.centered = По центру
+fancymenu.editor.items.string.alignment = Выравнивание
+fancymenu.editor.items.string.alignment.desc = Задает выравнивание текста.%n%%n%§cполезно, когда ширина%n%§cтекста не всегда одинакова, например, для значений %n%§cтекста-заполнителя.
+fancymenu.editor.items.string.alignment.left = Слева
+fancymenu.editor.items.string.alignment.right = Справа
+fancymenu.editor.items.string.alignment.centered = По центру
 
-helper.creator.items.string.border.alignment = выравнивание
+fancymenu.editor.items.string.border.alignment = выравнивание
 
-helper.creator.custombutton.config.actiontype.runcmd.desc = Запускает команду CMD/Terminal.%n%Поддерживает команды для каждой операционной системы,%n%как в примере.
-helper.creator.custombutton.config.actiontype.runcmd.desc.value = Команда
-helper.creator.custombutton.config.actiontype.runcmd.desc.value.example = [windows:run.bat]; [macos:./Run]; [linux:./run.sh];
+fancymenu.editor.custombutton.config.actiontype.runcmd.desc = Запускает команду CMD/Terminal.%n%Поддерживает команды для каждой операционной системы,%n%как в примере.
+fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value = Команда
+fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value.example = [windows:run.bat]; [macos:./Run]; [linux:./run.sh];
 
-helper.creator.custombutton.config.actiontype.closegui.desc = Закрыть отображаемый графический интерфейс.
+fancymenu.editor.custombutton.config.actiontype.closegui.desc = Закрыть отображаемый графический интерфейс.
 
-helper.ui.current = Текущее меню
-helper.ui.current.layouts = Макеты
-helper.ui.current.layouts.desc = Создавайте свои макеты для этого меню и управляйте ими.
-helper.ui.current.layouts.new = Новый
-helper.ui.current.layouts.new.desc = Создаст новый макет для этого меню.
-helper.ui.current.layouts.manage = Управление макетами
-helper.ui.current.layouts.manage.desc = Управляет своими существующими макетами для этого меню.
-helper.ui.current.layouts.manage.edit = Редактировать
-helper.ui.current.layouts.manage.edit.desc = Отредактирует этот макет в редакторе макетов.
-helper.ui.current.advanced = Продвинутый
-helper.ui.current.advanced.desc = Содержит инструменты для продвинутых пользователей.%n%%n%§c§lВАЖНО:%n%Этот материал может §cломать элементы%n%и в большинстве случаев не нужен!
+fancymenu.overlay.ui.current = Текущее меню
+fancymenu.overlay.ui.current.layouts = Макеты
+fancymenu.overlay.ui.current.layouts.desc = Создавайте свои макеты для этого меню и управляйте ими.
+fancymenu.overlay.ui.current.layouts.new = Новый
+fancymenu.overlay.ui.current.layouts.new.desc = Создаст новый макет для этого меню.
+fancymenu.overlay.ui.current.layouts.manage = Управление макетами
+fancymenu.overlay.ui.current.layouts.manage.desc = Управляет своими существующими макетами для этого меню.
+fancymenu.overlay.ui.current.layouts.manage.edit = Редактировать
+fancymenu.overlay.ui.current.layouts.manage.edit.desc = Отредактирует этот макет в редакторе макетов.
+fancymenu.overlay.ui.current.advanced = Продвинутый
+fancymenu.overlay.ui.current.advanced.desc = Содержит инструменты для продвинутых пользователей.%n%%n%§c§lВАЖНО:%n%Этот материал может §cломать элементы%n%и в большинстве случаев не нужен!
 
-helper.ui.customguis = Пользовательские графические интерфейсы
-helper.ui.customguis.new = Новый
-helper.ui.customguis.new.desc = Создайте §cпустой §rграфический интерфейс и%n%заполните его элементами.
-helper.ui.customguis.new.sure = §c§lТы уверен?%n%%n%%n%Вы действительно хотите создать новый §lпустой §rграфический интерфейс?%n%%n%§cЭто §lне §r§cто же самое, что настройка%n%§cсуществующего меню!%n%%n%Если вы хотите настроить меню выхода,%n%вместо этого создайте §l§rмакет.%n% %n% %n%
-helper.ui.customguis.manage = Управление графическими интерфейсами
-helper.ui.customguis.manage.desc = Управляйте своими существующими графическими интерфейсами.
+fancymenu.overlay.ui.customguis = Пользовательские графические интерфейсы
+fancymenu.overlay.ui.customguis.new = Новый
+fancymenu.overlay.ui.customguis.new.desc = Создайте §cпустой §rграфический интерфейс и%n%заполните его элементами.
+fancymenu.overlay.ui.customguis.new.sure = §c§lТы уверен?%n%%n%%n%Вы действительно хотите создать новый §lпустой §rграфический интерфейс?%n%%n%§cЭто §lне §r§cто же самое, что настройка%n%§cсуществующего меню!%n%%n%Если вы хотите настроить меню выхода,%n%вместо этого создайте §l§rмакет.%n% %n% %n%
+fancymenu.overlay.ui.customguis.manage = Управление графическими интерфейсами
+fancymenu.overlay.ui.customguis.manage.desc = Управляйте своими существующими графическими интерфейсами.
 
-helper.ui.tools = Инструменты
-helper.ui.tools.menuinfo.off = Информация о меню: §cВыкл
-helper.ui.tools.menuinfo.on = Информация о меню: §aВкл
-helper.ui.tools.menuinfo.desc = Покажет идентификатор меню этого меню.%n%%n%Вы можете щелкнуть левой кнопкой мыши идентификатор,%n%чтобы скопировать его.
-helper.ui.tools.buttoninfo.off = Информация о кнопке: §cВыкл
-helper.ui.tools.buttoninfo.on = Информация о кнопке: §aВкл
-helper.ui.tools.buttoninfo.desc = Показывать информацию о ванильных кнопках%n%при наведении на них курсора мыши.%n%%n%Не влияет на пользовательские кнопки.
+fancymenu.overlay.ui.tools = Инструменты
+fancymenu.overlay.ui.tools.menuinfo.off = Информация о меню: §cВыкл
+fancymenu.overlay.ui.tools.menuinfo.on = Информация о меню: §aВкл
+fancymenu.overlay.ui.tools.menuinfo.desc = Покажет идентификатор меню этого меню.%n%%n%Вы можете щелкнуть левой кнопкой мыши идентификатор,%n%чтобы скопировать его.
+fancymenu.overlay.ui.tools.buttoninfo.off = Информация о кнопке: §cВыкл
+fancymenu.overlay.ui.tools.buttoninfo.on = Информация о кнопке: §aВкл
+fancymenu.overlay.ui.tools.buttoninfo.desc = Показывать информацию о ванильных кнопках%n%при наведении на них курсора мыши.%n%%n%Не влияет на пользовательские кнопки.
 
-helper.ui.misc = Другое
-helper.ui.misc.closegui = §cЗАКРЫТЬ МЕНЮ
-helper.ui.misc.closegui.desc = Закрыть текущее меню.
-helper.ui.misc.openworldloading = Экран загрузки мира
-helper.ui.misc.openworldloading.desc = Откроет фиктивный экземпляр%n%экрана загрузки мира, который%n%используется для загрузки в миры.%n%%n%Позволяет настроить этот экран.
-helper.ui.misc.openmessagescreen = Открыть экран сообщения о Грязи
-helper.ui.misc.openmessagescreen.desc = Откроет фиктивный экземпляр%n%экрана с сообщением Грязи, который%n%используется для подключения к серверам и%n%загрузки в мирах.%n%%n%Позволяет настроить этот экран.
+fancymenu.overlay.ui.misc = Другое
+fancymenu.overlay.ui.misc.closegui = §cЗАКРЫТЬ МЕНЮ
+fancymenu.overlay.ui.misc.closegui.desc = Закрыть текущее меню.
+fancymenu.overlay.ui.misc.openworldloading = Экран загрузки мира
+fancymenu.overlay.ui.misc.openworldloading.desc = Откроет фиктивный экземпляр%n%экрана загрузки мира, который%n%используется для загрузки в миры.%n%%n%Позволяет настроить этот экран.
+fancymenu.overlay.ui.misc.openmessagescreen = Открыть экран сообщения о Грязи
+fancymenu.overlay.ui.misc.openmessagescreen.desc = Откроет фиктивный экземпляр%n%экрана с сообщением Грязи, который%n%используется для подключения к серверам и%n%загрузки в мирах.%n%%n%Позволяет настроить этот экран.
 
-helper.ui.reload.desc = Перезагрузить FancyMenu.%n%%n%§lПерезагрузит:%n%- Панорамы%n%- Слайд-шоу%n%- ModConfig%n%- Макеты%n%%n%§c§lНЕ перезагрузит:%n%- Анимацию
+fancymenu.overlay.ui.reload.desc = Перезагрузить FancyMenu.%n%%n%§lПерезагрузит:%n%- Панорамы%n%- Слайд-шоу%n%- ModConfig%n%- Макеты%n%%n%§c§lНЕ перезагрузит:%n%- Анимацию
 
-helper.editor.ui.unsavedwarning = §c§lВы уверены?%n%%n%%n%Все несохраненные изменения для текущего макета%n%будут потеряны!%n% %n% %n%
+fancymenu.editor.warning.unsaved = §c§lВы уверены?%n%%n%%n%Все несохраненные изменения для текущего макета%n%будут потеряны!%n% %n% %n%
 
-helper.editor.ui.layout = Макет
-helper.editor.ui.layout.new = Новый
-helper.editor.ui.layout.open = Открыть
-helper.editor.ui.layout.save = Сохранить
-helper.editor.ui.layout.saveas = Сохранить как
-helper.editor.ui.layout.saveas.entername = §lВведите название макета
-helper.editor.ui.layout.saveas.failed = §c§lНе удалось сохранить!%n%%n%%n%Неподдерживаемое имя макета или макет уже существует!%n% %n% %n%
-helper.editor.ui.layout.properties = Свойства
+fancymenu.editor.layout = Макет
+fancymenu.editor.layout.new = Новый
+fancymenu.editor.layout.open = Открыть
+fancymenu.editor.layout.save = Сохранить
+fancymenu.editor.layout.saveas = Сохранить как
+fancymenu.editor.layout.saveas.entername = §lВведите название макета
+fancymenu.editor.layout.saveas.failed = §c§lНе удалось сохранить!%n%%n%%n%Неподдерживаемое имя макета или макет уже существует!%n% %n% %n%
+fancymenu.editor.layout.properties = Свойства
 
-helper.editor.ui.edit = Редактировать
-helper.editor.ui.edit.undo = Отменить
-helper.editor.ui.edit.redo = Повторить
-helper.editor.ui.edit.copy = Копировать
-helper.editor.ui.edit.paste = Вставить
+fancymenu.editor.edit = Редактировать
+fancymenu.editor.edit.undo = Отменить
+fancymenu.editor.edit.redo = Повторить
+fancymenu.editor.edit.copy = Копировать
+fancymenu.editor.edit.paste = Вставить
 
-helper.editor.ui.element = Элемент
-helper.editor.ui.element.new = Новый
-helper.editor.ui.element.manageaudio = Управление аудиозаписями
-helper.editor.ui.element.manageaudio.loop.on = Цикл: §aВкл
-helper.editor.ui.element.manageaudio.loop.off = Цикл: §cВыкл
-helper.editor.ui.element.deletedvanillabuttons = Удалить Vanilla кнопки
-helper.editor.ui.element.deletedvanillabuttons.entry.desc = Щелкните левой кнопкой мыши, чтобы отменить удаление.
+fancymenu.editor.element = Элемент
+fancymenu.editor.element.new = Новый
+fancymenu.editor.element.manageaudio = Управление аудиозаписями
+fancymenu.editor.element.manageaudio.loop.on = Цикл: §aВкл
+fancymenu.editor.element.manageaudio.loop.off = Цикл: §cВыкл
+fancymenu.editor.element.deletedvanillabuttons = Удалить Vanilla кнопки
+fancymenu.editor.element.deletedvanillabuttons.entry.desc = Щелкните левой кнопкой мыши, чтобы отменить удаление.
 
-helper.editor.ui.exit = Выход
-helper.editor.ui.exit.desc = Закрыть редактор.
+fancymenu.editor.exit = Выход
+fancymenu.editor.exit.desc = Закрыть редактор.
 
-helper.editor.ui.layoutproperties.newelement = Новый элемент
+fancymenu.editor.layoutproperties.newelement = Новый элемент
 
-helper.ui.warning = §lПредупреждение!
-helper.ui.warning.unicode = Шрифты Unicode не полностью поддерживаются пользовательским интерфейсом FancyMenu!%n%Пожалуйста, рассмотрите возможность отключения шрифтов unicode в настройках языка!
+fancymenu.overlay.ui.warning = §lПредупреждение!
+fancymenu.overlay.ui.warning.unicode = Шрифты Unicode не полностью поддерживаются пользовательским интерфейсом FancyMenu!%n%Пожалуйста, рассмотрите возможность отключения шрифтов unicode в настройках языка!
 
-helper.creator.error.invalidfile = §c§lОшибка!%n%%n%%n%Недопустимый или несуществующий файл!%n% %n% %n% %n%
+fancymenu.editor.error.invalidfile = §c§lОшибка!%n%%n%%n%Недопустимый или несуществующий файл!%n% %n% %n% %n%
 
-helper.creator.add.splash = Всплывающий текст
-helper.creator.add.splash.single = Одиночный текст-заставка
-helper.creator.add.splash.single.desc = Введите текстовое содержимое заставки.
-helper.creator.add.splash.multi = Текст с несколькими заставками
-helper.creator.add.splash.multi.desc = Выберите текстовый файл с текстом-заставкой.
+fancymenu.editor.add.splash = Всплывающий текст
+fancymenu.editor.add.splash.single = Одиночный текст-заставка
+fancymenu.editor.add.splash.single.desc = Введите текстовое содержимое заставки.
+fancymenu.editor.add.splash.multi = Текст с несколькими заставками
+fancymenu.editor.add.splash.multi.desc = Выберите текстовый файл с текстом-заставкой.
 
-helper.creator.items.splash.bounce.on = Прыгающий: §aВкл
-helper.creator.items.splash.bounce.off = Прыгающий: §cВыкл
-helper.creator.items.splash.refresh.on = Refreshing: §aВкл
-helper.creator.items.splash.refresh.off = Refreshing: §cВыкл
-helper.creator.items.splash.refresh.desc = Выбирать новую заставку каждый раз, когда меню%n%перезагружается или открывается end.
-helper.creator.items.splash.basecolor = Базовый цвет
-helper.creator.items.splash.rotation = Вращение
+fancymenu.editor.items.splash.bounce.on = Прыгающий: §aВкл
+fancymenu.editor.items.splash.bounce.off = Прыгающий: §cВыкл
+fancymenu.editor.items.splash.refresh.on = Refreshing: §aВкл
+fancymenu.editor.items.splash.refresh.off = Refreshing: §cВыкл
+fancymenu.editor.items.splash.refresh.desc = Выбирать новую заставку каждый раз, когда меню%n%перезагружается или открывается end.
+fancymenu.editor.items.splash.basecolor = Базовый цвет
+fancymenu.editor.items.splash.rotation = Вращение
 
-helper.creator.items.delay = Задержка появления
-helper.creator.items.delay.off = Задержка: §cOff
-helper.creator.items.delay.firsttime = Задержка: §6Первый раз
-helper.creator.items.delay.everytime = Задержка: §aКаждый раз
-helper.creator.items.delay.seconds = Установить Задержку В Секундах
-helper.creator.items.delay.fadein.off = Затухание: §cВыкл
-helper.creator.items.delay.fadein.on = Затухание: §aВкл
-helper.creator.items.delay.fadein.speed = Установить скорость затухания
+fancymenu.editor.items.delay = Задержка появления
+fancymenu.editor.items.delay.off = Задержка: §cOff
+fancymenu.editor.items.delay.firsttime = Задержка: §6Первый раз
+fancymenu.editor.items.delay.everytime = Задержка: §aКаждый раз
+fancymenu.editor.items.delay.seconds = Установить Задержку В Секундах
+fancymenu.editor.items.delay.fadein.off = Затухание: §cВыкл
+fancymenu.editor.items.delay.fadein.on = Затухание: §aВкл
+fancymenu.editor.items.delay.fadein.speed = Установить скорость затухания
 
-fancymenu.helper.creator.layoutoptions.randommode.on = Случайный режим: §aВкл
-fancymenu.helper.creator.layoutoptions.randommode.off = Случайный режим: §cВыкл
-fancymenu.helper.creator.layoutoptions.randommode.btn.desc = Выберите случайный макет из той же группы,%n%когда откроется меню.%n%%n%Можно использовать для рандомизации%n%фонов и других элементов.
-fancymenu.helper.creator.layoutoptions.randommode.setgroup = Установить случайную группу
-fancymenu.helper.creator.layoutoptions.randommode.setgroup.btn.desc = Задайет группу этого случайного макета.%n%При открытии меню выбирается%n%один макет для каждой группы.
-fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.on = Рандомизировать только в первый раз: §aВкл
-fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.off = Рандомизировать только в первый раз: §cВыкл
-fancymenu.helper.creator.layoutoptions.randommode.onlyfirsttime.btn.desc = Если макеты этой случайной группы%n%должны быть случайными при%n%каждом открытии меню%n%или если при первом открытии меню%n%следует выбрать только один макет.
+fancymenu.fancymenu.editor.layoutoptions.randommode.on = Случайный режим: §aВкл
+fancymenu.fancymenu.editor.layoutoptions.randommode.off = Случайный режим: §cВыкл
+fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc = Выберите случайный макет из той же группы,%n%когда откроется меню.%n%%n%Можно использовать для рандомизации%n%фонов и других элементов.
+fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup = Установить случайную группу
+fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc = Задайет группу этого случайного макета.%n%При открытии меню выбирается%n%один макет для каждой группы.
+fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.on = Рандомизировать только в первый раз: §aВкл
+fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.off = Рандомизировать только в первый раз: §cВыкл
+fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc = Если макеты этой случайной группы%n%должны быть случайными при%n%каждом открытии меню%n%или если при первом открытии меню%n%следует выбрать только один макет.
 
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.set = Установить фон
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.set.desc = Устанавливает выбранную анимацию%n%в качестве активной фоновой анимации.
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear = Очистить
-fancymenu.helper.creator.backgroundoptions.backgroundanimation.clear.desc = Удаляет текущую%n%активную фоновую анимацию.
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.set = Установить фон
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.set.desc = Устанавливает выбранную анимацию%n%в качестве активной фоновой анимации.
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.clear = Очистить
+fancymenu.fancymenu.editor.backgroundoptions.backgroundanimation.clear.desc = Удаляет текущую%n%активную фоновую анимацию.
 
 fancymenu.helper.editor.items.buttons.buttonbackground = Фон кнопки
 fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground = Нормальный фон
@@ -728,8 +728,8 @@ fancymenu.helper.editor.items.visibilityrequirements.serveronline.valuename = IP
 fancymenu.helper.editor.items.copyid = Скопировать идентификатор элемента
 fancymenu.helper.editor.items.copyid.btn.desc = Скопируйте идентификатор этого элемента,%n%чтобы использовать его в требованиях к видимости и т.д.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.local = Локализовать текст
-fancymenu.helper.ui.dynamicvariabletextfield.variables.local.desc = Локализует текст по заданному ключу.%n%%n%Просто замените 'localization.key' в заполнителе с%n%ключом локализации.%n%%n%§cПроверьте wiki, чтобы узнать, как добавить%n%§cваши собственные текстовые локализации!%n%%n%§cВики: fm.keksuccino.com
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.local = Локализовать текст
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.local.desc = Локализует текст по заданному ключу.%n%%n%Просто замените 'localization.key' в заполнителе с%n%ключом локализации.%n%%n%§cПроверьте wiki, чтобы узнать, как добавить%n%§cваши собственные текстовые локализации!%n%%n%§cВики: fm.keksuccino.com
 
 FancyMenu.getConfig().showgrid = Показать сетку
 FancyMenu.getConfig().showgrid.desc = Добавьте сетку в редактор для упрощения выравнивания.
@@ -746,33 +746,33 @@ fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2 = Это 
 fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3 = Если вы сделали это в текущем размере окна, просто оставьте значения такими, какие они есть.
 fancymenu.helper.editor.properties.autoscale.error = §c§lЧто-то пошло не так!%n%%n%Не удалось установить базовый размер для автоматического масштабирования!%n%Пожалуйста, проверьте, являются ли оба значения §lбольше 0%n%и являются ли они §lдопустимыми числами§r.%n% %n% %n% %n% %n%
 
-fancymenu.helper.ui.dynamicvariabletextfield.categories.other = Другой
-fancymenu.helper.ui.dynamicvariabletextfield.categories.server = Сервер
-fancymenu.helper.ui.dynamicvariabletextfield.categories.realtime = Реальное время жизни
-fancymenu.helper.ui.dynamicvariabletextfield.categories.player = Игрок
-fancymenu.helper.ui.dynamicvariabletextfield.categories.client = Клиент
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other = Другой
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.server = Сервер
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.realtime = Реальное время жизни
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.player = Игрок
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.client = Клиент
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeyear = Год
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimemonth = Месяц
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeday = День
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimehour = Час
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimeminute = Минута
-fancymenu.helper.ui.dynamicvariabletextfield.variables.realtimesecond = Секунда
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeyear = Год
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimemonth = Месяц
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeday = День
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimehour = Час
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimeminute = Минута
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.realtimesecond = Секунда
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd = МОТД сервера
-fancymenu.helper.ui.dynamicvariabletextfield.variables.servermotd.desc = Получает MOTD сервера.%n%Просто замените 'someserver.com:25565'%n%с фактическим IP-адресом сервера%n%и '1' в строке MOTD.%n%У MOTDs есть только 2 строки, поэтому%n%единственными допустимыми значениями строк являются%n%'1' и '2'.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping = ПИНГ сервера
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverping.desc = Получает пинг на сервер.%n%%n%Просто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount = Количество игроков на сервере
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverplayercount.desc = Получает количество игроков на сервере.%n%%n%ППросто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus = Статус сервера
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverstatus.desc = Получает статус (онлайн/оффлайн) сервера.%n%%n%Просто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion = Версия сервера
-fancymenu.helper.ui.dynamicvariabletextfield.variables.serverversion.desc = Получает версию MC сервера.%n%%n%Просто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.servermotd = МОТД сервера
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.servermotd.desc = Получает MOTD сервера.%n%Просто замените 'someserver.com:25565'%n%с фактическим IP-адресом сервера%n%и '1' в строке MOTD.%n%У MOTDs есть только 2 строки, поэтому%n%единственными допустимыми значениями строк являются%n%'1' и '2'.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverping = ПИНГ сервера
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverping.desc = Получает пинг на сервер.%n%%n%Просто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverplayercount = Количество игроков на сервере
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverplayercount.desc = Получает количество игроков на сервере.%n%%n%ППросто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverstatus = Статус сервера
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverstatus.desc = Получает статус (онлайн/оффлайн) сервера.%n%%n%Просто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverversion = Версия сервера
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverversion.desc = Получает версию MC сервера.%n%%n%Просто замените 'someserver.com:25565' в строке%n%укажите действительный IP-адрес сервера.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.percentram = Используемая оперативная память в %
-fancymenu.helper.ui.dynamicvariabletextfield.variables.usedram = Используемая оперативная память в МБ
-fancymenu.helper.ui.dynamicvariabletextfield.variables.maxram = Максимальная оперативная память в МБ
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.percentram = Используемая оперативная память в %
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.usedram = Используемая оперативная память в МБ
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.maxram = Максимальная оперативная память в МБ
 
 fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground = Установить фон
 fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc = Установите изображение, анимацию, панораму%n%или слайд-шоу в качестве фона.
@@ -832,21 +832,21 @@ fancymenu.helper.ui.setup.restore.entry.btn.desc = Щелкните левой �
 fancymenu.commands.openguiscreen.error = Произошла ошибка при попытке открыть графический интерфейс.
 fancymenu.commands.openguiscreen.cannotopen = Не удается открыть графический интерфейс! Графический интерфейс, который вы хотите открыть, либо не существует, либо не поддерживается! Если это ванильный графический интерфейс, пожалуйста, свяжитесь с разработчиком FancyMenu, чтобы добавить для него поддержку.
 
-helper.creator.custombutton.config.actiontype.copytoclipboard.desc = Скопируйте текст в буфер обмена.
-helper.creator.custombutton.config.actiontype.copytoclipboard.desc.value = Текст
-helper.creator.custombutton.config.actiontype.copytoclipboard.desc.value.example = Этот текст был скопирован в ваш буфер обмена!
+fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc = Скопируйте текст в буфер обмена.
+fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value = Текст
+fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value.example = Этот текст был скопирован в ваш буфер обмена!
 
 FancyMenu.getConfig().forcefullscreen = Полноэкранный режим
 FancyMenu.getConfig().forcefullscreen.desc = Переводит окно в полноэкранный режим при запуске.%n%Пользователи все равно смогут%n%выйти из полноэкранного режима позже.
 
-helper.creator.custombutton.config.actiontype.mimicbutton.desc = Имитируйте поведение нажатия действие%n%кнопки vanilla/mod.%n%%n%Вам нужен локатор кнопок §l§rкнопки,%n%которую вы хотите имитировать.%n%%n%Как получить §lлокатор §rкнопки:%n%%n%§l1. §rВыйти из редактора%n%§l2. §rВключить §lИнструменты -> Информация о кнопке%n%§l3. §rНаведите курсор на целевую кнопку%n%§l4. §rЩелкните правой кнопкой мыши на кнопке
-helper.creator.custombutton.config.actiontype.mimicbutton.desc.value = Локатор кнопок
-helper.creator.custombutton.config.actiontype.mimicbutton.desc.value.example = some.menu.identifier:505280
+fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc = Имитируйте поведение нажатия действие%n%кнопки vanilla/mod.%n%%n%Вам нужен локатор кнопок §l§rкнопки,%n%которую вы хотите имитировать.%n%%n%Как получить §lлокатор §rкнопки:%n%%n%§l1. §rВыйти из редактора%n%§l2. §rВключить §lИнструменты -> Информация о кнопке%n%§l3. §rНаведите курсор на целевую кнопку%n%§l4. §rЩелкните правой кнопкой мыши на кнопке
+fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc.value = Локатор кнопок
+fancymenu.editor.custombutton.config.actiontype.mimicbutton.desc.value.example = some.menu.identifier:505280
 
 fancymenu.custombutton.action.mimicbutton.unabletoexecute = §c§lError!%n%%n%Не удается выполнить действие кнопки!%n%%n%Неверный локатор кнопки или не удается%n%открыть родительский экран кнопки.%n% %n% %n% %n%
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel = Кнопка текста Vanilla
-fancymenu.helper.ui.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Получить текст кнопки vanilla.%n%%n%Заменить 'some.menu.identifier:505280'%n%на правильный локатор%n%целевой кнопки.%n%%n%Указатель кнопки представляет собой комбинацию%n%идентификатора меню,%n%в котором находится кнопка, и%n%идентификатора кнопки, разделенных%n%двоеточием.%n%%n%§cВы можете щелкнуть правой кнопкой мыши на кнопке%n%§cв редакторе, чтобы скопировать ее локатор.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel = Кнопка текста Vanilla
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel.desc = Получить текст кнопки vanilla.%n%%n%Заменить 'some.menu.identifier:505280'%n%на правильный локатор%n%целевой кнопки.%n%%n%Указатель кнопки представляет собой комбинацию%n%идентификатора меню,%n%в котором находится кнопка, и%n%идентификатора кнопки, разделенных%n%двоеточием.%n%%n%§cВы можете щелкнуть правой кнопкой мыши на кнопке%n%§cв редакторе, чтобы скопировать ее локатор.
 
 fancymenu.helper.editor.windowsizerestrictions.reset = Сбросить ограничения по размеру окна
 fancymenu.helper.editor.windowsizerestrictions.reset.btn.desc = Сбросить/удалить все ограничения по размеру окна.
@@ -860,10 +860,10 @@ FancyMenu.getConfig().show_server_icons.desc = Если значки серве�
 FancyMenu.getConfig().show_world_icons = Показывать иконки Мира
 FancyMenu.getConfig().show_world_icons.desc = Если значки Мира должны быть видны.
 
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations = §cВам необходимо включить настройки%n%§cдля текущего меню, чтобы использовать этот инструмент!
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1 = §lВажно!
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = Вам необходимо включить настройки для
-fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = текущее меню перед использованием §rинструмента Информация о §cкнопке!
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations = §cВам необходимо включить настройки%n%§cдля текущего меню, чтобы использовать этот инструмент!
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1 = §lВажно!
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line2 = Вам необходимо включить настройки для
+fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line3 = текущее меню перед использованием §rинструмента Информация о §cкнопке!
 
 fancymenu.helper.editor.items.visibilityrequirements.guiscale = Является ли графический интерфейс масштабируемым
 fancymenu.helper.editor.items.visibilityrequirements.guiscale.desc = Проверьте, равен ли текущий масштаб графического интерфейса X.%n%%n%Вы можете проверить, больше ли ('>'),%n%меньше, чем ('<') и равен X.%n%%n%Например, если вы хотите проверить,%n%если масштаб меньше 3.20, введите%n%'<3.20' (без '').%n%Чтобы проверить, равен ли масштаб 1.0,%n%просто введите '1.0' (без '').%n%При проверке, больше ли масштаб 2.20,%n%введите'>2.20' (без '').%n%%n%Вы можете разделить несколько значений запятой,%n%чтобы проверить наличие более чем%n%одной шкалы одновременно.
@@ -884,19 +884,19 @@ fancymenu.helper.editor.backgrounds.custom.clearbackground.desc = Очистит
 fancymenu.helper.editor.extension.dummy.audio.btn.desc = §6Вам необходимо установить%n%§6§lАудио расширение, §r§6чтобы использовать этот%n%§6элемент.%n%%n%§cНажмите на кнопку, чтобы%n%§cоткрыть страницу загрузки.
 fancymenu.helper.editor.extension.dummy.audio.manageaudio.btn.desc = §c§lУСТАРЕЛО!%n%%n%§cЭто часть старой%n%§cаудиосистемы, и она будет удалена%n%§cочень скоро!%n%%n%§cДля получения дополнительной информации прочтите%n%§cвсплывающую подсказку%n%§cкнопки, чтобы добавить новый аудиоэлемент.
 
-helper.creator.custombutton.config.actiontype.join_last_world.desc = Присоединяйтесь к последнему миру/серверу.
+fancymenu.editor.custombutton.config.actiontype.join_last_world.desc = Присоединяйтесь к последнему миру/серверу.
 
 fancymenu.helper.ui.universal_layouts = Универсальные макеты
 fancymenu.helper.ui.universal_layouts.btn.desc = Универсальные макеты - это макеты,%n%которые применяются к каждому%n%настраиваемому меню%n%а не только к одному меню.%n%%n%Их можно использовать для применения%n%фоновых изображений, звуков и т.д.%n%ко всем меню сразу.
 fancymenu.helper.ui.universal_layouts.new = Новый макет
 fancymenu.helper.ui.universal_layouts.manage = Управление макетами
 
-fancymenu.helper.ui.misc.open_progress_screen = Открыть экран выполнения
-fancymenu.helper.ui.misc.open_progress_screen.btn.desc = Откроет фиктивный экземпляр%n%экрана выполнения, который%n%используется для присоединения к серверам и%n%загрузки в миры.%n%%n%Позволяет вам настроить этот экран.
-fancymenu.helper.ui.misc.receiving_level_screen = Открыть экран уровня загрузки
-fancymenu.helper.ui.misc.receiving_level_screen.btn.desc = Откроет фиктивный экземпляр%n%экрана уровня приема, который%n%используется для присоединения к серверам и%n%загрузки в миры.%n%%n%Позволяет вам настроить этот экран.%n%%n%§cВы можете открыть только этот экран%n%§cнаходясь не в мире%n%§cи не на сервере!
-fancymenu.helper.ui.misc.open_connect_screen = Открыть экран подключения
-fancymenu.helper.ui.misc.open_connect_screen.btn.desc = Откроет фиктивный экземпляр%n%экрана подключения, который%n%используется для подключения к серверам.%n%%n%Позволяет вам настроить этот экран.%n%%n%§cВы можете открыть только этот экран%n%§cнаходясь не в мире%n%§cи не на сервере!!
+fancymenu.fancymenu.overlay.ui.misc.open_progress_screen = Открыть экран выполнения
+fancymenu.fancymenu.overlay.ui.misc.open_progress_screen.btn.desc = Откроет фиктивный экземпляр%n%экрана выполнения, который%n%используется для присоединения к серверам и%n%загрузки в миры.%n%%n%Позволяет вам настроить этот экран.
+fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen = Открыть экран уровня загрузки
+fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen.btn.desc = Откроет фиктивный экземпляр%n%экрана уровня приема, который%n%используется для присоединения к серверам и%n%загрузки в миры.%n%%n%Позволяет вам настроить этот экран.%n%%n%§cВы можете открыть только этот экран%n%§cнаходясь не в мире%n%§cи не на сервере!
+fancymenu.fancymenu.overlay.ui.misc.open_connect_screen = Открыть экран подключения
+fancymenu.fancymenu.overlay.ui.misc.open_connect_screen.btn.desc = Откроет фиктивный экземпляр%n%экрана подключения, который%n%используется для подключения к серверам.%n%%n%Позволяет вам настроить этот экран.%n%%n%§cВы можете открыть только этот экран%n%§cнаходясь не в мире%n%§cи не на сервере!!
 
 fancymenu.helper.editor.layoutoptions.universal_layout.options = Универсальные варианты компоновки
 fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier = Идентификатор меню ввода:
@@ -916,8 +916,8 @@ fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.c
 
 fancymenu.guicomponents.back = Назад
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext = Случайный Текст из TXT-файла
-fancymenu.helper.ui.dynamicvariabletextfield.variables.randomtext.desc = Выбирает случайный текст из TXT-файла.%n%%n%Поддерживает пользовательские интервалы изменения текстов.%n%%n%Просто замените 'randomtexts.txt ' на%n%путь к вашему текстовому файлу%n%и замените '10' на%n%интервал изменения в секундах.%n%Интервал, равный 0, приведет к тому, что%n%выберет текст только один раз за сеанс.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext = Случайный Текст из TXT-файла
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext.desc = Выбирает случайный текст из TXT-файла.%n%%n%Поддерживает пользовательские интервалы изменения текстов.%n%%n%Просто замените 'randomtexts.txt ' на%n%путь к вашему текстовому файлу%n%и замените '10' на%n%интервал изменения в секундах.%n%Интервал, равный 0, приведет к тому, что%n%выберет текст только один раз за сеанс.
 
 fancymenu.helper.editor.items.visibilityrequirements.realtimeday = День реального времени
 fancymenu.helper.editor.items.visibilityrequirements.realtimeday.desc = Проверить, является ли текущий день реального времени X.%n%%n%Вы можете разделить несколько значений запятой,%n%чтобы проверять более одного дня%n%одновременно.
@@ -929,8 +929,8 @@ fancymenu.helper.editor.items.visibilityrequirements.realtimeyear = Год в р
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.desc = Проверить, является ли текущий год в реальном времени X.%n%%n%Вы можете разделить несколько значений запятой,%n%чтобы проверять более одного года%n%одновременно.
 fancymenu.helper.editor.items.visibilityrequirements.realtimeyear.valuename = Год(ы) реального времени (Значения разделяются запятой)
 
-fancymenu.helper.editor.ui.element.deleted_vanilla_elements = Удаленныть элементы Vanilla
-fancymenu.helper.editor.ui.element.deleted_vanilla_elements.desc = Управлять всеми удаленными элементами vanilla.
+fancymenu.fancymenu.editor.element.deleted_vanilla_elements = Удаленныть элементы Vanilla
+fancymenu.fancymenu.editor.element.deleted_vanilla_elements.desc = Управлять всеми удаленными элементами vanilla.
 
 fancymenu.helper.editor.element.vanilla.delete.confirm = §c§lВАЖНО%n%%n%Удаление элемента vanilla полностью скроет его.%n%Чтобы снова сделать его видимым, нажмите на §lэлемент -> Удаленные элементы Vanilla§r.%n% %n% %n% %n%
 
@@ -973,9 +973,9 @@ fancymenu.helper.visibilityrequirement.is_layout_enabled = Включен ли �
 fancymenu.helper.visibilityrequirement.is_layout_enabled.desc = Проверить, включена ли компоновка меню.
 fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc = Название макета
 
-fancymenu.helper.ui.tools.clear_variables = Очистить сохраненные переменные
-fancymenu.helper.ui.tools.clear_variables.desc = Очистит ВСЕ сохраненные значения!%n%%n%§cЭто не может быть отменено!
-fancymenu.helper.ui.tools.clear_variables.confirm = §c§lТы уверен?%n%%n%Вы действительно хотите §lочистить/сбросить §rВСЕ сохраненные переменные?%n%%n%§lЭто действие не может быть отменено!%n% %n% %n% %n%
+fancymenu.fancymenu.overlay.ui.tools.clear_variables = Очистить сохраненные переменные
+fancymenu.fancymenu.overlay.ui.tools.clear_variables.desc = Очистит ВСЕ сохраненные значения!%n%%n%§cЭто не может быть отменено!
+fancymenu.fancymenu.overlay.ui.tools.clear_variables.confirm = §c§lТы уверен?%n%%n%Вы действительно хотите §lочистить/сбросить §rВСЕ сохраненные переменные?%n%%n%§lЭто действие не может быть отменено!%n% %n% %n% %n%
 
 fancymenu.helper.buttonaction.toggle_layout.desc = Переключите расположение меню (включить/отключить)%n%по его названию.
 fancymenu.helper.buttonaction.toggle_layout.value.desc = Название макета
@@ -1117,16 +1117,16 @@ FancyMenu.getConfig().allow_level_registry_interactions.desc = Разрешит�
 FancyMenu.getConfig().show_unicode_warning = Показ. пред. в unicode
 FancyMenu.getConfig().show_unicode_warning.desc = Если должно быть видно красное предупреждение,%n%сообщающее вам, что шрифты unicode%n%не полностью совместимы%n%с пользовательским интерфейсом FancyMenu.
 
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth = Ширина экрана
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiwidth.desc = Ширина текущего меню.
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiheight = Высота экрана
-fancymenu.helper.ui.dynamicvariabletextfield.variables.guiheight.desc = Высота текущего меню.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth = Ширина экрана
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiwidth.desc = Ширина текущего меню.
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiheight = Высота экрана
+fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.guiheight.desc = Высота текущего меню.
 
 fancymenu.helper.placeholder.stringify = Упорядочить
 fancymenu.helper.placeholder.stringify.desc = Упорядочивает текст, экранируя все%n%синтаксические символы( " { } ).%n%%n%Это полезно при вложении других заполнителей%n%в качестве значения. Если замененный вложенный заполнитель%n%может содержать синтаксические%n%символы, которые не являются%n%частью другого заполнителя, вам нужно,%n%чтобы избежать их.%n%%n%§cЗаполнители в значении будут сначала заменены,%n%§cпоэтому вам не нужно%n%§cбеспокоиться о том, что они будут преобразованы в строку.
 
-fancymenu.helper.ui.dynamicvariabletextfield.categories.advanced = Передовой
-fancymenu.helper.ui.dynamicvariabletextfield.categories.gui = Графический интерфейс
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.advanced = Передовой
+fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.gui = Графический интерфейс
 
 fancymenu.helper.placeholder.elementheight = Высота элемента
 fancymenu.helper.placeholder.elementheight.desc = Возвращает высоту элемента%n%по его идентификатору элемента.%n%%n%Просто замените 'some.element.id' с%n%фактическим идентификатором элемента.%n%%n%§cВы можете получить идентификатор элементов,%n%§cщелкнув их правой кнопкой мыши в редакторе.

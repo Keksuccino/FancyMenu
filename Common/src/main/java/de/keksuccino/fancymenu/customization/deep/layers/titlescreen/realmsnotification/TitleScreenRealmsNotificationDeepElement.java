@@ -4,43 +4,41 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-
-public class TitleScreenRealmsNotificationItemAbstract extends AbstractDeepElement {
+public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElement {
 
     private static final ResourceLocation NEWS_ICON_LOCATION = new ResourceLocation("realms", "textures/gui/realms/news_notification_mainscreen.png");
 
-    public TitleScreenRealmsNotificationItemAbstract(DeepElementBuilder parentElement, PropertyContainer item) {
-        super(parentElement, item);
+    public TitleScreenRealmsNotificationDeepElement(DeepElementBuilder<?, ?, ?> builder) {
+        super(builder);
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        if (!this.shouldRender()) return;
 
         RenderSystem.enableBlend();
 
-        int yStart = menu.height / 4 + 48;
-        int l = menu.width / 2 + 80;
+        int yStart = getScreenHeight() / 4 + 48;
+        int l = getScreenWidth() / 2 + 80;
         int i1 = yStart + 48 + 2;
         int j1 = 0;
         int xOffset = 20;
 
-        int realmsButtonX = menu.width / 2 + 2;
+        int realmsButtonX = getScreenWidth() / 2 + 2;
         int realmsButtonY = yStart + 24 * 2;
         int realmsButtonWidth = 98;
-//        int realmsButtonHeight = 20;
 
         RenderSystem.setShaderTexture(0, NEWS_ICON_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        matrix.pushPose();
-        matrix.scale(0.4F, 0.4F, 0.4F);
-        GuiComponent.blit(matrix, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
-        matrix.popPose();
+        pose.pushPose();
+        pose.scale(0.4F, 0.4F, 0.4F);
+        GuiComponent.blit(pose, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
+        pose.popPose();
 
         this.width = 13;
         this.height = 13;

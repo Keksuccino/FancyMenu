@@ -18,7 +18,7 @@
 //import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 //import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 //import de.keksuccino.konkrete.file.FileUtils;
-//import de.keksuccino.konkrete.input.StringUtils;
+//import de.keksuccino.fancymenu.utils.LocalizationUtils;
 //import de.keksuccino.konkrete.math.MathUtils;
 //import de.keksuccino.fancymenu.properties.PropertyContainer;
 //import de.keksuccino.konkrete.rendering.RenderUtils;

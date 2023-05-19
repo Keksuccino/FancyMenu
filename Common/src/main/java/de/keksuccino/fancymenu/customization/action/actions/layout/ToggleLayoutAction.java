@@ -2,8 +2,9 @@ package de.keksuccino.fancymenu.customization.action.actions.layout;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 
 import java.util.List;
 
@@ -23,12 +24,12 @@ public class ToggleLayoutAction extends Action {
 
         if (value != null) {
 
-            List<LayoutHandler.LayoutProperties> enabled = LayoutHandler.getAsLayoutProperties(LayoutHandler.getEnabledLayouts());
-            List<LayoutHandler.LayoutProperties> disabled = LayoutHandler.getAsLayoutProperties(LayoutHandler.getDisabledLayouts());
+            List<Layout> enabled = LayoutHandler.getEnabledLayouts();
+            List<Layout> disabled = LayoutHandler.getDisabledLayouts();
 
-            for (LayoutHandler.LayoutProperties l : enabled) {
-                if (l.path != null) {
-                    String name = Files.getNameWithoutExtension(l.path);
+            for (Layout l : enabled) {
+                if (l.layoutFile != null) {
+                    String name = Files.getNameWithoutExtension(l.layoutFile.getName());
                     if (name.equals(value)) {
                         LayoutHandler.disableLayout(l);
                         return;
@@ -36,9 +37,9 @@ public class ToggleLayoutAction extends Action {
                 }
             }
 
-            for (LayoutHandler.LayoutProperties l : disabled) {
-                if (l.path != null) {
-                    String name = Files.getNameWithoutExtension(l.path);
+            for (Layout l : disabled) {
+                if (l.layoutFile != null) {
+                    String name = Files.getNameWithoutExtension(l.layoutFile.getName());
                     if (name.equals(value)) {
                         LayoutHandler.enableLayout(l);
                         return;
@@ -52,12 +53,12 @@ public class ToggleLayoutAction extends Action {
 
     @Override
     public String getActionDescription() {
-        return Locals.localize("fancymenu.helper.buttonaction.toggle_layout.desc");
+        return I18n.get("fancymenu.helper.buttonaction.toggle_layout.desc");
     }
 
     @Override
     public String getValueDescription() {
-        return Locals.localize("fancymenu.helper.buttonaction.toggle_layout.value.desc");
+        return I18n.get("fancymenu.helper.buttonaction.toggle_layout.value.desc");
     }
 
     @Override

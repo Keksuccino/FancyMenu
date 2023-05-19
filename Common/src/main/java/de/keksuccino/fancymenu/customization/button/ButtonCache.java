@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
-import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -68,7 +67,7 @@ public class ButtonCache {
 			}
 
 			//Don't cache video settings if OptiFine is active
-			if ((s instanceof VideoSettingsScreen) && FancyMenu.isOptifineLoaded()) {
+			if ((s instanceof VideoSettingsScreen) && FancyMenu.isOptiFineLoaded()) {
 				BUTTONS.clear();
 				EventHandler.INSTANCE.postEvent(new ButtonCacheUpdatedEvent(s, new ArrayList<>(), false));
 				return;
@@ -104,7 +103,7 @@ public class ButtonCache {
 		}
 
 		//Don't update video settings buttons if Optifine is active
-		if ((s instanceof VideoSettingsScreen) && FancyMenu.isOptifineLoaded()) {
+		if ((s instanceof VideoSettingsScreen) && FancyMenu.isOptiFineLoaded()) {
 			return;
 		}
 
@@ -119,14 +118,14 @@ public class ButtonCache {
 		}
 		//Use the new id calculation system
 		List<ButtonData> ids = cacheButtons(s, 1000, 1000);
-		List<ButtonData> btns = cacheButtons(s, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+		List<ButtonData> buttons = cacheButtons(s, Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 
-		if (btns.size() == ids.size()) {
+		if (buttons.size() == ids.size()) {
 			int i = 0;
 			for (ButtonData id : ids) {
-				ButtonData button = btns.get(i);
+				ButtonData button = buttons.get(i);
 				if (!BUTTONS.containsKey(id.getId())) {
-					BUTTONS.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().getMessage().getString()), s));
+					BUTTONS.put(id.getId(), new ButtonData(button.getButton(), id.getId(), s));
 				}
 				i++;
 			}
@@ -154,7 +153,6 @@ public class ButtonCache {
 			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
-			//TODO resize instead of init
 			s.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 
 			//Reflecting the buttons list field to cache all buttons of the menu
@@ -171,7 +169,7 @@ public class ButtonCache {
 					id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
 				}
 				ids.add(id);
-				buttonDataList.add(new ButtonData(w, id, LocaleUtils.getKeyForString(w.getMessage().getString()), s));
+				buttonDataList.add(new ButtonData(w, id, s));
 			}
 
 		} catch (Exception e) {
@@ -191,22 +189,6 @@ public class ButtonCache {
 		return baseId;
 	}
 
-	public static void cacheFrom(Screen s, int screenWidth, int screenHeight) {
-		updateButtons(s);
-	}
-
-	/**
-	 * Returns the button key or null if the button has no cached key.
-	 */
-	public static String getKeyForButton(AbstractWidget w) {
-		for (Map.Entry<Long, ButtonData> m : BUTTONS.entrySet()) {
-			if (m.getValue().getButton() == w) {
-				return m.getValue().getKey();
-			}
-		}
-		return null;
-	}
-
 	/**
 	 * Returns the button for this id or null if no button with this id was found.
 	 */
@@ -223,30 +205,6 @@ public class ButtonCache {
 				if (d.getCompatibilityId().equals(id)) {
 					return d;
 				}
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Returns the button for this key or null if no button with this key was found.
-	 */
-	public static ButtonData getButtonForKey(String key) {
-		for (Map.Entry<Long, ButtonData> m : BUTTONS.entrySet()) {
-			if (m.getValue().getKey().equalsIgnoreCase(key)) {
-				return m.getValue();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Returns the button for this name or null if no button with this name was found.
-	 */
-	public static ButtonData getButtonForName(String name) {
-		for (Map.Entry<Long, ButtonData> m : BUTTONS.entrySet()) {
-			if (m.getValue().label.equals(name)) {
-				return m.getValue();
 			}
 		}
 		return null;

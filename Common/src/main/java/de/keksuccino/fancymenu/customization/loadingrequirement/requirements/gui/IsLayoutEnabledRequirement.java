@@ -1,11 +1,12 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui;
 
 import com.google.common.io.Files;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 
@@ -28,21 +29,11 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         if (value != null) {
-
-            for (PropertyContainerSet s : LayoutHandler.getEnabledLayouts()) {
-                List<PropertyContainer> l = s.getSectionsOfType("customization-meta");
-                if (!l.isEmpty()) {
-                    PropertyContainer meta = l.get(0);
-                    String path = meta.getValue("path");
-                    if (path != null) {
-                        String name = Files.getNameWithoutExtension(path);
-                        if (name.equals(value)) {
-                            return true;
-                        }
-                    }
+            for (Layout s : LayoutHandler.getEnabledLayouts()) {
+                if (s.layoutFile != null) {
+                    return Files.getNameWithoutExtension(s.layoutFile.getName()).equals(value);
                 }
             }
-
         }
 
         return false;
@@ -51,22 +42,22 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
 
     @Override
     public String getDisplayName() {
-        return Locals.localize("fancymenu.helper.visibilityrequirement.is_layout_enabled");
+        return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled");
     }
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(StringUtils.splitLines(Locals.localize("fancymenu.helper.visibilityrequirement.is_layout_enabled.desc"), "%n%"));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled.desc")));
     }
 
     @Override
     public String getCategory() {
-        return Locals.localize("fancymenu.editor.loading_requirement.category.gui");
+        return I18n.get("fancymenu.editor.loading_requirement.category.gui");
     }
 
     @Override
     public String getValueDisplayName() {
-        return Locals.localize("fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc");
+        return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled.value.desc");
     }
 
     @Override

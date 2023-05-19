@@ -15,8 +15,8 @@ import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
@@ -173,12 +173,12 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
         this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
 
-        this.cancelButton = new AdvancedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new AdvancedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
             this.onClose();
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
-        this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Locals.localize("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.callback != null) {
                 this.callback.accept(this.getText());
@@ -186,7 +186,7 @@ public class TextEditorScreen extends Screen {
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.placeholderButton = new AdvancedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, Locals.localize("fancymenu.ui.text_editor.placeholders"), true, (button) -> {
+        this.placeholderButton = new AdvancedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), true, (button) -> {
             if (showPlaceholderMenu) {
                 showPlaceholderMenu = false;
             } else {
@@ -194,7 +194,7 @@ public class TextEditorScreen extends Screen {
             }
             this.rebuildWidgets();
         });
-        this.placeholderButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.dynamicvariabletextfield.variables.desc"), "%n%"));
+        this.placeholderButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
         UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
         if (showPlaceholderMenu) {
             this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
@@ -212,7 +212,7 @@ public class TextEditorScreen extends Screen {
         }
         this.rightClickContextMenu = new ContextMenu();
 
-        AdvancedButton cutButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.ui.text_editor.cut"), true, (press) -> {
+        AdvancedButton cutButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.cut"), true, (press) -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.rightClickContextMenu.closeMenu();
         });
@@ -221,7 +221,7 @@ public class TextEditorScreen extends Screen {
             cutButton.active = false;
         }
 
-        AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.ui.text_editor.copy"), true, (press) -> {
+        AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.copy"), true, (press) -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             this.rightClickContextMenu.closeMenu();
         });
@@ -230,7 +230,7 @@ public class TextEditorScreen extends Screen {
             copyButton.active = false;
         }
 
-        AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.ui.text_editor.paste"), true, (press) -> {
+        AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.paste"), true, (press) -> {
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             this.rightClickContextMenu.closeMenu();
         });
@@ -238,7 +238,7 @@ public class TextEditorScreen extends Screen {
 
         this.rightClickContextMenu.addSeparator();
 
-        AdvancedButton selectAllButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.ui.text_editor.select_all"), true, (press) -> {
+        AdvancedButton selectAllButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.select_all"), true, (press) -> {
             for (TextEditorLine t : this.textFieldLines) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -336,7 +336,7 @@ public class TextEditorScreen extends Screen {
                 a = Math.max(10, (int)(255F * f));
             }
             Color c = new Color(this.multilineNotSupportedNotificationColor.getRed(), this.multilineNotSupportedNotificationColor.getGreen(), this.multilineNotSupportedNotificationColor.getBlue(), a);
-            this.font.draw(matrix, Locals.localize("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB());
+            this.font.draw(matrix, I18n.get("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB());
         }
     }
 
@@ -418,7 +418,7 @@ public class TextEditorScreen extends Screen {
 
         Map<String, List<Placeholder>> categories = this.getPlaceholdersOrderedByCategories();
         if (!categories.isEmpty()) {
-            List<Placeholder> otherCategory = categories.get(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"));
+            List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
             if (otherCategory != null) {
 
                 if (category == null) {
@@ -435,12 +435,12 @@ public class TextEditorScreen extends Screen {
                         }
                     }
                     //Add placeholder entries of the "Other" category to the end of the categories list (because other = no category)
-                    this.updatePlaceholderEntries(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"), false, false);
+                    this.updatePlaceholderEntries(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"), false, false);
 
                 } else {
 
                     if (addBackButton) {
-                        PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Component.literal(Locals.localize("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
+                        PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Component.literal(I18n.get("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
                             this.updatePlaceholderEntries(null, true, true);
                         });
                         backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory;
@@ -484,7 +484,7 @@ public class TextEditorScreen extends Screen {
         for (Placeholder p : PlaceholderRegistry.getPlaceholdersList()) {
             String cat = p.getCategory();
             if (cat == null) {
-                cat = Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other");
+                cat = I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
             }
             List<Placeholder> l = categories.get(cat);
             if (l == null) {
@@ -494,10 +494,10 @@ public class TextEditorScreen extends Screen {
             l.add(p);
         }
         //Move the Other category to the end
-        List<Placeholder> otherCategory = categories.get(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"));
+        List<Placeholder> otherCategory = categories.get(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
         if (otherCategory != null) {
-            categories.remove(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"));
-            categories.put(Locals.localize("fancymenu.helper.ui.dynamicvariabletextfield.categories.other"), otherCategory);
+            categories.remove(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"));
+            categories.put(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other"), otherCategory);
         }
         return categories;
     }

@@ -25,7 +25,6 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.Loa
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.Placeholders;
-import de.keksuccino.fancymenu.customization.placeholder.v1.placeholders.Placeholders;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
@@ -43,6 +42,7 @@ import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
 
 public class ScreenCustomization {
 
@@ -284,29 +284,33 @@ public class ScreenCustomization {
 		return new ArrayList<>(SCREEN_BLACKLIST_RULES);
 	}
 
-	public static boolean isScreenBlacklisted(Screen screen) {
+	public static boolean isScreenBlacklisted(@NotNull Screen screen) {
+		return isScreenBlacklisted(screen.getClass().getName());
+	}
+
+	public static boolean isScreenBlacklisted(@NotNull String screenClassPath) {
 		for (ScreenBlacklistRule rule : SCREEN_BLACKLIST_RULES) {
-			if (rule.isScreenBlacklisted(screen)) return true;
+			if (rule.isScreenBlacklisted(screenClassPath)) return true;
 		}
 		return false;
 	}
 
 	private static void addDefaultScreenBlacklistRules() {
 
-		addScreenBlacklistRule((screen) -> screen instanceof PlayerEntityRotationScreen);
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("com.simibubi.create."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("de.keksuccino.panoramica."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("com.github.alexthe666.alexsmobs."));
-		addScreenBlacklistRule((screen) -> screen instanceof TextEditorScreen);
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("de.keksuccino.fancymenu.customization.layouteditor.loadingrequirements."));
-		addScreenBlacklistRule((screen) -> screen instanceof ConfirmationScreen);
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("de.keksuccino.fancymenu.customization.layouteditor.actions."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("io.github.lgatodu47.screenshot_viewer."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("twilightforest."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("de.keksuccino.spiffyhud."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("de.keksuccino.drippyloadingscreen."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("de.keksuccino.fmaudio."));
-		addScreenBlacklistRule((screen) -> screen.getClass().getName().startsWith("net.mehvahdjukaar.supplementaries."));
+		addScreenBlacklistRule((screen) -> screen.equals(PlayerEntityRotationScreen.class.getName()));
+		addScreenBlacklistRule((screen) -> screen.startsWith("com.simibubi.create."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.panoramica."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("com.github.alexthe666.alexsmobs."));
+		addScreenBlacklistRule((screen) -> screen.equals(TextEditorScreen.class.getName()));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.customization.layouteditor.loadingrequirements."));
+		addScreenBlacklistRule((screen) -> screen.equals(ConfirmationScreen.class.getName()));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.customization.layouteditor.actions."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("io.github.lgatodu47.screenshot_viewer."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("twilightforest."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.spiffyhud."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.drippyloadingscreen."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fmaudio."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("net.mehvahdjukaar.supplementaries."));
 
 	}
 
@@ -354,7 +358,7 @@ public class ScreenCustomization {
 	@FunctionalInterface
 	public interface ScreenBlacklistRule {
 
-		boolean isScreenBlacklisted(Screen screen);
+		boolean isScreenBlacklisted(String screenClassPath);
 
 	}
 	

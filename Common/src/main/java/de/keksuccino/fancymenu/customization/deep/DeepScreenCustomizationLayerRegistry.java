@@ -11,9 +11,9 @@ public class DeepScreenCustomizationLayerRegistry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<String, DeepScreenCustomizationLayer<?>> LAYERS = new HashMap<>();
+    private static final Map<String, DeepScreenCustomizationLayer> LAYERS = new HashMap<>();
 
-    public static void register(@NotNull DeepScreenCustomizationLayer<?> layer) {
+    public static void register(@NotNull DeepScreenCustomizationLayer layer) {
         Objects.requireNonNull(layer.getTargetMenuIdentifier(), "[FANCYMENU] Failed to register DeepScreenCustomizationLayer! Identifier was NULL!");
         if (LAYERS.containsKey(layer.getTargetMenuIdentifier())) {
             LOGGER.warn("[FANCYMENU] DeepScreenCustomizationLayer with identifier '" + layer.getTargetMenuIdentifier() + "' already registered! Overriding layer!");
@@ -26,12 +26,12 @@ public class DeepScreenCustomizationLayerRegistry {
     }
 
     @NotNull
-    public static List<DeepScreenCustomizationLayer<?>> getLayers() {
+    public static List<DeepScreenCustomizationLayer> getLayers() {
         return new ArrayList<>(LAYERS.values());
     }
 
     @Nullable
-    public static DeepScreenCustomizationLayer<?> getLayer(@NotNull String menuIdentifier) {
+    public static DeepScreenCustomizationLayer getLayer(@NotNull String menuIdentifier) {
         return LAYERS.get(menuIdentifier);
     }
 

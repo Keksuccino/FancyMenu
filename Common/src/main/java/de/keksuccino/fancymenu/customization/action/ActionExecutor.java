@@ -30,8 +30,9 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinServerList;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -164,11 +165,11 @@ public class ActionExecutor {
 							if (s != null) {
 								Minecraft.getInstance().setScreen(s);
 							} else {
-								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+								PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.custombuttons.action.opengui.cannotopengui")));
 							}
 						}
 					} catch (Exception e) {
-						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("custombuttons.action.opengui.cannotopengui")));
+						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.custombuttons.action.opengui.cannotopengui")));
 						e.printStackTrace();
 					}
 				}
@@ -271,10 +272,10 @@ public class ActionExecutor {
 			if (action.equalsIgnoreCase("mimicbutton")) {
 				if ((value != null) && value.contains(":")) {
 					if (!ButtonMimeHandler.executeButtonAction(value)) {
-						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
+						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
 					}
 				} else {
-					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
+					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.custombutton.action.mimicbutton.unabletoexecute")));
 				}
 			}
 			if (action.equalsIgnoreCase("join_last_world")) {

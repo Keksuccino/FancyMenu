@@ -80,7 +80,7 @@ public class ScreenCustomizationEvents {
 
 		ScreenCustomization.isCurrentScrollable = false;
 
-		if (!LayoutEditorScreen.isActive) {
+		if (!(e.getScreen() instanceof LayoutEditorScreen)) {
 			this.idle = false;
 		}
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(e.getScreen()) && !(e.getScreen() instanceof LayoutEditorScreen)) {
