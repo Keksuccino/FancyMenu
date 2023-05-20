@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.event.acara.EventBase;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 
 public class ButtonCacheUpdatedEvent extends EventBase {
 	
 	private final Screen screen;
-	private final List<ButtonData> buttonlist;
+	private final List<WidgetMeta> buttonlist;
 	private final boolean updated;
 	
-	public ButtonCacheUpdatedEvent(Screen screen, List<ButtonData> buttonlist, boolean updated) {
+	public ButtonCacheUpdatedEvent(Screen screen, List<WidgetMeta> buttonlist, boolean updated) {
 		this.buttonlist = buttonlist;
 		this.screen = screen;
 		this.updated = updated;
@@ -24,14 +24,14 @@ public class ButtonCacheUpdatedEvent extends EventBase {
 		return this.screen;
 	}
 	
-	public List<ButtonData> getButtonDataList() {
+	public List<WidgetMeta> getButtonDataList() {
 		return this.buttonlist;
 	}
 	
 	public List<AbstractWidget> getWidgetList() {
 		List<AbstractWidget> l = new ArrayList<AbstractWidget>();
-		for (ButtonData d : this.buttonlist) {
-			l.add(d.getButton());
+		for (WidgetMeta d : this.buttonlist) {
+			l.add(d.getWidget());
 		}
 		return l;
 	}

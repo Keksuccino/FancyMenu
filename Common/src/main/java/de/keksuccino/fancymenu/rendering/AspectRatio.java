@@ -34,14 +34,29 @@ public class AspectRatio {
     }
 
     /**
-     * Will calculate the aspect ratio and never gets smaller than the given width and height.
+     * Will calculate the aspect ratio and never gets <b>smaller</b> than the given width and height.
      *
      * @return The nearest possible width (index 0) and height (index 1).
      **/
-    public int[] getAspectRatioSize(int givenWidth, int givenHeight) {
+    public int[] getAspectRatioSizeByMinimumSize(int givenWidth, int givenHeight) {
         int aw = this.getAspectRatioWidth(givenHeight);
         int ah = givenHeight;
         if (aw < givenWidth) {
+            ah = this.getAspectRatioHeight(givenWidth);
+            aw = givenWidth;
+        }
+        return new int[]{aw,ah};
+    }
+
+    /**
+     * Will calculate the aspect ratio and never gets <b>bigger</b> than the given width and height.
+     *
+     * @return The nearest possible width (index 0) and height (index 1).
+     **/
+    public int[] getAspectRatioSizeByMaximumSize(int givenWidth, int givenHeight) {
+        int aw = this.getAspectRatioWidth(givenHeight);
+        int ah = givenHeight;
+        if (aw > givenWidth) {
             ah = this.getAspectRatioHeight(givenWidth);
             aw = givenWidth;
         }

@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanilla;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
@@ -20,8 +19,7 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     // IMPORTANT:
     // When adding new fields to this class or its superclasses, don't forget to add them to the stackElements() method in this class!
 
-    public String vanillaButtonIdentifier;
-    public ButtonData buttonData;
+    public WidgetMeta widgetMeta;
     public Component originalLabel;
     public int originalX;
     public int originalY;
@@ -114,11 +112,11 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
 
     @Override
     public String getInstanceIdentifier() {
-        if (this.buttonData != null) {
-            if (this.buttonData.getCompatibilityId() != null) {
-                return "vanillabtn:" + this.buttonData.getCompatibilityId();
+        if (this.widgetMeta != null) {
+            if (this.widgetMeta.getCompatibilityIdentifier() != null) {
+                return "vanillabtn:" + this.widgetMeta.getCompatibilityIdentifier();
             } else {
-                return "vanillabtn:" + this.buttonData.getId();
+                return "vanillabtn:" + this.widgetMeta.getLongIdentifier();
             }
         }
         return super.getInstanceIdentifier();
@@ -140,9 +138,9 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
         return true;
     }
 
-    public void setVanillaButton(ButtonData data) {
-        this.buttonData = data;
-        this.button = data.getButton();
+    public void setVanillaButton(WidgetMeta data) {
+        this.widgetMeta = data;
+        this.button = data.getWidget();
         this.originalLabel = this.button.getMessage();
         this.originalX = this.button.x;
         this.originalY = this.button.y;

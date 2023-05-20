@@ -1118,7 +1118,7 @@
   "fancymenu.element.anchor_point.mid_right": "Center of Right Edge",
   "fancymenu.element.anchor_point.bottom_right": "Bottom-Right Corner",
   "fancymenu.element.border_display.anchor_point": "Anchor Point: %s",
-  "fancymenu.element.border_display.pos_X": "X-Position: %s",
+  "fancymenu.element.border_display.pos_x": "X-Position: %s",
   "fancymenu.element.border_display.pos_y": "Y-Position: %s",
   "fancymenu.element.border_display.width": "Width: %s",
   "fancymenu.element.border_display.height": "Height: %s",

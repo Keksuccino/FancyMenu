@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -100,7 +99,7 @@ public class ImageMenuBackground extends MenuBackground {
             }
         } else if (this.keepBackgroundAspectRatio) {
             AspectRatio ratio = new AspectRatio(imageWidth, imageHeight);
-            int[] size = ratio.getAspectRatioSize(getScreenWidth(), getScreenHeight());
+            int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
             int x = Math.max(0, size[0] - getScreenWidth());
             if (x > 0) {
                 x = x / 2;

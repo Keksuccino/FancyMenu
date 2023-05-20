@@ -21,9 +21,9 @@ import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.events.screen.*;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.button.ButtonCache;
+import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
@@ -250,8 +250,8 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
 		if (e.getScreen() != null) {
-			for (ButtonData d : e.getButtonDataList()) {
-				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getButton());
+			for (WidgetMeta d : e.getButtonDataList()) {
+				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
 			}
 		}
 
@@ -423,9 +423,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	protected boolean shouldCustomize(Screen screen) {
 		if (screen == null) return false;
 		if (!this.getIdentifier().equals(screen.getClass().getName())) return false;
-		if (ButtonCache.isCaching()) return false;
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) return false;
-		if (ButtonCache.isCaching()) return false;
 		return true;
 	}
 

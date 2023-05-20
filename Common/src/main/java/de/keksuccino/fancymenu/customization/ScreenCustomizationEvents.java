@@ -5,8 +5,8 @@ import java.io.IOException;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.button.ButtonCache;
-import de.keksuccino.fancymenu.customization.button.ButtonMimeHandler;
+import de.keksuccino.fancymenu.customization.widget.WidgetCache;
+import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.acara.EventListener;
@@ -61,21 +61,16 @@ public class ScreenCustomizationEvents {
 	@EventListener
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
-		if (!ButtonCache.isCaching()) {
-			Screen current = Minecraft.getInstance().screen;
-			if (current != null) {
-				if (this.lastScreen != null) {
-					ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(current.getClass().getName());
-				} else {
-					ScreenCustomization.isNewMenu = true;
-				}
+		if (e.getScreen() != null) {
+			if (this.lastScreen != null) {
+				ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
 			} else {
 				ScreenCustomization.isNewMenu = true;
 			}
-			this.lastScreen = current;
-			if (ScreenCustomization.isNewMenu) {
-				ButtonMimeHandler.clearCache();
-			}
+		}
+		this.lastScreen = e.getScreen();
+		if (ScreenCustomization.isNewMenu) {
+			ButtonMimeHandler.clearCache();
 		}
 
 		ScreenCustomization.isCurrentScrollable = false;

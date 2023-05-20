@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.button;
+package de.keksuccino.fancymenu.customization.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;

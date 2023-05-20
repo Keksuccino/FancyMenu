@@ -1,10 +1,10 @@
-package de.keksuccino.fancymenu.customization.button.identification;
+package de.keksuccino.fancymenu.customization.widget.identification;
 
-import de.keksuccino.fancymenu.customization.button.ButtonData;
-import de.keksuccino.fancymenu.customization.button.identification.identificationcontext.DeathScreenButtonsIdentificationContext;
-import de.keksuccino.fancymenu.customization.button.identification.identificationcontext.MenuButtonsIdentificationContext;
-import de.keksuccino.fancymenu.customization.button.identification.identificationcontext.PauseScreenButtonsIdentificationContext;
-import de.keksuccino.fancymenu.customization.button.identification.identificationcontext.TitleScreenButtonsIdentificationContext;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.DeathScreenButtonsIdentificationContext;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.MenuButtonsIdentificationContext;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.PauseScreenButtonsIdentificationContext;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.TitleScreenButtonsIdentificationContext;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ComponentContents;
@@ -35,7 +35,7 @@ public class ButtonIdentificator {
         CONTEXTS.put(context.getMenu(), context);
     }
 
-    public static String getCompatibilityIdentifierForButton(ButtonData data) {
+    public static String getCompatibilityIdentifierForButton(WidgetMeta data) {
         try {
             Screen s = data.getScreen();
             if (s != null) {
@@ -50,7 +50,7 @@ public class ButtonIdentificator {
         return null;
     }
 
-    public static void setCompatibilityIdentifierToData(ButtonData data) {
+    public static void setCompatibilityIdentifierToWidgetMeta(WidgetMeta data) {
         if (data != null) {
             data.setCompatibilityId(getCompatibilityIdentifierForButton(data));
         }

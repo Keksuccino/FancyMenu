@@ -9,10 +9,11 @@ import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
-import de.keksuccino.fancymenu.customization.button.ButtonCache;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroScreen;
+import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
-import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
-import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
+import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
@@ -34,6 +35,7 @@ import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.rendering.ui.screen.FMConfigScreen;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
@@ -42,6 +44,7 @@ import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import org.jetbrains.annotations.NotNull;
 
 public class ScreenCustomization {
@@ -81,8 +84,6 @@ public class ScreenCustomization {
 
 		Placeholders.registerAll();
 
-		Placeholders.registerAll();
-
 		MenuBackgrounds.registerAll();
 
 		Elements.registerAll();
@@ -104,7 +105,7 @@ public class ScreenCustomization {
 
 		CustomizationOverlay.init();
 
-		ButtonCache.init();
+		WidgetCache.init();
 
 		LayoutHandler.init();
 
@@ -154,22 +155,21 @@ public class ScreenCustomization {
 		}
 	}
 
-	public static boolean isCustomizationEnabledForScreen(Screen screen) {
+	public static boolean isCustomizationEnabledForScreen(@NotNull Screen screen) {
+		if (isScreenBlacklisted(screen)) {
+			return false;
+		}
 		if (!allowScreenCustomization) {
 			return false;
 		}
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
-		if (screen != null) {
-			if (screen instanceof CustomGuiBase) {
-				return true;
-			}
-			String identifier = screen.getClass().getName();
-			List<PropertyContainer> s = customizableScreens.getSectionsOfType(identifier);
-			return (s != null) && !s.isEmpty();
+		if (screen instanceof CustomGuiBase) {
+			return true;
 		}
-		return false;
+		List<PropertyContainer> s = customizableScreens.getSectionsOfType(screen.getClass().getName());
+		return (s != null) && !s.isEmpty();
 	}
 
 	private static void writeCustomizableScreensToFile() {
@@ -297,20 +297,25 @@ public class ScreenCustomization {
 
 	private static void addDefaultScreenBlacklistRules() {
 
-		addScreenBlacklistRule((screen) -> screen.equals(PlayerEntityRotationScreen.class.getName()));
+//		addScreenBlacklistRule((screen) -> screen.equals(PlayerEntityRotationScreen.class.getName()));
 		addScreenBlacklistRule((screen) -> screen.startsWith("com.simibubi.create."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.panoramica."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("com.github.alexthe666.alexsmobs."));
-		addScreenBlacklistRule((screen) -> screen.equals(TextEditorScreen.class.getName()));
-		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.customization.layouteditor.loadingrequirements."));
-		addScreenBlacklistRule((screen) -> screen.equals(ConfirmationScreen.class.getName()));
-		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.customization.layouteditor.actions."));
+//		addScreenBlacklistRule((screen) -> screen.equals(TextEditorScreen.class.getName()));
+//		addScreenBlacklistRule((screen) -> screen.equals(ConfirmationScreen.class.getName()));
+//		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.customization.layout.editor."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("io.github.lgatodu47.screenshot_viewer."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("twilightforest."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.spiffyhud."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.drippyloadingscreen."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fmaudio."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.mehvahdjukaar.supplementaries."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("net.optifine"));
+		addScreenBlacklistRule((screen) -> screen.startsWith("slimeknights."));
+		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && FancyMenu.isOptiFineLoaded());
+//		addScreenBlacklistRule((screen) -> screen.equals(FMConfigScreen.class.getName()));
+//		addScreenBlacklistRule((screen) -> screen.equals(GameIntroScreen.class.getName()));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBase.class.getName()));
 
 	}
 

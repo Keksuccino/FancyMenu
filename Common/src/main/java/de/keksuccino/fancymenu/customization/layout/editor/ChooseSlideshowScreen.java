@@ -112,7 +112,7 @@ public class ChooseSlideshowScreen extends Screen {
             int slideW = (this.width / 2) - 40;
             int slideH = this.height / 2;
             AspectRatio ratio = new AspectRatio(this.selectedSlideshow.getImageWidth(), this.selectedSlideshow.getImageHeight());
-            int[] size = ratio.getAspectRatioSize(slideW, slideH);
+            int[] size = ratio.getAspectRatioSizeByMinimumSize(slideW, slideH);
             slideW = size[0];
             slideH = size[1];
             int slideX = this.width - 20 - slideW;

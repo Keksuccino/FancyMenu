@@ -18,6 +18,12 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
 
+	//TODO ChooseMenuBackgroundScreen: background setzen scheint nicht zu gehen (getestet mit Image)
+
+	//TODO Menu Bar in layout editor fixen
+
+	//TODO loading screen fade-out fixen
+
 	//TODO NOCH NICHT KOMPLETT: Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
 	// - Visibility Requirements (v1 stuff zu loading requirements machen)
 	// - Actions

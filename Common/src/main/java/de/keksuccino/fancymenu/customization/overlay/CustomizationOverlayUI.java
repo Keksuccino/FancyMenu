@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroScreen;
@@ -74,7 +74,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 	public static boolean showButtonInfo = false;
 	public static boolean showMenuInfo = false;
-	protected static List<ButtonData> buttons = new ArrayList<>();
+	protected static List<WidgetMeta> buttons = new ArrayList<>();
 	protected static int tick = 0;
 	protected static long lastButtonInfoRightClick = 0;
 
@@ -123,7 +123,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 			OverlayButton newLayoutButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.current.layouts.new"), true, (press) -> {
 				Screen s = Minecraft.getInstance().screen;
-				Minecraft.getInstance().setScreen(new LayoutEditorScreen(s, null));
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(s, new Layout(s)));
 				SoundRegistry.stopSounds();
 				SoundRegistry.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
@@ -284,7 +284,7 @@ public class CustomizationOverlayUI extends UIBase {
 			bar.addChild(universalLayoutsMenu, "fm.ui.tab.universal_layouts", ElementAlignment.LEFT);
 
 			OverlayButton newUniversalLayoutButton = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.helper.ui.universal_layouts.new"), true, (press) -> {
-				Minecraft.getInstance().setScreen(new LayoutEditorScreen(null, null));
+				Minecraft.getInstance().setScreen(new LayoutEditorScreen(new Layout()));
 				SoundRegistry.stopSounds();
 				SoundRegistry.resetSounds();
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
@@ -688,7 +688,7 @@ public class CustomizationOverlayUI extends UIBase {
 			if (bar != null) {
 				if (!PopupHandler.isPopupActive()) {
 					if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-						if (!(screen instanceof LayoutEditorScreen) && !(screen instanceof ConfigScreen) && !(screen instanceof GameIntroScreen) && AnimationHandler.isReady() && !ScreenCustomization.isScreenBlacklisted(screen)) {
+						if (AnimationHandler.isReady() && !ScreenCustomization.isScreenBlacklisted(screen)) {
 
 							RenderUtils.setZLevelPre(matrix, 400);
 
@@ -717,24 +717,24 @@ public class CustomizationOverlayUI extends UIBase {
 	protected static void renderButtonInfo(PoseStack matrix, Screen screen) {
 		if (showButtonInfo) {
 			boolean isButtonHovered = false;
-			for (ButtonData d : buttons) {
-				if (d.getButton().isHoveredOrFocused()) {
+			for (WidgetMeta d : buttons) {
+				if (d.getWidget().isHoveredOrFocused()) {
 					isButtonHovered = true;
-					long id = d.getId();
+					long id = d.getLongIdentifier();
 					String idString = I18n.get("fancymenu.overlay.buttoninfo.idnotfound");
 					if (id >= 0) {
 						idString = String.valueOf(id);
 					}
-					if (d.getCompatibilityId() != null) {
-						idString = d.getCompatibilityId();
+					if (d.getCompatibilityIdentifier() != null) {
+						idString = d.getCompatibilityIdentifier();
 					}
 					List<String> info = new ArrayList<>();
 					int width = Minecraft.getInstance().font.width(I18n.get("fancymenu.overlay.buttoninfo")) + 10;
 					long now = System.currentTimeMillis();
 					info.add("§f" + I18n.get("fancymenu.overlay.buttoninfo.id") + ": " + idString);
-					info.add("§f" + I18n.get("fancymenu.guicomponents.width") + ": " + d.getButton().getWidth());
-					info.add("§f" + I18n.get("fancymenu.guicomponents.height") + ": " + d.getButton().getHeight());
-					info.add("§f" + I18n.get("fancymenu.overlay.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
+					info.add("§f" + I18n.get("fancymenu.guicomponents.width") + ": " + d.getWidget().getWidth());
+					info.add("§f" + I18n.get("fancymenu.guicomponents.height") + ": " + d.getWidget().getHeight());
+					info.add("§f" + I18n.get("fancymenu.overlay.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getWidget().getMessage().getString()));
 					info.add("");
 					if (lastButtonInfoRightClick + 2000 < now) {
 						info.add(I18n.get("fancymenu.helper.button_info.copy_locator"));

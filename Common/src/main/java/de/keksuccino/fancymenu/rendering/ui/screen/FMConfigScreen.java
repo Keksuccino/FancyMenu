@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class FMConfigScreen extends ConfigScreen {
 
 	public FMConfigScreen(Screen parent) {
-		super(FancyMenu.getConfig(), I18n.get("FancyMenu.getConfig()"), parent);
+		super(FancyMenu.getConfig(), I18n.get("fancymenu.config"), parent);
 	}
 	
 	@Override
@@ -17,12 +17,12 @@ public class FMConfigScreen extends ConfigScreen {
 		super.init();
 		
 		for (String s : this.config.getCategorys()) {
-			this.setCategoryDisplayName(s, I18n.get("FancyMenu.getConfig().categories." + s));
+			this.setCategoryDisplayName(s, I18n.get("fancymenu.config.categories." + s));
 		}
 		
 		for (ConfigEntry e : this.config.getAllAsEntry()) {
-			this.setValueDisplayName(e.getName(), I18n.get("FancyMenu.getConfig()." + e.getName()));
-			this.setValueDescription(e.getName(), I18n.get("FancyMenu.getConfig()." + e.getName() + ".desc"));
+			this.setValueDisplayName(e.getName(), I18n.get("fancymenu.config." + e.getName()));
+			this.setValueDescription(e.getName(), I18n.get("fancymenu.config." + e.getName() + ".desc").replace("\n", "%n%"));
 		}
 		
 	}

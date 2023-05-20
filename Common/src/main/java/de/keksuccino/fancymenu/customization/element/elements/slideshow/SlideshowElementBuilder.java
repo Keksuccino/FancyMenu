@@ -16,7 +16,7 @@ public class SlideshowElementBuilder extends ElementBuilder<SlideshowElement, Sl
     private static final Logger LOGGER = LogManager.getLogger();
 
     public SlideshowElementBuilder() {
-        super("animation");
+        super("slideshow");
     }
 
     @Override

@@ -570,7 +570,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			RenderSystem.enableBlend();
 			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), DRAGGING_NOT_ALLOWED_OVERLAY_COLOR.getRGB());
 			AspectRatio ratio = new AspectRatio(32, 32);
-			int[] size = ratio.getAspectRatioSize(this.getWidth(), this.getHeight());
+			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];
 			int texH = size[1];
 			int texX = this.getX() + (this.getWidth() / 2) - (texW / 2);
@@ -585,9 +585,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.isHovered() || this.isSelected() || this.isMultiSelected()) {
 
 			//TOP
-			fill(pose, this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 2, this.getY() + 1, BORDER_COLOR.get(this));
+			fill(pose, this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
 			//BOTTOM
-			fill(pose, this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 2, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			fill(pose, this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//LEFT
 			fill(pose, this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//RIGHT
@@ -654,7 +654,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 		if (button == 1) {
 			if (this.isHovered() && !this.isGettingResized()) {
-				this.menu.openMenuAtMouse();
+				this.menu.openMenuAtMouseScaled();
 			}
 			if (!this.isHovered()) {
 				this.menu.closeMenu();
@@ -691,12 +691,18 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			//TODO add SHIFT-resize (aspect ratio)
 			if (this.leftMouseDown && this.isGettingResized()) {
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
-					this.element.width = this.resizeStartWidth + diffX;
-					this.element.baseX = this.resizeStartX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+					int i = this.resizeStartWidth + diffX;
+					if (i >= 1) {
+						this.element.width = i;
+						this.element.baseX = this.resizeStartX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+					}
 				}
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
-					this.element.height = this.resizeStartHeight + diffY;
-					this.element.baseY = this.resizeStartY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+					int i = this.resizeStartHeight + diffY;
+					if (i >= 1) {
+						this.element.height = i;
+						this.element.baseY = this.resizeStartY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+					}
 				}
 			}
 		}

@@ -1,7 +1,7 @@
-package de.keksuccino.fancymenu.customization.button.identification.identificationcontext;
+package de.keksuccino.fancymenu.customization.widget.identification.identificationcontext;
 
-import de.keksuccino.fancymenu.customization.button.ButtonData;
-import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
+import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.PauseScreen;
 
@@ -13,11 +13,11 @@ public class PauseScreenButtonsIdentificationContext extends MenuButtonsIdentifi
     }
 
     @Override
-    protected String getRawCompatibilityIdentifierForButton(ButtonData data) {
+    protected String getRawCompatibilityIdentifierForButton(WidgetMeta data) {
         if (data.getScreen().getClass() != this.getMenu()) {
             return null;
         }
-        AbstractWidget b = data.getButton();
+        AbstractWidget b = data.getWidget();
         if (b != null) {
             String key = ButtonIdentificator.getLocalizationKeyForButton(b);
             if (key != null) {

@@ -54,6 +54,9 @@ public class UIBase extends GuiComponent {
 
 	public static float getUIScale() {
 		float uiScale = FancyMenu.getConfig().getOrDefault("uiscale", 1.0F);
+		if (Minecraft.getInstance().isEnforceUnicode() && (uiScale > 2.0F)) {
+			uiScale = 2.0F;
+		}
 		return calculateFixedScale(uiScale);
 	}
 

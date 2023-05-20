@@ -45,6 +45,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
             });
             Minecraft.getInstance().setScreen(s);
         });
+        UIBase.applyDefaultButtonSkinTo(this.chooseAnimationButton);
 
         this.toggleRestartOnLoadButton = new Button(0, 0, 300, 20, Component.literal(""), true, (press) -> {
             this.background.restartOnMenuLoad = !this.background.restartOnMenuLoad;
@@ -59,6 +60,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
                 super.render($$0, $$1, $$2, $$3);
             }
         };
+        UIBase.applyDefaultButtonSkinTo(this.toggleRestartOnLoadButton);
 
         this.doneButton = new Button(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), true, (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
@@ -68,15 +70,17 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
             public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
                 this.active = background.animationName != null;
                 if (!this.active) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")).setDefaultBackgroundColor(), false, true);
                 }
                 super.render($$0, $$1, $$2, $$3);
             }
         };
+        UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new Button(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (press) -> {
             this.onClose();
         });
+        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }
 
@@ -88,7 +92,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         fill(pose, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
 
         int centerX = this.width / 2;
-        int centerY = this.height = 2;
+        int centerY = this.height / 2;
 
         MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
         int titleWidth = this.font.width(title);

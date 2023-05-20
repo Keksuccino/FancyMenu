@@ -10,8 +10,8 @@ import java.util.Map;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.button.ButtonCache;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.widget.WidgetCache;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -22,7 +22,6 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -58,35 +57,25 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Nullable
 	public Screen layoutTargetScreen;
 	@NotNull
-	public Layout layout = new Layout();
+	public Layout layout;
 	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
 	public List<VanillaButtonEditorElement> vanillaButtonEditorElements = new ArrayList<>();
 	public List<AbstractDeepEditorElement> deepEditorElements = new ArrayList<>();
 
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
-	public LayoutEditorUI ui = new LayoutEditorUI(this);
+	public LayoutEditorUI ui;
 	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
 
-	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @Nullable Layout layout) {
+	public LayoutEditorScreen(@NotNull Layout layout) {
+		this(null, layout);
+	}
+
+	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @NotNull Layout layout) {
 
 		super(Component.literal(""));
 
 		this.layoutTargetScreen = layoutTargetScreen;
-		if (layout != null) {
-			this.layout = layout.copy();
-		}
-		if (this.layout == null) {
-			this.layout = new Layout();
-			if (this.layoutTargetScreen == null) {
-				this.layout.setToUniversalLayout();
-			} else {
-				if (this.layoutTargetScreen instanceof CustomGuiBase c) {
-					this.layout.setMenuIdentifier(c.getIdentifier());
-				} else {
-					this.layout.setMenuIdentifier(this.layoutTargetScreen.getClass().getName());
-				}
-			}
-		}
+		this.layout = layout.copy();
 
 		if (this.layoutTargetScreen != null) {
 			Component cachedOriTitle = ScreenCustomizationLayer.cachedOriginalMenuTitles.get(this.layoutTargetScreen.getClass());
@@ -97,6 +86,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//Load all element instances before init, so the layout instance elements don't get wiped when updating it
 		this.constructElementInstances();
+
+		this.ui = new LayoutEditorUI(this);
 
 	}
 
@@ -135,6 +126,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.ui.renderTopMenuBar(pose, this);
 
+		if (this.rightClickMenu != null) {
+			this.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
+		}
+
 	}
 
 	protected void renderElements(PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -168,7 +163,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//Render element context menus
 		for (AbstractEditorElement e : selected) {
-			e.menu.render(pose, mouseX, mouseY, partial);
+			e.menu.renderScaled(pose, mouseX, mouseY, partial);
 		}
 
 	}
@@ -251,12 +246,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
 		if (this.layoutTargetScreen != null) {
-			ButtonCache.cacheButtons(this.layoutTargetScreen, this.width, this.height);
+			WidgetCache.updateWidgetCache(this.layoutTargetScreen);
 		}
 
-		List<ButtonData> vanillaButtonDataList = (this.layoutTargetScreen != null) ? ButtonCache.getButtons() : null;
+		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? WidgetCache.getWidgets() : null;
 
-		this.constructElementInstances(this.layout.menuIdentifier, vanillaButtonDataList, this.layout, normalElements, vanillaButtonElements, deepElements);
+		this.constructElementInstances(this.layout.menuIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaButtonElements, deepElements);
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {
@@ -515,7 +510,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			for (AbstractEditorElement e : selected) {
 				e.setMultiSelected(true);
 			}
-		} else {
+		} else if (selected.size() == 1) {
 			selected.get(0).setMultiSelected(false);
 		}
 	}
@@ -534,7 +529,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.deselectAllElements();
 			if (button == 1) {
 				this.rightClickMenu = this.ui.buildEditorRightClickContextMenu();
-				this.rightClickMenu.openMenuAtMouse();
+				this.rightClickMenu.openMenuAtMouseScaled();
 			}
 		}
 		for (AbstractEditorElement e : this.getAllElements()) {

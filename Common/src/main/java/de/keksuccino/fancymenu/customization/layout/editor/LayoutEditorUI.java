@@ -102,7 +102,7 @@ public class LayoutEditorUI extends UIBase {
 					if (call) {
 						SoundRegistry.stopSounds();
 						SoundRegistry.resetSounds();
-						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.editor.layoutTargetScreen, null));
+						Minecraft.getInstance().setScreen(new LayoutEditorScreen(this.editor.layoutTargetScreen, new Layout(this.editor.layoutTargetScreen)));
 					}
 				});
 			});
@@ -126,6 +126,7 @@ public class LayoutEditorUI extends UIBase {
 
 			AdvancedContextMenu layoutPropertiesMenu = this.buildEditorRightClickContextMenu();
 			layoutPropertiesMenu.getContextMenu().setAutoclose(true);
+			layoutPropertiesMenu.getContextMenu().setAutoAlignment(false);
 			this.layoutMenu.addClickableEntry("layout_properties", false, Component.translatable("fancymenu.editor.layout.properties"), layoutPropertiesMenu, Boolean.class, (entry, inherited, pass) -> {
 				layoutPropertiesMenu.getContextMenu().setParentButton(entry.getButton());
 				layoutPropertiesMenu.openMenu(0, entry.getButton().y);

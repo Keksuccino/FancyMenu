@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.button.VanillaButtonHandler;
+import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
@@ -17,9 +17,8 @@ import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -92,7 +91,8 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
 
     protected void tick() {
         if ((this.tooltip != null) && (this.getButton() != null) && this.getButton().isHoveredOrFocused()) {
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.create(LocalizationUtils.splitLocalizedStringLines(PlaceholderParser.replacePlaceholders(this.tooltip))), false, true);
+            String tooltip = this.tooltip.replace("%n%", "\n");
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
         if ((this.label != null) && (this.getButton() != null)) {
             this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.label)));

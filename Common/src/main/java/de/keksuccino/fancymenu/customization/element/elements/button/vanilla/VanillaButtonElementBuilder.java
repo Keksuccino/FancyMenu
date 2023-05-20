@@ -4,7 +4,9 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.IElementStacker;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +39,6 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
 
                 serialized.setType("vanilla_button");
 
-                serialized.putProperty("button_identifier", element.vanillaButtonIdentifier);
                 serialized.putProperty("is_hidden", "" + element.vanillaButtonHidden);
                 serialized.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
@@ -57,13 +58,6 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     public @NotNull VanillaButtonElement deserializeElement(@NotNull SerializedElement serialized) {
 
         VanillaButtonElement element = (VanillaButtonElement) super.deserializeElement(serialized);
-
-        String buttonId = serialized.getValue("button_identifier");
-        if (buttonId != null) {
-            element.vanillaButtonIdentifier = buttonId;
-        } else {
-            throw new NullPointerException("[FANCYMENU] Failed to deserialize VanillaButtonElement! Button ID was NULL!");
-        }
 
         String hidden = serialized.getValue("is_hidden");
         if ((hidden != null) && hidden.equalsIgnoreCase("true")) {
@@ -85,13 +79,19 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     }
 
     @Override
+    public @NotNull VanillaButtonEditorElement wrapIntoEditorElement(@NotNull ButtonElement element, @NotNull LayoutEditorScreen editor) {
+        return new VanillaButtonEditorElement(element, editor);
+    }
+
+    //Stacking Step 3
+    @Override
     public void stackElements(@NotNull VanillaButtonElement e, @NotNull VanillaButtonElement stack) {
 
         //Don't stack cached button stuff, just the plain customization part + identifier
 
         //VanillaButtonElement stuff
-        if (e.vanillaButtonIdentifier != null) {
-            stack.vanillaButtonIdentifier = e.vanillaButtonIdentifier;
+        if (e.widgetMeta != null) {
+            stack.setVanillaButton(e.widgetMeta);
         }
         if (e.vanillaButtonHidden) {
             stack.vanillaButtonHidden = true;
@@ -137,6 +137,7 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
 
     }
 
+    //Stacking Step 2
     @Override
     public void stackElementsSingleInternal(AbstractElement e, AbstractElement stack) {
 
@@ -149,6 +150,7 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
 
     }
 
+    //Stacking Step 1
     @Override
     public @Nullable VanillaButtonElement stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         if (stack != null) {

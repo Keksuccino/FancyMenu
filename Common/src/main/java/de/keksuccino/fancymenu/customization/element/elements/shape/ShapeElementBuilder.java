@@ -17,7 +17,7 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
     private static final Logger LOGGER = LogManager.getLogger();
 
     public ShapeElementBuilder() {
-        super("animation");
+        super("shape");
     }
 
     @Override

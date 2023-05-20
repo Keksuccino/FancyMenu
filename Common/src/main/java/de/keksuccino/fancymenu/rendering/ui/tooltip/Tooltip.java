@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -35,7 +34,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final Color DEFAULT_BACKGROUND_COLOR = new Color(26, 26, 26, 250);
-    public static final Color DEFAULT_BORDER_COLOR = new Color(64, 64, 64, 250);
+    public static final Color DEFAULT_BORDER_COLOR = new Color(197, 197, 197, 250);
 
     protected Font font = Minecraft.getInstance().font;
     protected List<Component> textLines = new ArrayList<>();
@@ -134,11 +133,11 @@ public class Tooltip extends GuiComponent implements Renderable {
         } else {
             if (this.borderColor != null) {
                 //BACKGROUND
-                fill(pose, x + 1, y + 1, x + this.getWidth() - 2, y + this.getHeight() - 2, this.backgroundColor.getRGB());
+                fill(pose, x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getRGB());
                 //TOP
-                fill(pose, x + 1, y, x + this.getWidth() - 2, y + 1, this.borderColor.getRGB());
+                fill(pose, x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getRGB());
                 //BOTTOM
-                fill(pose, x + 1, y + this.getHeight() - 1, x + this.getWidth() - 2, y + this.getHeight(), this.borderColor.getRGB());
+                fill(pose, x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getRGB());
                 //LEFT
                 fill(pose, x, y, x + 1, y + this.getHeight(), this.borderColor.getRGB());
                 //RIGHT
@@ -223,9 +222,9 @@ public class Tooltip extends GuiComponent implements Renderable {
             this.aspectHeight = -1;
             return;
         }
-        int[] ar = this.backgroundTexture.getAspectRatio().getAspectRatioSize(this.width, this.height);
-        this.aspectWidth = ar[0];
-        this.aspectHeight = ar[1];
+        int[] size = this.backgroundTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, this.height);
+        this.aspectWidth = size[0];
+        this.aspectHeight = size[1];
     }
 
     protected void updateSize() {
@@ -237,6 +236,9 @@ public class Tooltip extends GuiComponent implements Renderable {
                 w = wl;
             }
             h += this.font.lineHeight + 2;
+        }
+        if (h > 0) {
+            h -= 2;
         }
         this.width = w + (this.textBorderSize * 2);
         this.height = h + (this.textBorderSize * 2);

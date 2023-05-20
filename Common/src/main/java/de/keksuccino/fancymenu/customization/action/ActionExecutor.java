@@ -16,7 +16,7 @@ import com.google.common.io.Files;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.button.ButtonMimeHandler;
+import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
@@ -30,7 +30,6 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinServerList;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;

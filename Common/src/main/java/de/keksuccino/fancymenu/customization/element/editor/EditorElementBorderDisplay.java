@@ -20,7 +20,7 @@ public class EditorElementBorderDisplay implements Renderable {
     public final List<DisplayPosition> alternativePositions = new ArrayList<>();
     public DisplayPosition currentPosition;
     protected final Map<String, Supplier<Component>> lines = new LinkedHashMap<>();
-    public boolean textShadow = false;
+    public boolean textShadow = true;
     protected List<Component> renderLines = new ArrayList<>();
     protected int width = 0;
     protected int height = 0;
@@ -46,10 +46,10 @@ public class EditorElementBorderDisplay implements Renderable {
     protected void renderDisplayLines(PoseStack pose) {
 
         int x = this.editorElement.getX();
-        int y = this.editorElement.getY() - this.height - 2;
+        int y = this.editorElement.getY() - this.getHeight() - 2;
         boolean leftAligned = true;
         if (this.currentPosition == DisplayPosition.TOP_RIGHT) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() - this.width;
+            x = this.editorElement.getX() + this.editorElement.getWidth() - this.getWidth();
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.RIGHT_TOP) {
@@ -58,10 +58,10 @@ public class EditorElementBorderDisplay implements Renderable {
         }
         if (this.currentPosition == DisplayPosition.RIGHT_BOTTOM) {
             x = this.editorElement.getX() + this.editorElement.getWidth() + 2;
-            y = this.editorElement.getY() + this.editorElement.getHeight() - this.height;
+            y = this.editorElement.getY() + this.editorElement.getHeight() - this.getHeight();
         }
         if (this.currentPosition == DisplayPosition.BOTTOM_RIGHT) {
-            x = this.editorElement.getX() + this.editorElement.getWidth() - this.width;
+            x = this.editorElement.getX() + this.editorElement.getWidth() - this.getWidth();
             y = this.editorElement.getY() + this.editorElement.getHeight() + 2;
             leftAligned = false;
         }
@@ -69,28 +69,28 @@ public class EditorElementBorderDisplay implements Renderable {
             y = this.editorElement.getY() + this.editorElement.getHeight() + 2;
         }
         if (this.currentPosition == DisplayPosition.LEFT_BOTTOM) {
-            x = this.editorElement.getX() - this.width - 2;
-            y = this.editorElement.getY() + this.editorElement.getHeight() - this.height;
+            x = this.editorElement.getX() - this.getWidth() - 2;
+            y = this.editorElement.getY() + this.editorElement.getHeight() - this.getHeight();
             leftAligned = false;
         }
         if (this.currentPosition == DisplayPosition.LEFT_TOP) {
-            x = this.editorElement.getX() - this.width - 2;
+            x = this.editorElement.getX() - this.getWidth() - 2;
             y = this.editorElement.getY();
             leftAligned = false;
         }
 
-        float scale = !Minecraft.getInstance().isEnforceUnicode() ? 0.5F : 1.0F;
+        float scale = this.getScale();
         int lineY = y;
         pose.pushPose();
-        pose.translate(scale, scale, scale);
+        pose.scale(scale, scale, scale);
         for (Component c : this.renderLines) {
-            int lineX = leftAligned ? x : x + (this.width - this.font.width(c));
+            int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)this.font.width(c) * scale));
             if (this.textShadow) {
                 this.font.drawShadow(pose, c, (float)lineX / scale, (float)lineY / scale, -1);
             } else {
                 this.font.draw(pose, c, (float)lineX / scale, (float)lineY / scale, -1);
             }
-            lineY += this.font.lineHeight + 2;
+            lineY += (this.font.lineHeight + 2) * scale;
         }
         pose.popPose();
 
@@ -131,6 +131,18 @@ public class EditorElementBorderDisplay implements Renderable {
         this.currentPosition = this.findPosition();
     }
 
+    protected float getScale() {
+        return !Minecraft.getInstance().isEnforceUnicode() ? 0.5F : 1.0F;
+    }
+
+    public int getWidth() {
+        return (int) ((float)this.width * this.getScale());
+    }
+
+    public int getHeight() {
+        return (int) ((float)this.height * this.getScale());
+    }
+
     @NotNull
     protected DisplayPosition findPosition() {
         List<DisplayPosition> allowedPositions = new ArrayList<>(this.alternativePositions);
@@ -152,19 +164,19 @@ public class EditorElementBorderDisplay implements Renderable {
         int eleY = this.editorElement.getY();
         int eleW = this.editorElement.getWidth();
         int eleH = this.editorElement.getHeight();
-        if (eleX >= this.width) {
+        if (eleX >= this.getWidth()) {
             positions.add(DisplayPosition.LEFT_TOP);
             positions.add(DisplayPosition.LEFT_BOTTOM);
         }
-        if (eleY >= this.height) {
+        if (eleY >= this.getHeight()) {
             positions.add(DisplayPosition.TOP_LEFT);
             positions.add(DisplayPosition.TOP_RIGHT);
         }
-        if ((screenW - (eleX + eleW)) >= this.width) {
+        if ((screenW - (eleX + eleW)) >= this.getWidth()) {
             positions.add(DisplayPosition.RIGHT_TOP);
             positions.add(DisplayPosition.RIGHT_BOTTOM);
         }
-        if ((screenH - (eleY + eleH)) >= this.height) {
+        if ((screenH - (eleY + eleH)) >= this.getHeight()) {
             positions.add(DisplayPosition.BOTTOM_LEFT);
             positions.add(DisplayPosition.BOTTOM_RIGHT);
         }

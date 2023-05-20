@@ -56,6 +56,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 if ((e instanceof BackgroundTypeScrollEntry) && (((BackgroundTypeScrollEntry)e).backgroundType == this.background.builder)) {
                     e.setSelected(true);
                     this.backgroundType = this.background.builder;
+                    this.setDescription(this.backgroundType);
                     break;
                 }
             }
@@ -64,6 +65,9 @@ public class ChooseMenuBackgroundScreen extends Screen {
             this.background = null;
             if (addResetBackgroundEntry) {
                 this.backgroundTypeListScrollArea.getEntries().get(0).setSelected(true);
+                this.backgroundType = NO_BACKGROUND_TYPE;
+                this.background = NO_BACKGROUND;
+                this.setDescription(NO_BACKGROUND_TYPE);
             }
         }
 
@@ -178,6 +182,8 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         this.backgroundDescriptionScrollArea.clearEntries();
 
+        if (builder == NO_BACKGROUND_TYPE) return;
+
         if ((builder != null) && (builder.getDescription() != null)) {
             for (Component c : builder.getDescription()) {
                 TextScrollAreaEntry e = new TextScrollAreaEntry(this.backgroundDescriptionScrollArea, c.copy(), (entry) -> {});
@@ -196,7 +202,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         if (addResetBackgroundEntry) {
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, NO_BACKGROUND_TYPE, (entry) -> {
-                if (!entry.isSelected()) {
+                if (this.backgroundType != NO_BACKGROUND_TYPE) {
                     this.backgroundType = NO_BACKGROUND_TYPE;
                     this.background = NO_BACKGROUND;
                     this.setDescription(NO_BACKGROUND_TYPE);
@@ -207,7 +213,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
-                if (!entry.isSelected()) {
+                if (this.backgroundType != b) {
                     this.backgroundType = b;
                     this.background = null;
                     this.setDescription(b);
@@ -244,7 +250,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         private static Component getText(MenuBackgroundBuilder<?> backgroundType) {
             if (backgroundType == NO_BACKGROUND_TYPE) {
-                return Component.translatable("fancymenu.editor.menu_background.choose.entry.no_background").withStyle(ChatFormatting.RED);
+                return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(ChatFormatting.RED);
             }
             return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
         }

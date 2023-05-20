@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.layer;
 
-import de.keksuccino.fancymenu.customization.button.ButtonCache;
-import de.keksuccino.fancymenu.customization.button.ButtonData;
+import de.keksuccino.fancymenu.customization.widget.WidgetCache;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,15 +25,15 @@ public interface IElementFactory {
      * Constructs element instances for {@link ScreenCustomizationLayer}s and {@link LayoutEditorScreen}s.
      *
      * @param menuIdentifier        The target menu the elements get constructed for. If this is NULL, no {@link AbstractDeepElement} instances will get constructed.
-     * @param vanillaButtonDataList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
+     * @param vanillaWidgetMetaList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
      * @param layouts               The source layouts to construct the elements from.
      * @param normalElements        All normal {@link AbstractElement} instances will get added to this {@link Layout.OrderedElementCollection}.
      * @param vanillaButtonElements All {@link VanillaButtonElement} instances will get added to this list. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
      * @param deepElements          All {@link AbstractDeepElement} instances will get added to this list. If this is NULL, no {@link AbstractDeepElement}s will get constructed.
      */
-    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<ButtonData> vanillaButtonDataList, @NotNull List<Layout> layouts, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
+    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull List<Layout> layouts, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
 
-        Map<ButtonData, List<VanillaButtonElement>> unstackedVanillaButtonElements = new HashMap<>();
+        Map<WidgetMeta, List<VanillaButtonElement>> unstackedVanillaButtonElements = new HashMap<>();
         Map<DeepElementBuilder<?, ?, ?>, List<AbstractDeepElement>> unstackedDeepElements = new HashMap<>();
         for (Layout layout : layouts) {
             //Construct element instances
@@ -53,10 +52,7 @@ public interface IElementFactory {
             if (vanillaButtonElements != null) {
                 //Construct vanilla button element instances
                 for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
-                    ButtonData d = ButtonCache.getButtonForCompatibilityId(element.vanillaButtonIdentifier);
-                    if ((d == null) && MathUtils.isLong(element.vanillaButtonIdentifier)) {
-                        d = ButtonCache.getButtonForId(Long.parseLong(element.vanillaButtonIdentifier));
-                    }
+                    WidgetMeta d = WidgetCache.getWidget(element.getInstanceIdentifier());
                     if (d != null) {
                         element.setVanillaButton(d);
                         if (!unstackedVanillaButtonElements.containsKey(d)) {
@@ -91,9 +87,9 @@ public interface IElementFactory {
             }
         }
 
-        if ((vanillaButtonDataList != null) && (vanillaButtonElements != null)) {
+        if ((vanillaWidgetMetaList != null) && (vanillaButtonElements != null)) {
             //Add missing vanilla button element instances
-            for (ButtonData d : vanillaButtonDataList) {
+            for (WidgetMeta d : vanillaWidgetMetaList) {
                 if (!unstackedVanillaButtonElements.containsKey(d)) {
                     VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance();
                     element.setVanillaButton(d);
@@ -102,7 +98,7 @@ public interface IElementFactory {
                 }
             }
             //Stack collected vanilla button elements, so only one element per button is active at the same time
-            for (Map.Entry<ButtonData, List<VanillaButtonElement>> m : unstackedVanillaButtonElements.entrySet()) {
+            for (Map.Entry<WidgetMeta, List<VanillaButtonElement>> m : unstackedVanillaButtonElements.entrySet()) {
                 if (!m.getValue().isEmpty()) {
                     VanillaButtonElement stacked = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaButtonElement[0]));
                     if (stacked != null) {
@@ -118,16 +114,16 @@ public interface IElementFactory {
      * Constructs element instances for {@link ScreenCustomizationLayer}s and {@link LayoutEditorScreen}s.
      *
      * @param menuIdentifier The target menu the elements get constructed for. If this is NULL, no {@link AbstractDeepElement} instances will get constructed.
-     * @param vanillaButtonDataList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
+     * @param vanillaWidgetMetaList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
      * @param layout The source layout to construct the elements from.
      * @param normalElements All normal {@link AbstractElement} instances will get added to this {@link Layout.OrderedElementCollection}.
      * @param vanillaButtonElements All {@link VanillaButtonElement} instances will get added to this list. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
      * @param deepElements All {@link AbstractDeepElement} instances will get added to this list. If this is NULL, no {@link AbstractDeepElement}s will get constructed.
      */
-    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<ButtonData> vanillaButtonDataList, @NotNull Layout layout, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
+    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull Layout layout, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
         List<Layout> layouts = new ArrayList<>();
         layouts.add(layout);
-        this.constructElementInstances(menuIdentifier, vanillaButtonDataList, layouts, normalElements, vanillaButtonElements, deepElements);
+        this.constructElementInstances(menuIdentifier, vanillaWidgetMetaList, layouts, normalElements, vanillaButtonElements, deepElements);
     }
 
 }

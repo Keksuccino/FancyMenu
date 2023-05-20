@@ -48,7 +48,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 * This value is -1F by default and is not always set to an actual scale, so check this before using it!
 	 **/
 	public float customGuiScale = -1F;
-	public LoadingRequirementContainer loadingRequirementContainer;
+	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
 	protected String instanceIdentifier;
 
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {

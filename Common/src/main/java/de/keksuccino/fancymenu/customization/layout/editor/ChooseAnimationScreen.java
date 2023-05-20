@@ -113,7 +113,7 @@ public class ChooseAnimationScreen extends Screen {
             int aniW = (this.width / 2) - 40;
             int aniH = this.height / 2;
             AspectRatio ratio = new AspectRatio(this.selectedAnimation.getWidth(), this.selectedAnimation.getHeight());
-            int[] size = ratio.getAspectRatioSize(aniW, aniH);
+            int[] size = ratio.getAspectRatioSizeByMinimumSize(aniW, aniH);
             aniW = size[0];
             aniH = size[1];
             int aniX = this.width - 20 - aniW;

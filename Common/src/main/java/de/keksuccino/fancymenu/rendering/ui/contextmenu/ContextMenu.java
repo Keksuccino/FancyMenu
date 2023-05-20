@@ -134,6 +134,10 @@ public class ContextMenu extends de.keksuccino.konkrete.gui.content.ContextMenu 
 	public List<AdvancedButton> getContent() {
 		return this.content;
 	}
+
+	public List<de.keksuccino.konkrete.gui.content.ContextMenu> getChildren() {
+		return this.children;
+	}
 	
 	public void resetParentButtonOnClose(boolean reset) {
 		this.resetParentButtonOnClose = reset;

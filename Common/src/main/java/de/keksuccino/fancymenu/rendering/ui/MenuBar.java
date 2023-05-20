@@ -30,10 +30,10 @@ public class MenuBar extends UIBase {
 	public static final ResourceLocation SHRINK_BTN_TEXTURE = new ResourceLocation("keksuccino", "shrink_btn.png");
 	public static final ResourceLocation EXPAND_BTN_TEXTURE = new ResourceLocation("keksuccino", "expand_btn.png");
 	
-	protected Map<String, AdvancedButton> leftElements = new LinkedHashMap<String, AdvancedButton>();
-	protected Map<String, AdvancedButton> rightElements = new LinkedHashMap<String, AdvancedButton>();
-	protected List<String> persistentElements = new ArrayList<String>();
-	protected Map<String, ContextMenu> childs = new HashMap<String, ContextMenu>();
+	protected Map<String, AdvancedButton> leftElements = new LinkedHashMap<>();
+	protected Map<String, AdvancedButton> rightElements = new LinkedHashMap<>();
+	protected List<String> persistentElements = new ArrayList<>();
+	protected Map<String, ContextMenu> children = new HashMap<>();
 	
 	protected int height = 20;
 	protected Color barColor = new Color(247, 237, 255, 255);
@@ -195,12 +195,12 @@ public class MenuBar extends UIBase {
 			child.setAlignment(false, false);
 		}
 		
-		this.childs.put(key, child);
+		this.children.put(key, child);
 		
 	}
 	
 	public ContextMenu getChild(String key) {
-		return this.childs.get(key);
+		return this.children.get(key);
 	}
 	
 	public List<String> getElementKeys() {
@@ -218,14 +218,14 @@ public class MenuBar extends UIBase {
 	}
 	
 	public void removeChild(String key) {
-		if (this.childs.containsKey(key)) {
-			this.childs.remove(key);
+		if (this.children.containsKey(key)) {
+			this.children.remove(key);
 		}
 	}
 	
 	public void removeChild(ContextMenu child) {
 		List<String> keys = new ArrayList<String>();
-		for (Map.Entry<String, ContextMenu> m : this.childs.entrySet()) {
+		for (Map.Entry<String, ContextMenu> m : this.children.entrySet()) {
 			if (m.getValue() == child) {
 				keys.add(m.getKey());
 			}
@@ -236,11 +236,11 @@ public class MenuBar extends UIBase {
 	}
 	
 	public void removeAllChilds() {
-		this.childs.clear();
+		this.children.clear();
 	}
 	
 	public boolean isChildOpen() {
-		for (ContextMenu m : this.childs.values()) {
+		for (ContextMenu m : this.children.values()) {
 			if (m.isOpen()) {
 				return true;
 			}
@@ -280,10 +280,10 @@ public class MenuBar extends UIBase {
 						
 						this.renderBackground(matrix, screen);
 						
-						//Render all child context menus
-						//(It's important to render childs first, so height, width and scale updates
-						//made by button clicks can be applied before the menu is getting rendered.)
-						for (ContextMenu m : this.childs.values()) {
+						//Render all child context menus.
+						//It's important to render child menus first, so height, width and scale updates
+						//made by button clicks can be applied before the menu is getting rendered.
+						for (ContextMenu m : this.children.values()) {
 							m.setButtonHeight(this.height);
 							m.render(matrix, mouseX, mouseY);
 						}
@@ -364,7 +364,7 @@ public class MenuBar extends UIBase {
 		int mX = MouseInput.getMouseX();
 		int mY = MouseInput.getMouseY();
 		MouseInput.resetRenderScale();
-		for (ContextMenu m : this.childs.values()) {
+		for (ContextMenu m : this.children.values()) {
 			if (m.isOpen() && m.isHovered()) {
 				return true;
 			}

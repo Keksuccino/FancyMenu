@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.animation.ResourcePackAnimationRenderer;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
@@ -340,15 +341,15 @@ public class SetupSharingHandler {
             File exportToTempSetup = new File(exportToTemp.getPath() + "/setup");
             exportToTempSetup.mkdirs();
 
-            List<PropertyContainerSet> layouts = new ArrayList<>();
+            List<Layout> layouts = new ArrayList<>();
             layouts.addAll(LayoutHandler.getEnabledLayouts());
             layouts.addAll(LayoutHandler.getDisabledLayouts());
 
             //Export all layout resources
             List<String> exportedResources = new ArrayList<>();
             List<String> failedToExportResources = new ArrayList<>();
-            for (PropertyContainerSet l : layouts) {
-                for (String s : getLayoutResources(l)) {
+            for (Layout l : layouts) {
+                for (String s : getLayoutResources(l.serialize())) {
                     try {
                         if (!exportedResources.contains(s) && !failedToExportResources.contains(s)) {
                             File oriFile = new File(s);

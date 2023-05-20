@@ -6,7 +6,10 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.konkrete.input.MouseInput;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,20 +26,22 @@ public class AdvancedContextMenu implements Renderable {
 
     public static final Tooltip DEFAULT_TOOLTIP_STYLE = Tooltip.create().setBackgroundColor(Tooltip.DEFAULT_BACKGROUND_COLOR, Tooltip.DEFAULT_BORDER_COLOR);
 
-    protected ContextMenu contextMenu;
+    protected ContextMenu contextMenu = new ContextMenu();
     protected Tooltip tooltipStyle = DEFAULT_TOOLTIP_STYLE;
     protected List<MenuEntry> entries = new ArrayList<>();
+    protected boolean autoAlignment = true;
 
     public AdvancedContextMenu() {
         this.rebuildMenu();
     }
 
     public AdvancedContextMenu rebuildMenu() {
-        if (this.contextMenu != null) {
-            this.contextMenu.closeMenu();
-        }
-        this.contextMenu = new ContextMenu();
+        this.contextMenu.closeMenu();
+        this.contextMenu.closeChilds();
+        this.contextMenu.getContent().clear();
+        this.contextMenu.getChildren().clear();
         this.contextMenu.setAlwaysOnTop(true);
+        this.contextMenu.setAutoAlignment(this.autoAlignment);
         for (MenuEntry e : this.entries) {
             if (e instanceof SeparatorMenuEntry) {
                 this.contextMenu.addSeparator();
@@ -53,6 +58,16 @@ public class AdvancedContextMenu implements Renderable {
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        if (this.contextMenu.isOpen()) {
+            this.tick();
+        }
+        Screen s = Minecraft.getInstance().screen;
+        if (s != null) {
+            this.contextMenu.render(pose, mouseX, mouseY, s.width, s.height);
+        }
+    }
+
+    public void renderScaled(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         if (this.contextMenu.isOpen()) {
             this.tick();
         }
@@ -134,6 +149,7 @@ public class AdvancedContextMenu implements Renderable {
     protected MenuEntry addEntry(int index, @NotNull MenuEntry entry) {
         index = Math.max(0, Math.min(this.entries.size(), index));
         if (!this.hasEntry(entry.identifier)) {
+            entry.parentContextMenu = this;
             this.entries.add(index, entry);
         } else {
             LOGGER.error("[FANCYMENU] Failed to add entry to context menu! Identifier already in use: " + entry.identifier);
@@ -186,19 +202,52 @@ public class AdvancedContextMenu implements Renderable {
         return this.contextMenu;
     }
 
+    public boolean isAutoAlignment() {
+        return this.autoAlignment;
+    }
+
+    public void setAutoAlignment(boolean autoAlignment) {
+        this.autoAlignment = autoAlignment;
+        this.rebuildMenu();
+    }
+
     public AdvancedContextMenu closeMenu() {
         this.contextMenu.closeMenu();
         return this;
     }
 
-    public AdvancedContextMenu openMenuAtMouse() {
-        UIBase.openScaledContextMenuAtMouse(this.contextMenu);
+    protected AdvancedContextMenu openMenuAtMouseInternal(boolean scaleByUI) {
+        if (scaleByUI) {
+            UIBase.openScaledContextMenuAtMouse(this.contextMenu);
+        } else {
+            this.contextMenu.openMenuAt(MouseInput.getMouseX(), MouseInput.getMouseY());
+        }
         return this;
     }
 
-    public AdvancedContextMenu openMenu(int posX, int posY) {
-        UIBase.openScaledContextMenuAt(this.contextMenu, posX, posY);
+    public AdvancedContextMenu openMenuAtMouse() {
+        return this.openMenuAtMouseInternal(false);
+    }
+
+    public AdvancedContextMenu openMenuAtMouseScaled() {
+        return this.openMenuAtMouseInternal(true);
+    }
+
+    protected AdvancedContextMenu openMenuInternal(int posX, int posY, boolean scaleByUI) {
+        if (scaleByUI) {
+            UIBase.openScaledContextMenuAt(this.contextMenu, posX, posY);
+        } else {
+            this.contextMenu.openMenuAt(posX, posY);
+        }
         return this;
+    }
+
+    public AdvancedContextMenu openMenuScaled(int posX, int posY) {
+        return this.openMenuInternal(posX, posY, true);
+    }
+
+    public AdvancedContextMenu openMenu(int posX, int posY) {
+        return this.openMenuInternal(posX, posY, false);
     }
 
     public boolean isOpen() {
@@ -324,6 +373,7 @@ public class AdvancedContextMenu implements Renderable {
     public abstract static class MenuEntry {
 
         protected String identifier;
+        protected AdvancedContextMenu parentContextMenu = null;
         protected boolean stackable;
         protected RuntimePropertyContainer entryStackMeta = new RuntimePropertyContainer();
         protected boolean partOfStack = false;
@@ -395,7 +445,13 @@ public class AdvancedContextMenu implements Renderable {
             this.clickAction = clickAction;
             this.label = label;
             this.childContextMenu = childContextMenu;
-            this.button = new Button(0, 0, 0, 0, label, true, (b) -> this.onClick(null));
+            this.button = new Button(0, 0, 0, 0, label, true, (b) -> this.onClick(null)) {
+                @Override
+                public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
+                    tick(parentContextMenu);
+                    super.render($$0, $$1, $$2, $$3);
+                }
+            };
         }
 
         @SuppressWarnings("all")

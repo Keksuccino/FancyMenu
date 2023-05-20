@@ -29,6 +29,7 @@ import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElement;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -41,6 +42,7 @@ import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,6 +69,21 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
     @Nullable
     public DeepScreenCustomizationLayer deepScreenCustomizationLayer = null;
+
+    public Layout() {
+        this.setToUniversalLayout();
+    }
+
+    public Layout(@NotNull Screen screen) {
+        this.menuIdentifier = screen.getClass().getName();
+        if (screen instanceof CustomGuiBase c) {
+            this.menuIdentifier = c.getIdentifier();
+        }
+    }
+
+    public Layout(@NotNull String menuIdentifier) {
+        this.menuIdentifier = menuIdentifier;
+    }
 
     public PropertyContainerSet serialize() {
 
@@ -696,7 +713,7 @@ public class Layout extends LayoutBase {
             }
             if ((action != null) && (identifier != null)) {
 
-                element.vanillaButtonIdentifier = identifier;
+                element.setInstanceIdentifier(identifier);
 
                 boolean addElement = false;
 

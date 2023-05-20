@@ -12,7 +12,7 @@ public class DeepScreenCustomizationLayer {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected String targetMenuIdentifier;
-    protected final Map<String, DeepElementBuilder<?,?,?>> builders = new HashMap<>();
+    protected final Map<String, DeepElementBuilder<?,?,?>> builders = new LinkedHashMap<>();
 
     public DeepScreenCustomizationLayer(@NotNull String targetMenuIdentifier) {
         this.targetMenuIdentifier = targetMenuIdentifier;

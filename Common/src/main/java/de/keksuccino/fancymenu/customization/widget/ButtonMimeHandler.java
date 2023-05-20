@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.button;
+package de.keksuccino.fancymenu.customization.widget;
 
-import de.keksuccino.fancymenu.customization.button.identification.ButtonIdentificator;
+import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -61,7 +61,7 @@ public class ButtonMimeHandler {
         return false;
     }
 
-    public static ButtonData getButton(String buttonLocator) {
+    public static WidgetMeta getButton(String buttonLocator) {
         if (buttonLocator.contains(":")) {
             String menuIdentifier = buttonLocator.split(":", 2)[0];
             menuIdentifier = ScreenCustomization.findValidMenuIdentifierFor(menuIdentifier);
@@ -71,7 +71,7 @@ public class ButtonMimeHandler {
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
                     if (cachedButtons.containsKey(menuIdentifier)) {
                         ButtonPackage pack = cachedButtons.get(menuIdentifier);
-                        ButtonData d = pack.getButton(buttonId);
+                        WidgetMeta d = pack.getButton(buttonId);
                         if (d != null) {
                             if (d.getScreen() != current) {
                                 cacheFromInstance(current, true);
@@ -96,9 +96,9 @@ public class ButtonMimeHandler {
 
     public static boolean executeButtonAction(String buttonLocator) {
         try {
-            ButtonData d = getButton(buttonLocator);
+            WidgetMeta d = getButton(buttonLocator);
             if (d != null) {
-                AbstractWidget b = d.getButton();
+                AbstractWidget b = d.getWidget();
                 if (b != null) {
                     b.onClick(b.x+1, b.y+1);
                     return true;
@@ -117,19 +117,19 @@ public class ButtonMimeHandler {
 
     public static class ButtonPackage {
 
-        protected Map<Long, ButtonData> buttons = new HashMap<>();
+        protected Map<Long, WidgetMeta> buttons = new HashMap<>();
 
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
                 List<String> compIds = new ArrayList<>();
-                for (ButtonData d : ButtonCache.cacheButtons(screenToGetButtonsFrom, 1000, 1000)) {
-                    ButtonIdentificator.setCompatibilityIdentifierToData(d);
+                for (WidgetMeta d : WidgetCache.getWidgetsOfScreen(screenToGetButtonsFrom, 1000, 1000)) {
+                    ButtonIdentificator.setCompatibilityIdentifierToWidgetMeta(d);
                     if (compIds.contains(d.compatibilityId)) {
                         d.compatibilityId = null;
                     } else {
                         compIds.add(d.compatibilityId);
                     }
-                    this.buttons.put(d.getId(), d);
+                    this.buttons.put(d.getLongIdentifier(), d);
                 }
                 return true;
             } else {
@@ -138,16 +138,16 @@ public class ButtonMimeHandler {
             return false;
         }
 
-        public Map<Long, ButtonData> getButtons() {
+        public Map<Long, WidgetMeta> getButtons() {
             return this.buttons;
         }
 
-        public ButtonData getButton(String id) {
+        public WidgetMeta getButton(String id) {
             if (MathUtils.isLong(id)) {
                 return this.buttons.get(Long.parseLong(id));
             } else if (id.startsWith("button_compatibility_id:")) {
-                for (ButtonData d : this.buttons.values()) {
-                    if ((d.getCompatibilityId() != null) && d.getCompatibilityId().equals(id)) {
+                for (WidgetMeta d : this.buttons.values()) {
+                    if ((d.getCompatibilityIdentifier() != null) && d.getCompatibilityIdentifier().equals(id)) {
                         return d;
                     }
                 }

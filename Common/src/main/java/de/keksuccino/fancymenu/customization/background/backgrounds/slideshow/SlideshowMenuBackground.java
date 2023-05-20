@@ -52,7 +52,7 @@ public class SlideshowMenuBackground extends MenuBackground {
                 this.slideshow.height = getScreenHeight();
             } else {
                 AspectRatio ratio = new AspectRatio(imageWidth, imageHeight);
-                int[] size = ratio.getAspectRatioSize(getScreenWidth(), getScreenHeight());
+                int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
                 int x = Math.max(0, size[0] - getScreenWidth());
                 if (x > 0) {
                     x = x / 2;
