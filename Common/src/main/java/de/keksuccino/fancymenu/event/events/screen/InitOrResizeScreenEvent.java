@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.event.events.screen;
 import de.keksuccino.fancymenu.event.acara.EventBase;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 
 import java.util.List;
@@ -42,7 +44,11 @@ public class InitOrResizeScreenEvent extends EventBase {
         }
 
         public List<Renderable> getRenderables() {
-            return ((IMixinScreen)this.screen).getRenderablesFancyMenu();
+            return ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu();
+        }
+
+        public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
+            ((IMixinScreen)this.getScreen()).invokeAddWidgetFancyMenu(widget);
         }
 
     }
