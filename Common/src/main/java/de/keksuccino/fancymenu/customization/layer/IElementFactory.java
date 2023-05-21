@@ -85,6 +85,20 @@ public interface IElementFactory {
                     }
                 }
             }
+            //Order deep elements by builder order
+            if (deepScreenCustomizationLayer != null) {
+                List<AbstractDeepElement> deepElementsOrdered = new ArrayList<>();
+                for (DeepElementBuilder<?,?,?> b : deepScreenCustomizationLayer.getBuilders()) {
+                    for (AbstractDeepElement e : deepElements) {
+                        if (e.builder == b) {
+                            deepElementsOrdered.add(e);
+                            break;
+                        }
+                    }
+                }
+                deepElements.clear();
+                deepElements.addAll(deepElementsOrdered);
+            }
         }
 
         if ((vanillaWidgetMetaList != null) && (vanillaButtonElements != null)) {

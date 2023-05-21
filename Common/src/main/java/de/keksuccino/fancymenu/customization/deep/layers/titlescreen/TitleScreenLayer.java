@@ -10,6 +10,8 @@ import net.minecraft.client.gui.screens.TitleScreen;
 
 public class TitleScreenLayer extends DeepScreenCustomizationLayer {
 
+    public final TitleScreenLogoBuilder logo = new TitleScreenLogoBuilder(this);
+    public final TitleScreenBrandingBuilder branding = new TitleScreenBrandingBuilder(this);
     public final TitleScreenRealmsNotificationBuilder realmsNotification = new TitleScreenRealmsNotificationBuilder(this);
     public final TitleScreenSplashBuilder splash = new TitleScreenSplashBuilder(this);
 
@@ -17,8 +19,8 @@ public class TitleScreenLayer extends DeepScreenCustomizationLayer {
 
         super(TitleScreen.class.getName());
 
-        this.registerBuilder(new TitleScreenLogoBuilder(this));
-        this.registerBuilder(new TitleScreenBrandingBuilder(this));
+        this.registerBuilder(logo);
+        this.registerBuilder(branding);
         this.registerBuilder(splash);
         this.registerBuilder(realmsNotification);
 

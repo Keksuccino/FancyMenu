@@ -28,21 +28,13 @@ import java.util.Objects;
 public class ContextMenu extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
 
-    //TODO FIXEN: sub wird an falscher Y pos geöffnet
+    //TODO Pfeil an rechter Seite von sub menu entry
 
-
-    //TODO sub-menu entry type
-    // - möglichkeit, richtung zu setzen, in die geöffnet werden soll
-    // - parent bleibt hovered, wenn sub menü offen
-
-    //TODO getWidth method
-
-    //TODO border
-    // - border UM ENTRIES HERUM und border width zu total width dazu rechnen
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Color MENU_SHADOW_COLOR = new Color(43, 43, 43, 100);
+    private static final Color MENU_BACKGROUND_COLOR = UIBase.ELEMENT_BACKGROUND_COLOR_IDLE;
 
     protected final List<ContextMenuEntry> entries = new ArrayList<>();
     protected float scale = UIBase.getUiScale();
@@ -64,6 +56,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         RenderSystem.enableBlend();
         pose.pushPose();
         pose.scale(scale, scale, scale);
+        pose.translate(0.0F, 0.0F, 400.0F);
 
         this.rawWidth = 20;
         this.rawHeight = 0;
@@ -86,17 +79,19 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         int scaledY = (int)((float)y/scale);
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
-        boolean subHovered = this.isSubMenuHovered();
+        boolean navigatingInSub = this.isUserNavigatingInSubMenu();
 
         //Render shadow
         fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, MENU_SHADOW_COLOR.getRGB());
+        //Render background
+        fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), MENU_BACKGROUND_COLOR.getRGB());
         //Update + render entries
-        int entryY = (int) ((float)y / scale);
+        int entryY = scaledY;
         for (ContextMenuEntry e : this.entries) {
-            e.x = (int) ((float)x / scale);
+            e.x = scaledX;
             e.y = entryY; //already scaled
             e.width = this.rawWidth; //don't scale, because already scaled via pose.scale()
-            e.setHovered(!subHovered && UIBase.isMouseInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+            e.setHovered(!navigatingInSub && UIBase.isMouseInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
             e.render(pose, scaledMouseX, scaledMouseY, partial);
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
         }
@@ -265,8 +260,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 return this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5;
             }
         }
-        if ((this.getX() + this.getScaledWidth()) > getScreenWidth()) {
-            return this.getX() - this.getScaledWidth();
+        if ((this.getX() + this.getScaledWidth()) > (getScreenWidth() - 5)) {
+            int offset = (this.getX() + this.getScaledWidth()) - (getScreenWidth() - 5);
+            return this.getX() - offset;
         }
         return this.getX();
     }
@@ -275,22 +271,24 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         int y = this.getY();
         if (this.isSubMenu()) {
             float parentMenuScale = UIBase.calculateFixedScale(this.parentEntry.parent.scale);
-            y = (int) ((float)this.parentEntry.y / scale);
-            y -= 5;
+            y = (int) ((float)this.parentEntry.y * parentMenuScale);
+            y += 5;
         }
-        if ((y + this.getScaledHeight()) > getScreenHeight()) {
-            int offset = (y + this.getScaledHeight()) - getScreenHeight();
-            return y - offset - 5;
+        if ((y + this.getScaledHeight()) >= (getScreenHeight() - 5)) {
+            int offset = (y + this.getScaledHeight()) - (getScreenHeight() - 5);
+            return y - offset;
         }
         return y;
     }
 
     protected SubMenuOpeningSide getPossibleSubMenuOpeningSide() {
-        if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && ((this.getY() - this.getScaledWidth()) < 0)) {
-            return SubMenuOpeningSide.RIGHT;
-        }
-        if ((this.subMenuOpeningSide == SubMenuOpeningSide.RIGHT) && (this.getY() + this.getScaledWidth()) > getScreenWidth()) {
-            return SubMenuOpeningSide.LEFT;
+        if (this.isSubMenu()) {
+            if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && ((this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5) < 5)) {
+                return SubMenuOpeningSide.RIGHT;
+            }
+            if ((this.subMenuOpeningSide == SubMenuOpeningSide.RIGHT) && ((this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5 + this.getScaledWidth()) > (getScreenWidth() - 5))) {
+                return SubMenuOpeningSide.LEFT;
+            }
         }
         return this.subMenuOpeningSide;
     }
@@ -375,8 +373,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     public ContextMenu openMenuAt(int x, int y) {
         this.closeSubMenus();
         this.unhoverAllEntries();
-        this.rawX = x;
-        this.rawY = y;
+        this.rawX = Math.max(5, x);
+        this.rawY = Math.max(5, y);
         this.open = true;
         return this;
     }
@@ -410,7 +408,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     public boolean isUserNavigatingInSubMenu() {
-        if (!this.isSubMenu()) return false;
         for (ContextMenuEntry e : this.entries) {
             if (e instanceof SubMenuContextMenuEntry s) {
                 if (s.subContextMenu.isUserNavigatingInMenu()) return true;
@@ -421,7 +418,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        LOGGER.info("CONTEXT MENU mouseClicked CALLED : " + button);
         float scale = UIBase.calculateFixedScale(this.scale);
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
@@ -589,7 +585,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         protected void renderBackground(@NotNull PoseStack pose) {
-            fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, (this.isHovered() && this.isActive()) ? UIBase.ELEMENT_BACKGROUND_COLOR_HOVER.getRGB() : UIBase.ELEMENT_BACKGROUND_COLOR_IDLE.getRGB());
+            if (this.isHovered() && this.isActive()) {
+                fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, UIBase.ELEMENT_BACKGROUND_COLOR_HOVER.getRGB());
+            }
         }
 
         public ClickableContextMenuEntry setLabel(@NotNull Component label) {
@@ -655,6 +653,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected boolean subMenuHoverTicked = false;
         protected boolean subMenuHoveredAfterOpen = false;
         protected long entryHoverStartTime = -1;
+        protected long entryNotHoveredStartTime = -1;
 
         public SubMenuContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
             super(identifier, parent, label, ((menu, entry) -> {}));
@@ -690,9 +689,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                     this.subMenuHoveredAfterOpen = true;
                 }
             }
-            if (this.parent.isHovered() && this.subContextMenu.isOpen() && this.subMenuHoveredAfterOpen) {
+            if (this.parent.isHovered() && !this.isHovered() && this.subContextMenu.isOpen() && !this.subContextMenu.isUserNavigatingInMenu() && this.subMenuHoveredAfterOpen) {
                 this.subContextMenu.closeMenu();
-                LOGGER.info("CLOSED SUB IN TICK_ENTRY " + this.identifier);
             }
             //Open sub menu on entry hover
             if (this.isHovered() && !this.parent.isSubMenuHovered()) {
@@ -700,11 +698,24 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 if (this.entryHoverStartTime == -1) {
                     this.entryHoverStartTime = now;
                 }
-                if (((this.entryHoverStartTime + 1000) < now) && !this.subContextMenu.isOpen()) {
+                if (((this.entryHoverStartTime + 400) < now) && !this.subContextMenu.isOpen()) {
+                    this.parent.closeSubMenus();
                     this.openSubMenu();
                 }
             } else {
                 this.entryHoverStartTime = -1;
+            }
+            //Close sub menu if not hovered
+            if (!this.isHovered() && this.parent.isHovered() && !this.parent.isSubMenuHovered()) {
+                long now = System.currentTimeMillis();
+                if (this.entryNotHoveredStartTime == -1) {
+                    this.entryNotHoveredStartTime = now;
+                }
+                if (((this.entryNotHoveredStartTime + 400) < now) && this.subContextMenu.isOpen()) {
+                    this.subContextMenu.closeMenu();
+                }
+            } else {
+                this.entryNotHoveredStartTime = -1;
             }
         }
 
@@ -754,12 +765,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         public SeparatorContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
             super(identifier, parent);
-            this.height = 1;
+            this.height = 9;
         }
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            fill(pose, this.x, this.y, this.x + this.width, this.y + this.getHeight(), UIBase.ELEMENT_BORDER_COLOR_IDLE.getRGB());
+            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.ELEMENT_BORDER_COLOR_IDLE.getRGB());
         }
 
         @Override
