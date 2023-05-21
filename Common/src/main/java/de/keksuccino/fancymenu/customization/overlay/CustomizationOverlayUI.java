@@ -26,7 +26,6 @@ import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.guicreator.CreateCustomGuiPopup;
@@ -42,7 +41,6 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
-import de.keksuccino.konkrete.gui.screens.ConfigScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -754,14 +752,14 @@ public class CustomizationOverlayUI extends UIBase {
 						}
 					}
 					matrix.pushPose();
-					matrix.scale(getUIScale(), getUIScale(), getUIScale());
-					MouseInput.setRenderScale(getUIScale());
+					matrix.scale(getFixedUiScale(), getFixedUiScale(), getFixedUiScale());
+					MouseInput.setRenderScale(getFixedUiScale());
 					int x = MouseInput.getMouseX();
-					if ((screen.width / getUIScale()) < x + width + 10) {
+					if ((screen.width / getFixedUiScale()) < x + width + 10) {
 						x -= width + 10;
 					}
 					int y = MouseInput.getMouseY();
-					if ((screen.height / getUIScale()) < y + 80) {
+					if ((screen.height / getFixedUiScale()) < y + 80) {
 						y -= 90;
 					}
 					fill(matrix, x, y, x + width + 10, y + 100, BUTTON_INFO_BACKGROUND_COLOR.getRGB());
@@ -801,17 +799,17 @@ public class CustomizationOverlayUI extends UIBase {
 
 			matrix.pushPose();
 
-			matrix.scale(getUIScale(), getUIScale(), getUIScale());
+			matrix.scale(getFixedUiScale(), getFixedUiScale(), getFixedUiScale());
 
-			MouseInput.setRenderScale(getUIScale());
+			MouseInput.setRenderScale(getFixedUiScale());
 
 			int x = MouseInput.getMouseX();
-			if ((screen.width / getUIScale()) < x + width + 10) {
+			if ((screen.width / getFixedUiScale()) < x + width + 10) {
 				x -= width + 10;
 			}
 
 			int y = MouseInput.getMouseY();
-			if ((screen.height / getUIScale()) < y + 80) {
+			if ((screen.height / getFixedUiScale()) < y + 80) {
 				y -= 90;
 			}
 
@@ -854,7 +852,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 			matrix.pushPose();
 
-			matrix.scale(getUIScale(), getUIScale(), getUIScale());
+			matrix.scale(getFixedUiScale(), getFixedUiScale(), getFixedUiScale());
 
 			fill(matrix, 3, h, 3 + w + 4, h + 23, MENU_INFO_BACKGROUND_COLOR.getRGB());
 
@@ -865,7 +863,7 @@ public class CustomizationOverlayUI extends UIBase {
 				drawString(matrix, Minecraft.getInstance().font, "§a" + I18n.get("fancymenu.overlay.menuinfo.idcopied"), 5, h + 13, 0);
 			}
 
-			MouseInput.setRenderScale(getUIScale());
+			MouseInput.setRenderScale(getFixedUiScale());
 
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
@@ -911,7 +909,7 @@ public class CustomizationOverlayUI extends UIBase {
 			}
 
 			int x = screen.width - w - 5;
-			int y = (int) ((bar.getHeight() + 5) * UIBase.getUIScale());
+			int y = (int) ((bar.getHeight() + 5) * UIBase.getFixedUiScale());
 
 			RenderSystem.enableBlend();
 

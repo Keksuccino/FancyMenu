@@ -19,7 +19,7 @@ import java.io.File;
 public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEditorElement> {
 
     public ButtonElementBuilder() {
-        super("custom_button", "addbutton");
+        super("custom_button");
     }
 
     @Override

@@ -373,7 +373,7 @@ public class MenuBar extends UIBase {
 	}
 	
 	public float getScale() {
-		return getUIScale();
+		return getFixedUiScale();
 	}
 	
 	public void setHeight(int height) {

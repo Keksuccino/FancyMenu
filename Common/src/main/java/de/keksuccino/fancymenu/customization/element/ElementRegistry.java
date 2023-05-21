@@ -18,20 +18,11 @@ public class ElementRegistry {
      * {@link ElementBuilder}s should get registered during mod-init.
      **/
     public static void register(@NotNull ElementBuilder<?,?> builder) {
-        register(builder.getIdentifier(), true, builder);
-    }
-
-    private static void register(@NotNull String identifier, boolean registerAlternativeIdentifiers, @NotNull ElementBuilder<?,?> builder) {
-        Objects.requireNonNull(identifier, "[FANCYMENU] Failed to register ElementBuilder! Identifier was NULL!");
-        if (BUILDERS.containsKey(identifier)) {
-            LOGGER.warn("[FANCYMENU] ElementBuilder with identifier '" + identifier + "' already registered! Overriding builder!");
+        Objects.requireNonNull(builder.getIdentifier(), "[FANCYMENU] Failed to register ElementBuilder! Identifier was NULL!");
+        if (BUILDERS.containsKey(builder.getIdentifier())) {
+            LOGGER.warn("[FANCYMENU] ElementBuilder with identifier '" + builder.getIdentifier() + "' already registered! Overriding builder!");
         }
-        BUILDERS.put(identifier, builder);
-        if (registerAlternativeIdentifiers) {
-            for (String altIdentifier : builder.getAlternativeIdentifiers()) {
-                register(altIdentifier, false, builder);
-            }
-        }
+        BUILDERS.put(builder.getIdentifier(), builder);
     }
 
     public static void unregister(@NotNull String identifier) {

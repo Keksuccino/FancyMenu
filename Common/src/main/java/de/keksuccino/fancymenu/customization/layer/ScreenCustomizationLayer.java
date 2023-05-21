@@ -354,17 +354,14 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 				element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
-
-		//Render deep elements
-		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
-			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
-		}
-
 		//Render vanilla button elements
 		for (AbstractElement element : new ArrayList<>(this.vanillaButtonElements)) {
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
-
+		//Render deep elements
+		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
+			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+		}
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());

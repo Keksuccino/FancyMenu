@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
+
+import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
@@ -90,7 +92,8 @@ public class FancyMenu {
 
 				WindowHandler.handleForceFullscreen();
 
-//				EventHandler.INSTANCE.registerListenersOf(new Test());
+				//TODO remove debug
+				EventHandler.INSTANCE.registerListenersOf(new Test());
 
 				if (isOptiFineLoaded()) {
 					LOGGER.info("[FANCYMENU] OptiFine compatibility mode enabled!");

@@ -140,12 +140,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
 			}
 		}
-		//Render deep elements
-		for (AbstractEditorElement e : new ArrayList<>(this.deepEditorElements)) {
-			if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
-		}
 		//Render vanilla button elements
 		for (AbstractEditorElement e : new ArrayList<>(this.vanillaButtonEditorElements)) {
+			if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
+		}
+		//Render deep elements
+		for (AbstractEditorElement e : new ArrayList<>(this.deepEditorElements)) {
 			if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
 		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla

@@ -470,56 +470,10 @@ public class Layout extends LayoutBase {
 
     @NotNull
     public Layout copy() {
-
        return Objects.requireNonNull(deserialize(this.serialize(), this.layoutFile));
-
-//        Layout copy = new Layout();
-//
-//        copy.menuIdentifier = this.menuIdentifier;
-//        copy.layoutFile = this.layoutFile;
-//
-//        copy.overrideMenuWith = this.overrideMenuWith;
-//        copy.menuBackground = this.menuBackground;
-//        copy.keepBackgroundAspectRatio = this.keepBackgroundAspectRatio;
-//        copy.openAudio = this.openAudio;
-//        copy.closeAudio = this.closeAudio;
-//        copy.renderElementsBehindVanilla = this.renderElementsBehindVanilla;
-//        copy.randomMode = this.randomMode;
-//        copy.randomGroup = this.randomGroup;
-//        copy.randomOnlyFirstTime = this.randomOnlyFirstTime;
-//        copy.forcedScale = this.forcedScale;
-//        copy.autoScalingWidth = this.autoScalingWidth;
-//        copy.autoScalingHeight = this.autoScalingHeight;
-//        copy.customMenuTitle = this.customMenuTitle;
-//        copy.universalLayoutMenuWhitelist = this.universalLayoutMenuWhitelist;
-//        copy.universalLayoutMenuBlacklist = this.universalLayoutMenuBlacklist;
-//
-//        if (this.layoutWideLoadingRequirementContainer != null) {
-//            PropertyContainer loadingRequirementsSec = new PropertyContainer("loading_requirements");
-//            this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(loadingRequirementsSec);
-//            copy.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(loadingRequirementsSec);
-//        }
-//
-//        for (SerializedElement e : this.serializedElements) {
-//            copy.serializedElements.add(convertSectionToElement(e));
-//        }
-//        for (SerializedElement e : this.serializedVanillaButtonElements) {
-//            SerializedElement serializedVanilla = convertSectionToElement(e);
-//            serializedVanilla.setType("vanilla_button");
-//            copy.serializedVanillaButtonElements.add(serializedVanilla);
-//        }
-//        for (SerializedElement e : this.serializedDeepElements) {
-//            SerializedElement serializedDeep = convertSectionToElement(e);
-//            serializedDeep.setType("deep_element");
-//            copy.serializedDeepElements.add(serializedDeep);
-//        }
-//
-//        copy.deepScreenCustomizationLayer = this.deepScreenCustomizationLayer;
-//
-//        return copy;
-
     }
 
+    @Legacy("Converts legacy elements to the new format. Remove this later.")
     @NotNull
     protected static List<SerializedElement> convertLegacyElements(PropertyContainerSet layout) {
 

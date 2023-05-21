@@ -52,12 +52,16 @@ public class UIBase extends GuiComponent {
 		return button;
 	}
 
-	public static float getUIScale() {
+	public static float getUiScale() {
 		float uiScale = FancyMenu.getConfig().getOrDefault("uiscale", 1.0F);
 		if (Minecraft.getInstance().isEnforceUnicode() && (uiScale > 2.0F)) {
 			uiScale = 2.0F;
 		}
-		return calculateFixedScale(uiScale);
+		return uiScale;
+	}
+
+	public static float getFixedUiScale() {
+		return calculateFixedScale(getUiScale());
 	}
 
 	public static float calculateFixedScale(float fixedScale) {
@@ -65,10 +69,14 @@ public class UIBase extends GuiComponent {
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 
+	public static boolean isMouseInArea(int mouseX, int mouseY, int x, int y, int width, int height) {
+		return (mouseX >= x) && (mouseX < (x + width)) && (mouseY >= y) && (mouseY < (y + height));
+	}
+
 	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
-			menu.openMenuAt((int) (x / UIBase.getUIScale()), (int) (y / UIBase.getUIScale()), (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
+			menu.openMenuAt((int) (x / UIBase.getFixedUiScale()), (int) (y / UIBase.getFixedUiScale()), (int) (s.width / getFixedUiScale()), (int) (s.height / getFixedUiScale()));
 		}
 	}
 
@@ -82,14 +90,14 @@ public class UIBase extends GuiComponent {
 
 			matrix.pushPose();
 
-			matrix.scale(UIBase.getUIScale(), UIBase.getUIScale(), UIBase.getUIScale());
+			matrix.scale(UIBase.getFixedUiScale(), UIBase.getFixedUiScale(), UIBase.getFixedUiScale());
 
-			MouseInput.setRenderScale(UIBase.getUIScale());
+			MouseInput.setRenderScale(UIBase.getFixedUiScale());
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			MouseInput.resetRenderScale();
 
-			menu.render(matrix, mouseX, mouseY, (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
+			menu.render(matrix, mouseX, mouseY, (int) (s.width / getFixedUiScale()), (int) (s.height / getFixedUiScale()));
 
 			matrix.popPose();
 

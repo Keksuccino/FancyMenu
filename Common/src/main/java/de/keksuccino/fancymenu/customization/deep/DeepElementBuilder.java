@@ -18,11 +18,6 @@ public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer,
         this.layer = layer;
     }
 
-    public DeepElementBuilder(@NotNull String uniqueElementIdentifier, @NotNull D layer, @Nullable String... alternativeIdentifiers) {
-        super(uniqueElementIdentifier, alternativeIdentifiers);
-        this.layer = layer;
-    }
-
     @Override
     public @Nullable E deserializeElementInternal(@NotNull SerializedElement serialized) {
 
