@@ -163,7 +163,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//Render element context menus
 		for (AbstractEditorElement e : selected) {
-			e.menu.renderScaled(pose, mouseX, mouseY, partial);
+			e.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
 		}
 
 	}
