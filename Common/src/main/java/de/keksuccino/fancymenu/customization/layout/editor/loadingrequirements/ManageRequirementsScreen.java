@@ -38,6 +38,8 @@ public class ManageRequirementsScreen extends Screen {
     protected AdvancedButton removeButton;
     protected AdvancedButton doneButton;
 
+    //TODO add cancel button that returns NULL as callback
+
     public ManageRequirementsScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
 
         super(Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
@@ -178,7 +180,7 @@ public class ManageRequirementsScreen extends Screen {
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
-        this.callback.accept(this.container);
+        this.callback.accept(null);
     }
 
     @Override

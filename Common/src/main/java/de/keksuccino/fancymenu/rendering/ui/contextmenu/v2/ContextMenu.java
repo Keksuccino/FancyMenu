@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -26,8 +27,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ContextMenu extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
@@ -61,9 +60,16 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         pose.scale(scale, scale, scale);
         pose.translate(0.0F, 0.0F, 400.0F);
 
+        List<ContextMenuEntry> renderEntries = new ArrayList<>();
+
         this.rawWidth = 20;
         this.rawHeight = 0;
+        ContextMenuEntry prev = null;
         for (ContextMenuEntry e : this.entries) {
+            //Don't render separator entries at the start and end of the menu OR if the previous entry was also a separator entry
+            if ((prev instanceof SeparatorContextMenuEntry) || ((e instanceof SeparatorContextMenuEntry) && ((e == this.entries.get(0)) || (e == this.entries.get(this.entries.size()-1))))) {
+                continue;
+            }
             //Pre-tick
             if (e.ticker != null) {
                 e.ticker.onTick(this, e, false);
@@ -74,6 +80,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 this.rawWidth = w;
             }
             this.rawHeight += e.getHeight();
+            renderEntries.add(e);
+            prev = e;
         }
 
         int x = this.getActualX();
@@ -92,25 +100,23 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), MENU_BACKGROUND_COLOR.getRGB());
         //Update + render entries
         int entryY = scaledY;
-        ContextMenuEntry prev = null;
-        for (ContextMenuEntry e : this.entries) {
-            //Don't render separator entries at the start and end of the menu OR if the previous entry was also a separator entry
-            if ((prev instanceof SeparatorContextMenuEntry) || ((e instanceof SeparatorContextMenuEntry) && ((e == this.entries.get(0)) || (e == this.entries.get(this.entries.size()-1))))) {
-                continue;
-            }
+        for (ContextMenuEntry e : renderEntries) {
             e.x = scaledX;
             e.y = entryY; //already scaled
             e.width = this.rawWidth; //don't scale, because already scaled via pose.scale()
             e.setHovered(!navigatingInSub && UIBase.isMouseInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
             e.render(pose, scaledMouseX, scaledMouseY, partial);
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
-            prev = e;
+            Tooltip tooltip = e.getTooltip();
+            if (tooltip != null) {
+                TooltipHandler.INSTANCE.addTooltip(tooltip, e::isHovered, false, true);
+            }
         }
         //Render border
         UIBase.renderBorder(pose, scaledX - 1, scaledY - 1, scaledX + this.rawWidth + 1, scaledY + this.rawHeight + 1, 1, UIBase.ELEMENT_BORDER_COLOR_IDLE, true, true, true, true);
 
         //Post-tick
-        for (ContextMenuEntry e : this.entries) {
+        for (ContextMenuEntry e : renderEntries) {
             if (e.ticker != null) {
                 e.ticker.onTick(this, e, true);
             }
@@ -119,7 +125,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         pose.popPose();
 
         //Render sub context menus
-        for (ContextMenuEntry e : this.entries) {
+        for (ContextMenuEntry e : renderEntries) {
             if (e instanceof SubMenuContextMenuEntry s) {
                 s.subContextMenu.render(pose, mouseX, mouseY, partial);
             }
@@ -547,7 +553,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     /**
-     * Will stack all stackable settings and all stackable {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
+     * Will stack all stackable settings and all stackable ACTIVE {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
      */
     @NotNull
     public static ContextMenu stackContextMenus(@NotNull List<ContextMenu> menusToStack) {
@@ -555,7 +561,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     /**
-     * Will stack all stackable settings and all stackable {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
+     * Will stack all stackable settings and all stackable ACTIVE {@link ContextMenuEntry}s of the given {@link ContextMenu}s and returns them as a new (stacked) instance.
      */
     @NotNull
     public static ContextMenu stackContextMenus(@NotNull ContextMenu... menusToStack) {
@@ -568,41 +574,42 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.subMenuOpeningSide = menusToStack[0].subMenuOpeningSide;
             stacked.shadow = menusToStack[0].shadow;
 
-            for (ContextMenuEntry e : menusToStack[0].getStackableEntries()) {
+            for (ContextMenuEntry ignoredEntry : menusToStack[0].getStackableEntries()) {
 
                 RuntimePropertyContainer stackProperties = new RuntimePropertyContainer();
-                List<ContextMenuEntry> entryStack = new ArrayList<>();
-                for (ContextMenu m : menusToStack) {
-                    ContextMenuEntry e2 = m.getEntry(e.identifier);
-                    if ((e2 != null) && (e2 != e) && e2.stackMeta.isStackable() && e2.isActive()) entryStack.add(e2);
-                }
-                List<ContextMenuEntry> entryStackCopy = new ArrayList<>();
-                entryStack.forEach((entry) -> entryStackCopy.add(entry.copy()));
+                List<ContextMenuEntry> entryStack = collectInstancesOfStackableEntryInMenus(ignoredEntry.identifier, menusToStack);
+                if (!entryStack.isEmpty()) {
 
-                ContextMenuEntry first = e.copy();
-                first.stackMeta.firstInStack = true;
-                first.stackMeta.lastInStack = false;
-                first.stackMeta.partOfStack = true;
-                first.stackMeta.properties = stackProperties;
-                first.parent = stacked;
-                stacked.addEntry(first);
-                if (first instanceof SubMenuContextMenuEntry s) {
-                    List<ContextMenuEntry> fullEntryStack = new ArrayList<>(entryStack);
-                    fullEntryStack.add(e);
-                    s.setSubContextMenu(stackContextMenus(getContextMenusOfSubMenuEntries(fullEntryStack)));
-                    s.stackMeta.lastInStack = true;
-                } else {
-                    ContextMenuEntry prev = first;
-                    for (ContextMenuEntry e2 : entryStackCopy) {
-                        prev.stackMeta.nextInStack = e2;
-                        prev = e2;
-                        e2.stackMeta.properties = stackProperties;
-                        e2.stackMeta.partOfStack = true;
-                        e2.stackMeta.firstInStack = false;
-                        e2.stackMeta.lastInStack = false;
-                        e2.parent = stacked;
+                    ContextMenuEntry firstOriginal = entryStack.get(0);
+                    List<ContextMenuEntry> entryStackCopy = new ArrayList<>();
+                    entryStack.forEach((entry) ->  {
+                        if (entry != firstOriginal) entryStackCopy.add(entry.copy());
+                    });
+
+                    ContextMenuEntry first = firstOriginal.copy();
+                    first.stackMeta.firstInStack = true;
+                    first.stackMeta.lastInStack = false;
+                    first.stackMeta.partOfStack = true;
+                    first.stackMeta.properties = stackProperties;
+                    first.parent = stacked;
+                    stacked.addEntry(first);
+                    if (first instanceof SubMenuContextMenuEntry s) {
+                        s.setSubContextMenu(stackContextMenus(getSubContextMenusOfSubMenuEntries(entryStack)));
+                        s.stackMeta.lastInStack = true;
+                    } else {
+                        ContextMenuEntry prev = first;
+                        for (ContextMenuEntry e2 : entryStackCopy) {
+                            prev.stackMeta.nextInStack = e2;
+                            prev = e2;
+                            e2.stackMeta.properties = stackProperties;
+                            e2.stackMeta.partOfStack = true;
+                            e2.stackMeta.firstInStack = false;
+                            e2.stackMeta.lastInStack = false;
+                            e2.parent = stacked;
+                        }
+                        prev.stackMeta.lastInStack = true;
                     }
-                    prev.stackMeta.lastInStack = true;
+
                 }
 
             }
@@ -613,7 +620,18 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     }
 
-    protected static List<ContextMenu> getContextMenusOfSubMenuEntries(List<ContextMenuEntry> entries) {
+    protected static List<ContextMenuEntry> collectInstancesOfStackableEntryInMenus(String entryIdentifier, ContextMenu[] menus) {
+        List<ContextMenuEntry> entries = new ArrayList<>();
+        for (ContextMenu m : menus) {
+            ContextMenuEntry e = m.getEntry(entryIdentifier);
+            if ((e != null) && e.isStackable() && e.isActive()) {
+                entries.add(e);
+            }
+        }
+        return entries;
+    }
+
+    protected static List<ContextMenu> getSubContextMenusOfSubMenuEntries(List<ContextMenuEntry> entries) {
         List<ContextMenu> l = new ArrayList<>();
         for (ContextMenuEntry e : entries) {
             if (e instanceof SubMenuContextMenuEntry s) {
@@ -681,7 +699,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         public boolean isActive() {
-            return (this.activeStateSupplier == null) || this.activeStateSupplier.getAsBoolean();
+            return (this.activeStateSupplier == null) || this.activeStateSupplier.getBoolean(this.parent, this);
         }
 
         public ContextMenuEntry setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
@@ -701,7 +719,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Nullable
         public Tooltip getTooltip() {
-            return (this.tooltipSupplier != null) ? this.tooltipSupplier.get() : null;
+            return (this.tooltipSupplier != null) ? this.tooltipSupplier.get(this.parent, this) : null;
         }
 
         public ContextMenuEntry setStackable(boolean stackable) {
@@ -750,7 +768,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, parent);
             this.clickAction = clickAction;
-            this.labelSupplier = () -> label;
+            this.labelSupplier = (menu, entry) -> label;
         }
 
         @Override
@@ -785,7 +803,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @NotNull
         public Component getLabel() {
-            Component c = this.labelSupplier.get();
+            Component c = this.labelSupplier.get(this.parent, this);
             Objects.requireNonNull(c);
             return c;
         }
@@ -799,7 +817,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Nullable
         public Component getShortcutText() {
-            return (this.shortcutTextSupplier != null) ? this.shortcutTextSupplier.get() : null;
+            return (this.shortcutTextSupplier != null) ? this.shortcutTextSupplier.get(this.parent, this) : null;
         }
 
         @NotNull
@@ -810,7 +828,11 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         protected void onStackNotify() {
-            this.clickAction.onClick(this.parent, this);
+           if (this.isActive()) {
+               this.clickAction.onClick(this.parent, this);
+           } else {
+               this.getStackMeta().notifyNextInStack();
+           }
         }
 
         @Override
@@ -1185,6 +1207,24 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     public enum SubMenuOpeningSide {
         LEFT,
         RIGHT
+    }
+
+    @FunctionalInterface
+    public interface Supplier<T> {
+        T get(ContextMenu menu, ContextMenuEntry entry);
+    }
+
+    @FunctionalInterface
+    public interface BooleanSupplier extends Supplier<Boolean> {
+
+        default boolean getBoolean(ContextMenu menu, ContextMenuEntry entry) {
+            Boolean b = this.get(menu, entry);
+            if (b != null) {
+                return b;
+            }
+            return false;
+        }
+
     }
 
 }

@@ -634,6 +634,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			return true;
 		}
 
+		//TODO CTRL+A to select all elements
+
 		//CTRL + C
 		if ((keycode == InputConstants.KEY_C) && hasControlDown()) {
 			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement[0]));

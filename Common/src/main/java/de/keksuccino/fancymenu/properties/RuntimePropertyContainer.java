@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.properties;
 
+import de.keksuccino.fancymenu.misc.ValueToggle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,6 +18,19 @@ public class RuntimePropertyContainer {
     public <T> RuntimePropertyContainer putProperty(String key, T value) {
         this.properties.put(key, new RuntimeProperty<T>(value));
         return this;
+    }
+
+    public <T> RuntimePropertyContainer putPropertyIfAbsent(String key, T value) {
+        if (!this.hasProperty(key)) {
+            this.putProperty(key, value);
+        }
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T putPropertyIfAbsentAndGet(String key, T value) {
+        this.putPropertyIfAbsent(key, value);
+        return (T) this.getProperty(key, value.getClass());
     }
 
     @Nullable

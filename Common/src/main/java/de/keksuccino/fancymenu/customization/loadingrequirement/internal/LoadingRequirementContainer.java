@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
 import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -114,6 +115,36 @@ public class LoadingRequirementContainer {
         for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
             target.putProperty(m.getKey(), m.getValue());
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (this == o) return true;
+        if (o instanceof LoadingRequirementContainer other) {
+            if (!ListUtils.contentEquals(this.groups, other.groups)) return false;
+            if (!ListUtils.contentEquals(this.instances, other.instances)) return false;
+            return true;
+        }
+        return false;
+    }
+
+    public LoadingRequirementContainer copy() {
+        LoadingRequirementContainer c = new LoadingRequirementContainer();
+        this.groups.forEach((group) -> {
+            LoadingRequirementGroup g = group.copy();
+            g.parent = c;
+            for (LoadingRequirementInstance i : g.instances) {
+                i.parent = c;
+            }
+            c.groups.add(g);
+        });
+        this.instances.forEach((instance) -> {
+            LoadingRequirementInstance i = instance.copy();
+            i.parent = c;
+            c.instances.add(i);
+        });
+        return c;
     }
 
     @NotNull

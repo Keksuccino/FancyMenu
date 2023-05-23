@@ -16,4 +16,19 @@ public class ListUtils {
         return l;
     }
 
+    public static boolean contentEquals(List<?> list1, List<?> list2) {
+        if (list1.size() != list2.size()) return false;
+        for (Object o : list1) {
+            boolean b = false;
+            for (Object o2 : list2) {
+                if (o.equals(o2)) {
+                    b = true;
+                    break;
+                }
+            }
+            if (!b) return false;
+        }
+        return true;
+    }
+
 }

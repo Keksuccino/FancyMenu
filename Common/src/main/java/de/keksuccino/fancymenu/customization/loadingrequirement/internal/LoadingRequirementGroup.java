@@ -1,11 +1,13 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
 import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class LoadingRequirementGroup {
 
@@ -54,6 +56,29 @@ public class LoadingRequirementGroup {
 
     public List<LoadingRequirementInstance> getInstances() {
         return new ArrayList<>(this.instances);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (this == o) return true;
+        if (o instanceof LoadingRequirementGroup other) {
+            if (!Objects.equals(this.identifier, other.identifier)) return false;
+            if (this.mode != other.mode) return false;
+            if (!ListUtils.contentEquals(this.instances, other.instances)) return false;
+            return true;
+        }
+        return false;
+    }
+
+    public LoadingRequirementGroup copy() {
+        LoadingRequirementGroup g = new LoadingRequirementGroup(this.identifier, this.mode, null);
+        this.instances.forEach((instance) -> {
+            LoadingRequirementInstance i = instance.copy();
+            i.group = g;
+            g.instances.add(i);
+        });
+        return g;
     }
 
     @NotNull

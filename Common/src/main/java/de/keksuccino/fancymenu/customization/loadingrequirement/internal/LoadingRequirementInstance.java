@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class LoadingRequirementInstance {
 
@@ -35,6 +36,24 @@ public class LoadingRequirementInstance {
             return !met;
         }
         return met;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (this == o) return true;
+        if (o instanceof LoadingRequirementInstance other) {
+            if (this.requirement != other.requirement) return false;
+            if (!Objects.equals(this.value, other.value)) return false;
+            if (this.mode != other.mode) return false;
+            if (!Objects.equals(this.group, other.group)) return false;
+            return true;
+        }
+        return false;
+    }
+
+    public LoadingRequirementInstance copy() {
+        return new LoadingRequirementInstance(this.requirement, this.value, this.mode, null);
     }
 
     @NotNull

@@ -13,7 +13,9 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
+import de.keksuccino.fancymenu.misc.ValueToggle;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
@@ -21,7 +23,9 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.utils.ObjectUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -124,7 +128,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			}
 		};
 		this.rightClickMenu.addSubMenuEntry("pick_element", Component.translatable("fancymenu.element.general.pick_element"), pickElementMenu)
-				.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
+				.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
 
 		this.rightClickMenu.addSeparatorEntry("separator_1");
 
@@ -132,7 +136,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.rightClickMenu.addClickableEntry("copy_id", Component.translatable("fancymenu.helper.editor.items.copyid"), (menu, entry) -> {
 				Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")));
+			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")));
 
 		}
 
@@ -144,10 +148,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu anchorPointMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("anchor_point", Component.translatable("fancymenu.editor.items.setorientation"), anchorPointMenu)
-					.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
-					.setTicker((menu, entry, isPostTick) -> {
-						entry.setActive((element.advancedX == null) && (element.advancedY == null));
-					})
+					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
+					.setIsActiveSupplier((menu, entry) -> (element.advancedX == null) && (element.advancedY == null))
 					.setStackable(true);
 
 			if (this.settings.isElementAnchorPointAllowed()) {
@@ -182,7 +184,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							entry.getStackMeta().notifyNextInStack();
 						}
 					}
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.btn.desc")))
+				}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.btn.desc")))
 						.setStackable(true);
 			}
 
@@ -194,7 +196,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						if (entry.getStackMeta().isFirstInStack()) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 						}
-						anchorPointMenu.closeMenu();
+						menu.closeMenu();
 						this.setAnchorPoint(p);
 						entry.getStackMeta().notifyNextInStack();
 					}).setStackable(true);
@@ -207,58 +209,83 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu advancedPositioningMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.literal(""), advancedPositioningMenu)
-					.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
-					.setTicker((menu, entry, isPostTick) -> {
-						if (entry instanceof ContextMenu.SubMenuContextMenuEntry e) {
-							if ((element.advancedX != null) || (element.advancedY != null)) {
-								e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.active"));
-							} else {
-								e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning"));
-							}
+					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
+					.setLabelSupplier((menu, entry) -> {
+						if (((element.advancedX != null) || (element.advancedY != null)) && !entry.getStackMeta().isPartOfStack()) {
+							return Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.active");
+						} else {
+							return Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning");
 						}
-					});
+					})
+					.setStackable(true);
 
 			advancedPositioningMenu.addClickableEntry("advanced_positioning_x", Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"), (menu, entry) -> {
-				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"), this.editor, null, (call) -> {
-					if (call != null) {
-						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-						if (call.replace(" ", "").equals("")) {
-							this.element.advancedX = null;
-						} else {
-							this.element.advancedX = call;
+				if (entry.getStackMeta().isFirstInStack()) {
+					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"), this.editor, null, (call) -> {
+						if (call != null) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							if (call.replace(" ", "").equals("")) {
+								this.element.advancedX = null;
+							} else {
+								this.element.advancedX = call;
+							}
+							this.element.baseX = 0;
+							this.element.baseY = 0;
+							this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+							entry.getStackMeta().getProperties().putProperty("x", this.element.advancedX);
+							entry.getStackMeta().notifyNextInStack();
 						}
+					});
+					s.multilineMode = false;
+					if ((this.element.advancedX != null) && !entry.getStackMeta().isPartOfStack()) {
+						s.setText(this.element.advancedX);
+					}
+					Minecraft.getInstance().setScreen(s);
+				} else {
+					String call = entry.getStackMeta().getProperties().getProperty("x", String.class);
+					if (call != null) {
+						this.element.advancedX = call;
 						this.element.baseX = 0;
 						this.element.baseY = 0;
 						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+						entry.getStackMeta().notifyNextInStack();
 					}
-				});
-				s.multilineMode = false;
-				if (this.element.advancedX != null) {
-					s.setText(this.element.advancedX);
 				}
-				Minecraft.getInstance().setScreen(s);
-			});
+			}).setStackable(true);
 
 			advancedPositioningMenu.addClickableEntry("advanced_positioning_y", Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"), (menu, entry) -> {
-				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"), this.editor, null, (call) -> {
-					if (call != null) {
-						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-						if (call.replace(" ", "").equals("")) {
-							this.element.advancedY = null;
-						} else {
-							this.element.advancedY = call;
+				if (entry.getStackMeta().isFirstInStack()) {
+					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"), this.editor, null, (call) -> {
+						if (call != null) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							if (call.replace(" ", "").equals("")) {
+								this.element.advancedY = null;
+							} else {
+								this.element.advancedY = call;
+							}
+							this.element.baseX = 0;
+							this.element.baseY = 0;
+							this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+							entry.getStackMeta().getProperties().putProperty("y", this.element.advancedY);
+							entry.getStackMeta().notifyNextInStack();
 						}
+					});
+					s.multilineMode = false;
+					if ((this.element.advancedY != null) && !entry.getStackMeta().isPartOfStack()) {
+						s.setText(this.element.advancedY);
+					}
+					Minecraft.getInstance().setScreen(s);
+				} else {
+					String call = entry.getStackMeta().getProperties().getProperty("y", String.class);
+					if (call != null) {
+						this.element.advancedY = call;
 						this.element.baseX = 0;
 						this.element.baseY = 0;
 						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+						entry.getStackMeta().notifyNextInStack();
 					}
-				});
-				s.multilineMode = false;
-				if (this.element.advancedY != null) {
-					s.setText(this.element.advancedY);
 				}
-				Minecraft.getInstance().setScreen(s);
-			});
+			}).setStackable(true);
 
 		}
 
@@ -266,66 +293,77 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu advancedSizingMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.literal(""), advancedSizingMenu)
-					.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
-					.setTicker((menu, entry, isPostTick) -> {
-						if (entry instanceof ContextMenu.SubMenuContextMenuEntry e) {
-							if ((element.advancedX != null) || (element.advancedY != null)) {
-								e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.active"));
-							} else {
-								e.setLabel(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing"));
-							}
+					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
+					.setLabelSupplier((menu, entry) -> {
+						if (((element.advancedX != null) || (element.advancedY != null)) && !entry.getStackMeta().isPartOfStack()) {
+							return Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.active");
+						} else {
+							return Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing");
 						}
-					});
+					})
+					.setStackable(true);
 
 			advancedSizingMenu.addClickableEntry("advanced_sizing_width", Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"), (menu, entry) -> {
-				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"), this.editor, null, (call) -> {
-					if (call != null) {
-						if (call.replace(" ", "").equals("")) {
-							if ((this.element.advancedWidth != null) || (this.element.width != 50)) {
-								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				if (entry.getStackMeta().isFirstInStack()) {
+					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"), this.editor, null, (call) -> {
+						if (call != null) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							if (call.replace(" ", "").equals("")) {
+								this.element.width = 50;
+								this.element.advancedWidth = null;
+							} else {
+								this.element.width = 50;
+								this.element.advancedWidth = call;
 							}
-							this.element.width = 50;
-							this.element.advancedWidth = null;
-						} else {
-							if (!call.equals(this.element.advancedWidth) || (this.element.width != 50)) {
-								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-							}
-							this.element.width = 50;
-							this.element.advancedWidth = call;
+							entry.getStackMeta().getProperties().putProperty("width", this.element.advancedWidth);
+							entry.getStackMeta().notifyNextInStack();
 						}
+					});
+					s.multilineMode = false;
+					if ((this.element.advancedWidth != null) && !entry.getStackMeta().isPartOfStack()) {
+						s.setText(this.element.advancedWidth);
 					}
-				});
-				s.multilineMode = false;
-				if (this.element.advancedWidth != null) {
-					s.setText(this.element.advancedWidth);
+					Minecraft.getInstance().setScreen(s);
+				} else {
+					String call = entry.getStackMeta().getProperties().getProperty("width", String.class);
+					if (call != null) {
+						this.element.width = 50;
+						this.element.advancedWidth = call;
+						entry.getStackMeta().notifyNextInStack();
+					}
 				}
-				Minecraft.getInstance().setScreen(s);
-			});
+			}).setStackable(true);
 
 			advancedSizingMenu.addClickableEntry("advanced_sizing_height", Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"), (menu, entry) -> {
-				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"), this.editor, null, (call) -> {
-					if (call != null) {
-						if (call.replace(" ", "").equals("")) {
-							if ((this.element.advancedHeight != null) || (this.element.height != 50)) {
-								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				if (entry.getStackMeta().isFirstInStack()) {
+					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"), this.editor, null, (call) -> {
+						if (call != null) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+							if (call.replace(" ", "").equals("")) {
+								this.element.height = 50;
+								this.element.advancedHeight = null;
+							} else {
+								this.element.height = 50;
+								this.element.advancedHeight = call;
 							}
-							this.element.height = 50;
-							this.element.advancedHeight = null;
-						} else {
-							if (!call.equals(this.element.advancedHeight) || (this.element.height != 50)) {
-								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-							}
-							this.element.height = 50;
-							this.element.advancedHeight = call;
+							entry.getStackMeta().getProperties().putProperty("height", this.element.advancedHeight);
+							entry.getStackMeta().notifyNextInStack();
 						}
+					});
+					s.multilineMode = false;
+					if ((this.element.advancedHeight != null) && !entry.getStackMeta().isPartOfStack()) {
+						s.setText(this.element.advancedHeight);
 					}
-				});
-				s.multilineMode = false;
-				if (this.element.advancedHeight != null) {
-					s.setText(this.element.advancedHeight);
+					Minecraft.getInstance().setScreen(s);
+				} else {
+					String call = entry.getStackMeta().getProperties().getProperty("height", String.class);
+					if (call != null) {
+						this.element.height = 50;
+						this.element.advancedHeight = call;
+						entry.getStackMeta().notifyNextInStack();
+					}
 				}
-				Minecraft.getInstance().setScreen(s);
-			});
+			}).setStackable(true);
 
 		}
 
@@ -333,53 +371,149 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isStretchable()) {
 
-			this.rightClickMenu.addClickableEntry("stretch_x", Component.literal(""), (menu, entry) -> {
-				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-				this.element.stretchX = !this.element.stretchX;
-			})
-			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.x.desc")))
-			.setTicker((entry) -> {
-				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
-				e.getButton().active = element.advancedWidth == null;
-				if (element.stretchX && e.getButton().active) {
-					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.x.on"));
-				} else {
-					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.x.off"));
-				}
-			}).setStackable(true);
+			this.rightClickMenu.addClickableEntry("stretch_x", Component.literal(""), (menu, entry) ->
+					{
+						if (entry.getStackMeta().isFirstInStack()) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						}
+						if (!entry.getStackMeta().isPartOfStack()) {
+							this.element.stretchX = !this.element.stretchX;
+						} else {
+							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
+							if (entry.getStackMeta().isFirstInStack()) {
+								stretch.next();
+							}
+							this.element.stretchX = stretch.current();
+							entry.getStackMeta().notifyNextInStack();
+						}
+					})
+					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.x.desc")))
+					.setLabelSupplier((menu, entry) -> {
+						if (!entry.getStackMeta().isPartOfStack()) {
+							if (element.stretchX && entry.isActive()) {
+								return Component.translatable("fancymenu.editor.object.stretch.x.on");
+							} else {
+								return Component.translatable("fancymenu.editor.object.stretch.x.off");
+							}
+						} else {
+							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
+							if (stretch.current()) {
+								return Component.translatable("fancymenu.editor.object.stretch.x.on");
+							} else {
+								return Component.translatable("fancymenu.editor.object.stretch.x.off");
+							}
+						}
+					})
+					.setIsActiveSupplier((menu, entry) -> element.advancedWidth == null)
+					.setStackable(true);
 
-			this.rightClickMenu.addClickableEntry("stretch_y", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
-				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-				this.element.stretchY = !this.element.stretchY;
-			})
-			.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.y.desc")))
-			.setTicker((entry) -> {
-				AdvancedContextMenu.ClickableMenuEntry<?> e = (AdvancedContextMenu.ClickableMenuEntry<?>) entry;
-				e.getButton().active = element.advancedHeight == null;
-				if (element.stretchY && e.getButton().active) {
-					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.y.on"));
-				} else {
-					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.y.off"));
-				}
-			});
+			this.rightClickMenu.addClickableEntry("stretch_y", Component.literal(""), (menu, entry) ->
+					{
+						if (entry.getStackMeta().isFirstInStack()) {
+							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						}
+						if (!entry.getStackMeta().isPartOfStack()) {
+							this.element.stretchY = !this.element.stretchY;
+						} else {
+							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
+							if (entry.getStackMeta().isFirstInStack()) {
+								stretch.next();
+							}
+							this.element.stretchY = stretch.current();
+							entry.getStackMeta().notifyNextInStack();
+						}
+					})
+					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.y.desc")))
+					.setLabelSupplier((menu, entry) -> {
+						if (!entry.getStackMeta().isPartOfStack()) {
+							if (element.stretchY && entry.isActive()) {
+								return Component.translatable("fancymenu.editor.object.stretch.y.on");
+							} else {
+								return Component.translatable("fancymenu.editor.object.stretch.y.off");
+							}
+						} else {
+							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
+							if (stretch.current()) {
+								return Component.translatable("fancymenu.editor.object.stretch.y.on");
+							} else {
+								return Component.translatable("fancymenu.editor.object.stretch.y.off");
+							}
+						}
+					})
+					.setIsActiveSupplier((menu, entry) -> element.advancedHeight == null)
+					.setStackable(true);
 
 		}
 
-		this.rightClickMenu.addSeparatorEntry("separator_4", true);
+		this.rightClickMenu.addSeparatorEntry("separator_4").setStackable(true);
 
 		if (this.settings.isLoadingRequirementsEnabled()) {
 
-			this.rightClickMenu.addClickableEntry("loading_requirements", false, Component.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), null, Boolean.class, (entry, inherited, pass) -> {
-				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer, (call) -> {});
-				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-				Minecraft.getInstance().setScreen(s);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")));
+			this.rightClickMenu.addClickableEntry("loading_requirements", Component.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), (menu, entry) ->
+					{
+						if (!entry.getStackMeta().isPartOfStack()) {
+							ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer.copy(), (call) -> {
+								if (call != null) {
+									this.editor.history.saveSnapshot();
+									this.element.loadingRequirementContainer = call;
+								}
+							});
+							Minecraft.getInstance().setScreen(s);
+						} else {
+							if (entry.getStackMeta().isFirstInStack()) {
+								List<AbstractEditorElement> selected = new ArrayList<>();
+								this.editor.getSelectedElements().forEach((element) -> {
+									if (element.settings.isLoadingRequirementsEnabled()) selected.add(element);
+								});
+								List<LoadingRequirementContainer> containers = ObjectUtils.getOfAll(LoadingRequirementContainer.class, selected, consumes -> consumes.element.loadingRequirementContainer);
+								if ((containers.size() > 1) && ObjectUtils.equalsAll(containers.get(0), containers.subList(1, containers.size()-1).toArray())) {
+									ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, containers.get(0).copy(), (call) -> {
+										if (call != null) {
+											this.editor.history.saveSnapshot();
+											entry.getStackMeta().getProperties().putProperty("container", call);
+											this.element.loadingRequirementContainer = call.copy();
+											entry.getStackMeta().notifyNextInStack();
+										}
+									});
+									Minecraft.getInstance().setScreen(s);
+								} else if (containers.size() > 1) {
+									ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, new LoadingRequirementContainer(), (call) -> {
+										if (call != null) {
+											this.editor.history.saveSnapshot();
+											entry.getStackMeta().getProperties().putProperty("container", call);
+											this.element.loadingRequirementContainer = call.copy();
+											entry.getStackMeta().notifyNextInStack();
+										}
+									});
+									Minecraft.getInstance().setScreen(s);
+								} else {
+									ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer.copy(), (call) -> {
+										if (call != null) {
+											this.editor.history.saveSnapshot();
+											this.element.loadingRequirementContainer = call;
+										}
+									});
+									Minecraft.getInstance().setScreen(s);
+								}
+							} else {
+								LoadingRequirementContainer call = entry.getStackMeta().getProperties().getProperty("container", LoadingRequirementContainer.class);
+								if (call != null) {
+									this.element.loadingRequirementContainer = call.copy();
+									entry.getStackMeta().notifyNextInStack();
+								}
+							}
+						}
+					})
+					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")))
+					.setStackable(true);
 
 		}
 
-		this.rightClickMenu.addSeparatorEntry("separator_5", true);
+		this.rightClickMenu.addSeparatorEntry("separator_5").setStackable(true);
 
 		if (this.settings.isOrderable()) {
+
+			//TODO hier weiter machen (non-stackable lassen, weil macht hier keinen Sinn)
 
 			this.rightClickMenu.addClickableEntry("move_up_element", false, Component.translatable("fancymenu.editor.object.moveup"), null, Boolean.class, (entry, inherited, pass) -> {
 				AbstractEditorElement o = this.editor.moveElementUp(this);

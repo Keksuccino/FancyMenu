@@ -20,6 +20,8 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
 
+	//TODO add cancel button to ManageRequirementsScreen that returns NULL as callback
+
 	//TODO Text Element: auto line break (toggleable)
 
 	//TODO ChooseMenuBackgroundScreen: background setzen scheint nicht zu gehen (getestet mit Image)
