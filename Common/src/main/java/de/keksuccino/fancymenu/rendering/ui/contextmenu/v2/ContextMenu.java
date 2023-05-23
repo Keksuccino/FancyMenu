@@ -26,6 +26,8 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ContextMenu extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
@@ -572,7 +574,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 List<ContextMenuEntry> entryStack = new ArrayList<>();
                 for (ContextMenu m : menusToStack) {
                     ContextMenuEntry e2 = m.getEntry(e.identifier);
-                    if ((e2 != null) && (e2 != e) && e2.stackMeta.isStackable()) entryStack.add(e2);
+                    if ((e2 != null) && (e2 != e) && e2.stackMeta.isStackable() && e2.isActive()) entryStack.add(e2);
                 }
                 List<ContextMenuEntry> entryStackCopy = new ArrayList<>();
                 entryStack.forEach((entry) -> entryStackCopy.add(entry.copy()));
@@ -634,11 +636,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected int height = 20;
         @Nullable
         protected Ticker ticker;
-        @Nullable
-        protected Tooltip tooltip;
         protected boolean hovered = false;
-        protected boolean active = true;
         protected ContextMenuStackMeta stackMeta = new ContextMenuStackMeta();
+        @Nullable
+        protected BooleanSupplier activeStateSupplier;
+        @Nullable
+        protected Supplier<Tooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
 
         public ContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
@@ -678,11 +681,11 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         public boolean isActive() {
-            return this.active;
+            return (this.activeStateSupplier == null) || this.activeStateSupplier.getAsBoolean();
         }
 
-        public ContextMenuEntry setActive(boolean active) {
-            this.active = active;
+        public ContextMenuEntry setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
+            this.activeStateSupplier = activeStateSupplier;
             return this;
         }
 
@@ -691,14 +694,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return this;
         }
 
-        public ContextMenuEntry setTooltip(@Nullable Tooltip tooltip) {
-            this.tooltip = tooltip;
+        public ContextMenuEntry setTooltipSupplier(@Nullable Supplier<Tooltip> tooltipSupplier) {
+            this.tooltipSupplier = tooltipSupplier;
             return this;
         }
 
         @Nullable
         public Tooltip getTooltip() {
-            return this.tooltip;
+            return (this.tooltipSupplier != null) ? this.tooltipSupplier.get() : null;
         }
 
         public ContextMenuEntry setStackable(boolean stackable) {
@@ -740,13 +743,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @NotNull
         protected ClickAction clickAction;
         @NotNull
-        protected Component label;
-        protected @Nullable Component shortcutText;
+        protected Supplier<Component> labelSupplier;
+        @Nullable
+        protected Supplier<Component> shortcutTextSupplier;
 
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, parent);
             this.clickAction = clickAction;
-            this.label = label;
+            this.labelSupplier = () -> label;
         }
 
         @Override
@@ -756,11 +760,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
             int labelX = this.x + 10;
             int labelY = this.y + (this.height / 2) - (this.font.lineHeight / 2);
-            this.font.draw(pose, this.label, labelX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
+            this.font.draw(pose, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
 
-            if (this.shortcutText != null) {
-                int shortcutX = this.x + this.width - 10 - this.font.width(this.shortcutText);
-                this.font.draw(pose, this.shortcutText, shortcutX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
+            Component shortcutText = this.getShortcutText();
+            if (shortcutText != null) {
+                int shortcutX = this.x + this.width - 10 - this.font.width(shortcutText);
+                this.font.draw(pose, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
             }
 
         }
@@ -771,16 +776,21 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             }
         }
 
-        public ClickableContextMenuEntry setLabel(@NotNull Component label) {
-            this.label = label;
+        @NotNull
+        public ClickableContextMenuEntry setLabelSupplier(@NotNull Supplier<Component> labelSupplier) {
+            Objects.requireNonNull(labelSupplier);
+            this.labelSupplier = labelSupplier;
             return this;
         }
 
         @NotNull
         public Component getLabel() {
-            return this.label;
+            Component c = this.labelSupplier.get();
+            Objects.requireNonNull(c);
+            return c;
         }
 
+        @NotNull
         public ClickableContextMenuEntry setClickAction(@NotNull ClickAction clickAction) {
             Objects.requireNonNull(clickAction);
             this.clickAction = clickAction;
@@ -789,11 +799,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Nullable
         public Component getShortcutText() {
-            return this.shortcutText;
+            return (this.shortcutTextSupplier != null) ? this.shortcutTextSupplier.get() : null;
         }
 
-        public ClickableContextMenuEntry setShortcutText(@Nullable Component shortcutText) {
-            this.shortcutText = shortcutText;
+        @NotNull
+        public ClickableContextMenuEntry setShortcutTextSupplier(@Nullable Supplier<Component> shortcutTextSupplier) {
+            this.shortcutTextSupplier = shortcutTextSupplier;
             return this;
         }
 
@@ -804,12 +815,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public ClickableContextMenuEntry copy() {
-            ClickableContextMenuEntry copy = new ClickableContextMenuEntry(this.identifier, this.parent, this.label, this.clickAction);
-            copy.shortcutText = this.shortcutText;
+            ClickableContextMenuEntry copy = new ClickableContextMenuEntry(this.identifier, this.parent, Component.literal(""), this.clickAction);
+            copy.shortcutTextSupplier = this.shortcutTextSupplier;
+            copy.labelSupplier = this.labelSupplier;
             copy.height = this.height;
             copy.ticker = this.ticker;
-            copy.tooltip = this.tooltip;
-            copy.active = this.active;
+            copy.tooltipSupplier = this.tooltipSupplier;
+            copy.activeStateSupplier = this.activeStateSupplier;
             return copy;
         }
 
@@ -819,8 +831,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public ClickableContextMenuEntry setTooltip(@Nullable Tooltip tooltip) {
-            return (ClickableContextMenuEntry) super.setTooltip(tooltip);
+        public ClickableContextMenuEntry setTooltipSupplier(@Nullable Supplier<Tooltip> tooltipSupplier) {
+            return (ClickableContextMenuEntry) super.setTooltipSupplier(tooltipSupplier);
         }
 
         @Override
@@ -829,8 +841,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public ClickableContextMenuEntry setActive(boolean active) {
-            return (ClickableContextMenuEntry) super.setActive(active);
+        public ClickableContextMenuEntry setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
+            return (ClickableContextMenuEntry) super.setIsActiveSupplier(activeStateSupplier);
         }
 
         @Override
@@ -840,9 +852,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public int getMinWidth() {
-            int i = Minecraft.getInstance().font.width(this.label) + 20;
-            if (this.shortcutText != null) {
-                i += Minecraft.getInstance().font.width(this.shortcutText) + 50;
+            int i = Minecraft.getInstance().font.width(this.getLabel()) + 20;
+            Component shortcutText = this.getShortcutText();
+            if (shortcutText != null) {
+                i += Minecraft.getInstance().font.width(shortcutText) + 50;
             }
             return i;
         }
@@ -985,11 +998,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public SubMenuContextMenuEntry copy() {
-            SubMenuContextMenuEntry copy = new SubMenuContextMenuEntry(this.identifier, this.parent, this.label, new ContextMenu());
+            SubMenuContextMenuEntry copy = new SubMenuContextMenuEntry(this.identifier, this.parent, Component.literal(""), new ContextMenu());
             copy.height = this.height;
             copy.ticker = this.ticker;
-            copy.tooltip = this.tooltip;
-            copy.active = this.active;
+            copy.tooltipSupplier = this.tooltipSupplier;
+            copy.activeStateSupplier = this.activeStateSupplier;
+            copy.labelSupplier = this.labelSupplier;
             return copy;
         }
 
@@ -1014,13 +1028,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SubMenuContextMenuEntry setLabel(@NotNull Component label) {
-            return (SubMenuContextMenuEntry) super.setLabel(label);
+        public @NotNull SubMenuContextMenuEntry setLabelSupplier(@NotNull Supplier<Component> labelSupplier) {
+            return (SubMenuContextMenuEntry) super.setLabelSupplier(labelSupplier);
         }
 
         @Override
-        public SubMenuContextMenuEntry setTooltip(@Nullable Tooltip tooltip) {
-            return (SubMenuContextMenuEntry) super.setTooltip(tooltip);
+        public SubMenuContextMenuEntry setTooltipSupplier(@Nullable Supplier<Tooltip> tooltipSupplier) {
+            return (SubMenuContextMenuEntry) super.setTooltipSupplier(tooltipSupplier);
         }
 
         @Override
@@ -1029,8 +1043,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SubMenuContextMenuEntry setActive(boolean active) {
-            return (SubMenuContextMenuEntry) super.setActive(active);
+        public SubMenuContextMenuEntry setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
+            return (SubMenuContextMenuEntry) super.setIsActiveSupplier(activeStateSupplier);
         }
 
         @Override
@@ -1044,13 +1058,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SubMenuContextMenuEntry setClickAction(@NotNull ClickAction clickAction) {
+        public @NotNull SubMenuContextMenuEntry setClickAction(@NotNull ClickAction clickAction) {
             LOGGER.error("[FANCYMENU] You can't set the click action of SubMenuContextMenuEntries.");
             return this;
         }
 
         @Override
-        public SubMenuContextMenuEntry setShortcutText(@Nullable Component shortcutText) {
+        public @NotNull SubMenuContextMenuEntry setShortcutTextSupplier(@Nullable Supplier<Component> shortcutTextSupplier) {
             LOGGER.error("[FANCYMENU] You can't set a shortcut text for SubMenuContextMenuEntries.");
             return this;
         }
@@ -1075,8 +1089,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SeparatorContextMenuEntry setTooltip(@Nullable Tooltip tooltip) {
-            return (SeparatorContextMenuEntry) super.setTooltip(tooltip);
+        public SeparatorContextMenuEntry setTooltipSupplier(@Nullable Supplier<Tooltip> tooltipSupplier) {
+            return (SeparatorContextMenuEntry) super.setTooltipSupplier(tooltipSupplier);
         }
 
         @Override
@@ -1085,8 +1099,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SeparatorContextMenuEntry setActive(boolean active) {
-            return (SeparatorContextMenuEntry) super.setActive(active);
+        public SeparatorContextMenuEntry setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
+            return (SeparatorContextMenuEntry) super.setIsActiveSupplier(activeStateSupplier);
         }
 
         @Override
@@ -1099,8 +1113,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             SeparatorContextMenuEntry copy = new SeparatorContextMenuEntry(this.identifier, this.parent);
             copy.height = this.height;
             copy.ticker = this.ticker;
-            copy.tooltip = this.tooltip;
-            copy.active = this.active;
+            copy.tooltipSupplier = this.tooltipSupplier;
+            copy.activeStateSupplier = this.activeStateSupplier;
             return copy;
         }
 

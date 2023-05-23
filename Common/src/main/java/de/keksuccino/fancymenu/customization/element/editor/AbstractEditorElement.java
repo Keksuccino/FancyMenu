@@ -333,8 +333,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isStretchable()) {
 
-			//TODO schauen, ob stretch stackable gemacht werden kann
-			this.rightClickMenu.addClickableEntry("stretch_x", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
+			this.rightClickMenu.addClickableEntry("stretch_x", Component.literal(""), (menu, entry) -> {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				this.element.stretchX = !this.element.stretchX;
 			})
@@ -347,7 +346,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				} else {
 					e.setLabel(Component.translatable("fancymenu.editor.object.stretch.x.off"));
 				}
-			});
+			}).setStackable(true);
 
 			this.rightClickMenu.addClickableEntry("stretch_y", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
