@@ -22,27 +22,27 @@ public class ElementAnchorPoint {
     }
 
     public int getElementPositionX(@NotNull AbstractElement element) {
-        return element.baseX;
+        return this.getOriginX(element) + element.baseX;
     }
 
     public int getElementPositionY(@NotNull AbstractElement element) {
-        return element.baseY;
+        return this.getOriginY(element) + element.baseY;
     }
 
-    public int getDefaultElementPositionX(@NotNull AbstractElement element) {
-        return element.baseX;
+    public int getOriginX(@NotNull AbstractElement element) {
+        return 0;
     }
 
-    public int getDefaultElementPositionY(@NotNull AbstractElement element) {
-        return element.baseY;
+    public int getOriginY(@NotNull AbstractElement element) {
+        return 0;
     }
 
-    public int getOriginPositionX() {
-        return this.getElementPositionX(AbstractElement.EMPTY_ELEMENT);
+    public int getDefaultElementBaseX(@NotNull AbstractElement element) {
+        return 0;
     }
 
-    public int getOriginPositionY() {
-        return this.getElementPositionY(AbstractElement.EMPTY_ELEMENT);
+    public int getDefaultElementBaseY(@NotNull AbstractElement element) {
+        return 0;
     }
 
     public int getResizePositionOffsetX(@NotNull AbstractElement element, int mouseTravelX, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
@@ -65,6 +65,14 @@ public class ElementAnchorPoint {
         return 0;
     }
 
+    protected static int getScreenWidth() {
+        return AbstractElement.getScreenWidth();
+    }
+
+    protected static int getScreenHeight() {
+        return AbstractElement.getScreenHeight();
+    }
+
     // ---------------------------------
 
     public static class AnchorTopLeft extends ElementAnchorPoint {
@@ -84,12 +92,12 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionY(@NotNull AbstractElement element) {
-            return (AbstractElement.getScreenHeight() / 2) + element.baseY;
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight() / 2;
         }
 
         @Override
-        public int getDefaultElementPositionY(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -(element.getHeight() / 2);
         }
 
@@ -102,12 +110,12 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionY(@NotNull AbstractElement element) {
-            return AbstractElement.getScreenHeight() + element.baseY;
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight();
         }
 
         @Override
-        public int getDefaultElementPositionY(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -element.getHeight();
         }
 
@@ -120,12 +128,12 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionX(@NotNull AbstractElement element) {
-            return (AbstractElement.getScreenWidth() / 2) + element.baseX;
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth() / 2;
         }
 
         @Override
-        public int getDefaultElementPositionX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             return -(element.getWidth() / 2);
         }
 
@@ -138,22 +146,22 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionX(@NotNull AbstractElement element) {
-            return (AbstractElement.getScreenWidth() / 2) + element.baseX;
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth() / 2;
         }
 
         @Override
-        public int getElementPositionY(@NotNull AbstractElement element) {
-            return (AbstractElement.getScreenHeight() / 2) + element.baseY;
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight() / 2;
         }
 
         @Override
-        public int getDefaultElementPositionX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             return -(element.getWidth() / 2);
         }
 
         @Override
-        public int getDefaultElementPositionY(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -(element.getHeight() / 2);
         }
 
@@ -166,22 +174,22 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionX(@NotNull AbstractElement element) {
-            return (AbstractElement.getScreenWidth() / 2) + element.baseX;
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth() / 2;
         }
 
         @Override
-        public int getElementPositionY(@NotNull AbstractElement element) {
-            return AbstractElement.getScreenHeight() + element.baseY;
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight();
         }
 
         @Override
-        public int getDefaultElementPositionX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             return -(element.getWidth() / 2);
         }
 
         @Override
-        public int getDefaultElementPositionY(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -element.getHeight();
         }
 
@@ -194,12 +202,12 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionX(@NotNull AbstractElement element) {
-            return AbstractElement.getScreenWidth() + element.baseX;
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth();
         }
 
         @Override
-        public int getDefaultElementPositionX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             return -element.getWidth();
         }
 
@@ -212,22 +220,22 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionX(@NotNull AbstractElement element) {
-            return AbstractElement.getScreenWidth() + element.baseX;
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth();
         }
 
         @Override
-        public int getElementPositionY(@NotNull AbstractElement element) {
-            return (AbstractElement.getScreenHeight() / 2) + element.baseY;
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight() / 2;
         }
 
         @Override
-        public int getDefaultElementPositionX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             return -element.getWidth();
         }
 
         @Override
-        public int getDefaultElementPositionY(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -(element.getHeight() / 2);
         }
 
@@ -240,22 +248,22 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getElementPositionX(@NotNull AbstractElement element) {
-            return AbstractElement.getScreenWidth() + element.baseX;
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth();
         }
 
         @Override
-        public int getElementPositionY(@NotNull AbstractElement element) {
-            return AbstractElement.getScreenHeight() + element.baseY;
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight();
         }
 
         @Override
-        public int getDefaultElementPositionX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             return -element.getWidth();
         }
 
         @Override
-        public int getDefaultElementPositionY(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -element.getHeight();
         }
 
@@ -273,6 +281,33 @@ public class ElementAnchorPoint {
 
         AnchorElement() {
             super("element");
+        }
+
+        @Override
+        public int getOriginX(@NotNull AbstractElement element) {
+            AbstractElement anchor = element.getElementAnchorPointElement();
+            if (anchor != null) {
+                return anchor.getX();
+            }
+            return super.getOriginX(element);
+        }
+
+        @Override
+        public int getOriginY(@NotNull AbstractElement element) {
+            AbstractElement anchor = element.getElementAnchorPointElement();
+            if (anchor != null) {
+                return anchor.getY();
+            }
+            return super.getOriginY(element);
+        }
+
+        @Override
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
+            AbstractElement anchor = element.getElementAnchorPointElement();
+            if (anchor != null) {
+                return anchor.getHeight();
+            }
+            return super.getDefaultElementBaseX(element);
         }
 
     }

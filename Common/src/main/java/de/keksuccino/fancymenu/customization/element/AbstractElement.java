@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -18,12 +21,12 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
-	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(PoseStack p,int i1,int i2,float f){}};
+	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull PoseStack p, int i1, int i2, float f){}};
 
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.TOP_LEFT;
 	public String anchorPointElementIdentifier = null;
-	public AbstractElement anchorPointElement = null;
+	protected AbstractElement anchorPointElement = null;
 	/** Not the same as {@link AbstractElement#getX()}! This is the raw value without orientation and scale! **/
 	public int baseX = 0;
 	/** Not the same as {@link AbstractElement#getY()}! This is the raw value without orientation and scale! **/
@@ -96,6 +99,15 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			return this.anchorPoint.getElementPositionY(this);
 		}
 		return 0;
+	}
+
+	@Nullable
+	public AbstractElement getElementAnchorPointElement() {
+		if (this.anchorPointElementIdentifier == null) return null;
+		if (this.anchorPointElement == null) {
+			this.anchorPointElement = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
+		}
+		return this.anchorPointElement;
 	}
 	
 	public boolean shouldRender() {
@@ -178,6 +190,18 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public static int getScreenHeight() {
 		Screen s = getScreen();
 		return (s != null) ? s.height : 0;
+	}
+
+	@SuppressWarnings("all")
+	@Nullable
+	public static AbstractElement getElementByInstanceIdentifier(String identifier) {
+		if (isEditor()) {
+			return ((LayoutEditorScreen)getScreen()).getElementByInstanceIdentifier(identifier).element;
+		} else {
+			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
+			if (layer != null) return layer.getElementByInstanceIdentifier(identifier);
+		}
+		return null;
 	}
 
 	public enum Alignment {

@@ -29,10 +29,12 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
+import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.utils.ObjectUtils;
 import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -65,6 +67,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public LayoutEditorUI ui;
 	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
+	public ContextMenu activeElementContextMenu = null;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -98,6 +101,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.rightClickMenu.closeMenu();
 
+		if (this.activeElementContextMenu != null) {
+			this.activeElementContextMenu.closeMenu();
+			this.activeElementContextMenu = null;
+		}
+
 		this.serializeElementInstancesToLayoutInstance();
 
 		//Clear element lists
@@ -120,6 +128,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+		//Clear active element context menu if not open
+		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isOpen()) {
+			this.activeElementContextMenu = null;
+		}
+
 		this.renderBackground(pose, mouseX, mouseY, partial);
 
 		this.renderElements(pose, mouseX, mouseY, partial);
@@ -128,6 +141,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		if (this.rightClickMenu != null) {
 			this.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
+		}
+
+		//Render active element context menu
+		if (this.activeElementContextMenu != null) {
+			this.activeElementContextMenu.render(pose, mouseX, mouseY, partial);
 		}
 
 	}
@@ -141,12 +159,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		//Render vanilla button elements
-		for (AbstractEditorElement e : new ArrayList<>(this.vanillaButtonEditorElements)) {
-			if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
+		for (VanillaButtonEditorElement e : new ArrayList<>(this.vanillaButtonEditorElements)) {
+			if (!e.isSelected() && !e.isHidden()) e.render(pose, mouseX, mouseY, partial);
 		}
 		//Render deep elements
-		for (AbstractEditorElement e : new ArrayList<>(this.deepEditorElements)) {
-			if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
+		for (AbstractDeepEditorElement e : new ArrayList<>(this.deepEditorElements)) {
+			if (!e.isSelected() && !e.isHidden()) e.render(pose, mouseX, mouseY, partial);
 		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
@@ -159,11 +177,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<AbstractEditorElement> selected = this.getSelectedElements();
 		for (AbstractEditorElement e : selected) {
 			e.render(pose, mouseX, mouseY, partial);
-		}
-
-		//Render element context menus
-		for (AbstractEditorElement e : selected) {
-			e.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
 		}
 
 	}
@@ -264,8 +277,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (deepElements != null) {
 			for (AbstractElement e : deepElements) {
 				AbstractEditorElement editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
-				if ((editorElement instanceof AbstractDeepEditorElement)) {
-					this.deepEditorElements.add((AbstractDeepEditorElement) editorElement);
+				if (editorElement instanceof AbstractDeepEditorElement d) {
+					this.deepEditorElements.add(d);
 				}
 			}
 		}
@@ -329,7 +342,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public List<AbstractEditorElement> getHoveredElements() {
 		List<AbstractEditorElement> elements = new ArrayList<>();
 		for (AbstractEditorElement e : this.getAllElements()) {
-			if (e.isHovered()) elements.add(e);
+			if (e.isHovered()) {
+				if ((e instanceof IHideableElement h) && h.isHidden()) continue;
+				elements.add(e);
+			}
 		}
 		return elements;
 	}
@@ -522,26 +538,72 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+
+		if (topHoverElement != null) {
+			//Select hovered element on left- and right-click
+			if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu())) {
+				topHoverElement.setSelected(true);
+			}
+		}
+
+		//Handle mouse click for elements
+		for (AbstractEditorElement e : this.getAllElements()) {
+			e.mouseClicked(mouseX, mouseY, button);
+		}
+
+		//TODO FIX: right-click auf element selectet weiteres element, ohne andere zu de-selecten
+
+		//Deselect all elements
+		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
+			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || !topHoverElement.isSelected()))) {
+				for (AbstractEditorElement e : this.getAllElements()) {
+					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
+				}
+			}
+		}
+
+		//Close active element context menu
+		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isUserNavigatingInMenu()) {
+			this.activeElementContextMenu.closeMenu();
+			this.removeWidget(this.activeElementContextMenu);
+			this.activeElementContextMenu = null;
+		}
+		//Close background right-click context menu
 		if ((button == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
 			this.rightClickMenu.closeMenu();
 		}
+//		//Deselect all elements
+//		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
+//			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || !topHoverElement.isSelected()))) {
+//				for (AbstractEditorElement e : this.getAllElements()) {
+//					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
+//				}
+//			}
+//		}
+		//Open background right-click context menu
 		if (topHoverElement == null) {
-			this.deselectAllElements();
 			if (button == 1) {
 				this.rightClickMenu = this.ui.buildEditorRightClickContextMenu();
 				this.rightClickMenu.openMenuAtMouseScaled();
 			}
-		}
-		for (AbstractEditorElement e : this.getAllElements()) {
-			if ((e == topHoverElement) && !e.isSelected() && !hasControlDown()) {
-				e.setSelected(true);
-				return true;
-			} else if ((e == topHoverElement) && hasControlDown()) {
-				e.setSelected(!e.isSelected());
-				return true;
-			}
-			if (e.mouseClicked(mouseX, mouseY, button)) {
-				return true;
+		} else {
+//			//Select hovered element on left- and right-click
+//			if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu())) {
+//				topHoverElement.setSelected(true);
+//			}
+			//Set and open active element context menu
+			if (button == 1) {
+				List<AbstractEditorElement> selectedElements = this.getSelectedElements();
+				if (selectedElements.size() == 1) {
+					this.activeElementContextMenu = topHoverElement.rightClickMenu;
+					this.addWidget(this.activeElementContextMenu);
+					this.activeElementContextMenu.openMenuAtMouse();
+				} else if (selectedElements.size() > 1) {
+					List<ContextMenu> menus = ObjectUtils.getOfAll(ContextMenu.class, selectedElements, consumes -> consumes.rightClickMenu);
+					this.activeElementContextMenu = ContextMenu.stackContextMenus(menus);
+					this.addWidget(this.activeElementContextMenu);
+					this.activeElementContextMenu.openMenuAtMouse();
+				}
 			}
 		}
 
@@ -554,11 +616,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		if (PopupHandler.isPopupActive()) return false;
 
+		//Handle mouse released for all elements
 		for (AbstractEditorElement e : this.getAllElements()) {
-			if (e.mouseReleased(mouseX, mouseY, button)) {
-				return true;
-			}
+			e.mouseReleased(mouseX, mouseY, button);
 		}
+
 		return super.mouseReleased(mouseX, mouseY, button);
 
 	}

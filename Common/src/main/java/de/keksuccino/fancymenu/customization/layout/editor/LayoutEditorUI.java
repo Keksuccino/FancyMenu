@@ -54,6 +54,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("all")
@@ -185,6 +186,8 @@ public class LayoutEditorUI extends UIBase {
 				newElementMenu.getContextMenu().setParentButton(entry.getButton());
 				newElementMenu.openMenu(0, entry.getButton().y);
 			});
+
+			//TODO add "Editor" tab with entry to toggle grid (+ shortcut text Ctrl+G)
 
 			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), null, Boolean.class, (entry, inherited, pass) -> {
 				AdvancedContextMenu hiddenVanillaMenu = this.buildHiddenVanillaElementContextMenu();
@@ -707,14 +710,14 @@ public class LayoutEditorUI extends UIBase {
 			}
 
 			// ADD ALL ELEMENT TYPES
-			int count = 0;
 			for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
 				Component[] desc = builder.getDescription(null);
-				menu.addClickableEntry("element_" + count, false, builder.getDisplayName(null), null, Boolean.class, (entry, inherited, pass) -> {
-					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+				menu.addClickableEntry("element_" + builder.getIdentifier(), false, builder.getDisplayName(null), null, Boolean.class, (entry, inherited, pass) -> {
+					this.editor.history.saveSnapshot();
 					this.editor.normalEditorElements.add(builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), this.editor));
+					//TODO remove debug
+					LogManager.getLogger().info("ADDING NEW ELEMENT: " + builder.getIdentifier());
 				}).setTooltip((desc != null) ? Tooltip.create(desc) : null);
-				count++;
 			}
 
 		} catch (Exception ex) {

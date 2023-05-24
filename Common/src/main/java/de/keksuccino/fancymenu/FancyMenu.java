@@ -20,7 +20,15 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
 
+	//TODO loading requirements werden in editor nicht richtig gesetzt ( vermutlich wegen copy() )
+
+	//TODO deep element customizations werden nicht in editor geladen, wenn editor neu geöffnet wird
+
+	//TODO add "Select All" option to editor right-click menu and "Edit" tab in menu bar
+
 	//TODO add cancel button to ManageRequirementsScreen that returns NULL as callback
+
+	//TODO nicht vergessen, shortcut texte in context menüs zu setzen
 
 	//TODO Text Element: auto line break (toggleable)
 
@@ -34,7 +42,7 @@ public class FancyMenu {
 	// - Visibility Requirements (v1 stuff zu loading requirements machen)
 	// - Actions
 
-	//TODO Title Screen Mixins für customization adden <---------------------------------------------
+	//TODO Title Screen Mixins für customization adden
 	// - BackgroundRenderEvent nach rendern von panorama back callen
 	// - alle elemente entfernen, die durch Deep Cuz elemente ersetzt wurden
 

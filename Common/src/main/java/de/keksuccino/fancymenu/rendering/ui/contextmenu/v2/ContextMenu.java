@@ -67,7 +67,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         ContextMenuEntry prev = null;
         for (ContextMenuEntry e : this.entries) {
             //Don't render separator entries at the start and end of the menu OR if the previous entry was also a separator entry
-            if ((prev instanceof SeparatorContextMenuEntry) || ((e instanceof SeparatorContextMenuEntry) && ((e == this.entries.get(0)) || (e == this.entries.get(this.entries.size()-1))))) {
+            if ((e instanceof SeparatorContextMenuEntry) && ((prev instanceof SeparatorContextMenuEntry) || ((e == this.entries.get(0)) || (e == this.entries.get(this.entries.size()-1))))) {
+                prev = e;
                 continue;
             }
             //Pre-tick

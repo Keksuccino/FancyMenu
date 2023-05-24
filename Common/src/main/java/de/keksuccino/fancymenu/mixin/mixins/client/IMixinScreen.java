@@ -23,4 +23,6 @@ public interface IMixinScreen {
 
     @Invoker("addWidget") <T extends GuiEventListener & NarratableEntry> T invokeAddWidgetFancyMenu(T widget);
 
+    @Invoker("removeWidget") void invokeRemoveWidgetFancyMenu(GuiEventListener widget);
+
 }

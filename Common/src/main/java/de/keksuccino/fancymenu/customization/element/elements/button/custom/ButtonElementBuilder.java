@@ -28,6 +28,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.width = 100;
         element.height = 20;
         element.label = "New Button";
+        element.button = new Button(0, 0, 0, 0, Component.literal(""), true, (press) -> {
+            for (ActionExecutor.ActionContainer c : element.getActionList()) {
+                c.execute();
+            }
+        });
         return element;
     }
 
@@ -116,7 +121,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     @Override
     protected @NotNull SerializedElement serializeElement(@NotNull ButtonElement element, @NotNull SerializedElement serializeTo) {
 
-        if ((element.actions != null) && !element.actions.isEmpty()) {
+        if (!element.actions.isEmpty()) {
             String buttonaction = "";
             for (ActionExecutor.ActionContainer c : element.actions) {
                 String s2 = c.action;
@@ -169,6 +174,9 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
+        if (element instanceof ButtonElement b) {
+            return b.getButton().getMessage();
+        }
         return Component.translatable("fancymenu.editor.add.button");
     }
 

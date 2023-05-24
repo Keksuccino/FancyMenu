@@ -32,6 +32,42 @@ public abstract class AbstractDeepEditorElement extends AbstractEditorElement im
     }
 
     @Override
+    public void setSelected(boolean selected) {
+        if (this.isHidden()) return;
+        super.setSelected(selected);
+    }
+
+    @Override
+    public boolean isHovered() {
+        if (this.isHidden()) return false;
+        return super.isHovered();
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.isHidden()) return false;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.isHidden()) return false;
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
+        if (this.isHidden()) return false;
+        return super.mouseDragged(mouseX, mouseY, button, $$3, $$4);
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        if (this.isHidden()) return false;
+        return super.isMouseOver(mouseX, mouseY);
+    }
+
+    @Override
     public boolean isHidden() {
         return ((IHideableElement)this.element).isHidden();
     }
