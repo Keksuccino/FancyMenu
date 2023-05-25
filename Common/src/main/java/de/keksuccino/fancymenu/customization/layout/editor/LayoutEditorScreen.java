@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -32,10 +33,7 @@ import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.fancymenu.utils.ObjectUtils;
-import de.keksuccino.fancymenu.utils.ScreenTitleUtils;
+import de.keksuccino.fancymenu.utils.*;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
@@ -53,8 +51,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 
-	public static final Color GRID_COLOR_NORMAL = new Color(255, 255, 255, 100);
-	public static final Color GRID_COLOR_CENTER = new Color(150, 105, 255, 100);
+	protected static final Color MOUSE_SELECTION_RECTANGLE_COLOR = new Color(3, 148, 252);
+	protected static final Color GRID_COLOR_NORMAL = new Color(255, 255, 255, 100);
+	protected static final Color GRID_COLOR_CENTER = new Color(150, 105, 255, 100);
 
 	@Nullable
 	public Screen layoutTargetScreen;
@@ -68,6 +67,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public LayoutEditorUI ui;
 	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
 	public ContextMenu activeElementContextMenu = null;
+
+	protected boolean isMouseSelection = false;
+	protected int mouseSelectionStartX = 0;
+	protected int mouseSelectionStartY = 0;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -148,6 +151,20 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.activeElementContextMenu.render(pose, mouseX, mouseY, partial);
 		}
 
+		this.renderMouseSelectionRectangle(pose, mouseX, mouseY);
+
+	}
+
+	protected void renderMouseSelectionRectangle(PoseStack pose, int mouseX, int mouseY) {
+		if (this.isMouseSelection) {
+			int startX = Math.min(this.mouseSelectionStartX, mouseX);
+			int startY = Math.min(this.mouseSelectionStartY, mouseY);
+			int endX = Math.max(this.mouseSelectionStartX, mouseX);
+			int endY = Math.max(this.mouseSelectionStartY, mouseY);
+			fill(pose, startX, startY, endX, endY, RenderUtils.replaceAlphaInColor(MOUSE_SELECTION_RECTANGLE_COLOR.getRGB(), 70));
+			UIBase.renderBorder(pose, startX, startY, endX, endY, 1, MOUSE_SELECTION_RECTANGLE_COLOR, true, true, true, true);
+			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		}
 	}
 
 	protected void renderElements(PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -327,15 +344,26 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@NotNull
 	public List<AbstractEditorElement> getAllElements() {
 		List<AbstractEditorElement> elements = new ArrayList<>();
+		List<AbstractEditorElement> selected = new ArrayList<>();
+		List<AbstractEditorElement> elementsFinal = new ArrayList<>();
 		if (this.layout.keepBackgroundAspectRatio) {
 			elements.addAll(this.normalEditorElements);
 		}
-		elements.addAll(this.deepEditorElements);
 		elements.addAll(this.vanillaButtonEditorElements);
+		elements.addAll(this.deepEditorElements);
 		if (!this.layout.keepBackgroundAspectRatio) {
 			elements.addAll(this.normalEditorElements);
 		}
-		return elements;
+		//Put selected elements at the end, because they are always on top
+		for (AbstractEditorElement e : elements) {
+			if (!e.isSelected()) {
+				elementsFinal.add(e);
+			} else {
+				selected.add(e);
+			}
+		}
+		elementsFinal.addAll(selected);
+		return elementsFinal;
 	}
 
 	@NotNull
@@ -531,6 +559,14 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
+	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement element, int xStart, int yStart, int xEnd, int yEnd) {
+		int elementStartX = element.getX();
+		int elementStartY = element.getY();
+		int elementEndX = element.getX() + element.getWidth();
+		int elementEndY = element.getY() + element.getHeight();
+		return (xEnd > elementStartX) && (yEnd > elementStartY) && (yStart < elementEndY) && (xStart < elementEndX);
+	}
+
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
@@ -539,29 +575,38 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
 
+		boolean topHoverGotSelected = false;
 		if (topHoverElement != null) {
 			//Select hovered element on left- and right-click
 			if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu())) {
-				topHoverElement.setSelected(true);
+				if (!topHoverElement.isSelected()) {
+					topHoverElement.setSelected(true);
+					topHoverGotSelected = true;
+				}
 			}
 		}
-
+		boolean canStartMouseSelection = true;
 		//Handle mouse click for elements
 		for (AbstractEditorElement e : this.getAllElements()) {
 			e.mouseClicked(mouseX, mouseY, button);
+			if (e.isHovered() || e.isGettingResized() || (e.getHoveredResizeGrabber() != null)) {
+				canStartMouseSelection = false;
+			}
 		}
-
-		//TODO FIX: right-click auf element selectet weiteres element, ohne andere zu de-selecten
-
+		//Handle mouse selection
+		if ((button == 0) && canStartMouseSelection && !hasControlDown()) {
+			this.isMouseSelection = true;
+			this.mouseSelectionStartX = (int) mouseX;
+			this.mouseSelectionStartY = (int) mouseY;
+		}
 		//Deselect all elements
 		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
-			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || !topHoverElement.isSelected()))) {
+			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || topHoverGotSelected))) {
 				for (AbstractEditorElement e : this.getAllElements()) {
 					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
 				}
 			}
 		}
-
 		//Close active element context menu
 		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isUserNavigatingInMenu()) {
 			this.activeElementContextMenu.closeMenu();
@@ -572,14 +617,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if ((button == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
 			this.rightClickMenu.closeMenu();
 		}
-//		//Deselect all elements
-//		if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu()) && !hasControlDown()) {
-//			if ((button == 0) || ((button == 1) && ((topHoverElement == null) || !topHoverElement.isSelected()))) {
-//				for (AbstractEditorElement e : this.getAllElements()) {
-//					if (!e.isGettingResized() && ((topHoverElement == null) || (e != topHoverElement))) e.setSelected(false);
-//				}
-//			}
-//		}
 		//Open background right-click context menu
 		if (topHoverElement == null) {
 			if (button == 1) {
@@ -587,10 +624,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				this.rightClickMenu.openMenuAtMouseScaled();
 			}
 		} else {
-//			//Select hovered element on left- and right-click
-//			if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu())) {
-//				topHoverElement.setSelected(true);
-//			}
 			//Set and open active element context menu
 			if (button == 1) {
 				List<AbstractEditorElement> selectedElements = this.getSelectedElements();
@@ -616,6 +649,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		if (PopupHandler.isPopupActive()) return false;
 
+		if (button == 0) {
+			this.isMouseSelection = false;
+		}
+
 		//Handle mouse released for all elements
 		for (AbstractEditorElement e : this.getAllElements()) {
 			e.mouseReleased(mouseX, mouseY, button);
@@ -629,6 +666,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
 		if (PopupHandler.isPopupActive()) return false;
+
+		if (this.isMouseSelection) {
+			for (AbstractEditorElement e : this.getAllElements()) {
+				e.setSelected(this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY)));
+			}
+		}
 
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
@@ -696,7 +739,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			return true;
 		}
 
-		//TODO CTRL+A to select all elements
+		//CTRL + A
+		if ((keycode == InputConstants.KEY_A) && hasControlDown()) {
+			this.selectAllElements();
+		}
 
 		//CTRL + C
 		if ((keycode == InputConstants.KEY_C) && hasControlDown()) {

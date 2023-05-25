@@ -19,6 +19,7 @@ public class EditorElementSettings {
     private boolean movable = true;
     private boolean anchorPointCanBeChanged = true;
     private boolean allowElementAnchorPoint = true;
+    private boolean allowVanillaAnchorPoint = false;
     private boolean enableLoadingRequirements = true;
     private boolean identifierCopyable = true;
 
@@ -37,6 +38,7 @@ public class EditorElementSettings {
 
     public void setHideInsteadOfDestroy(boolean hideInsteadOfDestroy) {
         this.hideInsteadOfDestroy = hideInsteadOfDestroy;
+        this.settingsChanged();
     }
 
     public boolean isStretchable() {
@@ -156,6 +158,15 @@ public class EditorElementSettings {
         this.settingsChanged();
     }
 
+    public boolean isVanillaAnchorPointAllowed() {
+        return this.allowVanillaAnchorPoint;
+    }
+
+    public void setVanillaAnchorPointAllowed(boolean allow) {
+        this.allowVanillaAnchorPoint = allow;
+        this.settingsChanged();
+    }
+
     public boolean isLoadingRequirementsEnabled() {
         return enableLoadingRequirements;
     }
@@ -171,6 +182,7 @@ public class EditorElementSettings {
 
     public void setIdentifierCopyable(boolean copyable) {
         this.identifierCopyable = copyable;
+        this.settingsChanged();
     }
 
     protected void settingsChanged() {

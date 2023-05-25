@@ -34,6 +34,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = new ResourceLocation("fancymenu", "textures/context_menu_sub_arrow.png");
+    private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = new ResourceLocation("fancymenu", "textures/context_menu_tooltip.png");
     private static final Color MENU_SHADOW_COLOR = new Color(43, 43, 43, 100);
     private static final Color MENU_BACKGROUND_COLOR = UIBase.ELEMENT_BACKGROUND_COLOR_IDLE;
 
@@ -47,6 +48,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected SubMenuContextMenuEntry parentEntry = null;
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = true;
+    protected boolean applyDefaultTooltipStyle = true;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -61,6 +63,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         pose.translate(0.0F, 0.0F, 400.0F);
 
         List<ContextMenuEntry> renderEntries = new ArrayList<>();
+        renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_top", this));
 
         this.rawWidth = 20;
         this.rawHeight = 0;
@@ -72,8 +75,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 continue;
             }
             //Pre-tick
-            if (e.ticker != null) {
-                e.ticker.onTick(this, e, false);
+            if (e.tickAction != null) {
+                e.tickAction.run(this, e, false);
             }
             //Update width + height
             int w = e.getMinWidth();
@@ -84,6 +87,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             renderEntries.add(e);
             prev = e;
         }
+        this.rawHeight += 8; //add top and bottom spacer to total height
+
+        renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
         int x = this.getActualX();
         int y = this.getActualY();
@@ -105,21 +111,22 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             e.x = scaledX;
             e.y = entryY; //already scaled
             e.width = this.rawWidth; //don't scale, because already scaled via pose.scale()
-            e.setHovered(!navigatingInSub && UIBase.isMouseInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+            boolean hover = e.isHovered();
+            e.setHovered(!navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+            //Run hover action of element if its hover state changed to hovered
+            if (!hover && e.isHovered() && (e.hoverAction != null)) {
+                e.hoverAction.run(this, e, false);
+            }
             e.render(pose, scaledMouseX, scaledMouseY, partial);
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
-            Tooltip tooltip = e.getTooltip();
-            if (tooltip != null) {
-                TooltipHandler.INSTANCE.addTooltip(tooltip, e::isHovered, false, true);
-            }
         }
         //Render border
         UIBase.renderBorder(pose, scaledX - 1, scaledY - 1, scaledX + this.rawWidth + 1, scaledY + this.rawHeight + 1, 1, UIBase.ELEMENT_BORDER_COLOR_IDLE, true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry e : renderEntries) {
-            if (e.ticker != null) {
-                e.ticker.onTick(this, e, true);
+            if (e.tickAction != null) {
+                e.tickAction.run(this, e, true);
             }
         }
 
@@ -402,6 +409,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
+    public boolean isApplyDefaultTooltipStyle() {
+        return this.applyDefaultTooltipStyle;
+    }
+
+    public void setApplyDefaultTooltipStyle(boolean applyDefaultTooltipStyle) {
+        this.applyDefaultTooltipStyle = applyDefaultTooltipStyle;
+    }
+
     @NotNull
     public SubMenuOpeningSide getSubMenuOpeningSide() {
         return this.subMenuOpeningSide;
@@ -582,9 +597,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 if (!entryStack.isEmpty()) {
 
                     ContextMenuEntry firstOriginal = entryStack.get(0);
-                    List<ContextMenuEntry> entryStackCopy = new ArrayList<>();
+                    List<ContextMenuEntry> entryStackCopyWithoutFirst = new ArrayList<>();
                     entryStack.forEach((entry) ->  {
-                        if (entry != firstOriginal) entryStackCopy.add(entry.copy());
+                        if (entry != firstOriginal) entryStackCopyWithoutFirst.add(entry.copy());
                     });
 
                     ContextMenuEntry first = firstOriginal.copy();
@@ -599,7 +614,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                         s.stackMeta.lastInStack = true;
                     } else {
                         ContextMenuEntry prev = first;
-                        for (ContextMenuEntry e2 : entryStackCopy) {
+                        for (ContextMenuEntry e2 : entryStackCopyWithoutFirst) {
                             prev.stackMeta.nextInStack = e2;
                             prev = e2;
                             e2.stackMeta.properties = stackProperties;
@@ -654,7 +669,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected int width;
         protected int height = 20;
         @Nullable
-        protected Ticker ticker;
+        protected EntryTask tickAction;
+        protected EntryTask hoverAction;
         protected boolean hovered = false;
         protected ContextMenuStackMeta stackMeta = new ContextMenuStackMeta();
         @Nullable
@@ -708,8 +724,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return this;
         }
 
-        public ContextMenuEntry setTicker(@Nullable Ticker ticker) {
-            this.ticker = ticker;
+        public ContextMenuEntry setTickAction(@Nullable EntryTask tickAction) {
+            this.tickAction = tickAction;
+            return this;
+        }
+
+        public ContextMenuEntry setHoverAction(@Nullable EntryTask hoverAction) {
+            this.hoverAction = hoverAction;
             return this;
         }
 
@@ -737,9 +758,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return this.stackMeta;
         }
 
-        protected void onStackNotify() {
-        }
-
         protected void onRemoved() {
         }
 
@@ -751,8 +769,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @FunctionalInterface
-        public interface Ticker {
-            void onTick(ContextMenu menu, ContextMenuEntry entry, boolean isPostTick);
+        public interface EntryTask {
+            /**
+             * @param menu The {@link ContextMenu} this {@link EntryTask}'s {@link ContextMenuEntry} is part of.
+             * @param entry The {@link ContextMenuEntry} this {@link EntryTask} is part of.
+             * @param isPost Only used for the {@link ContextMenuEntry#tickAction}.
+             */
+            void run(ContextMenu menu, ContextMenuEntry entry, boolean isPost);
         }
 
     }
@@ -765,6 +788,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected Supplier<Component> labelSupplier;
         @Nullable
         protected Supplier<Component> shortcutTextSupplier;
+        protected long tooltipIconHoverStart = -1;
 
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, parent);
@@ -781,12 +805,58 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             int labelY = this.y + (this.height / 2) - (this.font.lineHeight / 2);
             this.font.draw(pose, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
 
+            int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                int shortcutX = this.x + this.width - 10 - this.font.width(shortcutText);
+                shortcutTextWidth = this.font.width(shortcutText);
+                int shortcutX = this.x + this.width - 10 - shortcutTextWidth;
                 this.font.draw(pose, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
             }
 
+            this.renderTooltipIconAndRegisterTooltip(pose, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);
+
+        }
+
+        protected void renderTooltipIconAndRegisterTooltip(PoseStack pose, int mouseX, int mouseY, int offsetX) {
+            if (this.tooltipSupplier != null) {
+
+                boolean iconHovered = this.isTooltipIconHovered(mouseX, mouseY, offsetX);
+                if (iconHovered) {
+                    if (this.tooltipIconHoverStart == -1) {
+                        this.tooltipIconHoverStart = System.currentTimeMillis();
+                    }
+                } else {
+                    this.tooltipIconHoverStart = -1;
+                }
+                boolean showTooltip = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
+
+                RenderSystem.enableBlend();
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, iconHovered ? 1.0F : 0.2F);
+                RenderUtils.bindTexture(CONTEXT_MENU_TOOLTIP_ICON);
+                blit(pose, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+                Tooltip tooltip = this.getTooltip();
+                if (tooltip != null) {
+                    if (this.parent.isApplyDefaultTooltipStyle()) {
+                        tooltip.setDefaultBackgroundColor();
+                    }
+                    TooltipHandler.INSTANCE.addTooltip(tooltip, () -> showTooltip, false, true);
+                }
+
+            }
+        }
+
+        protected boolean isTooltipIconHovered(int mouseX, int mouseY, int offsetX) {
+            return UIBase.isXYInArea(mouseX, mouseY, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 10, 10);
+        }
+
+        protected int getTooltipIconX() {
+            return this.x + this.width - 20;
+        }
+
+        protected int getTooltipIconY() {
+            return this.y + 5;
         }
 
         protected void renderBackground(@NotNull PoseStack pose) {
@@ -828,29 +898,25 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        protected void onStackNotify() {
-           if (this.isActive()) {
-               this.clickAction.onClick(this.parent, this);
-           } else {
-               this.getStackMeta().notifyNextInStack();
-           }
-        }
-
-        @Override
         public ClickableContextMenuEntry copy() {
             ClickableContextMenuEntry copy = new ClickableContextMenuEntry(this.identifier, this.parent, Component.literal(""), this.clickAction);
             copy.shortcutTextSupplier = this.shortcutTextSupplier;
             copy.labelSupplier = this.labelSupplier;
             copy.height = this.height;
-            copy.ticker = this.ticker;
+            copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSupplier = this.activeStateSupplier;
             return copy;
         }
 
         @Override
-        public ClickableContextMenuEntry setTicker(@Nullable Ticker ticker) {
-            return (ClickableContextMenuEntry) super.setTicker(ticker);
+        public ClickableContextMenuEntry setTickAction(@Nullable EntryTask tickAction) {
+            return (ClickableContextMenuEntry) super.setTickAction(tickAction);
+        }
+
+        @Override
+        public ClickableContextMenuEntry setHoverAction(@Nullable EntryTask hoverAction) {
+            return (ClickableContextMenuEntry) super.setHoverAction(hoverAction);
         }
 
         @Override
@@ -876,9 +942,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         public int getMinWidth() {
             int i = Minecraft.getInstance().font.width(this.getLabel()) + 20;
+            if (this.tooltipSupplier != null) {
+                i += 30;
+            }
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
-                i += Minecraft.getInstance().font.width(shortcutText) + 50;
+                i += Minecraft.getInstance().font.width(shortcutText) + 30;
             }
             return i;
         }
@@ -931,11 +1000,20 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
             super.render(pose, mouseX, mouseY, partial);
 
+            this.renderSubMenuArrow(pose);
+
+        }
+
+        protected void renderSubMenuArrow(PoseStack pose) {
             RenderSystem.enableBlend();
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderUtils.bindTexture(SUB_CONTEXT_MENU_ARROW_ICON);
             blit(pose, this.x + this.width - 20, this.y + 5, 0.0F, 0.0F, 10, 10, 10, 10);
+        }
 
+        @Override
+        protected int getTooltipIconX() {
+            return super.getTooltipIconX() - 15;
         }
 
         @Override
@@ -1016,14 +1094,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        protected void onStackNotify() {
-        }
-
-        @Override
         public SubMenuContextMenuEntry copy() {
             SubMenuContextMenuEntry copy = new SubMenuContextMenuEntry(this.identifier, this.parent, Component.literal(""), new ContextMenu());
             copy.height = this.height;
-            copy.ticker = this.ticker;
+            copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSupplier = this.activeStateSupplier;
             copy.labelSupplier = this.labelSupplier;
@@ -1047,7 +1121,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public int getMinWidth() {
-            return super.getMinWidth() + 30;
+            int i = super.getMinWidth();
+            if (this.tooltipSupplier == null) {
+                i += 30;
+            } else {
+                i += 15;
+            }
+            return i;
         }
 
         @Override
@@ -1061,8 +1141,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SubMenuContextMenuEntry setTicker(@Nullable Ticker ticker) {
-            return (SubMenuContextMenuEntry) super.setTicker(ticker);
+        public SubMenuContextMenuEntry setTickAction(@Nullable EntryTask tickAction) {
+            return (SubMenuContextMenuEntry) super.setTickAction(tickAction);
+        }
+
+        @Override
+        public SubMenuContextMenuEntry setHoverAction(@Nullable EntryTask hoverAction) {
+            return (SubMenuContextMenuEntry) super.setHoverAction(hoverAction);
         }
 
         @Override
@@ -1107,8 +1192,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public SeparatorContextMenuEntry setTicker(@Nullable Ticker ticker) {
-            return (SeparatorContextMenuEntry) super.setTicker(ticker);
+        public SeparatorContextMenuEntry setTickAction(@Nullable EntryTask tickAction) {
+            return (SeparatorContextMenuEntry) super.setTickAction(tickAction);
+        }
+
+        @Override
+        public SeparatorContextMenuEntry setHoverAction(@Nullable EntryTask hoverAction) {
+            return (SeparatorContextMenuEntry) super.setHoverAction(hoverAction);
         }
 
         @Override
@@ -1135,7 +1225,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         public SeparatorContextMenuEntry copy() {
             SeparatorContextMenuEntry copy = new SeparatorContextMenuEntry(this.identifier, this.parent);
             copy.height = this.height;
-            copy.ticker = this.ticker;
+            copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
             copy.activeStateSupplier = this.activeStateSupplier;
             return copy;
@@ -1144,6 +1234,40 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         public int getMinWidth() {
             return 20;
+        }
+
+        @Override
+        public void setFocused(boolean var1) {
+        }
+
+        @Override
+        public boolean isFocused() {
+            return false;
+        }
+
+    }
+
+    public static class SpacerContextMenuEntry extends ContextMenuEntry {
+
+        public SpacerContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
+            super(identifier, parent);
+            this.height = 4;
+        }
+
+        @Override
+        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        }
+
+        @Override
+        public int getMinWidth() {
+            return 20;
+        }
+
+        @Override
+        public ContextMenuEntry copy() {
+            SpacerContextMenuEntry e = new SpacerContextMenuEntry(this.identifier, this.parent);
+            e.height = this.height;
+            return e;
         }
 
         @Override
@@ -1192,15 +1316,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         public void setStackable(boolean stackable) {
             this.stackable = stackable;
-        }
-
-        /**
-         * Will notify the next entry in the stack. If you don't do this, the following entries will not get executed and the entry chain ends.
-         */
-        public void notifyNextInStack() {
-            if (this.stackable && (this.nextInStack != null)) {
-                this.nextInStack.onStackNotify();
-            }
         }
 
     }

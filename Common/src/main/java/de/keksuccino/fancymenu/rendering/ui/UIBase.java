@@ -69,8 +69,8 @@ public class UIBase extends GuiComponent {
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 
-	public static boolean isMouseInArea(int mouseX, int mouseY, int x, int y, int width, int height) {
-		return (mouseX >= x) && (mouseX < (x + width)) && (mouseY >= y) && (mouseY < (y + height));
+	public static boolean isXYInArea(int targetX, int targetY, int x, int y, int width, int height) {
+		return (targetX >= x) && (targetX < (x + width)) && (targetY >= y) && (targetY < (y + height));
 	}
 
 	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {

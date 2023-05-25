@@ -160,11 +160,6 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     }
 
     @Override
-    public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.editor.add.button");
-    }
-
-    @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
         return null;
     }

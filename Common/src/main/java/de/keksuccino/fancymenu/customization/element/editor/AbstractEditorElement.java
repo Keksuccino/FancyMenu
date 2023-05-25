@@ -61,7 +61,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	public AbstractElement element;
 	public final EditorElementSettings settings;
-	public ContextMenu rightClickMenu = new ContextMenu();
+	public ContextMenu rightClickMenu;
 	public EditorElementBorderDisplay topLeftDisplay = new EditorElementBorderDisplay(this, EditorElementBorderDisplay.DisplayPosition.TOP_LEFT, EditorElementBorderDisplay.DisplayPosition.LEFT_TOP, EditorElementBorderDisplay.DisplayPosition.BOTTOM_LEFT);
 	public EditorElementBorderDisplay bottomRightDisplay = new EditorElementBorderDisplay(this, EditorElementBorderDisplay.DisplayPosition.BOTTOM_RIGHT, EditorElementBorderDisplay.DisplayPosition.RIGHT_BOTTOM, EditorElementBorderDisplay.DisplayPosition.TOP_RIGHT);
 	public LayoutEditorScreen editor;
@@ -79,11 +79,21 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected ResizeGrabber activeResizeGrabber = null;
 	public long renderMovingNotAllowedTime = -1;
 
+	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
+
 	public AbstractEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
 		this.settings = (settings != null) ? settings : new EditorElementSettings();
 		this.settings.editorElement = this;
 		this.editor = editor;
 		this.element = element;
+		this.rightClickMenu = new ContextMenu() {
+			@Override
+			public @NotNull ContextMenu openMenuAt(int x, int y) {
+				cachedHoveredElementsOnRightClickMenuOpen.clear();
+				cachedHoveredElementsOnRightClickMenuOpen.addAll(editor.getHoveredElements());
+				return super.openMenuAt(x, y);
+			}
+		};
 		this.init();
 	}
 
@@ -111,16 +121,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			public @NotNull ContextMenu openMenuAt(int x, int y) {
 				this.clearEntries();
 				int i = 0;
-				for (AbstractEditorElement e : AbstractEditorElement.this.editor.getAllElements()) {
-					if (e.isHovered()) {
-						this.addClickableEntry("element_" + i, e.element.builder.getDisplayName(e.element), (menu, entry) -> {
-							for (AbstractEditorElement e2 : AbstractEditorElement.this.editor.getAllElements()) {
-								e2.resetElementStates();
-							}
-							e.setSelected(true);
-						});
-						i++;
-					}
+				for (AbstractEditorElement e : cachedHoveredElementsOnRightClickMenuOpen) {
+					this.addClickableEntry("element_" + i, e.element.builder.getDisplayName(e.element), (menu, entry) -> {
+						for (AbstractEditorElement e2 : AbstractEditorElement.this.editor.getAllElements()) {
+							e2.resetElementStates();
+						}
+						e.setSelected(true);
+					});
+					i++;
 				}
 				return super.openMenuAt(x, y);
 			}
@@ -187,7 +195,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			anchorPointMenu.addSeparatorEntry("separator_1").setStackable(true);
 
 			for (ElementAnchorPoint p : ElementAnchorPoints.getAnchorPoints()) {
-				if (p != ElementAnchorPoints.ELEMENT) {
+				if ((p != ElementAnchorPoints.ELEMENT) && (this.settings.isVanillaAnchorPointAllowed() || (p != ElementAnchorPoints.VANILLA))) {
 					anchorPointMenu.addClickableEntry("anchor_point_" + p.getName().replace("-", "_"), p.getDisplayName(), (menu, entry) -> {
 						if (entry.getStackMeta().isFirstInStack()) {
 							this.editor.history.saveSnapshot();
@@ -232,7 +240,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							this.element.baseY = 0;
 							this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
 							entry.getStackMeta().getProperties().putProperty("x", this.element.advancedX);
-							entry.getStackMeta().notifyNextInStack();
+							//TODO methode auf nicht-notify umschreiben
+//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
@@ -247,7 +256,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						this.element.baseX = 0;
 						this.element.baseY = 0;
 						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-						entry.getStackMeta().notifyNextInStack();
+						//TODO methode auf nicht-notify umschreiben
+//						entry.getStackMeta().notifyNextInStack();
 					}
 				}
 			}).setStackable(true);
@@ -266,7 +276,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							this.element.baseY = 0;
 							this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
 							entry.getStackMeta().getProperties().putProperty("y", this.element.advancedY);
-							entry.getStackMeta().notifyNextInStack();
+							//TODO methode auf nicht-notify umschreiben
+//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
@@ -281,7 +292,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						this.element.baseX = 0;
 						this.element.baseY = 0;
 						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-						entry.getStackMeta().notifyNextInStack();
+						//TODO methode auf nicht-notify umschreiben
+//						entry.getStackMeta().notifyNextInStack();
 					}
 				}
 			}).setStackable(true);
@@ -315,7 +327,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								this.element.advancedWidth = call;
 							}
 							entry.getStackMeta().getProperties().putProperty("width", this.element.advancedWidth);
-							entry.getStackMeta().notifyNextInStack();
+							//TODO methode auf nicht-notify umschreiben
+//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
@@ -328,7 +341,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					if (call != null) {
 						this.element.width = 50;
 						this.element.advancedWidth = call;
-						entry.getStackMeta().notifyNextInStack();
+						//TODO methode auf nicht-notify umschreiben
+//						entry.getStackMeta().notifyNextInStack();
 					}
 				}
 			}).setStackable(true);
@@ -346,7 +360,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								this.element.advancedHeight = call;
 							}
 							entry.getStackMeta().getProperties().putProperty("height", this.element.advancedHeight);
-							entry.getStackMeta().notifyNextInStack();
+							//TODO methode auf nicht-notify umschreiben
+//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
@@ -359,7 +374,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					if (call != null) {
 						this.element.height = 50;
 						this.element.advancedHeight = call;
-						entry.getStackMeta().notifyNextInStack();
+						//TODO methode auf nicht-notify umschreiben
+//						entry.getStackMeta().notifyNextInStack();
 					}
 				}
 			}).setStackable(true);
@@ -383,7 +399,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								stretch.next();
 							}
 							this.element.stretchX = stretch.current();
-							entry.getStackMeta().notifyNextInStack();
+							//TODO methode auf nicht-notify umschreiben
+//							entry.getStackMeta().notifyNextInStack();
 						}
 					})
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.x.desc")))
@@ -419,7 +436,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								stretch.next();
 							}
 							this.element.stretchY = stretch.current();
-							entry.getStackMeta().notifyNextInStack();
+							//TODO methode auf nicht-notify umschreiben
+//							entry.getStackMeta().notifyNextInStack();
 						}
 					})
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.y.desc")))
@@ -834,7 +852,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public boolean isHovered() {
-		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu();
+		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null);
 	}
 
 	public int getX() {
@@ -865,7 +883,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	@Nullable
-	protected ResizeGrabber getHoveredResizeGrabber() {
+	public ResizeGrabber getHoveredResizeGrabber() {
 		if (!this.settings.isResizeable()) {
 			return null;
 		}
@@ -880,7 +898,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return null;
 	}
 
-	protected class ResizeGrabber extends GuiComponent implements Renderable {
+	public class ResizeGrabber extends GuiComponent implements Renderable {
 
 		protected int width = 4;
 		protected int height = 4;

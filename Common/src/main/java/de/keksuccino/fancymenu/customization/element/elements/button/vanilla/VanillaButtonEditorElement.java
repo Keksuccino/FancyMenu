@@ -19,6 +19,7 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
         this.settings.setOrderable(false);
         this.settings.setCopyable(false);
         this.settings.setHideInsteadOfDestroy(true);
+        this.settings.setVanillaAnchorPointAllowed(true);
     }
 
     @Override
