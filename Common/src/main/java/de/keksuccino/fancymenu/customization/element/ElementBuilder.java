@@ -65,11 +65,17 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
             }
 
-            String fi = serialized.getValue("fadein");
+            String fi = serialized.getValue("fade_in");
+            if (fi == null) {
+                fi = serialized.getValue("fadein");
+            }
             if ((fi != null) && fi.equalsIgnoreCase("true")) {
                 element.fadeIn = true;
             }
-            String fis = serialized.getValue("fadeinspeed");
+            String fis = serialized.getValue("fade_in_speed");
+            if (fis == null) {
+                fis = serialized.getValue("fadeinspeed");
+            }
             if ((fis != null) && MathUtils.isFloat(fis)) {
                 element.fadeInSpeed = Float.parseFloat(fis);
             }

@@ -33,7 +33,7 @@ public class ValueToggle<T> {
     @SafeVarargs
     public ValueToggle(@NotNull T currentValue, @NotNull T...value) {
         this(0, value);
-        this.currentIndex = Math.max(0, this.values.indexOf(currentValue));
+        this.setCurrentValue(currentValue);
     }
 
     public List<T> getValues() {
@@ -59,6 +59,19 @@ public class ValueToggle<T> {
             this.currentIndex++;
         }
         return this.current();
+    }
+
+    public void setCurrentValue(T value) {
+        int i = this.values.indexOf(value);
+        if (i != -1) {
+            this.currentIndex = i;
+        }
+    }
+
+    public void setCurrentValueByIndex(int index) {
+        if ((index > 0) && (index < this.values.size())) {
+            this.currentIndex = index;
+        }
     }
 
 }

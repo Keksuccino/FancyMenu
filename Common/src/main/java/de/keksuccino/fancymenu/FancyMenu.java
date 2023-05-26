@@ -20,25 +20,32 @@ import org.apache.logging.log4j.Logger;
 
 public class FancyMenu {
 
-	//TODO Layout Editor: undo/redo geht nicht
+	//PRIORITY:
 
-	//TODO loading requirements werden in editor nicht richtig gesetzt ( vermutlich wegen copy() )
+	//TODO loading requirements werden in editor nicht richtig gesetzt ( vermutlich wegen copy() )  <-----------------------
+
+
+	//-----------------------------
+
+	//TODO add opacity support for title screen deep cuz elements (splash, logo, branding, realms icon, forge stuff)
+
+	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
+
+	//TODO label von custom buttons ist bei fade-in am Anfang kurz unsichtbar
+
+	//TODO Layout Editor: undo/redo geht nicht
 
 	//TODO deep element customizations werden nicht in editor geladen, wenn editor neu geöffnet wird
 
 	//TODO add "Select All" option to editor right-click menu and "Edit" tab in menu bar
 
-	//TODO add cancel button to ManageRequirementsScreen that returns NULL as callback
-
-	//TODO Layout Editor: selection rectangle per Maus ziehen, um mehrere Elemente zu selecten
+	//TODO add cancel button to ManageRequirementsScreen that returns NULL as callback (NULL gets handled already, just needs the return logic)
 
 	//TODO "Key Pressed" Loading Requirement
 
 	//TODO Button Element: "Click On Key Press" option, um buttons per key press zu klicken
 
 	//TODO Layout Editor: Toast Notifications rechts oben nach verschiedenen Aktionen wie copy/paste, undo/redo, etc.
-
-	//TODO nicht vergessen, shortcut texte in context menüs zu setzen
 
 	//TODO Text Element: auto line break (toggleable)
 

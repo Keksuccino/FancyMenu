@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.element.editor;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
@@ -22,6 +24,7 @@ import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.fancymenu.utils.ObjectUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -78,6 +81,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
 	public long renderMovingNotAllowedTime = -1;
+	public boolean recentlyMoved = false;
+	public boolean recentlyLeftClickSelected = false;
 
 	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
 
@@ -231,34 +236,26 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"), this.editor, null, (call) -> {
 						if (call != null) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-							if (call.replace(" ", "").equals("")) {
-								this.element.advancedX = null;
-							} else {
-								this.element.advancedX = call;
+							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+								if (e.settings.isAdvancedPositioningSupported()) {
+									if (call.replace(" ", "").equals("")) {
+										e.element.advancedX = null;
+									} else {
+										e.element.advancedX = call;
+									}
+									e.element.baseX = 0;
+									e.element.baseY = 0;
+									e.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+								}
 							}
-							this.element.baseX = 0;
-							this.element.baseY = 0;
-							this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-							entry.getStackMeta().getProperties().putProperty("x", this.element.advancedX);
-							//TODO methode auf nicht-notify umschreiben
-//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
-					if ((this.element.advancedX != null) && !entry.getStackMeta().isPartOfStack()) {
+					List<String> allAdvX = ObjectUtils.getOfAll(String.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isAdvancedPositioningSupported()), consumes -> consumes.element.advancedX);
+					if ((this.element.advancedX != null) && (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(allAdvX))) {
 						s.setText(this.element.advancedX);
 					}
 					Minecraft.getInstance().setScreen(s);
-				} else {
-					String call = entry.getStackMeta().getProperties().getProperty("x", String.class);
-					if (call != null) {
-						this.element.advancedX = call;
-						this.element.baseX = 0;
-						this.element.baseY = 0;
-						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-						//TODO methode auf nicht-notify umschreiben
-//						entry.getStackMeta().notifyNextInStack();
-					}
 				}
 			}).setStackable(true);
 
@@ -267,34 +264,26 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"), this.editor, null, (call) -> {
 						if (call != null) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-							if (call.replace(" ", "").equals("")) {
-								this.element.advancedY = null;
-							} else {
-								this.element.advancedY = call;
+							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+								if (e.settings.isAdvancedPositioningSupported()) {
+									if (call.replace(" ", "").equals("")) {
+										e.element.advancedY = null;
+									} else {
+										e.element.advancedY = call;
+									}
+									e.element.baseX = 0;
+									e.element.baseY = 0;
+									e.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+								}
 							}
-							this.element.baseX = 0;
-							this.element.baseY = 0;
-							this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-							entry.getStackMeta().getProperties().putProperty("y", this.element.advancedY);
-							//TODO methode auf nicht-notify umschreiben
-//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
-					if ((this.element.advancedY != null) && !entry.getStackMeta().isPartOfStack()) {
+					List<String> allAdvY = ObjectUtils.getOfAll(String.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isAdvancedPositioningSupported()), consumes -> consumes.element.advancedY);
+					if ((this.element.advancedY != null) && (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(allAdvY))) {
 						s.setText(this.element.advancedY);
 					}
 					Minecraft.getInstance().setScreen(s);
-				} else {
-					String call = entry.getStackMeta().getProperties().getProperty("y", String.class);
-					if (call != null) {
-						this.element.advancedY = call;
-						this.element.baseX = 0;
-						this.element.baseY = 0;
-						this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-						//TODO methode auf nicht-notify umschreiben
-//						entry.getStackMeta().notifyNextInStack();
-					}
 				}
 			}).setStackable(true);
 
@@ -319,31 +308,25 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"), this.editor, null, (call) -> {
 						if (call != null) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-							if (call.replace(" ", "").equals("")) {
-								this.element.width = 50;
-								this.element.advancedWidth = null;
-							} else {
-								this.element.width = 50;
-								this.element.advancedWidth = call;
+							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+								if (e.settings.isAdvancedSizingSupported()) {
+									if (call.replace(" ", "").equals("")) {
+										e.element.width = 50;
+										e.element.advancedWidth = null;
+									} else {
+										e.element.width = 50;
+										e.element.advancedWidth = call;
+									}
+								}
 							}
-							entry.getStackMeta().getProperties().putProperty("width", this.element.advancedWidth);
-							//TODO methode auf nicht-notify umschreiben
-//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
-					if ((this.element.advancedWidth != null) && !entry.getStackMeta().isPartOfStack()) {
+					List<String> allAdvWidth = ObjectUtils.getOfAll(String.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isAdvancedSizingSupported()), consumes -> consumes.element.advancedWidth);
+					if ((this.element.advancedWidth != null) && (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(allAdvWidth))) {
 						s.setText(this.element.advancedWidth);
 					}
 					Minecraft.getInstance().setScreen(s);
-				} else {
-					String call = entry.getStackMeta().getProperties().getProperty("width", String.class);
-					if (call != null) {
-						this.element.width = 50;
-						this.element.advancedWidth = call;
-						//TODO methode auf nicht-notify umschreiben
-//						entry.getStackMeta().notifyNextInStack();
-					}
 				}
 			}).setStackable(true);
 
@@ -352,31 +335,25 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"), this.editor, null, (call) -> {
 						if (call != null) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-							if (call.replace(" ", "").equals("")) {
-								this.element.height = 50;
-								this.element.advancedHeight = null;
-							} else {
-								this.element.height = 50;
-								this.element.advancedHeight = call;
+							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+								if (e.settings.isAdvancedSizingSupported()) {
+									if (call.replace(" ", "").equals("")) {
+										e.element.height = 50;
+										e.element.advancedHeight = null;
+									} else {
+										e.element.height = 50;
+										e.element.advancedHeight = call;
+									}
+								}
 							}
-							entry.getStackMeta().getProperties().putProperty("height", this.element.advancedHeight);
-							//TODO methode auf nicht-notify umschreiben
-//							entry.getStackMeta().notifyNextInStack();
 						}
 					});
 					s.multilineMode = false;
-					if ((this.element.advancedHeight != null) && !entry.getStackMeta().isPartOfStack()) {
+					List<String> allAdvHeight = ObjectUtils.getOfAll(String.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isAdvancedSizingSupported()), consumes -> consumes.element.advancedHeight);
+					if ((this.element.advancedHeight != null) && (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(allAdvHeight))) {
 						s.setText(this.element.advancedHeight);
 					}
 					Minecraft.getInstance().setScreen(s);
-				} else {
-					String call = entry.getStackMeta().getProperties().getProperty("height", String.class);
-					if (call != null) {
-						this.element.height = 50;
-						this.element.advancedHeight = call;
-						//TODO methode auf nicht-notify umschreiben
-//						entry.getStackMeta().notifyNextInStack();
-					}
 				}
 			}).setStackable(true);
 
@@ -388,36 +365,24 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.rightClickMenu.addClickableEntry("stretch_x", Component.literal(""), (menu, entry) ->
 					{
-						if (entry.getStackMeta().isFirstInStack()) {
-							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-						}
-						if (!entry.getStackMeta().isPartOfStack()) {
-							this.element.stretchX = !this.element.stretchX;
-						} else {
-							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
-							if (entry.getStackMeta().isFirstInStack()) {
-								stretch.next();
+						List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isStretchable());
+						ValueToggle<Boolean> toggle = this.setupValueToggle("stretch", new ValueToggle<Boolean>(0, false, true), selectedElements, entry.getStackMeta(), consumes -> consumes.element.stretchX);
+						this.editor.history.saveSnapshot();
+						if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
+							Boolean next = toggle.next();
+							for (AbstractEditorElement e : selectedElements) {
+								e.element.stretchX = next;
 							}
-							this.element.stretchX = stretch.current();
-							//TODO methode auf nicht-notify umschreiben
-//							entry.getStackMeta().notifyNextInStack();
 						}
 					})
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.x.desc")))
 					.setLabelSupplier((menu, entry) -> {
-						if (!entry.getStackMeta().isPartOfStack()) {
-							if (element.stretchX && entry.isActive()) {
-								return Component.translatable("fancymenu.editor.object.stretch.x.on");
-							} else {
-								return Component.translatable("fancymenu.editor.object.stretch.x.off");
-							}
+						List<AbstractEditorElement> selectedElements = (!entry.getStackMeta().getProperties().hasProperty("stretch")) ? ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isStretchable()) : new ArrayList<>();
+						ValueToggle<Boolean> toggle = this.setupValueToggle("stretch", new ValueToggle<Boolean>(0, false, true), selectedElements, entry.getStackMeta(), consumes -> consumes.element.stretchX);
+						if (toggle.current()) {
+							return Component.translatable("fancymenu.editor.object.stretch.x.on");
 						} else {
-							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
-							if (stretch.current()) {
-								return Component.translatable("fancymenu.editor.object.stretch.x.on");
-							} else {
-								return Component.translatable("fancymenu.editor.object.stretch.x.off");
-							}
+							return Component.translatable("fancymenu.editor.object.stretch.x.off");
 						}
 					})
 					.setIsActiveSupplier((menu, entry) -> element.advancedWidth == null)
@@ -425,36 +390,24 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.rightClickMenu.addClickableEntry("stretch_y", Component.literal(""), (menu, entry) ->
 					{
-						if (entry.getStackMeta().isFirstInStack()) {
-							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-						}
-						if (!entry.getStackMeta().isPartOfStack()) {
-							this.element.stretchY = !this.element.stretchY;
-						} else {
-							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
-							if (entry.getStackMeta().isFirstInStack()) {
-								stretch.next();
+						List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isStretchable());
+						ValueToggle<Boolean> toggle = this.setupValueToggle("stretch", new ValueToggle<Boolean>(0, false, true), selectedElements, entry.getStackMeta(), consumes -> consumes.element.stretchY);
+						this.editor.history.saveSnapshot();
+						if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
+							Boolean next = toggle.next();
+							for (AbstractEditorElement e : selectedElements) {
+								e.element.stretchY = next;
 							}
-							this.element.stretchY = stretch.current();
-							//TODO methode auf nicht-notify umschreiben
-//							entry.getStackMeta().notifyNextInStack();
 						}
 					})
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.stretch.y.desc")))
 					.setLabelSupplier((menu, entry) -> {
-						if (!entry.getStackMeta().isPartOfStack()) {
-							if (element.stretchY && entry.isActive()) {
-								return Component.translatable("fancymenu.editor.object.stretch.y.on");
-							} else {
-								return Component.translatable("fancymenu.editor.object.stretch.y.off");
-							}
+						List<AbstractEditorElement> selectedElements = (!entry.getStackMeta().getProperties().hasProperty("stretch")) ? ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isStretchable()) : new ArrayList<>();
+						ValueToggle<Boolean> toggle = this.setupValueToggle("stretch", new ValueToggle<Boolean>(0, false, true), selectedElements, entry.getStackMeta(), consumes -> consumes.element.stretchY);
+						if (toggle.current()) {
+							return Component.translatable("fancymenu.editor.object.stretch.y.on");
 						} else {
-							ValueToggle<Boolean> stretch = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("stretch", new ValueToggle<Boolean>(0, false, true));
-							if (stretch.current()) {
-								return Component.translatable("fancymenu.editor.object.stretch.y.on");
-							} else {
-								return Component.translatable("fancymenu.editor.object.stretch.y.off");
-							}
+							return Component.translatable("fancymenu.editor.object.stretch.y.off");
 						}
 					})
 					.setIsActiveSupplier((menu, entry) -> element.advancedHeight == null)
@@ -535,6 +488,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						} else {
 							this.editor.copyElementsToClipboard(this.editor.getSelectedElements().toArray(new AbstractEditorElement[0]));
 						}
+						menu.closeMenu();
 					})
 					.setStackable(true)
 					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"));
@@ -549,6 +503,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 							e.deleteElement();
 						}
+						menu.closeMenu();
 					})
 					.setStackable(true)
 					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"));
@@ -565,27 +520,20 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			appearanceDelayMenu.addClickableEntry("appearance_delay_type", Component.translatable("fancymenu.element.general.appearance_delay.no_delay"), (menu, entry) ->
 					{
+						List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable());
+						ValueToggle<AbstractElement.AppearanceDelay> toggle = this.setupValueToggle("delay", new ValueToggle<AbstractElement.AppearanceDelay>(0, AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME), selectedElements, entry.getStackMeta(), consumes -> consumes.element.appearanceDelay);
 						this.editor.history.saveSnapshot();
-						if (!entry.getStackMeta().isPartOfStack()) {
-							ValueToggle<AbstractElement.AppearanceDelay> toggle = new ValueToggle<>(this.element.appearanceDelay, AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME);
-							this.element.appearanceDelay = toggle.next();
-						} else if (entry.getStackMeta().isFirstInStack()) {
-							ValueToggle<AbstractElement.AppearanceDelay> delay = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("delay", new ValueToggle<AbstractElement.AppearanceDelay>(0, AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME));
-							AbstractElement.AppearanceDelay d = delay.next();
-							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-								if (e.settings.isDelayable()) {
-									e.element.appearanceDelay = d;
-								}
+						if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
+							AbstractElement.AppearanceDelay next = toggle.next();
+							for (AbstractEditorElement e : selectedElements) {
+								e.element.appearanceDelay = next;
 							}
 						}
 					})
 					.setLabelSupplier((menu, entry) -> {
-						if (entry.getStackMeta().isPartOfStack()) {
-							ValueToggle<AbstractElement.AppearanceDelay> delay = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("delay", new ValueToggle<AbstractElement.AppearanceDelay>(0, AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME));
-							return Component.translatable("fancymenu.element.general.appearance_delay." + delay.current().name);
-						} else {
-							return Component.translatable("fancymenu.element.general.appearance_delay." + this.element.appearanceDelay.name);
-						}
+						List<AbstractEditorElement> selectedElements = !entry.getStackMeta().getProperties().hasProperty("delay") ? ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable()) : new ArrayList<>();
+						ValueToggle<AbstractElement.AppearanceDelay> delay = setupValueToggle("delay", new ValueToggle<AbstractElement.AppearanceDelay>(0, AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME), selectedElements, entry.getStackMeta(), consumes -> consumes.element.appearanceDelay);
+						return Component.translatable("fancymenu.element.general.appearance_delay." + delay.current().name);
 					})
 					.setStackable(true);
 
@@ -605,7 +553,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							}
 						}
 					});
-					if (!entry.getStackMeta().isPartOfStack()) {
+					List<Float> all = ObjectUtils.getOfAll(Float.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable()), consumes -> consumes.element.appearanceDelayInSeconds);
+					if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(all)) {
 						p.setText("" + this.element.appearanceDelayInSeconds);
 					}
 					PopupHandler.displayPopup(p);
@@ -616,22 +565,20 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			appearanceDelayMenu.addClickableEntry("appearance_delay_fade_in", Component.translatable("fancymenu.element.general.appearance_delay.fade_in.off"), (menu, entry) ->
 					{
+						List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable());
+						ValueToggle<Boolean> toggle = this.setupValueToggle("fade_in", new ValueToggle<Boolean>(0, false, true), selectedElements, entry.getStackMeta(), consumes -> consumes.element.fadeIn);
 						this.editor.history.saveSnapshot();
-						if (!entry.getStackMeta().isPartOfStack()) {
-							this.element.fadeIn = !this.element.fadeIn;
-						} else {
-							ValueToggle<Boolean> toggle = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("fade_in", new ValueToggle<Boolean>(0, false, true));
-							boolean b = toggle.next();
-							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-								if (e.settings.isDelayable()) {
-									e.element.fadeIn = b;
-								}
+						if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
+							Boolean next = toggle.next();
+							for (AbstractEditorElement e : selectedElements) {
+								e.element.fadeIn = next;
 							}
 						}
 					})
 					.setLabelSupplier((menu, entry) -> {
-						ValueToggle<Boolean> toggle = entry.getStackMeta().getProperties().putPropertyIfAbsentAndGet("fade_in", new ValueToggle<Boolean>(0, false, true));
-						if ((entry.getStackMeta().isPartOfStack()) ? toggle.current() : this.element.fadeIn) {
+						List<AbstractEditorElement> selectedElements = (!entry.getStackMeta().getProperties().hasProperty("fade_in")) ? ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable()) : new ArrayList<>();
+						ValueToggle<Boolean> toggle = this.setupValueToggle("fade_in", new ValueToggle<Boolean>(0, false, true), selectedElements, entry.getStackMeta(), consumes -> consumes.element.fadeIn);
+						if (toggle.current()) {
 							return Component.translatable("fancymenu.element.general.appearance_delay.fade_in.on");
 						} else {
 							return Component.translatable("fancymenu.element.general.appearance_delay.fade_in.off");
@@ -655,7 +602,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							}
 						}
 					});
-					if (!entry.getStackMeta().isPartOfStack()) {
+					List<Float> all = ObjectUtils.getOfAll(Float.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable()), consumes -> consumes.element.fadeInSpeed);
+					if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(all)) {
 						p.setText("" + this.element.fadeInSpeed);
 					}
 					PopupHandler.displayPopup(p);
@@ -666,6 +614,23 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 
+	}
+
+	@SuppressWarnings("all")
+	protected <T, E extends AbstractEditorElement> ValueToggle<T> setupValueToggle(String toggleIdentifier, ValueToggle<T> toggle, List<E> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier<E, T> defaultValue) {
+		boolean hasProperty = stackMeta.getProperties().hasProperty(toggleIdentifier);
+		ValueToggle<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, toggle);
+		if (!elements.isEmpty()) {
+			E firstElement = elements.get(0);
+			if (!stackMeta.isPartOfStack()) {
+				t.setCurrentValue(defaultValue.get(firstElement));
+			} else if (!hasProperty) {
+				if (ListUtils.allInListEqual(ObjectUtils.getOfAllPrimitive((List<Object>)((Object)elements), (ConsumingSupplier<Object,Object>)((Object)defaultValue)))) {
+					t.setCurrentValue(defaultValue.get(firstElement));
+				}
+			}
+		}
+		return t;
 	}
 
 	@Override
@@ -758,7 +723,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (button == 0) {
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
-				if (this.isHovered() || this.isMultiSelected() || this.isGettingResized()) {
+				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized()) {
 					this.leftMouseDown = true;
 					this.leftMouseDownMouseX = mouseX;
 					this.leftMouseDownMouseY = mouseY;
@@ -777,6 +742,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
+			this.recentlyMoved = false;
 		}
 		return false;
 	}
@@ -790,11 +756,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			int diffX = (int)-(this.leftMouseDownMouseX - mouseX);
 			int diffY = (int)-(this.leftMouseDownMouseY - mouseY);
 			if (this.leftMouseDown && !this.isGettingResized()) {
-				if (this.settings.isMovable()) {
+				if (this.editor.allSelectedElementsMovable()) {
 					this.element.baseX = this.leftMouseDownBaseX + diffX;
 					this.element.baseY = this.leftMouseDownBaseY + diffY;
-				} else {
-					this.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+					if ((diffX > 0) || (diffY > 0)) {
+						this.recentlyMoved = true;
+					}
+				} else if (!this.settings.isMovable()) {
+					this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
 			//TODO add SHIFT-resize (aspect ratio)

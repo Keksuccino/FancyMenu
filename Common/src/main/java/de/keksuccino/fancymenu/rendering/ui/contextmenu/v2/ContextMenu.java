@@ -16,8 +16,10 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -594,7 +596,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
                 RuntimePropertyContainer stackProperties = new RuntimePropertyContainer();
                 List<ContextMenuEntry> entryStack = collectInstancesOfStackableEntryInMenus(ignoredEntry.identifier, menusToStack);
-                if (!entryStack.isEmpty()) {
+                if (!entryStack.isEmpty() && (entryStack.size() == menusToStack.length)) { // only stack entries if all menus have a stackable instance of it
 
                     ContextMenuEntry firstOriginal = entryStack.get(0);
                     List<ContextMenuEntry> entryStackCopyWithoutFirst = new ArrayList<>();
@@ -964,6 +966,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered()) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 this.clickAction.onClick(this.parent, this);
                 return true;
             }

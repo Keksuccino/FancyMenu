@@ -427,6 +427,21 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		return false;
 	}
 
+	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement element, int xStart, int yStart, int xEnd, int yEnd) {
+		int elementStartX = element.getX();
+		int elementStartY = element.getY();
+		int elementEndX = element.getX() + element.getWidth();
+		int elementEndY = element.getY() + element.getHeight();
+		return (xEnd > elementStartX) && (yEnd > elementStartY) && (yStart < elementEndY) && (xStart < elementEndX);
+	}
+
+	public boolean allSelectedElementsMovable() {
+		for (AbstractEditorElement e : this.getSelectedElements()) {
+			if (!e.settings.isMovable()) return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Returns the element the given one was moved above or NULL if there was no element above the given one.
 	 */
@@ -559,14 +574,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
-	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement element, int xStart, int yStart, int xEnd, int yEnd) {
-		int elementStartX = element.getX();
-		int elementStartY = element.getY();
-		int elementEndX = element.getX() + element.getWidth();
-		int elementEndY = element.getY() + element.getHeight();
-		return (xEnd > elementStartX) && (yEnd > elementStartY) && (yStart < elementEndY) && (xStart < elementEndX);
-	}
-
+	//Called before mouseDragged
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
@@ -581,6 +589,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			if (!this.rightClickMenu.isUserNavigatingInMenu() && ((this.activeElementContextMenu == null) || !this.activeElementContextMenu.isUserNavigatingInMenu())) {
 				if (!topHoverElement.isSelected()) {
 					topHoverElement.setSelected(true);
+					topHoverElement.recentlyLeftClickSelected = true;
 					topHoverGotSelected = true;
 				}
 			}
@@ -594,7 +603,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		//Handle mouse selection
-		if ((button == 0) && canStartMouseSelection && !hasControlDown()) {
+		if ((button == 0) && canStartMouseSelection) {
 			this.isMouseSelection = true;
 			this.mouseSelectionStartX = (int) mouseX;
 			this.mouseSelectionStartY = (int) mouseY;
@@ -644,18 +653,29 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	}
 
+	//Called after mouseDragged
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
-		if (PopupHandler.isPopupActive()) return false;
-
+		boolean cachedMouseSelection = this.isMouseSelection;
 		if (button == 0) {
 			this.isMouseSelection = false;
+		}
+
+		if (PopupHandler.isPopupActive()) return false;
+
+		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
+		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+
+		//Deselect hovered element on left-click if CTRL pressed
+		if (!cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMoved && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
+			topHoverElement.setSelected(false);
 		}
 
 		//Handle mouse released for all elements
 		for (AbstractEditorElement e : this.getAllElements()) {
 			e.mouseReleased(mouseX, mouseY, button);
+			e.recentlyLeftClickSelected = false;
 		}
 
 		return super.mouseReleased(mouseX, mouseY, button);
@@ -669,7 +689,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		if (this.isMouseSelection) {
 			for (AbstractEditorElement e : this.getAllElements()) {
-				e.setSelected(this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY)));
+				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY));
+				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
+				e.setSelected(b);
 			}
 		}
 
@@ -678,6 +700,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				return true;
 			}
 		}
+
 		return super.mouseDragged(mouseX, mouseY, button, $$3, $$4);
 
 	}
@@ -691,10 +714,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (keycode == InputConstants.KEY_LEFT) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (e.settings.isMovable()) {
+				if (this.allSelectedElementsMovable()) {
 					e.element.baseX -= 1;
-				} else {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				} else if (!e.settings.isMovable()) {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
 			return true;
@@ -704,10 +727,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (keycode == InputConstants.KEY_UP) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (e.settings.isMovable()) {
+				if (this.allSelectedElementsMovable()) {
 					e.element.baseY -= 1;
-				} else {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				} else if (!e.settings.isMovable()) {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
 			return true;
@@ -717,10 +740,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (keycode == InputConstants.KEY_RIGHT) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (e.settings.isMovable()) {
+				if (this.allSelectedElementsMovable()) {
 					e.element.baseX += 1;
-				} else {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				} else if (!e.settings.isMovable()) {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
 			return true;
@@ -730,10 +753,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (keycode == InputConstants.KEY_DOWN) {
 			this.history.saveSnapshot(this.history.createSnapshot());
 			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (e.settings.isMovable()) {
+				if (this.allSelectedElementsMovable()) {
 					e.element.baseY += 1;
-				} else {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+				} else if (!e.settings.isMovable()) {
+					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
 			return true;
@@ -786,7 +809,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//DEL
 		if (keycode == InputConstants.KEY_DELETE) {
-			this.history.saveSnapshot(this.history.createSnapshot());
+			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				e.deleteElement();
 			}

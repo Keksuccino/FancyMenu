@@ -85,19 +85,19 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
         if (this.isCopyrightButton()) {
             if ((this.getX() + this.getWidth()) > this.editor.width) {
                 this.element.baseX -= ((this.getX() + this.getWidth()) - this.editor.width);
-                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
             if (this.getX() < 0) {
                 this.element.baseX += Math.abs(this.getX());
-                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
             if ((this.getY() + this.getHeight()) > this.editor.height) {
                 this.element.baseY -= ((this.getY() + this.getHeight()) - this.editor.height);
-                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
             if (this.getY() < 0) {
                 this.element.baseY += Math.abs(this.getY());
-                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 2000;
+                this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
         }
     }
