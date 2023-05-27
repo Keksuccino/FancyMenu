@@ -93,7 +93,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
@@ -137,7 +137,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
@@ -158,8 +158,8 @@ public class ManageRequirementsScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
         this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.container);
+            Minecraft.getInstance().setScreen(this.parentScreen);
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
@@ -179,8 +179,8 @@ public class ManageRequirementsScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(null);
+        Minecraft.getInstance().setScreen(this.parentScreen);
     }
 
     @Override
@@ -287,9 +287,9 @@ public class ManageRequirementsScreen extends Screen {
         public final int lineHeight;
         public Font font = Minecraft.getInstance().font;
 
-        private MutableComponent displayNameComponent;
-        private MutableComponent modeComponent;
-        private MutableComponent valueComponent;
+        private final MutableComponent displayNameComponent;
+        private final MutableComponent modeComponent;
+        private final MutableComponent valueComponent;
 
         public RequirementInstanceEntry(ScrollArea parent, LoadingRequirementInstance instance, int lineHeight) {
 

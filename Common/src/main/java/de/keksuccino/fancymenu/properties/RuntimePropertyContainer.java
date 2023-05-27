@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.properties;
 
-import de.keksuccino.fancymenu.misc.ValueToggle;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

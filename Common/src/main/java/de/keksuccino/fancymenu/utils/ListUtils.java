@@ -4,8 +4,10 @@ import de.keksuccino.fancymenu.misc.ConsumingSupplier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class ListUtils {
 
     @SafeVarargs
@@ -56,6 +58,11 @@ public class ListUtils {
         listToFilter.clear();
         listToFilter.addAll(l);
         return listToFilter;
+    }
+
+    @SafeVarargs
+    public static <T> List<T> build(T... entries) {
+        return new ArrayList<>(Arrays.asList(entries));
     }
 
 }

@@ -2,28 +2,29 @@ package de.keksuccino.fancymenu.misc;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
-public class ValueToggle<T> {
+public class ValueSwitcher<T> {
 
     protected List<T> values = new ArrayList<>();
-    protected int currentIndex;
+    protected int currentIndex = 0;
 
     /**
      * A value toggle.<br>
-     * <b>The value array needs at least two entries!</b>
+     * <b>The value list needs at least two entries!</b>
      */
-    @SafeVarargs
-    public ValueToggle(int currentIndex, @NotNull T... values) {
-        this.values.addAll(Arrays.asList(values));
-        this.currentIndex = currentIndex;
-        if (this.currentIndex > this.values.size()-1) {
-            this.currentIndex = Math.max(0, this.values.size()-1);
-        } else if (this.currentIndex < 0) {
-            this.currentIndex = 0;
+    public static <T> ValueSwitcher<T> fromList(@NotNull List<T> values) {
+        Objects.requireNonNull(values);
+        if (values.size() < 2) {
+            throw new InvalidParameterException("Failed to create ValueSwitcher! Value list size too small (<2)!");
         }
+        ValueSwitcher<T> valueSwitcher = new ValueSwitcher<>();
+        valueSwitcher.values.addAll(values);
+        return valueSwitcher;
     }
 
     /**
@@ -31,9 +32,12 @@ public class ValueToggle<T> {
      * <b>The value array needs at least two entries!</b>
      */
     @SafeVarargs
-    public ValueToggle(@NotNull T currentValue, @NotNull T...value) {
-        this(0, value);
-        this.setCurrentValue(currentValue);
+    public static <T> ValueSwitcher<T> fromArray(@NotNull T... values) {
+        Objects.requireNonNull(values);
+        return fromList(Arrays.asList(values));
+    }
+
+    protected ValueSwitcher() {
     }
 
     public List<T> getValues() {

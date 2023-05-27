@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 public class TextEditorScreen extends Screen {
 
     //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
@@ -104,6 +105,7 @@ public class TextEditorScreen extends Screen {
     public int placeholderMenuEntryHeight = 16;
     public List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
     public boolean multilineMode = true;
+    protected boolean allowPlaceholders = true;
     public long multilineNotSupportedNotificationDisplayStart = -1L;
     public boolean boldTitle = true;
 
@@ -179,26 +181,31 @@ public class TextEditorScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
         this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.callback != null) {
                 this.callback.accept(this.getText());
             }
+            Minecraft.getInstance().setScreen(this.parentScreen);
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.placeholderButton = new AdvancedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), true, (button) -> {
+        if (this.allowPlaceholders) {
+            this.placeholderButton = new AdvancedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), true, (button) -> {
+                if (showPlaceholderMenu) {
+                    showPlaceholderMenu = false;
+                } else {
+                    showPlaceholderMenu = true;
+                }
+                this.rebuildWidgets();
+            });
+            this.placeholderButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
+            UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
             if (showPlaceholderMenu) {
-                showPlaceholderMenu = false;
-            } else {
-                showPlaceholderMenu = true;
+                this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
+                ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
             }
-            this.rebuildWidgets();
-        });
-        this.placeholderButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
-        if (showPlaceholderMenu) {
-            this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
-            ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
+        } else {
+            this.placeholderButton = null;
+            showPlaceholderMenu = false;
         }
 
     }
@@ -382,7 +389,9 @@ public class TextEditorScreen extends Screen {
 
         }
 
-        this.placeholderButton.render(matrix, mouseX, mouseY, partial);
+        if (this.placeholderButton != null) {
+            this.placeholderButton.render(matrix, mouseX, mouseY, partial);
+        }
 
     }
 
@@ -1069,6 +1078,15 @@ public class TextEditorScreen extends Screen {
         return s.toString();
     }
 
+    public boolean placeholdersAllowed() {
+        return this.allowPlaceholders;
+    }
+
+    public void setPlaceholdersAllowed(boolean allowed) {
+        this.allowPlaceholders = allowed;
+        this.init();
+    }
+
     /**
      * @return The text BEFORE the cursor or NULL if no line is focused.
      */
@@ -1323,13 +1341,13 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public void onClose() {
+        if (this.callback != null) {
+            this.callback.accept(null);
+        }
         if (this.parentScreen != null) {
             Minecraft.getInstance().setScreen(this.parentScreen);
         } else {
             super.onClose();
-        }
-        if (this.callback != null) {
-            this.callback.accept(null);
         }
     }
 

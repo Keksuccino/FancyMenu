@@ -27,6 +27,8 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO move layout editor config stuff to separate config and make it editable via Menu Bar Tab in Editor
+
 	//TODO add opacity support for title screen deep cuz elements (splash, logo, branding, realms icon, forge stuff)
 
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
@@ -204,7 +206,7 @@ public class FancyMenu {
 
 			config.registerValue("show_world_icons", true, "singleplayer_screen");
 
-			config.registerValue("showgrid", false, "layouteditor");
+			config.registerValue("showgrid", true, "layouteditor");
 			config.registerValue("gridsize", 10, "layouteditor");
 
 			config.registerValue("uiscale", 1.0F, "ui");
