@@ -21,7 +21,8 @@ public class LoadingRequirementInstance {
     @Nullable
     public LoadingRequirementGroup group;
     public RequirementMode mode;
-    public String requirementId = ScreenCustomization.generateUniqueIdentifier();
+    /** This identifier should NOT get used to actually identify the instance. It is mainly used to make the serialized instance unique. **/
+    protected String requirementId = ScreenCustomization.generateUniqueIdentifier();
 
     public LoadingRequirementInstance(LoadingRequirement requirement, @Nullable String value, RequirementMode mode, LoadingRequirementContainer parent) {
         this.parent = parent;
@@ -46,14 +47,17 @@ public class LoadingRequirementInstance {
             if (this.requirement != other.requirement) return false;
             if (!Objects.equals(this.value, other.value)) return false;
             if (this.mode != other.mode) return false;
-            if (!Objects.equals(this.group, other.group)) return false;
             return true;
         }
         return false;
     }
 
-    public LoadingRequirementInstance copy() {
-        return new LoadingRequirementInstance(this.requirement, this.value, this.mode, null);
+    public LoadingRequirementInstance copy(boolean copyIdentifier) {
+        LoadingRequirementInstance i = new LoadingRequirementInstance(this.requirement, this.value, this.mode, null);
+        if (copyIdentifier) {
+            i.requirementId = this.requirementId;
+        }
+        return i;
     }
 
     @NotNull
@@ -93,6 +97,7 @@ public class LoadingRequirementInstance {
                     if (key.contains("[req_id:")) {
                         String id = key.split("\\[req_id:", 2)[1].split("\\]", 2)[0];
                         LoadingRequirementInstance instance = new LoadingRequirementInstance(req, value, mode, parent);
+                        if (!req.hasValue()) instance.value = null;
                         instance.requirementId = id;
                         instance.group = group;
                         return instance;

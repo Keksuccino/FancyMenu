@@ -122,17 +122,17 @@ public class LoadingRequirementContainer {
         if (o == null) return false;
         if (this == o) return true;
         if (o instanceof LoadingRequirementContainer other) {
-            if (!ListUtils.contentEquals(this.groups, other.groups)) return false;
-            if (!ListUtils.contentEquals(this.instances, other.instances)) return false;
+            if (!ListUtils.contentEqual(this.groups, other.groups)) return false;
+            if (!ListUtils.contentEqual(this.instances, other.instances)) return false;
             return true;
         }
         return false;
     }
 
-    public LoadingRequirementContainer copy() {
+    public LoadingRequirementContainer copy(boolean copyRequirementInstanceIdentifiers) {
         LoadingRequirementContainer c = new LoadingRequirementContainer();
         this.groups.forEach((group) -> {
-            LoadingRequirementGroup g = group.copy();
+            LoadingRequirementGroup g = group.copy(copyRequirementInstanceIdentifiers);
             g.parent = c;
             for (LoadingRequirementInstance i : g.instances) {
                 i.parent = c;
@@ -140,11 +140,30 @@ public class LoadingRequirementContainer {
             c.groups.add(g);
         });
         this.instances.forEach((instance) -> {
-            LoadingRequirementInstance i = instance.copy();
+            LoadingRequirementInstance i = instance.copy(copyRequirementInstanceIdentifiers);
             i.parent = c;
             c.instances.add(i);
         });
         return c;
+    }
+
+    public static LoadingRequirementContainer stackContainers(@NotNull LoadingRequirementContainer... containers) {
+        LoadingRequirementContainer stack = new LoadingRequirementContainer();
+        for (LoadingRequirementContainer c : containers) {
+            LoadingRequirementContainer copy = c.copy(false);
+            stack.instances.addAll(copy.instances);
+            stack.groups.addAll(copy.groups);
+        }
+        for (LoadingRequirementInstance i : stack.instances) {
+            i.parent = stack;
+        }
+        for (LoadingRequirementGroup g : stack.groups) {
+            g.parent = stack;
+            for (LoadingRequirementInstance i : g.instances) {
+                i.parent = stack;
+            }
+        }
+        return stack;
     }
 
     @NotNull

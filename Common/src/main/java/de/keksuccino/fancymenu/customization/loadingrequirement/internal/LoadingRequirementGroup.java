@@ -65,16 +65,16 @@ public class LoadingRequirementGroup {
         if (o instanceof LoadingRequirementGroup other) {
             if (!Objects.equals(this.identifier, other.identifier)) return false;
             if (this.mode != other.mode) return false;
-            if (!ListUtils.contentEquals(this.instances, other.instances)) return false;
+            if (!ListUtils.contentEqual(this.instances, other.instances)) return false;
             return true;
         }
         return false;
     }
 
-    public LoadingRequirementGroup copy() {
+    public LoadingRequirementGroup copy(boolean copyRequirementInstanceIdentifiers) {
         LoadingRequirementGroup g = new LoadingRequirementGroup(this.identifier, this.mode, null);
         this.instances.forEach((instance) -> {
-            LoadingRequirementInstance i = instance.copy();
+            LoadingRequirementInstance i = instance.copy(copyRequirementInstanceIdentifiers);
             i.group = g;
             g.instances.add(i);
         });

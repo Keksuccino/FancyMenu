@@ -5,8 +5,12 @@ import java.util.List;
 
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LayoutEditorHistory {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected LayoutEditorScreen editor;
 	private List<Snapshot> history = new ArrayList<>();
@@ -22,6 +26,8 @@ public class LayoutEditorHistory {
 	}
 	
 	public void saveSnapshot(Snapshot snap) {
+		//TODO remove debug
+		LOGGER.info("SAVING SNAPSHOT");
 		if (!this.preventSnapshotSaving) {
 			if (this.current < 0) {
 				this.history.clear();
@@ -57,6 +63,9 @@ public class LayoutEditorHistory {
 	public void stepBack() {
 		if (this.current > -1) {
 
+			//TODO remove debug
+			LOGGER.info("STEP BACK");
+
 			if (this.current <= this.history.size()-1) {
 
 				Snapshot snap = this.history.get(this.current);
@@ -77,6 +86,9 @@ public class LayoutEditorHistory {
 	
 	public void stepForward() {
 		if (this.current >= -1) {
+
+			//TODO remove debug
+			LOGGER.info("STEP FORWARD");
 
 			if (this.current < this.history.size()-1) {
 
@@ -101,6 +113,8 @@ public class LayoutEditorHistory {
 		public Snapshot preSnapshotState = null;
 		
 		public Snapshot(LayoutEditorScreen editor) {
+			//TODO remove debug
+			LOGGER.info("CREATING NEW SNAPSHOT");
 			editor.serializeElementInstancesToLayoutInstance();
 			this.snapshot = editor.layout.copy();
 		}

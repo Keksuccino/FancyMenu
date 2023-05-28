@@ -1,7 +1,11 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface IElementStacker<E extends AbstractElement> {
 
@@ -75,9 +79,12 @@ public interface IElementStacker<E extends AbstractElement> {
     @SuppressWarnings("all")
     public default E stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         try {
+            List<LoadingRequirementContainer> containers = new ArrayList<>();
             for (AbstractElement e : elements) {
                 this.stackElementsSingleInternal(e, stack);
+                containers.add(e.loadingRequirementContainer);
             }
+            stack.loadingRequirementContainer = LoadingRequirementContainer.stackContainers(containers.toArray(new LoadingRequirementContainer[0]));
             return (E) stack;
         } catch (Exception ex) {
             ex.printStackTrace();

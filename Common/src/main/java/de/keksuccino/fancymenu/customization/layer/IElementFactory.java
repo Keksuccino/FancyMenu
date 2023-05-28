@@ -79,9 +79,13 @@ public interface IElementFactory {
             //Stack collected deep elements, so only one element per element type is active at the same time
             for (Map.Entry<DeepElementBuilder<?, ?, ?>, List<AbstractDeepElement>> m : unstackedDeepElements.entrySet()) {
                 if (!m.getValue().isEmpty()) {
-                    AbstractDeepElement stacked = m.getKey().stackElementsInternal(m.getKey().buildDefaultInstance(), m.getValue().toArray(new AbstractDeepElement[0]));
-                    if (stacked != null) {
-                        deepElements.add(stacked);
+                    if (m.getValue().size() > 1) {
+                        AbstractDeepElement stacked = m.getKey().stackElementsInternal(m.getKey().buildDefaultInstance(), m.getValue().toArray(new AbstractDeepElement[0]));
+                        if (stacked != null) {
+                            deepElements.add(stacked);
+                        }
+                    } else {
+                        deepElements.add(m.getValue().get(0));
                     }
                 }
             }
@@ -114,9 +118,13 @@ public interface IElementFactory {
             //Stack collected vanilla button elements, so only one element per button is active at the same time
             for (Map.Entry<WidgetMeta, List<VanillaButtonElement>> m : unstackedVanillaButtonElements.entrySet()) {
                 if (!m.getValue().isEmpty()) {
-                    VanillaButtonElement stacked = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaButtonElement[0]));
-                    if (stacked != null) {
-                        vanillaButtonElements.add(stacked);
+                    if (m.getValue().size() > 1) {
+                        VanillaButtonElement stacked = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaButtonElement[0]));
+                        if (stacked != null) {
+                            vanillaButtonElements.add(stacked);
+                        }
+                    } else {
+                        vanillaButtonElements.add(m.getValue().get(0));
                     }
                 }
             }

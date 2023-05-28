@@ -22,7 +22,7 @@ public class FancyMenu {
 
 	//PRIORITY:
 
-	//TODO loading requirements werden in editor nicht richtig gesetzt ( vermutlich wegen copy() )  <-----------------------
+	//TODO Layout Editor: undo/redo shortcuts gehen nicht (Z + Y in a nutshell)
 
 
 	//-----------------------------
@@ -34,8 +34,6 @@ public class FancyMenu {
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO label von custom buttons ist bei fade-in am Anfang kurz unsichtbar
-
-	//TODO Layout Editor: undo/redo geht nicht
 
 	//TODO deep element customizations werden nicht in editor geladen, wenn editor neu geöffnet wird
 

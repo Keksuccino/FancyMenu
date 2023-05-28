@@ -5,14 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class ObjectUtils {
-
-    public static boolean equalsAll(Object first, Object... others) {
-        for (Object o : others) {
-            if (!first.equals(o)) return false;
-        }
-        return true;
-    }
 
     public static <T> boolean isTrueForAll(List<T> objects, ConsumingSupplier<T, Boolean> checkFor) {
         for (T object : objects) {
@@ -46,7 +40,7 @@ public class ObjectUtils {
     }
 
     @NotNull
-    public static List<Object> getOfAllPrimitive(List<Object> objects, ConsumingSupplier<Object, Object> getter) {
+    public static List<Object> getOfAllUnsafe(List<Object> objects, ConsumingSupplier<Object, Object> getter) {
         return getOfAll(Object.class, objects, getter);
     }
 

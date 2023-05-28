@@ -911,12 +911,10 @@
   "fancymenu.helper.editor.items.visibilityrequirements.is_number.desc": "Check if a number matches another.\n\nCompare Modes:\nequals, bigger-than, smaller-than,\nbigger-than-or-equals,\nsmaller-than-or-equals\n\nSet the 3 dots after the 'mode' variable\nto the compare mode you want to use.\n\nSet the 3 dots after the 'number' variable\nto the number you want to check.\n\nSet the 3 dots after the 'compare_with'\nvariable to the number you want to\ncompare the first one with.\n\n§cYou can check for multiple numbers/modes\n§cat once by separating multiple\n§ccompare sections by comma.",
   "fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename": "Compare Section(s)",
   "fancymenu.helper.editor.items.features.advanced_positioning": "Advanced Positioning",
-  "fancymenu.helper.editor.items.features.advanced_positioning.active": "Advanced Positioning (§6Active§r)",
   "fancymenu.helper.editor.items.features.advanced_positioning.desc": "§cONLY FOR ADVANCED USERS!\n\nAllows you to manually set the\nposition of the element.\n\nAdvanced positions support placeholders,\nso you can calculate positions\nby using the Calculator placeholder,\nget positions of other elements\nand much more.\n\nMany useful placeholders for element\npositioning can be found\nin the \"GUI\" and \"Advanced\"\nplaceholder categories.\n\n§cYou will not be able to resize or\n§cdrag and move the element while this\n§cfeature is in use.\n\n§cTo \"disable\" it, just set both the\n§cX position and Y position to an\n§cempty value.",
   "fancymenu.helper.editor.items.features.advanced_positioning.posx": "X Position",
   "fancymenu.helper.editor.items.features.advanced_positioning.posy": "Y Position",
   "fancymenu.helper.editor.items.features.advanced_sizing": "Advanced Sizing",
-  "fancymenu.helper.editor.items.features.advanced_sizing.active": "Advanced Sizing (§6Active§r)",
   "fancymenu.helper.editor.items.features.advanced_sizing.desc": "§cONLY FOR ADVANCED USERS!\n\nAllows you to manually set the\nsize of the element.\n\nAdvanced sizes support placeholders,\nso you can calculate sizes\nby using the Calculator placeholder,\nget sizes of other elements\nand much more.\n\nMany useful placeholders for element\nsizing can be found\nin the \"GUI\" and \"Advanced\"\nplaceholder categories.\n\n§cYou will not be able to resize\n§cthe element on axes that got\n§coverridden by an advanced size.\n\n§cTo \"undo\" the override, just set\n§cthe respective advanced sizing value\n§cto an empty/blank one.",
   "fancymenu.helper.editor.items.features.advanced_sizing.width": "Width",
   "fancymenu.helper.editor.items.features.advanced_sizing.height": "Height",
@@ -1175,5 +1173,8 @@
   "fancymenu.guicomponents.height": "Height",
   "fancymenu.editor.shortcuts.copy": "Ctrl+C",
   "fancymenu.editor.shortcuts.delete": "Del",
-  "fancymenu.elements.vanilla_button.copyright.unable_to_move": "§cYou can't move the Copyright button out-of-screen!"
+  "fancymenu.elements.vanilla_button.copyright.unable_to_move": "§cYou can't move the Copyright button out-of-screen!",
+  "fancymenu.elements.advanced_sizing.enabled_notification": "§6Advanced Sizing is enabled!",
+  "fancymenu.elements.advanced_positioning.enabled_notification": "§6Advanced Positioning is enabled!",
+  "fancymenu.elements.multiselect.loading_requirements.warning.override": "§c§lOverride Loading Requirements?\n\nThe selected elements have different loading requirements!\nAll of their loading requirements will get §coverridden§r!\n\nContinue?"
 }

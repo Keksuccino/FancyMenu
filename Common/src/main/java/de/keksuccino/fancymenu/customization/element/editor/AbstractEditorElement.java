@@ -21,6 +21,7 @@ import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.utils.ListUtils;
@@ -81,7 +82,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
 	public long renderMovingNotAllowedTime = -1;
-	public boolean recentlyMoved = false;
+	public boolean recentlyMovedByDragging = false;
 	public boolean recentlyLeftClickSelected = false;
 
 	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
@@ -161,7 +162,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			ContextMenu anchorPointMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("anchor_point", Component.translatable("fancymenu.editor.items.setorientation"), anchorPointMenu)
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
-					.setIsActiveSupplier((menu, entry) -> (element.advancedX == null) && (element.advancedY == null))
 					.setStackable(true);
 
 			if (this.settings.isElementAnchorPointAllowed()) {
@@ -220,39 +220,24 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isAdvancedPositioningSupported()) {
 
 			ContextMenu advancedPositioningMenu = new ContextMenu();
-			this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.literal(""), advancedPositioningMenu)
+			this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning"), advancedPositioningMenu)
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
-					.setLabelSupplier((menu, entry) -> {
-						if (((element.advancedX != null) || (element.advancedY != null)) && !entry.getStackMeta().isPartOfStack()) {
-							return Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.active");
-						} else {
-							return Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning");
-						}
-					})
 					.setStackable(true);
 
 			this.addStringInputContextMenuEntryTo(advancedPositioningMenu, "advanced_positioning_x", null,
 							element -> element.settings.isAdvancedPositioningSupported(),
 							null,
 							consumes -> consumes.element.advancedX,
-							(element, input) -> {
-								element.element.advancedX = input;
-//								element.element.baseX = 0;
-//								element.element.baseY = 0;
-//								element.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-							}, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"))
+							(element, input) -> element.element.advancedX = input,
+							false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"))
 					.setStackable(true);
 
 			this.addStringInputContextMenuEntryTo(advancedPositioningMenu, "advanced_positioning_y", null,
 							element -> element.settings.isAdvancedPositioningSupported(),
 							null,
 							consumes -> consumes.element.advancedY,
-							(element, input) -> {
-								element.element.advancedY = input;
-//								element.element.baseX = 0;
-//								element.element.baseY = 0;
-//								element.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-							}, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"))
+							(element, input) -> element.element.advancedY = input,
+							false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"))
 					.setStackable(true);
 
 		}
@@ -260,15 +245,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isAdvancedSizingSupported()) {
 
 			ContextMenu advancedSizingMenu = new ContextMenu();
-			this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.literal(""), advancedSizingMenu)
+			this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing"), advancedSizingMenu)
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
-					.setLabelSupplier((menu, entry) -> {
-						if (((element.advancedX != null) || (element.advancedY != null)) && !entry.getStackMeta().isPartOfStack()) {
-							return Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.active");
-						} else {
-							return Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing");
-						}
-					})
 					.setStackable(true);
 
 			this.addStringInputContextMenuEntryTo(advancedSizingMenu, "advanced_sizing_width", null,
@@ -318,40 +296,43 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isLoadingRequirementsEnabled()) {
 
-			//TODO FIXEN !!! Loading Requiremments werden nicht gesetzt
 			this.rightClickMenu.addClickableEntry("loading_requirements", Component.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), (menu, entry) ->
 					{
 						if (!entry.getStackMeta().isPartOfStack()) {
-							ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer.copy(), (call) -> {
+							ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.element.loadingRequirementContainer.copy(true), (call) -> {
 								if (call != null) {
 									this.editor.history.saveSnapshot();
-									//TODO remove debug
-									LOGGER.info("SETTING LOADING REQUIREMENT CONTAINER");
 									this.element.loadingRequirementContainer = call;
 								}
 							});
 							Minecraft.getInstance().setScreen(s);
 						} else if (entry.getStackMeta().isFirstInStack()) {
-							List<AbstractEditorElement> selected = new ArrayList<>();
-							this.editor.getSelectedElements().forEach((element) -> {
-								if (element.settings.isLoadingRequirementsEnabled()) selected.add(element);
-							});
-							List<LoadingRequirementContainer> containers = ObjectUtils.getOfAll(LoadingRequirementContainer.class, selected, consumes -> consumes.element.loadingRequirementContainer);
+							List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(element -> element.settings.isLoadingRequirementsEnabled());
+							List<LoadingRequirementContainer> containers = ObjectUtils.getOfAll(LoadingRequirementContainer.class, selectedElements, consumes -> consumes.element.loadingRequirementContainer);
 							LoadingRequirementContainer containerToUseInManager = new LoadingRequirementContainer();
-							if ((containers.size() > 1) && ObjectUtils.equalsAll(containers.get(0), containers.subList(1, containers.size()-1).toArray())) {
-								containerToUseInManager = containers.get(0).copy();
-							} else {
-								containerToUseInManager = this.element.loadingRequirementContainer.copy();
+							boolean allEqual = ListUtils.allInListEqual(containers);
+							if (allEqual) {
+								containerToUseInManager = containers.get(0).copy(false);
 							}
 							ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, containerToUseInManager, (call) -> {
 								if (call != null) {
 									this.editor.history.saveSnapshot();
-									for (AbstractEditorElement e : selected) {
-										e.element.loadingRequirementContainer = call.copy();
+									for (AbstractEditorElement e : selectedElements) {
+										e.element.loadingRequirementContainer = call.copy(false);
 									}
 								}
 							});
-							Minecraft.getInstance().setScreen(s);
+							if (allEqual) {
+								Minecraft.getInstance().setScreen(s);
+							} else {
+								Minecraft.getInstance().setScreen(new ConfirmationScreen((call) -> {
+									if (call) {
+										Minecraft.getInstance().setScreen(s);
+									} else {
+										Minecraft.getInstance().setScreen(this.editor);
+									}
+								}, LocalizationUtils.splitLocalizedStringLines("fancymenu.elements.multiselect.loading_requirements.warning.override")));
+							}
 						}
 					})
 					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")))
@@ -438,30 +419,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							Component.translatable("fancymenu.element.general.appearance_delay.seconds"))
 					.setStackable(true);
 
-//			appearanceDelayMenu.addClickableEntry("appearance_delay_seconds", Component.translatable("fancymenu.element.general.appearance_delay.seconds"), (menu, entry) -> {
-//				if (entry.getStackMeta().isFirstInStack()) {
-//					FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + I18n.get("fancymenu.element.general.appearance_delay.seconds"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
-//						if (call != null) {
-//							this.editor.history.saveSnapshot();
-//							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-//								if (e.settings.isDelayable()) {
-//									if (call.replace(" ", "").equals("")) {
-//										e.element.appearanceDelayInSeconds = 1.0F;
-//									} else if (MathUtils.isFloat(call)) {
-//										e.element.appearanceDelayInSeconds = Float.parseFloat(call);
-//									}
-//								}
-//							}
-//						}
-//					});
-//					List<Float> all = ObjectUtils.getOfAll(Float.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable()), consumes -> consumes.element.appearanceDelayInSeconds);
-//					if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(all)) {
-//						p.setText("" + this.element.appearanceDelayInSeconds);
-//					}
-//					PopupHandler.displayPopup(p);
-//				}
-//			}).setStackable(true);
-
 			appearanceDelayMenu.addSeparatorEntry("separator_1").setStackable(true);
 
 			this.addBooleanSwitcherContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_fade_in",
@@ -479,30 +436,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							Component.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"))
 					.setStackable(true);
 
-//			appearanceDelayMenu.addClickableEntry("appearance_delay_fade_in_speed", Component.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"), (menu, entry) -> {
-//				if (entry.getStackMeta().isFirstInStack()) {
-//					FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§f" + I18n.get("fancymenu.element.general.appearance_delay.fade_in.speed"), CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
-//						if (call != null) {
-//							this.editor.history.saveSnapshot();
-//							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-//								if (e.settings.isDelayable()) {
-//									if (call.replace(" ", "").equals("")) {
-//										e.element.fadeInSpeed = 1.0F;
-//									} else if (MathUtils.isFloat(call)) {
-//										e.element.fadeInSpeed = Float.parseFloat(call);
-//									}
-//								}
-//							}
-//						}
-//					});
-//					List<Float> all = ObjectUtils.getOfAll(Float.class, ListUtils.filterList(this.editor.getSelectedElements(), consumes -> consumes.settings.isDelayable()), consumes -> consumes.element.fadeInSpeed);
-//					if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(all)) {
-//						p.setText("" + this.element.fadeInSpeed);
-//					}
-//					PopupHandler.displayPopup(p);
-//				}
-//			}).setStackable(true);
-
 		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
@@ -511,6 +444,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	@Override
 	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+		this.tick();
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
 
@@ -524,6 +459,21 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.renderBorder(pose, mouseX, mouseY, partial);
 
+	}
+
+	protected void tick() {
+		if ((this.element.advancedWidth != null) || (this.element.advancedHeight != null) && !this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
+			this.topLeftDisplay.addLine("advanced_sizing_enabled", () -> Component.translatable("fancymenu.elements.advanced_sizing.enabled_notification"));
+		}
+		if ((this.element.advancedWidth == null) && (this.element.advancedHeight == null) && this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
+			this.topLeftDisplay.removeLine("advanced_sizing_enabled");
+		}
+		if ((this.element.advancedX != null) || (this.element.advancedY != null) && !this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
+			this.topLeftDisplay.addLine("advanced_positioning_enabled", () -> Component.translatable("fancymenu.elements.advanced_positioning.enabled_notification"));
+		}
+		if ((this.element.advancedX == null) && (this.element.advancedY == null) && this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
+			this.topLeftDisplay.removeLine("advanced_positioning_enabled");
+		}
 	}
 
 	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
@@ -618,7 +568,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
-			this.recentlyMoved = false;
+			this.recentlyMovedByDragging = false;
 		}
 		return false;
 	}
@@ -636,7 +586,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					this.element.baseX = this.leftMouseDownBaseX + diffX;
 					this.element.baseY = this.leftMouseDownBaseY + diffY;
 					if ((diffX > 0) || (diffY > 0)) {
-						this.recentlyMoved = true;
+						this.recentlyMovedByDragging = true;
 					}
 				} else if (!this.settings.isMovable()) {
 					this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
@@ -802,10 +752,12 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				return false;
 			}
 			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY();
+				if ((this.type == ResizeGrabberType.TOP) && (AbstractEditorElement.this.element.advancedY != null)) return false;
+				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableY() && (AbstractEditorElement.this.element.advancedHeight == null);
 			}
 			if ((this.type == ResizeGrabberType.LEFT) || (this.type == ResizeGrabberType.RIGHT)) {
-				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX();
+				if ((this.type == ResizeGrabberType.LEFT) && (AbstractEditorElement.this.element.advancedX != null)) return false;
+				return AbstractEditorElement.this.settings.isResizeable() && AbstractEditorElement.this.settings.isResizeableX() && (AbstractEditorElement.this.element.advancedWidth == null);
 			}
 			return false;
 		}
@@ -815,6 +767,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 
 	}
+
+	//TODO add method to build FileChooser entries
 
 	protected ContextMenu.ClickableContextMenuEntry addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable CharacterFilter inputCharacterFilter, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label) {
 		return addTo.addClickableEntry(entryIdentifier, label, (menu, entry) ->
@@ -952,7 +906,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			if (!stackMeta.isPartOfStack()) {
 				t.setCurrentValue(defaultValue.get(firstElement));
 			} else if (!hasProperty) {
-				if (ListUtils.allInListEqual(ObjectUtils.getOfAllPrimitive((List<Object>)((Object)elements), (ConsumingSupplier<Object,Object>)((Object)defaultValue)))) {
+				if (ListUtils.allInListEqual(ObjectUtils.getOfAllUnsafe((List<Object>)((Object)elements), (ConsumingSupplier<Object,Object>)((Object)defaultValue)))) {
 					t.setCurrentValue(defaultValue.get(firstElement));
 				}
 			}

@@ -71,6 +71,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	protected boolean isMouseSelection = false;
 	protected int mouseSelectionStartX = 0;
 	protected int mouseSelectionStartY = 0;
+	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -101,6 +102,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	protected void init() {
 
 		this.ui.updateTopMenuBar();
+
+		this.isMouseSelection = false;
+		this.preDragElementSnapshot = null;
 
 		this.rightClickMenu.closeMenu();
 
@@ -539,6 +543,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (this.layout.layoutFile != null) {
 			this.serializeElementInstancesToLayoutInstance();
 			if (!LayoutHandler.saveLayoutToFile(this.layout, this.layout.layoutFile.getAbsolutePath())) {
+				//TODO replace with NotificationScreen (does not exist yet)
 				Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 			}
 		} else {
@@ -547,14 +552,17 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	}
 
 	public void saveLayoutAs() {
+		//TODO replace with TextInputScreen (does not exist yet)
 		FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.editor.save_as"), CharacterFilter.getFilenameFilterWithUppercaseSupport(), 240, (call) -> {
 			if (call != null) {
 				this.serializeElementInstancesToLayoutInstance();
 				File f = new File(FancyMenu.getCustomizationsDirectory().getAbsolutePath() + "/" + call + ".txt");
 				if (f.isFile()) {
+					//TODO replace with NotificationScreen (does not exist yet)
 					Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.file_exists")));
 				} else {
 					if (!LayoutHandler.saveLayoutToFile(this.layout, f.getAbsolutePath())) {
+						//TODO replace with NotificationScreen (does not exist yet)
 						Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 					}
 				}
@@ -668,15 +676,24 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
-		if (!cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMoved && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
+		if (!cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
 			topHoverElement.setSelected(false);
 		}
 
+		boolean elementRecentlyMovedByDragging = false;
+
 		//Handle mouse released for all elements
 		for (AbstractEditorElement e : this.getAllElements()) {
+			if (e.recentlyMovedByDragging) elementRecentlyMovedByDragging = true;
 			e.mouseReleased(mouseX, mouseY, button);
 			e.recentlyLeftClickSelected = false;
 		}
+
+		//Save snapshot from before started dragging element(s)
+		if (elementRecentlyMovedByDragging && (this.preDragElementSnapshot != null)) {
+			this.history.saveSnapshot(this.preDragElementSnapshot);
+		}
+		this.preDragElementSnapshot = null;
 
 		return super.mouseReleased(mouseX, mouseY, button);
 
@@ -693,6 +710,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
 				e.setSelected(b);
 			}
+		}
+
+		if (this.preDragElementSnapshot == null) {
+			this.preDragElementSnapshot = this.history.createSnapshot();
 		}
 
 		for (AbstractEditorElement e : this.getAllElements()) {
@@ -785,14 +806,28 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			return true;
 		}
 
+		//TODO remove debug
+		LOGGER.info("KEY PRESSED: " + keycode);
+
+
+		//TODO FIX: undo/redo shortcuts gehen nicht richtig
+		// - ctrl + Y geht nicht wegen Chrome
+		// - sonst nur tasten vertautscht wegen QWERTZ
+		// - checken, ob irgendwie abgefragt werden kann, welcher keycode wirklich Y/Z ist (InputConstants.getKey() nutzen -> siehe KeyBindsScreen)
+
+
 		//CTRL + Z
 		if ((keycode == InputConstants.KEY_Z) && hasControlDown()) {
+			//TODO remove debug
+			LOGGER.info("KEY TRIGGER STEP BACK");
 			this.history.stepBack();
 			return true;
 		}
 
 		//CTRL + Y
 		if ((keycode == InputConstants.KEY_Y) && hasControlDown()) {
+			//TODO remove debug
+			LOGGER.info("KEY TRIGGER STEP FORWARD");
 			this.history.stepForward();
 			return true;
 		}

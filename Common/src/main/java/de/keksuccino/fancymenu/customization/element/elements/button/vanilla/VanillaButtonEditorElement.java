@@ -34,9 +34,25 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.tick();
-        super.render(pose, mouseX, mouseY, partial);
+    protected void tick() {
+        super.tick();
+        if ((this.lastAnchorPoint == null) || (this.lastAnchorPoint != this.element.anchorPoint)) {
+            if (this.element.anchorPoint == ElementAnchorPoints.VANILLA) {
+                this.settings.setMovable(false);
+                this.settings.setResizeable(false);
+            } else {
+                this.settings.setMovable(true);
+                this.settings.setResizeable(true);
+            }
+        }
+        this.lastAnchorPoint = this.element.anchorPoint;
+        //Make the Copyright button un-deletable
+        if (this.isCopyrightButton() && (this.settings.isDestroyable() || this.settings.isResizeable())) {
+            this.settings.setDestroyable(false);
+            this.settings.setResizeable(false);
+        }
+        //Make it impossible to move the Copyright button out-of-screen
+        this.handleCopyrightButtonPositionRestrictions();
     }
 
     @Override
@@ -55,30 +71,6 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
             this.topLeftDisplay.removeLine("vanilla_button_copyright_unable_to_move");
         }
         super.renderDraggingNotAllowedOverlay(pose);
-    }
-
-    protected void tick() {
-        if ((this.lastAnchorPoint == null) || (this.lastAnchorPoint != this.element.anchorPoint)) {
-            if (this.element.anchorPoint == ElementAnchorPoints.VANILLA) {
-                this.settings.setMovable(false);
-                this.settings.setResizeable(false);
-                this.settings.setAdvancedSizingSupported(false);
-                this.settings.setAdvancedPositioningSupported(false);
-            } else {
-                this.settings.setMovable(true);
-                this.settings.setResizeable(true);
-                this.settings.setAdvancedSizingSupported(true);
-                this.settings.setAdvancedPositioningSupported(true);
-            }
-        }
-        this.lastAnchorPoint = this.element.anchorPoint;
-        //Make the Copyright button un-deletable
-        if (this.isCopyrightButton() && (this.settings.isDestroyable() || this.settings.isResizeable())) {
-            this.settings.setDestroyable(false);
-            this.settings.setResizeable(false);
-        }
-        //Make it impossible to move the Copyright button out-of-screen
-        this.handleCopyrightButtonPositionRestrictions();
     }
 
     protected void handleCopyrightButtonPositionRestrictions() {

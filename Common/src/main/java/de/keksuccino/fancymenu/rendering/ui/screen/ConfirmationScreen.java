@@ -2,6 +2,7 @@
 package de.keksuccino.fancymenu.rendering.ui.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.resources.language.I18n;
@@ -18,10 +19,22 @@ public class ConfirmationScreen extends Screen {
     protected Screen parentScreen;
     protected String[] text;
     protected Consumer<Boolean> callback;
+    protected boolean openParentScreen = true;
 
     protected AdvancedButton confirmButton;
     protected AdvancedButton cancelButton;
 
+    /**
+     *  Confirmation screen that does NOT open its parent screen on close.
+     */
+    public ConfirmationScreen(@NotNull Consumer<Boolean> callback, @NotNull String... text) {
+        this(null, callback, text);
+        this.openParentScreen = false;
+    }
+
+    /**
+     * Confirmation screen that opens its parent screen on close.
+     */
     public ConfirmationScreen(@Nullable Screen parentScreen, @NotNull Consumer<Boolean> callback, @NotNull String... text) {
 
         super(Component.literal(""));
@@ -29,14 +42,14 @@ public class ConfirmationScreen extends Screen {
         this.callback = callback;
         this.text = text;
 
-        this.confirmButton = new AdvancedButton(0, 0, 150, 20, "§a" + I18n.get("fancymenu.guicomponents.confirm"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
+        this.confirmButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.confirm"), true, (button) -> {
+            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(true);
         });
         UIBase.applyDefaultButtonSkinTo(this.confirmButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 150, 20, "§c" + I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
+        this.cancelButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
+            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(false);
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
@@ -56,28 +69,28 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
 
         int y = (this.height / 2) - ((this.text.length * 14) / 2);
         for (String s : this.text) {
             if (s.length() > 0) {
                 int textWidth = this.font.width(s);
-                drawString(matrix, this.font, Component.literal(s), (this.width / 2) - (textWidth / 2), y, -1);
+                drawString(pose, this.font, Component.literal(s), (this.width / 2) - (textWidth / 2), y, -1);
             }
             y += 14;
         }
 
         this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
         this.confirmButton.setY(this.height - 40);
-        this.confirmButton.render(matrix, mouseX, mouseY, partial);
+        this.confirmButton.render(pose, mouseX, mouseY, partial);
 
         this.cancelButton.setX((this.width / 2) + 5);
         this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(pose, mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(pose, mouseX, mouseY, partial);
 
     }
 
@@ -85,8 +98,8 @@ public class ConfirmationScreen extends Screen {
     public boolean keyPressed(int button, int p_96553_, int p_96554_) {
 
         //ENTER
-        if (button == 257) {
-            Minecraft.getInstance().setScreen(this.parentScreen);
+        if (button == InputConstants.KEY_ENTER) {
+            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(true);
             return true;
         }
@@ -97,7 +110,7 @@ public class ConfirmationScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
+        if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(false);
     }
 

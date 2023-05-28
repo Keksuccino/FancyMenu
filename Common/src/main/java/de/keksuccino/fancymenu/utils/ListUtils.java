@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class ListUtils {
@@ -30,17 +31,29 @@ public class ListUtils {
         return true;
     }
 
-    public static boolean contentEquals(List<?> list1, List<?> list2) {
-        if (list1.size() != list2.size()) return false;
-        for (Object o : list1) {
-            boolean b = false;
-            for (Object o2 : list2) {
-                if (o.equals(o2)) {
-                    b = true;
+    /**
+     * Checks if the elements of both lists are equal, but ignores their order.
+     */
+    public static <T> boolean contentEqual(@NotNull List<T> list1, @NotNull List<T> list2) {
+        Objects.requireNonNull(list1);
+        Objects.requireNonNull(list2);
+        if (list1.size() != list2.size()) {
+            return false;
+        }
+        if (list1 == list2) {
+            return true;
+        }
+        for (T obj1 : list1) {
+            boolean foundMatch = false;
+            for (T obj2 : list2) {
+                if (obj1.equals(obj2)) {
+                    foundMatch = true;
                     break;
                 }
             }
-            if (!b) return false;
+            if (!foundMatch) {
+                return false;
+            }
         }
         return true;
     }

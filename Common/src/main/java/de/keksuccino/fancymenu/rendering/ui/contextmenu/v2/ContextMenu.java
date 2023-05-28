@@ -1044,7 +1044,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 this.subContextMenu.closeMenu();
             }
             //Open sub menu on entry hover
-            if (this.isHovered() && !this.parent.isSubMenuHovered()) {
+            if (this.isActive() && this.isHovered() && !this.parent.isSubMenuHovered()) {
                 long now = System.currentTimeMillis();
                 if (this.entryHoverStartTime == -1) {
                     this.entryHoverStartTime = now;

@@ -37,6 +37,7 @@ public class ManageRequirementsScreen extends Screen {
     protected AdvancedButton editButton;
     protected AdvancedButton removeButton;
     protected AdvancedButton doneButton;
+    protected AdvancedButton cancelButton;
 
     //TODO add cancel button that returns NULL as callback
 
@@ -157,6 +158,12 @@ public class ManageRequirementsScreen extends Screen {
         };
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
+        this.cancelButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
+            this.callback.accept(null);
+            Minecraft.getInstance().setScreen(this.parentScreen);
+        });
+        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+
         this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
             this.callback.accept(this.container);
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -203,8 +210,12 @@ public class ManageRequirementsScreen extends Screen {
         this.doneButton.setY(this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
+        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
+        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+
         this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.doneButton.getY() - 15 - 20);
+        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
         this.removeButton.render(matrix, mouseX, mouseY, partial);
 
         this.editButton.setX(this.width - 20 - this.editButton.getWidth());
