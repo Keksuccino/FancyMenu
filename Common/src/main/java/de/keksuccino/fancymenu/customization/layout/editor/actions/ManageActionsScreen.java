@@ -291,9 +291,9 @@ public class ManageActionsScreen extends Screen {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
+            this.displayNameComponent = Component.literal(this.instance.action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB()));
             String valueString = ((this.instance.value != null) && this.instance.action.hasValue()) ? this.instance.value : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
+            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 2) + (HEADER_FOOTER_HEIGHT * 2));

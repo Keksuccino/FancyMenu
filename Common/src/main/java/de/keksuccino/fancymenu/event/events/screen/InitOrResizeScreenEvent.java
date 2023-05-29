@@ -43,12 +43,17 @@ public class InitOrResizeScreenEvent extends EventBase {
             super(screen);
         }
 
-        public List<Renderable> getRenderables() {
-            return ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu();
-        }
-
         public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
             ((IMixinScreen)this.getScreen()).invokeAddWidgetFancyMenu(widget);
+        }
+
+        public <T extends GuiEventListener & NarratableEntry & Renderable> void addRenderableWidget(T widget) {
+            this.addWidget(widget);
+            ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu().add(widget);
+        }
+
+        public List<Renderable> getRenderables() {
+            return ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu();
         }
 
     }

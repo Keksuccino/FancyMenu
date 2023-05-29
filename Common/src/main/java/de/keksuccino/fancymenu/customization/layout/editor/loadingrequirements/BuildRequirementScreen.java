@@ -253,7 +253,7 @@ public class BuildRequirementScreen extends Screen {
 
             //Add category entries
             for (Map.Entry<String, List<LoadingRequirement>> m : categories.entrySet()) {
-                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GRAY_1.getRGB()));
+                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GREY_1.getRGB()));
                 TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.LISTING_DOT_RED, (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
@@ -264,7 +264,7 @@ public class BuildRequirementScreen extends Screen {
             }
             //Add requirement entries without category
             for (LoadingRequirement r : LoadingRequirementRegistry.getRequirementsWithoutCategory()) {
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GRAY_1.getRGB()));
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GREY_1.getRGB()));
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.LISTING_DOT_BLUE, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
@@ -289,7 +289,7 @@ public class BuildRequirementScreen extends Screen {
             List<LoadingRequirement> l = categories.get(category);
             if (l != null) {
                 for (LoadingRequirement r : l) {
-                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GRAY_1.getRGB()));
+                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GREY_1.getRGB()));
                     RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.LISTING_DOT_BLUE, (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);

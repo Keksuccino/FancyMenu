@@ -7,9 +7,11 @@ import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.sounds.SoundManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
+@SuppressWarnings("unused")
 public abstract class ScrollAreaEntry extends UIBase {
 
     public ScrollArea parent;
@@ -38,13 +40,13 @@ public abstract class ScrollAreaEntry extends UIBase {
             this.onClick(this);
         }) {
             @Override
-            public void playDownSound(SoundManager p_93665_) {
+            public void playDownSound(@NotNull SoundManager p_93665_) {
                 if (ScrollAreaEntry.this.playClickSound) {
                     super.playDownSound(p_93665_);
                 }
             }
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     this.isHovered = false;
                 }

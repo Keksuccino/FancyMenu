@@ -228,7 +228,7 @@ public class BuildActionScreen extends Screen {
         public Action action;
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())), LISTING_DOT_BLUE, onClick);
             this.action = action;
         }
 

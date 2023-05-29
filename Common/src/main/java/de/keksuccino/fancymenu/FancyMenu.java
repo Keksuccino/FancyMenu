@@ -27,11 +27,17 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)
+
+	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
+
 	//TODO move layout editor config stuff to separate config and make it editable via Menu Bar Tab in Editor
 
 	//TODO add opacity support for title screen deep cuz elements (splash, logo, branding, realms icon, forge stuff)
 
-	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
+	//TODO add setAlpha() support to Vanilla slider widgets
+
+	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
 
 	//TODO label von custom buttons ist bei fade-in am Anfang kurz unsichtbar
 

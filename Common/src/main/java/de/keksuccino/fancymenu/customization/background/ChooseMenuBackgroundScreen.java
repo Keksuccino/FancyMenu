@@ -252,7 +252,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             if (backgroundType == NO_BACKGROUND_TYPE) {
                 return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(ChatFormatting.RED);
             }
-            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB()));
+            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB()));
         }
 
     }

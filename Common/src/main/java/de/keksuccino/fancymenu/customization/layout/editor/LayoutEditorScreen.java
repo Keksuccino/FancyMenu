@@ -44,6 +44,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 public class LayoutEditorScreen extends Screen implements IElementFactory {
 
@@ -114,14 +115,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 
 		this.serializeElementInstancesToLayoutInstance();
-
-		//Clear element lists
-		for (AbstractEditorElement e : this.getAllElements()) {
-			e.resetElementStates();
-		}
-		this.normalEditorElements.clear();
-		this.vanillaButtonEditorElements.clear();
-		this.deepEditorElements.clear();
 
 		this.constructElementInstances();
 
@@ -274,6 +267,14 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	}
 
 	protected void constructElementInstances() {
+
+		//Clear element lists
+		for (AbstractEditorElement e : this.getAllElements()) {
+			e.resetElementStates();
+		}
+		this.normalEditorElements.clear();
+		this.vanillaButtonEditorElements.clear();
+		this.deepEditorElements.clear();
 
 		Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
 		List<VanillaButtonElement> vanillaButtonElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
@@ -727,13 +728,16 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	}
 
 	@Override
-	public boolean keyPressed(int keycode, int $$1, int $$2) {
+	public boolean keyPressed(int keycode, int scancode, int $$2) {
 
 		if (PopupHandler.isPopupActive()) return false;
 
+		String key = GLFW.glfwGetKeyName(keycode, scancode);
+		if (key == null) key = "";
+
 		//ARROW LEFT
 		if (keycode == InputConstants.KEY_LEFT) {
-			this.history.saveSnapshot(this.history.createSnapshot());
+			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
 					e.element.baseX -= 1;
@@ -746,7 +750,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//ARROW UP
 		if (keycode == InputConstants.KEY_UP) {
-			this.history.saveSnapshot(this.history.createSnapshot());
+			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
 					e.element.baseY -= 1;
@@ -759,7 +763,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//ARROW RIGHT
 		if (keycode == InputConstants.KEY_RIGHT) {
-			this.history.saveSnapshot(this.history.createSnapshot());
+			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
 					e.element.baseX += 1;
@@ -772,7 +776,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		//ARROW DOWN
 		if (keycode == InputConstants.KEY_DOWN) {
-			this.history.saveSnapshot(this.history.createSnapshot());
+			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
 					e.element.baseY += 1;
@@ -784,56 +788,42 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 
 		//CTRL + A
-		if ((keycode == InputConstants.KEY_A) && hasControlDown()) {
+		if (key.equals("a") && hasControlDown()) {
 			this.selectAllElements();
 		}
 
 		//CTRL + C
-		if ((keycode == InputConstants.KEY_C) && hasControlDown()) {
+		if (key.equals("c") && hasControlDown()) {
 			this.copyElementsToClipboard(this.getSelectedElements().toArray(new AbstractEditorElement[0]));
 			return true;
 		}
 
 		//CTRL + V
-		if ((keycode == InputConstants.KEY_V) && hasControlDown()) {
+		if (key.equals("v") && hasControlDown()) {
 			this.pasteElementsFromClipboard();
 			return true;
 		}
 
 		//CTRL + S
-		if ((keycode == InputConstants.KEY_S) && hasControlDown()) {
+		if (key.equals("s") && hasControlDown()) {
 			this.saveLayout();
 			return true;
 		}
 
-		//TODO remove debug
-		LOGGER.info("KEY PRESSED: " + keycode);
-
-
-		//TODO FIX: undo/redo shortcuts gehen nicht richtig
-		// - ctrl + Y geht nicht wegen Chrome
-		// - sonst nur tasten vertautscht wegen QWERTZ
-		// - checken, ob irgendwie abgefragt werden kann, welcher keycode wirklich Y/Z ist (InputConstants.getKey() nutzen -> siehe KeyBindsScreen)
-
-
 		//CTRL + Z
-		if ((keycode == InputConstants.KEY_Z) && hasControlDown()) {
-			//TODO remove debug
-			LOGGER.info("KEY TRIGGER STEP BACK");
+		if (key.equals("z") && hasControlDown()) {
 			this.history.stepBack();
 			return true;
 		}
 
 		//CTRL + Y
-		if ((keycode == InputConstants.KEY_Y) && hasControlDown()) {
-			//TODO remove debug
-			LOGGER.info("KEY TRIGGER STEP FORWARD");
+		if (key.equals("y") && hasControlDown()) {
 			this.history.stepForward();
 			return true;
 		}
 
 		//CTRL + G
-		if ((keycode == InputConstants.KEY_G) && hasControlDown()) {
+		if (key.equals("g") && hasControlDown()) {
 			try {
 				FancyMenu.getConfig().setValue("showgrid", !FancyMenu.getConfig().getOrDefault("showgrid", false));
 			} catch (Exception e) {
@@ -851,7 +841,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			return true;
 		}
 
-		return super.keyPressed(keycode, $$1, $$2);
+		return super.keyPressed(keycode, scancode, $$2);
 
 	}
 

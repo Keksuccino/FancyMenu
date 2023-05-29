@@ -77,7 +77,7 @@ public class TextEditorScreen extends Screen {
     public Color screenBackgroundColor = UIBase.SCREEN_BACKGROUND_COLOR;
     public Color editorAreaBorderColor = UIBase.ELEMENT_BORDER_COLOR_IDLE;
     public Color editorAreaBackgroundColor = UIBase.AREA_BACKGROUND_COLOR;
-    public Color textColor = UIBase.TEXT_COLOR_GRAY_1;
+    public Color textColor = UIBase.TEXT_COLOR_GREY_1;
     public Color focusedLineColor = UIBase.ENTRY_COLOR_FOCUSED;
     public Color scrollGrabberIdleColor = UIBase.SCROLL_GRABBER_IDLE_COLOR;
     public Color scrollGrabberHoverColor = UIBase.SCROLL_GRABBER_HOVER_COLOR;
@@ -89,7 +89,7 @@ public class TextEditorScreen extends Screen {
     public Color placeholderEntryBackgroundColorHover = UIBase.ENTRY_COLOR_FOCUSED;
     public Color placeholderEntryDotColorPlaceholder = UIBase.LISTING_DOT_BLUE;
     public Color placeholderEntryDotColorCategory = UIBase.LISTING_DOT_RED;
-    public Color placeholderEntryLabelColor = UIBase.TEXT_COLOR_GRAY_1;
+    public Color placeholderEntryLabelColor = UIBase.TEXT_COLOR_GREY_1;
     public Color placeholderEntryBackToCategoriesLabelColor = UIBase.TEXT_COLOR_ORANGE_1;
     public int currentLineWidth;
     public int lastTickFocusedLineIndex = -1;

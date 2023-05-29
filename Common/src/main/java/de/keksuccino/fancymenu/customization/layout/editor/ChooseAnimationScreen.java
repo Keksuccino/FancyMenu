@@ -199,7 +199,7 @@ public class ChooseAnimationScreen extends Screen {
         public String animation;
 
         public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())), LISTING_DOT_BLUE, onClick);
             this.animation = animation;
         }
 

@@ -1176,5 +1176,11 @@
   "fancymenu.elements.vanilla_button.copyright.unable_to_move": "§cYou can't move the Copyright button out-of-screen!",
   "fancymenu.elements.advanced_sizing.enabled_notification": "§6Advanced Sizing is enabled!",
   "fancymenu.elements.advanced_positioning.enabled_notification": "§6Advanced Positioning is enabled!",
-  "fancymenu.elements.multiselect.loading_requirements.warning.override": "§c§lOverride Loading Requirements?\n\nThe selected elements have different loading requirements!\nAll of their loading requirements will get §coverridden§r!\n\nContinue?"
+  "fancymenu.elements.multiselect.loading_requirements.warning.override": "§c§lOverride Loading Requirements?\n\nThe selected elements have different loading requirements!\nAll of their loading requirements will get §coverridden§r!\n\nContinue?",
+  "fancymenu.guicomponents.ok": "OK",
+  "fancymenu.ui.filechooser.choose.file": "Choose File",
+  "fancymenu.ui.filechooser.files": "Files",
+  "fancymenu.ui.filechooser.preview": "Preview",
+  "fancymenu.ui.filechooser.go_up": "Go Up",
+  "fancymenu.ui.filechooser.no_preview": "No preview available."
 }

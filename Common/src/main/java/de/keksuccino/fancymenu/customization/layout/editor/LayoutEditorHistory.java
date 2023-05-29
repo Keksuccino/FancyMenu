@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.customization.layout.Layout;
-import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -26,8 +25,6 @@ public class LayoutEditorHistory {
 	}
 	
 	public void saveSnapshot(Snapshot snap) {
-		//TODO remove debug
-		LOGGER.info("SAVING SNAPSHOT");
 		if (!this.preventSnapshotSaving) {
 			if (this.current < 0) {
 				this.history.clear();
@@ -56,16 +53,12 @@ public class LayoutEditorHistory {
 		return new Snapshot(editor);
 	}
 
-	public void setPreventSnapshotSaving(boolean b) {
-		this.preventSnapshotSaving = b;
+	public void setPreventSnapshotSaving(boolean preventSaving) {
+		this.preventSnapshotSaving = preventSaving;
 	}
-	
+
 	public void stepBack() {
 		if (this.current > -1) {
-
-			//TODO remove debug
-			LOGGER.info("STEP BACK");
-
 			if (this.current <= this.history.size()-1) {
 
 				Snapshot snap = this.history.get(this.current);
@@ -74,36 +67,40 @@ public class LayoutEditorHistory {
 
 				snap.preSnapshotState = this.createSnapshot();
 
-				LayoutEditorScreen newEditor = new LayoutEditorScreen(this.editor.layoutTargetScreen, snap.snapshot);
-				newEditor.history = this;
-				this.editor = newEditor;
-				Minecraft.getInstance().setScreen(newEditor);
+				this.editor.layout = snap.snapshot;
+				this.editor.isMouseSelection = false;
+				this.editor.preDragElementSnapshot = null;
+				this.editor.rightClickMenu.closeMenu();
+				if (this.editor.activeElementContextMenu != null) {
+					this.editor.activeElementContextMenu.closeMenu();
+					this.editor.activeElementContextMenu = null;
+				}
+				this.editor.constructElementInstances();
 
 			}
-			
 		}
 	}
-	
+
 	public void stepForward() {
 		if (this.current >= -1) {
-
-			//TODO remove debug
-			LOGGER.info("STEP FORWARD");
-
 			if (this.current < this.history.size()-1) {
 
 				this.current++;
 
 				Snapshot snap = this.history.get(this.current).preSnapshotState;
 				if (snap != null) {
-					LayoutEditorScreen newEditor = new LayoutEditorScreen(this.editor.layoutTargetScreen, snap.snapshot);
-					newEditor.history = this;
-					this.editor = newEditor;
-					Minecraft.getInstance().setScreen(newEditor);
+					this.editor.layout = snap.snapshot;
+					this.editor.isMouseSelection = false;
+					this.editor.preDragElementSnapshot = null;
+					this.editor.rightClickMenu.closeMenu();
+					if (this.editor.activeElementContextMenu != null) {
+						this.editor.activeElementContextMenu.closeMenu();
+						this.editor.activeElementContextMenu = null;
+					}
+					this.editor.constructElementInstances();
 				}
 
 			}
-
 		}
 	}
 	
@@ -113,8 +110,6 @@ public class LayoutEditorHistory {
 		public Snapshot preSnapshotState = null;
 		
 		public Snapshot(LayoutEditorScreen editor) {
-			//TODO remove debug
-			LOGGER.info("CREATING NEW SNAPSHOT");
 			editor.serializeElementInstancesToLayoutInstance();
 			this.snapshot = editor.layout.copy();
 		}

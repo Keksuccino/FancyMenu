@@ -186,7 +186,7 @@ public class ChooseSlideshowScreen extends Screen {
         public String slideshow;
 
         public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())), LISTING_DOT_BLUE, onClick);
             this.slideshow = slideshow;
         }
 

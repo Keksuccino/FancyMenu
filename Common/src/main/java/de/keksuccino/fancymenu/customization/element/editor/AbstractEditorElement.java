@@ -9,10 +9,12 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
@@ -22,6 +24,7 @@ import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.utils.ListUtils;
@@ -769,6 +772,40 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	//TODO add method to build FileChooser entries
+
+	protected ContextMenu.ClickableContextMenuEntry addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, @Nullable List<String> allowedFileExtensions, @Nullable String rootDirectory) {
+		return addTo.addClickableEntry(entryIdentifier, label, (menu, entry) ->
+		{
+			if (entry.getStackMeta().isFirstInStack()) {
+				List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
+
+				FileChooserScreen fileChooser = FileChooserScreen.createParentless(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
+					//TODO <---------------------
+				});
+
+				TextEditorScreen s = new TextEditorScreen(label, this.editor, inputCharacterFilter, (call) -> {
+					if (call != null) {
+						this.editor.history.saveSnapshot();
+						for (AbstractEditorElement e : selectedElements) {
+							targetFieldSetter.accept(e, call);
+						}
+					}
+					menu.closeMenu();
+				});
+				s.multilineMode = multiLineInput;
+				s.setPlaceholdersAllowed(allowPlaceholders);
+				List<String> targetValuesOfSelected = new ArrayList<>();
+				for (AbstractEditorElement e : selectedElements) {
+					targetValuesOfSelected.add(targetFieldGetter.get(e));
+				}
+				if (!entry.getStackMeta().isPartOfStack() || ListUtils.allInListEqual(targetValuesOfSelected)) {
+					String text = targetFieldGetter.get(this);
+					if (text != null) s.setText(text);
+				}
+				Minecraft.getInstance().setScreen(s);
+			}
+		});
+	}
 
 	protected ContextMenu.ClickableContextMenuEntry addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable CharacterFilter inputCharacterFilter, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label) {
 		return addTo.addClickableEntry(entryIdentifier, label, (menu, entry) ->

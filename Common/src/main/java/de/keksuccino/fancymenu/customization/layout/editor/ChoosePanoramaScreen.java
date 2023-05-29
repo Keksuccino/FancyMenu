@@ -154,7 +154,7 @@ public class ChoosePanoramaScreen extends Screen {
         public String panorama;
 
         public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GRAY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())), LISTING_DOT_BLUE, onClick);
             this.panorama = panorama;
         }
 

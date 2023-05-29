@@ -28,7 +28,7 @@ public class UIBase extends GuiComponent {
 	public static final Color SIDE_BAR_COLOR = new Color(49, 51, 53);
 	public static final Color TEXT_COLOR_RED_1 = new Color(237, 69, 69);
 	public static final Color TEXT_COLOR_ORANGE_1 = new Color(170, 130, 63);
-	public static final Color TEXT_COLOR_GRAY_1 = new Color(158, 170, 184);
+	public static final Color TEXT_COLOR_GREY_1 = new Color(158, 170, 184);
 	public static final Color TEXT_COLOR_GREY_2 = new Color(91, 92, 94);
 	public static final Color TEXT_COLOR_GREY_3 = new Color(137, 147, 150);
 	public static final Color TEXT_COLOR_GREY_4 = new Color(206, 221, 237);
