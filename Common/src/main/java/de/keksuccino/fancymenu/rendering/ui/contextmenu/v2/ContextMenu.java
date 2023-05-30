@@ -591,6 +591,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.scale = menusToStack[0].scale;
             stacked.subMenuOpeningSide = menusToStack[0].subMenuOpeningSide;
             stacked.shadow = menusToStack[0].shadow;
+            stacked.applyDefaultTooltipStyle = menusToStack[0].applyDefaultTooltipStyle;
 
             for (ContextMenuEntry ignoredEntry : menusToStack[0].getStackableEntries()) {
 
@@ -986,6 +987,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected ContextMenu subContextMenu;
         protected boolean subMenuHoverTicked = false;
         protected boolean subMenuHoveredAfterOpen = false;
+        protected long parentMenuHoverStartTime = -1;
         protected long entryHoverStartTime = -1;
         protected long entryNotHoveredStartTime = -1;
 
@@ -993,6 +995,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             super(identifier, parent, label, ((menu, entry) -> {}));
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
+            this.subContextMenu.applyDefaultTooltipStyle = parent.applyDefaultTooltipStyle;
             this.clickAction = (menu, entry) -> this.openSubMenu();
         }
 
@@ -1041,7 +1044,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 }
             }
             if (this.parent.isHovered() && !this.isHovered() && this.subContextMenu.isOpen() && !this.subContextMenu.isUserNavigatingInMenu() && this.subMenuHoveredAfterOpen) {
-                this.subContextMenu.closeMenu();
+                if (this.parentMenuHoverStartTime == -1) {
+                    this.parentMenuHoverStartTime = System.currentTimeMillis();
+                }
+                if ((this.parentMenuHoverStartTime + 400) < System.currentTimeMillis()) {
+                    this.subContextMenu.closeMenu();
+                }
+            } else {
+                this.parentMenuHoverStartTime = -1;
             }
             //Open sub menu on entry hover
             if (this.isActive() && this.isHovered() && !this.parent.isSubMenuHovered()) {
@@ -1084,6 +1094,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             this.subContextMenu.parentEntry = null;
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
+            this.subContextMenu.applyDefaultTooltipStyle = this.parent.applyDefaultTooltipStyle;
         }
 
         @NotNull

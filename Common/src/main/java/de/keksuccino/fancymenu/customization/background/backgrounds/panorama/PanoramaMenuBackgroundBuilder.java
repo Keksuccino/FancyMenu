@@ -19,8 +19,8 @@ public class PanoramaMenuBackgroundBuilder extends MenuBackgroundBuilder<Panoram
     }
 
     @Override
-    public void buildNewOrEditInstance(@NotNull Screen currentScreen, @Nullable PanoramaMenuBackground backgroundToEdit, @NotNull Consumer<PanoramaMenuBackground> backgroundConsumer) {
-        ChoosePanoramaScreen s = new ChoosePanoramaScreen(currentScreen, (backgroundToEdit != null) ? backgroundToEdit.panoramaName : null, (call) -> {
+    public void buildNewOrEditInstance(Screen currentScreen, @Nullable PanoramaMenuBackground backgroundToEdit, @NotNull Consumer<PanoramaMenuBackground> backgroundConsumer) {
+        ChoosePanoramaScreen s = new ChoosePanoramaScreen((backgroundToEdit != null) ? backgroundToEdit.panoramaName : null, (call) -> {
             if (call != null) {
                 if (backgroundToEdit != null) {
                     backgroundToEdit.panoramaName = call;
@@ -33,6 +33,7 @@ public class PanoramaMenuBackgroundBuilder extends MenuBackgroundBuilder<Panoram
             } else {
                 backgroundConsumer.accept(backgroundToEdit);
             }
+            Minecraft.getInstance().setScreen(currentScreen);
         });
         Minecraft.getInstance().setScreen(s);
     }

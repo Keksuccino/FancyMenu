@@ -61,4 +61,14 @@ public class WidgetMeta {
 		return "" + this.getLongIdentifier();
 	}
 
+	@NotNull
+	public String getLocator() {
+		return this.screen.getClass().getName() + ":" + this.getIdentifier();
+	}
+
+	@NotNull
+	public String getLongLocator() {
+		return this.screen.getClass().getName() + ":" + this.getLongIdentifier();
+	}
+
 }

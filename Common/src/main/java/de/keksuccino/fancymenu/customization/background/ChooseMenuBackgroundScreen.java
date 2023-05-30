@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.rendering.ui.widget.Button;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -30,7 +29,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
     protected static final MenuBackgroundBuilder<ImageMenuBackground> NO_BACKGROUND_TYPE = new ImageMenuBackgroundBuilder();
     public static final MenuBackground NO_BACKGROUND = new ImageMenuBackground(NO_BACKGROUND_TYPE);
 
-    protected Screen parentScreen;
     protected MenuBackgroundBuilder<?> backgroundType;
     protected MenuBackground background;
     protected Consumer<MenuBackground> callback;
@@ -41,11 +39,10 @@ public class ChooseMenuBackgroundScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public ChooseMenuBackgroundScreen(@Nullable Screen parentScreen, @Nullable MenuBackground backgroundToEdit, boolean addResetBackgroundEntry, @NotNull Consumer<MenuBackground> callback) {
+    public ChooseMenuBackgroundScreen(@Nullable MenuBackground backgroundToEdit, boolean addResetBackgroundEntry, @NotNull Consumer<MenuBackground> callback) {
 
         super(Component.translatable("fancymenu.menu_background.choose"));
 
-        this.parentScreen = parentScreen;
         this.background = backgroundToEdit;
         this.callback = callback;
         this.setContentOfBackgroundTypeList(addResetBackgroundEntry);
@@ -73,7 +70,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         this.configureButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), true, (button) -> {
             if (this.backgroundType != null) {
-                this.backgroundType.buildNewOrEditInstanceInternal(this.parentScreen, this.background, (back) -> {
+                this.backgroundType.buildNewOrEditInstanceInternal(this, this.background, (back) -> {
                     if (back != null) {
                         this.background = back;
                     }
@@ -94,7 +91,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.configureButton);
 
         this.doneButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.background);
         }) {
             @Override
@@ -114,7 +110,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(null);
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
@@ -132,7 +127,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(null);
     }
 
@@ -229,7 +223,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         if (button == InputConstants.KEY_ENTER) {
             if (this.background != null) {
-                Minecraft.getInstance().setScreen(this.parentScreen);
                 this.callback.accept(this.background);
                 return true;
             }

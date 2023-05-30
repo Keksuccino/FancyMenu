@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 
 public class ChoosePanoramaScreen extends Screen {
 
-    protected Screen parentScreen;
     protected Consumer<String> callback;
     protected String selectedPanoramaName = null;
 
@@ -34,11 +33,10 @@ public class ChoosePanoramaScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public ChoosePanoramaScreen(@Nullable Screen parentScreen, @Nullable String preSelectedPanorama, @NotNull Consumer<String> callback) {
+    public ChoosePanoramaScreen(@Nullable String preSelectedPanorama, @NotNull Consumer<String> callback) {
 
         super(Component.translatable("fancymenu.panorama.choose"));
 
-        this.parentScreen = parentScreen;
         this.callback = callback;
         this.updateSlideshowScrollAreaContent();
 
@@ -53,7 +51,6 @@ public class ChoosePanoramaScreen extends Screen {
         }
 
         this.doneButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.selectedPanoramaName);
         }) {
             @Override
@@ -70,7 +67,6 @@ public class ChoosePanoramaScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(null);
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
@@ -79,7 +75,6 @@ public class ChoosePanoramaScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(null);
     }
 
@@ -132,6 +127,10 @@ public class ChoosePanoramaScreen extends Screen {
         if (this.panoramaListScrollArea.getEntries().isEmpty()) {
             this.panoramaListScrollArea.addEntry(new TextScrollAreaEntry(this.panoramaListScrollArea, Component.translatable("fancymenu.panorama.choose.no_panoramas"), (entry) -> {}));
         }
+        int totalWidth = this.panoramaListScrollArea.getTotalEntryWidth();
+        for (ScrollAreaEntry e : this.panoramaListScrollArea.getEntries()) {
+            e.setWidth(totalWidth);
+        }
     }
 
     @Override
@@ -139,7 +138,6 @@ public class ChoosePanoramaScreen extends Screen {
 
         if (button == InputConstants.KEY_ENTER) {
             if (this.selectedPanoramaName != null) {
-                Minecraft.getInstance().setScreen(this.parentScreen);
                 this.callback.accept(this.selectedPanoramaName);
                 return true;
             }

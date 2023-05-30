@@ -35,7 +35,7 @@ public class FancyMenu {
 
 	//TODO add opacity support for title screen deep cuz elements (splash, logo, branding, realms icon, forge stuff)
 
-	//TODO add setAlpha() support to Vanilla slider widgets
+	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
 

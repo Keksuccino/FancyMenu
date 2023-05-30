@@ -23,7 +23,6 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.overlay.OverlayButton;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
@@ -407,11 +406,12 @@ public class LayoutEditorUI extends UIBase {
 
 			// SET BACKGROUND
 			menu.addClickableEntry("set_background", false, Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), null, Boolean.class, (entry, inherited, pass) -> {
-				ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(this.editor, this.editor.layout.menuBackground, true, (call) -> {
+				ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(this.editor.layout.menuBackground, true, (call) -> {
 					if (call != null) {
-						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
+						this.editor.history.saveSnapshot();
 						this.editor.layout.menuBackground = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
 					}
+					Minecraft.getInstance().setScreen(this.editor);
 				});
 				Minecraft.getInstance().setScreen(s);
 			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")));

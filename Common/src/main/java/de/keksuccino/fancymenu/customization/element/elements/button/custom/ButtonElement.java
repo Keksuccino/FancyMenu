@@ -23,6 +23,7 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -138,7 +139,9 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                                 if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
                                     ani.resetAnimation();
                                 }
-                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                                if (!this.getButton().isHoveredOrFocused()) {
+                                    VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                                }
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
@@ -146,7 +149,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                         if (back != null) {
                             if (this.button instanceof AdvancedButton) {
                                 ((AdvancedButton)this.button).setBackgroundNormal(back.getResourceLocation());
-                            } else {
+                            } else if (!this.getButton().isHoveredOrFocused()) {
                                 VanillaButtonHandler.setRenderTickBackgroundTexture(this.button, back.getResourceLocation());
                             }
                         }
@@ -168,9 +171,16 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                                 }
                                 ani.resetAnimation();
                             }
-                            VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                            if (!this.getButton().isHoveredOrFocused()) {
+                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                            }
                         }
                     }
+                }
+            } else {
+                if (this.button instanceof AdvancedButton) {
+                    ((AdvancedButton) this.button).setBackgroundNormal((ResourceLocation) null);
+                    ((AdvancedButton) this.button).setBackgroundNormal((IAnimationRenderer) null);
                 }
             }
             if (this.backgroundTextureHover != null) {
@@ -220,6 +230,11 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                             VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
                         }
                     }
+                }
+            } else {
+                if (this.button instanceof AdvancedButton) {
+                    ((AdvancedButton) this.button).setBackgroundHover((ResourceLocation) null);
+                    ((AdvancedButton) this.button).setBackgroundHover((IAnimationRenderer) null);
                 }
             }
         }

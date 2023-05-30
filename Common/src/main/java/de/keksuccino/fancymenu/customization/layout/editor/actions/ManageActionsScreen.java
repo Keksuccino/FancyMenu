@@ -25,7 +25,6 @@ import java.util.function.Consumer;
 
 public class ManageActionsScreen extends Screen {
 
-    protected Screen parentScreen;
     protected List<ActionInstance> instances;
 
     protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -37,11 +36,10 @@ public class ManageActionsScreen extends Screen {
     protected AdvancedButton removeButton;
     protected AdvancedButton doneButton;
 
-    public ManageActionsScreen(@Nullable Screen parentScreen, @NotNull List<ActionInstance> instances, @NotNull Consumer<List<ActionInstance>> callback) {
+    public ManageActionsScreen(@NotNull List<ActionInstance> instances, @NotNull Consumer<List<ActionInstance>> callback) {
 
         super(Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.manage")));
 
-        this.parentScreen = parentScreen;
         this.callback = callback;
         this.instances = instances;
         this.updateActionInstanceScrollArea(false);
@@ -76,7 +74,7 @@ public class ManageActionsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
                     this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -108,7 +106,7 @@ public class ManageActionsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
                     this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -131,7 +129,7 @@ public class ManageActionsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
                     this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -158,7 +156,7 @@ public class ManageActionsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isInstanceSelected()) {
                     this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -173,7 +171,6 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
         this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instances);
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
@@ -194,7 +191,6 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(this.instances);
     }
 
@@ -282,8 +278,8 @@ public class ManageActionsScreen extends Screen {
         public final int lineHeight;
         public Font font = Minecraft.getInstance().font;
 
-        private MutableComponent displayNameComponent;
-        private MutableComponent valueComponent;
+        private final MutableComponent displayNameComponent;
+        private final MutableComponent valueComponent;
 
         public ActionInstanceEntry(ScrollArea parent, ActionInstance instance, int lineHeight) {
 

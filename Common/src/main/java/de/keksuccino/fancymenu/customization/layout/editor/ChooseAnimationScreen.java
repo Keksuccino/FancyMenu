@@ -18,7 +18,6 @@ import de.keksuccino.fancymenu.rendering.ui.widget.Button;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -29,7 +28,6 @@ import java.util.function.Consumer;
 
 public class ChooseAnimationScreen extends Screen {
 
-    protected Screen parentScreen;
     protected Consumer<String> callback;
     protected String selectedAnimationName = null;
     protected IAnimationRenderer selectedAnimation = null;
@@ -38,11 +36,10 @@ public class ChooseAnimationScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public ChooseAnimationScreen(@Nullable Screen parentScreen, @Nullable String preSelectedAnimation, @NotNull Consumer<String> callback) {
+    public ChooseAnimationScreen(@Nullable String preSelectedAnimation, @NotNull Consumer<String> callback) {
 
         super(Component.translatable("fancymenu.animation.choose"));
 
-        this.parentScreen = parentScreen;
         this.callback = callback;
         this.updateAnimationScrollAreaContent();
 
@@ -57,7 +54,6 @@ public class ChooseAnimationScreen extends Screen {
         }
 
         this.doneButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.selectedAnimationName);
         }) {
             @Override
@@ -74,7 +70,6 @@ public class ChooseAnimationScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(null);
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
@@ -83,7 +78,6 @@ public class ChooseAnimationScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(null);
     }
 
@@ -113,7 +107,7 @@ public class ChooseAnimationScreen extends Screen {
             int aniW = (this.width / 2) - 40;
             int aniH = this.height / 2;
             AspectRatio ratio = new AspectRatio(this.selectedAnimation.getWidth(), this.selectedAnimation.getHeight());
-            int[] size = ratio.getAspectRatioSizeByMinimumSize(aniW, aniH);
+            int[] size = ratio.getAspectRatioSizeByMaximumSize(aniW, aniH);
             aniW = size[0];
             aniH = size[1];
             int aniX = this.width - 20 - aniW;
@@ -177,6 +171,10 @@ public class ChooseAnimationScreen extends Screen {
         if (this.animationListScrollArea.getEntries().isEmpty()) {
             this.animationListScrollArea.addEntry(new TextScrollAreaEntry(this.animationListScrollArea, Component.translatable("fancymenu.animation.choose.no_animations"), (entry) -> {}));
         }
+        int totalWidth = this.animationListScrollArea.getTotalEntryWidth();
+        for (ScrollAreaEntry e : this.animationListScrollArea.getEntries()) {
+            e.setWidth(totalWidth);
+        }
     }
 
     @Override
@@ -184,7 +182,6 @@ public class ChooseAnimationScreen extends Screen {
 
         if (button == InputConstants.KEY_ENTER) {
             if (this.selectedAnimationName != null) {
-                Minecraft.getInstance().setScreen(this.parentScreen);
                 this.callback.accept(this.selectedAnimationName);
                 return true;
             }

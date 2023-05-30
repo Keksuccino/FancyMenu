@@ -23,16 +23,16 @@ public class Test {
     @EventListener(priority = -2000)
     public void onInit(InitOrResizeScreenCompletedEvent e) {
 
-        if (!(e.getScreen() instanceof TitleScreen)) return;
-
-        e.addRenderableWidget(new Button(20, 20, 100, 20, "Open File Chooser", (button) -> {
-            FileChooserScreen s = FileChooserScreen.create(e.getScreen(), FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
-                if (call != null) {
-                    LOGGER.info("RETURNED FILE: " + call.getAbsolutePath());
-                }
-            });
-            Minecraft.getInstance().setScreen(s);
-        }));
+//        if (!(e.getScreen() instanceof TitleScreen)) return;
+//
+//        e.addRenderableWidget(new Button(20, 20, 100, 20, "Open File Chooser", (button) -> {
+//            FileChooserScreen s = new FileChooserScreen(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
+//                if (call != null) {
+//                    LOGGER.info("RETURNED FILE: " + call.getAbsolutePath());
+//                }
+//            });
+//            Minecraft.getInstance().setScreen(s);
+//        }));
 
     }
 

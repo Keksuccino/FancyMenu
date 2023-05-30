@@ -45,6 +45,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
@@ -718,14 +719,7 @@ public class CustomizationOverlayUI extends UIBase {
 			for (WidgetMeta d : buttons) {
 				if (d.getWidget().isHoveredOrFocused()) {
 					isButtonHovered = true;
-					long id = d.getLongIdentifier();
-					String idString = I18n.get("fancymenu.overlay.buttoninfo.idnotfound");
-					if (id >= 0) {
-						idString = String.valueOf(id);
-					}
-					if (d.getCompatibilityIdentifier() != null) {
-						idString = d.getCompatibilityIdentifier();
-					}
+					String idString = d.getIdentifier();
 					List<String> info = new ArrayList<>();
 					int width = Minecraft.getInstance().font.width(I18n.get("fancymenu.overlay.buttoninfo")) + 10;
 					long now = System.currentTimeMillis();
@@ -733,17 +727,17 @@ public class CustomizationOverlayUI extends UIBase {
 					info.add("§f" + I18n.get("fancymenu.guicomponents.width") + ": " + d.getWidget().getWidth());
 					info.add("§f" + I18n.get("fancymenu.guicomponents.height") + ": " + d.getWidget().getHeight());
 					info.add("§f" + I18n.get("fancymenu.overlay.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getWidget().getMessage().getString()));
-					info.add("");
-					if (lastButtonInfoRightClick + 2000 < now) {
-						info.add(I18n.get("fancymenu.helper.button_info.copy_locator"));
-					} else {
-						info.add(I18n.get("fancymenu.helper.button_info.copy_locator.copied"));
-					}
-					if (MouseInput.isRightMouseDown()) {
-						Screen current = Minecraft.getInstance().screen;
-						String locator = current.getClass().getName() + ":" + idString;
-						Minecraft.getInstance().keyboardHandler.setClipboard(locator);
-						lastButtonInfoRightClick = now;
+					if (d.getWidget() instanceof AbstractButton) {
+						info.add("");
+						if (lastButtonInfoRightClick + 2000 < now) {
+							info.add(I18n.get("fancymenu.helper.button_info.copy_locator"));
+						} else {
+							info.add(I18n.get("fancymenu.helper.button_info.copy_locator.copied"));
+						}
+						if (MouseInput.isRightMouseDown()) {
+							Minecraft.getInstance().keyboardHandler.setClipboard(d.getLocator());
+							lastButtonInfoRightClick = now;
+						}
 					}
 					for (String s : info) {
 						int i = Minecraft.getInstance().font.width(s) + 10;

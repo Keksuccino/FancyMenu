@@ -2,13 +2,14 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
+import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.Button;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,19 +40,14 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
         this.callback = callback;
 
         this.chooseImageButton = new Button(0, 0, 300, 20, Component.translatable("fancymenu.background.image.configure.choose_image"), true, (press) -> {
-            ChooseFilePopup p = new ChooseFilePopup((call) -> {
+            FileChooserScreen s = new FileChooserScreen(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
                 if (call != null) {
-                    if (call.replace(" ", "").length() > 0) {
-                        this.background.imagePath = call;
-                    } else {
-                        this.background.imagePath = null;
-                    }
+                    this.background.imagePath = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
                 }
-            }, "png", "jpg", "jpeg");
-            if (this.background.imagePath != null) {
-                p.setText(this.background.imagePath);
-            }
-            PopupHandler.displayPopup(p);
+                Minecraft.getInstance().setScreen(this);
+            });
+            s.setFileFilter(FileChooserScreen.IMAGE_FILE_FILTER);
+            Minecraft.getInstance().setScreen(s);
         });
         UIBase.applyDefaultButtonSkinTo(this.chooseImageButton);
 

@@ -297,13 +297,9 @@ public class ScreenCustomization {
 
 	private static void addDefaultScreenBlacklistRules() {
 
-//		addScreenBlacklistRule((screen) -> screen.equals(PlayerEntityRotationScreen.class.getName()));
 		addScreenBlacklistRule((screen) -> screen.startsWith("com.simibubi.create."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.panoramica."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("com.github.alexthe666.alexsmobs."));
-//		addScreenBlacklistRule((screen) -> screen.equals(TextEditorScreen.class.getName()));
-//		addScreenBlacklistRule((screen) -> screen.equals(ConfirmationScreen.class.getName()));
-//		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.customization.layout.editor."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("io.github.lgatodu47.screenshot_viewer."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("twilightforest."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.spiffyhud."));
@@ -313,8 +309,6 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.optifine"));
 		addScreenBlacklistRule((screen) -> screen.startsWith("slimeknights."));
 		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && FancyMenu.isOptiFineLoaded());
-//		addScreenBlacklistRule((screen) -> screen.equals(FMConfigScreen.class.getName()));
-//		addScreenBlacklistRule((screen) -> screen.equals(GameIntroScreen.class.getName()));
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBase.class.getName()));
 
 	}
@@ -341,7 +335,7 @@ public class ScreenCustomization {
 		}
 	}
 
-	public static String getAbsoluteGameDirectoryPath(String path) {
+	public static String getAbsoluteGameDirectoryPath(@NotNull String path) {
 		try {
 			path = path.replace("\\", "/");
 			String gameDir = FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/");
@@ -352,6 +346,14 @@ public class ScreenCustomization {
 			e.printStackTrace();
 		}
 		return path;
+	}
+
+	public static String getPathWithoutGameDirectory(@NotNull String path) {
+		Objects.requireNonNull(path, "Path cannot be NULL!");
+		File f = new File(getAbsoluteGameDirectoryPath(path));
+		String p = f.getAbsolutePath().replace(FancyMenu.getGameDirectory().getAbsolutePath(), "");
+		if (p.startsWith("/")) p = p.substring(1);
+		return p;
 	}
 
 	public static String generateUniqueIdentifier() {

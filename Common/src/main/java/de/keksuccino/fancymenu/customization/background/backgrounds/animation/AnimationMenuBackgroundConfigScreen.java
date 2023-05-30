@@ -38,10 +38,11 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         this.callback = callback;
 
         this.chooseAnimationButton = new Button(0, 0, 300, 20, Component.translatable("fancymenu.background.animation.configure.choose_animation"), true, (press) -> {
-            ChooseAnimationScreen s = new ChooseAnimationScreen(this, this.background.animationName, (call) -> {
+            ChooseAnimationScreen s = new ChooseAnimationScreen(this.background.animationName, (call) -> {
                 if (call != null) {
                     this.background.animationName = call;
                 }
+                Minecraft.getInstance().setScreen(this);
             });
             Minecraft.getInstance().setScreen(s);
         });

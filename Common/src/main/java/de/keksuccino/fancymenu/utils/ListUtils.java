@@ -26,7 +26,7 @@ public class ListUtils {
         }
         Object first = list.get(0);
         for (Object obj : list.subList(1, list.size())) {
-            if (!obj.equals(first)) return false;
+            if (!Objects.equals(obj, first)) return false;
         }
         return true;
     }

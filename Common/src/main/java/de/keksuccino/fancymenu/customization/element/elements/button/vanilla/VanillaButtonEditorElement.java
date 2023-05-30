@@ -7,6 +7,10 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,9 +31,25 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
 
         super.init();
 
-        //TODO set "Change Label" entry to inactive if button is Copyright button
+        this.rightClickMenu.removeEntry("manage_actions");
+        this.rightClickMenu.removeEntry("button_separator_1");
 
-        //TODO entries adden
+        if (this.isCopyrightButton()) {
+            this.rightClickMenu.removeEntry("button_separator_2");
+            this.rightClickMenu.removeEntry("edit_label");
+            this.rightClickMenu.removeEntry("edit_hover_label");
+        }
+
+        if (this.getButtonElement().getButton() instanceof AbstractButton) {
+
+            this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_button_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu, entry) ->
+                    {
+                        Minecraft.getInstance().keyboardHandler.setClipboard(((VanillaButtonElement)this.element).widgetMeta.getLocator());
+                        menu.closeMenu();
+                    })
+                    .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")));
+
+        }
 
     }
 

@@ -1,25 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.elements.ChooseFilePopup;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
-import java.io.File;
 
 public class PlayerEntityEditorElement extends AbstractEditorElement {
 

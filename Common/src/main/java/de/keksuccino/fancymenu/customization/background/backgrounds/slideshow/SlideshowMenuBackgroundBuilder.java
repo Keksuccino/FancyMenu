@@ -19,8 +19,8 @@ public class SlideshowMenuBackgroundBuilder extends MenuBackgroundBuilder<Slides
     }
 
     @Override
-    public void buildNewOrEditInstance(@NotNull Screen currentScreen, @Nullable SlideshowMenuBackground backgroundToEdit, @NotNull Consumer<SlideshowMenuBackground> backgroundConsumer) {
-        ChooseSlideshowScreen s = new ChooseSlideshowScreen(currentScreen, (backgroundToEdit != null) ? backgroundToEdit.slideshowName : null, (call) -> {
+    public void buildNewOrEditInstance(Screen currentScreen, @Nullable SlideshowMenuBackground backgroundToEdit, @NotNull Consumer<SlideshowMenuBackground> backgroundConsumer) {
+        ChooseSlideshowScreen s = new ChooseSlideshowScreen((backgroundToEdit != null) ? backgroundToEdit.slideshowName : null, (call) -> {
             if (call != null) {
                 if (backgroundToEdit != null) {
                     backgroundToEdit.slideshowName = call;
@@ -33,6 +33,7 @@ public class SlideshowMenuBackgroundBuilder extends MenuBackgroundBuilder<Slides
             } else {
                 backgroundConsumer.accept(backgroundToEdit);
             }
+            Minecraft.getInstance().setScreen(currentScreen);
         });
         Minecraft.getInstance().setScreen(s);
     }

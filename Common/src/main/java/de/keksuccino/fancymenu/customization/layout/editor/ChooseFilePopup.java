@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.layout.editor.elements;
+package de.keksuccino.fancymenu.customization.layout.editor;
 
 import java.awt.Color;
 import java.io.File;

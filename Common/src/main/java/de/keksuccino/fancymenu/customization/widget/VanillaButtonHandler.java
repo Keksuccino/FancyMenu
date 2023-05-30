@@ -88,9 +88,21 @@ public class VanillaButtonHandler {
         }
         if ((backgroundTexture == null) && (backgroundAnimation != null)) {
             boolean loop = backgroundAnimation.animationRenderer.isGettingLooped();
+            int aw = backgroundAnimation.animationRenderer.getWidth();
+            int ah = backgroundAnimation.animationRenderer.getHeight();
+            int ax = backgroundAnimation.animationRenderer.getPosX();
+            int ay = backgroundAnimation.animationRenderer.getPosY();
+            backgroundAnimation.animationRenderer.setWidth(w.getWidth());
+            backgroundAnimation.animationRenderer.setHeight(w.getHeight());
+            backgroundAnimation.animationRenderer.setPosX(w.x);
+            backgroundAnimation.animationRenderer.setPosY(w.y);
             backgroundAnimation.animationRenderer.setOpacity(backgroundAnimation.opacity);
             backgroundAnimation.animationRenderer.setLooped(backgroundAnimation.loop);
             backgroundAnimation.animationRenderer.render(e.getPoseStack());
+            backgroundAnimation.animationRenderer.setWidth(aw);
+            backgroundAnimation.animationRenderer.setHeight(ah);
+            backgroundAnimation.animationRenderer.setPosX(ax);
+            backgroundAnimation.animationRenderer.setPosY(ay);
             backgroundAnimation.animationRenderer.setOpacity(1.0F);
             backgroundAnimation.animationRenderer.setLooped(loop);
         }

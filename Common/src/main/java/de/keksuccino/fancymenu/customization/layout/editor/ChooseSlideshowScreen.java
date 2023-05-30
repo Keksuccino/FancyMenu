@@ -17,7 +17,6 @@ import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.Button;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -28,7 +27,6 @@ import java.util.function.Consumer;
 
 public class ChooseSlideshowScreen extends Screen {
 
-    protected Screen parentScreen;
     protected Consumer<String> callback;
     protected String selectedSlideshowName = null;
     protected ExternalTextureSlideshowRenderer selectedSlideshow = null;
@@ -37,11 +35,10 @@ public class ChooseSlideshowScreen extends Screen {
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
 
-    public ChooseSlideshowScreen(@Nullable Screen parentScreen, @Nullable String preSelectedSlideshow, @NotNull Consumer<String> callback) {
+    public ChooseSlideshowScreen(@Nullable String preSelectedSlideshow, @NotNull Consumer<String> callback) {
 
         super(Component.translatable("fancymenu.slideshow.choose"));
 
-        this.parentScreen = parentScreen;
         this.callback = callback;
         this.updateSlideshowScrollAreaContent();
 
@@ -56,7 +53,6 @@ public class ChooseSlideshowScreen extends Screen {
         }
 
         this.doneButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.selectedSlideshowName);
         }) {
             @Override
@@ -73,7 +69,6 @@ public class ChooseSlideshowScreen extends Screen {
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
-            Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(null);
         });
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
@@ -82,7 +77,6 @@ public class ChooseSlideshowScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(this.parentScreen);
         this.callback.accept(null);
     }
 
@@ -112,7 +106,7 @@ public class ChooseSlideshowScreen extends Screen {
             int slideW = (this.width / 2) - 40;
             int slideH = this.height / 2;
             AspectRatio ratio = new AspectRatio(this.selectedSlideshow.getImageWidth(), this.selectedSlideshow.getImageHeight());
-            int[] size = ratio.getAspectRatioSizeByMinimumSize(slideW, slideH);
+            int[] size = ratio.getAspectRatioSizeByMaximumSize(slideW, slideH);
             slideW = size[0];
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
@@ -164,6 +158,10 @@ public class ChooseSlideshowScreen extends Screen {
         if (this.slideshowListScrollArea.getEntries().isEmpty()) {
             this.slideshowListScrollArea.addEntry(new TextScrollAreaEntry(this.slideshowListScrollArea, Component.translatable("fancymenu.slideshow.choose.no_slideshows"), (entry) -> {}));
         }
+        int totalWidth = this.slideshowListScrollArea.getTotalEntryWidth();
+        for (ScrollAreaEntry e : this.slideshowListScrollArea.getEntries()) {
+            e.setWidth(totalWidth);
+        }
     }
 
     @Override
@@ -171,7 +169,6 @@ public class ChooseSlideshowScreen extends Screen {
 
         if (button == InputConstants.KEY_ENTER) {
             if (this.selectedSlideshowName != null) {
-                Minecraft.getInstance().setScreen(this.parentScreen);
                 this.callback.accept(this.selectedSlideshowName);
                 return true;
             }
