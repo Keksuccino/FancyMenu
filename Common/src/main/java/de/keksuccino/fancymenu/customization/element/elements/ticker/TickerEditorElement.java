@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -8,17 +7,13 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,102 +32,68 @@ public class TickerEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        //TODO add entries
+        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
+            List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
+            for (ActionExecutor.ActionContainer c : this.getTickerElement().actions) {
+                Action bac = ActionRegistry.getAction(c.action);
+                if (bac != null) {
+                    ManageActionsScreen.ActionInstance i = new ManageActionsScreen.ActionInstance(bac, c.value);
+                    l.add(i);
+                }
+            }
+            ManageActionsScreen s = new ManageActionsScreen(l, (call) -> {
+                if (call != null) {
+                    this.editor.history.saveSnapshot();
+                    this.getTickerElement().actions.clear();
+                    for (ManageActionsScreen.ActionInstance i : call) {
+                        this.getTickerElement().actions.add(new ActionExecutor.ActionContainer(i.action.getIdentifier(), i.value));
+                    }
+                }
+                Minecraft.getInstance().setScreen(this.editor);
+            });
+            Minecraft.getInstance().setScreen(s);
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.ticker.manage_actions.desc")));
 
-//        TickerElement i = ((TickerElement)this.element);
-//
-//        AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
-//            List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
-//            for (ActionExecutor.ActionContainer c : i.actions) {
-//                Action bac = ActionRegistry.getActionByName(c.action);
-//                if (bac != null) {
-//                    ManageActionsScreen.ActionInstance i2 = new ManageActionsScreen.ActionInstance(bac, c.value);
-//                    l.add(i2);
-//                }
-//            }
-//            ManageActionsScreen s = new ManageActionsScreen(this.editor, l, (call) -> {
-//                if (call != null) {
-//                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                    i.actions.clear();
-//                    for (ManageActionsScreen.ActionInstance i2 : call) {
-//                        i.actions.add(new ActionExecutor.ActionContainer(i2.action.getIdentifier(), i2.value));
-//                    }
-//                }
-//            });
-//            Minecraft.getInstance().setScreen(s);
-//        });
-//        manageActionsButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.elements.ticker.manage_actions.desc")));
-//        this.rightClickContextMenu.addContent(manageActionsButton);
-//
-//        AdvancedButton tickDelayButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.ticker.tick_delay"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0), I18n.get("fancymenu.customization.items.ticker.tick_delay"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
-//                if (call != null) {
-//                    if (MathUtils.isLong(call)) {
-//                        long delay = Long.parseLong(call);
-//                        if (i.tickDelayMs != delay) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.tickDelayMs = delay;
-//                    } else {
-//                        if (call.replace(" ", "").equals("")) {
-//                            if (i.tickDelayMs != 0) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//                            i.tickDelayMs = 0;
-//                        }
-//                    }
-//                }
-//            });
-//            p.setText("" + i.tickDelayMs);
-//            PopupHandler.displayPopup(p);
-//        });
-//        tickDelayButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.ticker.tick_delay.desc")));
-//        this.rightClickContextMenu.addContent(tickDelayButton);
-//
-//        AdvancedButton asyncButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
-//            if (i.isAsync) {
-//                i.isAsync = false;
-//            } else {
-//                i.isAsync = true;
-//            }
-//        }) {
-//            @Override
-//            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-//                if (i.isAsync) {
-//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.async.on"));
-//                } else {
-//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.async.off"));
-//                }
-//                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-//            }
-//        };
-//        asyncButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.ticker.async.desc")));
-//        this.rightClickContextMenu.addContent(asyncButton);
-//
-//        AdvancedButton oneTickModeButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
-//            if (i.tickMode == TickerElement.TickMode.NORMAL) {
-//                i.tickMode = TickerElement.TickMode.ONCE_PER_SESSION;
-//            } else if (i.tickMode == TickerElement.TickMode.ONCE_PER_SESSION){
-//                i.tickMode = TickerElement.TickMode.ON_MENU_LOAD;
-//            } else if (i.tickMode == TickerElement.TickMode.ON_MENU_LOAD) {
-//                i.tickMode = TickerElement.TickMode.NORMAL;
-//            }
-//        }) {
-//            @Override
-//            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-//                if (i.tickMode == TickerElement.TickMode.NORMAL) {
-//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.tick_mode.normal"));
-//                } else if (i.tickMode == TickerElement.TickMode.ONCE_PER_SESSION){
-//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.tick_mode.once_per_session"));
-//                } else if (i.tickMode == TickerElement.TickMode.ON_MENU_LOAD) {
-//                    this.setMessage(I18n.get("fancymenu.customization.items.ticker.tick_mode.on_menu_load"));
-//                }
-//                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-//            }
-//        };
-//        oneTickModeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.ticker.tick_mode.desc")));
-//        this.rightClickContextMenu.addContent(oneTickModeButton);
+        this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
+        this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay",
+                        consumes -> (consumes instanceof TickerEditorElement),
+                        0L,
+                        consumes -> ((TickerElement)consumes.element).tickDelayMs,
+                        (element, delay) -> ((TickerElement)element.element).tickDelayMs = Math.min(0L, delay),
+                        Component.translatable("fancymenu.customization.items.ticker.tick_delay"))
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_delay.desc")));
+
+        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_async",
+                        consumes -> (consumes instanceof TickerEditorElement),
+                        consumes -> ((TickerElement)consumes.element).isAsync,
+                        (element1, aBoolean) -> ((TickerElement)element1.element).isAsync = aBoolean,
+                        "fancymenu.customization.items.ticker.async")
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.async.desc")));
+
+        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
+                        ListUtils.build(TickerElement.TickMode.NORMAL, TickerElement.TickMode.ONCE_PER_SESSION, TickerElement.TickMode.ON_MENU_LOAD),
+                        consumes -> (consumes instanceof TickerEditorElement),
+                        consumes -> ((TickerElement)consumes.element).tickMode,
+                        (element, mode) -> ((TickerElement)element.element).tickMode = mode,
+                        (menu, entry, switcherValue) -> {
+                            if (switcherValue == TickerElement.TickMode.NORMAL) {
+                                return Component.translatable("fancymenu.customization.items.ticker.tick_mode.normal");
+                            }
+                            if (switcherValue == TickerElement.TickMode.ONCE_PER_SESSION) {
+                                return Component.translatable("fancymenu.customization.items.ticker.tick_mode.once_per_session");
+                            }
+                            return Component.translatable("fancymenu.customization.items.ticker.tick_mode.on_menu_load");
+                        })
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_mode.desc")));
+
+    }
+
+    protected TickerElement getTickerElement() {
+        return (TickerElement) this.element;
     }
 
 }

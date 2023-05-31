@@ -1,22 +1,15 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.input.StringUtils;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SliderEditorElement extends AbstractEditorElement {
@@ -25,212 +18,113 @@ public class SliderEditorElement extends AbstractEditorElement {
         super(element, editor);
     }
 
+    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
+    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
+    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
+    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
+
     @Override
     public void init() {
 
         super.init();
 
-        //TODO add entries
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable", null,
+                        consumes -> (consumes instanceof SliderEditorElement),
+                        null,
+                        consumes -> ((SliderElement)consumes.element).linkedVariable,
+                        (element, varName) -> ((SliderElement)element.element).linkedVariable = varName,
+                        false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_variable"))
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_variable.desc")));
 
-//        SliderElement i = ((SliderElement)this.element);
-//
-//        AdvancedButton setVariableButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_variable"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.set_variable"), null, 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.replace(" ", "").equals("")) {
-//                        if ((i.linkedVariable == null) || (!i.linkedVariable.equals(call))) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.linkedVariable = call;
-//                    } else {
-//                        if (i.linkedVariable != null) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.linkedVariable = null;
-//                    }
-//                }
-//            });
-//            if (i.linkedVariable != null) {
-//                p.setText(i.linkedVariable);
-//            }
-//            PopupHandler.displayPopup(p);
-//        });
-//        setVariableButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_variable.desc")));
-//        this.rightClickContextMenu.addContent(setVariableButton);
-//
-//        ContextMenu setTypeMenu = new ContextMenu();
-//        this.rightClickContextMenu.addChild(setTypeMenu);
-//
-//        AdvancedButton setTypeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_type"), true, (press) -> {
-//            setTypeMenu.setParentButton((AdvancedButton) press);
-//            setTypeMenu.openMenuAt(0, press.y);
-//        });
-//        setTypeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_type.desc")));
-//        this.rightClickContextMenu.addContent(setTypeButton);
-//        for (SliderElement.SliderType t : SliderElement.SliderType.values()) {
-//            AdvancedButton typeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.type." + t.getName()), (press) -> {
-//                if (i.type != t) {
-//                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                }
-//                i.type = t;
-//                i.initializeSlider();
-//                rightClickContextMenu.closeMenu();
-//                this.init();
-//            }) {
-//                @Override
-//                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-//                    if (i.type == t) {
-//                        this.setMessage("§a" + I18n.get("fancymenu.customization.items.slider.type." + t.getName()));
-//                    } else {
-//                        this.setMessage(I18n.get("fancymenu.customization.items.slider.type." + t.getName()));
-//                    }
-//                    super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-//                }
-//            };
-//            setTypeMenu.addContent(typeButton);
-//        }
-//
-//        AdvancedButton setLabelPrefixButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_label_prefix"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.set_label_prefix"), null, 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.replace(" ", "").equals("")) {
-//                        if ((i.labelPrefix == null) || (!i.labelPrefix.equals(call))) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.labelPrefix = call;
-//                    } else {
-//                        if (i.labelPrefix != null) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.labelPrefix = null;
-//                    }
-//                    i.initializeSlider();
-//                }
-//            });
-//            if (i.labelPrefix != null) {
-//                p.setText(i.labelPrefix);
-//            }
-//            PopupHandler.displayPopup(p);
-//        });
-//        setLabelPrefixButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_label_prefix.desc")));
-//        this.rightClickContextMenu.addContent(setLabelPrefixButton);
-//
-//        AdvancedButton setLabelSuffixButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.set_label_suffix"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.set_label_suffix"), null, 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.replace(" ", "").equals("")) {
-//                        if ((i.labelSuffix == null) || (!i.labelSuffix.equals(call))) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.labelSuffix = call;
-//                    } else {
-//                        if (i.labelSuffix != null) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.labelSuffix = null;
-//                    }
-//                    i.initializeSlider();
-//                }
-//            });
-//            if (i.labelSuffix != null) {
-//                p.setText(i.labelSuffix);
-//            }
-//            PopupHandler.displayPopup(p);
-//        });
-//        setLabelSuffixButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.set_label_suffix.desc")));
-//        this.rightClickContextMenu.addContent(setLabelSuffixButton);
-//
-//        this.rightClickContextMenu.addSeparator();
-//
-//        if (i.type == SliderElement.SliderType.RANGE) {
-//
-//            AdvancedButton setMinRangeValueButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.range.set_min_range_value"), (press) -> {
-//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.range.set_min_range_value"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
-//                    if (call != null) {
-//                        if (!call.replace(" ", "").equals("")) {
-//                            if (MathUtils.isInteger(call)) {
-//                                int min = Integer.parseInt(call);
-//                                if (i.minRangeValue != min) {
-//                                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                                }
-//                                i.minRangeValue = min;
-//                            }
-//                        } else {
-//                            if (i.minRangeValue != 1) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//                            i.minRangeValue = 1;
-//                        }
-//                        i.initializeSlider();
-//                    }
-//                });
-//                p.setText("" + i.minRangeValue);
-//                PopupHandler.displayPopup(p);
-//            });
-//            this.rightClickContextMenu.addContent(setMinRangeValueButton);
-//
-//            AdvancedButton setMaxRangeValueButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.range.set_max_range_value"), (press) -> {
-//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.range.set_max_range_value"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
-//                    if (call != null) {
-//                        if (!call.replace(" ", "").equals("")) {
-//                            if (MathUtils.isInteger(call)) {
-//                                int min = Integer.parseInt(call);
-//                                if (i.maxRangeValue != min) {
-//                                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                                }
-//                                i.maxRangeValue = min;
-//                            }
-//                        } else {
-//                            if (i.maxRangeValue != 1) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//                            i.maxRangeValue = 1;
-//                        }
-//                        i.initializeSlider();
-//                    }
-//                });
-//                p.setText("" + i.maxRangeValue);
-//                PopupHandler.displayPopup(p);
-//            });
-//            this.rightClickContextMenu.addContent(setMaxRangeValueButton);
-//
-//        }
-//        if (i.type == SliderElement.SliderType.LIST) {
-//
-//            AdvancedButton setListValuesButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values"), (press) -> {
-//                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values"), null, 240, (call) -> {
-//                    if (call != null) {
-//                        if (!call.replace(" ", "").equals("")) {
-//                            List<String> newValues = SliderElement.deserializeValuesList(call);
-//                            if (newValues.size() >= 2) {
-//                                if (!SliderElement.serializeValuesList(i.listValues).equals(call)) {
-//                                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                                }
-//                                i.listValues = SliderElement.deserializeValuesList(call);
-//                            } else {
-//                                FMNotificationPopup p2 = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values.error.not_enough_values")));
-//                                PopupHandler.displayPopup(p2);
-//                            }
-//                        } else {
-//                            List<String> l = new ArrayList<>();
-//                            l.add("some_value");
-//                            l.add("another_value");
-//                            l.add("yet_another_value");
-//                            if (!SliderElement.serializeValuesList(l).equals(SliderElement.serializeValuesList(i.listValues))) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//                            i.listValues = l;
-//                        }
-//                        i.initializeSlider();
-//                    }
-//                });
-//                p.setText(SliderElement.serializeValuesList(i.listValues));
-//                PopupHandler.displayPopup(p);
-//            });
-//            setListValuesButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.slider.editor.list.set_list_values.desc")));
-//            this.rightClickContextMenu.addContent(setListValuesButton);
-//
-//        }
+        this.rightClickMenu.addSeparatorEntry("slider_separator_1");
+
+        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_slider_type",
+                        ListUtils.build(SliderElement.SliderType.LIST, SliderElement.SliderType.RANGE),
+                        consumes -> (consumes instanceof SliderEditorElement),
+                        consumes -> ((SliderElement)consumes.element).type,
+                        (element, type) -> {
+                            ((SliderElement)element.element).type = type;
+                            ((SliderElement)element.element).initializeSlider();
+                        },
+                        (menu, entry, switcherValue) -> {
+                            if (switcherValue == SliderElement.SliderType.LIST) {
+                                return Component.translatable("fancymenu.customization.items.slider.editor.type.list");
+                            }
+                            return Component.translatable("fancymenu.customization.items.slider.editor.type.range");
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.type.desc")));
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_list_values", null, consumes -> (consumes instanceof SliderEditorElement), "example_value_1\nexample_value_2\nexample_value_3", consumes ->
+                        {
+                            List<String> values = ((SliderElement)consumes.element).listValues;
+                            String s = "example_value_1\nexample_value_2\nexample_value_3";
+                            if (values != null) {
+                                s = "";
+                                for (String v : values) {
+                                    if (s.length() > 0) s += "\n";
+                                    s += v;
+                                }
+                            }
+                            return s;
+                        }, (element1, s) -> {
+                            if (s != null) {
+                                ((SliderElement)element1.element).listValues = Arrays.asList(StringUtils.splitLines(s, "\n"));
+                                ((SliderElement)element1.element).initializeSlider();
+                            }
+                        }, true, true,
+                        Component.translatable("fancymenu.customization.items.slider.editor.list.set_list_values"))
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.list.set_list_values.desc")))
+                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
+                        consumes -> (consumes instanceof SliderEditorElement),
+                        0,
+                        consumes -> ((SliderElement)consumes.element).minRangeValue,
+                        (element, range) -> {
+                            ((SliderElement)element.element).minRangeValue = range;
+                            ((SliderElement)element.element).initializeSlider();
+                        },
+                        Component.translatable("fancymenu.customization.items.slider.editor.range.set_min_range_value"))
+                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.RANGE);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
+                        consumes -> (consumes instanceof SliderEditorElement),
+                        0,
+                        consumes -> ((SliderElement)consumes.element).maxRangeValue,
+                        (element, range) -> {
+                            ((SliderElement)element.element).maxRangeValue = range;
+                            ((SliderElement)element.element).initializeSlider();
+                        },
+                        Component.translatable("fancymenu.customization.items.slider.editor.range.set_max_range_value"))
+                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.RANGE);
+
+        this.rightClickMenu.addSeparatorEntry("slider_separator_2");
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_prefix", null,
+                        consumes -> (consumes instanceof SliderEditorElement),
+                        null,
+                        consumes -> ((SliderElement)consumes.element).labelPrefix,
+                        (element, label) -> {
+                            ((SliderElement)element.element).labelPrefix = label;
+                            ((SliderElement)element.element).initializeSlider();
+                        },
+                        false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_label_prefix"))
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_prefix.desc")));
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_suffix", null,
+                        consumes -> (consumes instanceof SliderEditorElement),
+                        null,
+                        consumes -> ((SliderElement)consumes.element).labelSuffix,
+                        (element, label) -> {
+                            ((SliderElement)element.element).labelSuffix = label;
+                            ((SliderElement)element.element).initializeSlider();
+                        },
+                        false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_label_suffix"))
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_suffix.desc")));
+
+        this.rightClickMenu.addSeparatorEntry("slider_separator_3").setStackable(true);
 
     }
 

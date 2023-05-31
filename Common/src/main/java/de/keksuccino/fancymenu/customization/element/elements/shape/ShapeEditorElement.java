@@ -3,15 +3,11 @@ package de.keksuccino.fancymenu.customization.element.elements.shape;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 
 public class ShapeEditorElement extends AbstractEditorElement {
 
@@ -24,41 +20,18 @@ public class ShapeEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        //TODO add entries
-
-//        AdvancedButton colorB = new AdvancedButton(0, 0, 0, 16, I18n.get("fancymenu.editor.items.shape.color"), true, (press) -> {
-//
-//            FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.shape.color") + ":", null, 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.equals("")) {
-//                        Color c = RenderUtils.getColorFromHexString(call);
-//                        if (c != null) {
-//
-//                            if (!this.getObject().getColorString().equalsIgnoreCase(call)) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//
-//                            this.getObject().setColor(call);
-//
-//                        }
-//                    } else {
-//                        if (!this.getObject().getColorString().equalsIgnoreCase("#ffffff")) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//
-//                        this.getObject().setColor("#ffffff");
-//                    }
-//                }
-//
-//            });
-//
-//            t.setText(this.getObject().getColorString());
-//
-//            PopupHandler.displayPopup(t);
-//
-//        });
-//        colorB.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.items.shape.color.btndesc")));
-//        this.rightClickContextMenu.addContent(colorB);
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", null,
+                        consumes -> (consumes instanceof ShapeEditorElement),
+                        "#ffffff",
+                        consumes -> ((ShapeElement)consumes.element).color.getHex(),
+                        (element, colorHex) -> {
+                            DrawableColor c = DrawableColor.create(colorHex);
+                            if (c != null) {
+                                ((ShapeElement)element.element).color = c;
+                            }
+                        }, false, false, Component.translatable("fancymenu.editor.items.shape.color"))
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.shape.color.btndesc")));
 
     }
 

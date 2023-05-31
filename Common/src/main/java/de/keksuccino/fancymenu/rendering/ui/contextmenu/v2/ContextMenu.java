@@ -76,6 +76,11 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 prev = e;
                 continue;
             }
+            //Don't render if hidden
+            if (!e.isVisible()) {
+                prev = e;
+                continue;
+            }
             //Pre-tick
             if (e.tickAction != null) {
                 e.tickAction.run(this, e, false);
@@ -679,6 +684,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Nullable
         protected BooleanSupplier activeStateSupplier;
         @Nullable
+        protected BooleanSupplier visibleStateSupplier;
+        @Nullable
         protected Supplier<Tooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
 
@@ -724,6 +731,15 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         public ContextMenuEntry setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
             this.activeStateSupplier = activeStateSupplier;
+            return this;
+        }
+
+        public boolean isVisible() {
+            return (this.visibleStateSupplier == null) || this.visibleStateSupplier.getBoolean(this.parent, this);
+        }
+
+        public ContextMenuEntry setIsVisibleSupplier(@Nullable BooleanSupplier visibleStateSupplier) {
+            this.visibleStateSupplier = visibleStateSupplier;
             return this;
         }
 
