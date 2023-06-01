@@ -4,17 +4,13 @@ package de.keksuccino.fancymenu.customization.element.elements.splash;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 
 public class SplashTextEditorElement extends AbstractEditorElement {
 
@@ -27,129 +23,103 @@ public class SplashTextEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        //TODO add "set source" entry
+        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_mode",
+                ListUtils.build(SplashTextElement.SourceMode.VANILLA, SplashTextElement.SourceMode.DIRECT_TEXT, SplashTextElement.SourceMode.TEXT_FILE),
+                consumes -> (consumes instanceof SplashTextEditorElement),
+                consumes -> ((SplashTextElement)consumes.element).sourceMode,
+                (element1, sourceMode) -> {
+                    ((SplashTextElement)element1.element).sourceMode = sourceMode;
+                    ((SplashTextElement)element1.element).source = null;
+                },
+                (menu, entry, switcherValue) -> {
+                    if (switcherValue == SplashTextElement.SourceMode.VANILLA) {
+                        return Component.translatable("fancymenu.elements.splash.source_mode.vanilla");
+                    }
+                    if (switcherValue == SplashTextElement.SourceMode.DIRECT_TEXT) {
+                        return Component.translatable("fancymenu.elements.splash.source_mode.direct");
+                    }
+                    return Component.translatable("fancymenu.elements.splash.source_mode.text_file");
+                });
 
-        //TODO add "set source mode" entry
+        this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        null,
+                        consumes -> ((SplashTextElement)consumes.element).source,
+                        (element1, s) -> {
+                            ((SplashTextElement)element1.element).source = s;
+                            ((SplashTextElement)element1.element).updateSplash();
+                        },
+                        Component.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
+                        false, FileChooserScreen.TXT_FILE_FILTER)
+                .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE);
 
-        //TODO add back old entries
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct", null,
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        null,
+                        consumes -> ((SplashTextElement)consumes.element).source,
+                        (element1, s) -> {
+                            ((SplashTextElement)element1.element).source = s;
+                            ((SplashTextElement)element1.element).updateSplash();
+                        },
+                        false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"))
+                .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.DIRECT_TEXT);
 
-//        /** SCALE **/
-//        AdvancedButton scaleButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.string.setscale"), true, (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.string.setscale") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, this::setScaleCallback);
-//            p.setText("" + this.getObject().scale);
-//            PopupHandler.displayPopup(p);
-//        });
-//        this.rightClickContextMenu.addContent(scaleButton);
-//
-//        /** ROTATION **/
-//        AdvancedButton rotationButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.editor.items.splash.rotation"), true, (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.splash.rotation") + ":", CharacterFilter.getDoubleCharacterFiler(), 240, (call) -> {
-//                if (call != null) {
-//                    if (MathUtils.isFloat(call)) {
-//                        this.getObject().rotation = Float.parseFloat(call);
-//                    }
-//                }
-//            });
-//            p.setText("" + this.getObject().rotation);
-//            PopupHandler.displayPopup(p);
-//        });
-//        this.rightClickContextMenu.addContent(rotationButton);
-//
-//        /** BASE COLOR **/
-//        AdvancedButton colorButton = new AdvancedButton(0, 0, 0, 16, I18n.get("fancymenu.editor.items.splash.basecolor"), true, (press) -> {
-//            FMTextInputPopup t = new FMTextInputPopup(new Color(0, 0, 0, 0), "§l" + I18n.get("fancymenu.editor.items.splash.basecolor") + ":", null, 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.equals("")) {
-//                        Color c = RenderUtils.getColorFromHexString(call);
-//                        if (c != null) {
-//
-//                            if (!this.getObject().basecolorString.equalsIgnoreCase(call)) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//
-//                            this.getObject().basecolor = c;
-//                            this.getObject().basecolorString = call;
-//
-//                        }
-//                    } else {
-//                        if (!this.getObject().basecolorString.equalsIgnoreCase("#ffff00")) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//
-//                        this.getObject().basecolorString = "#ffff00";
-//                        this.getObject().basecolor = new Color(255, 255, 0);
-//                    }
-//                }
-//
-//            });
-//            t.setText(this.getObject().basecolorString);
-//
-//            PopupHandler.displayPopup(t);
-//        });
-//        this.rightClickContextMenu.addContent(colorButton);
-//
-//        /** SHADOW **/
-//        String shadowLabel = I18n.get("fancymenu.editor.items.string.setshadow");
-//        if (this.getObject().shadow) {
-//            shadowLabel = I18n.get("fancymenu.editor.items.string.setnoshadow");
-//        }
-//        AdvancedButton shadowButton = new AdvancedButton(0, 0, 0, 0, shadowLabel, true, (press) -> {
-//            if (this.getObject().shadow) {
-//                ((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.string.setshadow"));
-//                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//
-//                this.getObject().shadow = false;
-//            } else {
-//                ((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.string.setnoshadow"));
-//                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//
-//                this.getObject().shadow = true;
-//            }
-//        });
-//        this.rightClickContextMenu.addContent(shadowButton);
-//
-//        /** BOUNCING **/
-//        String bounceLabel = I18n.get("fancymenu.editor.items.splash.bounce.off");
-//        if (this.getObject().bounce) {
-//            bounceLabel = I18n.get("fancymenu.editor.items.splash.bounce.on");
-//        }
-//        AdvancedButton bounceButton = new AdvancedButton(0, 0, 0, 0, bounceLabel, true, (press) -> {
-//            if (this.getObject().bounce) {
-//                ((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.bounce.off"));
-//                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//
-//                this.getObject().bounce = false;
-//            } else {
-//                ((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.bounce.on"));
-//                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//
-//                this.getObject().bounce = true;
-//            }
-//        });
-//        this.rightClickContextMenu.addContent(bounceButton);
-//
-//        /** REFRESH ON MENU RELOAD **/
-//        String refreshLabel = I18n.get("fancymenu.editor.items.splash.refresh.off");
-//        if (this.getObject().refreshOnMenuReload) {
-//            refreshLabel = I18n.get("fancymenu.editor.items.splash.refresh.on");
-//        }
-//        AdvancedButton refreshButton = new AdvancedButton(0, 0, 0, 0, refreshLabel, true, (press) -> {
-//            if (this.getObject().refreshOnMenuReload) {
-//                ((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.refresh.off"));
-//                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//
-//                this.getObject().refreshOnMenuReload = false;
-//            } else {
-//                ((AdvancedButton)press).setMessage(I18n.get("fancymenu.editor.items.splash.refresh.on"));
-//                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//
-//                this.getObject().refreshOnMenuReload = true;
-//            }
-//        });
-//        refreshButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.items.splash.refresh.desc")));
-//        if (this.getObject().text == null) {
-//            this.rightClickContextMenu.addContent(refreshButton);
-//        }
+        this.rightClickMenu.addSeparatorEntry("splash_separator_1");
+
+        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        1.0F,
+                        consumes -> ((SplashTextElement)consumes.element).scale,
+                        (element, scale) -> {
+                            ((SplashTextElement)element.element).scale = Math.max(0.2F, scale);
+                            ((SplashTextElement)element.element).updateSplash();
+                        },
+                        Component.translatable("fancymenu.elements.splash.set_scale"))
+                .setStackable(true);
+
+        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_rotation",
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        20.0F,
+                        consumes -> ((SplashTextElement)consumes.element).rotation,
+                        (element, rot) -> {
+                            ((SplashTextElement)element.element).rotation = rot;
+                            ((SplashTextElement)element.element).updateSplash();
+                        },
+                        Component.translatable("fancymenu.editor.items.splash.rotation"))
+                .setStackable(true);
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", null,
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        DrawableColor.create(255, 255, 0).getHex(),
+                        consumes -> ((SplashTextElement)consumes.element).baseColor.getHex(),
+                        (element1, s) -> {
+                            ((SplashTextElement)element1.element).baseColor = DrawableColor.create(s);
+                            ((SplashTextElement)element1.element).updateSplash();
+                        },
+                        false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"))
+                .setStackable(true);
+
+        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        consumes -> ((SplashTextElement)consumes.element).shadow,
+                        (element1, s) -> ((SplashTextElement)element1.element).shadow = s,
+                        "fancymenu.elements.splash.shadow")
+                .setStackable(true);
+
+        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "bouncing",
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        consumes -> ((SplashTextElement)consumes.element).bounce,
+                        (element1, s) -> ((SplashTextElement)element1.element).bounce = s,
+                        "fancymenu.editor.items.splash.bounce")
+                .setStackable(true);
+
+        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
+                        consumes -> (consumes instanceof SplashTextEditorElement),
+                        consumes -> ((SplashTextElement)consumes.element).refreshOnMenuReload,
+                        (element1, s) -> ((SplashTextElement)element1.element).refreshOnMenuReload = s,
+                        "fancymenu.editor.items.splash.refresh")
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.splash.refresh.desc")));
 
     }
 

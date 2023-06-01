@@ -1,20 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.konkrete.math.MathUtils;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 
 public class InputFieldEditorElement extends AbstractEditorElement {
 
@@ -27,86 +20,43 @@ public class InputFieldEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        //TODO add entries
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable", null,
+                        consumes -> (consumes instanceof InputFieldEditorElement),
+                        null,
+                        consumes -> ((InputFieldElement)consumes.element).linkedVariable,
+                        (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
+                        false, false, Component.translatable("fancymenu.customization.items.input_field.editor.set_variable"))
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")));
 
-//        InputFieldElement i = ((InputFieldElement)this.element);
-//
-//        AdvancedButton setVariableButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.input_field.editor.set_variable"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.input_field.editor.set_variable"), null, 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.replace(" ", "").equals("")) {
-//                        if ((i.linkedVariable == null) || (!i.linkedVariable.equals(call))) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.linkedVariable = call;
-//                    } else {
-//                        if (i.linkedVariable != null) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.linkedVariable = null;
-//                    }
-//                }
-//            });
-//            if (i.linkedVariable != null) {
-//                p.setText(i.linkedVariable);
-//            }
-//            PopupHandler.displayPopup(p);
-//        });
-//        setVariableButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.input_field.editor.set_variable.desc")));
-//        this.rightClickContextMenu.addContent(setVariableButton);
-//
-//        AdvancedButton setMaxLengthButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.input_field.editor.set_max_length"), (press) -> {
-//            FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.customization.items.input_field.editor.set_max_length"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
-//                if (call != null) {
-//                    if (!call.replace(" ", "").equals("")) {
-//                        if (MathUtils.isInteger(call)) {
-//                            int ml = Integer.parseInt(call);
-//                            if (ml != i.maxTextLength) {
-//                                this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                            }
-//                            i.maxTextLength = ml;
-//                        }
-//                    } else {
-//                        if (i.maxTextLength != 10000) {
-//                            this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                        }
-//                        i.maxTextLength = 10000;
-//                    }
-//                }
-//            });
-//            p.setText("" + i.maxTextLength);
-//            PopupHandler.displayPopup(p);
-//        });
-//        this.rightClickContextMenu.addContent(setMaxLengthButton);
-//
-//        ContextMenu setTypeMenu = new ContextMenu();
-//        this.rightClickContextMenu.addChild(setTypeMenu);
-//
-//        AdvancedButton setTypeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.input_field.editor.set_type"), true, (press) -> {
-//            setTypeMenu.setParentButton((AdvancedButton) press);
-//            setTypeMenu.openMenuAt(0, press.y);
-//        });
-//        setTypeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.customization.items.input_field.editor.set_type.desc")));
-//        this.rightClickContextMenu.addContent(setTypeButton);
-//        for (InputFieldElement.InputFieldType t : InputFieldElement.InputFieldType.values()) {
-//            AdvancedButton typeButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.customization.items.input_field.type." + t.getName()), (press) -> {
-//                if (i.type != t) {
-//                    this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
-//                }
-//                i.type = t;
-//            }) {
-//                @Override
-//                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-//                    if (i.type == t) {
-//                        this.setMessage("§a" + I18n.get("fancymenu.customization.items.input_field.type." + t.getName()));
-//                    } else {
-//                        this.setMessage(I18n.get("fancymenu.customization.items.input_field.type." + t.getName()));
-//                    }
-//                    super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-//                }
-//            };
-//            setTypeMenu.addContent(typeButton);
-//        }
+        this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
+
+        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_type",
+                        ListUtils.build(InputFieldElement.InputFieldType.TEXT, InputFieldElement.InputFieldType.URL, InputFieldElement.InputFieldType.INTEGER_ONLY, InputFieldElement.InputFieldType.DECIMAL_ONLY),
+                        consumes -> (consumes instanceof InputFieldEditorElement),
+                        consumes -> ((InputFieldElement)consumes.element).type,
+                        (element, type) -> ((InputFieldElement)element.element).type = type,
+                        (menu, entry, switcherValue) -> {
+                            if (switcherValue == InputFieldElement.InputFieldType.TEXT) {
+                                return Component.translatable("fancymenu.customization.items.input_field.type.text");
+                            }
+                            if (switcherValue == InputFieldElement.InputFieldType.INTEGER_ONLY) {
+                                return Component.translatable("fancymenu.customization.items.input_field.type.integer");
+                            }
+                            if (switcherValue == InputFieldElement.InputFieldType.DECIMAL_ONLY) {
+                                return Component.translatable("fancymenu.customization.items.input_field.type.decimal");
+                            }
+                            return Component.translatable("fancymenu.customization.items.input_field.type.url");
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_type.desc")));
+
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
+                        consumes -> (consumes instanceof InputFieldEditorElement),
+                        10000,
+                        consumes -> ((InputFieldElement)consumes.element).maxTextLength,
+                        (element, length) -> ((InputFieldElement)element.element).maxTextLength = length,
+                        Component.translatable("fancymenu.customization.items.input_field.editor.set_max_length"))
+                .setStackable(true);
 
     }
 

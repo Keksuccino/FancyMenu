@@ -2,11 +2,12 @@ package de.keksuccino.fancymenu.rendering;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.Objects;
 
 public class DrawableColor {
+
+    public static final DrawableColor PLACEHOLDER_COLOR = DrawableColor.create(new Color(255, 255, 255));
 
     protected Color color;
     protected int colorInt;
@@ -23,8 +24,8 @@ public class DrawableColor {
         return c;
     }
 
-    /** Tries to create a {@link DrawableColor} out of the given HEX-{@link String}. Returns NULL if it failed to create the color. **/
-    @Nullable
+    /** Creates a {@link DrawableColor} out of the given HEX-{@link String}. **/
+    @NotNull
     public static DrawableColor create(@NotNull String hex) {
         Objects.requireNonNull(hex);
         hex = hex.replace(" ", "");
@@ -40,7 +41,7 @@ public class DrawableColor {
         if (c.color != null) {
             return c;
         }
-        return null;
+        return PLACEHOLDER_COLOR.copy();
     }
 
     /** Creates a {@link DrawableColor} out of the given RGB integers. The alpha channel will get defaulted to 255. **/
@@ -77,6 +78,14 @@ public class DrawableColor {
             return "#ffffffff";
         }
         return this.hex;
+    }
+
+    public DrawableColor copy() {
+        DrawableColor c = new DrawableColor();
+        c.color = this.color;
+        c.colorInt = this.colorInt;
+        c.hex = this.hex;
+        return c;
     }
 
     @Nullable

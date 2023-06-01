@@ -23,6 +23,10 @@ import java.util.List;
 
 public class SplashTextElement extends AbstractElement {
 
+    //TODO FIXEN: Splash text rendert nicht richtig
+    //TODO FIXEN: Splash text rendert nicht richtig
+    //TODO FIXEN: Splash text rendert nicht richtig
+
     public SourceMode sourceMode = SourceMode.DIRECT_TEXT;
     public String source = "Splash Text";
     public float scale = 1.0F;

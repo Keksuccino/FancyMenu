@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.rendering.ui.screen.filechooser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
@@ -14,6 +15,7 @@ import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -45,10 +47,14 @@ public class FileChooserScreen extends Screen {
     protected static final ResourceLocation FILE_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/file_icon.png");
     protected static final ResourceLocation FOLDER_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/folder_icon.png");
 
+    public static final FileFilter RESOURCE_NAME_FILTER = file -> {
+        return CharacterFilter.getBasicFilenameCharacterFilter().isAllowed(ScreenCustomization.getPathWithoutGameDirectory(file.getAbsolutePath()).replace("/", "").replace("\\", ""));
+    };
     public static final FileFilter WAV_AUDIO_FILE_FILTER = file -> {
         return (file.getPath().toLowerCase().endsWith(".wav"));
     };
     public static final FileFilter OGG_AUDIO_FILE_FILTER = file -> {
+        if (!RESOURCE_NAME_FILTER.checkFile(file)) return false;
         return (file.getPath().toLowerCase().endsWith(".ogg"));
     };
     public static final FileFilter TXT_FILE_FILTER = file -> {
@@ -64,12 +70,14 @@ public class FileChooserScreen extends Screen {
         return false;
     };
     public static final FileFilter IMAGE_FILE_FILTER = file -> {
+        if (!RESOURCE_NAME_FILTER.checkFile(file)) return false;
         if (file.getPath().toLowerCase().endsWith(".png")) return true;
         if (file.getPath().toLowerCase().endsWith(".jpg")) return true;
         if (file.getPath().toLowerCase().endsWith(".jpeg")) return true;
         return false;
     };
     public static final FileFilter IMAGE_AND_GIF_FILE_FILTER = file -> {
+        if (!RESOURCE_NAME_FILTER.checkFile(file)) return false;
         if (file.getPath().toLowerCase().endsWith(".png")) return true;
         if (file.getPath().toLowerCase().endsWith(".jpg")) return true;
         if (file.getPath().toLowerCase().endsWith(".jpeg")) return true;

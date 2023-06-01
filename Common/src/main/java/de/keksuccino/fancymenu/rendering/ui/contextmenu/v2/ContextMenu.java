@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
@@ -19,7 +20,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -983,7 +983,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered()) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                if (FancyMenu.getConfig().getOrDefault("play_ui_click_sounds", true)) {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                }
                 this.clickAction.onClick(this.parent, this);
                 return true;
             }

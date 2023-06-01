@@ -18,11 +18,6 @@ public class SliderEditorElement extends AbstractEditorElement {
         super(element, editor);
     }
 
-    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
-    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
-    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
-    //TODO inputfield + playerentity + splash -> editor element entries fertig machen !!
-
     @Override
     public void init() {
 

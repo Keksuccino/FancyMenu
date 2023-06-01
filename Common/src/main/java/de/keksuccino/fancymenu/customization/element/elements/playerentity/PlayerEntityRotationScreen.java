@@ -4,24 +4,20 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.slider.RangeSliderButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.function.Consumer;
 
 public class PlayerEntityRotationScreen extends Screen {
 
     protected static final Color SCREEN_BACKGROUND_COLOR = new Color(54, 54, 54);
-
-    protected LayoutEditorScreen parent;
 
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
@@ -36,11 +32,13 @@ public class PlayerEntityRotationScreen extends Screen {
     protected float headRotationX;
     protected float headRotationY;
 
-    protected PlayerEntityRotationScreen(LayoutEditorScreen parent, PlayerEntityElement element) {
+    protected Consumer<PlayerEntityElement> callback;
+
+    protected PlayerEntityRotationScreen(PlayerEntityElement element, Consumer<PlayerEntityElement> callback) {
 
         super(Component.literal(""));
 
-        this.parent = parent;
+        this.callback = callback;
         this.element = element;
 
         this.bodyRotationX = element.bodyRotationX;
@@ -83,7 +81,6 @@ public class PlayerEntityRotationScreen extends Screen {
 
         this.doneButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (press) -> {
             this.applyChanges();
-            this.onClose();
         });
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
@@ -170,18 +167,16 @@ public class PlayerEntityRotationScreen extends Screen {
     }
 
     protected void applyChanges() {
-        this.parent.history.saveSnapshot(this.parent.history.createSnapshot());
         this.element.bodyRotationX = this.bodyRotationX;
         this.element.bodyRotationY = this.bodyRotationY;
         this.element.headRotationX = this.headRotationX;
         this.element.headRotationY = this.headRotationY;
+        this.callback.accept(this.element);
     }
 
     @Override
     public void onClose() {
-        if (!PopupHandler.isPopupActive()) {
-            Minecraft.getInstance().setScreen(this.parent);
-        }
+        this.callback.accept(null);
     }
 
 }
