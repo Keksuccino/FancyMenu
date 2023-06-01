@@ -9,23 +9,28 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 
 public class SplashTextElement extends AbstractElement {
 
-    //TODO FIXEN: Splash text rendert nicht richtig
-    //TODO FIXEN: Splash text rendert nicht richtig
-    //TODO FIXEN: Splash text rendert nicht richtig
+    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
+    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
+    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
+    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public SourceMode sourceMode = SourceMode.DIRECT_TEXT;
     public String source = "Splash Text";
@@ -38,7 +43,10 @@ public class SplashTextElement extends AbstractElement {
 
     public Font font = Minecraft.getInstance().font;
     protected float baseScale = 1.8F;
-    protected String renderText = "";
+    protected String renderText = null;
+
+    protected String lastSource = null;
+    protected SourceMode lastSourceMode = null;
 
     public SplashTextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -63,6 +71,12 @@ public class SplashTextElement extends AbstractElement {
     }
 
     protected void updateSplash() {
+
+        if (!Objects.equals(this.lastSource, this.source) || !Objects.equals(this.lastSourceMode, this.sourceMode)) {
+            this.refresh();
+        }
+        this.lastSource = this.source;
+        this.lastSourceMode = this.sourceMode;
 
         if ((this.sourceMode != SourceMode.VANILLA) && (this.source == null)) return;
 
@@ -102,20 +116,24 @@ public class SplashTextElement extends AbstractElement {
 
     protected void renderSplash(PoseStack pose) {
 
-        if (this.renderText == null) return;
+        if (this.renderText == null) {
+            if (isEditor()) {
+                this.renderText = "< empty splash element >";
+            } else {
+                return;
+            }
+        }
 
-        String renderTextFinal;
-        if (!isEditor()) {
-            renderTextFinal = PlaceholderParser.replacePlaceholders(this.renderText);
-        } else {
+        String renderTextFinal = PlaceholderParser.replacePlaceholders(this.renderText);
+        if (isEditor()) {
             renderTextFinal = StringUtils.convertFormatCodes(this.renderText, "&", "§");
         }
 
-        float bScale = this.baseScale;
+        float splashBaseScale = this.baseScale;
         if (this.bounce) {
-            bScale = bScale - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
+            splashBaseScale = splashBaseScale - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         }
-        bScale = bScale * 100.0F / (float) (font.width(renderTextFinal) + 32);
+        splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextFinal) + 32);
 
         RenderSystem.enableBlend();
 
@@ -123,9 +141,9 @@ public class SplashTextElement extends AbstractElement {
         pose.scale(this.scale, this.scale, this.scale);
 
         pose.pushPose();
-        pose.translate((((float)this.getX() + ((float)this.getWidth() / 2F)) / this.scale), (float)this.getY() / this.scale, 0.0F);
+        pose.translate(((this.getX() + (this.getWidth() / 2F)) / this.scale), this.getY() / this.scale, 0.0F);
         pose.mulPose(Axis.ZP.rotationDegrees(this.rotation));
-        pose.scale(bScale, bScale, bScale);
+        pose.scale(splashBaseScale, splashBaseScale, splashBaseScale);
 
         int alpha = this.baseColor.getColor().getAlpha();
         int i = Mth.ceil(this.opacity * 255.0F);
