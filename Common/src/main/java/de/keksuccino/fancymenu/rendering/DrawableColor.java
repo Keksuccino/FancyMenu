@@ -1,13 +1,15 @@
 package de.keksuccino.fancymenu.rendering;
 
+import de.keksuccino.fancymenu.utils.RenderUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.Objects;
 
+@SuppressWarnings("all")
 public class DrawableColor {
 
-    public static final DrawableColor PLACEHOLDER_COLOR = DrawableColor.create(new Color(255, 255, 255));
+    public static final DrawableColor WHITE = DrawableColor.of(new Color(255, 255, 255));
 
     protected Color color;
     protected int colorInt;
@@ -15,49 +17,54 @@ public class DrawableColor {
 
     /** Creates a {@link DrawableColor} out of the given {@link Color}. **/
     @NotNull
-    public static DrawableColor create(@NotNull Color color) {
+    public static DrawableColor of(@NotNull Color color) {
         Objects.requireNonNull(color);
         DrawableColor c = new DrawableColor();
         c.color = color;
         c.colorInt = color.getRGB();
         c.hex = convertColorToHexString(color);
+        if (c.hex == null) c.hex = "#ffffffff";
         return c;
     }
 
     /** Creates a {@link DrawableColor} out of the given HEX-{@link String}. **/
     @NotNull
-    public static DrawableColor create(@NotNull String hex) {
-        Objects.requireNonNull(hex);
-        hex = hex.replace(" ", "");
-        if (!hex.startsWith("#")) {
-            hex = "#" + hex;
+    public static DrawableColor of(@NotNull String hex) {
+        if (hex != null) {
+            hex = hex.replace(" ", "");
+            if (!hex.startsWith("#")) {
+                hex = "#" + hex;
+            }
+            DrawableColor c = new DrawableColor();
+            c.color = convertHexStringToColor(hex);
+            if (c.color != null) {
+                c.colorInt = c.color.getRGB();
+            }
+            c.hex = hex;
+            if (c.color != null) {
+                return c;
+            }
         }
-        DrawableColor c = new DrawableColor();
-        c.color = convertHexStringToColor(hex);
-        if (c.color != null) {
-            c.colorInt = c.color.getRGB();
-        }
-        c.hex = hex;
-        if (c.color != null) {
-            return c;
-        }
-        return PLACEHOLDER_COLOR.copy();
+        return WHITE.copy();
     }
 
     /** Creates a {@link DrawableColor} out of the given RGB integers. The alpha channel will get defaulted to 255. **/
     @NotNull
-    public static DrawableColor create(int r, int g, int b) {
-        return create(r, g, b, 255);
+    public static DrawableColor of(int r, int g, int b) {
+        return of(r, g, b, 255);
     }
 
     /** Creates a {@link DrawableColor} out of the given RGBA integers. **/
     @NotNull
-    public static DrawableColor create(int r, int g, int b, int a) {
+    public static DrawableColor of(int r, int g, int b, int a) {
         DrawableColor c = new DrawableColor();
         c.color = new Color(r, g, b, a);
         c.colorInt = c.color.getRGB();
         c.hex = convertColorToHexString(c.color);
-        return c;
+        if (c.hex != null) {
+            return c;
+        }
+        return WHITE.copy();
     }
 
     protected DrawableColor() {
@@ -70,6 +77,10 @@ public class DrawableColor {
 
     public int getColorInt() {
         return this.colorInt;
+    }
+
+    public int getColorIntWithAlpha(float alpha) {
+        return RenderUtils.replaceAlphaInColor(this.colorInt, alpha);
     }
 
     @NotNull

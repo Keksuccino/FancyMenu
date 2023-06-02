@@ -7,14 +7,14 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
-import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +32,8 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
         EventHandler.INSTANCE.registerListenersOf(this);
     }
 
-    @EventListener(priority = EventPriority.HIGH)
-    public void onInitScreenPre(InitOrResizeScreenEvent.Pre e) {
+    @EventListener
+    public void onInitScreenPre(InitOrResizeScreenStartingEvent e) {
         this.isNewMenu = (lastScreen == null) || (this.lastScreen.getClass() != e.getScreen().getClass());
         this.lastScreen = e.getScreen();
     }
@@ -78,10 +78,7 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
 
         String baseColor = serialized.getValue("base_color");
         if (baseColor != null) {
-            DrawableColor c = DrawableColor.create(baseColor);
-            if (c != null) {
-                element.baseColor = c;
-            }
+            element.baseColor = DrawableColor.of(baseColor);
         }
 
         String shadow = serialized.getValue("shadow");

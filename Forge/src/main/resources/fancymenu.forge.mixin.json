@@ -5,7 +5,8 @@
   "mixins": [
   ],
   "client": [
-    "client.MixinForgeGameRenderer"
+    "client.MixinForgeGameRenderer",
+    "client.MixinForgeTitleScreen"
   ],
   "injectors": {
     "defaultRequire": 1

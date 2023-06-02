@@ -452,7 +452,7 @@
   "fancymenu.editor.items.splash.bounce.off": "Bouncing: §cOff",
   "fancymenu.editor.items.splash.refresh.on": "Refresh On Menu Load: §aOn",
   "fancymenu.editor.items.splash.refresh.off": "Refresh On Menu Load: §cOff",
-  "fancymenu.editor.items.splash.refresh.desc": "Pick a new splash everytime the menu\nis getting reloaded or openend.",
+  "fancymenu.editor.items.splash.refresh.desc": "Pick a new splash everytime the menu\nis getting reloaded or opened.",
   "fancymenu.editor.items.splash.basecolor": "Set Text Color",
   "fancymenu.editor.items.splash.rotation": "Set Rotation",
   "fancymenu.element.general.appearance_delay": "Delay Appearance",

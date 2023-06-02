@@ -6,7 +6,8 @@
   ],
   "client": [
     "client.MixinFabricGameRenderer",
-    "client.MixinFabricScreenEvents"
+    "client.MixinFabricScreenEvents",
+    "client.MixinFabricTitleScreen"
   ],
   "injectors": {
     "defaultRequire": 1

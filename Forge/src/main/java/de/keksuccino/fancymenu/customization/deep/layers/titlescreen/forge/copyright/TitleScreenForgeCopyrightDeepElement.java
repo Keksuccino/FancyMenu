@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copyright;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -35,6 +36,8 @@ public class TitleScreenForgeCopyrightDeepElement extends AbstractDeepElement {
                 drawString(pose, font, brd, getScreenWidth() - font.width(brd) - 1, getScreenHeight() - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
             });
         }
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

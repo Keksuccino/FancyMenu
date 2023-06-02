@@ -128,6 +128,8 @@ public class SliderElement extends AbstractElement {
                 ((RangeSliderButton)this.slider).minValue = this.minRangeValue;
             }
 
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
         }
 
     }

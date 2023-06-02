@@ -5,6 +5,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.platform.Services;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.utils.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -38,8 +40,9 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
 
         int w = 0;
         int i = 0;
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
         for (Component line : Services.COMPAT.getTitleScreenBrandingLines()) {
-            drawString(pose, font, line, 2, getScreenHeight() - (10 + (i * (font.lineHeight + 1))), -1);
+            drawString(pose, font, line, 2, getScreenHeight() - (10 + (i * (font.lineHeight + 1))), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             int lineW = font.width(line);
             if (lineW > w) {
                 w = lineW;
@@ -48,6 +51,8 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
         }
 
         this.width = w;
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

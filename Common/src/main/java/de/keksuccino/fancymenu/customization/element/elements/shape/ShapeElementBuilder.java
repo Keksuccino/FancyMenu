@@ -40,9 +40,9 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
 
         String colorHex = serialized.getValue("color");
         if (colorHex != null) {
-            element.color = DrawableColor.create(colorHex);
+            element.color = DrawableColor.of(colorHex);
             if (element.color == null) {
-                DrawableColor.create(255, 255, 255);
+                DrawableColor.of(255, 255, 255);
             }
         }
 

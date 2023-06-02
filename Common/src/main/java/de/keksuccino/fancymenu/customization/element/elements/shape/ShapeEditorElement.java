@@ -25,7 +25,7 @@ public class ShapeEditorElement extends AbstractEditorElement {
                         "#ffffff",
                         consumes -> ((ShapeElement)consumes.element).color.getHex(),
                         (element, colorHex) -> {
-                            DrawableColor c = DrawableColor.create(colorHex);
+                            DrawableColor c = DrawableColor.of(colorHex);
                             if (c != null) {
                                 ((ShapeElement)element.element).color = c;
                             }

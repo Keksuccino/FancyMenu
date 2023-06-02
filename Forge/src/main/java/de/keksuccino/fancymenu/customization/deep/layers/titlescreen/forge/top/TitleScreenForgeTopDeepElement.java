@@ -1,8 +1,11 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.top;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.utils.RenderUtils;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -24,10 +27,11 @@ public class TitleScreenForgeTopDeepElement extends AbstractDeepElement {
 
         Font font = Minecraft.getInstance().font;
         if (isEditor()) {
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
             Component line1 = Component.literal(I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line1"));
-            drawCenteredString(pose, font, line1, getScreenWidth() / 2, 4 + (0 * (font.lineHeight + 1)), -1);
+            drawCenteredString(pose, font, line1, getScreenWidth() / 2, 4 + (0 * (font.lineHeight + 1)), RenderUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), this.opacity));
             Component line2 = Component.literal(I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line2"));
-            drawCenteredString(pose, font, line2, getScreenWidth() / 2, 4 + (1 * (font.lineHeight + 1)), -1);
+            drawCenteredString(pose, font, line2, getScreenWidth() / 2, 4 + (1 * (font.lineHeight + 1)), RenderUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), this.opacity));
             this.width = font.width(line1);
             int w2 = font.width(line2);
             if (this.width < w2) {
@@ -37,8 +41,10 @@ public class TitleScreenForgeTopDeepElement extends AbstractDeepElement {
             this.baseX = (getScreenWidth() / 2) - (this.getWidth() / 2);
             this.baseY = 4;
         } else {
-            ForgeHooksClient.renderMainMenu((TitleScreen) getScreen(), pose, font, getScreenWidth(), getScreenHeight(), 255);
+            ForgeHooksClient.renderMainMenu((TitleScreen) getScreen(), pose, font, getScreenWidth(), getScreenHeight(), (int) (this.opacity * 255.0F));
         }
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

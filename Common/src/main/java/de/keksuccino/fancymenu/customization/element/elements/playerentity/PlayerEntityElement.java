@@ -107,6 +107,8 @@ public class PlayerEntityElement extends AbstractElement {
 
             this.renderPlayerEntity(x, y, this.scale, (float)x - MouseInput.getMouseX(), (float)(y - 50) - MouseInput.getMouseY());
 
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
         }
 
     }

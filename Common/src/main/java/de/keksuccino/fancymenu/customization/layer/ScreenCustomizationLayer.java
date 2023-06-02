@@ -21,7 +21,6 @@ import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.events.screen.*;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -45,6 +44,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("unused")
 public class ScreenCustomizationLayer extends GuiComponent implements IElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -417,6 +417,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		return null;
 	}
 
+	@SuppressWarnings("all")
 	protected boolean shouldCustomize(Screen screen) {
 		if (screen == null) return false;
 		if (!this.getIdentifier().equals(screen.getClass().getName())) return false;

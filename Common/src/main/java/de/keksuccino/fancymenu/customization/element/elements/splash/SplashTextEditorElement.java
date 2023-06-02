@@ -90,10 +90,10 @@ public class SplashTextEditorElement extends AbstractEditorElement {
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", null,
                         consumes -> (consumes instanceof SplashTextEditorElement),
-                        DrawableColor.create(255, 255, 0).getHex(),
+                        DrawableColor.of(255, 255, 0).getHex(),
                         consumes -> ((SplashTextElement)consumes.element).baseColor.getHex(),
                         (element1, s) -> {
-                            ((SplashTextElement)element1.element).baseColor = DrawableColor.create(s);
+                            ((SplashTextElement)element1.element).baseColor = DrawableColor.of(s);
                             ((SplashTextElement)element1.element).updateSplash();
                         },
                         false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"))

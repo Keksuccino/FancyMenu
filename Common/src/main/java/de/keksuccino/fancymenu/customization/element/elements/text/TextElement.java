@@ -165,6 +165,8 @@ public class TextElement extends AbstractElement {
                     drawCenteredString(pose, font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
             }
 
         } catch (Exception e) {

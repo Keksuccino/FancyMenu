@@ -66,6 +66,8 @@ public class InputFieldElement extends AbstractElement {
                 this.lastValue = this.textField.getValue();
             }
 
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
         }
 
     }

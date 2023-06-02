@@ -8,6 +8,7 @@ package de.keksuccino.fancymenu.event.acara;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -117,11 +118,11 @@ public class EventHandler {
 				for (Method m : c.getMethods()) {
 					if (isClass && Modifier.isStatic(m.getModifiers())) {
 						EventMethod em = EventMethod.tryCreateFrom(new AnalyzedMethod(m, c));
-						if (em != null) l.add(em);
+						if ((em != null) && this.hasEventListenerAnnotation(em)) l.add(em);
 					}
 					if (!isClass && !Modifier.isStatic(m.getModifiers())) {
 						EventMethod em = EventMethod.tryCreateFrom(new AnalyzedMethod(m, objectOrClass));
-						if (em != null) l.add(em);
+						if ((em != null) && this.hasEventListenerAnnotation(em)) l.add(em);
 					}
 				}
 			}
@@ -129,6 +130,13 @@ public class EventHandler {
 			e.printStackTrace();
 		}
 		return l;
+	}
+
+	protected boolean hasEventListenerAnnotation(@NotNull EventMethod m) {
+		for (Annotation a : m.annotations) {
+			if (a instanceof EventListener) return true;
+		}
+		return false;
 	}
 
 	public void registerListener(Consumer<EventBase> listener, Class<? extends EventBase> eventType) {

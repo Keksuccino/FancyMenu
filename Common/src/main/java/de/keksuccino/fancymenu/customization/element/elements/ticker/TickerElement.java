@@ -96,6 +96,8 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
             this.asyncThreadController.running = false;
         }
 
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
     }
 
     

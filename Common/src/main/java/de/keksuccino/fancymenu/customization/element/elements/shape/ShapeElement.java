@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.shape;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -16,7 +17,7 @@ public class ShapeElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Shape shape = Shape.RECTANGLE;
-    public DrawableColor color = DrawableColor.create(255, 255, 255);
+    public DrawableColor color = DrawableColor.of(255, 255, 255);
 
     public ShapeElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -41,6 +42,8 @@ public class ShapeElement extends AbstractElement {
             }
 
         }
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

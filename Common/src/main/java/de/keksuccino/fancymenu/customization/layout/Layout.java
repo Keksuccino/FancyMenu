@@ -284,6 +284,7 @@ public class Layout extends LayoutBase {
                         elementType = elementType.replace("deep_customization_element:", "");
                         if (layout.deepScreenCustomizationLayer.hasBuilder(elementType)) {
                             SerializedElement e = convertSectionToElement(sec);
+                            e.setType("deep_element");
                             e.putProperty("element_type", elementType);
                             layout.serializedDeepElements.add(e);
                         }
@@ -513,9 +514,9 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addshape")) {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
-                        e.color = DrawableColor.create(sec.getValue("color"));
+                        e.color = DrawableColor.of(sec.getValue("color"));
                         if (e.color == null) {
-                            e.color = DrawableColor.create(255, 255, 255);
+                            e.color = DrawableColor.of(255, 255, 255);
                         }
                         elements.add(Elements.SHAPE.serializeElementInternal(e));
                     }
@@ -556,9 +557,9 @@ public class Layout extends LayoutBase {
                         }
                         String baseColor = sec.getValue("basecolor");
                         if (baseColor != null) {
-                            e.baseColor = DrawableColor.create(baseColor);
+                            e.baseColor = DrawableColor.of(baseColor);
                             if (e.baseColor == null) {
-                                e.baseColor = DrawableColor.create(255, 255, 255);
+                                e.baseColor = DrawableColor.of(255, 255, 255);
                             }
                         }
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));

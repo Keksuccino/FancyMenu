@@ -38,7 +38,7 @@ public class SplashTextElement extends AbstractElement {
     public boolean shadow = true;
     public boolean bounce = true;
     public float rotation = 20.0F;
-    public DrawableColor baseColor = DrawableColor.create(255, 255, 0);
+    public DrawableColor baseColor = DrawableColor.of(255, 255, 0);
     public boolean refreshOnMenuReload = false;
 
     public Font font = Minecraft.getInstance().font;
@@ -47,6 +47,7 @@ public class SplashTextElement extends AbstractElement {
 
     protected String lastSource = null;
     protected SourceMode lastSourceMode = null;
+    protected boolean refreshedOnMenuLoad = false;
 
     public SplashTextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -61,6 +62,8 @@ public class SplashTextElement extends AbstractElement {
 
             this.renderSplash(pose);
 
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
         }
 
     }
@@ -72,16 +75,19 @@ public class SplashTextElement extends AbstractElement {
 
     protected void updateSplash() {
 
-        if (!Objects.equals(this.lastSource, this.source) || !Objects.equals(this.lastSourceMode, this.sourceMode)) {
-            this.refresh();
+        if (isEditor()) {
+            if (!Objects.equals(this.lastSource, this.source) || !Objects.equals(this.lastSourceMode, this.sourceMode)) {
+                this.refresh();
+            }
+            this.lastSource = this.source;
+            this.lastSourceMode = this.sourceMode;
         }
-        this.lastSource = this.source;
-        this.lastSourceMode = this.sourceMode;
 
         if ((this.sourceMode != SourceMode.VANILLA) && (this.source == null)) return;
 
-        if (this.getBuilder().isNewMenu && this.refreshOnMenuReload) {
+        if (this.getBuilder().isNewMenu && this.refreshOnMenuReload && !this.refreshedOnMenuLoad) {
             this.refresh();
+            this.refreshedOnMenuLoad = true;
         }
         if ((this.renderText == null) && (this.getBuilder().splashCache.containsKey(this.getInstanceIdentifier()))) {
             this.renderText = this.getBuilder().splashCache.get(this.getInstanceIdentifier()).renderText;
@@ -95,7 +101,7 @@ public class SplashTextElement extends AbstractElement {
                 File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
                 if (f.isFile()) {
                     List<String> l = FileUtils.getFileLines(f);
-                    if (!l.isEmpty()) {
+                    if (!l.isEmpty() && ((l.size() > 1) || (l.get(0).replace(" ", "").length() > 0))) {
                         int i = MathUtils.getRandomNumberInRange(0, l.size()-1);
                         this.renderText = l.get(i);
                     } else {

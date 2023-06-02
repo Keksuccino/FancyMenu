@@ -34,10 +34,6 @@ public class TitleScreenSplashBuilder extends DeepElementBuilder<TitleScreenLaye
     }
 
     @Override
-    public void stackElements(@NotNull TitleScreenSplashDeepElement element, @NotNull TitleScreenSplashDeepElement stack) {
-    }
-
-    @Override
     public @NotNull TitleScreenSplashDeepEditorElement wrapIntoEditorElement(@NotNull TitleScreenSplashDeepElement element, @NotNull LayoutEditorScreen editor) {
         return new TitleScreenSplashDeepEditorElement(element, editor);
     }
@@ -50,6 +46,10 @@ public class TitleScreenSplashBuilder extends DeepElementBuilder<TitleScreenLaye
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
         return null;
+    }
+
+    @Override
+    public void stackElements(@NotNull TitleScreenSplashDeepElement element, @NotNull TitleScreenSplashDeepElement stack) {
     }
 
 }

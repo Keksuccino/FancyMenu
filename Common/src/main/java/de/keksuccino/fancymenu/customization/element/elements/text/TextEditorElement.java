@@ -172,7 +172,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> ((TextElement)consumes.element).baseColorHex,
                         (element, colorHex) -> {
-                            if (DrawableColor.create(colorHex) != null) {
+                            if (DrawableColor.of(colorHex) != null) {
                                 ((TextElement)element.element).baseColorHex = colorHex;
                             } else {
                                 ((TextElement)element.element).baseColorHex = null;
@@ -257,7 +257,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexNormal,
                         (element, colorHex) -> {
-                            if (DrawableColor.create(colorHex) != null) {
+                            if (DrawableColor.of(colorHex) != null) {
                                 ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
                             } else {
                                 ((TextElement)element.element).scrollGrabberColorHexNormal = null;
@@ -271,7 +271,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexHover,
                         (element, colorHex) -> {
-                            if (DrawableColor.create(colorHex) != null) {
+                            if (DrawableColor.of(colorHex) != null) {
                                 ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
                             } else {
                                 ((TextElement)element.element).scrollGrabberColorHexHover = null;

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TitleScreenSplashDeepElement extends AbstractDeepElement {
 
-    private static final DrawableColor DEFAULT_COLOR = DrawableColor.create(255, 255, 0);
+    private static final DrawableColor DEFAULT_COLOR = DrawableColor.of(255, 255, 0);
 
     public static String cachedSplashText;
 
@@ -32,6 +32,8 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
 
         RenderSystem.enableBlend();
         this.renderSplash(pose, Minecraft.getInstance().font);
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 
@@ -51,7 +53,8 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
         f = f * 100.0F / (float) (font.width(cachedSplashText) + 32);
         pose.scale(f, f, f);
 
-        drawCenteredString(pose, font, Component.literal(cachedSplashText), 0, -8, DEFAULT_COLOR.getColorInt());
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+        drawCenteredString(pose, font, Component.literal(cachedSplashText), 0, -8, DEFAULT_COLOR.getColorIntWithAlpha(this.opacity));
 
         pose.popPose();
 

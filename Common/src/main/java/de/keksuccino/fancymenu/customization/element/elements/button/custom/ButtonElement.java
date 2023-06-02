@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
@@ -84,9 +85,14 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
             }
         }
 
+        //TODO remove debug
+        LOGGER.info("########### RENDER BUTTON: " + ((this.getButton().getMessage() != null) ? this.getButton().getMessage().getString() : "null"));
+
         this.getButton().render(pose, mouseX, mouseY, partial);
 
         this.hovered = this.button.isHoveredOrFocused();
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 
