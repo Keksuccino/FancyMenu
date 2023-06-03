@@ -5,7 +5,8 @@ import de.keksuccino.fancymenu.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
+import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
@@ -437,7 +438,7 @@ public class AdvancedContextMenu implements Renderable {
         protected ClickAction<R> clickAction;
         protected AdvancedContextMenu childContextMenu;
         protected Component label;
-        protected Button button;
+        protected AdvancedButton button;
         protected Tooltip tooltip = null;
 
         protected ClickableMenuEntry(String identifier, boolean stackable, @NotNull Component label, @Nullable AdvancedContextMenu childContextMenu, @NotNull ClickAction<R> clickAction) {
@@ -445,11 +446,11 @@ public class AdvancedContextMenu implements Renderable {
             this.clickAction = clickAction;
             this.label = label;
             this.childContextMenu = childContextMenu;
-            this.button = new Button(0, 0, 0, 0, label, true, (b) -> this.onClick(null)) {
+            this.button = new AdvancedButton(0, 0, 0, 0, label.getString(), true, (b) -> this.onClick(null)) {
                 @Override
-                public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
+                public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                     tick(parentContextMenu);
-                    super.render($$0, $$1, $$2, $$3);
+                    super.render(pose, mouseX, mouseY, partial);
                 }
             };
         }
@@ -501,7 +502,7 @@ public class AdvancedContextMenu implements Renderable {
             this.button.setMessage(label);
         }
 
-        public Button getButton() {
+        public AdvancedButton getButton() {
             return this.button;
         }
 

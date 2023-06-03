@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextListScro
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.ChatFormatting;
@@ -35,9 +35,9 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
     protected ScrollArea backgroundTypeListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea backgroundDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected AdvancedButton configureButton;
-    protected AdvancedButton doneButton;
-    protected AdvancedButton cancelButton;
+    protected ExtendedButton configureButton;
+    protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
 
     public ChooseMenuBackgroundScreen(@Nullable MenuBackground backgroundToEdit, boolean addResetBackgroundEntry, @NotNull Consumer<MenuBackground> callback) {
 
@@ -68,7 +68,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             }
         }
 
-        this.configureButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), true, (button) -> {
+        this.configureButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), (button) -> {
             if (this.backgroundType != null) {
                 this.backgroundType.buildNewOrEditInstanceInternal(this, this.background, (back) -> {
                     if (back != null) {
@@ -78,23 +78,23 @@ public class ChooseMenuBackgroundScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack pose, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else {
                     this.active = ChooseMenuBackgroundScreen.this.backgroundType != NO_BACKGROUND_TYPE;
                 }
-                super.render(pose, p_93658_, p_93659_, p_93660_);
+                super.render(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.configureButton);
 
-        this.doneButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.background);
         }) {
             @Override
-            public void renderWidget(PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
@@ -106,12 +106,12 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 }
                 super.renderWidget(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -325,6 +326,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             LOGGER.error("[FANCYMENU] Failed to add properties to serialized element! Keys reserved by the system: " + keys);
         }
         return serialized;
+    }
+
+    protected static boolean isEditor() {
+        return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
     }
 
 }

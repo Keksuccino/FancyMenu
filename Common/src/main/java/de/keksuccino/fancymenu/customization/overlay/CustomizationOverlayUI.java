@@ -59,6 +59,7 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
+import org.jetbrains.annotations.NotNull;
 
 public class CustomizationOverlayUI extends UIBase {
 
@@ -521,7 +522,7 @@ public class CustomizationOverlayUI extends UIBase {
 				}
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 					Screen current = Minecraft.getInstance().screen;
 					if ((current != null) && ScreenCustomization.isCustomizationEnabledForScreen(current)) {
 						this.active = true;
@@ -530,7 +531,7 @@ public class CustomizationOverlayUI extends UIBase {
 						this.active = false;
 						this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.tools.buttoninfo.enablecustomizations")));
 					}
-					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+					super.render(pose, mouseX, mouseY, partial);
 				}
 			};
 			if (showButtonInfo) {
@@ -594,13 +595,13 @@ public class CustomizationOverlayUI extends UIBase {
 				Minecraft.getInstance().setScreen(s);
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 					if (Minecraft.getInstance().level == null) {
 						this.active = true;
 					} else {
 						this.active = false;
 					}
-					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+					super.render(pose, mouseX, mouseY, partial);
 				}
 			};
 			openReceivingLevelScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.misc.receiving_level_screen.btn.desc")));
@@ -610,13 +611,13 @@ public class CustomizationOverlayUI extends UIBase {
 				ConnectScreen.startConnecting(new TitleScreen(), Minecraft.getInstance(), new ServerAddress("%fancymenu_dummy_address%", 25565), null);
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 					if (Minecraft.getInstance().level == null) {
 						this.active = true;
 					} else {
 						this.active = false;
 					}
-					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+					super.render(pose, mouseX, mouseY, partial);
 				}
 			};
 			openConnectScreenButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.overlay.ui.misc.open_connect_screen.btn.desc")));

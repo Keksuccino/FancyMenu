@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -100,8 +100,8 @@ public class FileChooserScreen extends Screen {
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
     protected LocalTexture previewTexture;
-    protected AdvancedButton okButton;
-    protected AdvancedButton cancelButton;
+    protected ExtendedButton okButton;
+    protected ExtendedButton cancelButton;
 
     public FileChooserScreen(@Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
 
@@ -123,24 +123,24 @@ public class FileChooserScreen extends Screen {
         this.updateTextPreview(null);
         this.updateFilesList();
 
-        this.okButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), true, (button) -> {
+        this.okButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
             FileScrollAreaEntry selected = this.getSelectedEntry();
             if (selected != null) {
                 this.callback.accept(selected.file);
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 FileScrollAreaEntry e = FileChooserScreen.this.getSelectedEntry();
                 this.active = (e != null) && (e.file.isFile());
-                super.render($$0, $$1, $$2, $$3);
+                super.render(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.okButton);
 
-        this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

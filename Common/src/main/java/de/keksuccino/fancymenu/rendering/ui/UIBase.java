@@ -4,8 +4,10 @@ import java.awt.Color;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -49,6 +51,20 @@ public class UIBase extends GuiComponent {
 	 */
 	public static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
 		button.setBackgroundColor(ELEMENT_BACKGROUND_COLOR_IDLE, ELEMENT_BACKGROUND_COLOR_HOVER, ELEMENT_BORDER_COLOR_IDLE, ELEMENT_BORDER_COLOR_HOVER, ELEMENT_BORDER_THICKNESS);
+		return button;
+	}
+
+	/**
+	 * Applies the default skin to the input button and returns it.
+	 *
+	 * @return The input button.
+	 */
+	public static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
+		DrawableColor normal = DrawableColor.of(ELEMENT_BACKGROUND_COLOR_IDLE);
+		DrawableColor hover = DrawableColor.of(ELEMENT_BACKGROUND_COLOR_HOVER);
+		DrawableColor normalBorder = DrawableColor.of(ELEMENT_BORDER_COLOR_IDLE);
+		DrawableColor hoverBorder = DrawableColor.of(ELEMENT_BORDER_COLOR_HOVER);
+		button.setBackground(ExtendedButton.ColorButtonBackground.create(normal, hover, normalBorder, hoverBorder, ELEMENT_BORDER_THICKNESS));
 		return button;
 	}
 

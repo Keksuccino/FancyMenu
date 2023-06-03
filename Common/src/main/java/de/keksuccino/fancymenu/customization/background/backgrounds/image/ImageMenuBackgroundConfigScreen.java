@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -26,10 +26,10 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
     protected ImageMenuBackground background;
     protected Consumer<ImageMenuBackground> callback;
 
-    protected Button chooseImageButton;
-    protected Button toggleSlideButton;
-    protected Button cancelButton;
-    protected Button doneButton;
+    protected ExtendedButton chooseImageButton;
+    protected ExtendedButton toggleSlideButton;
+    protected ExtendedButton cancelButton;
+    protected ExtendedButton doneButton;
 
     protected ImageMenuBackgroundConfigScreen(@Nullable Screen parent, @NotNull ImageMenuBackground background, @NotNull Consumer<ImageMenuBackground> callback) {
 
@@ -39,7 +39,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
         this.background = background;
         this.callback = callback;
 
-        this.chooseImageButton = new Button(0, 0, 300, 20, Component.translatable("fancymenu.background.image.configure.choose_image"), true, (press) -> {
+        this.chooseImageButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.image.configure.choose_image"), (press) -> {
             FileChooserScreen s = new FileChooserScreen(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
                 if (call != null) {
                     this.background.imagePath = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
@@ -48,42 +48,42 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
             });
             s.setFileFilter(FileChooserScreen.IMAGE_FILE_FILTER);
             Minecraft.getInstance().setScreen(s);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.chooseImageButton);
 
-        this.toggleSlideButton = new Button(0, 0, 300, 20, Component.literal(""), true, (press) -> {
+        this.toggleSlideButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
             this.background.slideLeftRight = !this.background.slideLeftRight;
         }) {
             @Override
-            public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
-                if (!background.slideLeftRight) {
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+                if (!ImageMenuBackgroundConfigScreen.this.background.slideLeftRight) {
                     this.setMessage(Component.translatable("fancymenu.background.image.configure.slide.off"));
                 } else {
                     this.setMessage(Component.translatable("fancymenu.background.image.configure.slide.on"));
                 }
-                super.render($$0, $$1, $$2, $$3);
+                super.render(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.toggleSlideButton);
 
-        this.doneButton = new Button(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), true, (press) -> {
+        this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
             this.callback.accept(this.background);
         }) {
             @Override
-            public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
-                this.active = background.imagePath != null;
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+                this.active = ImageMenuBackgroundConfigScreen.this.background.imagePath != null;
                 if (!this.active) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen")).setDefaultBackgroundColor(), false, true);
                 }
-                super.render($$0, $$1, $$2, $$3);
+                super.render(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new Button(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (press) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
             this.onClose();
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

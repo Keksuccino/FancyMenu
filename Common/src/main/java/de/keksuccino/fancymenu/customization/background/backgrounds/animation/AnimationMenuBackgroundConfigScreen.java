@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -24,10 +24,10 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
     protected AnimationMenuBackground background;
     protected Consumer<AnimationMenuBackground> callback;
 
-    protected Button chooseAnimationButton;
-    protected Button toggleRestartOnLoadButton;
-    protected Button cancelButton;
-    protected Button doneButton;
+    protected ExtendedButton chooseAnimationButton;
+    protected ExtendedButton toggleRestartOnLoadButton;
+    protected ExtendedButton cancelButton;
+    protected ExtendedButton doneButton;
 
     protected AnimationMenuBackgroundConfigScreen(@Nullable Screen parent, @NotNull AnimationMenuBackground background, @NotNull Consumer<AnimationMenuBackground> callback) {
 
@@ -37,7 +37,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         this.background = background;
         this.callback = callback;
 
-        this.chooseAnimationButton = new Button(0, 0, 300, 20, Component.translatable("fancymenu.background.animation.configure.choose_animation"), true, (press) -> {
+        this.chooseAnimationButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.animation.configure.choose_animation"), (press) -> {
             ChooseAnimationScreen s = new ChooseAnimationScreen(this.background.animationName, (call) -> {
                 if (call != null) {
                     this.background.animationName = call;
@@ -45,42 +45,42 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
                 Minecraft.getInstance().setScreen(this);
             });
             Minecraft.getInstance().setScreen(s);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.chooseAnimationButton);
 
-        this.toggleRestartOnLoadButton = new Button(0, 0, 300, 20, Component.literal(""), true, (press) -> {
+        this.toggleRestartOnLoadButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
             this.background.restartOnMenuLoad = !this.background.restartOnMenuLoad;
         }) {
             @Override
-            public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
-                if (!background.restartOnMenuLoad) {
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+                if (!AnimationMenuBackgroundConfigScreen.this.background.restartOnMenuLoad) {
                     this.setMessage(Component.translatable("fancymenu.background.animation.configure.restart_on_load.off"));
                 } else {
                     this.setMessage(Component.translatable("fancymenu.background.animation.configure.restart_on_load.on"));
                 }
-                super.render($$0, $$1, $$2, $$3);
+                super.render(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.toggleRestartOnLoadButton);
 
-        this.doneButton = new Button(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), true, (press) -> {
+        this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
             this.callback.accept(this.background);
         }) {
             @Override
-            public void render(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
-                this.active = background.animationName != null;
+            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+                this.active = AnimationMenuBackgroundConfigScreen.this.background.animationName != null;
                 if (!this.active) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")).setDefaultBackgroundColor(), false, true);
                 }
-                super.render($$0, $$1, $$2, $$3);
+                super.render(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new Button(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (press) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
             this.onClose();
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

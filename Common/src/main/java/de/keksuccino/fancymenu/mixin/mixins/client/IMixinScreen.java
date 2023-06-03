@@ -21,6 +21,8 @@ public interface IMixinScreen {
 
     @Accessor("renderables") List<Renderable> getRenderablesFancyMenu();
 
+    @Accessor("children") List<GuiEventListener> getChildrenFancyMenu();
+
     @Invoker("addWidget") <T extends GuiEventListener & NarratableEntry> T invokeAddWidgetFancyMenu(T widget);
 
     @Invoker("removeWidget") void invokeRemoveWidgetFancyMenu(GuiEventListener widget);

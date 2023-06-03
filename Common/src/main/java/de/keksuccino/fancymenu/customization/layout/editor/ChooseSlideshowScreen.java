@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextListScro
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.rendering.ui.widget.Button;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.gui.screens.Screen;
@@ -32,8 +32,8 @@ public class ChooseSlideshowScreen extends Screen {
     protected ExternalTextureSlideshowRenderer selectedSlideshow = null;
 
     protected ScrollArea slideshowListScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected AdvancedButton doneButton;
-    protected AdvancedButton cancelButton;
+    protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
 
     public ChooseSlideshowScreen(@Nullable String preSelectedSlideshow, @NotNull Consumer<String> callback) {
 
@@ -52,25 +52,25 @@ public class ChooseSlideshowScreen extends Screen {
             }
         }
 
-        this.doneButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.selectedSlideshowName);
         }) {
             @Override
-            public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseSlideshowScreen.this.selectedSlideshowName == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.slideshow.choose.no_slideshow_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;
                 }
-                super.renderWidget(matrix, mouseX, mouseY, partialTicks);
+                super.renderWidget(pose, mouseX, mouseY, partial);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new Button(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }
