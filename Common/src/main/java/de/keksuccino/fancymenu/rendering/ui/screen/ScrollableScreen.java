@@ -210,7 +210,7 @@ public class ScrollableScreen extends Screen {
             this.button = button;
             this.renderBody = (render) -> {
                 int xCenter = render.entry.x + (render.entry.getWidth() / 2);
-                UIBase.colorizeButton(this.button);
+                UIBase.applyDefaultButtonSkinTo(this.button);
                 if (!this.isOverlayButtonHoveredAndOverlapsArea()) {
                     this.button.active = true;
                 } else {

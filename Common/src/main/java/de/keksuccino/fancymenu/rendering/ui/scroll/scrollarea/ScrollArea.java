@@ -28,8 +28,8 @@ public class ScrollArea extends UIBase {
     protected int y;
     protected int width;
     protected int height;
-    public Color backgroundColor = AREA_BACKGROUND_COLOR;
-    public Color borderColor = ELEMENT_BORDER_COLOR_IDLE;
+    public Color backgroundColor = UIBase.getUIColorScheme().areaBackgroundColor.getColor();
+    public Color borderColor = UIBase.getUIColorScheme().elementBorderColorNormal.getColor();
     protected int borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
     public boolean minimumEntryWidthIsAreaWidth = true;
@@ -45,9 +45,9 @@ public class ScrollArea extends UIBase {
         this.setY(y, true);
         this.setWidth(width, true);
         this.setHeight(height, true);
-        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
+        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, UIBase.getUIColorScheme().scrollGrabberColorNormal.getColor(), UIBase.getUIColorScheme().scrollGrabberColorHover.getColor());
         this.verticalScrollBar.setScrollWheelAllowed(true);
-        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, SCROLL_GRABBER_IDLE_COLOR, SCROLL_GRABBER_HOVER_COLOR);
+        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, UIBase.getUIColorScheme().scrollGrabberColorNormal.getColor(), UIBase.getUIColorScheme().scrollGrabberColorHover.getColor());
         this.updateScrollArea();
     }
 

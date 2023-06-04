@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -133,7 +132,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(matrix, titleComp, 20, 20, -1);
@@ -237,7 +236,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
         public MenuBackgroundBuilder<?> backgroundType;
 
         public BackgroundTypeScrollEntry(ScrollArea parent, @NotNull MenuBackgroundBuilder<?> backgroundType, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, getText(backgroundType), LISTING_DOT_BLUE, onClick);
+            super(parent, getText(backgroundType), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.backgroundType = backgroundType;
         }
 
@@ -245,7 +244,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             if (backgroundType == NO_BACKGROUND_TYPE) {
                 return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(ChatFormatting.RED);
             }
-            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB()));
+            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt()));
         }
 
     }

@@ -25,7 +25,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,8 +36,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = new ResourceLocation("fancymenu", "textures/context_menu_sub_arrow.png");
     private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = new ResourceLocation("fancymenu", "textures/context_menu_tooltip.png");
-    private static final Color MENU_SHADOW_COLOR = new Color(43, 43, 43, 100);
-    private static final Color MENU_BACKGROUND_COLOR = UIBase.ELEMENT_BACKGROUND_COLOR_IDLE;
 
     protected final List<ContextMenuEntry> entries = new ArrayList<>();
     protected float scale = UIBase.getUiScale();
@@ -108,10 +105,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         //Render shadow
         if (this.hasShadow()) {
-            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, MENU_SHADOW_COLOR.getRGB());
+            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, UIBase.getUIColorScheme().contextMenuShaderColor.getColorInt());
         }
         //Render background
-        fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), MENU_BACKGROUND_COLOR.getRGB());
+        fill(pose, scaledX, scaledY, scaledX + this.rawWidth, scaledY + this.rawHeight, UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
         //Update + render entries
         int entryY = scaledY;
         for (ContextMenuEntry e : renderEntries) {
@@ -128,7 +125,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
         }
         //Render border
-        UIBase.renderBorder(pose, scaledX - 1, scaledY - 1, scaledX + this.rawWidth + 1, scaledY + this.rawHeight + 1, 1, UIBase.ELEMENT_BORDER_COLOR_IDLE, true, true, true, true);
+        UIBase.renderBorder(pose, scaledX - 1, scaledY - 1, scaledX + this.rawWidth + 1, scaledY + this.rawHeight + 1, 1, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry e : renderEntries) {
@@ -822,14 +819,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
             int labelX = this.x + 10;
             int labelY = this.y + (this.height / 2) - (this.font.lineHeight / 2);
-            this.font.draw(pose, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
+            this.font.draw(pose, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
                 shortcutTextWidth = this.font.width(shortcutText);
                 int shortcutX = this.x + this.width - 10 - shortcutTextWidth;
-                this.font.draw(pose, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.TEXT_COLOR_GREY_4.getRGB() : UIBase.TEXT_COLOR_GREY_3.getRGB());
+                this.font.draw(pose, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
             }
 
             this.renderTooltipIconAndRegisterTooltip(pose, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);
@@ -850,10 +847,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 boolean showTooltip = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, iconHovered ? 1.0F : 0.2F);
+                UIBase.getUIColorScheme().setUITextureShaderColor(iconHovered ? 1.0F : 0.2F);
                 RenderUtils.bindTexture(CONTEXT_MENU_TOOLTIP_ICON);
                 blit(pose, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                UIBase.resetShaderColor();
 
                 Tooltip tooltip = this.getTooltip();
                 if (tooltip != null) {
@@ -880,7 +877,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         protected void renderBackground(@NotNull PoseStack pose) {
             if (this.isHovered() && this.isActive()) {
-                fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, UIBase.ELEMENT_BACKGROUND_COLOR_HOVER.getRGB());
+                fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, UIBase.getUIColorScheme().elementBackgroundColorHover.getColorInt());
             }
         }
 
@@ -1030,9 +1027,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         protected void renderSubMenuArrow(PoseStack pose) {
             RenderSystem.enableBlend();
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
             RenderUtils.bindTexture(SUB_CONTEXT_MENU_ARROW_ICON);
             blit(pose, this.x + this.width - 20, this.y + 5, 0.0F, 0.0F, 10, 10, 10, 10);
+            UIBase.resetShaderColor();
         }
 
         @Override
@@ -1220,7 +1218,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.ELEMENT_BORDER_COLOR_IDLE.getRGB());
+            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.getUIColorScheme().elementBorderColorNormal.getColorInt());
         }
 
         @Override

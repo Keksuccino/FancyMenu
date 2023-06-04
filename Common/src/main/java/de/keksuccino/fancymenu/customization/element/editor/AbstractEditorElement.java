@@ -21,11 +21,12 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
 import de.keksuccino.fancymenu.misc.ValueSwitcher;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.utils.ListUtils;
@@ -54,14 +55,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = new ResourceLocation("fancymenu", "textures/not_allowed.png");
-	protected static final Color DRAGGING_NOT_ALLOWED_OVERLAY_COLOR = new Color(232, 54, 9, 200);
-	protected static final Color BORDER_COLOR_SELECTED = new Color(3, 219, 252);
-	protected static final Color BORDER_COLOR_NORMAL = new Color(3, 148, 252);
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
-			return BORDER_COLOR_SELECTED.getRGB();
+			return UIBase.getUIColorScheme().layoutEditorElementBorderColorSelected.getColorInt();
 		}
-		return BORDER_COLOR_NORMAL.getRGB();
+		return UIBase.getUIColorScheme().layoutEditorElementBorderColorNormal.getColorInt();
 	};
 	protected static final long CURSOR_HORIZONTAL_RESIZE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long CURSOR_VERTICAL_RESIZE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
@@ -483,7 +481,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			RenderSystem.enableBlend();
-			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), DRAGGING_NOT_ALLOWED_OVERLAY_COLOR.getRGB());
+			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorScheme().layoutEditorElementDraggingNotAllowedColor.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];

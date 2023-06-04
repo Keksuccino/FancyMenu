@@ -85,7 +85,7 @@ public class ChooseAnimationScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(pose, titleComp, 20, 20, -1);
@@ -112,7 +112,7 @@ public class ChooseAnimationScreen extends Screen {
             int aniX = this.width - 20 - aniW;
             int aniY = 50 + 15;
             boolean cachedLooped = this.selectedAnimation.isGettingLooped();
-            fill(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.AREA_BACKGROUND_COLOR.getRGB());
+            fill(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
             this.selectedAnimation.setLooped(false);
             this.selectedAnimation.setPosX(aniX);
             this.selectedAnimation.setPosY(aniY);
@@ -120,7 +120,7 @@ public class ChooseAnimationScreen extends Screen {
             this.selectedAnimation.setHeight(aniH);
             this.selectedAnimation.render(pose);
             this.selectedAnimation.setLooped(cachedLooped);
-            UIBase.renderBorder(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.ELEMENT_BORDER_COLOR_IDLE, true, true, true, true);
+            UIBase.renderBorder(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
         }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
@@ -195,7 +195,7 @@ public class ChooseAnimationScreen extends Screen {
         public String animation;
 
         public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.animation = animation;
         }
 

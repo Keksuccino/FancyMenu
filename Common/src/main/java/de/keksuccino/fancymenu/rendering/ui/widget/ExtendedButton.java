@@ -7,9 +7,13 @@ import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Button;
@@ -23,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
@@ -34,7 +39,11 @@ public class ExtendedButton extends Button {
     protected boolean enableLabel = true;
     @NotNull
     protected ButtonBackground background = VanillaButtonBackground.create().setParent(this);
+    protected DrawableColor labelBaseColorNormal = DrawableColor.of(new Color(0xFFFFFF));
+    protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
+    protected boolean labelShadow = true;
     protected boolean autoRegister = false;
+    protected Tooltip tooltip = null;
 
     protected int lastHoverState = -1;
 
@@ -56,6 +65,9 @@ public class ExtendedButton extends Button {
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        if ((this.tooltip != null) && this.isHovered() && this.isActive() && this.visible) {
+            TooltipHandler.INSTANCE.addTooltip(this.tooltip, () -> true, false, true);
+        }
         this.handleAutoRegister();
         this.handleHover();
         super.render(pose, mouseX, mouseY, partial);
@@ -69,8 +81,40 @@ public class ExtendedButton extends Button {
 
     protected void renderLabelText(PoseStack pose) {
         if (this.enableLabel) {
-            int k = this.active ? 0xFFFFFF : 0xA0A0A0;
-            this.renderString(pose, mc.font, k | Mth.ceil(this.alpha * 255.0f) << 24);
+            int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
+            this.renderScrollingLabel(pose, mc.font, 2, k);
+        }
+    }
+
+    protected void renderScrollingLabel(@NotNull PoseStack pose, @NotNull Font font, int spaceLeftRight, int textColor) {
+        int xMin = this.getX() + spaceLeftRight;
+        int xMax = this.getX() + this.getWidth() - spaceLeftRight;
+        this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
+    }
+
+    protected void renderScrollingLabelInternal(@NotNull PoseStack pose, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
+        int textWidth = font.width(text);
+        int textPosY = (yMin + yMax - 9) / 2 + 1;
+        int maxTextWidth = xMax - xMin;
+        if (textWidth > maxTextWidth) {
+            int diffTextWidth = textWidth - maxTextWidth;
+            double scrollTime = (double) Util.getMillis() / 1000.0D;
+            double $$13 = Math.max((double)diffTextWidth * 0.5D, 3.0D);
+            double $$14 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / $$13)) / 2.0D + 0.5D;
+            double textPosX = Mth.lerp($$14, 0.0D, diffTextWidth);
+            enableScissor(xMin, yMin, xMax, yMax);
+            if (!this.labelShadow) {
+                font.draw(pose, text, xMin - (int)textPosX, textPosY, textColor);
+            } else {
+                font.drawShadow(pose, text, xMin - (int)textPosX, textPosY, textColor);
+            }
+            disableScissor();
+        } else {
+            if (!this.labelShadow) {
+                font.draw(pose, text, ((xMin + xMax) / 2F) - (font.width(text) / 2F), textPosY, textColor);
+            } else {
+                font.drawShadow(pose, text, ((xMin + xMax) / 2F) - (font.width(text) / 2F), textPosY, textColor);
+            }
         }
     }
 
@@ -114,6 +158,15 @@ public class ExtendedButton extends Button {
         return this;
     }
 
+    public Tooltip getTooltip() {
+        return this.tooltip;
+    }
+
+    public ExtendedButton setTooltip(@Nullable Tooltip tooltip) {
+        this.tooltip = tooltip;
+        return this;
+    }
+
     public boolean isLabelEnabled() {
         return this.enableLabel;
     }
@@ -121,6 +174,30 @@ public class ExtendedButton extends Button {
     public ExtendedButton setLabelEnabled(boolean enabled) {
         this.enableLabel = enabled;
         return this;
+    }
+
+    public DrawableColor getLabelBaseColorNormal() {
+        return this.labelBaseColorNormal;
+    }
+
+    public void setLabelBaseColorNormal(DrawableColor labelBaseColorNormal) {
+        this.labelBaseColorNormal = labelBaseColorNormal;
+    }
+
+    public DrawableColor getLabelBaseColorInactive() {
+        return this.labelBaseColorInactive;
+    }
+
+    public void setLabelBaseColorInactive(DrawableColor labelBaseColorInactive) {
+        this.labelBaseColorInactive = labelBaseColorInactive;
+    }
+
+    public boolean isLabelShadowEnabled() {
+        return this.labelShadow;
+    }
+
+    public void setLabelShadowEnabled(boolean enabled) {
+        this.labelShadow = enabled;
     }
 
     @NotNull
@@ -400,8 +477,6 @@ public class ExtendedButton extends Button {
         protected IAnimationRenderer backgroundAnimationHover;
         protected boolean loop = true;
         protected boolean restartOnHover = true;
-
-//        protected int lastHoverState = -1;
 
         public static AnimationButtonBackground create(@NotNull IAnimationRenderer backgroundAnimationNormal) {
             return new AnimationButtonBackground(backgroundAnimationNormal, null);

@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import net.minecraft.client.Minecraft;

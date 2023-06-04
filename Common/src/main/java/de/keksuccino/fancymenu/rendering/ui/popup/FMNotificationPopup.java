@@ -14,7 +14,7 @@ public class FMNotificationPopup extends NotificationPopup {
 
 	@Override
 	protected void colorizePopupButton(AdvancedButton b) {
-		UIBase.colorizeButton(b);
+		UIBase.applyDefaultButtonSkinTo(b);
 	}
 
 }

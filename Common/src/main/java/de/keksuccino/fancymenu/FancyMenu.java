@@ -22,7 +22,7 @@ public class FancyMenu {
 
 	//PRIORITY:
 
-	//TODO Layout Editor: undo/redo shortcuts gehen nicht (Z + Y in a nutshell)
+	//TODO FIXEN: Hover sound von vanilla + custom buttons geht nicht
 
 
 	//-----------------------------
@@ -216,6 +216,7 @@ public class FancyMenu {
 			config.registerValue("uiscale", 1.0F, "ui");
 			config.registerValue("show_unicode_warning", true, "ui");
 			config.registerValue("play_ui_click_sounds", true, "ui");
+			config.registerValue("light_mode", false, "ui");
 
 			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			

@@ -37,7 +37,7 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
             Minecraft.getInstance().setScreen(this.parent);
             this.onCancel();
         });
-        UIBase.colorizeButton(this.backButton);
+        UIBase.applyDefaultButtonSkinTo(this.backButton);
 
         for (String s : this.parentList) {
             this.scrollArea.addEntry(new StringScrollAreaEntry(this.scrollArea, s, this));

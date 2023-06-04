@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.rendering.ui.screen.filechooser;
+package de.keksuccino.fancymenu.rendering.ui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -155,7 +154,7 @@ public class FileChooserScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(pose, titleComp, 20, 20, -1);
@@ -187,11 +186,13 @@ public class FileChooserScreen extends Screen {
             int h = size[1];
             int x = this.width - 20 - w;
             int y = 50 + 15;
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            fill(pose, x, y, x + w, y + h, UIBase.AREA_BACKGROUND_COLOR.getRGB());
+            UIBase.resetShaderColor();
+            fill(pose, x, y, x + w, y + h, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
+            UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
             RenderUtils.bindTexture(this.previewTexture.getResourceLocation());
             blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
-            UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.ELEMENT_BORDER_COLOR_IDLE, true, true, true, true);
+            UIBase.resetShaderColor();
+            UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
         } else {
             this.textFilePreviewScrollArea.setWidth((this.width / 2) - 40, true);
             this.textFilePreviewScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -241,7 +242,7 @@ public class FileChooserScreen extends Screen {
         this.textFilePreviewScrollArea.clearEntries();
         if ((file != null) && file.isFile() && PLAIN_TEXT_FILE_FILTER.checkFile(file)) {
             for (String s : FileUtils.getFileLines(file)) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GREY_1.getRGB())), (entry) -> {});
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
@@ -252,7 +253,7 @@ public class FileChooserScreen extends Screen {
                 e.setWidth(totalWidth);
             }
         } else {
-            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.TEXT_COLOR_GREY_3.getRGB())), (entry) -> {});
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt())), (entry) -> {});
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorIdle());
             e.setPlayClickSound(false);
@@ -343,7 +344,7 @@ public class FileChooserScreen extends Screen {
 
             super(parent, 100, 30);
             this.file = file;
-            this.fileNameComponent = Component.literal(this.file.getName()).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB()));
+            this.fileNameComponent = Component.literal(this.file.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt()));
 
             this.setWidth(this.font.width(this.fileNameComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);
@@ -362,8 +363,10 @@ public class FileChooserScreen extends Screen {
                 RenderSystem.enableBlend();
 
                 //Render icon
+                UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
                 RenderUtils.bindTexture(this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE);
                 blit(pose, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
+                UIBase.resetShaderColor();
 
                 //Render file name
                 this.font.draw(pose, this.fileNameComponent, this.x + BORDER + 20 + 3, this.y + ((float)this.height / 2) - ((float)this.font.lineHeight / 2) , -1);
@@ -409,7 +412,7 @@ public class FileChooserScreen extends Screen {
         public ParentDirScrollAreaEntry(@NotNull ScrollArea parent) {
 
             super(parent, 100, 30);
-            this.labelComponent = Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_4.getRGB()).withBold(true));
+            this.labelComponent = Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt()).withBold(true));
 
             this.setWidth(this.font.width(this.labelComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);
@@ -426,8 +429,10 @@ public class FileChooserScreen extends Screen {
             RenderSystem.enableBlend();
 
             //Render icon
+            UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
             RenderUtils.bindTexture(GO_UP_ICON_TEXTURE);
             blit(pose, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
+            UIBase.resetShaderColor();
 
             //Render file name
             this.font.draw(pose, this.labelComponent, this.x + BORDER + 20 + 3, this.y + ((float)this.height / 2) - ((float)this.font.lineHeight / 2) , -1);

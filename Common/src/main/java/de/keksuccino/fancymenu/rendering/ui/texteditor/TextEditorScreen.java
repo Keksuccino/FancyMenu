@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollbar.ScrollBar;
@@ -12,6 +13,8 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -63,9 +66,9 @@ public class TextEditorScreen extends Screen {
     public ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
     public ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
     public ContextMenu rightClickContextMenu;
-    public AdvancedButton cancelButton;
-    public AdvancedButton doneButton;
-    public AdvancedButton placeholderButton;
+    public ExtendedButton cancelButton;
+    public ExtendedButton doneButton;
+    public ExtendedButton placeholderButton;
     public int lastCursorPosSetByUser = 0;
     public boolean justSwitchedLineByWordDeletion = false;
     public boolean triggeredFocusedLineWasTooHighInCursorPosMethod = false;
@@ -74,23 +77,23 @@ public class TextEditorScreen extends Screen {
     public int borderLeft = 40;
     public int borderRight = 20;
     public int lineHeight = 14;
-    public Color screenBackgroundColor = UIBase.SCREEN_BACKGROUND_COLOR;
-    public Color editorAreaBorderColor = UIBase.ELEMENT_BORDER_COLOR_IDLE;
-    public Color editorAreaBackgroundColor = UIBase.AREA_BACKGROUND_COLOR;
-    public Color textColor = UIBase.TEXT_COLOR_GREY_1;
-    public Color focusedLineColor = UIBase.ENTRY_COLOR_FOCUSED;
-    public Color scrollGrabberIdleColor = UIBase.SCROLL_GRABBER_IDLE_COLOR;
-    public Color scrollGrabberHoverColor = UIBase.SCROLL_GRABBER_HOVER_COLOR;
-    public Color sideBarColor = UIBase.SIDE_BAR_COLOR;
-    public Color lineNumberTextColorNormal = UIBase.TEXT_COLOR_GREY_2;
-    public Color lineNumberTextColorFocused = UIBase.TEXT_COLOR_GREY_3;
-    public Color multilineNotSupportedNotificationColor = UIBase.TEXT_COLOR_RED_1;
-    public Color placeholderEntryBackgroundColorIdle = UIBase.AREA_BACKGROUND_COLOR;
-    public Color placeholderEntryBackgroundColorHover = UIBase.ENTRY_COLOR_FOCUSED;
-    public Color placeholderEntryDotColorPlaceholder = UIBase.LISTING_DOT_BLUE;
-    public Color placeholderEntryDotColorCategory = UIBase.LISTING_DOT_RED;
-    public Color placeholderEntryLabelColor = UIBase.TEXT_COLOR_GREY_1;
-    public Color placeholderEntryBackToCategoriesLabelColor = UIBase.TEXT_COLOR_ORANGE_1;
+    public Color screenBackgroundColor = UIBase.getUIColorScheme().screenBackgroundColor.getColor();
+    public Color editorAreaBorderColor = UIBase.getUIColorScheme().elementBorderColorNormal.getColor();
+    public Color editorAreaBackgroundColor = UIBase.getUIColorScheme().areaBackgroundColor.getColor();
+    public Color textColor = UIBase.getUIColorScheme().uiTextColor3.getColor();
+    public Color focusedLineColor = UIBase.getUIColorScheme().listEntryColorSelected.getColor();
+    public Color scrollGrabberIdleColor = UIBase.getUIColorScheme().scrollGrabberColorNormal.getColor();
+    public Color scrollGrabberHoverColor = UIBase.getUIColorScheme().scrollGrabberColorHover.getColor();
+    public Color sideBarColor = UIBase.getUIColorScheme().textEditorSideBarColor.getColor();
+    public Color lineNumberTextColorNormal = UIBase.getUIColorScheme().textEditorLineNumberTextColorNormal.getColor();
+    public Color lineNumberTextColorFocused = UIBase.getUIColorScheme().textEditorLineNumberTextColorSelected.getColor();
+    public Color multilineNotSupportedNotificationColor = UIBase.getUIColorScheme().uiTextColor1.getColor();
+    public Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorScheme().areaBackgroundColor.getColor();
+    public Color placeholderEntryBackgroundColorHover = UIBase.getUIColorScheme().listEntryColorSelected.getColor();
+    public Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorScheme().listingDotColor1.getColor();
+    public Color placeholderEntryDotColorCategory = UIBase.getUIColorScheme().listingDotColor2.getColor();
+    public Color placeholderEntryLabelColor = UIBase.getUIColorScheme().uiTextColor3.getColor();
+    public Color placeholderEntryBackToCategoriesLabelColor = UIBase.getUIColorScheme().uiTextColor2.getColor();
     public int currentLineWidth;
     public int lastTickFocusedLineIndex = -1;
     public TextEditorLine startHighlightLine = null;
@@ -175,32 +178,31 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
         this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
 
-        this.cancelButton = new AdvancedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             this.onClose();
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
-        this.doneButton = new AdvancedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             if (this.callback != null) {
                 this.callback.accept(this.getText());
             }
             Minecraft.getInstance().setScreen(this.parentScreen);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         if (this.allowPlaceholders) {
-            this.placeholderButton = new AdvancedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), true, (button) -> {
+            this.placeholderButton = new ExtendedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), (button) -> {
                 if (showPlaceholderMenu) {
                     showPlaceholderMenu = false;
                 } else {
                     showPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            });
-            this.placeholderButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
+            }).setAutoRegisterToScreen(true).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultBackgroundColor());
             UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
             if (showPlaceholderMenu) {
-                this.placeholderButton.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), this.editorAreaBorderColor, this.editorAreaBorderColor, 1);
+                this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().elementBackgroundColorNormal, UIBase.getUIColorScheme().elementBackgroundColorHover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));
                 ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
             }
         } else {
@@ -210,6 +212,7 @@ public class TextEditorScreen extends Screen {
 
     }
 
+    //TODO rewrite this !!!!!!!!!!!!!!!
     public void updateRightClickContextMenu() {
 
         TextEditorLine hoveredLine = this.getHoveredLine();
@@ -281,6 +284,7 @@ public class TextEditorScreen extends Screen {
 
         this.renderEditorAreaBackground(matrix);
 
+        //TODO use GuiComponent#enableScissor instead
         Window win = Minecraft.getInstance().getWindow();
         double scale = win.getGuiScale();
         int sciBottom = this.height - this.footerHeight;
@@ -329,7 +333,7 @@ public class TextEditorScreen extends Screen {
 
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
-        this.font.draw(matrix, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), -1);
+        this.font.draw(matrix, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
     }
 
@@ -1324,6 +1328,11 @@ public class TextEditorScreen extends Screen {
 
         }
 
+        List<PlaceholderMenuEntry> entries = new ArrayList<>(this.placeholderMenuEntries);
+        for (PlaceholderMenuEntry e : entries) {
+            e.buttonBase.mouseClicked(mouseX, mouseY, button);
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
 
     }
@@ -1547,7 +1556,7 @@ public class TextEditorScreen extends Screen {
         return this.headerHeight;
     }
 
-    public static class PlaceholderMenuEntry extends UIBase {
+    public class PlaceholderMenuEntry extends UIBase {
 
         public TextEditorScreen parent;
         public final Component label;
@@ -1559,7 +1568,7 @@ public class TextEditorScreen extends Screen {
         public Color backgroundColorHover = Color.LIGHT_GRAY;
         public Color dotColor = Color.BLUE;
         public Color entryLabelColor = Color.WHITE;
-        public AdvancedButton buttonBase;
+        public ExtendedButton buttonBase;
         public Font font = Minecraft.getInstance().font;
 
         public PlaceholderMenuEntry(@NotNull TextEditorScreen parent, @NotNull Component label, @NotNull Runnable clickAction) {
@@ -1567,7 +1576,7 @@ public class TextEditorScreen extends Screen {
             this.label = label;
             this.clickAction = clickAction;
             this.labelWidth = this.font.width(this.label);
-            this.buttonBase = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (button) -> {
+            this.buttonBase = new ExtendedButton(0, 0, this.getWidth(), this.getHeight(), "", (button) -> {
                 this.clickAction.run();
             }) {
                 @Override
@@ -1585,7 +1594,7 @@ public class TextEditorScreen extends Screen {
                     super.onClick(p_93371_, p_93372_);
                 }
                 @Override
-                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                     if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
                         this.isHovered = false;
                     }
@@ -1596,7 +1605,7 @@ public class TextEditorScreen extends Screen {
 
         public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
             //Update the button colors
-            this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
+            this.buttonBase.setBackground(ExtendedButton.ColorButtonBackground.create(DrawableColor.of(this.backgroundColorIdle), DrawableColor.of(this.backgroundColorHover), DrawableColor.of(this.backgroundColorIdle), DrawableColor.of(this.backgroundColorHover)));
             //Update the button pos
             this.buttonBase.x = this.x;
             this.buttonBase.y = this.y;
@@ -1622,7 +1631,7 @@ public class TextEditorScreen extends Screen {
         }
 
         public void setDescription(String... desc) {
-            this.buttonBase.setDescription(desc);
+            this.buttonBase.setTooltip(Tooltip.create(desc).setDefaultBackgroundColor());
         }
 
     }

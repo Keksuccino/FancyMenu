@@ -2,9 +2,12 @@ package de.keksuccino.fancymenu.rendering.ui;
 
 import java.awt.Color;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.rendering.ui.colorschemes.LightUIColorScheme;
+import de.keksuccino.fancymenu.rendering.ui.colorschemes.UIColorScheme;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
@@ -14,29 +17,12 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
 
 public class UIBase extends GuiComponent {
 
-	public static final Color SCROLL_GRABBER_IDLE_COLOR = new Color(89, 91, 93, 100);
-	public static final Color SCROLL_GRABBER_HOVER_COLOR = new Color(102, 104, 104, 100);
-	public static final Color SCREEN_BACKGROUND_COLOR = new Color(60, 63, 65);
-	public static final Color SCREEN_BACKGROUND_COLOR_DARK = new Color(38, 38, 38);
-	public static final Color ELEMENT_BORDER_COLOR_IDLE = new Color(209, 194, 209);
-	public static final Color ELEMENT_BORDER_COLOR_HOVER = new Color(227, 211, 227);
-	public static final Color ELEMENT_BACKGROUND_COLOR_IDLE = new Color(71, 71, 71);
-	public static final Color ELEMENT_BACKGROUND_COLOR_HOVER = new Color(83, 156, 212);
-	public static final Color AREA_BACKGROUND_COLOR = new Color(43, 43, 43);
-	public static final Color ENTRY_COLOR_FOCUSED = new Color(50, 50, 50);
-	public static final Color SIDE_BAR_COLOR = new Color(49, 51, 53);
-	public static final Color TEXT_COLOR_RED_1 = new Color(237, 69, 69);
-	public static final Color TEXT_COLOR_ORANGE_1 = new Color(170, 130, 63);
-	public static final Color TEXT_COLOR_GREY_1 = new Color(158, 170, 184);
-	public static final Color TEXT_COLOR_GREY_2 = new Color(91, 92, 94);
-	public static final Color TEXT_COLOR_GREY_3 = new Color(137, 147, 150);
-	public static final Color TEXT_COLOR_GREY_4 = new Color(206, 221, 237);
-	public static final Color LISTING_DOT_BLUE = new Color(62, 134, 160);
-	public static final Color LISTING_DOT_RED = new Color(173, 108, 121);
-	public static final Color LISTING_DOT_ORANGE = new Color(170, 130, 63);
+	protected static UIColorScheme uiColorSchemeDefault = new UIColorScheme();
+	protected static UIColorScheme uiColorSchemeLight = new LightUIColorScheme();
 
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
 	public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
@@ -50,7 +36,7 @@ public class UIBase extends GuiComponent {
 	 * @return The input button.
 	 */
 	public static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
-		button.setBackgroundColor(ELEMENT_BACKGROUND_COLOR_IDLE, ELEMENT_BACKGROUND_COLOR_HOVER, ELEMENT_BORDER_COLOR_IDLE, ELEMENT_BORDER_COLOR_HOVER, ELEMENT_BORDER_THICKNESS);
+		button.setBackgroundColor(uiColorSchemeDefault.elementBackgroundColorNormal.getColor(), uiColorSchemeDefault.elementBackgroundColorHover.getColor(), uiColorSchemeDefault.elementBorderColorNormal.getColor(), uiColorSchemeDefault.elementBorderColorHover.getColor(), ELEMENT_BORDER_THICKNESS);
 		return button;
 	}
 
@@ -60,11 +46,10 @@ public class UIBase extends GuiComponent {
 	 * @return The input button.
 	 */
 	public static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
-		DrawableColor normal = DrawableColor.of(ELEMENT_BACKGROUND_COLOR_IDLE);
-		DrawableColor hover = DrawableColor.of(ELEMENT_BACKGROUND_COLOR_HOVER);
-		DrawableColor normalBorder = DrawableColor.of(ELEMENT_BORDER_COLOR_IDLE);
-		DrawableColor hoverBorder = DrawableColor.of(ELEMENT_BORDER_COLOR_HOVER);
-		button.setBackground(ExtendedButton.ColorButtonBackground.create(normal, hover, normalBorder, hoverBorder, ELEMENT_BORDER_THICKNESS));
+		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().elementBackgroundColorNormal, UIBase.getUIColorScheme().elementBackgroundColorHover, UIBase.getUIColorScheme().elementBorderColorNormal, UIBase.getUIColorScheme().elementBorderColorHover, ELEMENT_BORDER_THICKNESS));
+		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().elementLabelColorNormal);
+		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().elementLabelColorInactive);
+		button.setLabelShadowEnabled(false);
 		return button;
 	}
 
@@ -139,33 +124,35 @@ public class UIBase extends GuiComponent {
 		}
 	}
 
+	public static void setShaderColor(DrawableColor color) {
+		Color c = color.getColor();
+		float a = Math.min(1F, Math.max(0F, (float)c.getAlpha() / 255.0F));
+		setShaderColor(color, a);
+	}
+
+	public static void setShaderColor(DrawableColor color, float alpha) {
+		Color c = color.getColor();
+		float r = Math.min(1F, Math.max(0F, (float)c.getRed() / 255.0F));
+		float g = Math.min(1F, Math.max(0F, (float)c.getGreen() / 255.0F));
+		float b = Math.min(1F, Math.max(0F, (float)c.getBlue() / 255.0F));
+		RenderSystem.setShaderColor(r, g, b, alpha);
+	}
+
+	public static void resetShaderColor() {
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+	}
+
 	public static void displayNotification(String... notification) {
 		PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, notification));
 	}
 
-	@Deprecated
-	public static void colorizeButton(AdvancedButton button) {
-		applyDefaultButtonSkinTo(button);
+	@NotNull
+	public static UIColorScheme getUIColorScheme() {
+		return isLightMode() ? uiColorSchemeLight : uiColorSchemeDefault;
 	}
 
-	@Deprecated
-	public static Color getButtonIdleColor() {
-		return ELEMENT_BACKGROUND_COLOR_IDLE;
-	}
-
-	@Deprecated
-	public static Color getButtonBorderIdleColor() {
-		return ELEMENT_BORDER_COLOR_IDLE;
-	}
-
-	@Deprecated
-	public static Color getButtonHoverColor() {
-		return ELEMENT_BACKGROUND_COLOR_HOVER;
-	}
-
-	@Deprecated
-	public static Color getButtonBorderHoverColor() {
-		return ELEMENT_BORDER_COLOR_HOVER;
+	public static boolean isLightMode() {
+		return FancyMenu.getConfig().getOrDefault("light_mode", false);
 	}
 
 }

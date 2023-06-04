@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -85,7 +84,7 @@ public class ChooseSlideshowScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(pose, titleComp, 20, 20, -1);
@@ -111,13 +110,13 @@ public class ChooseSlideshowScreen extends Screen {
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
             int slideY = 50 + 15;
-            fill(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.AREA_BACKGROUND_COLOR.getRGB());
+            fill(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
             this.selectedSlideshow.x = slideX;
             this.selectedSlideshow.y = slideY;
             this.selectedSlideshow.width = slideW;
             this.selectedSlideshow.height = slideH;
             this.selectedSlideshow.render(pose);
-            UIBase.renderBorder(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.ELEMENT_BORDER_COLOR_IDLE, true, true, true, true);
+            UIBase.renderBorder(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
         }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
@@ -183,7 +182,7 @@ public class ChooseSlideshowScreen extends Screen {
         public String slideshow;
 
         public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(TEXT_COLOR_GREY_1.getRGB())), LISTING_DOT_BLUE, onClick);
+            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.slideshow = slideshow;
         }
 

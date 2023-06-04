@@ -90,7 +90,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         int centerX = this.width / 2;
         int centerY = this.height / 2;
