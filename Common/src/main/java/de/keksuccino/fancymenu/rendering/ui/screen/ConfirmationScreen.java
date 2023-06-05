@@ -4,6 +4,7 @@ package de.keksuccino.fancymenu.rendering.ui.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -21,8 +22,8 @@ public class ConfirmationScreen extends Screen {
     protected Consumer<Boolean> callback;
     protected boolean openParentScreen = true;
 
-    protected AdvancedButton confirmButton;
-    protected AdvancedButton cancelButton;
+    protected ExtendedButton confirmButton;
+    protected ExtendedButton cancelButton;
 
     /**
      *  Confirmation screen that does NOT open its parent screen on close.
@@ -42,16 +43,16 @@ public class ConfirmationScreen extends Screen {
         this.callback = callback;
         this.text = text;
 
-        this.confirmButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.confirm"), true, (button) -> {
+        this.confirmButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.confirm"), (button) -> {
             if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(true);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.confirmButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(false);
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

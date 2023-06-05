@@ -88,9 +88,9 @@ public class ChooseAnimationScreen extends Screen {
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, -1);
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.animation.choose.available_animations"), 20, 50, -1);
+        this.font.draw(pose, Component.translatable("fancymenu.animation.choose.available_animations"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.animationListScrollArea.setWidth((this.width / 2) - 40, true);
         this.animationListScrollArea.setHeight(this.height - 85, true);
@@ -100,7 +100,7 @@ public class ChooseAnimationScreen extends Screen {
 
         Component previewLabel = Component.translatable("fancymenu.animation.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, -1);
+        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         if (this.selectedAnimation != null) {
             int aniW = (this.width / 2) - 40;
@@ -195,7 +195,7 @@ public class ChooseAnimationScreen extends Screen {
         public String animation;
 
         public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.animation = animation;
         }
 

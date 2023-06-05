@@ -30,14 +30,12 @@ public class ImageMenuBackground extends MenuBackground {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        int imageWidth = 10;
-        int imageHeight = 10;
         ResourceLocation r = null;
+        AspectRatio ratio = new AspectRatio(10, 10);
         if (this.imagePath != null) {
             LocalTexture external = TextureHandler.INSTANCE.getTexture(this.imagePath);
             if (external != null) {
-                imageWidth = external.getWidth();
-                imageHeight = external.getHeight();
+                ratio = external.getAspectRatio();
                 r = external.getResourceLocation();
             }
         }
@@ -50,7 +48,6 @@ public class ImageMenuBackground extends MenuBackground {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 
         if (this.slideLeftRight) {
-            AspectRatio ratio = new AspectRatio(imageWidth, imageHeight);
             int w = ratio.getAspectRatioWidth(getScreenHeight());
             //Check if background should move to the left or the right side
             if ((slidePos + (w - getScreenWidth())) <= 0) {
@@ -98,17 +95,16 @@ public class ImageMenuBackground extends MenuBackground {
                 RenderUtils.doubleBlit(slidePos, 0, 0.0F, 0.0F, w,getScreenHeight());
             }
         } else if (this.keepBackgroundAspectRatio) {
-            AspectRatio ratio = new AspectRatio(imageWidth, imageHeight);
             int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
-            int x = Math.max(0, size[0] - getScreenWidth());
-            if (x > 0) {
-                x = x / 2;
+            int x = 0;
+            if (size[0] > getScreenWidth()) {
+                x = -((size[0] - getScreenWidth()) / 2);
             }
-            int y = Math.max(0, size[1] - getScreenHeight());
-            if (y > 0) {
-                y = y / 2;
+            int y = 0;
+            if (size[1] > getScreenHeight()) {
+                y = -((size[1] - getScreenHeight()) / 2);
             }
-            blit(pose, -x, -y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+            blit(pose, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
         } else {
             blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }

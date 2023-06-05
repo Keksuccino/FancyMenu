@@ -4,6 +4,7 @@ import java.io.File;
 
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
+import de.keksuccino.fancymenu.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
@@ -122,7 +123,9 @@ public class FancyMenu {
 	    		BUTTONSCRIPT_DIR.mkdirs();
 	    		PANORAMA_DIR.mkdirs();
 	    		SLIDESHOW_DIR.mkdirs();
-	    		
+
+				UIColorSchemes.registerAll();
+
 	        	ScreenCustomization.init();
 
 				WindowHandler.handleForceFullscreen();

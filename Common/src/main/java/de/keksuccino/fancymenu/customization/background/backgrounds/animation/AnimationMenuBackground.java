@@ -60,16 +60,16 @@ public class AnimationMenuBackground extends MenuBackground {
             } else {
                 AspectRatio ratio = new AspectRatio(imageWidth, imageHeight);
                 int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
-                int x = Math.max(0, size[0] - getScreenWidth());
-                if (x > 0) {
-                    x = x / 2;
-                }
-                int y = Math.max(0, size[1] - getScreenHeight());
-                if (y > 0) {
-                    y = y / 2;
-                }
                 this.animation.setWidth(size[0] + 1);
                 this.animation.setHeight(size[1] + 1);
+                int x = 0;
+                if (size[0] > getScreenWidth()) {
+                    x = -((size[0] - getScreenWidth()) / 2);
+                }
+                int y = 0;
+                if (size[1] > getScreenHeight()) {
+                    y = -((size[1] - getScreenHeight()) / 2);
+                }
                 this.animation.setPosX(x);
                 this.animation.setPosY(y);
             }

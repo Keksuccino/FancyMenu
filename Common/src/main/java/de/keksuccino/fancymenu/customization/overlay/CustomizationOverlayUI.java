@@ -747,14 +747,14 @@ public class CustomizationOverlayUI extends UIBase {
 						}
 					}
 					matrix.pushPose();
-					matrix.scale(getFixedUiScale(), getFixedUiScale(), getFixedUiScale());
-					MouseInput.setRenderScale(getFixedUiScale());
+					matrix.scale(getFixedUIScale(), getFixedUIScale(), getFixedUIScale());
+					MouseInput.setRenderScale(getFixedUIScale());
 					int x = MouseInput.getMouseX();
-					if ((screen.width / getFixedUiScale()) < x + width + 10) {
+					if ((screen.width / getFixedUIScale()) < x + width + 10) {
 						x -= width + 10;
 					}
 					int y = MouseInput.getMouseY();
-					if ((screen.height / getFixedUiScale()) < y + 80) {
+					if ((screen.height / getFixedUIScale()) < y + 80) {
 						y -= 90;
 					}
 					fill(matrix, x, y, x + width + 10, y + 100, BUTTON_INFO_BACKGROUND_COLOR.getRGB());
@@ -794,17 +794,17 @@ public class CustomizationOverlayUI extends UIBase {
 
 			matrix.pushPose();
 
-			matrix.scale(getFixedUiScale(), getFixedUiScale(), getFixedUiScale());
+			matrix.scale(getFixedUIScale(), getFixedUIScale(), getFixedUIScale());
 
-			MouseInput.setRenderScale(getFixedUiScale());
+			MouseInput.setRenderScale(getFixedUIScale());
 
 			int x = MouseInput.getMouseX();
-			if ((screen.width / getFixedUiScale()) < x + width + 10) {
+			if ((screen.width / getFixedUIScale()) < x + width + 10) {
 				x -= width + 10;
 			}
 
 			int y = MouseInput.getMouseY();
-			if ((screen.height / getFixedUiScale()) < y + 80) {
+			if ((screen.height / getFixedUIScale()) < y + 80) {
 				y -= 90;
 			}
 
@@ -847,7 +847,7 @@ public class CustomizationOverlayUI extends UIBase {
 
 			matrix.pushPose();
 
-			matrix.scale(getFixedUiScale(), getFixedUiScale(), getFixedUiScale());
+			matrix.scale(getFixedUIScale(), getFixedUIScale(), getFixedUIScale());
 
 			fill(matrix, 3, h, 3 + w + 4, h + 23, MENU_INFO_BACKGROUND_COLOR.getRGB());
 
@@ -858,7 +858,7 @@ public class CustomizationOverlayUI extends UIBase {
 				drawString(matrix, Minecraft.getInstance().font, "§a" + I18n.get("fancymenu.overlay.menuinfo.idcopied"), 5, h + 13, 0);
 			}
 
-			MouseInput.setRenderScale(getFixedUiScale());
+			MouseInput.setRenderScale(getFixedUIScale());
 
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
@@ -904,7 +904,7 @@ public class CustomizationOverlayUI extends UIBase {
 			}
 
 			int x = screen.width - w - 5;
-			int y = (int) ((bar.getHeight() + 5) * UIBase.getFixedUiScale());
+			int y = (int) ((bar.getHeight() + 5) * UIBase.getFixedUIScale());
 
 			RenderSystem.enableBlend();
 

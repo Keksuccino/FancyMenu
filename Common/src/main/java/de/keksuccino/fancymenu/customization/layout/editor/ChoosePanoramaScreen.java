@@ -84,9 +84,9 @@ public class ChoosePanoramaScreen extends Screen {
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, -1);
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, -1);
+        this.font.draw(pose, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.panoramaListScrollArea.setWidth((this.width / 2) - 40, true);
         this.panoramaListScrollArea.setHeight(this.height - 85, true);
@@ -150,7 +150,7 @@ public class ChoosePanoramaScreen extends Screen {
         public String panorama;
 
         public PanoramaScrollEntry(ScrollArea parent, @NotNull String panorama, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
+            super(parent, Component.literal(panorama).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.panorama = panorama;
         }
 

@@ -15,6 +15,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         //Only render line if inside the editor area (for performance reasons)
         if (this.isInEditorArea()) {
@@ -96,7 +97,6 @@ public class TextEditorLine extends AdvancedTextField {
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
             int cursorPos = this.getCursorPosition() - this.getAsAccessor().getDisplayPosFancyMenu();
             int highlightPos = this.getAsAccessor().getHighlightPosFancyMenu() - this.getAsAccessor().getDisplayPosFancyMenu();
-//                String text = this.font2.plainSubstrByWidth(this.getValue().substring(this.getAsAccessor().getDisplayPosFancyMenu()), this.getInnerWidth());
             String text = this.getValue();
             boolean isCursorNotAtStartOrEnd = cursorPos >= 0 && cursorPos <= text.length();
             boolean renderCursor = this.isFocused() && this.getAsAccessor().getFrameFancyMenu() / 6 % 2 == 0 && isCursorNotAtStartOrEnd;
@@ -113,18 +113,16 @@ public class TextEditorLine extends AdvancedTextField {
                 textXRender = this.font2.draw(matrix, this.getFormattedText(textBeforeCursor), (float)textX, (float)textY, textColorInt);
             }
 
-            boolean isCursorAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
+            boolean isCursorNotAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
             int cursorPosRender = textXRender;
             if (!isCursorNotAtStartOrEnd) {
                 cursorPosRender = cursorPos > 0 ? textX + this.width : textX;
-            } else if (isCursorAtEndOfLine) {
+            } else if (isCursorNotAtEndOfLine) {
                 cursorPosRender = textXRender - 1;
-                --textXRender;
             }
 
             if (!text.isEmpty() && isCursorNotAtStartOrEnd && cursorPos < text.length()) {
                 //Render text after cursor
-//                this.font2.draw(matrix, this.getAsAccessor().getFormatterFancyMenu().apply(text.substring(cursorPos), this.getCursorPosition()), (float)textXRender, (float)textY, textColorInt);
                 this.font2.draw(matrix, this.getFormattedText(text.substring(cursorPos)), (float)textXRender, (float)textY, textColorInt);
             }
 
@@ -132,13 +130,13 @@ public class TextEditorLine extends AdvancedTextField {
                 this.font2.draw(matrix, this.getAsAccessor().getHintFancyMenu(), (float)textXRender, (float)textY, textColorInt);
             }
 
-            if (!isCursorAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
+            if (!isCursorNotAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
                 this.font2.draw(matrix, this.getAsAccessor().getSuggestionFancyMenu(), (float)(cursorPosRender - 1), (float)textY, -8355712);
             }
 
             if (renderCursor) {
-                if (isCursorAtEndOfLine) {
-                    GuiComponent.fill(matrix, cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, -3092272);
+                if (isCursorNotAtEndOfLine) {
+                    fill(matrix, cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, textColorInt);
                 } else {
                     this.font2.draw(matrix, "_", (float)cursorPosRender, (float)textY, textColorInt);
                 }

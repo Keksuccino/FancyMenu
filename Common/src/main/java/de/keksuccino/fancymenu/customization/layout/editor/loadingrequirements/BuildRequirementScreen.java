@@ -12,7 +12,8 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -38,10 +39,10 @@ public class BuildRequirementScreen extends Screen {
 
     protected ScrollArea requirementsListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea requirementDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected AdvancedButton requirementModeButton;
-    protected AdvancedButton editValueButton;
-    protected AdvancedButton doneButton;
-    protected AdvancedButton cancelButton;
+    protected ExtendedButton requirementModeButton;
+    protected ExtendedButton editValueButton;
+    protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
 
     public BuildRequirementScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
 
@@ -65,7 +66,7 @@ public class BuildRequirementScreen extends Screen {
             }
         }
 
-        this.editValueButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), true, (button) -> {
+        this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), (button) -> {
             TextEditorScreen s = new TextEditorScreen(button.getMessage(), this, null, (call) -> {
                 if (call != null) {
                     this.instance.value = call;
@@ -86,52 +87,48 @@ public class BuildRequirementScreen extends Screen {
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 LoadingRequirement r = BuildRequirementScreen.this.instance.requirement;
                 if ((r != null) && !r.hasValue()) {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.no_value")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.no_value")));
                 } else {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.normal")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.normal")));
                 }
-                if ((r == null) || !r.hasValue()) {
-                    this.active = false;
-                } else {
-                    this.active = true;
-                }
+                this.active = (r != null) && r.hasValue();
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.editValueButton);
 
-        this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instance);
         }) {
             @Override
-            public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 if (BuildRequirementScreen.this.instance.requirement == null) {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_requirement_selected")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_requirement_selected")));
                     this.active = false;
                 } else if ((BuildRequirementScreen.this.instance.value == null) && BuildRequirementScreen.this.instance.requirement.hasValue()) {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_value_set")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_value_set")));
                     this.active = false;
                 } else {
-                    this.setDescription((String[])null);
+                    this.setTooltip((Tooltip) null);
                     this.active = true;
                 }
                 super.renderWidget(matrix, mouseX, mouseY, partialTicks);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.isEdit) {
                 this.callback.accept(this.instance);
             } else {
                 this.callback.accept(null);
             }
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
-        this.requirementModeButton = new AdvancedButton(0, 0, 150, 20, "", true, (button) -> {
+        this.requirementModeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
                 this.instance.mode = LoadingRequirementInstance.RequirementMode.IF_NOT;
             } else {
@@ -147,8 +144,8 @@ public class BuildRequirementScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        };
-        this.requirementModeButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.desc")));
+        }.setAutoRegisterToScreen(true);
+        this.requirementModeButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.desc")));
         UIBase.applyDefaultButtonSkinTo(this.requirementModeButton);
 
     }
@@ -183,9 +180,9 @@ public class BuildRequirementScreen extends Screen {
         fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, -1);
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, -1);
+        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementsListScrollArea.setHeight(this.height - 85, true);
@@ -195,7 +192,7 @@ public class BuildRequirementScreen extends Screen {
 
         String descLabelString = I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, -1);
+        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.requirementDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -233,7 +230,7 @@ public class BuildRequirementScreen extends Screen {
 
         if ((requirement != null) && (requirement.getDescription() != null)) {
             for (String s : requirement.getDescription()) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.requirementDescriptionScrollArea, Component.literal(s), (entry) -> {});
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.requirementDescriptionScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
@@ -253,7 +250,7 @@ public class BuildRequirementScreen extends Screen {
 
             //Add category entries
             for (Map.Entry<String, List<LoadingRequirement>> m : categories.entrySet()) {
-                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt()));
+                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
                 TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listingDotColor2.getColor(), (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
@@ -264,7 +261,7 @@ public class BuildRequirementScreen extends Screen {
             }
             //Add requirement entries without category
             for (LoadingRequirement r : LoadingRequirementRegistry.getRequirementsWithoutCategory()) {
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt()));
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listingDotColor1.getColor(), (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
@@ -276,7 +273,7 @@ public class BuildRequirementScreen extends Screen {
         } else {
 
             //Add "Back" button
-            Component backLabel = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.lists.back")).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor2.getColorInt()));
+            Component backLabel = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.lists.back")).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().warningTextColor.getColorInt()));
             TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUIColorScheme().listingDotColor2.getColor(), (entry) -> {
                 BuildRequirementScreen.this.setContentOfRequirementsList(null);
                 BuildRequirementScreen.this.instance.requirement = null;
@@ -289,7 +286,7 @@ public class BuildRequirementScreen extends Screen {
             List<LoadingRequirement> l = categories.get(category);
             if (l != null) {
                 for (LoadingRequirement r : l) {
-                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt()));
+                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
                     RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listingDotColor1.getColor(), (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);

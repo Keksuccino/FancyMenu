@@ -3,11 +3,12 @@ package de.keksuccino.fancymenu.rendering.ui;
 import java.awt.Color;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
-import de.keksuccino.fancymenu.rendering.ui.colorschemes.LightUIColorScheme;
-import de.keksuccino.fancymenu.rendering.ui.colorschemes.UIColorScheme;
+import de.keksuccino.fancymenu.rendering.ui.colorscheme.UIColorSchemeRegistry;
+import de.keksuccino.fancymenu.rendering.ui.colorscheme.UIColorScheme;
+import de.keksuccino.fancymenu.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
@@ -21,9 +22,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class UIBase extends GuiComponent {
 
-	protected static UIColorScheme uiColorSchemeDefault = new UIColorScheme();
-	protected static UIColorScheme uiColorSchemeLight = new LightUIColorScheme();
-
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
 	public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
 	public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
@@ -36,7 +34,8 @@ public class UIBase extends GuiComponent {
 	 * @return The input button.
 	 */
 	public static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
-		button.setBackgroundColor(uiColorSchemeDefault.elementBackgroundColorNormal.getColor(), uiColorSchemeDefault.elementBackgroundColorHover.getColor(), uiColorSchemeDefault.elementBorderColorNormal.getColor(), uiColorSchemeDefault.elementBorderColorHover.getColor(), ELEMENT_BORDER_THICKNESS);
+		UIColorScheme darkScheme = UIColorSchemes.DARK;
+		button.setBackgroundColor(darkScheme.elementBackgroundColorNormal.getColor(), darkScheme.elementBackgroundColorHover.getColor(), darkScheme.elementBorderColorNormal.getColor(), darkScheme.elementBorderColorHover.getColor(), ELEMENT_BORDER_THICKNESS);
 		return button;
 	}
 
@@ -50,10 +49,11 @@ public class UIBase extends GuiComponent {
 		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().elementLabelColorNormal);
 		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().elementLabelColorInactive);
 		button.setLabelShadowEnabled(false);
+		button.setForceDefaultTooltipStyle(true);
 		return button;
 	}
 
-	public static float getUiScale() {
+	public static float getUIScale() {
 		float uiScale = FancyMenu.getConfig().getOrDefault("uiscale", 1.0F);
 		if (Minecraft.getInstance().isEnforceUnicode() && (uiScale > 2.0F)) {
 			uiScale = 2.0F;
@@ -61,8 +61,8 @@ public class UIBase extends GuiComponent {
 		return uiScale;
 	}
 
-	public static float getFixedUiScale() {
-		return calculateFixedScale(getUiScale());
+	public static float getFixedUIScale() {
+		return calculateFixedScale(getUIScale());
 	}
 
 	public static float calculateFixedScale(float fixedScale) {
@@ -77,7 +77,7 @@ public class UIBase extends GuiComponent {
 	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
-			menu.openMenuAt((int) (x / UIBase.getFixedUiScale()), (int) (y / UIBase.getFixedUiScale()), (int) (s.width / getFixedUiScale()), (int) (s.height / getFixedUiScale()));
+			menu.openMenuAt((int) (x / UIBase.getFixedUIScale()), (int) (y / UIBase.getFixedUIScale()), (int) (s.width / getFixedUIScale()), (int) (s.height / getFixedUIScale()));
 		}
 	}
 
@@ -91,14 +91,14 @@ public class UIBase extends GuiComponent {
 
 			matrix.pushPose();
 
-			matrix.scale(UIBase.getFixedUiScale(), UIBase.getFixedUiScale(), UIBase.getFixedUiScale());
+			matrix.scale(UIBase.getFixedUIScale(), UIBase.getFixedUIScale(), UIBase.getFixedUIScale());
 
-			MouseInput.setRenderScale(UIBase.getFixedUiScale());
+			MouseInput.setRenderScale(UIBase.getFixedUIScale());
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			MouseInput.resetRenderScale();
 
-			menu.render(matrix, mouseX, mouseY, (int) (s.width / getFixedUiScale()), (int) (s.height / getFixedUiScale()));
+			menu.render(matrix, mouseX, mouseY, (int) (s.width / getFixedUIScale()), (int) (s.height / getFixedUIScale()));
 
 			matrix.popPose();
 
@@ -148,11 +148,7 @@ public class UIBase extends GuiComponent {
 
 	@NotNull
 	public static UIColorScheme getUIColorScheme() {
-		return isLightMode() ? uiColorSchemeLight : uiColorSchemeDefault;
-	}
-
-	public static boolean isLightMode() {
-		return FancyMenu.getConfig().getOrDefault("light_mode", false);
+		return UIColorSchemeRegistry.getActiveScheme();
 	}
 
 }

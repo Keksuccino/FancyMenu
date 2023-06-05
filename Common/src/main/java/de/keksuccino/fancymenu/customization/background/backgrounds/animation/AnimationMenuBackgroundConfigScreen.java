@@ -97,7 +97,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
 
         MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
         int titleWidth = this.font.width(title);
-        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, -1);
+        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.chooseAnimationButton.setX(centerX - (this.chooseAnimationButton.getWidth() / 2));
         this.chooseAnimationButton.setY(centerY - 20 - 3);

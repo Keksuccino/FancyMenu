@@ -100,7 +100,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
 
         MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
         int titleWidth = this.font.width(title);
-        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, -1);
+        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.chooseImageButton.setX(centerX - (this.chooseImageButton.getWidth() / 2));
         this.chooseImageButton.setY(centerY - 20 - 3);

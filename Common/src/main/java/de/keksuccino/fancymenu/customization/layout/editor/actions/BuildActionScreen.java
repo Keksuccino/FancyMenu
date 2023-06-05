@@ -10,7 +10,8 @@ import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.ScrollAreaEn
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -31,9 +32,9 @@ public class BuildActionScreen extends Screen {
 
     protected ScrollArea actionsListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea actionDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected AdvancedButton editValueButton;
-    protected AdvancedButton doneButton;
-    protected AdvancedButton cancelButton;
+    protected ExtendedButton editValueButton;
+    protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
 
     public BuildActionScreen(@Nullable Screen parentScreen, @Nullable ManageActionsScreen.ActionInstance instanceToEdit, @NotNull Consumer<ManageActionsScreen.ActionInstance> callback) {
 
@@ -55,7 +56,7 @@ public class BuildActionScreen extends Screen {
             }
         }
 
-        this.editValueButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.build_screen.edit_value"), true, (button) -> {
+        this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
             TextEditorScreen s = new TextEditorScreen(Component.literal(this.instance.action.getValueDescription()), this, null, (call) -> {
                 if (call != null) {
                     this.instance.value = call;
@@ -76,49 +77,45 @@ public class BuildActionScreen extends Screen {
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 Action b = BuildActionScreen.this.instance.action;
                 if ((b != null) && !b.hasValue()) {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value")));
                 } else {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal")));
                 }
-                if ((b == null) || !b.hasValue()) {
-                    this.active = false;
-                } else {
-                    this.active = true;
-                }
+                this.active = (b != null) && b.hasValue();
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.editValueButton);
 
-        this.doneButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), true, (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             this.callback.accept(this.instance);
         }) {
             @Override
-            public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 if (BuildActionScreen.this.instance.action == null) {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.finish.no_action_selected")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
                 } else if ((BuildActionScreen.this.instance.value == null) && BuildActionScreen.this.instance.action.hasValue()) {
-                    this.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.action.screens.build_screen.finish.no_value_set")));
+                    this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.finish.no_value_set")));
                     this.active = false;
                 } else {
-                    this.setDescription((String[])null);
+                    this.setTooltip((Tooltip)null);
                     this.active = true;
                 }
                 super.renderWidget(matrix, mouseX, mouseY, partialTicks);
             }
-        };
+        }.setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
-        this.cancelButton = new AdvancedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
             if (this.isEdit) {
                 this.callback.accept(this.instance);
             } else {
                 this.callback.accept(null);
             }
-        });
+        }).setAutoRegisterToScreen(true);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }
@@ -153,9 +150,9 @@ public class BuildActionScreen extends Screen {
         fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, -1);
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, -1);
+        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionsListScrollArea.setHeight(this.height - 85, true);
@@ -165,7 +162,7 @@ public class BuildActionScreen extends Screen {
 
         String descLabelString = I18n.get("fancymenu.editor.action.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, -1);
+        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -228,7 +225,7 @@ public class BuildActionScreen extends Screen {
         public Action action;
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
+            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.action = action;
         }
 

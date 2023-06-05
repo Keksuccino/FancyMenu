@@ -157,9 +157,9 @@ public class FileChooserScreen extends Screen {
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, -1);
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, -1);
+        this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.fileListScrollArea.setWidth((this.width / 2) - 40, true);
         this.fileListScrollArea.setHeight(this.height - 85, true);
@@ -169,7 +169,7 @@ public class FileChooserScreen extends Screen {
 
         Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, -1);
+        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.okButton.setX(this.width - 20 - this.okButton.getWidth());
         this.okButton.setY(this.height - 20 - 20);
@@ -188,7 +188,7 @@ public class FileChooserScreen extends Screen {
             int y = 50 + 15;
             UIBase.resetShaderColor();
             fill(pose, x, y, x + w, y + h, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
-            UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderUtils.bindTexture(this.previewTexture.getResourceLocation());
             blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
             UIBase.resetShaderColor();
@@ -242,7 +242,7 @@ public class FileChooserScreen extends Screen {
         this.textFilePreviewScrollArea.clearEntries();
         if ((file != null) && file.isFile() && PLAIN_TEXT_FILE_FILTER.checkFile(file)) {
             for (String s : FileUtils.getFileLines(file)) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), (entry) -> {});
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
@@ -253,7 +253,7 @@ public class FileChooserScreen extends Screen {
                 e.setWidth(totalWidth);
             }
         } else {
-            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt())), (entry) -> {});
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), (entry) -> {});
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorIdle());
             e.setPlayClickSound(false);
@@ -344,7 +344,7 @@ public class FileChooserScreen extends Screen {
 
             super(parent, 100, 30);
             this.file = file;
-            this.fileNameComponent = Component.literal(this.file.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt()));
+            this.fileNameComponent = Component.literal(this.file.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
 
             this.setWidth(this.font.width(this.fileNameComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);

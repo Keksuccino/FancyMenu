@@ -1,13 +1,13 @@
 
 package de.keksuccino.fancymenu.rendering.ui.texteditor.formattingrules;
 
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorLine;
 import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,18 +16,18 @@ import java.util.Map;
 public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRule {
 
     protected Style[] colorsByLevelOfNesting = new Style[] {
-            Style.EMPTY.withColor(new Color(235, 127, 127).getRGB()),
-            Style.EMPTY.withColor(new Color(235, 201, 127).getRGB()),
-            Style.EMPTY.withColor(new Color(190, 235, 127).getRGB()),
-            Style.EMPTY.withColor(new Color(127, 235, 230).getRGB()),
-            Style.EMPTY.withColor(new Color(127, 158, 235).getRGB()),
-            Style.EMPTY.withColor(new Color(150, 127, 235).getRGB()),
-            Style.EMPTY.withColor(new Color(212, 127, 235).getRGB()),
-            Style.EMPTY.withColor(new Color(245, 54, 54).getRGB()),
-            Style.EMPTY.withColor(new Color(245, 146, 54).getRGB()),
-            Style.EMPTY.withColor(new Color(245, 229, 54).getRGB()),
-            Style.EMPTY.withColor(new Color(105, 245, 54).getRGB()),
-            Style.EMPTY.withColor(new Color(54, 137, 245).getRGB())
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor1.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor2.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor3.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor4.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor5.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor6.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor7.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor8.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor9.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor10.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor11.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor12.getColorInt())
     };
 
     protected Map<TextEditorLine, List<PlaceholderIndexPair>> placeholderIndexes = new HashMap<>();

@@ -579,7 +579,7 @@
   "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverstatus.desc": "Gets the status (online/offline) of a server.\n\nJust replace 'someserver.com:25565' in the\nplaceholder with a valid server IP.",
   "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverversion": "Server Version",
   "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.serverversion.desc": "Gets the MC version of a server.\n\nJust replace 'someserver.com:25565' in the\nplaceholder with a valid server IP.",
-  "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.percentram": "Used RAM in %",
+  "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.percentram": "Used RAM in %%",
   "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.usedram": "Used RAM in MB",
   "fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.maxram": "Max RAM in MB",
   "fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground": "Set Background",

@@ -1,7 +1,7 @@
-package de.keksuccino.fancymenu.rendering.ui.colorschemes;
+package de.keksuccino.fancymenu.rendering.ui.colorscheme;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
 
 import java.awt.*;
 
@@ -22,7 +22,7 @@ public class UIColorScheme {
     public DrawableColor elementBackgroundColorNormal = DrawableColor.of(new Color(71, 71, 71));
     public DrawableColor elementBackgroundColorHover = DrawableColor.of(new Color(83, 156, 212));
     public DrawableColor areaBackgroundColor = DrawableColor.of(new Color(43, 43, 43));
-    public DrawableColor listEntryColorSelected = DrawableColor.of(new Color(50, 50, 50));
+    public DrawableColor listEntryColorSelectedHovered = DrawableColor.of(new Color(50, 50, 50));
     public DrawableColor textEditorSideBarColor = DrawableColor.of(new Color(49, 51, 53));
     public DrawableColor textEditorLineNumberTextColorNormal = DrawableColor.of(new Color(91, 92, 94));
     public DrawableColor textEditorLineNumberTextColorSelected = DrawableColor.of(new Color(137, 147, 150));
@@ -31,16 +31,33 @@ public class UIColorScheme {
     public DrawableColor listingDotColor3 = DrawableColor.of(new Color(170, 130, 63));
     public DrawableColor contextMenuShaderColor = DrawableColor.of(new Color(43, 43, 43, 100));
 
+    public DrawableColor uiTextureColor = DrawableColor.of(new Color(255, 255, 255));
+
     public DrawableColor genericTextBaseColor = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor elementLabelColorNormal = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor elementLabelColorInactive = DrawableColor.of(new Color(137, 147, 150));
-    public DrawableColor uiTextColor1 = DrawableColor.of(new Color(237, 69, 69));
-    public DrawableColor uiTextColor2 = DrawableColor.of(new Color(170, 130, 63));
-    public DrawableColor uiTextColor3 = DrawableColor.of(new Color(158, 170, 184));
-    public DrawableColor uiTextColor4 = DrawableColor.of(new Color(91, 92, 94));
+    public DrawableColor descriptionAreaTextColor = DrawableColor.of(new Color(158, 170, 184));
+    public DrawableColor textEditorTextColor = DrawableColor.of(new Color(158, 170, 184));
+    public DrawableColor errorTextColor = DrawableColor.of(new Color(237, 69, 69));
+    public DrawableColor warningTextColor = DrawableColor.of(new Color(170, 130, 63));
+
+    public DrawableColor textFormattingNestedTextColor1 = DrawableColor.of(new Color(235, 127, 127));
+    public DrawableColor textFormattingNestedTextColor2 = DrawableColor.of(new Color(235, 201, 127));
+    public DrawableColor textFormattingNestedTextColor3 = DrawableColor.of(new Color(190, 235, 127));
+    public DrawableColor textFormattingNestedTextColor4 = DrawableColor.of(new Color(127, 235, 230));
+    public DrawableColor textFormattingNestedTextColor5 = DrawableColor.of(new Color(127, 158, 235));
+    public DrawableColor textFormattingNestedTextColor6 = DrawableColor.of(new Color(150, 127, 235));
+    public DrawableColor textFormattingNestedTextColor7 = DrawableColor.of(new Color(212, 127, 235));
+    public DrawableColor textFormattingNestedTextColor8 = DrawableColor.of(new Color(245, 54, 54));
+    public DrawableColor textFormattingNestedTextColor9 = DrawableColor.of(new Color(245, 146, 54));
+    public DrawableColor textFormattingNestedTextColor10 = DrawableColor.of(new Color(245, 229, 54));
+    public DrawableColor textFormattingNestedTextColor11 = DrawableColor.of(new Color(105, 245, 54));
+    public DrawableColor textFormattingNestedTextColor12 = DrawableColor.of(new Color(54, 137, 245));
+
+    public DrawableColor textFormattingBracketsColor = DrawableColor.of(new Color(252, 223, 3));
 
     public void setUITextureShaderColor(float alpha) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+        UIBase.setShaderColor(uiTextureColor, alpha);
     }
     
 }

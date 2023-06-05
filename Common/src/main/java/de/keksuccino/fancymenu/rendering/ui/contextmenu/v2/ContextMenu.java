@@ -38,7 +38,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = new ResourceLocation("fancymenu", "textures/context_menu_tooltip.png");
 
     protected final List<ContextMenuEntry> entries = new ArrayList<>();
-    protected float scale = UIBase.getUiScale();
+    protected float scale = UIBase.getUIScale();
     protected boolean open = false;
     protected int rawX; // without border
     protected int rawY; // without border
@@ -47,7 +47,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected SubMenuContextMenuEntry parentEntry = null;
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = true;
-    protected boolean applyDefaultTooltipStyle = true;
+    protected boolean forceDefaultTooltipStyle = true;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -413,12 +413,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
-    public boolean isApplyDefaultTooltipStyle() {
-        return this.applyDefaultTooltipStyle;
+    public boolean isForceDefaultTooltipStyle() {
+        return this.forceDefaultTooltipStyle;
     }
 
-    public void setApplyDefaultTooltipStyle(boolean applyDefaultTooltipStyle) {
-        this.applyDefaultTooltipStyle = applyDefaultTooltipStyle;
+    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
+        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
     }
 
     @NotNull
@@ -593,7 +593,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.scale = menusToStack[0].scale;
             stacked.subMenuOpeningSide = menusToStack[0].subMenuOpeningSide;
             stacked.shadow = menusToStack[0].shadow;
-            stacked.applyDefaultTooltipStyle = menusToStack[0].applyDefaultTooltipStyle;
+            stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
 
             for (ContextMenuEntry ignoredEntry : menusToStack[0].getStackableEntries()) {
 
@@ -854,7 +854,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
                 Tooltip tooltip = this.getTooltip();
                 if (tooltip != null) {
-                    if (this.parent.isApplyDefaultTooltipStyle()) {
+                    if (this.parent.isForceDefaultTooltipStyle()) {
                         tooltip.setDefaultBackgroundColor();
                     }
                     TooltipHandler.INSTANCE.addTooltip(tooltip, () -> showTooltip, false, true);
@@ -1010,7 +1010,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             super(identifier, parent, label, ((menu, entry) -> {}));
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.subContextMenu.applyDefaultTooltipStyle = parent.applyDefaultTooltipStyle;
+            this.subContextMenu.forceDefaultTooltipStyle = parent.forceDefaultTooltipStyle;
             this.clickAction = (menu, entry) -> this.openSubMenu();
         }
 
@@ -1110,7 +1110,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             this.subContextMenu.parentEntry = null;
             this.subContextMenu = subContextMenu;
             this.subContextMenu.parentEntry = this;
-            this.subContextMenu.applyDefaultTooltipStyle = this.parent.applyDefaultTooltipStyle;
+            this.subContextMenu.forceDefaultTooltipStyle = this.parent.forceDefaultTooltipStyle;
         }
 
         @NotNull

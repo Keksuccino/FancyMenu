@@ -29,7 +29,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         i.height = 40;
         Screen s = Minecraft.getInstance().screen;
         if (s instanceof LayoutEditorScreen) {
-            i.baseY = (int)(((LayoutEditorScreen)s).ui.topMenuBar.getHeight() * UIBase.getFixedUiScale());
+            i.baseY = (int)(((LayoutEditorScreen)s).ui.topMenuBar.getHeight() * UIBase.getFixedUIScale());
         }
         return i;
     }

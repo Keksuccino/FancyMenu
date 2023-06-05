@@ -44,6 +44,7 @@ public class ExtendedButton extends Button {
     protected boolean labelShadow = true;
     protected boolean autoRegister = false;
     protected Tooltip tooltip = null;
+    protected boolean forceDefaultTooltipStyle = false;
 
     protected int lastHoverState = -1;
 
@@ -66,6 +67,9 @@ public class ExtendedButton extends Button {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         if ((this.tooltip != null) && this.isHovered() && this.isActive() && this.visible) {
+            if (this.forceDefaultTooltipStyle) {
+                this.tooltip.setDefaultBackgroundColor();
+            }
             TooltipHandler.INSTANCE.addTooltip(this.tooltip, () -> true, false, true);
         }
         this.handleAutoRegister();
@@ -165,6 +169,14 @@ public class ExtendedButton extends Button {
     public ExtendedButton setTooltip(@Nullable Tooltip tooltip) {
         this.tooltip = tooltip;
         return this;
+    }
+
+    public boolean isForceDefaultTooltipStyle() {
+        return this.forceDefaultTooltipStyle;
+    }
+
+    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
+        this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
     }
 
     public boolean isLabelEnabled() {
@@ -332,7 +344,7 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected DrawableColor getBorderColor() {
-            if (this.parent.isHovered) {
+            if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundColorBorderHover != null) return this.backgroundColorBorderHover;
                 if (this.backgroundColorBorderNormal != null) return this.backgroundColorBorderNormal;
                 return this.getBackgroundColor();
@@ -343,7 +355,7 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected DrawableColor getBackgroundColor() {
-            if (this.parent.isHovered) {
+            if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundColorHover != null) return this.backgroundColorHover;
             }
             return this.backgroundColorNormal;
@@ -441,7 +453,7 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected ResourceLocation getBackgroundTexture() {
-            if (this.parent.isHovered) {
+            if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundTextureHover != null) return this.backgroundTextureHover;
             }
             return this.backgroundTextureNormal;
@@ -557,7 +569,7 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected IAnimationRenderer getBackgroundAnimation() {
-            if (this.parent.isHovered) {
+            if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundAnimationHover != null) return this.backgroundAnimationHover;
             }
             return this.backgroundAnimationNormal;
@@ -671,7 +683,7 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected ButtonBackground getBackground() {
-            if (this.parent.isHovered) {
+            if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundHover != null) return this.backgroundHover;
             }
             return this.backgroundNormal;

@@ -87,9 +87,9 @@ public class ChooseSlideshowScreen extends Screen {
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, -1);
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, -1);
+        this.font.draw(pose, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         this.slideshowListScrollArea.setWidth((this.width / 2) - 40, true);
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
@@ -99,7 +99,7 @@ public class ChooseSlideshowScreen extends Screen {
 
         Component previewLabel = Component.translatable("fancymenu.slideshow.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, -1);
+        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
 
         if (this.selectedSlideshow != null) {
             int slideW = (this.width / 2) - 40;
@@ -182,7 +182,7 @@ public class ChooseSlideshowScreen extends Screen {
         public String slideshow;
 
         public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().uiTextColor3.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
+            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
             this.slideshow = slideshow;
         }
 

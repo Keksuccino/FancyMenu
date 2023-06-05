@@ -1,13 +1,10 @@
 
 package de.keksuccino.fancymenu.rendering.ui.texteditor.formattingrules.brackets;
 
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import net.minecraft.network.chat.Style;
 
-import java.awt.*;
-
 public class HighlightRoundBracketsFormattingRule extends HighlightBracketsFormattingRuleBase {
-
-    protected static final Style STYLE = Style.EMPTY.withColor(new Color(252, 223, 3).getRGB());
 
     @Override
     protected String getOpenBracketChar() {
@@ -21,7 +18,7 @@ public class HighlightRoundBracketsFormattingRule extends HighlightBracketsForma
 
     @Override
     protected Style getHighlightStyle() {
-        return STYLE;
+        return Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingBracketsColor.getColorInt());
     }
 
 }
