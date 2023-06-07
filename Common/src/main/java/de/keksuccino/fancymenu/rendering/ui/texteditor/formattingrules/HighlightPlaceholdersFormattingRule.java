@@ -16,18 +16,18 @@ import java.util.Map;
 public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRule {
 
     protected Style[] colorsByLevelOfNesting = new Style[] {
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor1.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor2.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor3.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor4.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor5.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor6.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor7.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor8.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor9.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor10.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor11.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingNestedTextColor12.getColorInt())
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor1.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor2.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor3.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor4.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor5.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor6.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor7.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor8.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor9.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor10.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor11.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingNestedTextColor12.getColorInt())
     };
 
     protected Map<TextEditorLine, List<PlaceholderIndexPair>> placeholderIndexes = new HashMap<>();

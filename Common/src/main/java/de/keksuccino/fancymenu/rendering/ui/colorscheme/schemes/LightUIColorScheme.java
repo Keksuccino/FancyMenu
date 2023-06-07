@@ -42,20 +42,37 @@ public class LightUIColorScheme extends UIColorScheme {
         errorTextColor = DrawableColor.of(new Color(183, 51, 51));
         warningTextColor = DrawableColor.of(new Color(155, 97, 5));
 
-        textFormattingNestedTextColor1 = DrawableColor.of(new Color(161, 15, 15));
-        textFormattingNestedTextColor2 = DrawableColor.of(new Color(178, 125, 9));
-        textFormattingNestedTextColor3 = DrawableColor.of(new Color(102, 168, 10));
-        textFormattingNestedTextColor4 = DrawableColor.of(new Color(8, 152, 145));
-        textFormattingNestedTextColor5 = DrawableColor.of(new Color(7, 46, 141));
-        textFormattingNestedTextColor6 = DrawableColor.of(new Color(38, 6, 157));
-        textFormattingNestedTextColor7 = DrawableColor.of(new Color(106, 6, 133));
-        textFormattingNestedTextColor8 = DrawableColor.of(new Color(115, 3, 3));
-        textFormattingNestedTextColor9 = DrawableColor.of(new Color(133, 67, 6));
-        textFormattingNestedTextColor10 = DrawableColor.of(new Color(145, 133, 4));
-        textFormattingNestedTextColor11 = DrawableColor.of(new Color(38, 122, 7));
-        textFormattingNestedTextColor12 = DrawableColor.of(new Color(54, 60, 245));
+        textEditorTextFormattingNestedTextColor1 = DrawableColor.of(new Color(161, 15, 15));
+        textEditorTextFormattingNestedTextColor2 = DrawableColor.of(new Color(178, 125, 9));
+        textEditorTextFormattingNestedTextColor3 = DrawableColor.of(new Color(102, 168, 10));
+        textEditorTextFormattingNestedTextColor4 = DrawableColor.of(new Color(8, 152, 145));
+        textEditorTextFormattingNestedTextColor5 = DrawableColor.of(new Color(7, 46, 141));
+        textEditorTextFormattingNestedTextColor6 = DrawableColor.of(new Color(38, 6, 157));
+        textEditorTextFormattingNestedTextColor7 = DrawableColor.of(new Color(106, 6, 133));
+        textEditorTextFormattingNestedTextColor8 = DrawableColor.of(new Color(115, 3, 3));
+        textEditorTextFormattingNestedTextColor9 = DrawableColor.of(new Color(133, 67, 6));
+        textEditorTextFormattingNestedTextColor10 = DrawableColor.of(new Color(145, 133, 4));
+        textEditorTextFormattingNestedTextColor11 = DrawableColor.of(new Color(38, 122, 7));
+        textEditorTextFormattingNestedTextColor12 = DrawableColor.of(new Color(54, 60, 245));
 
-        textFormattingBracketsColor = DrawableColor.of(new Color(255, 58, 0, 100));
+        textEditorTextFormattingBracketsColor = DrawableColor.of(new Color(255, 58, 0, 100));
+
+        fontRendererTextFormattingColorBlack = DrawableColor.of(new Color(255, 255, 255));
+        fontRendererTextFormattingColorDarkBlue = DrawableColor.of(new Color(170));
+        fontRendererTextFormattingColorDarkGreen = DrawableColor.of(new Color(0x018D01));
+        fontRendererTextFormattingColorDarkAqua = DrawableColor.of(new Color(0x018A8A));
+        fontRendererTextFormattingColorDarkRed = DrawableColor.of(new Color(11141120));
+        fontRendererTextFormattingColorDarkPurple = DrawableColor.of(new Color(11141290));
+        fontRendererTextFormattingColorGold = DrawableColor.of(new Color(0xAB7103));
+        fontRendererTextFormattingColorGray = DrawableColor.of(new Color(11184810));
+        fontRendererTextFormattingColorDarkGray = DrawableColor.of(new Color(5592405));
+        fontRendererTextFormattingColorBlue = DrawableColor.of(new Color(5592575));
+        fontRendererTextFormattingColorGreen = DrawableColor.of(new Color(0x038103));
+        fontRendererTextFormattingColorAqua = DrawableColor.of(new Color(0x048A8A));
+        fontRendererTextFormattingColorRed = DrawableColor.of(new Color(0xC40707));
+        fontRendererTextFormattingColorLightPurple = DrawableColor.of(new Color(0xA606A6));
+        fontRendererTextFormattingColorYellow = DrawableColor.of(new Color(0xAFAF03));
+        fontRendererTextFormattingColorWhite = DrawableColor.of(new Color(0, 0, 0));
 
     }
 

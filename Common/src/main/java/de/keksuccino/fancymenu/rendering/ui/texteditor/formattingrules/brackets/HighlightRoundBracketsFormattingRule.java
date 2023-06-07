@@ -18,7 +18,7 @@ public class HighlightRoundBracketsFormattingRule extends HighlightBracketsForma
 
     @Override
     protected Style getHighlightStyle() {
-        return Style.EMPTY.withColor(UIBase.getUIColorScheme().textFormattingBracketsColor.getColorInt());
+        return Style.EMPTY.withColor(UIBase.getUIColorScheme().textEditorTextFormattingBracketsColor.getColorInt());
     }
 
 }

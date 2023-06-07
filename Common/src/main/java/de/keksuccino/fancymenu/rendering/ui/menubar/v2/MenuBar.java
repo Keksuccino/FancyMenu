@@ -20,6 +20,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO hier weiter machen !!!!!!!!!!
+//TODO hier weiter machen !!!!!!!!!!
+//TODO hier weiter machen !!!!!!!!!!
+//TODO hier weiter machen !!!!!!!!!!
+//TODO hier weiter machen !!!!!!!!!!
+
 @SuppressWarnings("unused")
 public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
@@ -238,11 +244,6 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
     }
-
-    //TODO MenuBar weiter coden !!!
-    //TODO MenuBar weiter coden !!!
-    //TODO MenuBar weiter coden !!!
-    //TODO MenuBar weiter coden !!!
 
     public static class SeparatorMenuBarEntry extends MenuBarEntry {
 

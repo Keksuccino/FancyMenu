@@ -4,6 +4,7 @@ import java.io.File;
 
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
+import de.keksuccino.fancymenu.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
@@ -29,6 +30,10 @@ public class FancyMenu {
 	//-----------------------------
 
 	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)
+
+	//TODO element list mit allen elementen eines layouts als widget (wie in photoshop)
+	// - elemente sind nach order gelistet
+	// - non-orderables haben andere Farbe und sind an richtiger (fester) position in list
 
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
@@ -125,6 +130,8 @@ public class FancyMenu {
 	    		SLIDESHOW_DIR.mkdirs();
 
 				UIColorSchemes.registerAll();
+
+				TextColorFormatters.registerAll();
 
 	        	ScreenCustomization.init();
 

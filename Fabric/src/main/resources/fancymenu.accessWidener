@@ -8,3 +8,5 @@ accessible field net/minecraft/client/gui/components/AbstractWidget y I
 
 mutable field net/minecraft/client/gui/screens/TitleScreen fading Z
 accessible field net/minecraft/client/gui/screens/TitleScreen fading Z
+
+#extendable method net/minecraft/ChatFormatting <init> (Ljava/lang/String;CZILjava/lang/Integer;)V
