@@ -26,10 +26,11 @@
     "client.MixinMouseHandler",
     "client.MixinMusicManager",
     "client.MixinOnlineServerEntry",
+    "client.MixinRealmsNotificationsScreen",
     "client.MixinScreen",
+    "client.MixinStringDecomposer",
     "client.MixinTitleScreen",
-    "client.MixinWorldListEntry",
-    "client.MixinStringDecomposer"
+    "client.MixinWorldListEntry"
   ],
   "injectors": {
     "defaultRequire": 1

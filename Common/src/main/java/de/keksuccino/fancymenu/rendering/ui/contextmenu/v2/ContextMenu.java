@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -39,6 +40,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     protected final List<ContextMenuEntry> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
+    protected Float overriddenRenderScale = null;
+    protected boolean forceUIScale = true;
     protected boolean open = false;
     protected int rawX; // without border
     protected int rawY; // without border
@@ -48,11 +51,16 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = true;
     protected boolean forceDefaultTooltipStyle = true;
+    protected boolean enableMinXY = true;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (!this.isOpen()) return;
+
+        if (this.forceUIScale) this.scale = UIBase.getUIScale();
+        float cachedScale = this.scale;
+        if (this.overriddenRenderScale != null) this.scale = this.overriddenRenderScale;
 
         float scale = UIBase.calculateFixedScale(this.getScale());
 
@@ -95,10 +103,16 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
+        //TODO koordinaten von sub-context menüs fixen
+        //TODO koordinaten von sub-context menüs fixen
+        //TODO koordinaten von sub-context menüs fixen
+        //TODO koordinaten von sub-context menüs fixen
+        //TODO koordinaten von sub-context menüs fixen
+
         int x = this.getActualX();
-        int y = this.getActualY();
-        int scaledX = (int)((float)x/scale);
-        int scaledY = (int)((float)y/scale);
+        int y = this.getActualY(true);
+        int scaledX = (int)((float)x/scale) + this.getBorderThickness();
+        int scaledY = (int)((float)y/scale) + this.getBorderThickness();
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
@@ -108,13 +122,13 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, UIBase.getUIColorScheme().contextMenuShaderColor.getColorInt());
         }
         //Render background
-        fill(pose, scaledX, scaledY, scaledX + this.rawWidth, scaledY + this.rawHeight, UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
+        fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
         //Update + render entries
         int entryY = scaledY;
         for (ContextMenuEntry e : renderEntries) {
             e.x = scaledX;
             e.y = entryY; //already scaled
-            e.width = this.rawWidth; //don't scale, because already scaled via pose.scale()
+            e.width = this.getWidth(); //don't scale, because already scaled via pose.scale()
             boolean hover = e.isHovered();
             e.setHovered(!navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
             //Run hover action of element if its hover state changed to hovered
@@ -125,7 +139,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
         }
         //Render border
-        UIBase.renderBorder(pose, scaledX - 1, scaledY - 1, scaledX + this.rawWidth + 1, scaledY + this.rawHeight + 1, 1, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
+        UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry e : renderEntries) {
@@ -139,9 +153,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         //Render sub context menus
         for (ContextMenuEntry e : renderEntries) {
             if (e instanceof SubMenuContextMenuEntry s) {
+                s.subContextMenu.scale = this.scale;
+                s.subContextMenu.forceUIScale = this.forceUIScale;
+                s.subContextMenu.overriddenRenderScale = this.overriddenRenderScale;
                 s.subContextMenu.render(pose, mouseX, mouseY, partial);
             }
         }
+
+        this.scale = cachedScale;
 
     }
 
@@ -313,36 +332,63 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     @NotNull
     public ContextMenu setScale(float scale) {
+        if (this.forceUIScale) LOGGER.error("[FANCYMENU] Unable to set scale of ContextMenu while ContextMenu#isForceUIScale()!");
         this.scale = scale;
+        return this;
+    }
+
+    @Nullable
+    public Float getOverriddenRenderScale() {
+        return this.overriddenRenderScale;
+    }
+
+    public ContextMenu setOverriddenRenderScale(@Nullable Float overriddenRenderScale) {
+        this.overriddenRenderScale = overriddenRenderScale;
+        return this;
+    }
+
+    public boolean isForceUIScale() {
+        return this.forceUIScale;
+    }
+
+    public ContextMenu setForceUIScale(boolean forceUIScale) {
+        this.forceUIScale = forceUIScale;
         return this;
     }
 
     protected int getActualX() {
         if (this.isSubMenu()) {
+            float cachedScale = this.parentEntry.parent.scale;
+            if (this.parentEntry.parent.overriddenRenderScale != null) this.parentEntry.parent.scale = this.parentEntry.parent.overriddenRenderScale;
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
             if (side == SubMenuOpeningSide.LEFT) {
-                return this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5;
+                int actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5;
+                this.parentEntry.parent.scale = cachedScale;
+                return actualX;
             }
             if (side == SubMenuOpeningSide.RIGHT) {
-                return this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5;
+                int actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5;
+                this.parentEntry.parent.scale = cachedScale;
+                return actualX;
             }
         }
-        if ((this.getX() + this.getScaledWidth()) > (getScreenWidth() - 5)) {
-            int offset = (this.getX() + this.getScaledWidth()) - (getScreenWidth() - 5);
+        if ((this.getXWithBorder() + this.getScaledWidth()) > (getScreenWidth() - 5)) {
+            int offset = (this.getXWithBorder() + this.getScaledWidth()) - (getScreenWidth() - 5);
             return this.getX() - offset;
         }
         return this.getX();
     }
 
-    protected int getActualY() {
+    protected int getActualY(boolean applyOverriddenRenderScaleIfSub) {
         int y = this.getY();
         if (this.isSubMenu()) {
-            float parentMenuScale = UIBase.calculateFixedScale(this.parentEntry.parent.scale);
+            float parentMenuBaseScale = (applyOverriddenRenderScaleIfSub && (this.parentEntry.parent.overriddenRenderScale != null)) ? this.parentEntry.parent.overriddenRenderScale : this.parentEntry.parent.scale;
+            float parentMenuScale = UIBase.calculateFixedScale(parentMenuBaseScale);
             y = (int) ((float)this.parentEntry.y * parentMenuScale);
             y += 5;
         }
-        if ((y + this.getScaledHeight()) >= (getScreenHeight() - 5)) {
-            int offset = (y + this.getScaledHeight()) - (getScreenHeight() - 5);
+        if (((y + this.getBorderThickness()) + this.getScaledHeight()) >= (getScreenHeight() - 5)) {
+            int offset = ((y + this.getBorderThickness()) + this.getScaledHeight()) - (getScreenHeight() - 5);
             return y - offset;
         }
         return y;
@@ -361,16 +407,37 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this.subMenuOpeningSide;
     }
 
+    public int getBorderThickness() {
+        return 1;
+    }
+
+    public int getScaledBorderThickness() {
+        float scale = UIBase.calculateFixedScale(this.scale);
+        return (int)((float)this.getBorderThickness() * scale);
+    }
+
     public int getX() {
-        return this.rawX - 1; // - border
+        return this.rawX;
+    }
+
+    public int getXWithBorder() {
+        return this.getX() - this.getBorderThickness();
     }
 
     public int getY() {
-        return this.rawY - 1; // - border
+        return this.rawY;
+    }
+
+    public int getYWithBorder() {
+        return this.getY() - this.getBorderThickness();
     }
 
     public int getWidth() {
-        return this.rawWidth + 2; // + border
+        return this.rawWidth;
+    }
+
+    public int getWidthWithBorder() {
+        return this.getWidth() + (this.getBorderThickness() * 2);
     }
 
     public int getScaledWidth() {
@@ -378,13 +445,25 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return (int) ((float)this.getWidth() * scale);
     }
 
+    public int getScaledWidthWithBorder() {
+        return this.getScaledWidth() + (this.getScaledBorderThickness() * 2);
+    }
+
     public int getHeight() {
-        return this.rawHeight + 2; // + border
+        return this.rawHeight;
+    }
+
+    public int getHeightWithBorder() {
+        return this.getHeight() + (this.getBorderThickness() * 2);
     }
 
     public int getScaledHeight() {
         float scale = UIBase.calculateFixedScale(this.scale);
         return (int) ((float)this.getHeight() * scale);
+    }
+
+    public int getScaledHeightWithBorder() {
+        return this.getScaledHeight() + (this.getScaledBorderThickness() * 2);
     }
 
     public boolean isHovered() {
@@ -419,6 +498,15 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
         this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
+    }
+
+    public boolean isMinXYEnabled() {
+        return this.enableMinXY;
+    }
+
+    public ContextMenu setMinXYEnabled(boolean enableMinXY) {
+        this.enableMinXY = enableMinXY;
+        return this;
     }
 
     @NotNull
@@ -466,8 +554,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     public ContextMenu openMenuAt(int x, int y) {
         this.closeSubMenus();
         this.unhoverAllEntries();
-        this.rawX = Math.max(5, x);
-        this.rawY = Math.max(5, y);
+        this.rawX = this.isMinXYEnabled() ? Math.max(5, x) : x;
+        this.rawY = this.isMinXYEnabled() ? Math.max(5, y) : y;
         this.open = true;
         return this;
     }
@@ -819,14 +907,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
             int labelX = this.x + 10;
             int labelY = this.y + (this.height / 2) - (this.font.lineHeight / 2);
-            this.font.draw(pose, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+            UIBase.drawText(pose, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
                 shortcutTextWidth = this.font.width(shortcutText);
                 int shortcutX = this.x + this.width - 10 - shortcutTextWidth;
-                this.font.draw(pose, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+                UIBase.drawText(pose, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
             }
 
             this.renderTooltipIconAndRegisterTooltip(pose, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);

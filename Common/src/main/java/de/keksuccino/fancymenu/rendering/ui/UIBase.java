@@ -16,8 +16,10 @@ import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
 public class UIBase extends GuiComponent {
@@ -48,7 +50,7 @@ public class UIBase extends GuiComponent {
 		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().elementBackgroundColorNormal, UIBase.getUIColorScheme().elementBackgroundColorHover, UIBase.getUIColorScheme().elementBorderColorNormal, UIBase.getUIColorScheme().elementBorderColorHover, ELEMENT_BORDER_THICKNESS));
 		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().elementLabelColorNormal);
 		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().elementLabelColorInactive);
-		button.setLabelShadowEnabled(false);
+		button.setLabelShadowEnabled(FancyMenu.getConfig().getOrDefault("ui_text_shadow", true));
 		button.setForceDefaultTooltipStyle(true);
 		return button;
 	}
@@ -74,6 +76,7 @@ public class UIBase extends GuiComponent {
 		return (targetX >= x) && (targetX < (x + width)) && (targetY >= y) && (targetY < (y + height));
 	}
 
+	@Deprecated
 	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
@@ -81,10 +84,12 @@ public class UIBase extends GuiComponent {
 		}
 	}
 
+	@Deprecated
 	public static void openScaledContextMenuAtMouse(ContextMenu menu) {
 		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 
+	@Deprecated
 	public static void renderScaledContextMenu(PoseStack matrix, ContextMenu menu) {
 		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {
@@ -122,6 +127,14 @@ public class UIBase extends GuiComponent {
 		if (renderBottom) {
 			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor.getRGB());
 		}
+	}
+
+	public static int drawText(PoseStack pose, Font font, Component text, int x, int y, int baseColor) {
+		return FancyMenu.getConfig().getOrDefault("ui_text_shadow", true) ? font.drawShadow(pose, text, x, y, baseColor) : font.draw(pose, text, x, y, baseColor);
+	}
+
+	public static int drawText(PoseStack pose, Font font, String text, int x, int y, int baseColor) {
+		return drawText(pose, font, Component.literal(text), x, y, baseColor);
 	}
 
 	public static void setShaderColor(DrawableColor color) {

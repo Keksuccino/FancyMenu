@@ -227,6 +227,7 @@ public class FancyMenu {
 			config.registerValue("show_unicode_warning", true, "ui");
 			config.registerValue("play_ui_click_sounds", true, "ui");
 			config.registerValue("light_mode", false, "ui");
+			config.registerValue("ui_text_shadow", false, "ui");
 
 			config.registerValue("allow_level_registry_interactions", true, "compatibility");
 			
