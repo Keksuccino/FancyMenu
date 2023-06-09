@@ -57,22 +57,9 @@ public class LightUIColorScheme extends UIColorScheme {
 
         textEditorTextFormattingBracketsColor = DrawableColor.of(new Color(255, 58, 0, 100));
 
-        fontRendererTextFormattingColorBlack = DrawableColor.of(new Color(255, 255, 255));
-        fontRendererTextFormattingColorDarkBlue = DrawableColor.of(new Color(170));
-        fontRendererTextFormattingColorDarkGreen = DrawableColor.of(new Color(0x018D01));
-        fontRendererTextFormattingColorDarkAqua = DrawableColor.of(new Color(0x018A8A));
-        fontRendererTextFormattingColorDarkRed = DrawableColor.of(new Color(11141120));
-        fontRendererTextFormattingColorDarkPurple = DrawableColor.of(new Color(11141290));
-        fontRendererTextFormattingColorGold = DrawableColor.of(new Color(0xAB7103));
-        fontRendererTextFormattingColorGray = DrawableColor.of(new Color(11184810));
-        fontRendererTextFormattingColorDarkGray = DrawableColor.of(new Color(5592405));
-        fontRendererTextFormattingColorBlue = DrawableColor.of(new Color(5592575));
+        fontRendererTextFormattingColorOrange = DrawableColor.of(new Color(0xAB7103));
         fontRendererTextFormattingColorGreen = DrawableColor.of(new Color(0x038103));
-        fontRendererTextFormattingColorAqua = DrawableColor.of(new Color(0x048A8A));
         fontRendererTextFormattingColorRed = DrawableColor.of(new Color(0xC40707));
-        fontRendererTextFormattingColorLightPurple = DrawableColor.of(new Color(0xA606A6));
-        fontRendererTextFormattingColorYellow = DrawableColor.of(new Color(0xAFAF03));
-        fontRendererTextFormattingColorWhite = DrawableColor.of(new Color(0, 0, 0));
 
     }
 

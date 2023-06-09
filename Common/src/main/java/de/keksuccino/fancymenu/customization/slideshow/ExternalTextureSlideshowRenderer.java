@@ -129,7 +129,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					
 					File overlay = new File(this.dir + "/overlay.png");
 					if (overlay.exists()) {
-						this.overlayTexture = LocalTexture.create(overlay.getPath());
+						this.overlayTexture = LocalTexture.of(overlay.getPath());
 					}
 					
 				}

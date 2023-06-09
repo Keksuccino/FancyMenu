@@ -32,7 +32,7 @@ public class LocalTexture implements ITexture {
 
     /** Returns a new {@link LocalTexture} instance. **/
     @NotNull
-    public static LocalTexture create(@NotNull String path) {
+    public static LocalTexture of(@NotNull String path) {
         Objects.requireNonNull(path);
         LocalTexture t = new LocalTexture(path, null);
         t.loadTexture();
@@ -41,7 +41,7 @@ public class LocalTexture implements ITexture {
 
     /** Returns a new {@link LocalTexture} instance. **/
     @NotNull
-    public static LocalTexture create(@NotNull InputStream inputStream) {
+    public static LocalTexture of(@NotNull InputStream inputStream) {
         Objects.requireNonNull(inputStream);
         LocalTexture t = new LocalTexture(null, inputStream);
         t.loadTexture();

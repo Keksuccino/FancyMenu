@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("unused")
 public class WebTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -33,7 +34,7 @@ public class WebTexture implements ITexture {
 
     /** Returns a new {@link WebTexture} instance and automatically asynchronously loads the texture. **/
     @NotNull
-    public static WebTexture create(@NotNull String sourceURL) {
+    public static WebTexture of(@NotNull String sourceURL) {
         Objects.requireNonNull(sourceURL);
         WebTexture t = new WebTexture(sourceURL);
         t.downloadAndLoadAsynchronously();
@@ -42,7 +43,7 @@ public class WebTexture implements ITexture {
 
     /** Returns a new {@link WebTexture} instance. **/
     @NotNull
-    public static WebTexture create(@NotNull String sourceURL, boolean autoLoadTextureAsynchronously) {
+    public static WebTexture of(@NotNull String sourceURL, boolean autoLoadTextureAsynchronously) {
         Objects.requireNonNull(sourceURL);
         WebTexture t = new WebTexture(sourceURL);
         if (autoLoadTextureAsynchronously) {

@@ -29,6 +29,8 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO An inject point von TextColorFormatters (custom string color codes) system für HEX color codes adden ( format: §[#ffffff] / §[ffffff] )
+
 	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)
 
 	//TODO element list mit allen elementen eines layouts als widget (wie in photoshop)

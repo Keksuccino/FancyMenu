@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -51,7 +50,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = true;
     protected boolean forceDefaultTooltipStyle = true;
-    protected boolean enableMinXY = true;
+    protected boolean useMinDistanceToScreenEdge = true;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -65,6 +64,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         float scale = UIBase.calculateFixedScale(this.getScale());
 
         RenderSystem.enableBlend();
+        UIBase.resetShaderColor();
         pose.pushPose();
         pose.scale(scale, scale, scale);
         pose.translate(0.0F, 0.0F, 400.0F);
@@ -103,14 +103,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
-        //TODO koordinaten von sub-context menüs fixen
-        //TODO koordinaten von sub-context menüs fixen
-        //TODO koordinaten von sub-context menüs fixen
-        //TODO koordinaten von sub-context menüs fixen
-        //TODO koordinaten von sub-context menüs fixen
-
         int x = this.getActualX();
-        int y = this.getActualY(true);
+        int y = this.getActualY();
         int scaledX = (int)((float)x/scale) + this.getBorderThickness();
         int scaledY = (int)((float)y/scale) + this.getBorderThickness();
         int scaledMouseX = (int) ((float)mouseX / scale);
@@ -120,9 +114,11 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         //Render shadow
         if (this.hasShadow()) {
             fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, UIBase.getUIColorScheme().contextMenuShaderColor.getColorInt());
+            UIBase.resetShaderColor();
         }
         //Render background
         fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
+        UIBase.resetShaderColor();
         //Update + render entries
         int entryY = scaledY;
         for (ContextMenuEntry e : renderEntries) {
@@ -135,9 +131,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             if (!hover && e.isHovered() && (e.hoverAction != null)) {
                 e.hoverAction.run(this, e, false);
             }
+            RenderSystem.enableBlend();
+            UIBase.resetShaderColor();
             e.render(pose, scaledMouseX, scaledMouseY, partial);
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
         }
+        UIBase.resetShaderColor();
         //Render border
         UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
 
@@ -153,6 +152,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         //Render sub context menus
         for (ContextMenuEntry e : renderEntries) {
             if (e instanceof SubMenuContextMenuEntry s) {
+                s.subContextMenu.shadow = this.shadow;
                 s.subContextMenu.scale = this.scale;
                 s.subContextMenu.forceUIScale = this.forceUIScale;
                 s.subContextMenu.overriddenRenderScale = this.overriddenRenderScale;
@@ -162,82 +162,84 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         this.scale = cachedScale;
 
+        UIBase.resetShaderColor();
+
     }
 
     @NotNull
     public SubMenuContextMenuEntry addSubMenuEntryAt(int index, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
         SubMenuContextMenuEntry e = new SubMenuContextMenuEntry(identifier, this, label, subContextMenu);
-        return (SubMenuContextMenuEntry) this.addEntryAt(index, e);
+        return this.addEntryAt(index, e);
     }
 
     @NotNull
     public SubMenuContextMenuEntry addSubMenuEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
         SubMenuContextMenuEntry e = new SubMenuContextMenuEntry(identifier, this, label, subContextMenu);
-        return (SubMenuContextMenuEntry) this.addEntryBefore(addBeforeIdentifier, e);
+        return this.addEntryBefore(addBeforeIdentifier, e);
     }
 
     @NotNull
     public SubMenuContextMenuEntry addSubMenuEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
         SubMenuContextMenuEntry e = new SubMenuContextMenuEntry(identifier, this, label, subContextMenu);
-        return (SubMenuContextMenuEntry) this.addEntryAfter(addAfterIdentifier, e);
+        return this.addEntryAfter(addAfterIdentifier, e);
     }
 
     @NotNull
     public SubMenuContextMenuEntry addSubMenuEntry(@NotNull String identifier, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
         SubMenuContextMenuEntry e = new SubMenuContextMenuEntry(identifier, this, label, subContextMenu);
-        return (SubMenuContextMenuEntry) this.addEntry(e);
+        return this.addEntry(e);
     }
 
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntryAt(int index, @NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
-        return (SeparatorContextMenuEntry) this.addEntryAt(index, e);
+        return this.addEntryAt(index, e);
     }
 
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
-        return (SeparatorContextMenuEntry) this.addEntryBefore(addBeforeIdentifier, e);
+        return this.addEntryBefore(addBeforeIdentifier, e);
     }
 
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
-        return (SeparatorContextMenuEntry) this.addEntryAfter(addAfterIdentifier, e);
+        return this.addEntryAfter(addAfterIdentifier, e);
     }
 
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntry(@NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
-        return (SeparatorContextMenuEntry) this.addEntry(e);
+        return this.addEntry(e);
     }
 
     @NotNull
     public ClickableContextMenuEntry addClickableEntryAt(int index, @NotNull String identifier, @NotNull Component label, @NotNull ClickableContextMenuEntry.ClickAction clickAction) {
         ClickableContextMenuEntry e = new ClickableContextMenuEntry(identifier, this, label, clickAction);
-        return (ClickableContextMenuEntry) this.addEntryAt(index, e);
+        return this.addEntryAt(index, e);
     }
 
     @NotNull
     public ClickableContextMenuEntry addClickableEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ClickableContextMenuEntry.ClickAction clickAction) {
         ClickableContextMenuEntry e = new ClickableContextMenuEntry(identifier, this, label, clickAction);
-        return (ClickableContextMenuEntry) this.addEntryAfter(addAfterIdentifier, e);
+        return this.addEntryAfter(addAfterIdentifier, e);
     }
 
     @NotNull
     public ClickableContextMenuEntry addClickableEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ClickableContextMenuEntry.ClickAction clickAction) {
         ClickableContextMenuEntry e = new ClickableContextMenuEntry(identifier, this, label, clickAction);
-        return (ClickableContextMenuEntry) this.addEntryBefore(addBeforeIdentifier, e);
+        return this.addEntryBefore(addBeforeIdentifier, e);
     }
 
     @NotNull
     public ClickableContextMenuEntry addClickableEntry(@NotNull String identifier, @NotNull Component label, @NotNull ClickableContextMenuEntry.ClickAction clickAction) {
         ClickableContextMenuEntry e = new ClickableContextMenuEntry(identifier, this, label, clickAction);
-        return (ClickableContextMenuEntry) this.addEntry(e);
+        return this.addEntry(e);
     }
 
     @NotNull
-    public ContextMenuEntry addEntryAfter(@NotNull String identifier, @NotNull ContextMenuEntry entry) {
+    public <T extends ContextMenuEntry> T addEntryAfter(@NotNull String identifier, @NotNull T entry) {
         int index = this.getEntryIndex(identifier);
         if (index >= 0) {
             index++;
@@ -249,7 +251,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     @NotNull
-    public ContextMenuEntry addEntryBefore(@NotNull String identifier, @NotNull ContextMenuEntry entry) {
+    public <T extends ContextMenuEntry> T addEntryBefore(@NotNull String identifier, @NotNull T entry) {
         int index = this.getEntryIndex(identifier);
         if (index < 0) {
             LOGGER.error("[FANCYMENU] Failed to add ContextMenu entry (" + entry.identifier + ") before other entry (" + identifier + ")! Target entry not found! Will add the entry at the end instead!");
@@ -259,12 +261,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     @NotNull
-    public ContextMenuEntry addEntry(@NotNull ContextMenuEntry entry) {
+    public <T extends ContextMenuEntry> T addEntry(@NotNull T entry) {
         return this.addEntryAt(this.entries.size(), entry);
     }
 
     @NotNull
-    public ContextMenuEntry addEntryAt(int index, @NotNull ContextMenuEntry entry) {
+    public <T extends ContextMenuEntry> T addEntryAt(int index, @NotNull T entry) {
         if (this.hasEntry(entry.identifier)) {
             LOGGER.error("[FANCYMENU] Failed to add ContextMenu entry! Identifier already in use: " + entry.identifier);
         } else {
@@ -356,42 +358,47 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
+    protected int getMinDistanceToScreenEdge() {
+        if (!this.useMinDistanceToScreenEdge) return 0;
+        return 5;
+    }
+
     protected int getActualX() {
         if (this.isSubMenu()) {
             float cachedScale = this.parentEntry.parent.scale;
             if (this.parentEntry.parent.overriddenRenderScale != null) this.parentEntry.parent.scale = this.parentEntry.parent.overriddenRenderScale;
+            float scale = UIBase.calculateFixedScale(this.scale);
+            int scaledOffsetX = (int) (5.0F * scale);
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
             if (side == SubMenuOpeningSide.LEFT) {
-                int actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5;
+                int actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
                 this.parentEntry.parent.scale = cachedScale;
                 return actualX;
             }
             if (side == SubMenuOpeningSide.RIGHT) {
-                int actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5;
+                int actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
                 this.parentEntry.parent.scale = cachedScale;
                 return actualX;
             }
         }
-        if ((this.getXWithBorder() + this.getScaledWidth()) > (getScreenWidth() - 5)) {
-            int offset = (this.getXWithBorder() + this.getScaledWidth()) - (getScreenWidth() - 5);
-            return this.getX() - offset;
+        if ((this.getX() + this.getScaledWidthWithBorder()) >= (getScreenWidth() - this.getMinDistanceToScreenEdge())) {
+            return getScreenWidth() - this.getScaledWidthWithBorder() - this.getMinDistanceToScreenEdge() - 1;
         }
-        return this.getX();
+        return Math.max(this.getX(), this.getMinDistanceToScreenEdge());
     }
 
-    protected int getActualY(boolean applyOverriddenRenderScaleIfSub) {
+    protected int getActualY() {
         int y = this.getY();
         if (this.isSubMenu()) {
-            float parentMenuBaseScale = (applyOverriddenRenderScaleIfSub && (this.parentEntry.parent.overriddenRenderScale != null)) ? this.parentEntry.parent.overriddenRenderScale : this.parentEntry.parent.scale;
-            float parentMenuScale = UIBase.calculateFixedScale(parentMenuBaseScale);
-            y = (int) ((float)this.parentEntry.y * parentMenuScale);
-            y += 5;
+            float scale = UIBase.calculateFixedScale((this.overriddenRenderScale != null) ? this.overriddenRenderScale : this.scale);
+            int scaledOffsetY = (int) (10.0F * scale);
+            y = (int) ((float)this.parentEntry.y * scale);
+            y += scaledOffsetY;
         }
-        if (((y + this.getBorderThickness()) + this.getScaledHeight()) >= (getScreenHeight() - 5)) {
-            int offset = ((y + this.getBorderThickness()) + this.getScaledHeight()) - (getScreenHeight() - 5);
-            return y - offset;
+        if ((y + this.getScaledHeightWithBorder()) >= (getScreenHeight() - this.getMinDistanceToScreenEdge())) {
+            return getScreenHeight() - this.getScaledHeightWithBorder() - this.getMinDistanceToScreenEdge() - 1;
         }
-        return y;
+        return Math.max(y, this.getMinDistanceToScreenEdge());
     }
 
     @NotNull
@@ -500,12 +507,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
     }
 
-    public boolean isMinXYEnabled() {
-        return this.enableMinXY;
+    public boolean isMinDistanceToScreenEdgeUsed() {
+        return this.useMinDistanceToScreenEdge;
     }
 
-    public ContextMenu setMinXYEnabled(boolean enableMinXY) {
-        this.enableMinXY = enableMinXY;
+    public ContextMenu setUseMinDistanceToScreenEdge(boolean useMinDistance) {
+        this.useMinDistanceToScreenEdge = useMinDistance;
         return this;
     }
 
@@ -554,8 +561,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     public ContextMenu openMenuAt(int x, int y) {
         this.closeSubMenus();
         this.unhoverAllEntries();
-        this.rawX = this.isMinXYEnabled() ? Math.max(5, x) : x;
-        this.rawY = this.isMinXYEnabled() ? Math.max(5, y) : y;
+        this.rawX = x;
+        this.rawY = y;
         this.open = true;
         return this;
     }
@@ -682,6 +689,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.subMenuOpeningSide = menusToStack[0].subMenuOpeningSide;
             stacked.shadow = menusToStack[0].shadow;
             stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
+            stacked.forceUIScale = menusToStack[0].forceUIScale;
+            stacked.overriddenRenderScale = menusToStack[0].overriddenRenderScale;
+            stacked.useMinDistanceToScreenEdge = menusToStack[0].useMinDistanceToScreenEdge;
 
             for (ContextMenuEntry ignoredEntry : menusToStack[0].getStackableEntries()) {
 

@@ -32,7 +32,7 @@ public class WrappedTexture implements ITexture {
      * Keep in mind that the texture needs to be registered already!
      **/
     @NotNull
-    public static WrappedTexture create(@NotNull ResourceLocation textureLocation) {
+    public static WrappedTexture of(@NotNull ResourceLocation textureLocation) {
         Objects.requireNonNull(textureLocation);
         WrappedTexture t = new WrappedTexture(textureLocation);
         t.loadTexture();

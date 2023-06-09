@@ -2,10 +2,13 @@ package de.keksuccino.fancymenu.rendering.ui.menubar.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.resources.texture.ITexture;
 import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
@@ -13,10 +16,12 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +30,20 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
+    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
+    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
+    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
+    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
+    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
 
-    protected int height = 20;
+    protected int height = 28;
     protected float scale = UIBase.getUIScale();
     protected boolean forceUIScale = true;
-    protected int bottomLineY;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -58,25 +68,29 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         //Render all visible entries
         int leftX = 0;
         for (MenuBarEntry e : this.leftEntries) {
-            e.x = (int)((float)leftX / scale);
+            e.x = leftX;
             e.y = y;
             e.height = this.height;
             e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
             if (e.isVisible()) {
+                RenderSystem.enableBlend();
+                UIBase.resetShaderColor();
                 e.render(pose, scaledMouseX, scaledMouseY, partial);
             }
-            leftX += (int)((float)e.getWidth() * scale);
+            leftX += e.getWidth();
         }
         int rightX = scaledWidth;
         for (MenuBarEntry e : this.rightEntries) {
-            e.x = (int)((float)rightX / scale) - e.getWidth();
+            e.x = rightX - e.getWidth();
             e.y = y;
             e.height = this.height;
             e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
             if (e.isVisible()) {
+                RenderSystem.enableBlend();
+                UIBase.resetShaderColor();
                 e.render(pose, scaledMouseX, scaledMouseY, partial);
             }
-            rightX -= (int)((float)e.getWidth() / scale);
+            rightX -= e.getWidth();
         }
 
         this.renderBottomLine(pose, scaledWidth, this.height);
@@ -101,38 +115,213 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     }
 
     protected void renderBottomLine(PoseStack pose, int width, int height) {
-        this.bottomLineY = height - this.getBottomLineThickness();
-        fill(pose, 0, this.bottomLineY, width, height, UIBase.getUIColorScheme().elementBorderColorNormal.getColorInt());
+        fill(pose, 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorScheme().elementBorderColorNormal.getColorInt());
         UIBase.resetShaderColor();
     }
 
     @NotNull
+    public SpacerMenuBarEntry addSpacerEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier) {
+        return this.addEntryAfter(addAfterIdentifier, new SpacerMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public SpacerMenuBarEntry addSpacerEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier) {
+        return this.addEntryBefore(addBeforeIdentifier, new SpacerMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public SpacerMenuBarEntry addSpacerEntry(@NotNull Side side, @NotNull String identifier) {
+        return this.addEntry(side, new SpacerMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public SpacerMenuBarEntry addSpacerEntryAt(int index, @NotNull Side side, @NotNull String identifier) {
+        return this.addEntryAt(index, side, new SpacerMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public SeparatorMenuBarEntry addSeparatorEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier) {
+        return this.addEntryAfter(addAfterIdentifier, new SeparatorMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public SeparatorMenuBarEntry addSeparatorEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier) {
+        return this.addEntryBefore(addBeforeIdentifier, new SeparatorMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
     public SeparatorMenuBarEntry addSeparatorEntry(@NotNull Side side, @NotNull String identifier) {
-        return (SeparatorMenuBarEntry) this.addEntry(side, new SeparatorMenuBarEntry(identifier, this));
+        return this.addEntry(side, new SeparatorMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public SeparatorMenuBarEntry addSeparatorEntryAt(int index, @NotNull Side side, @NotNull String identifier) {
+        return this.addEntryAt(index, side, new SeparatorMenuBarEntry(identifier, this));
+    }
+
+    @NotNull
+    public ContextMenuBarEntry addContextMenuEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
+        return this.addEntryAfter(addAfterIdentifier, new ContextMenuBarEntry(identifier, this, label, contextMenu));
+    }
+
+    @NotNull
+    public ContextMenuBarEntry addContextMenuEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
+        return this.addEntryBefore(addBeforeIdentifier, new ContextMenuBarEntry(identifier, this, label, contextMenu));
     }
 
     @NotNull
     public ContextMenuBarEntry addContextMenuEntry(@NotNull Side side, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
-        return (ContextMenuBarEntry) this.addEntry(side, new ContextMenuBarEntry(identifier, this, label, contextMenu));
+        return this.addEntry(side, new ContextMenuBarEntry(identifier, this, label, contextMenu));
+    }
+
+    @NotNull
+    public ContextMenuBarEntry addContextMenuEntryAt(int index, @NotNull Side side, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
+        return this.addEntryAt(index, side, new ContextMenuBarEntry(identifier, this, label, contextMenu));
+    }
+
+    @NotNull
+    public ClickableMenuBarEntry addClickableEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ClickableMenuBarEntry.ClickAction clickAction) {
+        return this.addEntryAfter(addAfterIdentifier, new ClickableMenuBarEntry(identifier, this, label, clickAction));
+    }
+
+    @NotNull
+    public ClickableMenuBarEntry addClickableEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ClickableMenuBarEntry.ClickAction clickAction) {
+        return this.addEntryBefore(addBeforeIdentifier, new ClickableMenuBarEntry(identifier, this, label, clickAction));
     }
 
     @NotNull
     public ClickableMenuBarEntry addClickableEntry(@NotNull Side side, @NotNull String identifier, @NotNull Component label, @NotNull ClickableMenuBarEntry.ClickAction clickAction) {
-        return (ClickableMenuBarEntry) this.addEntry(side, new ClickableMenuBarEntry(identifier, this, label, clickAction));
+        return this.addEntry(side, new ClickableMenuBarEntry(identifier, this, label, clickAction));
     }
 
     @NotNull
-    public MenuBarEntry addEntry(@NotNull Side side, @NotNull MenuBarEntry entry) {
+    public ClickableMenuBarEntry addClickableEntryAt(int index, @NotNull Side side, @NotNull String identifier, @NotNull Component label, @NotNull ClickableMenuBarEntry.ClickAction clickAction) {
+        return this.addEntryAt(index, side, new ClickableMenuBarEntry(identifier, this, label, clickAction));
+    }
+
+    @NotNull
+    public <T extends MenuBarEntry> T addEntryAfter(@NotNull String addAfterIdentifier, @NotNull T entry) {
+        Objects.requireNonNull(addAfterIdentifier);
+        int index = this.getEntryIndex(addAfterIdentifier);
+        Side side = this.getEntrySide(addAfterIdentifier);
+        if ((index >= 0) && (side != null)) {
+            index++;
+        } else {
+            LOGGER.error("[FANCYMENU] Failed to add MenuBar entry (" + entry.identifier + ") after other entry (" + addAfterIdentifier + ")! Target entry not found! Will add the entry at the end of left side instead!");
+            index = this.leftEntries.size();
+            side = Side.LEFT;
+        }
+        return this.addEntryAt(index, side, entry);
+    }
+
+    @NotNull
+    public <T extends MenuBarEntry> T addEntryBefore(@NotNull String addBeforeIdentifier, @NotNull T entry) {
+        Objects.requireNonNull(addBeforeIdentifier);
+        int index = this.getEntryIndex(addBeforeIdentifier);
+        Side side = this.getEntrySide(addBeforeIdentifier);
+        if ((index < 0) || (side == null)) {
+            LOGGER.error("[FANCYMENU] Failed to add MenuBar entry (" + entry.identifier + ") before other entry (" + addBeforeIdentifier + ")! Target entry not found! Will add the entry at the end of left side instead!");
+            index = this.leftEntries.size();
+            side = Side.LEFT;
+        }
+        return this.addEntryAt(index, side, entry);
+    }
+
+    @NotNull
+    public <T extends MenuBarEntry> T addEntry(@NotNull Side side, @NotNull T entry) {
+        int index = (side == Side.LEFT) ? this.leftEntries.size() : this.rightEntries.size();
+        return this.addEntryAt(index, side, entry);
+    }
+
+    @NotNull
+    public <T extends MenuBarEntry> T addEntryAt(int index, @NotNull Side side, @NotNull T entry) {
         Objects.requireNonNull(side);
         Objects.requireNonNull(entry);
         Objects.requireNonNull(entry.identifier);
-        if (side == Side.LEFT) {
-            this.leftEntries.add(entry);
-        }
-        if (side == Side.RIGHT) {
-            this.rightEntries.add(entry);
+        if (this.hasEntry(entry.identifier)) {
+            LOGGER.error("[FANCYMENU] Failed to add MenuBar entry! Identifier already in use: " + entry.identifier);
+        } else {
+            if (side == Side.LEFT) {
+                this.leftEntries.add(Math.max(0, Math.min(index, this.leftEntries.size())), entry);
+            }
+            if (side == Side.RIGHT) {
+                this.rightEntries.add(Math.max(0, Math.min(index, this.rightEntries.size())), entry);
+            }
         }
         return entry;
+    }
+
+    public MenuBar removeEntry(@NotNull String identifier) {
+        MenuBarEntry e = this.getEntry(identifier);
+        if (e != null) {
+            this.leftEntries.remove(e);
+            this.rightEntries.remove(e);
+        }
+        return this;
+    }
+
+    public MenuBar clearLeftEntries() {
+        this.leftEntries.clear();
+        return this;
+    }
+
+    public MenuBar clearRightEntries() {
+        this.rightEntries.clear();
+        return this;
+    }
+
+    public MenuBar clearEntries() {
+        this.leftEntries.clear();
+        this.rightEntries.clear();
+        return this;
+    }
+
+    public int getEntryIndex(@NotNull String identifier) {
+        MenuBarEntry e = this.getEntry(identifier);
+        if (e != null) {
+            int index = this.leftEntries.indexOf(e);
+            if (index == -1) index = this.rightEntries.indexOf(e);
+            return index;
+        }
+        return -1;
+    }
+
+    @Nullable
+    public Side getEntrySide(@NotNull String identifier) {
+        MenuBarEntry e = this.getEntry(identifier);
+        if (e != null) {
+            if (this.leftEntries.contains(e)) return Side.LEFT;
+            return Side.RIGHT;
+        }
+        return null;
+    }
+
+    @Nullable
+    public MenuBarEntry getEntry(@NotNull String identifier) {
+        Objects.requireNonNull(identifier);
+        for (MenuBarEntry e : this.getEntries()) {
+            if (e.identifier.equals(identifier)) return e;
+        }
+        return null;
+    }
+
+    public boolean hasEntry(@NotNull String identifier) {
+        return this.getEntry(identifier) != null;
+    }
+
+    @NotNull
+    public List<MenuBarEntry> getLeftEntries() {
+        return new ArrayList<>(this.leftEntries);
+    }
+
+    @NotNull
+    public List<MenuBarEntry> getRightEntries() {
+        return new ArrayList<>(this.rightEntries);
+    }
+
+    @NotNull
+    public List<MenuBarEntry> getEntries() {
+        return ListUtils.mergeLists(this.leftEntries, this.rightEntries);
     }
 
     public int getHeight() {
@@ -164,6 +353,24 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
     public MenuBar setForceUIScale(boolean forceUIScale) {
         this.forceUIScale = forceUIScale;
+        return this;
+    }
+
+    public boolean isEntryContextMenuOpen() {
+        for (MenuBarEntry e : this.getEntries()) {
+            if (e instanceof ContextMenuBarEntry c) {
+                if (c.contextMenu.isOpen()) return true;
+            }
+        }
+        return false;
+    }
+
+    public MenuBar closeAllContextMenus() {
+        for (MenuBarEntry e : this.getEntries()) {
+            if (e instanceof ContextMenuBarEntry c) {
+                c.contextMenu.closeMenu();
+            }
+        }
         return this;
     }
 
@@ -209,8 +416,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         protected int y;
         protected int height;
         protected boolean hovered = false;
-        protected BooleanSupplier activeSupplier;
-        protected BooleanSupplier visibleSupplier;
+        protected MenuBarEntryBooleanSupplier activeSupplier;
+        protected MenuBarEntryBooleanSupplier visibleSupplier;
 
         public MenuBarEntry(@NotNull String identifier, @NotNull MenuBar parent) {
             this.identifier = identifier;
@@ -237,7 +444,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             return this;
         }
 
-        public MenuBarEntry setActiveSupplier(BooleanSupplier activeSupplier) {
+        public MenuBarEntry setActiveSupplier(MenuBarEntryBooleanSupplier activeSupplier) {
             this.activeSupplier = activeSupplier;
             return this;
         }
@@ -251,7 +458,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             return this;
         }
 
-        public MenuBarEntry setVisibleSupplier(BooleanSupplier visibleSupplier) {
+        public MenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
             this.visibleSupplier = visibleSupplier;
             return this;
         }
@@ -281,7 +488,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @FunctionalInterface
-        public interface BooleanSupplier {
+        public interface MenuBarEntryBooleanSupplier {
             boolean get(MenuBar bar, MenuBarEntry entry);
         }
 
@@ -291,6 +498,9 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         @NotNull
         protected Component label;
+        @Nullable
+        protected ITexture iconTexture;
+        protected boolean applyUIShaderColorToIcon = true;
         @NotNull
         protected ClickAction clickAction;
         protected Font font = Minecraft.getInstance().font;
@@ -303,25 +513,67 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            RenderSystem.enableBlend();
-            UIBase.resetShaderColor();
             this.renderBackground(pose);
-            this.renderLabel(pose);
+            this.renderLabelOrIcon(pose);
         }
 
         protected void renderBackground(PoseStack pose) {
+            UIBase.resetShaderColor();
             fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
             UIBase.resetShaderColor();
         }
 
-        protected void renderLabel(PoseStack pose) {
-            UIBase.drawText(pose, this.font, this.label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+        protected void renderLabelOrIcon(PoseStack pose) {
+            RenderSystem.enableBlend();
+            if (this.iconTexture != null) {
+                int[] size = this.iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), this.height);
+                UIBase.resetShaderColor();
+                if (this.applyUIShaderColorToIcon) {
+                    UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
+                }
+                RenderUtils.bindTexture((this.iconTexture.getResourceLocation() != null) ? this.iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION);
+                blit(pose, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+            } else {
+                UIBase.drawText(pose, this.font, this.label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+            }
             UIBase.resetShaderColor();
         }
 
         @Override
         protected int getWidth() {
+            if (this.iconTexture != null) {
+                return this.iconTexture.getAspectRatio().getAspectRatioWidth(this.height);
+            }
             return this.font.width(this.label) + 10;
+        }
+
+        @Override
+        public ClickableMenuBarEntry setActive(boolean active) {
+            return (ClickableMenuBarEntry) super.setActive(active);
+        }
+
+        @Override
+        public ClickableMenuBarEntry setActiveSupplier(MenuBarEntryBooleanSupplier activeSupplier) {
+            return (ClickableMenuBarEntry) super.setActiveSupplier(activeSupplier);
+        }
+
+        @Override
+        public ClickableMenuBarEntry setVisible(boolean visible) {
+            return (ClickableMenuBarEntry) super.setVisible(visible);
+        }
+
+        @Override
+        public ClickableMenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
+            return (ClickableMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
+        }
+
+        public boolean isApplyUIShaderColorToIcon() {
+            return this.applyUIShaderColorToIcon;
+        }
+
+        public ClickableMenuBarEntry setApplyUIShaderColorToIcon(boolean applyUIShaderColorToIcon) {
+            this.applyUIShaderColorToIcon = applyUIShaderColorToIcon;
+            return this;
         }
 
         @NotNull
@@ -340,6 +592,16 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             return this;
         }
 
+        @Nullable
+        public ITexture getIconTexture() {
+            return iconTexture;
+        }
+
+        public ClickableMenuBarEntry setIconTexture(@Nullable ITexture iconTexture) {
+            this.iconTexture = iconTexture;
+            return this;
+        }
+
         @NotNull
         public ClickAction getClickAction() {
             return this.clickAction;
@@ -353,6 +615,9 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && (this.isActive() && this.isVisible() && this.isHovered())) {
+                if (FancyMenu.getConfig().getOrDefault("play_ui_click_sounds", true)) {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                }
                 this.clickAction.onClick(this.parent, this);
                 return true;
             }
@@ -374,7 +639,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             super(identifier, menuBar, label, (bar, entry) -> {});
             this.contextMenu = contextMenu;
             this.contextMenu.setShadow(false);
-            this.contextMenu.setMinXYEnabled(false);
+            this.contextMenu.setUseMinDistanceToScreenEdge(false);
             this.contextMenu.setForceUIScale(false);
             this.clickAction = (bar, entry) -> this.openContextMenu();
         }
@@ -387,11 +652,54 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             this.contextMenu.setScale(this.parent.scale);
+            this.handleOpenOnHover();
             super.render(pose, mouseX, mouseY, partial);
         }
 
+        protected void handleOpenOnHover() {
+            if (this.isHovered() && this.isActive() && this.isVisible() && !this.contextMenu.isOpen() && this.parent.isEntryContextMenuOpen()) {
+                this.parent.closeAllContextMenus();
+                this.openContextMenu();
+            }
+        }
+
         @Override
-        public ClickableMenuBarEntry setClickAction(@NotNull ClickAction clickAction) {
+        public ContextMenuBarEntry setActive(boolean active) {
+            return (ContextMenuBarEntry) super.setActive(active);
+        }
+
+        @Override
+        public ContextMenuBarEntry setActiveSupplier(MenuBarEntryBooleanSupplier activeSupplier) {
+            return (ContextMenuBarEntry) super.setActiveSupplier(activeSupplier);
+        }
+
+        @Override
+        public ContextMenuBarEntry setVisible(boolean visible) {
+            return (ContextMenuBarEntry) super.setVisible(visible);
+        }
+
+        @Override
+        public ContextMenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
+            return (ContextMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
+        }
+
+        @Override
+        public ContextMenuBarEntry setLabel(@NotNull Component label) {
+            return (ContextMenuBarEntry) super.setLabel(label);
+        }
+
+        @Override
+        public ContextMenuBarEntry setIconTexture(@Nullable ITexture iconTexture) {
+            return (ContextMenuBarEntry) super.setIconTexture(iconTexture);
+        }
+
+        @Override
+        public ContextMenuBarEntry setApplyUIShaderColorToIcon(boolean applyUIShaderColorToIcon) {
+            return (ContextMenuBarEntry) super.setApplyUIShaderColorToIcon(applyUIShaderColorToIcon);
+        }
+
+        @Override
+        public ContextMenuBarEntry setClickAction(@NotNull ClickAction clickAction) {
             LOGGER.error("[FANCYMENU] You can't change the click action of ContextMenuBarEntries!");
             return this;
         }
@@ -407,11 +715,59 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             if ((button == 0) && (!this.isHovered() || !this.isActive() || !this.isVisible()) && !this.contextMenu.isUserNavigatingInMenu()) {
                 this.contextMenu.closeMenu();
             }
-//            if ((button == 0) && (this.isActive() && this.isVisible() && this.isHovered())) {
-//                this.contextMenu.openMenuAt()
-//                return true;
-//            }
             return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+    }
+
+    public static class SpacerMenuBarEntry extends MenuBarEntry {
+
+        protected int width = 10;
+
+        public SpacerMenuBarEntry(@NotNull String identifier, @NotNull MenuBar menuBar) {
+            super(identifier, menuBar);
+        }
+
+        @Override
+        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            RenderSystem.enableBlend();
+            UIBase.resetShaderColor();
+            this.renderBackground(pose);
+        }
+
+        protected void renderBackground(PoseStack pose) {
+            fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
+            UIBase.resetShaderColor();
+        }
+
+        @Override
+        protected int getWidth() {
+            return this.width;
+        }
+
+        @Override
+        public SpacerMenuBarEntry setActive(boolean active) {
+            return (SpacerMenuBarEntry) super.setActive(active);
+        }
+
+        @Override
+        public SpacerMenuBarEntry setActiveSupplier(MenuBarEntryBooleanSupplier activeSupplier) {
+            return (SpacerMenuBarEntry) super.setActiveSupplier(activeSupplier);
+        }
+
+        @Override
+        public SpacerMenuBarEntry setVisible(boolean visible) {
+            return (SpacerMenuBarEntry) super.setVisible(visible);
+        }
+
+        @Override
+        public SpacerMenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
+            return (SpacerMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
+        }
+
+        public SpacerMenuBarEntry setWidth(int width) {
+            this.width = width;
+            return this;
         }
 
     }
@@ -438,13 +794,34 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             return 1;
         }
 
+        @Override
+        public SeparatorMenuBarEntry setActive(boolean active) {
+            return (SeparatorMenuBarEntry) super.setActive(active);
+        }
+
+        @Override
+        public SeparatorMenuBarEntry setActiveSupplier(MenuBarEntryBooleanSupplier activeSupplier) {
+            return (SeparatorMenuBarEntry) super.setActiveSupplier(activeSupplier);
+        }
+
+        @Override
+        public SeparatorMenuBarEntry setVisible(boolean visible) {
+            return (SeparatorMenuBarEntry) super.setVisible(visible);
+        }
+
+        @Override
+        public SeparatorMenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
+            return (SeparatorMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
+        }
+
         @NotNull
         public DrawableColor getColor() {
             return this.color;
         }
 
-        public void setColor(@NotNull DrawableColor color) {
+        public SeparatorMenuBarEntry setColor(@NotNull DrawableColor color) {
             this.color = color;
+            return this;
         }
 
     }

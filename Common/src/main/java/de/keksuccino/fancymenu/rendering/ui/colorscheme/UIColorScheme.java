@@ -56,22 +56,9 @@ public class UIColorScheme {
 
     public DrawableColor textEditorTextFormattingBracketsColor = DrawableColor.of(new Color(252, 223, 3));
 
-    public DrawableColor fontRendererTextFormattingColorBlack = DrawableColor.of(new Color(0));
-    public DrawableColor fontRendererTextFormattingColorDarkBlue = DrawableColor.of(new Color(170));
-    public DrawableColor fontRendererTextFormattingColorDarkGreen = DrawableColor.of(new Color(43520));
-    public DrawableColor fontRendererTextFormattingColorDarkAqua = DrawableColor.of(new Color(43690));
-    public DrawableColor fontRendererTextFormattingColorDarkRed = DrawableColor.of(new Color(11141120));
-    public DrawableColor fontRendererTextFormattingColorDarkPurple = DrawableColor.of(new Color(11141290));
-    public DrawableColor fontRendererTextFormattingColorGold = DrawableColor.of(new Color(16755200));
-    public DrawableColor fontRendererTextFormattingColorGray = DrawableColor.of(new Color(11184810));
-    public DrawableColor fontRendererTextFormattingColorDarkGray = DrawableColor.of(new Color(5592405));
-    public DrawableColor fontRendererTextFormattingColorBlue = DrawableColor.of(new Color(5592575));
+    public DrawableColor fontRendererTextFormattingColorOrange = DrawableColor.of(new Color(16755200));
     public DrawableColor fontRendererTextFormattingColorGreen = DrawableColor.of(new Color(5635925));
-    public DrawableColor fontRendererTextFormattingColorAqua = DrawableColor.of(new Color(5636095));
     public DrawableColor fontRendererTextFormattingColorRed = DrawableColor.of(new Color(16733525));
-    public DrawableColor fontRendererTextFormattingColorLightPurple = DrawableColor.of(new Color(16733695));
-    public DrawableColor fontRendererTextFormattingColorYellow = DrawableColor.of(new Color(16777045));
-    public DrawableColor fontRendererTextFormattingColorWhite = DrawableColor.of(new Color(16777215));
 
     public void setUITextureShaderColor(float alpha) {
         UIBase.setShaderColor(uiTextureColor, alpha);

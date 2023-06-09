@@ -59,7 +59,7 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("all")
 public class LayoutEditorUI extends UIBase {
 
-	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
+	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_icon.png");
 
 	public MenuBar topMenuBar;
 	public LayoutEditorScreen editor;

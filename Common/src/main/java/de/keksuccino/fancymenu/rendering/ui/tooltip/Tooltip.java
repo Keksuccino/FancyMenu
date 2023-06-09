@@ -293,7 +293,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     public Tooltip setBackgroundTexture(@NotNull ResourceLocation texture) {
-        this.backgroundTexture = WrappedTexture.create(texture);
+        this.backgroundTexture = WrappedTexture.of(texture);
         this.backgroundColor = null;
         this.vanillaLike = false;
         return this;

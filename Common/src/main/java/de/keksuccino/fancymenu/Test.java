@@ -4,14 +4,18 @@ import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class Test {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final ResourceLocation FM_LOGO_LOCATION = new ResourceLocation("fancymenu", "textures/fancymenu_logo_icon.png");
 
     @EventListener(priority = -2000)
     public void onInit(InitOrResizeScreenCompletedEvent e) {
@@ -33,7 +37,8 @@ public class Test {
         menu1.addClickableEntry("menu_entry_4", Component.literal("Menu Entry 4"), (menu, entry) -> {
             LOGGER.info("CLICK");
         });
-        menuBar.addContextMenuEntry(MenuBar.Side.LEFT, "entry_1", Component.literal("Context Entry 1"), menu1);
+        menuBar.addContextMenuEntry(MenuBar.Side.LEFT, "entry_1", Component.literal("Context Entry 1"), menu1)
+                .setIconTexture(WrappedTexture.of(FM_LOGO_LOCATION));
 
         ContextMenu subMenu1 = new ContextMenu();
         subMenu1.addClickableEntry("menu_entry_1", Component.literal("Menu Entry 1"), (menu, entry) -> {
@@ -82,6 +87,42 @@ public class Test {
             LOGGER.info("CLICK");
         });
         menuBar.addContextMenuEntry(MenuBar.Side.LEFT, "entry_3", Component.literal("3 lul"), menu3);
+
+        ContextMenu menu4 = new ContextMenu();
+        menu4.addClickableEntry("menu_entry_1", Component.literal("Menu Entry 1"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu4.addClickableEntry("menu_entry_2", Component.literal("Menu Entry 2"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu4.addClickableEntry("menu_entry_3", Component.literal("Menu Entry 3"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu4.addClickableEntry("menu_entry_4", Component.literal("Menu Entry 4"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu4.addClickableEntry("menu_entry_5", Component.literal("Menu Entry 5"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menuBar.addContextMenuEntry(MenuBar.Side.RIGHT, "entry_4", Component.literal("Entry Right 1"), menu4);
+
+        ContextMenu menu5 = new ContextMenu();
+        menu5.addClickableEntry("menu_entry_1", Component.literal("Menu Entry 1"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu5.addClickableEntry("menu_entry_2", Component.literal("Menu Entry 2"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu5.addClickableEntry("menu_entry_3", Component.literal("Menu Entry 3"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu5.addClickableEntry("menu_entry_4", Component.literal("Menu Entry 4"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menu5.addClickableEntry("menu_entry_5", Component.literal("Menu Entry 5"), (menu, entry) -> {
+            LOGGER.info("CLICK");
+        });
+        menuBar.addContextMenuEntry(MenuBar.Side.RIGHT, "entry_5", Component.literal("Entry Right 2"), menu5);
 
         e.addRenderableWidget(menuBar);
 

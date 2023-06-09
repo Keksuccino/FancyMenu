@@ -30,7 +30,7 @@ public class TextureHandler {
     public LocalTexture getTexture(File file) {
         if (!textures.containsKey(file.getAbsolutePath())) {
             if (file.exists() && file.isFile()) {
-                LocalTexture t = LocalTexture.create(file.getAbsolutePath());
+                LocalTexture t = LocalTexture.of(file.getAbsolutePath());
                 textures.put(file.getAbsolutePath(), t);
                 return t;
             } else {
@@ -49,7 +49,7 @@ public class TextureHandler {
     @Nullable
     public WebTexture getWebTexture(String url, boolean autoLoadTextureAsynchronously) {
         if (!textures.containsKey(url)) {
-            WebTexture t = WebTexture.create(url, autoLoadTextureAsynchronously);
+            WebTexture t = WebTexture.of(url, autoLoadTextureAsynchronously);
             this.textures.put(url, t);
             return t;
         } else {

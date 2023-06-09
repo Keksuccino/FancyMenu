@@ -63,7 +63,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class CustomizationOverlayUI extends UIBase {
 
-	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_btn.png");
+	protected static final ResourceLocation CLOSE_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "close_icon.png");
 	protected static final ResourceLocation RELOAD_BUTTON_TEXTURE = new ResourceLocation("keksuccino", "/filechooser/back_icon.png");
 
 	protected static final Color BUTTON_INFO_BACKGROUND_COLOR = new Color(102, 0, 102, 200);
@@ -683,6 +683,9 @@ public class CustomizationOverlayUI extends UIBase {
 	}
 
 	public static void render(PoseStack matrix, Screen screen) {
+
+//		if (true) return; //TODO remove debug
+
 		try {
 
 			if (bar != null) {
