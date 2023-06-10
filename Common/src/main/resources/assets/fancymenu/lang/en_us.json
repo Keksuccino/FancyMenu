@@ -1185,5 +1185,15 @@
   "fancymenu.elements.splash.source_mode.text_file.set_source": "Set Source Text File",
   "fancymenu.elements.splash.shadow.off": "Shadow: §äOff",
   "fancymenu.elements.splash.shadow.on": "Shadow: §pOn",
-  "fancymenu.elements.splash.set_scale": "Set Scale"
+  "fancymenu.elements.splash.set_scale": "Set Scale",
+
+  "fancymenu.overlay.menu_bar.screen": "Screen",
+  "fancymenu.overlay.menu_bar.screen.current": "Current",
+  "fancymenu.overlay.menu_bar.screen.current.customizations.off": "Customizations: §äOff",
+  "fancymenu.overlay.menu_bar.screen.current.customizations.on": "Customizations: §pOff",
+  "fancymenu.overlay.menu_bar.screen.current.override": "Override with Custom GUI",
+  "fancymenu.overlay.menu_bar.layout": "Layout",
+  "fancymenu.overlay.menu_bar.settings": "Settings",
+  "fancymenu.overlay.menu_bar.help": "Help",
+  "fancymenu.overlay.menu_bar.tools": "Tools"
 }

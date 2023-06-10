@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
+import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUIOLD;
 import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
@@ -29,7 +30,6 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
-import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
@@ -256,8 +256,8 @@ public class ScreenCustomization {
 		LayoutHandler.reloadLayouts();
 		CustomGuiLoader.loadCustomGuis();
 		if (!FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-			CustomizationOverlayUI.showButtonInfo = false;
-			CustomizationOverlayUI.showMenuInfo = false;
+			CustomizationOverlayUIOLD.showButtonInfo = false;
+			CustomizationOverlayUIOLD.showMenuInfo = false;
 		}
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		try {

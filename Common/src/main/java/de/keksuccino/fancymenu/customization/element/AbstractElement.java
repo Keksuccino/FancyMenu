@@ -53,6 +53,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
 	protected String instanceIdentifier;
 
+	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
 		this.builder = builder;
 	}
@@ -246,17 +247,6 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 				}
 			}
 			return null;
-		}
-
-		@NotNull
-		public static AppearanceDelay next(AppearanceDelay previous) {
-			if (previous == FIRST_TIME) {
-				return EVERY_TIME;
-			}
-			if (previous == EVERY_TIME) {
-				return NO_DELAY;
-			}
-			return FIRST_TIME;
 		}
 
 	}

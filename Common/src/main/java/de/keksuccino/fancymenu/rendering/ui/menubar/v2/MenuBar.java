@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.resources.texture.ITexture;
 import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.fancymenu.utils.ScreenUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -30,12 +31,6 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
-    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
-    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
-    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
-    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
-    //TODO FIXEN: X Koordinate von Context Menüs auf rechter Seite
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
@@ -54,7 +49,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
         int y = 0;
-        int width = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen.width : 0;
+        int width = ScreenUtils.getScreenWidth();
         int scaledWidth = (width != 0) ? (int)((float)width / scale) : 0;
 
         RenderSystem.enableBlend();
@@ -159,24 +154,36 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         return this.addEntryAt(index, side, new SeparatorMenuBarEntry(identifier, this));
     }
 
+    /**
+     * {@link ContextMenuBarEntry}s should only get added to the LEFT {@link Side} of the {@link MenuBar}.
+     */
     @NotNull
     public ContextMenuBarEntry addContextMenuEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
         return this.addEntryAfter(addAfterIdentifier, new ContextMenuBarEntry(identifier, this, label, contextMenu));
     }
 
+    /**
+     * {@link ContextMenuBarEntry}s should only get added to the LEFT {@link Side} of the {@link MenuBar}.
+     */
     @NotNull
     public ContextMenuBarEntry addContextMenuEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
         return this.addEntryBefore(addBeforeIdentifier, new ContextMenuBarEntry(identifier, this, label, contextMenu));
     }
 
+    /**
+     * {@link ContextMenuBarEntry}s should only get added to the LEFT {@link Side} of the {@link MenuBar}.
+     */
     @NotNull
-    public ContextMenuBarEntry addContextMenuEntry(@NotNull Side side, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
-        return this.addEntry(side, new ContextMenuBarEntry(identifier, this, label, contextMenu));
+    public ContextMenuBarEntry addContextMenuEntry(@NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
+        return this.addEntry(Side.LEFT, new ContextMenuBarEntry(identifier, this, label, contextMenu));
     }
 
+    /**
+     * {@link ContextMenuBarEntry}s should only get added to the LEFT {@link Side} of the {@link MenuBar}.
+     */
     @NotNull
-    public ContextMenuBarEntry addContextMenuEntryAt(int index, @NotNull Side side, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
-        return this.addEntryAt(index, side, new ContextMenuBarEntry(identifier, this, label, contextMenu));
+    public ContextMenuBarEntry addContextMenuEntryAt(int index, @NotNull String identifier, @NotNull Component label, @NotNull ContextMenu contextMenu) {
+        return this.addEntryAt(index, Side.LEFT, new ContextMenuBarEntry(identifier, this, label, contextMenu));
     }
 
     @NotNull
@@ -492,14 +499,19 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             boolean get(MenuBar bar, MenuBarEntry entry);
         }
 
+        @FunctionalInterface
+        public interface MenuBarEntrySupplier<T> {
+            T get(MenuBar bar, MenuBarEntry entry);
+        }
+
     }
 
     public static class ClickableMenuBarEntry extends MenuBarEntry {
 
         @NotNull
-        protected Component label;
+        protected MenuBarEntrySupplier<Component> labelSupplier;
         @Nullable
-        protected ITexture iconTexture;
+        protected MenuBarEntrySupplier<ITexture> iconTextureSupplier;
         protected boolean applyUIShaderColorToIcon = true;
         @NotNull
         protected ClickAction clickAction;
@@ -507,7 +519,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         public ClickableMenuBarEntry(@NotNull String identifier, @NotNull MenuBar menuBar, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, menuBar);
-            this.label = label;
+            this.labelSupplier = (bar, entry) -> label;
             this.clickAction = clickAction;
         }
 
@@ -525,26 +537,30 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         protected void renderLabelOrIcon(PoseStack pose) {
             RenderSystem.enableBlend();
-            if (this.iconTexture != null) {
-                int[] size = this.iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), this.height);
+            Component label = this.getLabel();
+            ITexture iconTexture = this.getIconTexture();
+            if (iconTexture != null) {
+                int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), this.height);
                 UIBase.resetShaderColor();
                 if (this.applyUIShaderColorToIcon) {
                     UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
                 }
-                RenderUtils.bindTexture((this.iconTexture.getResourceLocation() != null) ? this.iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION);
+                RenderUtils.bindTexture((iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION);
                 blit(pose, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
             } else {
-                UIBase.drawText(pose, this.font, this.label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+                UIBase.drawText(pose, this.font, label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
             }
             UIBase.resetShaderColor();
         }
 
         @Override
         protected int getWidth() {
-            if (this.iconTexture != null) {
-                return this.iconTexture.getAspectRatio().getAspectRatioWidth(this.height);
+            Component label = this.getLabel();
+            ITexture iconTexture = this.getIconTexture();
+            if (iconTexture != null) {
+                return iconTexture.getAspectRatio().getAspectRatioWidth(this.height);
             }
-            return this.font.width(this.label) + 10;
+            return this.font.width(label) + 10;
         }
 
         @Override
@@ -583,22 +599,39 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @NotNull
-        public Component getLabel() {
-            return this.label;
+        protected Component getLabel() {
+            Component c = this.labelSupplier.get(this.parent, this);
+            return (c != null) ? c : Component.empty();
+        }
+
+        public ClickableMenuBarEntry setLabelSupplier(@NotNull MenuBarEntrySupplier<Component> labelSupplier) {
+            this.labelSupplier = labelSupplier;
+            return this;
         }
 
         public ClickableMenuBarEntry setLabel(@NotNull Component label) {
-            this.label = label;
+            this.labelSupplier = ((bar, entry) -> label);
             return this;
         }
 
         @Nullable
-        public ITexture getIconTexture() {
-            return iconTexture;
+        protected ITexture getIconTexture() {
+            if (this.iconTextureSupplier != null) return this.iconTextureSupplier.get(this.parent, this);
+            return null;
+        }
+
+        @Nullable
+        public MenuBarEntrySupplier<ITexture> getIconTextureSupplier() {
+            return this.iconTextureSupplier;
+        }
+
+        public ClickableMenuBarEntry setIconTextureSupplier(@Nullable MenuBarEntrySupplier<ITexture> iconTextureSupplier) {
+            this.iconTextureSupplier = iconTextureSupplier;
+            return this;
         }
 
         public ClickableMenuBarEntry setIconTexture(@Nullable ITexture iconTexture) {
-            this.iconTexture = iconTexture;
+            this.iconTextureSupplier = (iconTexture != null) ? ((bar, entry) -> iconTexture) : null;
             return this;
         }
 
@@ -639,8 +672,10 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             super(identifier, menuBar, label, (bar, entry) -> {});
             this.contextMenu = contextMenu;
             this.contextMenu.setShadow(false);
-            this.contextMenu.setUseMinDistanceToScreenEdge(false);
+            this.contextMenu.setKeepDistanceToEdges(false);
             this.contextMenu.setForceUIScale(false);
+            this.contextMenu.setForceRawXY(true);
+            this.contextMenu.setForceSide(true);
             this.clickAction = (bar, entry) -> this.openContextMenu();
         }
 
@@ -689,8 +724,18 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @Override
+        public ContextMenuBarEntry setLabelSupplier(@NotNull MenuBarEntrySupplier<Component> labelSupplier) {
+            return (ContextMenuBarEntry) super.setLabelSupplier(labelSupplier);
+        }
+
+        @Override
         public ContextMenuBarEntry setIconTexture(@Nullable ITexture iconTexture) {
             return (ContextMenuBarEntry) super.setIconTexture(iconTexture);
+        }
+
+        @Override
+        public ContextMenuBarEntry setIconTextureSupplier(@Nullable MenuBarEntrySupplier<ITexture> iconTextureSupplier) {
+            return (ContextMenuBarEntry) super.setIconTextureSupplier(iconTextureSupplier);
         }
 
         @Override

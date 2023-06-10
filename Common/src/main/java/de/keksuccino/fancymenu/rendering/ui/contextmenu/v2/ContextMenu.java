@@ -49,8 +49,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected SubMenuContextMenuEntry parentEntry = null;
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = true;
+    protected boolean keepDistanceToEdges = true;
     protected boolean forceDefaultTooltipStyle = true;
-    protected boolean useMinDistanceToScreenEdge = true;
+    protected boolean forceRawXY = false;
+    protected boolean forceSide = false;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -152,6 +154,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         //Render sub context menus
         for (ContextMenuEntry e : renderEntries) {
             if (e instanceof SubMenuContextMenuEntry s) {
+                s.subContextMenu.forceSide = this.forceSide;
+                s.subContextMenu.forceRawXY = this.forceRawXY;
                 s.subContextMenu.shadow = this.shadow;
                 s.subContextMenu.scale = this.scale;
                 s.subContextMenu.forceUIScale = this.forceUIScale;
@@ -275,7 +279,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return entry;
     }
 
-    @NotNull
     public ContextMenu removeEntry(String identifier) {
         ContextMenuEntry e = this.getEntry(identifier);
         if (e != null) {
@@ -285,7 +288,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
-    @NotNull
     public ContextMenu clearEntries() {
         this.closeMenu();
         for (ContextMenuEntry e : this.entries) {
@@ -332,7 +334,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this.scale;
     }
 
-    @NotNull
     public ContextMenu setScale(float scale) {
         if (this.forceUIScale) LOGGER.error("[FANCYMENU] Unable to set scale of ContextMenu while ContextMenu#isForceUIScale()!");
         this.scale = scale;
@@ -359,7 +360,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     protected int getMinDistanceToScreenEdge() {
-        if (!this.useMinDistanceToScreenEdge) return 0;
+        if (!this.keepDistanceToEdges) return 0;
         return 5;
     }
 
@@ -381,6 +382,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 return actualX;
             }
         }
+        if (this.forceRawXY) {
+            return this.getX();
+        }
         if ((this.getX() + this.getScaledWidthWithBorder()) >= (getScreenWidth() - this.getMinDistanceToScreenEdge())) {
             return getScreenWidth() - this.getScaledWidthWithBorder() - this.getMinDistanceToScreenEdge() - 1;
         }
@@ -395,6 +399,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             y = (int) ((float)this.parentEntry.y * scale);
             y += scaledOffsetY;
         }
+        if (this.forceRawXY) {
+            return y;
+        }
         if ((y + this.getScaledHeightWithBorder()) >= (getScreenHeight() - this.getMinDistanceToScreenEdge())) {
             return getScreenHeight() - this.getScaledHeightWithBorder() - this.getMinDistanceToScreenEdge() - 1;
         }
@@ -403,6 +410,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     @NotNull
     protected SubMenuOpeningSide getPossibleSubMenuOpeningSide() {
+        if (this.forceSide) {
+            return this.subMenuOpeningSide;
+        }
         if (this.isSubMenu()) {
             if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && ((this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5) < 5)) {
                 return SubMenuOpeningSide.RIGHT;
@@ -427,16 +437,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this.rawX;
     }
 
-    public int getXWithBorder() {
-        return this.getX() - this.getBorderThickness();
-    }
-
     public int getY() {
         return this.rawY;
-    }
-
-    public int getYWithBorder() {
-        return this.getY() - this.getBorderThickness();
     }
 
     public int getWidth() {
@@ -481,7 +483,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return false;
     }
 
-    @NotNull
     protected ContextMenu unhoverAllEntries() {
         for (ContextMenuEntry e : this.entries) {
             e.setHovered(false);
@@ -493,7 +494,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this.shadow;
     }
 
-    @NotNull
     public ContextMenu setShadow(boolean shadow) {
         this.shadow = shadow;
         return this;
@@ -503,16 +503,35 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this.forceDefaultTooltipStyle;
     }
 
-    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
+    public ContextMenu setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
         this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
+        return this;
     }
 
-    public boolean isMinDistanceToScreenEdgeUsed() {
-        return this.useMinDistanceToScreenEdge;
+    public boolean isKeepDistanceToEdges() {
+        return this.keepDistanceToEdges;
     }
 
-    public ContextMenu setUseMinDistanceToScreenEdge(boolean useMinDistance) {
-        this.useMinDistanceToScreenEdge = useMinDistance;
+    public ContextMenu setKeepDistanceToEdges(boolean keepDistanceToEdges) {
+        this.keepDistanceToEdges = keepDistanceToEdges;
+        return this;
+    }
+
+    public boolean isForceRawXY() {
+        return this.forceRawXY;
+    }
+
+    public ContextMenu setForceRawXY(boolean forceRawXY) {
+        this.forceRawXY = forceRawXY;
+        return this;
+    }
+
+    public boolean isForceSide() {
+        return this.forceSide;
+    }
+
+    public ContextMenu setForceSide(boolean forceSide) {
+        this.forceSide = forceSide;
         return this;
     }
 
@@ -521,7 +540,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this.subMenuOpeningSide;
     }
 
-    @NotNull
     public ContextMenu setSubMenuOpeningSide(@NotNull SubMenuOpeningSide subMenuOpeningSide) {
         Objects.requireNonNull(subMenuOpeningSide);
         this.subMenuOpeningSide = subMenuOpeningSide;
@@ -557,7 +575,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return false;
     }
 
-    @NotNull
     public ContextMenu openMenuAt(int x, int y) {
         this.closeSubMenus();
         this.unhoverAllEntries();
@@ -567,12 +584,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
-    @NotNull
     public ContextMenu openMenuAtMouse() {
         return this.openMenuAt(MouseInput.getMouseX(), MouseInput.getMouseY());
     }
 
-    @NotNull
     public ContextMenu closeMenu() {
         this.closeSubMenus();
         this.unhoverAllEntries();
@@ -580,7 +595,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
-    @NotNull
     public ContextMenu closeSubMenus() {
         for (ContextMenuEntry e : this.entries) {
             if (e instanceof SubMenuContextMenuEntry s) {
@@ -691,7 +705,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
             stacked.forceUIScale = menusToStack[0].forceUIScale;
             stacked.overriddenRenderScale = menusToStack[0].overriddenRenderScale;
-            stacked.useMinDistanceToScreenEdge = menusToStack[0].useMinDistanceToScreenEdge;
+            stacked.keepDistanceToEdges = menusToStack[0].keepDistanceToEdges;
+            stacked.forceRawXY = menusToStack[0].forceRawXY;
+            stacked.forceSide = menusToStack[0].forceSide;
 
             for (ContextMenuEntry ignoredEntry : menusToStack[0].getStackableEntries()) {
 

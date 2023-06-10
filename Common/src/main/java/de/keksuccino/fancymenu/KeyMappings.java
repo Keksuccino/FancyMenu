@@ -40,7 +40,8 @@ public class KeyMappings {
 //		e.register(KEYBIND_TOGGLE_OVERLAY);
 //
 //	}
-	
+
+	//TODO rewrite this
 	private static void initGuiClickActions() {
 		//It's not possible in GUIs to check for keypresses via Keybinding.isPressed(), so I'm doing it on my own
 		KeyboardHandler.addKeyPressedListener((c) -> {
@@ -55,7 +56,7 @@ public class KeyMappings {
 						FancyMenu.getConfig().setValue("showcustomizationbuttons", true);
 					}
 					FancyMenu.getConfig().syncConfig();
-					CustomizationOverlay.updateUI();
+//					CustomizationOverlay.updateUI();
 				} catch (InvalidValueException e) {
 					e.printStackTrace();
 				}
