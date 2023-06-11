@@ -47,7 +47,7 @@ public class MenuCustomizationEvents {
 
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	//I don't fucking know why I made a "PrePre" event, but even if it's ugly, it works, so I will just not touch it anymore lmao
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onInitPrePre(InitOrResizeScreenEvent.Pre e) {
@@ -91,7 +91,7 @@ public class MenuCustomizationEvents {
 		this.lastScreen = null;
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	@SubscribeEvent
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 

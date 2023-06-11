@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.events;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraftforge.eventbus.api.Event;
 
 public class SplashScreenRenderEvent extends Event {
 
     protected LoadingOverlay screen;
-    protected PoseStack matrix;
+    protected GuiGraphics graphics;
     protected int mouseX;
     protected int mouseY;
     protected float partialTicks;
@@ -19,9 +19,9 @@ public class SplashScreenRenderEvent extends Event {
     protected int backgroundColor = -1;
     protected boolean renderForgeText = true;
 
-    public SplashScreenRenderEvent(LoadingOverlay screen, PoseStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
+    public SplashScreenRenderEvent(LoadingOverlay screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
         this.screen = screen;
-        this.matrix = matrix;
+        this.graphics = graphics;
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         this.partialTicks = partialTicks;
@@ -34,8 +34,8 @@ public class SplashScreenRenderEvent extends Event {
         return false;
     }
 
-    public PoseStack getPoseStack() {
-        return this.matrix;
+    public GuiGraphics getGuiGraphics() {
+        return this.graphics;
     }
 
     public LoadingOverlay getScreen() {
@@ -96,8 +96,8 @@ public class SplashScreenRenderEvent extends Event {
 
     public static class Pre extends SplashScreenRenderEvent {
 
-        public Pre(LoadingOverlay screen, PoseStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
-            super(screen, matrix, mouseX, mouseY, partialTicks, screenWidth, screenHeight);
+        public Pre(LoadingOverlay screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
+            super(screen, graphics, mouseX, mouseY, partialTicks, screenWidth, screenHeight);
         }
 
         @Override
@@ -109,8 +109,8 @@ public class SplashScreenRenderEvent extends Event {
 
     public static class Post extends SplashScreenRenderEvent {
 
-        public Post(LoadingOverlay screen, PoseStack matrix, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
-            super(screen, matrix, mouseX, mouseY, partialTicks, screenWidth, screenHeight);
+        public Post(LoadingOverlay screen, GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, int screenWidth, int screenHeight) {
+            super(screen, graphics, mouseX, mouseY, partialTicks, screenWidth, screenHeight);
         }
 
     }

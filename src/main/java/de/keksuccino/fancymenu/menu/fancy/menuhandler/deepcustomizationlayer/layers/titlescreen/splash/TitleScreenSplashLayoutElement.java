@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
@@ -170,13 +170,13 @@ public class TitleScreenSplashLayoutElement extends DeepCustomizationLayoutEdito
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
         if (this.object.orientation.equals("original")) {
             this.dragable = false;
         } else {
             this.dragable = true;
         }
-        super.render(matrix, mouseX, mouseY);
+        super.render(graphics, mouseX, mouseY);
     }
 
     @Override

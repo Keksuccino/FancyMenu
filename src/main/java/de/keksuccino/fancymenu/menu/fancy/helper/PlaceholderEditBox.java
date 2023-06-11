@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
@@ -95,34 +95,34 @@ public class PlaceholderEditBox extends AdvancedTextField {
 	}
 	
 	@Override
-	public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		if (this.variableButton != null) {
 
 			this.variableButton.setWidth(this.height);
 			this.variableButton.setHeight(this.height);
 
-			super.renderWidget(matrix, mouseX, mouseY, partialTicks);
+			super.renderWidget(graphics, mouseX, mouseY, partialTicks);
 
 			this.variableButton.setX(this.x + this.width + 5);
 			this.variableButton.setY(this.y);
-			this.variableButton.render(matrix, mouseX, mouseY, partialTicks);
+			this.variableButton.render(graphics, mouseX, mouseY, partialTicks);
 
 			if (this.renderContextMenu) {
-				this.renderContextMenu(matrix);
+				this.renderContextMenu(graphics);
 			}
 
 		}
 	}
 
-	public void renderContextMenu(PoseStack matrix) {
+	public void renderContextMenu(GuiGraphics graphics) {
 		float scale = UIBase.getUIScale();
 		MouseInput.setRenderScale(scale);
-		matrix.pushPose();
-		matrix.scale(scale, scale, scale);
+		graphics.pose().pushPose();
+		graphics.pose().scale(scale, scale, scale);
 		if (this.variableMenu != null) {
-			this.variableMenu.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY());
+			this.variableMenu.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY());
 		}
-		matrix.popPose();
+		graphics.pose().popPose();
 		MouseInput.resetRenderScale();
 	}
 

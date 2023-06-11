@@ -337,6 +337,11 @@ public class AnimationHandler {
 		return ready;
 	}
 
+	
+	public static void setReady(boolean ready) {
+		AnimationHandler.ready = ready;
+	}
+
 	public static void setupAnimationSizes() {
 		for (IAnimationRenderer a : getAnimations()) {
 			if (a instanceof ResourcePackAnimationRenderer) {

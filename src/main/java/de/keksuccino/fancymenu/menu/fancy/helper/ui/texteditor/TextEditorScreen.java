@@ -1,10 +1,9 @@
-//TODO übernehmenn
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar.ScrollBar;
@@ -37,15 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 public class TextEditorScreen extends Screen {
-
-    //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
-
-    //TODO Bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
-
-    //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
-
-    //TODO Auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -249,7 +241,7 @@ public class TextEditorScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         //Reset scrolls if content fits editor area
         if (this.currentLineWidth <= this.getEditorAreaWidth()) {
@@ -266,9 +258,9 @@ public class TextEditorScreen extends Screen {
         //Adjust the scroll wheel speed depending on the amount of lines
         this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
-        this.renderScreenBackground(matrix);
+        this.renderScreenBackground(graphics);
 
-        this.renderEditorAreaBackground(matrix);
+        this.renderEditorAreaBackground(graphics);
 
         Window win = Minecraft.getInstance().getWindow();
         double scale = win.getGuiScale();
@@ -282,14 +274,14 @@ public class TextEditorScreen extends Screen {
         //Update positions and size of lines and render them
         this.updateLines((line) -> {
             if (line.isInEditorArea()) {
-                this.lineNumberRenderQueue.add(() -> this.renderLineNumber(matrix, line));
+                this.lineNumberRenderQueue.add(() -> this.renderLineNumber(graphics, line));
             }
-            line.render(matrix, mouseX, mouseY, partial);
+            line.render(graphics, mouseX, mouseY, partial);
         });
 
         RenderSystem.disableScissor();
 
-        this.renderLineNumberBackground(matrix, this.borderLeft);
+        this.renderLineNumberBackground(graphics, this.borderLeft);
 
         RenderSystem.enableScissor(0, (int)(win.getHeight() - (sciBottom * scale)), (int)(this.borderLeft * scale), (int)(this.getEditorAreaHeight() * scale));
         for (Runnable r : this.lineNumberRenderQueue) {
@@ -300,29 +292,29 @@ public class TextEditorScreen extends Screen {
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
         this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        UIBase.renderBorder(matrix, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+        UIBase.renderBorder(graphics, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
-        this.verticalScrollBar.render(matrix);
-        this.horizontalScrollBar.render(matrix);
+        this.verticalScrollBar.render(graphics);
+        this.horizontalScrollBar.render(graphics);
 
-        this.renderPlaceholderMenu(matrix, mouseX, mouseY, partial);
+        this.renderPlaceholderMenu(graphics, mouseX, mouseY, partial);
 
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
-        this.renderMultilineNotSupportedNotification(matrix, mouseX, mouseY, partial);
+        this.renderMultilineNotSupportedNotification(graphics, mouseX, mouseY, partial);
 
-        UIBase.renderScaledContextMenu(matrix, this.rightClickContextMenu);
+        UIBase.renderScaledContextMenu(graphics, this.rightClickContextMenu);
 
         this.tickMouseHighlighting();
 
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
-        this.font.draw(matrix, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), -1);
+        graphics.drawString(this.font, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), -1, false);
 
     }
 
-    protected void renderMultilineNotSupportedNotification(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         long now = System.currentTimeMillis();
         if (!this.multilineMode && (this.multilineNotSupportedNotificationDisplayStart + 3000L >= now)) {
             int a = 255;
@@ -332,11 +324,11 @@ public class TextEditorScreen extends Screen {
                 a = Math.max(10, (int)(255F * f));
             }
             Color c = new Color(this.multilineNotSupportedNotificationColor.getRed(), this.multilineNotSupportedNotificationColor.getGreen(), this.multilineNotSupportedNotificationColor.getBlue(), a);
-            this.font.draw(matrix, Locals.localize("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB());
+            graphics.drawString(this.font, Locals.localize("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB(), false);
         }
     }
 
-    protected void renderPlaceholderMenu(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    protected void renderPlaceholderMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (showPlaceholderMenu) {
 
@@ -348,7 +340,7 @@ public class TextEditorScreen extends Screen {
             }
 
             //Render placeholder menu background
-            fill(matrix, this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+            graphics.fill(this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
 
             Window win = Minecraft.getInstance().getWindow();
             double scale = win.getGuiScale();
@@ -363,22 +355,22 @@ public class TextEditorScreen extends Screen {
             for (PlaceholderMenuEntry e : entries) {
                 e.x = (this.width - this.borderRight - this.placeholderMenuWidth) + this.getPlaceholderEntriesRenderOffsetX();
                 e.y = this.getEditorAreaY() + (this.placeholderMenuEntryHeight * index) + this.getPlaceholderEntriesRenderOffsetY();
-                e.render(matrix, mouseX, mouseY, partial);
+                e.render(graphics, mouseX, mouseY, partial);
                 index++;
             }
 
             RenderSystem.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderBorder(matrix, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+            UIBase.renderBorder(graphics, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
             //Render placeholder menu scroll bars
-            this.verticalScrollBarPlaceholderMenu.render(matrix);
-            this.horizontalScrollBarPlaceholderMenu.render(matrix);
+            this.verticalScrollBarPlaceholderMenu.render(graphics);
+            this.horizontalScrollBarPlaceholderMenu.render(graphics);
 
         }
 
-        this.placeholderButton.render(matrix, mouseX, mouseY, partial);
+        this.placeholderButton.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -498,22 +490,22 @@ public class TextEditorScreen extends Screen {
         return categories;
     }
 
-    protected void renderLineNumberBackground(PoseStack matrix, int width) {
-        fill(matrix, this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
+    protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
+        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
     }
 
-    protected void renderLineNumber(PoseStack matrix, TextEditorLine line) {
+    protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
-        this.font.draw(matrix, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB());
+        graphics.drawString(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB(), false);
     }
 
-    protected void renderEditorAreaBackground(PoseStack matrix) {
-        fill(matrix, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+    protected void renderEditorAreaBackground(GuiGraphics graphics) {
+        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
     }
 
-    protected void renderScreenBackground(PoseStack matrix) {
-        fill(matrix, 0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
+    protected void renderScreenBackground(GuiGraphics graphics) {
+        graphics.fill(0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
     }
 
     protected void tickMouseHighlighting() {
@@ -1563,7 +1555,7 @@ public class TextEditorScreen extends Screen {
                     super.onClick(p_93371_, p_93372_);
                 }
                 @Override
-                public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                     if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
                         this.isHovered = false;
                     }
@@ -1572,7 +1564,7 @@ public class TextEditorScreen extends Screen {
             };
         }
 
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             //Update the button colors
             this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
             //Update the button pos
@@ -1580,11 +1572,11 @@ public class TextEditorScreen extends Screen {
             this.buttonBase.y = this.y;
             int yCenter = this.y + (this.getHeight() / 2);
             //Render the button
-            this.buttonBase.render(matrix, mouseX, mouseY, partial);
+            this.buttonBase.render(graphics, mouseX, mouseY, partial);
             //Render dot
-            renderListingDot(matrix, this.x + 5, yCenter - 2, this.dotColor);
+            renderListingDot(graphics, this.x + 5, yCenter - 2, this.dotColor);
             //Render label
-            this.font.draw(matrix, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB());
+            graphics.drawString(this.font, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB(), false);
         }
 
         public int getWidth() {

@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 import java.io.File;
 import java.io.IOException;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -98,7 +98,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		if (this.parent != null) {
 
 			this.updateValues();

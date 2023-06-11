@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import com.google.common.io.Files;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 public class SetupSharingEngine {
 
     public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
@@ -1091,7 +1092,7 @@ public class SetupSharingEngine {
                     return true;
                 }
                 if (!isCustomGuiName(identifier)) {
-                    Class.forName(identifier);
+                    Class.forName(identifier, false, SetupSharingEngine.class.getClassLoader());
                 }
                 return true;
             } catch (Exception e2) {}
@@ -1153,7 +1154,7 @@ public class SetupSharingEngine {
                         if (l.contains(invalidIdentifier)) {
                             for (String s : l) {
                                 try {
-                                    Class.forName(s);
+                                    Class.forName(s, false, SetupSharingEngine.class.getClassLoader());
                                     return s;
                                 } catch (Exception e2) {}
                             }
@@ -1178,11 +1179,11 @@ public class SetupSharingEngine {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
-            super.render(matrix, mouseX, mouseY, renderIn);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, Screen renderIn) {
+            super.render(graphics, mouseX, mouseY, renderIn);
             int centerX = renderIn.width / 2;
             int centerY = renderIn.height / 2;
-            drawCenteredString(matrix, Minecraft.getInstance().font, this.status, centerX, centerY, -1);
+            graphics.drawCenteredString(Minecraft.getInstance().font, this.status, centerX, centerY, -1);
         }
 
     }

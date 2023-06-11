@@ -14,7 +14,7 @@ public class GameIntroEvents {
 
 	private static boolean titleScreenDisplayed = false;
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	@SubscribeEvent
 	public void onScreenInitPre(InitOrResizeScreenEvent.Pre e) {
 		if (e.getScreen() instanceof TitleScreen) {

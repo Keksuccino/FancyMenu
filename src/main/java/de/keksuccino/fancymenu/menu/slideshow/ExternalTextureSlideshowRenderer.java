@@ -8,14 +8,14 @@ import java.util.List;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.resources.ResourceLocation;
 
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
@@ -150,7 +150,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		}
 	}
 
-	public void render(PoseStack matrix) {
+	public void render(GuiGraphics graphics) {
 
 		try {
 			
@@ -158,11 +158,11 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 				
 				this.tick();
 				
-				this.renderCurrent(matrix);
+				this.renderCurrent(graphics);
 				
-				this.renderPrevious(matrix);
+				this.renderPrevious(graphics);
 				
-				this.renderOverlay(matrix);
+				this.renderOverlay(graphics);
 				
 			}
 			
@@ -214,12 +214,12 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		
 	}
 
-	protected void renderPrevious(PoseStack matrix) {
+	protected void renderPrevious(GuiGraphics graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
 			if (!this.previous.isReady()) {
 				this.previous.loadTexture();
 			}
-			matrix.pushPose();
+			graphics.pushPose();
 			RenderSystem.enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
@@ -229,14 +229,14 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			ResourceLocation r = this.previous.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				blit(graphics, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			matrix.popPose();
+			graphics.popPose();
 		}
 	}
 
-	protected void renderCurrent(PoseStack matrix) {
+	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
 			if (!this.current.isReady()) {
 				this.current.loadTexture();
@@ -246,12 +246,12 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			ResourceLocation r = this.current.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				blit(graphics, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
 
-	protected void renderOverlay(PoseStack matrix) {
+	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlay_texture != null) {
 			if (!this.overlay_texture.isReady()) {
 				this.overlay_texture.loadTexture();
@@ -261,7 +261,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			ResourceLocation r = this.overlay_texture.getResourceLocation();
 			if (r != null) {
 				RenderUtils.bindTexture(r);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				blit(graphics, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}

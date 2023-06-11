@@ -5,7 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
@@ -242,8 +242,8 @@ public class ButtonBackgroundPopup extends FMPopup {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
-        super.render(matrix, mouseX, mouseY, renderIn);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, Screen renderIn) {
+        super.render(graphics, mouseX, mouseY, renderIn);
 
         Font font = Minecraft.getInstance().font;
         int midX = renderIn.width / 2;
@@ -251,15 +251,15 @@ public class ButtonBackgroundPopup extends FMPopup {
         float partial = Minecraft.getInstance().getFrameTime();
 
         //Normal Background
-        drawCenteredString(matrix, font, "§l" + Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground"), midX, midY - 113, -1);
+        graphics.drawCenteredString(font, "§l" + Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.normalbackground"), midX, midY - 113, -1);
 
-        this.normalBackgroundTypeSwitcher.render(matrix, midX - (this.normalBackgroundTypeSwitcher.getTotalWidth() / 2), midY - 100);
+        this.normalBackgroundTypeSwitcher.render(graphics, midX - (this.normalBackgroundTypeSwitcher.getTotalWidth() / 2), midY - 100);
 
         if (this.normalBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
 
             this.normalBackgroundImageTextField.x = midX - (this.normalBackgroundImageTextField.getWidth() / 2);
             this.normalBackgroundImageTextField.y = midY - 70;
-            this.normalBackgroundImageTextField.render(matrix, mouseX, mouseY, partial);
+            this.normalBackgroundImageTextField.render(graphics, mouseX, mouseY, partial);
 
             this.chooseNormalBackgroundImageButton.visible = true;
             this.chooseNormalBackgroundImageButton.x = midX - (this.chooseNormalBackgroundImageButton.getWidth() / 2);
@@ -269,20 +269,20 @@ public class ButtonBackgroundPopup extends FMPopup {
 
             this.chooseNormalBackgroundImageButton.visible = false;
 
-            this.normalBackgroundAnimationSwitcher.render(matrix, midX - (this.normalBackgroundAnimationSwitcher.getTotalWidth() / 2), midY - 62);
+            this.normalBackgroundAnimationSwitcher.render(graphics, midX - (this.normalBackgroundAnimationSwitcher.getTotalWidth() / 2), midY - 62);
 
         }
 
         //Hover Background
-        drawCenteredString(matrix, font, "§l" + Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.hoverbackground"), midX, midY - 15, -1);
+        graphics.drawCenteredString(font, "§l" + Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.hoverbackground"), midX, midY - 15, -1);
 
-        this.hoverBackgroundTypeSwitcher.render(matrix, midX - (this.hoverBackgroundTypeSwitcher.getTotalWidth() / 2), midY - 2); // 98
+        this.hoverBackgroundTypeSwitcher.render(graphics, midX - (this.hoverBackgroundTypeSwitcher.getTotalWidth() / 2), midY - 2); // 98
 
         if (this.hoverBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
 
             this.hoverBackgroundImageTextField.x = midX - (this.hoverBackgroundImageTextField.getWidth() / 2);
             this.hoverBackgroundImageTextField.y = midY + 28;
-            this.hoverBackgroundImageTextField.render(matrix, mouseX, mouseY, partial);
+            this.hoverBackgroundImageTextField.render(graphics, mouseX, mouseY, partial);
 
             this.chooseHoverBackgroundImageButton.visible = true;
             this.chooseHoverBackgroundImageButton.x = midX - (this.chooseHoverBackgroundImageButton.getWidth() / 2);
@@ -292,7 +292,7 @@ public class ButtonBackgroundPopup extends FMPopup {
 
             this.chooseHoverBackgroundImageButton.visible = false;
 
-            this.hoverBackgroundAnimationSwitcher.render(matrix, midX - (this.hoverBackgroundAnimationSwitcher.getTotalWidth() / 2), midY + 40);
+            this.hoverBackgroundAnimationSwitcher.render(graphics, midX - (this.hoverBackgroundAnimationSwitcher.getTotalWidth() / 2), midY + 40);
 
         }
 
@@ -302,7 +302,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.cancelButton.x = midX + 5;
         this.cancelButton.y = midY + 80;
 
-        this.renderButtons(matrix, mouseX, mouseY);
+        this.renderButtons(graphics, mouseX, mouseY);
     }
 
     protected void applyChangesToLayout() {

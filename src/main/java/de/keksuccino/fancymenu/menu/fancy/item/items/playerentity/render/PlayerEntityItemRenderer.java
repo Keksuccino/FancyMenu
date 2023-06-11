@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers.PlayerEntityCapeLayer;
@@ -37,6 +38,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
+@SuppressWarnings("all")
 @OnlyIn(Dist.CLIENT)
 public class PlayerEntityItemRenderer extends PlayerRenderer {
 
@@ -54,31 +56,17 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
         this.addLayer(new PlayerEntityCapeLayer(this, this.properties));
     }
 
-//    public PlayerEntityItemRenderer(EntityRendererProvider.Context context, boolean slim) {
-//        super(context, new PlayerModel<>(context.bakeLayer(slim ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), slim), 0.5F);
-//        this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel(context.bakeLayer(slim ? ModelLayers.PLAYER_SLIM_INNER_ARMOR : ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(slim ? ModelLayers.PLAYER_SLIM_OUTER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR))));
-//        this.addLayer(new PlayerItemInHandLayer<>(this, context.getItemInHandRenderer()));
-//        this.addLayer(new ArrowLayer<>(context, this));
-//        this.addLayer(new Deadmau5EarsLayer(this));
-//        this.addLayer(new CapeLayer(this));
-//        this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
-//        this.addLayer(new ElytraLayer<>(this, context.getModelSet()));
-//        this.addLayer(new ParrotOnShoulderLayer<>(this, context.getModelSet()));
-//        this.addLayer(new SpinAttackEffectLayer<>(this, context.getModelSet()));
-//        this.addLayer(new BeeStingerLayer<>(this));
-//    }
-
-    public void renderPlayerEntityItem(double d11, double d12, double d13, float f11, float f12, PoseStack matrix, MultiBufferSource bufferSource, int i11) {
+    public void renderPlayerEntityItem(double d11, double d12, double d13, float f11, float f12, PoseStack pose, MultiBufferSource bufferSource, int i11) {
         try {
             Vec3 vec3 = this.getRenderOffset(null, f12);
             double d2 = d11 + vec3.x();
             double d3 = d12 + vec3.y();
             double d0 = d13 + vec3.z();
-            matrix.pushPose();
-            matrix.translate(d2, d3, d0);
-            this.render(f11, f12, matrix, bufferSource, i11);
-            matrix.translate(-vec3.x(), -vec3.y(), -vec3.z());
-            matrix.popPose();
+            pose.pushPose();
+            pose.translate(d2, d3, d0);
+            this.render(f11, f12, pose, bufferSource, i11);
+            pose.translate(-vec3.x(), -vec3.y(), -vec3.z());
+            pose.popPose();
         } catch (Exception ex) {
             CrashReport crashreport = CrashReport.forThrowable(ex, "FancyMenu: Rendering player entity item");
             CrashReportCategory crashreportcategory1 = crashreport.addCategory("Renderer details");
@@ -88,14 +76,14 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
         }
     }
 
-    protected void render(float f11, float f12, PoseStack matrix, MultiBufferSource bufferSource, int i11) {
+    protected void render(float f11, float f12, PoseStack graphics, MultiBufferSource bufferSource, int i11) {
         this.setModelProperties();
-        this.innerRender(f11, f12, matrix, bufferSource, i11);
+        this.innerRender(f11, f12, graphics, bufferSource, i11);
     }
 
-    protected void innerRender(float f11, float f12, PoseStack matrix, MultiBufferSource bufferSource, int i11) {
+    protected void innerRender(float f11, float f12, PoseStack graphics, MultiBufferSource bufferSource, int i11) {
 
-        matrix.pushPose();
+        graphics.pushPose();
 
         boolean shouldSit = this.properties.shouldSit;
         this.playerModel.riding = shouldSit;
@@ -110,15 +98,15 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
             Direction direction = this.properties.getBedOrientation();
             if (direction != null) {
                 float f4 = this.properties.getEyeHeight(Pose.STANDING) - 0.1F;
-                matrix.translate((float)(-direction.getStepX()) * f4, 0.0F, (float)(-direction.getStepZ()) * f4);
+                graphics.translate((float)(-direction.getStepX()) * f4, 0.0F, (float)(-direction.getStepZ()) * f4);
             }
         }
 
         float f7 = f12;
-        this.setupRotations(matrix, f7, f, f12);
-        matrix.scale(-1.0F, -1.0F, 1.0F);
-        this.scale(matrix, f12);
-        matrix.translate(0.0F, -1.501F, 0.0F);
+        this.setupRotations(graphics, f7, f, f12);
+        graphics.scale(-1.0F, -1.0F, 1.0F);
+        this.scale(graphics, f12);
+        graphics.translate(0.0F, -1.501F, 0.0F);
         float f8 = 0.0F;
         float f5 = 0.0F;
         if (!shouldSit) {
@@ -141,28 +129,28 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
         if (rendertype != null) {
             VertexConsumer vertexconsumer = bufferSource.getBuffer(rendertype);
             int i = OverlayTexture.pack(OverlayTexture.u(this.getWhiteOverlayProgress(null, f12)), OverlayTexture.v(false));
-            this.playerModel.renderToBuffer(matrix, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F);
+            this.playerModel.renderToBuffer(graphics, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F);
         }
 
         if (!this.properties.isSpectator()) {
             for(RenderLayer renderlayer : this.layers) {
                 if (renderlayer instanceof PlayerEntityRenderLayer) {
-                    renderlayer.render(matrix, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
+                    renderlayer.render(graphics, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
                 }
             }
         }
 
-        matrix.popPose();
+        graphics.popPose();
 
         if (this.properties.showDisplayName) {
-            this.renderNameTag(null, this.properties.displayName, matrix, bufferSource, i11);
+            this.renderNameTag(null, this.properties.displayName, graphics, bufferSource, i11);
         }
 
     }
 
-    protected void scale(PoseStack matrix, float f11) {
+    protected void scale(PoseStack graphics, float f11) {
         float f = 0.9375F;
-        matrix.scale(0.9375F, 0.9375F, 0.9375F);
+        graphics.scale(0.9375F, 0.9375F, 0.9375F);
     }
 
     private void setModelProperties() {
@@ -251,30 +239,30 @@ public class PlayerEntityItemRenderer extends PlayerRenderer {
     }
 
     @Override
-    protected void renderNameTag(@Nullable AbstractClientPlayer entity, Component content, PoseStack matrix, MultiBufferSource bufferSource, int p_114502_) {
+    protected void renderNameTag(@Nullable AbstractClientPlayer entity, Component content, PoseStack graphics, MultiBufferSource bufferSource, int p_114502_) {
         boolean flag = !this.properties.isCrouching();
         float f = this.properties.getDimensions().height + 0.5F;
         int i = 0;
-        matrix.pushPose();
-        matrix.translate(0.0F, f, 0.0F);
-        matrix.scale(-0.025F, -0.025F, 0.025F);
-        Matrix4f matrix4f = matrix.last().pose();
+        graphics.pushPose();
+        graphics.translate(0.0F, f, 0.0F);
+        graphics.scale(-0.025F, -0.025F, 0.025F);
+        Matrix4f graphics4f = graphics.last().pose();
         float f1 = Minecraft.getInstance().options.getBackgroundOpacity(0.25F);
         int j = (int)(f1 * 255.0F) << 24;
         Font font = this.getFont();
         float f2 = (float)(-font.width(content) / 2);
-        //TODO übernehmen 1.19.4
-        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, p_114502_);
+        
+        font.drawInBatch(content, f2, (float)i, 553648127, false, graphics4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, p_114502_);
         if (flag) {
-            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, Font.DisplayMode.NORMAL, 0, p_114502_);
+            font.drawInBatch(content, f2, (float)i, -1, false, graphics4f, bufferSource, Font.DisplayMode.NORMAL, 0, p_114502_);
         }
-        //------------------
-        matrix.popPose();
+        
+        graphics.popPose();
     }
 
-    protected void setupRotations(PoseStack matrix, float f11, float f12, float f13) {
+    protected void setupRotations(PoseStack graphics, float f11, float f12, float f13) {
         if (!this.properties.hasPose(Pose.SLEEPING)) {
-            matrix.mulPose(Axis.YP.rotationDegrees(180.0F - f12));
+            graphics.mulPose(Axis.YP.rotationDegrees(180.0F - f12));
         }
     }
 

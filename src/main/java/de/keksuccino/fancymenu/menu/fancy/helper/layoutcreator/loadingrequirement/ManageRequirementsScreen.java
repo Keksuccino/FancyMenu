@@ -1,8 +1,8 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ConfirmationScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea;
@@ -16,10 +16,12 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -91,7 +93,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
@@ -135,7 +137,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setMessage(Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
@@ -182,42 +184,42 @@ public class ManageRequirementsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        graphics.fill(0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, -1);
+        graphics.drawString(Minecraft.getInstance().font, titleComp, 20, 20, -1, false);
 
-        this.font.draw(matrix, Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups"), 20, 50, -1);
+        graphics.drawString(Minecraft.getInstance().font, Locals.localize("fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups"), 20, 50, -1, false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(50 + 15, true);
-        this.requirementsScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.requirementsScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
         this.removeButton.setY(this.doneButton.getY() - 15 - 20);
-        this.removeButton.render(matrix, mouseX, mouseY, partial);
+        this.removeButton.render(graphics, mouseX, mouseY, partial);
 
         this.editButton.setX(this.width - 20 - this.editButton.getWidth());
         this.editButton.setY(this.removeButton.getY() - 5 - 20);
-        this.editButton.render(matrix, mouseX, mouseY, partial);
+        this.editButton.render(graphics, mouseX, mouseY, partial);
 
         this.addGroupButton.setX(this.width - 20 - this.addGroupButton.getWidth());
         this.addGroupButton.setY(this.editButton.getY() - 5 - 20);
-        this.addGroupButton.render(matrix, mouseX, mouseY, partial);
+        this.addGroupButton.render(graphics, mouseX, mouseY, partial);
 
         this.addRequirementButton.setX(this.width - 20 - this.addRequirementButton.getWidth());
         this.addRequirementButton.setY(this.addGroupButton.getY() - 5 - 20);
-        this.addRequirementButton.render(matrix, mouseX, mouseY, partial);
+        this.addRequirementButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -307,9 +309,9 @@ public class ManageRequirementsScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
 
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
@@ -317,14 +319,14 @@ public class ManageRequirementsScreen extends Screen {
 
             RenderSystem.enableBlend();
 
-            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, LISTING_DOT_RED);
-            this.font.draw(matrix, this.displayNameComponent, (float)(this.getX() + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
+            renderListingDot(graphics, this.getX() + 5, centerYLine1 - 2, LISTING_DOT_RED);
+            graphics.drawString(Minecraft.getInstance().font, this.displayNameComponent, (this.getX() + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, LISTING_DOT_BLUE);
-            this.font.draw(matrix, this.modeComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
+            renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine2 - 2, LISTING_DOT_BLUE);
+            graphics.drawString(Minecraft.getInstance().font, this.modeComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
 
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine3 - 2, LISTING_DOT_BLUE);
-            this.font.draw(matrix, this.valueComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine3 - (this.font.lineHeight / 2)), -1);
+            renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine3 - 2, LISTING_DOT_BLUE);
+            graphics.drawString(Minecraft.getInstance().font, this.valueComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), -1, false);
 
         }
 

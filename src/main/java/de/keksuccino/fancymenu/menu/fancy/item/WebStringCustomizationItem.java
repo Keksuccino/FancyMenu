@@ -11,7 +11,7 @@ import java.util.Map;
 import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -78,7 +78,7 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
 		if (!this.shouldRender()) {
 			return;
@@ -106,14 +106,10 @@ public class WebStringCustomizationItem extends CustomizationItemBase {
 					x = (int) (x + (((this.getWidth() - lineWidth) / sc) / 2));
 				}
 
-				matrix.pushPose();
-				matrix.scale(sc, sc, sc);
-				if (this.shadow) {
-					font.drawShadow(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | Mth.ceil(this.opacity * 255.0F) << 24);
-				} else {
-					font.draw(matrix, "§f" + m.getKey(), x, y + (i / sc), 0 | Mth.ceil(this.opacity * 255.0F) << 24);
-				}
-				matrix.popPose();
+				graphics.pose().pushPose();
+				graphics.pose().scale(sc, sc, sc);
+				graphics.drawString(font, "§f" + m.getKey(), x, y + (i / sc), 0 | Mth.ceil(this.opacity * 255.0F) << 24, this.shadow);
+				graphics.pose().popPose();
 
 				i += (10 * sc);
 

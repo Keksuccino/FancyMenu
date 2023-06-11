@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
@@ -31,8 +32,6 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class CustomizationHelper {
-
-	public static List<Runnable> mainThreadTasks = new ArrayList<>();
 	
 	public static void init() {
 		
@@ -45,23 +44,12 @@ public class CustomizationHelper {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(ScreenEvent.Render.Post e) {
 
-		List<Runnable> runs = new ArrayList<>();
-		runs.addAll(CustomizationHelper.mainThreadTasks);
-		for (Runnable r : runs) {
-			try {
-				r.run();
-				CustomizationHelper.mainThreadTasks.remove(r);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-
 		if (!MenuCustomization.isBlacklistedMenu(e.getScreen().getClass().getName())) {
 			if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 				if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 					if (!e.getScreen().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
 
-						CustomizationHelperUI.render(e.getPoseStack(), e.getScreen());
+						CustomizationHelperUI.render(e.getGuiGraphics(), e.getScreen());
 
 					}
 				}
@@ -237,8 +225,10 @@ public class CustomizationHelper {
 		return false;
 	}
 
+	@Deprecated
+	/** Use {@link MainThreadTaskExecutor#executeInMainThread(Runnable, MainThreadTaskExecutor.ExecuteTiming)} instead! **/
 	public static void runTaskInMainThread(Runnable task) {
-		mainThreadTasks.add(task);
+		MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
 	}
 
 }

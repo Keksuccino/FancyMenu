@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
@@ -28,9 +29,9 @@ import org.joml.Quaternionf;
 
 import java.io.File;
 
+@SuppressWarnings("all")
 public class PlayerEntityCustomizationItem extends CustomizationItem {
 
-    //---
     private static final Logger LOGGER = LogManager.getLogger();
 
     public PlayerEntityItemRenderer normalRenderer = new PlayerEntityItemRenderer(false);
@@ -54,10 +55,10 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     public volatile String capeUrl;
     protected volatile String oldCapeUrl = null;
     public volatile String capePath;
-    //---
+    
     protected volatile ResourceLocation currentSkinLocation = null;
     protected volatile ResourceLocation currentCapeLocation = null;
-    //------------------
+    
 
     public boolean followMouse = true;
     public float bodyRotationX;
@@ -69,7 +70,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
 
         super(parentContainer, item);
 
-        //---
+        
         if (isEditorActive()) {
             PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.clear();
         }
@@ -210,7 +211,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
             }
         }
 
-        //---
+        
         if (!isEditorActive()) {
             PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.put(this.actionId, this);
         }
@@ -272,13 +273,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setCapeByPlayerName() {
-        //---
+        
         PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
         if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
             this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
             return;
         }
-        //---------------------
+        
         new Thread(() -> {
             try {
                 if (this.playerName != null) {
@@ -296,13 +297,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setSkinByPlayerName() {
-        //---
+        
         PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
         if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
             this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
             return;
         }
-        //---------------------
+        
         new Thread(() -> {
             try {
                 if (this.playerName != null) {
@@ -328,13 +329,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setSkinTextureBySource(String sourcePathOrLink, boolean web) {
-        //---
+        
         PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
         if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
             this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
             return;
         }
-        //---------------------
+        
         if (sourcePathOrLink != null) {
             if (web) {
                 new Thread(() -> {
@@ -345,7 +346,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         this.skinPath = null;
                         String sha1 = PlayerEntityElementCache.calculateWebSourceSHA1(url);
                         if (sha1 != null) {
-                            //---
+                            
                             if (!PlayerEntityElementCache.isSkinCached(sha1)) {
                                 SkinWebTextureResourceLocation sr = new SkinWebTextureResourceLocation(url);
                                 sr.downloadTexture();
@@ -367,7 +368,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                             } else {
                                 this.setSkinTextureLocation(PlayerEntityElementCache.getSkin(sha1));
                             }
-                            //---------------------
+                            
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -381,7 +382,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
                             String sha1 = PlayerEntityElementCache.calculateSHA1(f);
                             if (sha1 != null) {
-                                //---
+                                
                                 if (!PlayerEntityElementCache.isSkinCached(sha1)) {
                                     SkinExternalTextureResourceLocation sr = new SkinExternalTextureResourceLocation(path);
                                     CustomizationHelper.runTaskInMainThread(() -> sr.loadTexture());
@@ -399,7 +400,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                                 } else {
                                     this.setSkinTextureLocation(PlayerEntityElementCache.getSkin(sha1));
                                 }
-                                //------------------
+                                
                                 this.skinUrl = null;
                                 this.skinPath = sourcePathOrLink;
                             }
@@ -418,13 +419,13 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     public void setCapeTextureBySource(String sourcePathOrLink, boolean web) {
-        //---
+        
         PlayerEntityCustomizationItem cachedInstance = PlayerEntityCustomizationItemContainer.ELEMENT_CACHE.get(this.actionId);
         if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
             this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
             return;
         }
-        //---------------------
+        
         if (sourcePathOrLink != null) {
             if (web) {
                 new Thread(() -> {
@@ -435,7 +436,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         this.capePath = null;
                         String sha1 = PlayerEntityElementCache.calculateWebSourceSHA1(url);
                         if (sha1 != null) {
-                            //---
+                            
                             if (!PlayerEntityElementCache.isCapeCached(sha1)) {
                                 CapeWebTextureResourceLocation sr = new CapeWebTextureResourceLocation(url);
                                 sr.downloadTexture();
@@ -457,7 +458,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                             } else {
                                 this.setCapeTextureLocation(PlayerEntityElementCache.getCape(sha1));
                             }
-                            //------------------
+                            
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -470,7 +471,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                         File f = new File(path);
                         if (f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png"))) {
                             String sha1 = PlayerEntityElementCache.calculateSHA1(f);
-                            //---
+                            
                             if (sha1 != null) {
                                 if (!PlayerEntityElementCache.isCapeCached(sha1)) {
                                     ExternalTextureResourceLocation er = new ExternalTextureResourceLocation(path);
@@ -492,7 +493,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
                                 this.capeUrl = null;
                                 this.capePath = sourcePathOrLink;
                             }
-                            //-------------------------
+                            
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -508,20 +509,20 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     protected void setSkinTextureLocation(ResourceLocation loc) {
-        //---
+        
         this.currentSkinLocation = loc;
         this.normalRenderer.properties.setSkinTextureLocation(loc);
         this.slimRenderer.properties.setSkinTextureLocation(loc);
     }
 
     protected void setCapeTextureLocation(ResourceLocation loc) {
-        //---
+        
         this.currentCapeLocation = loc;
         this.normalRenderer.properties.setCapeTextureLocation(loc);
         this.slimRenderer.properties.setCapeTextureLocation(loc);
     }
 
-    //---
+    
 //    @Nullable
 //    protected ResourceLocation getResourceLocationOfWebResource(String url) {
 //        try {
@@ -553,7 +554,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) {
+    public void render(GuiGraphics graphics, Screen menu) {
 
         if (this.shouldRender()) {
 
@@ -610,16 +611,16 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
         modelViewStack.translate((posX+((this.getActiveEntityProperties().getDimensions().width / 2) * scale)), (posY+(this.getActiveEntityProperties().getDimensions().height * this.scale)), 1050.0F);
         modelViewStack.scale(1.0F, 1.0F, -1.0F);
         RenderSystem.applyModelViewMatrix();
-        PoseStack innerMatrix = new PoseStack();
-        innerMatrix.translate(0.0F, 0.0F, 1000.0F);
-        innerMatrix.scale((float)scale, (float)scale, (float)scale);
+        PoseStack innergraphics = new PoseStack();
+        innergraphics.translate(0.0F, 0.0F, 1000.0F);
+        innergraphics.scale((float)scale, (float)scale, (float)scale);
         Quaternionf quat1;
         Quaternionf quat2;
         if (this.followMouse) {
             quat1 = (new Quaternionf()).rotateZ((float)Math.PI);
             quat2 = (new Quaternionf()).rotateX(angleY * 20.0F * ((float)Math.PI / 180F));
             quat1.mul(quat2);
-            innerMatrix.mulPose(quat1);
+            innergraphics.mulPose(quat1);
             props.yBodyRot = 180.0F + angleX * 20.0F;
             props.yRot = 180.0F + angleX * 40.0F;
             props.xRot = -angleY * 20.0F;
@@ -629,7 +630,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
             quat1 = Axis.ZP.rotationDegrees(180.0F);
             quat2 = Axis.XP.rotationDegrees(this.bodyRotationY);
             quat1.mul(quat2);
-            innerMatrix.mulPose(quat1);
+            innergraphics.mulPose(quat1);
             props.yBodyRot = 180.0F + this.bodyRotationX;
             props.xRot = this.headRotationY;
             props.yHeadRot = 180.0F + this.headRotationX;
@@ -642,7 +643,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItem {
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
         RenderSystem.runAsFancy(() -> {
-            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerMatrix, bufferSource, 15728880);
+            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innergraphics, bufferSource, 15728880);
         });
         bufferSource.endBatch();
         dispatcher.setRenderShadow(true);

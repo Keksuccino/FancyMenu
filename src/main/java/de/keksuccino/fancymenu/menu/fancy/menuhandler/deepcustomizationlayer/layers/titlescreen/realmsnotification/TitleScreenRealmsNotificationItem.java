@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.realmsnotification;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 
@@ -20,7 +20,7 @@ public class TitleScreenRealmsNotificationItem extends DeepCustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         RenderSystem.enableBlend();
 
@@ -37,10 +37,10 @@ public class TitleScreenRealmsNotificationItem extends DeepCustomizationItem {
 
         RenderSystem.setShaderTexture(0, NEWS_ICON_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        matrix.pushPose();
-        matrix.scale(0.4F, 0.4F, 0.4F);
-        GuiComponent.blit(matrix, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
-        matrix.popPose();
+        graphics.pushPose();
+        graphics.scale(0.4F, 0.4F, 0.4F);
+        GuiComponent.blit(graphics, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
+        graphics.popPose();
 
         this.width = 13;
         this.height = 13;

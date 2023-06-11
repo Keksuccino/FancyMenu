@@ -22,7 +22,7 @@ public class PauseScreenHandler extends MenuHandlerBase {
         }
     }
 
-    //TODO übernehmen 1.19.4 (event ändern)
+    
     @Override
     protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
         if (this.customizePauseScreen(e.getScreen())) {

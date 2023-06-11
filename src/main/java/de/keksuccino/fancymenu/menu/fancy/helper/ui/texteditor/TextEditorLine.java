@@ -1,14 +1,14 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.mixin.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -46,11 +46,11 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         //Only render line if inside the editor area (for performance reasons)
         if (this.isInEditorArea()) {
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
         }
 
         this.lastTickValue = this.getValue();
@@ -79,7 +79,7 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     @Override
-    public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.currentCharacterRenderIndex = 0;
 
@@ -90,7 +90,7 @@ public class TextEditorLine extends AdvancedTextField {
 
             if (this.isFocused()) {
                 //Render focused background
-                fill(matrix, 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
+                graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
             }
 
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
@@ -110,7 +110,7 @@ public class TextEditorLine extends AdvancedTextField {
             if (!text.isEmpty()) {
                 String textBeforeCursor = isCursorNotAtStartOrEnd ? text.substring(0, cursorPos) : text;
                 //Render text before cursor
-                textXRender = this.font2.draw(matrix, this.getFormattedText(textBeforeCursor), (float)textX, (float)textY, textColorInt);
+                textXRender = graphics.drawString(this.font2, this.getFormattedText(textBeforeCursor), textX, textY, textColorInt, false);
             }
 
             boolean isCursorAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
@@ -124,30 +124,30 @@ public class TextEditorLine extends AdvancedTextField {
 
             if (!text.isEmpty() && isCursorNotAtStartOrEnd && cursorPos < text.length()) {
                 //Render text after cursor
-//                this.font2.draw(matrix, this.getAsAccessor().getFormatterFancyMenu().apply(text.substring(cursorPos), this.getCursorPosition()), (float)textXRender, (float)textY, textColorInt);
-                this.font2.draw(matrix, this.getFormattedText(text.substring(cursorPos)), (float)textXRender, (float)textY, textColorInt);
+//                graphics.drawString(this.font2, this.getAsAccessor().getFormatterFancyMenu().apply(text.substring(cursorPos), this.getCursorPosition()), (float)textXRender, (float)textY, textColorInt);
+                graphics.drawString(this.font2, this.getFormattedText(text.substring(cursorPos)), textXRender, textY, textColorInt, false);
             }
 
             if (this.getAsAccessor().getHintFancyMenu() != null && text.isEmpty() && !this.isFocused()) {
-                this.font2.draw(matrix, this.getAsAccessor().getHintFancyMenu(), (float)textXRender, (float)textY, textColorInt);
+                graphics.drawString(this.font2, this.getAsAccessor().getHintFancyMenu(), textXRender, textY, textColorInt, false);
             }
 
             if (!isCursorAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
-                this.font2.draw(matrix, this.getAsAccessor().getSuggestionFancyMenu(), (float)(cursorPosRender - 1), (float)textY, -8355712);
+                graphics.drawString(this.font2, this.getAsAccessor().getSuggestionFancyMenu(), (float)(cursorPosRender - 1), (float)textY, -8355712, false);
             }
 
             if (renderCursor) {
                 if (isCursorAtEndOfLine) {
-                    GuiComponent.fill(matrix, cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, -3092272);
+                    graphics.fill(cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, -3092272);
                 } else {
-                    this.font2.draw(matrix, "_", (float)cursorPosRender, (float)textY, textColorInt);
+                    graphics.drawString(this.font2, "_", (float)cursorPosRender, (float)textY, textColorInt, false);
                 }
             }
 
             if (highlightPos != cursorPos) {
                 this.currentHighlightPosXStart = cursorPosRender;
                 this.currentHighlightPosXEnd = textX + this.font2.width(text.substring(0, highlightPos)) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(matrix, this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
+                this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;

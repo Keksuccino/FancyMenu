@@ -1,7 +1,7 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
@@ -43,28 +43,40 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    protected void init() {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+        super.init();
+
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        graphics.fill(0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
 
         int y = (this.height / 2) - ((this.text.length * 14) / 2);
         for (String s : this.text) {
             if (s.length() > 0) {
                 int textWidth = this.font.width(s);
-                drawString(matrix, this.font, Component.literal(s), (this.width / 2) - (textWidth / 2), y, -1);
+                graphics.drawString(this.font, Component.literal(s), (this.width / 2) - (textWidth / 2), y, -1);
             }
             y += 14;
         }
 
         this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
         this.confirmButton.setY(this.height - 40);
-        this.confirmButton.render(matrix, mouseX, mouseY, partial);
+        this.confirmButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX((this.width / 2) + 5);
         this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 

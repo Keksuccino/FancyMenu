@@ -2,15 +2,14 @@ package de.keksuccino.fancymenu.menu.fancy.helper.ui;
 
 import java.awt.Color;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
-public class UIBase extends GuiComponent {
+public class UIBase {
 
 	public static final Color SCROLL_GRABBER_IDLE_COLOR = new Color(89, 91, 93, 100);
 	public static final Color SCROLL_GRABBER_HOVER_COLOR = new Color(102, 104, 104, 100);
@@ -69,42 +68,42 @@ public class UIBase extends GuiComponent {
 		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 
-	public static void renderScaledContextMenu(PoseStack matrix, FMContextMenu menu) {
+	public static void renderScaledContextMenu(GuiGraphics graphics, FMContextMenu menu) {
 		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {
 
-			matrix.pushPose();
+			graphics.pose().pushPose();
 
-			matrix.scale(UIBase.getUIScale(), UIBase.getUIScale(), UIBase.getUIScale());
+			graphics.pose().scale(UIBase.getUIScale(), UIBase.getUIScale(), UIBase.getUIScale());
 
 			MouseInput.setRenderScale(UIBase.getUIScale());
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
 			MouseInput.resetRenderScale();
 
-			menu.render(matrix, mouseX, mouseY, (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
+			menu.render(graphics, mouseX, mouseY, (int) (s.width / getUIScale()), (int) (s.height / getUIScale()));
 
-			matrix.popPose();
+			graphics.pose().popPose();
 
 		}
 	}
 
-	public static void renderListingDot(PoseStack matrix, int x, int y, Color color) {
-		fill(matrix, x, y, x + 4, y + 4, color.getRGB());
+	public static void renderListingDot(GuiGraphics graphics, int x, int y, Color color) {
+		graphics.fill(x, y, x + 4, y + 4, color.getRGB());
 	}
 
-	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		if (renderTop) {
-			fill(matrix, xMin, yMin, xMax, yMin + borderThickness, borderColor.getRGB());
+			graphics.fill(xMin, yMin, xMax, yMin + borderThickness, borderColor.getRGB());
 		}
 		if (renderLeft) {
-			fill(matrix, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor.getRGB());
+			graphics.fill(xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor.getRGB());
 		}
 		if (renderRight) {
-			fill(matrix, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor.getRGB());
+			graphics.fill(xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor.getRGB());
 		}
 		if (renderBottom) {
-			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor.getRGB());
+			graphics.fill(xMin, yMax - borderThickness, xMax, yMax, borderColor.getRGB());
 		}
 	}
 

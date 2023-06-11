@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.slider.RangeSliderButton;
@@ -92,42 +92,42 @@ public class PlayerEntityRotationScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
         RenderSystem.enableBlend();
 
         //Draw screen background
-        fill(matrix, 0, 0, this.width, this.height, SCREEN_BACKGROUND_COLOR.getRGB());
+        graphics.fill(0, 0, this.width, this.height, SCREEN_BACKGROUND_COLOR.getRGB());
 
         int xCenter = this.width / 2;
         int yCenter = this.height / 2;
         int sliderX = xCenter - 100;
 
         this.bodyXSlider.setPosition(sliderX, yCenter - 5 - 20 - 5 - 20);
-        this.bodyXSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.bodyXSlider.render(graphics, mouseX, mouseY, partialTicks);
 
         this.bodyYSlider.setPosition(sliderX, yCenter - 5 - 20);
-        this.bodyYSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.bodyYSlider.render(graphics, mouseX, mouseY, partialTicks);
 
         this.headXSlider.setPosition(sliderX, yCenter);
-        this.headXSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.headXSlider.render(graphics, mouseX, mouseY, partialTicks);
 
         this.headYSlider.setPosition(sliderX, yCenter + 20 + 5);
-        this.headYSlider.render(matrix, mouseX, mouseY, partialTicks);
+        this.headYSlider.render(graphics, mouseX, mouseY, partialTicks);
 
         this.doneButton.setX(xCenter - this.doneButton.getWidth() - 5);
         this.doneButton.setY(this.height - 35);
-        this.doneButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.doneButton.render(graphics, mouseX, mouseY, partialTicks);
 
         this.cancelButton.setX(xCenter + 5);
         this.cancelButton.setY(this.height - 35);
-        this.cancelButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.cancelButton.render(graphics, mouseX, mouseY, partialTicks);
 
-        this.renderEntity(matrix, xCenter - 100 - (int)(this.element.getActiveEntityProperties().getDimensions().width * 40) - 30, yCenter - (int)(this.element.getActiveEntityProperties().getDimensions().height * 40) / 2);
+        this.renderEntity(graphics, xCenter - 100 - (int)(this.element.getActiveEntityProperties().getDimensions().width * 40) - 30, yCenter - (int)(this.element.getActiveEntityProperties().getDimensions().height * 40) / 2);
 
     }
 
-    protected void renderEntity(PoseStack matrix, int posX, int posY) {
+    protected void renderEntity(GuiGraphics graphics, int posX, int posY) {
 
         float bX = this.element.bodyRotationX;
         float bY = this.element.bodyRotationY;
@@ -151,7 +151,7 @@ public class PlayerEntityRotationScreen extends Screen {
         this.element.posX = posX;
         this.element.posY = posY;
 
-        this.element.render(matrix, this);
+        this.element.render(graphics, this);
 
         this.element.bodyRotationX = bX;
         this.element.bodyRotationY = bY;

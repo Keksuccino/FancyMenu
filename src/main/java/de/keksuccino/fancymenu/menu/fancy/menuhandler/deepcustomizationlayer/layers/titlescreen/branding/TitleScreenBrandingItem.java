@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.branding;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.internal.BrandingControl;
 
@@ -23,7 +23,7 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         RenderSystem.enableBlend();
 
@@ -32,7 +32,7 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
 
         Font font = Minecraft.getInstance().font;
         BrandingControl.forEachLine(true, true, (brdline, brd) -> {
-            GuiComponent.drawString(matrix, font, brd, 2, menu.height - ( 10 + brdline * (font.lineHeight + 1)), 16777215);
+            GuiComponent.graphics.drawString(font, brd, 2, menu.height - ( 10 + brdline * (font.lineHeight + 1)), 16777215);
             int w = font.width(brd);
             if (lastWidth < w) {
                 lastWidth = w;

@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.konkrete.localization.Locals;
@@ -12,7 +12,7 @@ import de.keksuccino.konkrete.input.KeyboardHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -56,8 +56,8 @@ public class GameIntroScreen extends Screen {
 	}
 	
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
-		super.render(matrix, mouseX, mouseY, partialTicks);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		super.render(graphics, mouseX, mouseY, partialTicks);
 		
 		if (this.renderer != null) {
 			if (!this.renderer.isReady()) {
@@ -73,7 +73,7 @@ public class GameIntroScreen extends Screen {
 			}
 			
 			if (!this.renderer.isFinished()) {
-				this.renderer.render(matrix);
+				this.renderer.render(graphics);
 				if (FancyMenu.config.getOrDefault("allowgameintroskip", true)) {
 					this.skipable = true;
 				}
@@ -89,15 +89,15 @@ public class GameIntroScreen extends Screen {
 		
 		if (this.skipable) {
 			RenderSystem.enableBlend();
-			matrix.pushPose();
-			matrix.scale(1.05F, 1.05F, 1.05F);
+			graphics.pushPose();
+			graphics.scale(1.05F, 1.05F, 1.05F);
 			String text = Locals.localize("gameintro.skip");
 			String customtext = StringUtils.convertFormatCodes(FancyMenu.config.getOrDefault("customgameintroskiptext", ""), "&", "§");
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;
 			}
-			GuiComponent.drawCenteredString(matrix, Minecraft.getInstance().font, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
-			matrix.popPose();
+			graphics.drawCenteredString(Minecraft.getInstance().font, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
+			graphics.popPose();
 		}
 	}
 

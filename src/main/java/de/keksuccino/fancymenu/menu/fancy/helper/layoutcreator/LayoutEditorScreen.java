@@ -10,7 +10,6 @@ import java.util.Map;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
@@ -20,6 +19,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -67,11 +67,14 @@ import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("all")
 public class LayoutEditorScreen extends Screen {
 
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/LayoutEditorScreen");
@@ -148,14 +151,15 @@ public class LayoutEditorScreen extends Screen {
 	protected boolean multiselectStretchedX = false;
 	protected boolean multiselectStretchedY = false;
 	protected List<ContextMenu> multiselectChilds = new ArrayList<ContextMenu>();
-	
-	protected Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
+
 	protected LayoutElement topObject;
 
 	protected List<String> universalLayoutWhitelist = new ArrayList<>();
 	protected List<String> universalLayoutBlacklist = new ArrayList<>();
 
 	protected LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
+
+	protected FMContextMenu activeElementContextMenu = null;
 
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
 	
@@ -164,7 +168,7 @@ public class LayoutEditorScreen extends Screen {
 		this.screen = screenToCustomize;
 		Component cachedOriTitle = MenuHandlerBase.cachedOriginalMenuTitles.get(this.screen.getClass());
 		if (cachedOriTitle != null) {
-			this.screen.title = cachedOriTitle;
+			ScreenTitleHandler.setScreenTitle(this.screen, cachedOriTitle);
 		}
 
 		if (!initDone) {
@@ -230,8 +234,8 @@ public class LayoutEditorScreen extends Screen {
 
 		this.focusedObjects.clear();
 		this.updateContent();
-		
-		this.focusChangeBlocker.clear();
+
+		this.resetActiveElementContextMenu();
 		
 	}
 
@@ -547,7 +551,7 @@ public class LayoutEditorScreen extends Screen {
 			}
 			this.updateContent();
 		}
-		this.focusChangeBlocker.clear();
+		this.resetActiveElementContextMenu();
 	}
 	
 	public List<LayoutElement> getContent() {
@@ -555,7 +559,7 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		
 		//Handle object focus and update the top hovered object
 		if (!MouseInput.isVanillaInputBlocked()) {
@@ -584,15 +588,15 @@ public class LayoutEditorScreen extends Screen {
 			}
 		}
 
-		this.renderCreatorBackground(matrix);
+		this.renderCreatorBackground(graphics);
 
-		this.drawGrid(matrix);
+		this.drawGrid(graphics);
 
 		if (this.renderorder.equalsIgnoreCase("foreground")) {
-			this.renderVanillaButtons(matrix, mouseX, mouseY);
+			this.renderVanillaButtons(graphics, mouseX, mouseY);
 			for (LayoutElement l : this.content) {
 				if (l instanceof DeepCustomizationLayoutEditorElement) {
-					l.render(matrix, mouseX, mouseY);
+					l.render(graphics, mouseX, mouseY);
 				}
 			}
 		}
@@ -600,24 +604,24 @@ public class LayoutEditorScreen extends Screen {
 		for (LayoutElement l : this.content) {
 			if (!(l instanceof LayoutVanillaButton) && !(l instanceof DeepCustomizationLayoutEditorElement)) {
 				if (!this.isFocused(l)) {
-					l.render(matrix, mouseX, mouseY);
+					l.render(graphics, mouseX, mouseY);
 				}
 			}
 		}
 		if (this.renderorder.equalsIgnoreCase("background")) {
-			this.renderVanillaButtons(matrix, mouseX, mouseY);
+			this.renderVanillaButtons(graphics, mouseX, mouseY);
 			for (LayoutElement l : this.content) {
 				if (l instanceof DeepCustomizationLayoutEditorElement) {
-					l.render(matrix, mouseX, mouseY);
+					l.render(graphics, mouseX, mouseY);
 				}
 			}
 		}
 		
 		for (LayoutElement o : this.getFocusedObjects()) {
-			o.render(matrix, mouseX, mouseY);
+			o.render(graphics, mouseX, mouseY);
 		}
 		
-		super.render(matrix, mouseX, mouseY, partialTicks);
+		super.render(graphics, mouseX, mouseY, partialTicks);
 		
 		//Handle multiselect rightclick menu
 		if (this.multiselectRightclickMenu != null) {
@@ -629,19 +633,13 @@ public class LayoutEditorScreen extends Screen {
 			}
 
 			if (!PopupHandler.isPopupActive()) {
-				UIBase.renderScaledContextMenu(matrix, this.multiselectRightclickMenu);
+				UIBase.renderScaledContextMenu(graphics, this.multiselectRightclickMenu);
 			} else {
 				this.multiselectRightclickMenu.closeMenu();
 			}
 
 			if (MouseInput.isLeftMouseDown() && !this.multiselectRightclickMenu.isHoveredOrFocused()) {
 				this.multiselectRightclickMenu.closeMenu();
-			}
-
-			if (this.multiselectRightclickMenu.isOpen()) {
-				this.setFocusChangeBlocked("editor.context.multiselect", true);
-			} else {
-				this.setFocusChangeBlocked("editor.context.multiselect", false);
 			}
 
 		}
@@ -654,7 +652,7 @@ public class LayoutEditorScreen extends Screen {
 			}
 
 			if (!PopupHandler.isPopupActive()) {
-				UIBase.renderScaledContextMenu(matrix, this.propertiesRightclickMenu);
+				UIBase.renderScaledContextMenu(graphics, this.propertiesRightclickMenu);
 			} else {
 				this.propertiesRightclickMenu.closeMenu();
 			}
@@ -663,25 +661,15 @@ public class LayoutEditorScreen extends Screen {
 				this.propertiesRightclickMenu.closeMenu();
 			}
 
-			if (this.propertiesRightclickMenu.isOpen()) {
-				this.setFocusChangeBlocked("editor.context.properties", true);
-			} else {
-				this.setFocusChangeBlocked("editor.context.properties", false);
-			}
-
 		}
-				
-		//Render rightclick menus of all layout elements
-		for (LayoutElement e : this.content) {
-			if (e.rightclickMenu != null) {
-				if (!PopupHandler.isPopupActive()) {
-					UIBase.renderScaledContextMenu(matrix, e.rightclickMenu);
-				}
-			}
+
+		this.handleActiveElementContextMenu();
+		if (this.activeElementContextMenu != null) {
+			UIBase.renderScaledContextMenu(graphics, this.activeElementContextMenu);
 		}
 		
 		//Render the editor UI
-		this.ui.render(matrix, this);
+		this.ui.render(graphics, this);
 
 		//Needs to be done after other object render stuff to prevent ConcurrentModificationExceptions.
 		if (this.newContentMove != null) {
@@ -710,7 +698,7 @@ public class LayoutEditorScreen extends Screen {
 
 	}
 
-	protected void drawGrid(PoseStack matrix) {
+	protected void drawGrid(GuiGraphics graphics) {
 		if (FancyMenu.config.getOrDefault("showgrid", false)) {
 
 			Color cNormal = new Color(255, 255, 255, 100);
@@ -719,7 +707,7 @@ public class LayoutEditorScreen extends Screen {
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			fill(matrix, (this.width / 2) - 1, 0, (this.width / 2) + 1, this.height, cCenter.getRGB());
+			graphics.fill((this.width / 2) - 1, 0, (this.width / 2) + 1, this.height, cCenter.getRGB());
 
 			//Draw vertical lines center -> left
 			int linesVerticalToLeftPosX = (this.width / 2) - gridSize - 1;
@@ -727,7 +715,7 @@ public class LayoutEditorScreen extends Screen {
 				int minY = 0;
 				int maxY = this.height;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
-				fill(matrix, linesVerticalToLeftPosX, minY, maxX, maxY, cNormal.getRGB());
+				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, cNormal.getRGB());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
@@ -737,12 +725,12 @@ public class LayoutEditorScreen extends Screen {
 				int minY = 0;
 				int maxY = this.height;
 				int maxX = linesVerticalToRightPosX + lineThickness;
-				fill(matrix, linesVerticalToRightPosX, minY, maxX, maxY, cNormal.getRGB());
+				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, cNormal.getRGB());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			fill(matrix, 0, (this.height / 2) - 1, this.width, (this.height / 2) + 1, cCenter.getRGB());
+			graphics.fill(0, (this.height / 2) - 1, this.width, (this.height / 2) + 1, cCenter.getRGB());
 
 			//Draw horizontal lines center -> top
 			int linesHorizontalToTopPosY = (this.height / 2) - gridSize - 1;
@@ -750,7 +738,7 @@ public class LayoutEditorScreen extends Screen {
 				int minX = 0;
 				int maxX = this.width;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
-				fill(matrix, minX, linesHorizontalToTopPosY, maxX, maxY, cNormal.getRGB());
+				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, cNormal.getRGB());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
@@ -760,33 +748,33 @@ public class LayoutEditorScreen extends Screen {
 				int minX = 0;
 				int maxX = this.width;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
-				fill(matrix, minX, linesHorizontalToBottomPosY, maxX, maxY, cNormal.getRGB());
+				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, cNormal.getRGB());
 				linesHorizontalToBottomPosY += gridSize;
 			}
 
 		}
 	}
 
-	protected void renderVanillaButtons(PoseStack matrix, int mouseX, int mouseY) {
+	protected void renderVanillaButtons(GuiGraphics graphics, int mouseX, int mouseY) {
 		for (LayoutElement l : this.vanillaButtonContent) {
 			if (!this.isHidden(l)) {
 				if (!this.isFocused(l)) {
-					l.render(matrix, mouseX, mouseY);
+					l.render(graphics, mouseX, mouseY);
 				}
 			}
 		}
 	}
 
-	protected void renderCreatorBackground(PoseStack matrix) {
+	protected void renderCreatorBackground(GuiGraphics graphics) {
 		RenderSystem.enableBlend();
-		fill(matrix, 0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
+		graphics.fill(0, 0, this.width, this.height, new Color(38, 38, 38).getRGB());
 
 		if (this.backgroundTexture != null) {
-			RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
+//			RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
 			
 			if (!this.panorama) {
 				if (!this.keepBackgroundAspectRatio) {
-					blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					int w = this.backgroundTexture.getWidth();
 					int h = this.backgroundTexture.getHeight();
@@ -794,9 +782,9 @@ public class LayoutEditorScreen extends Screen {
 					int wfinal = (int)(this.height * ratio);
 					int screenCenterX = this.width / 2;
 					if (wfinal < this.width) {
-						blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+						graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 					} else {
-						blit(CurrentScreenHandler.getPoseStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, this.height + 1, wfinal + 1, this.height + 1);
+						graphics.blit(this.backgroundTexture.getResourceLocation(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, this.height + 1, wfinal + 1, this.height + 1);
 					}
 				}
 			} else {
@@ -848,7 +836,7 @@ public class LayoutEditorScreen extends Screen {
 					}
 				}
 				if (wfinal <= this.width) {
-					blit(matrix, 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
+					graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, this.width + 1, this.height + 1, this.width + 1, this.height + 1);
 				} else {
 					RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, this.height + 1);
 				}
@@ -877,7 +865,7 @@ public class LayoutEditorScreen extends Screen {
 					this.backgroundAnimation.setPosY(0);
 				}
 			}
-			this.backgroundAnimation.render(CurrentScreenHandler.getPoseStack());
+			this.backgroundAnimation.render(graphics);
 			this.backgroundAnimation.setWidth(wOri);
 			this.backgroundAnimation.setHeight(hOri);
 			this.backgroundAnimation.setPosX(xOri);
@@ -915,7 +903,7 @@ public class LayoutEditorScreen extends Screen {
 			}
 			this.backgroundSlideshow.y = 0;
 			
-			this.backgroundSlideshow.render(CurrentScreenHandler.getPoseStack());
+			this.backgroundSlideshow.render(graphics);
 			
 			this.backgroundSlideshow.width = sw;
 			this.backgroundSlideshow.height = sh;
@@ -924,7 +912,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 
 		if (this.customMenuBackground != null) {
-			this.customMenuBackground.render(matrix, this, this.keepBackgroundAspectRatio);
+			this.customMenuBackground.render(graphics, this, this.keepBackgroundAspectRatio);
 		}
 
 	}
@@ -1446,12 +1434,17 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
-	public void setFocusChangeBlocked(String id, Boolean b) {
-		this.focusChangeBlocker.put(id, b);
-	}
-
 	public boolean isFocusChangeBlocked() {
-		return this.focusChangeBlocker.containsValue(true);
+		if (this.activeElementContextMenu != null) {
+			return true;
+		}
+		if ((this.propertiesRightclickMenu != null) && this.propertiesRightclickMenu.isOpen()) {
+			return true;
+		}
+		if ((this.multiselectRightclickMenu != null) && this.multiselectRightclickMenu.isOpen()) {
+			return true;
+		}
+		return false;
 	}
 	
 	public LayoutElement getTopHoverObject() {
@@ -1598,6 +1591,50 @@ public class LayoutEditorScreen extends Screen {
 			return (((CustomGuiBase) this.screen).getIdentifier().equals("%fancymenu:universal_layout%"));
 		}
 		return false;
+	}
+
+	protected void handleActiveElementContextMenu() {
+
+		if (this.activeElementContextMenu != null) {
+			//Close active element menu when mouse is clicked while menu is not hovered
+			if ((MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) && !this.activeElementContextMenu.isHoveredOrFocused()) {
+				this.activeElementContextMenu.closeMenu();
+				this.activeElementContextMenu = null;
+			}
+			//Force-reset active element menu if it's closed
+			if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isOpen()) {
+				this.activeElementContextMenu = null;
+			}
+		}
+
+		if ((this.activeElementContextMenu == null) && MouseInput.isRightMouseDown()) {
+			//Search for potential element menu to open
+			for (LayoutElement e : this.content) {
+				if ((e.rightclickMenu != null) && e.isRightClicked() && this.isFocused(e) && (this.getFocusedObjects().size() == 1)) {
+					this.activeElementContextMenu = e.rightclickMenu;
+					UIBase.openScaledContextMenuAtMouse(e.rightclickMenu);
+					e.hoveredLayers.clear();
+					for (LayoutElement o : this.content) {
+						if (o.isHoveredOrFocused()) {
+							e.hoveredLayers.add(o);
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	public void resetActiveElementContextMenu() {
+		if (this.activeElementContextMenu != null) {
+			this.activeElementContextMenu.closeMenu();
+			this.activeElementContextMenu = null;
+		}
+	}
+
+	@Nullable
+	public FMContextMenu getActiveElementContextMenu() {
+		return this.activeElementContextMenu;
 	}
 
 	protected static void onShortcutPressed(KeyboardData d) {

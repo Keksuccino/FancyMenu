@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.item;
 
 import java.io.IOException;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -26,7 +26,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}
@@ -52,7 +52,7 @@ public class AnimationCustomizationItem extends CustomizationItemBase {
 				this.renderer.setWidth(this.getWidth());
 			}
 			
-			this.renderer.render(matrix);
+			this.renderer.render(graphics);
 			
 			this.renderer.setPosX(cachedX);
 			this.renderer.setPosY(cachedY);

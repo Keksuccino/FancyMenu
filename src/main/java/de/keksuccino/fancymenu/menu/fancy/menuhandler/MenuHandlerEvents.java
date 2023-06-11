@@ -22,7 +22,7 @@ public class MenuHandlerEvents {
 		this.initHandler(e.getScreen());
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onScreenInitPre(InitOrResizeScreenEvent.Pre e) {
 		

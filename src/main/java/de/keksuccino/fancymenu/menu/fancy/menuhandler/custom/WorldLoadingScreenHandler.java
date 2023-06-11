@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.lang.reflect.Field;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -10,7 +10,7 @@ import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
@@ -32,14 +32,14 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				e.setCanceled(true);
 				
-				e.getScreen().renderBackground(e.getPoseStack());
+				e.getScreen().renderBackground(e.getGuiGraphics());
 				
-				this.renderMenu(e.getPoseStack(), e.getScreen());
+				this.renderMenu(e.getGuiGraphics(), e.getScreen());
 			}
 		}
 	}
 	
-	private void renderMenu(PoseStack matrix, Screen screen) {
+	private void renderMenu(GuiGraphics graphics, Screen screen) {
 		
 		StoringChunkProgressListener tracker = getTracker(screen);
 		Font font = Minecraft.getInstance().font;
@@ -56,12 +56,12 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 			}
 			
 			if (FancyMenu.config.getOrDefault("showloadingscreenanimation", true)) {
-				LevelLoadingScreen.renderChunks(matrix, getTracker(screen), j, k + 30, 2, 0);
+				LevelLoadingScreen.renderChunks(graphics, getTracker(screen), j, k + 30, 2, 0);
 			}
 		}
 		
 		if (FancyMenu.config.getOrDefault("showloadingscreenpercent", true)) {
-			GuiComponent.drawCenteredString(matrix, font, s, j, k - 9 / 2 - 30, 16777215);
+			graphics.drawCenteredString(font, s, j, k - 9 / 2 - 30, 16777215);
 		}
 		
 	}

@@ -9,7 +9,8 @@ import java.util.Map;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.client.IMixinSplashRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -127,7 +128,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		
 		if (this.isNewMenuThis) {
 			isNewMenu = false;
@@ -139,18 +140,18 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 		
 		if (this.shouldRender()) {
 			
-			this.renderSplash(matrix, Minecraft.getInstance().font, menu);
+			this.renderSplash(graphics, Minecraft.getInstance().font, menu);
 			
 		}
 		
 	}
 
-	protected void renderSplash(PoseStack matrix, Font font, Screen s) {
+	protected void renderSplash(GuiGraphics graphics, Font font, Screen s) {
 
 		String splash = null;
 
 		if (this.vanillaLike && (this.text == null)) {
-			this.text = Minecraft.getInstance().getSplashManager().getSplash();
+			this.text = ((IMixinSplashRenderer)Minecraft.getInstance().getSplashManager()).getSplashStringFancyMenu();
 			vanillaLikeCache.put(this.actionId, this.text);
 		}
 
@@ -198,13 +199,13 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 
 			RenderSystem.enableBlend();
 
-			matrix.pushPose();
-			matrix.scale(this.scale, this.scale, this.scale);
+			graphics.pose().pushPose();
+			graphics.pose().scale(this.scale, this.scale, this.scale);
 
-			matrix.pushPose();
-			matrix.translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
-			matrix.mulPose(Axis.ZP.rotationDegrees(this.rotation));
-			matrix.scale(f, f, f);
+			graphics.pose().pushPose();
+			graphics.pose().translate(((this.getPosX(s) + (this.getWidth() / 2)) / this.scale), this.getPosY(s) / this.scale, 0.0F);
+			graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotation));
+			graphics.pose().scale(f, f, f);
 
 			int alpha = this.basecolor.getAlpha();
 			int i = Mth.ceil(this.opacity * 255.0F);
@@ -213,20 +214,16 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 			}
 			Color c = new Color(this.basecolor.getRed(), this.basecolor.getGreen(), this.basecolor.getBlue(), alpha);
 
-			if (this.shadow) {
-				font.drawShadow(matrix, splash, -(font.width(splash) / 2), 0, c.getRGB());
-			} else {
-				font.draw(matrix, splash, -(font.width(splash) / 2), 0, c.getRGB());
-			}
+			graphics.drawString(Minecraft.getInstance().font, splash, -(font.width(splash) / 2), 0, c.getRGB(), this.shadow);
 
-			matrix.popPose();
-			matrix.popPose();
+			graphics.pose().popPose();
+			graphics.pose().popPose();
 
 		}
 
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	@SubscribeEvent
 	public static void onInitScreenPre(InitOrResizeScreenEvent.Pre e) {
 		Screen s = Minecraft.getInstance().screen;

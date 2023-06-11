@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.sounds.SoundManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,19 +11,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetEvent;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraftforge.common.MinecraftForge;
 
-//TODO übernehmen 1.19.4
+
 @Mixin(value = AbstractWidget.class)
-public abstract class MixinAbstractWidget extends GuiComponent {
+public abstract class MixinAbstractWidget {
 
 	@Shadow float alpha;
 	
 	@Inject(at = @At(value = "HEAD"), method = "render", cancellable = true)
-	private void onRenderPre(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void onRenderPre(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		try {
-			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(matrix, (AbstractWidget)((Object)this), this.alpha);
+			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(graphics, (AbstractWidget)((Object)this), this.alpha);
 			MinecraftForge.EVENT_BUS.post(e);
 			this.alpha = e.getAlpha();
 			if (e.isCanceled()) {
@@ -34,10 +33,10 @@ public abstract class MixinAbstractWidget extends GuiComponent {
 		}
 	}
 	
-	@Inject(at = @At(value = "TAIL"), method = "render", cancellable = true)
-	private void onRenderPost(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	@Inject(at = @At(value = "TAIL"), method = "render")
+	private void onRenderPost(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		try {
-			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(matrix, (AbstractWidget)((Object)this), this.alpha);
+			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(graphics, (AbstractWidget)((Object)this), this.alpha);
 			MinecraftForge.EVENT_BUS.post(e);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -57,7 +56,7 @@ public abstract class MixinAbstractWidget extends GuiComponent {
 		}
 	}
 	
-	@Inject(at = @At(value = "TAIL"), method = "playDownSound", cancellable = true)
+	@Inject(at = @At(value = "TAIL"), method = "playDownSound")
 	private void onButtonClickSoundPost(SoundManager manager, CallbackInfo info) {
 		try {
 			PlayWidgetClickSoundEvent.Post e = new PlayWidgetClickSoundEvent.Post((AbstractWidget)((Object)this));

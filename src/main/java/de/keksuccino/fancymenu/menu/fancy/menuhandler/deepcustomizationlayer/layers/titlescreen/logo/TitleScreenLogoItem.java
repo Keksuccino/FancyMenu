@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.logo;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -21,7 +21,7 @@ public class TitleScreenLogoItem extends DeepCustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         int j = menu.width / 2 - 137;
 
@@ -34,12 +34,12 @@ public class TitleScreenLogoItem extends DeepCustomizationItem {
 
         RenderUtils.bindTexture(MINECRAFT_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        blit(matrix, j + 0, 30, 0, 0, 155, 44);
-        blit(matrix, j + 155, 30, 0, 45, 155, 44);
+        blit(graphics, j + 0, 30, 0, 0, 155, 44);
+        blit(graphics, j + 155, 30, 0, 45, 155, 44);
 
         RenderUtils.bindTexture(MINECRAFT_EDITION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+        blit(graphics, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 
     }
 

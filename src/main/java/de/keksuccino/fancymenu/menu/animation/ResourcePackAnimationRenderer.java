@@ -5,14 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
@@ -71,7 +71,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     }
 
     @Override
-    public void render(PoseStack matrix) {
+    public void render(GuiGraphics graphics) {
         if ((this.resources == null) || (this.resources.isEmpty())) {
             return;
         }
@@ -95,7 +95,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         }
 
         //Rendering the current frame
-        this.renderFrame(matrix);
+        this.renderFrame(graphics);
 
         //Updating the current frame based on the fps value
         long time = System.currentTimeMillis();
@@ -108,7 +108,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         }
     }
 
-    protected void renderFrame(PoseStack matrix) {
+    protected void renderFrame(GuiGraphics graphics) {
         int h = this.height;
         int w = this.width;
         int x2 = this.x;
@@ -123,7 +123,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
 
         RenderUtils.bindTexture(this.resources.get(this.frame));
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-        GuiComponent.blit(matrix, x2, y2, 0.0F, 0.0F, w, h, w, h);
+        GuiComponent.blit(graphics, x2, y2, 0.0F, 0.0F, w, h, w, h);
         RenderSystem.disableBlend();
     }
 

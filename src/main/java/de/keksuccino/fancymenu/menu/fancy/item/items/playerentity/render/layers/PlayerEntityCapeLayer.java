@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.PlayerEntityItemRenderer;
@@ -24,10 +24,10 @@ public class PlayerEntityCapeLayer extends PlayerEntityRenderLayer {
         this.renderer = renderer;
     }
 
-    public void render(PoseStack matrix, MultiBufferSource p_116616_, int p_116617_, @Nullable Entity entity, float p_116619_, float p_116620_, float p_116621_, float p_116622_, float p_116623_, float p_116624_) {
+    public void render(GuiGraphics graphics, MultiBufferSource p_116616_, int p_116617_, @Nullable Entity entity, float p_116619_, float p_116620_, float p_116621_, float p_116622_, float p_116623_, float p_116624_) {
         if (!this.properties.invisible && this.properties.isModelPartShown(PlayerModelPart.CAPE) && this.properties.getCapeTextureLocation() != null) {
-            matrix.pushPose();
-            matrix.translate(0.0F, 0.0F, 0.125F);
+            graphics.pushPose();
+            graphics.translate(0.0F, 0.0F, 0.125F);
             double d0 = Mth.lerp((double)p_116621_, this.properties.xCloakO, this.properties.xCloak) - Mth.lerp((double)p_116621_, this.properties.xo, 0);
             double d1 = Mth.lerp((double)p_116621_, this.properties.yCloakO, this.properties.yCloak) - Mth.lerp((double)p_116621_, this.properties.yo, 0);
             double d2 = Mth.lerp((double)p_116621_, this.properties.zCloakO, this.properties.zCloak) - Mth.lerp((double)p_116621_, this.properties.zo, 0);
@@ -50,12 +50,12 @@ public class PlayerEntityCapeLayer extends PlayerEntityRenderLayer {
                 f1 += 25.0F;
             }
 
-            matrix.mulPose(Axis.XP.rotationDegrees(6.0F + f2 / 2.0F + f1));
-            matrix.mulPose(Axis.ZP.rotationDegrees(f3 / 2.0F));
-            matrix.mulPose(Axis.YP.rotationDegrees(180.0F - f3 / 2.0F));
+            graphics.mulPose(Axis.XP.rotationDegrees(6.0F + f2 / 2.0F + f1));
+            graphics.mulPose(Axis.ZP.rotationDegrees(f3 / 2.0F));
+            graphics.mulPose(Axis.YP.rotationDegrees(180.0F - f3 / 2.0F));
             VertexConsumer vertexconsumer = p_116616_.getBuffer(RenderType.entitySolid(this.properties.getCapeTextureLocation()));
-            this.renderer.getModel().renderCloak(matrix, vertexconsumer, p_116617_, OverlayTexture.NO_OVERLAY);
-            matrix.popPose();
+            this.renderer.getModel().renderCloak(graphics, vertexconsumer, p_116617_, OverlayTexture.NO_OVERLAY);
+            graphics.popPose();
         }
     }
 

@@ -20,7 +20,6 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
-import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -33,7 +32,6 @@ public class ButtonCache {
 	private static boolean caching = false;
 	private static Map<String, AbstractWidget> customButtons = new HashMap<String, AbstractWidget>();
 
-	//TODO übernehmen 1.19.4
 	@SubscribeEvent
 	public void updateCache(InitOrResizeScreenEvent.Post e) {
 		if (!caching) {
@@ -166,7 +164,6 @@ public class ButtonCache {
 
 			//Reset the button list
 			//TODO EXPERIMENTAL
-			//TODO übernehmen 1.19.4
 //			s.renderables.clear();
 
 			//Set all important variables and init screen
@@ -174,15 +171,13 @@ public class ButtonCache {
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
 			//TODO EXPERIMENTAL
-			//TODO übernehmen 1.19.4
 //			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 			s.resize(Minecraft.getInstance(), screenWidth, screenHeight);
-			//----------------
+			
 
 			//Reflecting the buttons list field to cache all buttons of the menu
 			List<AbstractWidget> widgets = new ArrayList<>();
 			for (Renderable r : s.renderables) {
-				//TODO übernehmen 1.19.4
 				if (r instanceof AbstractWidget) {
 					widgets.add((AbstractWidget)r);
 				}

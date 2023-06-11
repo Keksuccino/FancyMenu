@@ -15,10 +15,10 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
-import org.joml.Matrix4f;
+import org.joml.graphics4f;
 
 public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
@@ -32,6 +32,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	private double fov = 85.0D;
 	private float angle = 25.0F;
 	private Minecraft mc = Minecraft.getInstance();
+	
+	public float opacity = 1.0F;
 
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -122,7 +124,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 	public void render() {
 		try {
-			this.renderRaw(1.0F);
+			
+			this.renderRaw(this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -140,29 +143,30 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 			Tesselator tesselator = Tesselator.getInstance();
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			Matrix4f matrix4f = new Matrix4f().setPerspective(fovf, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
-			RenderSystem.backupProjectionMatrix();
-			RenderSystem.setProjectionMatrix(matrix4f);
-			PoseStack poseStack = RenderSystem.getModelViewStack();
-			poseStack.pushPose();
-			poseStack.setIdentity();
-			poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
-			RenderSystem.applyModelViewMatrix();
+			graphics4f graphics4f = new graphics4f().setPerspective(fovf, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+			RenderSystem.backupProjectiongraphics();
+			RenderSystem.setProjectiongraphics(graphics4f);
+			GuiGraphics GuiGraphics = RenderSystem.getModelViewStack();
+			GuiGraphics.pushPose();
+			GuiGraphics.setIdentity();
+			GuiGraphics.mulPose(Axis.XP.rotationDegrees(180.0f));
+			RenderSystem.applyModelViewgraphics();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+			
+			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
 			RenderSystem.enableBlend();
 			RenderSystem.disableCull();
 			RenderSystem.depthMask(false);
 			RenderSystem.defaultBlendFunc();
 
 			for(int j = 0; j < 4; ++j) {
-				poseStack.pushPose();
+				GuiGraphics.pushPose();
 				float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
 				float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
-				poseStack.translate(k, l, 0.0f);
-				poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
-				poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
-				RenderSystem.applyModelViewMatrix();
+				GuiGraphics.translate(k, l, 0.0f);
+				GuiGraphics.mulPose(Axis.XP.rotationDegrees(pitch));
+				GuiGraphics.mulPose(Axis.YP.rotationDegrees(yaw));
+				RenderSystem.applyModelViewgraphics();
 				for (int n = 0; n < 6; ++n) {
 					ExternalTextureResourceLocation r = this.pano.get(n);
 					if (r != null) {
@@ -213,15 +217,15 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					}
 				}
 
-				poseStack.popPose();
-				RenderSystem.applyModelViewMatrix();
+				GuiGraphics.popPose();
+				RenderSystem.applyModelViewgraphics();
 				RenderSystem.colorMask(true, true, true, false);
 			}
 
 			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.restoreProjectionMatrix();
-			poseStack.popPose();
-			RenderSystem.applyModelViewMatrix();
+			RenderSystem.restoreProjectiongraphics();
+			GuiGraphics.popPose();
+			RenderSystem.applyModelViewgraphics();
 			RenderSystem.depthMask(true);
 			RenderSystem.enableCull();
 			RenderSystem.enableDepthTest();
@@ -231,13 +235,16 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					this.overlay_texture.loadTexture();
 				}
 				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+				
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
-				blit(CurrentScreenHandler.getPoseStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+				blit(CurrentScreenHandler.getGuiGraphics(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}
+		
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0F);
 	}
 
 	public String getName() {

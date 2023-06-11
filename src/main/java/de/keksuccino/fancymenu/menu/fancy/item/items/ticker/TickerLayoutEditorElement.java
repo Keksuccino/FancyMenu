@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
@@ -92,7 +92,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.isAsync) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.ticker.async.on"));
                 } else {
@@ -114,7 +114,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.tickMode == TickerCustomizationItem.TickMode.NORMAL) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.normal"));
                 } else if (i.tickMode == TickerCustomizationItem.TickMode.ONCE_PER_SESSION){

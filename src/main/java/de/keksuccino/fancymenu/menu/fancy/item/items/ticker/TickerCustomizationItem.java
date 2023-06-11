@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine.ActionContainer;
@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-//TODO übernehmenn (implements)
+
 public class TickerCustomizationItem extends CustomizationItem implements IActionExecutorItem {
 
-    //TODO übernehmenn (replace with new ButtonScriptEngine.ActionContainer class)
+    
     public volatile List<ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
@@ -105,14 +105,14 @@ public class TickerCustomizationItem extends CustomizationItem implements IActio
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         this.ready = true;
 
         if (isEditorActive()) {
             RenderSystem.enableBlend();
-            fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.ORANGE.getRGB());
-            drawCenteredString(matrix, Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.customization.items.ticker"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            graphics.fill(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.ORANGE.getRGB());
+            graphics.drawCenteredString(Minecraft.getInstance().font, "§l" + Locals.localize("fancymenu.customization.items.ticker"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
         } else if (!this.isAsync) {
             this.tick();
         }
@@ -143,13 +143,13 @@ public class TickerCustomizationItem extends CustomizationItem implements IActio
 
     }
 
-    //TODO übernehmenn
+    
     @Override
     public List<ActionContainer> getActionList() {
         return this.actions;
     }
 
-    //TODO übernehmenn
+    
 //    public static class ActionContainer {
 //
 //        public volatile String action;

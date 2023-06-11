@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.List;
 
-//TODO übernehmen 1.19.4 (LÖSCHEN!)
+
 @Mixin(GridLayout.class)
 public interface IMixinGridWidget {
 //

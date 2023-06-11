@@ -26,8 +26,6 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.client.gui.screens.worldselection.ExperimentsScreen;
 import net.minecraftforge.common.MinecraftForge;
 
 public class MenuCustomization {
@@ -43,7 +41,11 @@ public class MenuCustomization {
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
 
-	public static boolean isLoadingScreen = true;
+	
+	public static boolean allowScreenCustomization = false;
+
+	
+	//public static boolean isLoadingScreen = true;
 	
 	public static void init() {
 		if (!initDone) {
@@ -95,7 +97,7 @@ public class MenuCustomization {
 					if (sec.getSectionType().equals("net.mehvahdjukaar.supplementaries.compat.configured.CustomConfigScreen")) {
 						identifier = sec.getSectionType();
 					} else if ((sec.getSectionType() != null) && (sec.getSectionType().length() > 5)) {
-						Class.forName(sec.getSectionType());
+						Class.forName(sec.getSectionType(), false, MenuCustomization.class.getClassLoader());
 						identifier = sec.getSectionType();
 					}
 				} catch (Exception e) {}
@@ -149,6 +151,11 @@ public class MenuCustomization {
 	}
 
 	public static boolean isMenuCustomizable(Screen menu) {
+		
+		if (!allowScreenCustomization) {
+			return false;
+		}
+		//------------------------
 		if (menu != null) {
 			if (menu instanceof CustomGuiBase) {
 				return true;
@@ -173,7 +180,7 @@ public class MenuCustomization {
 		}
 		SetupSharingEngine.MenuIdentifierDatabase db = SetupSharingEngine.getIdentifierDatabase();
 		try {
-			Class.forName(identifier);
+			Class.forName(identifier, false, MenuCustomization.class.getClassLoader());
 			return identifier;
 		} catch (Exception e) {}
 		if (db != null) {
@@ -328,6 +335,12 @@ public class MenuCustomization {
 			return true;
 		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("io.github.lgatodu47.screenshot_viewer.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("twilightforest.")) {
 			return true;
 		}
 		return false;

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -70,7 +70,7 @@ public class StringCustomizationItem extends CustomizationItemBase {
 
 	}
 
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		if (!this.shouldRender()) {
 			return;
 		}
@@ -82,14 +82,10 @@ public class StringCustomizationItem extends CustomizationItemBase {
 		Font font = Minecraft.getInstance().font;
 
 		RenderSystem.enableBlend();
-		matrix.pushPose();
-		matrix.scale(this.scale, this.scale, this.scale);
-		if (this.shadow) {
-			font.drawShadow(matrix, "§f" + this.value, x, y, 0 | Mth.ceil(this.opacity * 255.0F) << 24);
-		} else {
-			font.draw(matrix, "§f" + this.value, x, y, 0 | Mth.ceil(this.opacity * 255.0F) << 24);
-		}
-		matrix.popPose();
+		graphics.pose().pushPose();
+		graphics.pose().scale(this.scale, this.scale, this.scale);
+		graphics.drawString(font, "§f" + this.value, x, y, 0 | Mth.ceil(this.opacity * 255.0F) << 24, this.shadow);
+		graphics.pose().popPose();
 		RenderSystem.disableBlend();
 
 	}

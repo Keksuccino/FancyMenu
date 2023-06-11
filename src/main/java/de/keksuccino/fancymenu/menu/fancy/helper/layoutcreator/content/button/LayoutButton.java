@@ -30,14 +30,14 @@ import net.minecraft.network.chat.Component;
 public class LayoutButton extends LayoutElement {
 
 	public MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
-	//TODO übernehmenn
+	
 //	public String actionContent = "";
 //	public String actionType = "openlink";
 	public String onlydisplayin = null;
 	private AdvancedButton onlyOutgameBtn;
 	private AdvancedButton onlySingleplayerBtn;
 	private AdvancedButton onlyMultiplayerBtn;
-	//TODO übernehmenn
+	
 	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
 
 	public LayoutButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
@@ -55,13 +55,13 @@ public class LayoutButton extends LayoutElement {
 
 		super.init();
 
-		//TODO übernehmenn
+		
 //		AdvancedButton b3 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.custombutton.config"), (press) -> {
 //			Minecraft.getInstance().setScreen(new ButtonActionScreen(this.handler, this));
 //		});
 //		this.rightclickMenu.addContent(b3);
 
-		//TODO übernehmenn
+		
 //		AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.add_action"), (press) -> {
 //			ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
 //				if (call != null) {
@@ -73,7 +73,7 @@ public class LayoutButton extends LayoutElement {
 //		addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.custom_button.add_action.desc"), "%n%"));
 //		this.rightclickMenu.addContent(addActionButton);
 
-		//TODO übernehmenn
+		
 		AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
 			List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
 			for (ButtonScriptEngine.ActionContainer c : this.actions) {
@@ -96,7 +96,7 @@ public class LayoutButton extends LayoutElement {
 		});
 		manageActionsButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.editor.elements.button.manage_actions.desc"), "%n%"));
 		this.rightclickMenu.addContent(manageActionsButton);
-		//----------------------
+		
 
 		this.rightclickMenu.addSeparator();
 
@@ -141,7 +141,7 @@ public class LayoutButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.editlabel")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (!this.object.value.equals(call)) {
@@ -153,14 +153,14 @@ public class LayoutButton extends LayoutElement {
 			s.multilineMode = false;
 			s.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
 			Minecraft.getInstance().setScreen(s);
-			//----------------------
+			
 		});
 		this.rightclickMenu.addContent(b2);
 
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.hoverlabel")), this.handler, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(call)) {
@@ -175,7 +175,7 @@ public class LayoutButton extends LayoutElement {
 				s.setText(StringUtils.convertFormatCodes(this.customizationContainer.hoverLabel, "§", "&"));
 			}
 			Minecraft.getInstance().setScreen(s);
-			//-------------------
+			
 		});
 		this.rightclickMenu.addContent(b5);
 
@@ -258,7 +258,7 @@ public class LayoutButton extends LayoutElement {
 		this.rightclickMenu.addContent(b10);
 
 		AdvancedButton b12 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("helper.creator.items.button.btndescription")), this.handler, null, (call) -> {
 				if (call != null) {
 					call = call.replace("\n", "%n%");
@@ -279,7 +279,7 @@ public class LayoutButton extends LayoutElement {
 				s.setText(this.customizationContainer.buttonDescription.replace("%n%", "\n"));
 			}
 			Minecraft.getInstance().setScreen(s);
-			//--------------------
+			
 		});
 		List<String> l = new ArrayList<String>();
 		for (String s : StringUtils.splitLines(Locals.localize("helper.creator.items.button.btndescription.desc"), "%n%")) {
@@ -345,7 +345,7 @@ public class LayoutButton extends LayoutElement {
 		this.rightclickMenu.addContent(b10);
 	}
 
-	//TODO übernehmenn
+	
 	@Override
 	public List<PropertiesSection> getProperties() {
 
@@ -446,7 +446,7 @@ public class LayoutButton extends LayoutElement {
 		}
 		s.addEntry("label", this.object.value);
 
-		//TODO übernehmenn
+		
 		this.addLoadingRequirementPropertiesTo(s);
 
 		l.add(s);

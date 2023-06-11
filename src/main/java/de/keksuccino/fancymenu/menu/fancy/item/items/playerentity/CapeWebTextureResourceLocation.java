@@ -1,4 +1,4 @@
-//---
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 
 import com.mojang.blaze3d.platform.NativeImage;

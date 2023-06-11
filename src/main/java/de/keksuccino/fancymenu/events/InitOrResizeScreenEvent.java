@@ -7,10 +7,10 @@ import net.minecraftforge.eventbus.api.Event;
 import java.util.List;
 import java.util.Objects;
 
-//TODO übernehmen 1.19.4 (neue klasse)
+
 public class InitOrResizeScreenEvent extends Event {
 
-    private final Screen screen;
+    protected final Screen screen;
 
     protected InitOrResizeScreenEvent(Screen screen) {
         this.screen = Objects.requireNonNull(screen);
@@ -25,10 +25,7 @@ public class InitOrResizeScreenEvent extends Event {
         return screen;
     }
 
-    public List<Renderable> getRenderables() {
-        return this.screen.renderables;
-    }
-
+    /** You should not get the widgets list in Pre, because it is fired BEFORE the list get cleared. **/
     public static class Pre extends InitOrResizeScreenEvent {
 
         public Pre(Screen screen) {
@@ -41,6 +38,10 @@ public class InitOrResizeScreenEvent extends Event {
 
         public Post(Screen screen) {
             super(screen);
+        }
+
+        public List<Renderable> getRenderables() {
+            return this.screen.renderables;
         }
 
     }

@@ -9,7 +9,6 @@ import java.util.Map;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
@@ -19,9 +18,11 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 
+@SuppressWarnings("all")
 public class MenuBar extends UIBase {
 	
 	public static final ResourceLocation FM_LOGO_TEXTURE = new ResourceLocation("keksuccino", "fm_pixel_logo.png");
@@ -50,9 +51,9 @@ public class MenuBar extends UIBase {
 
 		}) {
 			@Override
-			public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+			public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 				this.width = this.height;
-				super.render(matrix, mouseX, mouseY, partialTicks);
+				super.render(graphics, mouseX, mouseY, partialTicks);
 			}
 		};
 		fmBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.settings"), "%n%"));
@@ -61,21 +62,24 @@ public class MenuBar extends UIBase {
 		//Add default expand button
 		AdvancedButton expandBtn = new AdvancedImageButton(0, 0, 20, 20, SHRINK_BTN_TEXTURE, true, (press) -> {
 			this.toggleExpanded();
+			
 			if (this.expanded) {
 				((AdvancedImageButton)press).setImage(SHRINK_BTN_TEXTURE);
-				((AdvancedButton)press).setDescription(Locals.localize("helper.menubar.shrink"));
+				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.shrink"), "%n%"));
 			} else {
 				((AdvancedImageButton)press).setImage(EXPAND_BTN_TEXTURE);
-				((AdvancedButton)press).setDescription(Locals.localize("helper.menubar.expand"));
+				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
 			}
+			//-----------------------
 		}) {
 			@Override
-			public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+			public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 				this.width = this.height;
-				super.render(matrix, mouseX, mouseY, partialTicks);
+				super.render(graphics, mouseX, mouseY, partialTicks);
 			}
 		};
-		expandBtn.setDescription(Locals.localize("helper.menubar.shrink"));
+		
+		expandBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.shrink"), "%n%"));
 		this.addElement(expandBtn, "menubar.default.extendbtn", ElementAlignment.RIGHT, true);
 		
 	}
@@ -243,7 +247,7 @@ public class MenuBar extends UIBase {
 		return false;
 	}
 	
-	public void render(PoseStack matrix, Screen screen) {
+	public void render(GuiGraphics graphics, Screen screen) {
 		
 		if (AnimationHandler.isReady()) {
 			if (screen != null) {
@@ -265,22 +269,22 @@ public class MenuBar extends UIBase {
 					
 					MouseInput.resetRenderScale();
 					
-					RenderUtils.setZLevelPre(matrix, 400);
+					RenderUtils.setZLevelPre(graphics.pose(), 400);
 					
-					matrix.scale(this.getScale(), this.getScale(), this.getScale());
+					graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
 
 					RenderSystem.enableBlend();
 					
 					if (this.expanded) {
 						
-						this.renderBackground(matrix, screen);
+						this.renderBackground(graphics, screen);
 						
 						//Render all child context menus
 						//(It's important to render childs first, so height, width and scale updates
 						//made by button clicks can be applied before the menu is getting rendered.)
 						for (ContextMenu m : this.childs.values()) {
 							m.setButtonHeight(this.height);
-							m.render(matrix, mouseX, mouseY);
+							m.render(graphics, mouseX, mouseY);
 						}
 						
 						//Render left bar elements
@@ -295,7 +299,7 @@ public class MenuBar extends UIBase {
 								b.x = xl;
 								b.y = 0;
 								colorizeButton(b);
-								b.render(matrix, mouseX, mouseY, partialTicks);
+								b.render(graphics, mouseX, mouseY, partialTicks);
 								xl += b.getWidth() + this.elementSpace;
 							}
 						}
@@ -313,7 +317,7 @@ public class MenuBar extends UIBase {
 								b.x = xr;
 								b.y = 0;
 								colorizeButton(b);
-								b.render(matrix, mouseX, mouseY, partialTicks);
+								b.render(graphics, mouseX, mouseY, partialTicks);
 								xr -= this.elementSpace;
 							}
 						}
@@ -327,13 +331,13 @@ public class MenuBar extends UIBase {
 							right.x = (int) ((width / this.getScale()) - right.getWidth());
 							right.y = 0;
 							colorizeButton(right);
-							right.render(matrix, mouseX, mouseY, partialTicks);
+							right.render(graphics, mouseX, mouseY, partialTicks);
 							
 						}
 						
 					}
 					
-					RenderUtils.setZLevelPost(matrix);
+					RenderUtils.setZLevelPost(graphics.pose());
 					
 				}
 				
@@ -342,10 +346,10 @@ public class MenuBar extends UIBase {
 		
 	}
 	
-	protected void renderBackground(PoseStack matrix, Screen screen) {
+	protected void renderBackground(GuiGraphics graphics, Screen screen) {
 		if (this.expanded) {
 			if ((screen != null) && (this.barColor != null)) {
-				RenderUtils.fill(matrix, 0, 0, screen.width / this.getScale(), this.height, this.barColor.getRGB(), this.barOpacity);
+				RenderUtils.fill(graphics.pose(), 0, 0, screen.width / this.getScale(), this.height, this.barColor.getRGB(), this.barOpacity);
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.slider;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.CommonComponents;
@@ -31,7 +31,7 @@ public abstract class AdvancedSliderButton extends AbstractSliderButton {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
         if (this.visible) {
 
@@ -66,7 +66,7 @@ public abstract class AdvancedSliderButton extends AbstractSliderButton {
 
         }
 
-        super.render(matrix, mouseX, mouseY, partialTicks);
+        super.render(graphics, mouseX, mouseY, partialTicks);
 
     }
 

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.api.item.example;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
@@ -46,7 +46,7 @@ public class ExampleCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         //This is really important and should be in every item render method, to check for visibility requirements and more.
         if (this.shouldRender()) {
@@ -59,7 +59,7 @@ public class ExampleCustomizationItem extends CustomizationItem {
             RenderSystem.enableBlend();
 
             //Rendering the background color as background of the item.
-            fill(matrix, x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getRGB() | Mth.ceil(this.opacity * 255.0F) << 24);
+            graphics.fill(x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getRGB() | Mth.ceil(this.opacity * 255.0F) << 24);
 
             //Rendering the display text to the upper-left side of the item
             if (this.displayText != null) {
@@ -73,7 +73,7 @@ public class ExampleCustomizationItem extends CustomizationItem {
                 }
                 //The 'opacity' field is used to set the fade-in opacity of the item when the "delay appearance" option is enabled for it.
                 //Always try to make your items' opacity changeable by setting the 'opacity' field! (I also used it in the fill method for the background)
-                drawString(matrix, Minecraft.getInstance().font, text, x + 10, y + 10, -1 | Mth.ceil(this.opacity * 255.0F) << 24);
+                graphics.drawString(Minecraft.getInstance().font, text, x + 10, y + 10, -1 | Mth.ceil(this.opacity * 255.0F) << 24);
             }
 
         }

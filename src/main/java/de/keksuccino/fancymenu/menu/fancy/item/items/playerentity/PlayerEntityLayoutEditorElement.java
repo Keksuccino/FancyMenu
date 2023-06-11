@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
@@ -45,7 +45,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.copy_client_player.off"));
                 } else {
@@ -79,7 +79,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             Minecraft.getInstance().setScreen(s);
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.set_player_name.desc"), "%n%"));
@@ -105,7 +105,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.auto.desc"), "%n%"));
@@ -131,7 +131,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             setSkinMenu.openMenuAt(0, press.y);
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer && !item.autoSkin) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.skin.set.desc"), "%n%"));
@@ -216,7 +216,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer && !item.autoSkin) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.slim.desc"), "%n%"));
@@ -253,7 +253,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.auto.desc"), "%n%"));
@@ -279,7 +279,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             setCapeMenu.openMenuAt(0, press.y);
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.copyClientPlayer && !item.autoCape) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.cape.set.desc"), "%n%"));
@@ -366,7 +366,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.followMouse) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.off"));
                 } else {
@@ -382,7 +382,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             Minecraft.getInstance().setScreen(new PlayerEntityRotationScreen(this.handler, item));
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (!item.followMouse) {
                     this.active = true;
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.items.playerentity.rotation.custom.desc"), "%n%"));
@@ -432,7 +432,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (item.crouching) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.crouching.on"));
                 } else {
@@ -453,7 +453,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (item.showPlayerName) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.show_name.on"));
                 } else {
@@ -476,7 +476,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (item.hasParrotOnShoulder) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot.on"));
                 } else {
@@ -497,7 +497,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (item.parrotOnLeftShoulder) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.parrot_left.on"));
                 } else {
@@ -520,7 +520,7 @@ public class PlayerEntityLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (item.isBaby) {
                     this.setMessage(Locals.localize("fancymenu.helper.editor.items.playerentity.baby.on"));
                 } else {

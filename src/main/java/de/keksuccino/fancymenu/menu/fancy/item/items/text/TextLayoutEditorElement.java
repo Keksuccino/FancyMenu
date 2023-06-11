@@ -1,7 +1,7 @@
 
 package de.keksuccino.fancymenu.menu.fancy.item.items.text;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
 import de.keksuccino.fancymenu.menu.fancy.helper.PlaceholderInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
@@ -53,7 +53,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
             i.updateContent();
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.sourceMode == TextCustomizationItem.SourceMode.LOCAL_SOURCE) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.text.source_mode.mode.local"));
                 }
@@ -131,7 +131,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.sourceMode == TextCustomizationItem.SourceMode.LOCAL_SOURCE) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.text.set_source.local"));
                     this.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.text.set_source.local.desc"), "%n%"));
@@ -167,7 +167,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
             i.updateContent();
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.caseMode == TextCustomizationItem.CaseMode.NORMAL) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.text.case_mode.normal"));
                 }
@@ -218,7 +218,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.shadow) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.text.shadow.on"));
                 } else {
@@ -240,7 +240,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.alignment == CustomizationItemBase.Alignment.LEFT) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.text.alignment.left"));
                 }
@@ -356,7 +356,7 @@ public class TextLayoutEditorElement extends LayoutEditorElement {
             i.updateContent();
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.enableScrolling) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.text.scrolling.on"));
                 } else {

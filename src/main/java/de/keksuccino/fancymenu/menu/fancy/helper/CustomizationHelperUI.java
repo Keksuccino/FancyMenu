@@ -12,7 +12,7 @@ import java.util.*;
 import com.google.common.io.Files;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -56,10 +56,10 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
-import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+@SuppressWarnings("all")
 public class CustomizationHelperUI extends UIBase {
 
 	public static MenuBar bar;
@@ -519,7 +519,7 @@ public class CustomizationHelperUI extends UIBase {
 				}
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 					Screen current = Minecraft.getInstance().screen;
 					if ((current != null) && MenuCustomization.isMenuCustomizable(current)) {
 						this.active = true;
@@ -592,7 +592,7 @@ public class CustomizationHelperUI extends UIBase {
 				Minecraft.getInstance().setScreen(s);
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 					if (Minecraft.getInstance().level == null) {
 						this.active = true;
 					} else {
@@ -605,10 +605,10 @@ public class CustomizationHelperUI extends UIBase {
 			miscMenu.addContent(openReceivingLevelScreenButton);
 
 			CustomizationButton openConnectScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.open_connect_screen"), true, (press) -> {
-				ConnectScreen.startConnecting(new TitleScreen(), Minecraft.getInstance(), new ServerAddress("%fancymenu_dummy_address%", 25565), null);
+				ConnectScreen.startConnecting(new TitleScreen(), Minecraft.getInstance(), new ServerAddress("%fancymenu_dummy_address%", 25565), null, false);
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 					if (Minecraft.getInstance().level == null) {
 						this.active = true;
 					} else {
@@ -632,9 +632,9 @@ public class CustomizationHelperUI extends UIBase {
 				Minecraft.getInstance().setScreen(null);
 			}) {
 				@Override
-				public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+				public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 					this.width = this.height;
-					super.render(matrix, mouseX, mouseY, partialTicks);
+					super.render(graphics, mouseX, mouseY, partialTicks);
 				}
 			};
 			closeGuiButtonTab.ignoreLeftMouseDownClickBlock = true;
@@ -649,9 +649,9 @@ public class CustomizationHelperUI extends UIBase {
 				CustomizationHelper.reloadSystemAndMenu();
 			}) {
 				@Override
-				public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+				public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 					this.width = this.height;
-					super.render(matrix, mouseX, mouseY, partialTicks);
+					super.render(graphics, mouseX, mouseY, partialTicks);
 				}
 			};
 			reloadButtonTab.ignoreLeftMouseDownClickBlock = true;
@@ -666,7 +666,8 @@ public class CustomizationHelperUI extends UIBase {
 				if (expandButton instanceof AdvancedImageButton) {
 					if (!extended) {
 						((AdvancedImageButton)expandButton).setImage(MenuBar.EXPAND_BTN_TEXTURE);
-						expandButton.setDescription(Locals.localize("helper.menubar.expand"));
+						
+						expandButton.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
 					}
 				}
 			}
@@ -678,7 +679,7 @@ public class CustomizationHelperUI extends UIBase {
 		}
 	}
 
-	public static void render(PoseStack matrix, Screen screen) {
+	public static void render(GuiGraphics graphics, Screen screen) {
 		try {
 
 			if (bar != null) {
@@ -686,19 +687,19 @@ public class CustomizationHelperUI extends UIBase {
 					if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 						if (!(screen instanceof LayoutEditorScreen) && !(screen instanceof ConfigScreen) && !(screen instanceof GameIntroScreen) && AnimationHandler.isReady() && MenuCustomization.isValidScreen(screen)) {
 
-							RenderUtils.setZLevelPre(matrix, 400);
+							RenderUtils.setZLevelPre(graphics.pose(), 400);
 
-							renderMenuInfo(matrix, screen);
+							renderMenuInfo(graphics, screen);
 
-							renderUnicodeWarning(matrix, screen);
+							renderUnicodeWarning(graphics, screen);
 
-							renderButtonInfo(matrix, screen);
+							renderButtonInfo(graphics, screen);
 
-							renderButtonInfoWarning(matrix, screen);
+							renderButtonInfoWarning(graphics, screen);
 
-							RenderUtils.setZLevelPost(matrix);
+							RenderUtils.setZLevelPost(graphics.pose());
 
-							bar.render(matrix, screen);
+							bar.render(graphics, screen);
 
 						}
 					}
@@ -710,7 +711,7 @@ public class CustomizationHelperUI extends UIBase {
 		}
 	}
 
-	protected static void renderButtonInfo(PoseStack matrix, Screen screen) {
+	protected static void renderButtonInfo(GuiGraphics graphics, Screen screen) {
 		if (showButtonInfo) {
 			boolean isButtonHovered = false;
 			for (ButtonData d : buttons) {
@@ -759,9 +760,9 @@ public class CustomizationHelperUI extends UIBase {
 						}
 					}
 
-					matrix.pushPose();
+					graphics.pose().pushPose();
 
-					matrix.scale(getUIScale(), getUIScale(), getUIScale());
+					graphics.pose().scale(getUIScale(), getUIScale(), getUIScale());
 
 					MouseInput.setRenderScale(getUIScale());
 
@@ -775,20 +776,20 @@ public class CustomizationHelperUI extends UIBase {
 						y -= 90;
 					}
 
-					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
+					graphics.fill(x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
 
 					RenderSystem.enableBlend();
-					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
+					graphics.drawString(Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
 					int i2 = 20;
 					for (String s : info) {
-						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
+						graphics.drawString(Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
 
 					MouseInput.resetRenderScale();
 
-					matrix.popPose();
+					graphics.pose().popPose();
 
 					RenderSystem.disableBlend();
 
@@ -801,7 +802,7 @@ public class CustomizationHelperUI extends UIBase {
 		}
 	}
 
-	protected static void renderButtonInfoWarning(PoseStack matrix, Screen screen) {
+	protected static void renderButtonInfoWarning(GuiGraphics graphics, Screen screen) {
 		if (showButtonInfo && !MenuCustomization.isMenuCustomizable(screen)) {
 			List<String> info = new ArrayList<String>();
 			int width = Minecraft.getInstance().font.width(Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1")) + 10;
@@ -816,9 +817,9 @@ public class CustomizationHelperUI extends UIBase {
 				}
 			}
 
-			matrix.pushPose();
+			graphics.pose().pushPose();
 
-			matrix.scale(getUIScale(), getUIScale(), getUIScale());
+			graphics.pose().scale(getUIScale(), getUIScale(), getUIScale());
 
 			MouseInput.setRenderScale(getUIScale());
 
@@ -832,26 +833,26 @@ public class CustomizationHelperUI extends UIBase {
 				y -= 90;
 			}
 
-			fill(matrix, x, y, x + width + 10, y + 60, new Color(230, 15, 0, 240).getRGB());
+			graphics.fill(x, y, x + width + 10, y + 60, new Color(230, 15, 0, 240).getRGB());
 
 			RenderSystem.enableBlend();
-			drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
+			graphics.drawString(Minecraft.getInstance().font, "§f§l" + Locals.localize("fancymenu.helper.ui.tools.buttoninfo.enablecustomizations.cursorwarning.line1"), x + 10, y + 10, -1);
 
 			int i2 = 20;
 			for (String s : info) {
-				drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
+				graphics.drawString(Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 				i2 += 10;
 			}
 
 			MouseInput.resetRenderScale();
 
-			matrix.popPose();
+			graphics.pose().popPose();
 
 			RenderSystem.disableBlend();
 		}
 	}
 
-	protected static void renderMenuInfo(PoseStack matrix, Screen screen) {
+	protected static void renderMenuInfo(GuiGraphics graphics, Screen screen) {
 		if (showMenuInfo) {
 			String infoTitle = "§f§l" + Locals.localize("helper.menuinfo.identifier") + ":";
 			String id = "";
@@ -869,17 +870,17 @@ public class CustomizationHelperUI extends UIBase {
 
 			RenderSystem.enableBlend();
 
-			matrix.pushPose();
+			graphics.pose().pushPose();
 
-			matrix.scale(getUIScale(), getUIScale(), getUIScale());
+			graphics.pose().scale(getUIScale(), getUIScale(), getUIScale());
 
-			fill(matrix, 3, h, 3 + w + 4, h + 23, new Color(0, 0, 0, 240).getRGB());
+			graphics.fill(3, h, 3 + w + 4, h + 23, new Color(0, 0, 0, 240).getRGB());
 
-			drawString(matrix, Minecraft.getInstance().font, infoTitle, 5, h + 2, 0);
+			graphics.drawString(Minecraft.getInstance().font, infoTitle, 5, h + 2, 0);
 			if (tick == 0) {
-				drawString(matrix, Minecraft.getInstance().font, "§f" + id, 5, h + 13, 0);
+				graphics.drawString(Minecraft.getInstance().font, "§f" + id, 5, h + 13, 0);
 			} else {
-				drawString(matrix, Minecraft.getInstance().font, "§a" + Locals.localize("helper.menuinfo.idcopied"), 5, h + 13, 0);
+				graphics.drawString(Minecraft.getInstance().font, "§a" + Locals.localize("helper.menuinfo.idcopied"), 5, h + 13, 0);
 			}
 
 			MouseInput.setRenderScale(getUIScale());
@@ -888,7 +889,7 @@ public class CustomizationHelperUI extends UIBase {
 			int mouseY = MouseInput.getMouseY();
 			if (!bar.isChildOpen()) {
 				if ((mouseX >= 5) && (mouseX <= 5 + w2) && (mouseY >= h + 13) && (mouseY <= h + 13 + 10) && (tick == 0)) {
-					fill(matrix, 5, h + 13 + 10 - 1, 5 + w2, h + 13 + 10, -1);
+					graphics.fill(5, h + 13 + 10 - 1, 5 + w2, h + 13 + 10, -1);
 
 					if (MouseInput.isLeftMouseDown()) {
 						tick++;
@@ -906,13 +907,13 @@ public class CustomizationHelperUI extends UIBase {
 
 			MouseInput.resetRenderScale();
 
-			matrix.popPose();
+			graphics.pose().popPose();
 
 			RenderSystem.disableBlend();
 		}
 	}
 
-	protected static void renderUnicodeWarning(PoseStack matrix, Screen screen) {
+	protected static void renderUnicodeWarning(GuiGraphics graphics, Screen screen) {
 		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
 			return;
 		}
@@ -936,13 +937,13 @@ public class CustomizationHelperUI extends UIBase {
 			if (lines.length > 0) {
 				h += 10*lines.length;
 			}
-			fill(matrix, x - 4, y, x + w + 2, y + h, new Color(230, 15, 0, 240).getRGB());
+			graphics.fill(x - 4, y, x + w + 2, y + h, new Color(230, 15, 0, 240).getRGB());
 
-			drawString(matrix, Minecraft.getInstance().font, title, x, y + 2, Color.WHITE.getRGB());
+			graphics.drawString(Minecraft.getInstance().font, title, x, y + 2, Color.WHITE.getRGB());
 
 			int i = 0;
 			for (String s : lines) {
-				drawString(matrix, Minecraft.getInstance().font, s, x, y + 13 + i, Color.WHITE.getRGB());
+				graphics.drawString(Minecraft.getInstance().font, s, x, y + 13 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
 
@@ -955,7 +956,6 @@ public class CustomizationHelperUI extends UIBase {
 		buttons = e.getButtonDataList();
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
 	@SubscribeEvent
 	public void onInitScreen(InitOrResizeScreenEvent.Pre e) {
 		try {
@@ -1218,11 +1218,11 @@ public class CustomizationHelperUI extends UIBase {
 		}
 
 		@Override
-		public void render(PoseStack matrix, int mouseX, int mouseY) {
-			super.render(matrix, mouseX, mouseY);
+		public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+			super.render(graphics, mouseX, mouseY);
 
 			if (this.manageSubPopup != null) {
-				this.manageSubPopup.render(matrix, mouseX, mouseY);
+				this.manageSubPopup.render(graphics, mouseX, mouseY);
 				if (!this.isOpen()) {
 					this.manageSubPopup.closeMenu();
 				}

@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
@@ -55,19 +55,19 @@ import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
@@ -80,7 +80,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MenuHandlerBase extends GuiComponent {
+public class MenuHandlerBase {
 
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuHandlerBase");
 
@@ -102,12 +102,15 @@ public class MenuHandlerBase extends GuiComponent {
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
 	protected String customMenuTitle = null;
+	protected boolean forceDisableCustomMenuTitle = false;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected MenuBackground customMenuBackground = null;
+	
+	public float backgroundOpacity = 1.0F;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<AbstractWidget, ButtonCustomizationContainer>();
@@ -177,7 +180,7 @@ public class MenuHandlerBase extends GuiComponent {
 		}
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	@SubscribeEvent
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 
@@ -257,10 +260,12 @@ public class MenuHandlerBase extends GuiComponent {
 				continue;
 			}
 
-			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
-			if (cusMenuTitle != null) {
-				this.customMenuTitle = cusMenuTitle;
-				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
+			if (!this.forceDisableCustomMenuTitle) {
+				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+				if (cusMenuTitle != null) {
+					this.customMenuTitle = cusMenuTitle;
+					ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
+				}
 			}
 			
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -387,7 +392,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
 		
 		String action = sec.getEntryValue("action");
@@ -483,6 +488,8 @@ public class MenuHandlerBase extends GuiComponent {
 		this.panoramacube = null;
 		this.slideshow = null;
 		this.customMenuBackground = null;
+		
+		this.backgroundOpacity = 1.0F;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -1264,7 +1271,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 		//Re-init screen if layout-wide requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
-			//TODO übernehmenn (if)
+			
 			if (m.getKey().requirementsMet() != m.getValue()) {
 				e.getScreen().resize(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
 				break;
@@ -1285,8 +1292,8 @@ public class MenuHandlerBase extends GuiComponent {
 			return;
 		}
 
-		if (this.customMenuTitle != null) {
-			e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle));
+		if ((this.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
+			ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle)));
 		}
 
 		if (!this.backgroundDrawable) {
@@ -1295,7 +1302,7 @@ public class MenuHandlerBase extends GuiComponent {
 			backItems.addAll(this.backgroundRenderItems);
 			for (CustomizationItemBase i : backItems) {
 				try {
-					i.render(e.getPoseStack(), e.getScreen());
+					i.render(e.getGuiGraphics(), e.getScreen());
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -1307,7 +1314,7 @@ public class MenuHandlerBase extends GuiComponent {
 		frontItems.addAll(this.frontRenderItems);
 		for (CustomizationItemBase i : frontItems) {
 			try {
-				i.render(e.getPoseStack(), e.getScreen());
+				i.render(e.getGuiGraphics(), e.getScreen());
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -1317,11 +1324,11 @@ public class MenuHandlerBase extends GuiComponent {
 	@SubscribeEvent
 	public void drawToBackground(ScreenEvent.BackgroundRendered e) {
 		if (!MenuCustomization.isCurrentMenuScrollable()) {
-			this.renderBackground(e.getPoseStack(), e.getScreen());
+			this.renderBackground(e.getGuiGraphics(), e.getScreen());
 		}
 	}
 
-	protected void renderBackground(PoseStack matrix, Screen s) {
+	protected void renderBackground(GuiGraphics graphics, Screen s) {
 		if (this.shouldCustomize(s)) {
 			if (!MenuCustomization.isMenuCustomizable(s)) {
 				return;
@@ -1350,19 +1357,25 @@ public class MenuHandlerBase extends GuiComponent {
 							this.backgroundAnimation.setPosY(0);
 						}
 					}
-					this.backgroundAnimation.render(CurrentScreenHandler.getPoseStack());
+					
+					this.backgroundAnimation.setOpacity(this.backgroundOpacity);
+					
+					this.backgroundAnimation.render(graphics);
 					this.backgroundAnimation.setWidth(wOri);
 					this.backgroundAnimation.setHeight(hOri);
 					this.backgroundAnimation.setPosX(xOri);
 					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
+					
+					this.backgroundAnimation.setOpacity(1.0F);
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
-					RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-
+//					RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
+					
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
 					if (!this.panoramaback) {
 						if (!this.keepBackgroundAspectRatio) {
-							GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
 							int w = this.backgroundTexture.getWidth();
 							int h = this.backgroundTexture.getHeight();
@@ -1370,9 +1383,9 @@ public class MenuHandlerBase extends GuiComponent {
 							int wfinal = (int)(s.height * ratio);
 							int screenCenterX = s.width / 2;
 							if (wfinal < s.width) {
-								GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+								graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 							} else {
-								GuiComponent.blit(CurrentScreenHandler.getPoseStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
+								graphics.blit(this.backgroundTexture.getResourceLocation(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
 							}
 						}
 					} else {
@@ -1424,23 +1437,33 @@ public class MenuHandlerBase extends GuiComponent {
 							}
 						}
 						if (wfinal <= s.width) {
-							GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
+							RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
 							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
 						}
 					}
 
 					RenderSystem.disableBlend();
+					
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
 				} else if (this.panoramacube != null) {
+
 					
+					float opacity = this.panoramacube.opacity;
+					this.panoramacube.opacity = this.backgroundOpacity;
 					this.panoramacube.render();
+					this.panoramacube.opacity = opacity;
+					//-----------------
 
 				} else if (this.slideshow != null) {
 					int sw = this.slideshow.width;
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
+					
+					float opacity = this.slideshow.slideshowOpacity;
 
 					if (!this.keepBackgroundAspectRatio) {
 						this.slideshow.width = s.width + 1;
@@ -1461,16 +1484,24 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 					}
 					this.slideshow.y = 0;
+					
+					this.slideshow.slideshowOpacity = this.backgroundOpacity;
 
-					this.slideshow.render(matrix);
+					this.slideshow.render(graphics);
 					
 					this.slideshow.width = sw;
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
+					
+					this.slideshow.slideshowOpacity = opacity;
 				} else if (this.customMenuBackground != null) {
 
-					this.customMenuBackground.render(matrix, s, this.keepBackgroundAspectRatio);
+					
+					this.customMenuBackground.opacity = this.backgroundOpacity;
+					this.customMenuBackground.render(graphics, s, this.keepBackgroundAspectRatio);
+					this.customMenuBackground.opacity = 1.0F;
+					//-------------------
 
 				}
 			}
@@ -1484,7 +1515,7 @@ public class MenuHandlerBase extends GuiComponent {
 			backItems.addAll(this.backgroundRenderItems);
 			for (CustomizationItemBase i : backItems) {
 				try {
-					i.render(CurrentScreenHandler.getPoseStack(), s);
+					i.render(graphics, s);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
@@ -1573,7 +1604,7 @@ public class MenuHandlerBase extends GuiComponent {
 						if (w instanceof ImageButton) {
 							Component msg = w.getMessage();
 							if (msg != null) {
-								GuiComponent.drawCenteredString(e.getPoseStack(), Minecraft.getInstance().font, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, w.getFGColor() | Mth.ceil(e.getAlpha() * 255.0F) << 24);
+								e.getGuiGraphics().drawCenteredString(Minecraft.getInstance().font, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, w.getFGColor() | Mth.ceil(e.getAlpha() * 255.0F) << 24);
 							}
 						}
 
@@ -1587,7 +1618,7 @@ public class MenuHandlerBase extends GuiComponent {
 
 	protected boolean renderCustomButtomBackground(RenderWidgetBackgroundEvent e, String background, boolean restartAnimationBackground) {
 		AbstractWidget w = e.getWidget();
-		PoseStack matrix = e.getPoseStack();
+		GuiGraphics graphics = e.getGuiGraphics();
 		ButtonCustomizationContainer c = this.vanillaButtonCustomizations.get(w);
 		if (c != null) {
 			if (w != null) {
@@ -1628,7 +1659,7 @@ public class MenuHandlerBase extends GuiComponent {
 									RenderUtils.bindTexture(back.getResourceLocation());
 									RenderSystem.enableBlend();
 									RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha());
-									GuiComponent.blit(matrix, w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
+									GuiComponent.blit(graphics, w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
 									return true;
 								}
 							}
@@ -1665,7 +1696,7 @@ public class MenuHandlerBase extends GuiComponent {
 					((AdvancedAnimation) ani).setMuteAudio(true);
 				}
 
-				ani.render(e.getPoseStack());
+				ani.render(e.getGuiGraphics());
 
 				ani.setPosX(aniX);
 				ani.setPosY(aniY);
@@ -1754,7 +1785,7 @@ public class MenuHandlerBase extends GuiComponent {
 				//Allow background stuff to be rendered in scrollable GUIs
 				if (Minecraft.getInstance().screen != null) {
 					
-					this.renderBackground(e.getPoseStack(), s);
+					this.renderBackground(e.getGuiGraphics(), s);
 					
 				}
 

@@ -1,15 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -25,13 +22,11 @@ import de.keksuccino.fancymenu.mixin.client.IMixinTitleScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.reflection.ReflectionHelper;
 import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.AbstractWidget;
+
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -76,7 +71,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		TitleScreenSplashItem.cachedSplashText = null;
 	}
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	@Override
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getScreen())) {
@@ -177,7 +172,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				e.setCanceled(true);
-				e.getScreen().renderBackground(e.getPoseStack());
+				e.getScreen().renderBackground(e.getGuiGraphics());
 			}
 		}
 	}
@@ -195,7 +190,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
-			PoseStack matrix = CurrentScreenHandler.getPoseStack();
+			GuiGraphics graphics = CurrentScreenHandler.getGuiGraphics();
 
 			RenderSystem.enableBlend();
 
@@ -205,7 +200,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 				RenderUtils.bindTexture(PANORAMA_OVERLAY);
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-				blit(matrix, 0, 0, e.getScreen().width, e.getScreen().height, 0.0F, 0.0F, 16, 128, 16, 128);
+				blit(graphics, 0, 0, e.getScreen().width, e.getScreen().height, 0.0F, 0.0F, 16, 128, 16, 128);
 			}
 
 			super.drawToBackground(e);
@@ -214,32 +209,32 @@ public class MainMenuHandler extends MenuHandlerBase {
 				RenderUtils.bindTexture(MINECRAFT_TITLE_TEXTURE);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 				if ((double) minecraftLogoSpelling < 1.0E-4D) {
-					blit(matrix, j + 0, 30, 0, 0, 99, 44);
-					blit(matrix, j + 99, 30, 129, 0, 27, 44);
-					blit(matrix, j + 99 + 26, 30, 126, 0, 3, 44);
-					blit(matrix, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
-					blit(matrix, j + 155, 30, 0, 45, 155, 44);
+					blit(graphics, j + 0, 30, 0, 0, 99, 44);
+					blit(graphics, j + 99, 30, 129, 0, 27, 44);
+					blit(graphics, j + 99 + 26, 30, 126, 0, 3, 44);
+					blit(graphics, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
+					blit(graphics, j + 155, 30, 0, 45, 155, 44);
 				} else {
-					blit(matrix, j + 0, 30, 0, 0, 155, 44);
-					blit(matrix, j + 155, 30, 0, 45, 155, 44);
+					blit(graphics, j + 0, 30, 0, 0, 155, 44);
+					blit(graphics, j + 155, 30, 0, 45, 155, 44);
 				}
 
 				RenderSystem.setShaderTexture(0, EDITION_TITLE_TEXTURE);
-				blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+				blit(graphics, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 			}
 
 			if (this.showBranding) {
 				BrandingControl.forEachLine(true, true, (brdline, brd) -> {
-					GuiComponent.drawString(matrix, font, brd, 2, e.getScreen().height - (10 + brdline * (font.lineHeight + 1)), 16777215);
+					GuiComponent.graphics.drawString(font, brd, 2, e.getScreen().height - (10 + brdline * (font.lineHeight + 1)), 16777215);
 				});
 			}
 
 			if (this.showForgeNotificationTop) {
-				ForgeHooksClient.renderMainMenu((TitleScreen) e.getScreen(), matrix, Minecraft.getInstance().font, e.getScreen().width, e.getScreen().height, 255);
+				ForgeHooksClient.renderMainMenu((TitleScreen) e.getScreen(), graphics, Minecraft.getInstance().font, e.getScreen().width, e.getScreen().height, 255);
 			}
 			if (this.showForgeNotificationCopyright) {
 				BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {
-					GuiComponent.drawString(matrix, font, brd, e.getScreen().width - font.width(brd) - 1, e.getScreen().height - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
+					GuiComponent.graphics.drawString(font, brd, e.getScreen().width - font.width(brd) - 1, e.getScreen().height - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
 				});
 			}
 
@@ -248,19 +243,19 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 
 			if (this.showRealmsNotification) {
-				this.drawRealmsNotification(matrix, e.getScreen());
+				this.drawRealmsNotification(graphics, e.getScreen());
 			}
 
-			this.renderSplash(matrix, e.getScreen());
+			this.renderSplash(graphics, e.getScreen());
 
 		}
 	}
 
-	protected void renderSplash(PoseStack matrix, Screen s) {
+	protected void renderSplash(GuiGraphics graphics, Screen s) {
 
 		try {
 			if (this.splashItem != null) {
-				this.splashItem.render(matrix, s);
+				this.splashItem.render(graphics, s);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -273,17 +268,17 @@ public class MainMenuHandler extends MenuHandlerBase {
 		float partial = Minecraft.getInstance().getFrameTime();
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
-				buttons.get(i).render(CurrentScreenHandler.getPoseStack(), mouseX, mouseY, partial);
+				buttons.get(i).render(CurrentScreenHandler.getGuiGraphics(), mouseX, mouseY, partial);
 			}
 		}
 	}
 
-	private void drawRealmsNotification(PoseStack matrix, Screen gui) {
+	private void drawRealmsNotification(GuiGraphics graphics, Screen gui) {
 		if (Minecraft.getInstance().options.realmsNotifications().get()) {
 			Screen realms = ((IMixinTitleScreen)gui).getRealmsNotificationsScreenFancyMenu();
 			if (realms != null) {
 				//render
-				realms.render(matrix, (int)Minecraft.getInstance().mouseHandler.xpos(), (int)Minecraft.getInstance().mouseHandler.ypos(), Minecraft.getInstance().getFrameTime());
+				realms.render(graphics, (int)Minecraft.getInstance().mouseHandler.xpos(), (int)Minecraft.getInstance().mouseHandler.ypos(), Minecraft.getInstance().getFrameTime());
 			}
 		}
 	}

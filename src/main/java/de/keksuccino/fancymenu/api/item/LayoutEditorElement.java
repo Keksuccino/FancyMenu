@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.item;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
@@ -62,13 +62,13 @@ public abstract class LayoutEditorElement extends LayoutElement {
      *
      * You don't need to touch this method in most cases.
      *
-     * @param matrix The {@link PoseStack} used to render {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement}s.
+     * @param graphics The {@link GuiGraphics} used to render {@link de.keksuccino.fancymenu.api.item.DeepCustomizationLayoutEditorElement}s.
      * @param mouseX X position of the mouse.
      * @param mouseY Y position of the mouse.
      */
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY) {
-        super.render(matrix, mouseX, mouseY);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+        super.render(graphics, mouseX, mouseY);
     }
 
     /**

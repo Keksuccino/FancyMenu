@@ -14,7 +14,7 @@ public class AnimationHandlerEvents {
 	private boolean idle = false;
 	private Screen lastScreen;
 
-	//TODO übernehmen 1.19.4 (event ändern)
+	
 	//
 	@SubscribeEvent
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {

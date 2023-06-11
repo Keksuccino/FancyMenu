@@ -9,11 +9,10 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.loadingrequirement.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
@@ -23,7 +22,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.EditHistory.Snapshot;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.LayoutVanillaButton;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
@@ -39,7 +37,8 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 
-public abstract class LayoutElement extends GuiComponent {
+@SuppressWarnings("all")
+public abstract class LayoutElement {
 	
 	public CustomizationItemBase object;
 	public LayoutEditorScreen handler;
@@ -71,7 +70,7 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean enableElementIdCopyButton = true;
 	protected boolean allowOrientationByElement = true;
 
-	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
+	public List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 
 	public FMContextMenu rightclickMenu;
 
@@ -274,13 +273,13 @@ public abstract class LayoutElement extends GuiComponent {
 				orientationMenu.openMenuAt(0, press.y);
 			}) {
 				@Override
-				public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+				public void render(GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
 					if ((object.advancedPosX != null) || (object.advancedPosY != null)) {
 						this.active = false;
 					} else {
 						this.active = true;
 					}
-					super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+					super.render(graphics, p_93658_, p_93659_, p_93660_);
 				}
 			};
 			orientationButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.items.orientation.btndesc"), "%n%"));
@@ -298,7 +297,7 @@ public abstract class LayoutElement extends GuiComponent {
 			advancedPositioningMenu.openMenuAt(0, press.y);
 		}) {
 			@Override
-			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+			public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 				if ((object.advancedPosX != null) || (object.advancedPosY != null)) {
 					this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.active"));
 				} else {
@@ -313,7 +312,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -332,12 +331,12 @@ public abstract class LayoutElement extends GuiComponent {
 				s.setText(this.object.advancedPosX);
 			}
 			Minecraft.getInstance().setScreen(s);
-			//---------------------
+			
 		});
 		advancedPositioningMenu.addContent(advancedPosXButton);
 
 		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -356,7 +355,7 @@ public abstract class LayoutElement extends GuiComponent {
 				s.setText(this.object.advancedPosY);
 			}
 			Minecraft.getInstance().setScreen(s);
-			//-------------------
+			
 		});
 		advancedPositioningMenu.addContent(advancedPosYButton);
 
@@ -370,7 +369,7 @@ public abstract class LayoutElement extends GuiComponent {
 			advancedSizingMenu.openMenuAt(0, press.y);
 		}) {
 			@Override
-			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+			public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 				if ((object.advancedWidth != null) || (object.advancedHeight != null)) {
 					this.setMessage(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.active"));
 				} else {
@@ -385,7 +384,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
@@ -413,12 +412,12 @@ public abstract class LayoutElement extends GuiComponent {
 				s.setText(this.object.advancedWidth);
 			}
 			Minecraft.getInstance().setScreen(s);
-			//--------------------------
+			
 		});
 		advancedSizingMenu.addContent(advancedWidthButton);
 
 		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
@@ -446,7 +445,7 @@ public abstract class LayoutElement extends GuiComponent {
 				s.setText(this.object.advancedHeight);
 			}
 			Minecraft.getInstance().setScreen(s);
-			//--------------------
+			
 		});
 		advancedSizingMenu.addContent(advancedHeightButton);
 
@@ -494,7 +493,7 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		}) {
 			@Override
-			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+			public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 				if (object.advancedWidth != null) {
 					this.active = false;
 				} else {
@@ -513,7 +512,7 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		}) {
 			@Override
-			public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+			public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 				if (object.advancedHeight != null) {
 					this.active = false;
 				} else {
@@ -634,14 +633,14 @@ public abstract class LayoutElement extends GuiComponent {
 			PopupHandler.displayPopup(p);
 		}) {
 			@Override
-			public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			public void render(GuiGraphics graphicsStack, int mouseX, int mouseY, float partialTicks) {
 				if (!LayoutElement.this.object.delayAppearance) {
 					this.active = false;
 				} else {
 					this.active = true;
 				}
 				
-				super.render(matrixStack, mouseX, mouseY, partialTicks);
+				super.render(graphicsStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		delayMenu.addContent(delaySecondsButton);
@@ -662,14 +661,14 @@ public abstract class LayoutElement extends GuiComponent {
 			}
 		}) {
 			@Override
-			public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			public void render(GuiGraphics graphicsStack, int mouseX, int mouseY, float partialTicks) {
 				if (!LayoutElement.this.object.delayAppearance) {
 					this.active = false;
 				} else {
 					this.active = true;
 				}
 				
-				super.render(matrixStack, mouseX, mouseY, partialTicks);
+				super.render(graphicsStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		if (this.fadeable) {
@@ -693,14 +692,14 @@ public abstract class LayoutElement extends GuiComponent {
 			PopupHandler.displayPopup(p);
 		}) {
 			@Override
-			public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+			public void render(GuiGraphics graphicsStack, int mouseX, int mouseY, float partialTicks) {
 				if (!LayoutElement.this.object.delayAppearance) {
 					this.active = false;
 				} else {
 					this.active = true;
 				}
 				
-				super.render(matrixStack, mouseX, mouseY, partialTicks);
+				super.render(graphicsStack, mouseX, mouseY, partialTicks);
 			}
 		};
 		if (this.fadeable) {
@@ -913,12 +912,12 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 	}
 	
-	public void render(PoseStack matrix, int mouseX, int mouseY) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY) {
 		this.updateHovered(mouseX, mouseY);
 
 		//Render the customization item
         try {
-			this.object.render(matrix, handler);
+			this.object.render(graphics, handler);
 
 			this.handleStretch();
 			
@@ -928,10 +927,10 @@ public abstract class LayoutElement extends GuiComponent {
         
 		// Renders the border around the object if its focused (starts to render one tick after the object got focused)
 		if (this.handler.isFocused(this)) {
-			this.renderBorder(matrix, mouseX, mouseY);
+			this.renderBorder(graphics, mouseX, mouseY);
 		} else {
 			if ((this.handler.getTopHoverObject() == this) && (!this.handler.isObjectFocused() || (!this.handler.isFocusedHovered() && !this.handler.isFocusedDragged() && !this.handler.isFocusedGettingResized() && !this.handler.isFocusedGrabberPressed()))) {
-				this.renderHighlightBorder(matrix);
+				this.renderHighlightBorder(graphics);
 			}
 		}
 		
@@ -1018,46 +1017,17 @@ public abstract class LayoutElement extends GuiComponent {
 			this.resizing = false;
 		}
 
-		//Handle rightclick context menu
-        if (this.rightclickMenu != null) {
-        	
-        	if (this.isRightClicked() && this.handler.isFocused(this)) {
-            	if (this.handler.getFocusedObjects().size() == 1) {
-            		UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
-                	this.hoveredLayers.clear();
-                	for (LayoutElement o : this.handler.getContent()) {
-                		if (o.isHoveredOrFocused()) {
-                			this.hoveredLayers.add(o);
-                		}
-                	}
-            	}
-            }
-
-        	if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHoveredOrFocused())) {
-        		this.rightclickMenu.closeMenu();
-        	}
-        	if (MouseInput.isRightMouseDown() && !this.isHoveredOrFocused() && !this.rightclickMenu.isHoveredOrFocused()) {
-        		this.rightclickMenu.closeMenu();
-        	}
-        	
-        	if (this.rightclickMenu.isOpen()) {
-        		this.handler.setFocusChangeBlocked(objectId, true);
-        	} else {
-        		this.handler.setFocusChangeBlocked(objectId, false);
-        	}
-
-        }
 	}
 	
-	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
+	protected void renderBorder(GuiGraphics graphics, int mouseX, int mouseY) {
 		//horizontal line top
-		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
+		graphics.fill(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, Color.BLUE.getRGB());
 		//horizontal line bottom
-		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		graphics.fill(this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line left
-		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		graphics.fill(this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 		//vertical line right
-		GuiComponent.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
+		graphics.fill(this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), Color.BLUE.getRGB());
 
 		int w = 4;
 		int h = 4;
@@ -1073,15 +1043,15 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.dragable && this.resizeable && (this.object.advancedPosX == null) && (this.object.advancedPosY == null) && (this.object.advancedWidth == null) && (this.object.advancedHeight == null)) {
 			if (!this.stretchX && this.resizeableX) {
 				//grabber left
-				GuiComponent.fill(matrix, xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
+				graphics.fill(xHorizontalLeft, yHorizontal, xHorizontalLeft + w, yHorizontal + h, Color.BLUE.getRGB());
 				//grabber right
-				GuiComponent.fill(matrix, xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
+				graphics.fill(xHorizontalRight, yHorizontal, xHorizontalRight + w, yHorizontal + h, Color.BLUE.getRGB());
 			}
 			if (!this.stretchY && this.resizeableY) {
 				//grabber top
-				GuiComponent.fill(matrix, xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
+				graphics.fill(xVertical, yVerticalTop, xVertical + w, yVerticalTop + h, Color.BLUE.getRGB());
 				//grabber bottom
-				GuiComponent.fill(matrix, xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
+				graphics.fill(xVertical, yVerticalBottom, xVertical + w, yVerticalBottom + h, Color.BLUE.getRGB());
 			}
 		}
 
@@ -1123,27 +1093,27 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		//Render pos and size values
-		RenderUtils.setScale(matrix, 0.5F);
-		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
-		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
-		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
+		RenderUtils.setScale(graphics.pose(), 0.5F);
+		graphics.drawString(Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.orientation") + ": " + this.object.orientation, this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 26, Color.WHITE.getRGB());
+		graphics.drawString(Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posx") + ": " + this.object.getPosX(handler), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 17, Color.WHITE.getRGB());
+		graphics.drawString(Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.width") + ": " + this.object.getWidth(), this.object.getPosX(handler)*2, (this.object.getPosY(handler)*2) - 8, Color.WHITE.getRGB());
 		
-		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
-		GuiComponent.drawString(matrix, Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
-		RenderUtils.postScale(matrix);
+		graphics.drawString(Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.posy") + ": " + this.object.getPosY(handler), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 14, Color.WHITE.getRGB());
+		graphics.drawString(Minecraft.getInstance().font, Locals.localize("helper.creator.items.border.height") + ": " + this.object.getHeight(), ((this.object.getPosX(handler) + this.object.getWidth())*2)+3, ((this.object.getPosY(handler) + this.object.getHeight())*2) - 5, Color.WHITE.getRGB());
+		RenderUtils.postScale(graphics.pose());
 	}
 
-	protected void renderHighlightBorder(PoseStack matrix) {
+	protected void renderHighlightBorder(GuiGraphics graphics) {
 		Color c = new Color(0, 200, 255, 255);
 		
 		//horizontal line top
-		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
+		graphics.fill( this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + 1, c.getRGB());
 		//horizontal line bottom
-		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
+		graphics.fill( this.object.getPosX(handler), this.object.getPosY(handler) + this.object.getHeight() - 1, this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line left
-		GuiComponent.fill(matrix, this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
+		graphics.fill( this.object.getPosX(handler), this.object.getPosY(handler), this.object.getPosX(handler) + 1, this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 		//vertical line right
-		GuiComponent.fill(matrix, this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
+		graphics.fill( this.object.getPosX(handler) + this.object.getWidth() - 1, this.object.getPosY(handler), this.object.getPosX(handler) + this.object.getWidth(), this.object.getPosY(handler) + this.object.getHeight(), c.getRGB());
 	}
 	
 	/**
@@ -1361,7 +1331,6 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.rightclickMenu != null) {
 			this.rightclickMenu.closeMenu();
 		}
-		this.handler.setFocusChangeBlocked(objectId, false);
 		this.handler.setObjectFocused(this, false, true);
 	}
 
