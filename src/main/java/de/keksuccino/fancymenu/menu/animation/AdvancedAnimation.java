@@ -9,7 +9,7 @@ import net.minecraft.server.packs.resources.Resource;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
@@ -102,7 +102,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 	
 	@Override
-	public void render(PoseStack matrix) {
+	public void render(GuiGraphics graphics) {
 		if (this.isReady()) {
 			this.started = true;
 
@@ -134,16 +134,16 @@ public class AdvancedAnimation implements IAnimationRenderer {
 				this.introRenderer.setLooped(false);
 				if (!this.introRenderer.isFinished()) {
 					if (canRenderFrameOf(this.introRenderer, this.introRenderer.currentFrame())) {
-						this.introRenderer.render(matrix);
+						this.introRenderer.render(graphics);
 					}
 				} else {
 					if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
-						this.animationRenderer.render(matrix);
+						this.animationRenderer.render(graphics);
 					}
 				}
 			} else {
 				if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
-					this.animationRenderer.render(matrix);
+					this.animationRenderer.render(graphics);
 				}
 			}
 		}

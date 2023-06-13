@@ -5,16 +5,16 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 
-public abstract class CustomizationItemBase extends GuiComponent {
+public abstract class CustomizationItemBase {
 
 	/**
 	 * This value CANNOT BE NULL!<br>
@@ -46,6 +46,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
+	public float customGuiScale = -1F;
 
 	public LoadingRequirementContainer loadingRequirementContainer;
 
@@ -148,7 +149,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 
 	}
 
-	public abstract void render(PoseStack matrix, Screen menu) throws IOException;
+	public abstract void render(GuiGraphics graphics, Screen menu) throws IOException;
 
 	/**
 	 * Should be used to get the REAL and final X-position of this item.<br>

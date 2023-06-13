@@ -6,10 +6,10 @@ import java.util.Map;
 
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.components.AbstractWidget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
@@ -34,7 +34,7 @@ public class VanillaButtonDescriptionHandler {
 	public void onDrawScreen(DrawScreenEvent.Post e) {
 		for (Map.Entry<AbstractWidget, String> m : descriptions.entrySet()) {
 			if (m.getKey().isHoveredOrFocused()) {
-				renderDescription(e.getMatrixStack(), e.getMouseX(), e.getMouseY(), m.getValue());
+				renderDescription(e.getGuiGraphics(), e.getMouseX(), e.getMouseY(), m.getValue());
 				break;
 			}
 		}
@@ -44,11 +44,11 @@ public class VanillaButtonDescriptionHandler {
 		descriptions.put(w, desc);
 	}
 	
-	private static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
-		GuiComponent.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
+	private static void renderDescriptionBackground(GuiGraphics graphics, int x, int y, int width, int height) {
+		graphics.fill(x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
 	}
 	
-	private static void renderDescription(PoseStack matrix, int mouseX, int mouseY, String desc) {
+	private static void renderDescription(GuiGraphics graphics, int mouseX, int mouseY, String desc) {
 		if (desc != null) {
 			int width = 10;
 			int height = 10;
@@ -75,19 +75,19 @@ public class VanillaButtonDescriptionHandler {
 				mouseY -= height + 10;
 			}
 			
-			RenderUtils.setZLevelPre(matrix, 600);
+			RenderUtils.setZLevelPre(graphics, 600);
 
-			renderDescriptionBackground(matrix, mouseX, mouseY, width, height);
+			renderDescriptionBackground(graphics, mouseX, mouseY, width, height);
 
 			RenderSystem.enableBlend();
 
 			int i2 = 5;
 			for (String s : descArray) {
-				GuiComponent.drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+				graphics.drawString(Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
 				i2 += 10;
 			}
 			
-			RenderUtils.setZLevelPost(matrix);
+			RenderUtils.setZLevelPost(graphics);
 			
 			RenderSystem.disableBlend();
 		}

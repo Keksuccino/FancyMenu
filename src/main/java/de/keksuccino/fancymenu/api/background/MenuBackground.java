@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.api.background;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.Nonnull;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -8,6 +8,7 @@ public abstract class MenuBackground {
 
     private final String backgroundIdentifier;
     private final MenuBackgroundType type;
+    public float opacity = 1.0F;
 
     /**
      * A menu background.<br><br>
@@ -35,11 +36,11 @@ public abstract class MenuBackground {
      * Backgrounds should get rendered at X0 Y0 and in the size of the screen,<br>
      * to cover the full menu background.<br><br>
      *
-     * @param matrix The matrix/pose stack used to render the screen.
+     * @param graphics The graphics/pose stack used to render the screen.
      * @param screen The screen this background is getting rendered in.
      * @param keepAspectRatio If the background should keep its aspect ratio or if it should get stretched to the screen size.
      */
-    public abstract void render(PoseStack matrix, Screen screen, boolean keepAspectRatio);
+    public abstract void render(GuiGraphics graphics, Screen screen, boolean keepAspectRatio);
 
     /**
      * Called when the Clear/Reset Background button of the editor is pressed to remove this background.

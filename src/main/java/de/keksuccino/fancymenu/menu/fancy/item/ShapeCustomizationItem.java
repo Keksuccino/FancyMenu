@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.io.IOException;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.Mth;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 
@@ -35,7 +35,7 @@ public class ShapeCustomizationItem extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		if (this.shouldRender()) {
 			if (this.shape != null) {
 				
@@ -48,7 +48,7 @@ public class ShapeCustomizationItem extends CustomizationItemBase {
 				
 				if (this.shape == Shape.RECTANGLE) {
 
-					fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), c.getRGB());
+					graphics.fill(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), c.getRGB());
 
 				}
 				

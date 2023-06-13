@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.fancy.item.CustomizationItemBase;
@@ -38,7 +38,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 	}
 
 	@Override
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		RenderSystem.enableBlend();
 
 		IAnimationRenderer animation = null;
@@ -74,9 +74,9 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 		}
 
 		if (texture != null) {
-			RenderUtils.bindTexture(texture);
+//			RenderUtils.bindTexture(texture);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			blit(matrix, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+			graphics.blit(texture, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 		} else if (animation != null) {
 			int aniX = animation.getPosX();
 			int aniY = animation.getPosY();
@@ -93,7 +93,7 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 				((AdvancedAnimation) animation).setMuteAudio(true);
 			}
 
-			animation.render(matrix);
+			animation.render(graphics);
 
 			animation.setPosX(aniX);
 			animation.setPosY(aniY);
@@ -104,9 +104,9 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 				((AdvancedAnimation) animation).setMuteAudio(false);
 			}
 		} else {
-			fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());
+			graphics.fill(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), new Color(138, 138, 138, 255).getRGB());
 		}
-		drawCenteredString(matrix, Minecraft.getInstance().font, Component.literal(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, -1);
+		graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal(this.value), this.getPosX(menu) + this.getWidth() / 2, this.getPosY(menu) + (this.getHeight() - 8) / 2, -1);
 		RenderSystem.disableBlend();
 	}
 

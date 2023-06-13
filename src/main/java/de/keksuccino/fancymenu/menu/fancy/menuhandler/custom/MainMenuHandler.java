@@ -5,7 +5,7 @@ import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
@@ -33,6 +33,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.LogoRenderer;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -46,8 +47,9 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	private static final CubeMap PANORAMA_CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
 	private static final ResourceLocation PANORAMA_OVERLAY = new ResourceLocation("textures/gui/title/background/panorama_overlay.png");
-	private static final ResourceLocation MINECRAFT_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/minecraft.png");
-	private static final ResourceLocation EDITION_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/edition.png");
+//	private static final ResourceLocation MINECRAFT_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/minecraft.png");
+//	private static final ResourceLocation EDITION_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/edition.png");
+	private static final LogoRenderer LOGO_RENDERER = new LogoRenderer(false);
 	private static final Random RANDOM = new Random();
 	
 	private PanoramaRenderer panorama = new PanoramaRenderer(PANORAMA_CUBE_MAP);
@@ -169,7 +171,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		if (this.shouldCustomize(e.getGui())) {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 				e.setCanceled(true);
-				e.getGui().renderBackground(e.getMatrixStack());
+				e.getGui().renderBackground(e.getGuiGraphics());
 			}
 		}
 	}
@@ -190,38 +192,24 @@ public class MainMenuHandler extends MenuHandlerBase {
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
-			PoseStack matrix = CurrentScreenHandler.getMatrixStack();
+//			GuiGraphics graphics = CurrentScreenHandler.getMatrixStack();
 
 			RenderSystem.enableBlend();
 
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
 				this.panorama.render(Minecraft.getInstance().getDeltaFrameTime(), 1.0F);
-				RenderUtils.bindTexture(PANORAMA_OVERLAY);
+//				RenderUtils.bindTexture(PANORAMA_OVERLAY);
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-				blit(matrix, 0, 0, e.getGui().width, e.getGui().height, 0.0F, 0.0F, 16, 128, 16, 128);
+				e.getGuiGraphics().blit(PANORAMA_OVERLAY, 0, 0, e.getGui().width, e.getGui().height, 0.0F, 0.0F, 16, 128, 16, 128);
 			}
 			
 			super.drawToBackground(e);
 			
 			//Draw minecraft logo and edition textures if not disabled in the config
 			if (this.showLogo) {
-				RenderUtils.bindTexture(MINECRAFT_TITLE_TEXTURE);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-				if ((double) minecraftLogoSpelling < 1.0E-4D) {
-					e.getGui().blit(matrix, j + 0, 30, 0, 0, 99, 44);
-					e.getGui().blit(matrix, j + 99, 30, 129, 0, 27, 44);
-					e.getGui().blit(matrix, j + 99 + 26, 30, 126, 0, 3, 44);
-					e.getGui().blit(matrix, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
-					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
-				} else {
-					e.getGui().blit(matrix, j + 0, 30, 0, 0, 155, 44);
-					e.getGui().blit(matrix, j + 155, 30, 0, 45, 155, 44);
-				}
-
-				RenderSystem.setShaderTexture(0, EDITION_TITLE_TEXTURE);
-				blit(matrix, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+				LOGO_RENDERER.renderLogo(e.getGuiGraphics(), e.getScreen().width, 1.0F);
 			}
 
 			//Draw branding strings to the main menu if not disabled in the config
@@ -237,7 +225,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 					string = string + I18n.get("menu.modded");
 				}
 
-				drawString(e.getMatrixStack(), font, string, 2, e.getGui().height - 10, -1);
+				e.getGuiGraphics().drawString(font, string, 2, e.getGui().height - 10, -1);
 			}
 
 			if (!PopupHandler.isPopupActive()) {
@@ -246,10 +234,10 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 			//Draw notification indicators to the "Realms" button if not disabled in the config
 			if (this.showRealmsNotification) {
-				this.drawRealmsNotification(matrix, e.getGui());
+				this.drawRealmsNotification(e.getGuiGraphics(), e.getGui());
 			}
 
-			this.renderSplash(matrix, e.getGui());
+			this.renderSplash(e.getGuiGraphics(), e.getGui());
 
 		}
 	}
@@ -272,11 +260,11 @@ public class MainMenuHandler extends MenuHandlerBase {
 		super.onRenderListBackground(e);
 	}
 
-	protected void renderSplash(PoseStack matrix, Screen s) {
+	protected void renderSplash(GuiGraphics graphics, Screen s) {
 
 		try {
 			if (this.splashItem != null) {
-				this.splashItem.render(matrix, s);
+				this.splashItem.render(graphics, s);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -290,18 +278,18 @@ public class MainMenuHandler extends MenuHandlerBase {
 		
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
-				buttons.get(i).render(CurrentScreenHandler.getMatrixStack(), mouseX, mouseY, partial);
+				buttons.get(i).render(e.getGuiGraphics(), mouseX, mouseY, partial);
 			}
 		}
 	}
 	
-	private void drawRealmsNotification(PoseStack matrix, Screen gui) {
+	private void drawRealmsNotification(GuiGraphics graphics, Screen gui) {
 		try {
 			if (Minecraft.getInstance().options.realmsNotifications().get()) {
 				Screen realms = MinecraftCompatibilityUtils.getTitleScreenRealmsNotificationsScreen((TitleScreen) gui);
 				if (realms != null) {
 					MouseHandler mh = Minecraft.getInstance().mouseHandler;
-					realms.render(matrix, (int)mh.xpos(), (int)mh.ypos(), Minecraft.getInstance().getFrameTime());
+					realms.render(graphics, (int)mh.xpos(), (int)mh.ypos(), Minecraft.getInstance().getFrameTime());
 				}
 			}
 		} catch (Exception e) {

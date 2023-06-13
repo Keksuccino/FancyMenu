@@ -8,7 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
@@ -69,26 +69,26 @@ public class CreateCustomGuiPopup extends FMPopup {
 	}
 	
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
-		super.render(matrix, mouseX, mouseY, renderIn);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, Screen renderIn) {
+		super.render(graphics, mouseX, mouseY, renderIn);
 		
 		float partial = Minecraft.getInstance().getFrameTime();
 		String id = this.identifierText.getValue();
 		Font font = Minecraft.getInstance().font;	
 		
-		drawCenteredString(matrix, font, "§l" + Locals.localize("helper.buttons.tools.creategui"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, "§l" + Locals.localize("helper.buttons.tools.creategui"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 		
-		drawCenteredString(matrix, font, Locals.localize("helper.buttons.tools.creategui.menuidentifier"), renderIn.width / 2, (renderIn.height / 2) - 80, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("helper.buttons.tools.creategui.menuidentifier"), renderIn.width / 2, (renderIn.height / 2) - 80, Color.WHITE.getRGB());
 		this.identifierText.x = (renderIn.width / 2) - (this.identifierText.getWidth() / 2);
 		this.identifierText.y = (renderIn.height / 2) - 65;
-		this.identifierText.render(matrix, mouseX, mouseY, partial);
+		this.identifierText.render(graphics, mouseX, mouseY, partial);
 		
-		drawCenteredString(matrix, font, Locals.localize("helper.buttons.tools.creategui.menutitle"), renderIn.width / 2, (renderIn.height / 2) - 37, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("helper.buttons.tools.creategui.menutitle"), renderIn.width / 2, (renderIn.height / 2) - 37, Color.WHITE.getRGB());
 		this.titleText.x = (renderIn.width / 2) - (this.titleText.getWidth() / 2);
 		this.titleText.y = (renderIn.height / 2) - 22;
-		this.titleText.render(matrix, mouseX, mouseY, partial);
+		this.titleText.render(graphics, mouseX, mouseY, partial);
 
-		drawCenteredString(matrix, font, Locals.localize("helper.buttons.tools.creategui.allowescdesc"), renderIn.width / 2, (renderIn.height / 2) + 5, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("helper.buttons.tools.creategui.allowescdesc"), renderIn.width / 2, (renderIn.height / 2) + 5, Color.WHITE.getRGB());
 		this.allowEscButton.x = (renderIn.width / 2) - this.allowEscButton.getWidth() - 5;
 		this.allowEscButton.y = (renderIn.height / 2) + 20;
 		
@@ -106,14 +106,14 @@ public class CreateCustomGuiPopup extends FMPopup {
 				this.doneButton.visible = true;
 			} else {
 				this.doneButton.visible = false;
-				drawCenteredString(matrix, font, Locals.localize("helper.buttons.tools.creategui.identifieralreadyused"), renderIn.width / 2, (renderIn.height / 2) + 85, Color.WHITE.getRGB());
+				graphics.drawCenteredString(font, Locals.localize("helper.buttons.tools.creategui.identifieralreadyused"), renderIn.width / 2, (renderIn.height / 2) + 85, Color.WHITE.getRGB());
 			}
 		} else {
 			this.doneButton.visible = false;
-			drawCenteredString(matrix, font, Locals.localize("helper.buttons.tools.creategui.invalididentifier"), renderIn.width / 2, (renderIn.height / 2) + 85, Color.WHITE.getRGB());
+			graphics.drawCenteredString(font, Locals.localize("helper.buttons.tools.creategui.invalididentifier"), renderIn.width / 2, (renderIn.height / 2) + 85, Color.WHITE.getRGB());
 		}
 		
-		this.renderButtons(matrix, mouseX, mouseY);
+		this.renderButtons(graphics, mouseX, mouseY);
 		
 	}
 	

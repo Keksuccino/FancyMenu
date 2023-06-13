@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
@@ -36,7 +36,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 
         TickerCustomizationItem i = ((TickerCustomizationItem)this.object);
 
-        //TODO übernehmenn
+        
 //        AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.add_action"), (press) -> {
 //            ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
 //                if (call != null) {
@@ -49,7 +49,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 //        addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.add_action.desc"), "%n%"));
 //        this.rightclickMenu.addContent(addActionButton);
 
-        //TODO übernehmenn
+        
         AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
             List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
             for (ButtonScriptEngine.ActionContainer c : i.actions) {
@@ -109,7 +109,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.isAsync) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.ticker.async.on"));
                 } else {
@@ -131,7 +131,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.tickMode == TickerCustomizationItem.TickMode.NORMAL) {
                     this.setMessage(Locals.localize("fancymenu.customization.items.ticker.tick_mode.normal"));
                 } else if (i.tickMode == TickerCustomizationItem.TickMode.ONCE_PER_SESSION){
@@ -158,7 +158,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
         sec.addEntry("tick_delay", "" + i.tickDelayMs);
         sec.addEntry("tick_mode", "" + i.tickMode.name);
         int index = 0;
-        //TODO übernehmenn
+        
         for (ButtonScriptEngine.ActionContainer c : i.actions) {
             String v = c.value;
             if (v == null) {

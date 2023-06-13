@@ -20,40 +20,28 @@ public class MixinScreen {
         MenuHandlerBase.cachedOriginalMenuTitles.put(this.getClass(), title);
     }
 
-    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init()V"))
-    private void beforeInitInInit(Minecraft p_96607_, int p_96608_, int p_96609_, CallbackInfo info) {
+    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("HEAD"))
+    private void beforeInit(Minecraft minecraft, int width, int height, CallbackInfo info) {
         InitOrResizeScreenEvent.Pre e = new InitOrResizeScreenEvent.Pre(((Screen)(Object)this));
         Konkrete.getEventHandler().callEventsFor(e);
-//		if (e.isCanceled()) {
-//			info.cancel();
-//		}
-    }
-
-    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;repositionElements()V"))
-    private void beforeRepositionElementsInInit(Minecraft p_96607_, int p_96608_, int p_96609_, CallbackInfo info) {
-        InitOrResizeScreenEvent.Pre e = new InitOrResizeScreenEvent.Pre(((Screen)(Object)this));
-        Konkrete.getEventHandler().callEventsFor(e);
-//		if (e.isCanceled()) {
-//			info.cancel();
-//		}
     }
 
     @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("TAIL"))
-    private void afterInitTriggeredBySetScreen(Minecraft minecraft, int width, int height, CallbackInfo info) {
+    private void afterInit(Minecraft minecraft, int width, int height, CallbackInfo info) {
         InitOrResizeScreenEvent.Post e = new InitOrResizeScreenEvent.Post(((Screen)(Object)this));
         Konkrete.getEventHandler().callEventsFor(e);
         GuiInitCompletedEvent e2 = new GuiInitCompletedEvent((Screen) ((Object)this));
         Konkrete.getEventHandler().callEventsFor(e2);
     }
 
-    @Inject(method = "resize", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;repositionElements()V"))
-    private void beforeRepositionElementsInResize(CallbackInfo info) {
+    @Inject(method = "resize", at = @At(value = "HEAD"))
+    private void beforeResize(CallbackInfo info) {
         InitOrResizeScreenEvent.Pre e = new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen);
         Konkrete.getEventHandler().callEventsFor(e);
     }
 
-    @Inject(method = "resize", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;repositionElements()V", shift = At.Shift.AFTER))
-    private void afterRepositionElementsInResize(CallbackInfo info) {
+    @Inject(method = "resize", at = @At(value = "TAIL"))
+    private void afterResize(CallbackInfo info) {
         InitOrResizeScreenEvent.Post e = new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen);
         Konkrete.getEventHandler().callEventsFor(e);
         GuiInitCompletedEvent e2 = new GuiInitCompletedEvent(Minecraft.getInstance().screen);

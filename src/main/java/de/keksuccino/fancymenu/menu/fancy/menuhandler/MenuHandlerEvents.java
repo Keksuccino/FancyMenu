@@ -2,26 +2,24 @@ package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.OpenScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
-import de.keksuccino.konkrete.events.client.GuiOpenEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
-@SuppressWarnings("resource")
 public class MenuHandlerEvents {
 	
 	private MenuHandlerBase current;
 	private Screen lastScreen;
 	
 	@SubscribeEvent
-	public void onOpenGui(GuiOpenEvent e) {
-		this.initHandler(e.getGui());
+	public void onOpenGui(OpenScreenEvent e) {
+		this.initHandler(e.getScreen());
 	}
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
@@ -36,9 +34,8 @@ public class MenuHandlerEvents {
 		//Resetting scale to the normal value when no GUI is active
 		if ((MenuHandlerBase.scaleChangedIn != null) && (Minecraft.getInstance().screen == null)) {
 			MenuHandlerBase.scaleChangedIn = null;
-			int mcscale = Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode());
 			Window m = Minecraft.getInstance().getWindow();
-			m.setGuiScale((double)mcscale);
+			m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
 		}
 
 		//Resetting last active menu handler when no GUI is displayed
@@ -73,13 +70,11 @@ public class MenuHandlerEvents {
 			if (s instanceof CustomGuiBase) {
 				if (!MenuHandlerRegistry.isHandlerRegistered(((CustomGuiBase)s).getIdentifier())) {
 					MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(((CustomGuiBase)s).getIdentifier()));
-					MenuCustomization.reloadCurrentMenu();
 				}
 			} else {
 				if (!MenuHandlerRegistry.isHandlerRegistered(s.getClass().getName())) {
 					if (MenuCustomization.isValidScreen(s)) {
 						MenuHandlerRegistry.registerHandler(new MenuHandlerBase(s.getClass().getName()));
-						MenuCustomization.reloadCurrentMenu();
 					}
 				}
 			}

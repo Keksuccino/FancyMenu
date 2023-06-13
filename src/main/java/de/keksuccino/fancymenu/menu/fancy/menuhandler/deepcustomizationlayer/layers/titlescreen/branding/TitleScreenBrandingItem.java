@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.branding;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -20,7 +20,7 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         RenderSystem.enableBlend();
 
@@ -34,7 +34,7 @@ public class TitleScreenBrandingItem extends DeepCustomizationItem {
         if (Minecraft.checkModStatus().shouldReportAsModified()) {
             branding = branding + I18n.get("menu.modded");
         }
-        drawString(matrix, font, branding, 2, menu.height - 10, -1);
+        graphics.drawString(font, branding, 2, menu.height - 10, -1);
 
         this.setWidth(font.width(branding));
         this.setHeight(10);

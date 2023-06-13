@@ -3,15 +3,16 @@ package de.keksuccino.fancymenu.menu.fancy.item.items.text;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
-import de.keksuccino.fancymenu.menu.fancy.helper.ui.ScrollableScreen;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
+import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -23,6 +24,10 @@ import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 
 import java.awt.*;
@@ -137,48 +142,72 @@ public class TextCustomizationItem extends CustomizationItem {
 
     public void updateScrollArea() {
 
-//        this.getWidth() = this.cachedTextWidth;
-
-        this.scrollArea = new ScrollArea(0, 0, this.getWidth(), this.getHeight());
+        this.scrollArea = new ScrollArea(0, 0, this.getWidth(), this.getHeight()) {
+            @Override
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                super.render(graphics, mouseX, mouseY, partial);
+                this.verticalScrollBar.active = (this.getTotalEntryHeight() > this.getInnerHeight()) && TextCustomizationItem.this.enableScrolling;
+            }
+            @Override
+            public void updateScrollArea() {
+                super.updateScrollArea();
+                if (Minecraft.getInstance().screen != null) {
+                    this.verticalScrollBar.scrollAreaEndX = TextCustomizationItem.this.getPosX(Minecraft.getInstance().screen) + TextCustomizationItem.this.getWidth() + 12;
+                    this.horizontalScrollBar.scrollAreaEndY = TextCustomizationItem.this.getPosY(Minecraft.getInstance().screen) + TextCustomizationItem.this.getHeight() + 12;
+                }
+            }
+        };
+        this.scrollArea.verticalScrollBar.grabberWidth = 10;
+        this.scrollArea.verticalScrollBar.grabberHeight = 20;
+        this.scrollArea.horizontalScrollBar.grabberWidth = 20;
+        this.scrollArea.horizontalScrollBar.grabberHeight = 10;
         this.scrollArea.backgroundColor = new Color(0,0,0,0);
-        this.scrollArea.enableScrolling = this.enableScrolling;
+        this.scrollArea.borderColor = new Color(0,0,0,0);
+        this.scrollArea.verticalScrollBar.setScrollWheelAllowed(this.enableScrolling);
+        this.scrollArea.verticalScrollBar.active = false;
+        this.scrollArea.horizontalScrollBar.active = false;
 
         if (this.scrollGrabberColorHexNormal != null) {
             Color c = RenderUtils.getColorFromHexString(this.scrollGrabberColorHexNormal);
             if (c != null) {
-                this.scrollArea.grabberColorNormal = c;
+                this.scrollArea.verticalScrollBar.idleBarColor = c;
+                this.scrollArea.horizontalScrollBar.idleBarColor = c;
             }
         }
         if (this.scrollGrabberColorHexHover != null) {
             Color c = RenderUtils.getColorFromHexString(this.scrollGrabberColorHexHover);
             if (c != null) {
-                this.scrollArea.grabberColorHover = c;
+                this.scrollArea.verticalScrollBar.hoverBarColor = c;
+                this.scrollArea.horizontalScrollBar.hoverBarColor = c;
             }
         }
 
         if (this.scrollGrabberTextureNormal != null) {
             ExternalTextureResourceLocation r = TextureHandler.getResource(this.scrollGrabberTextureNormal);
             if (r != null) {
-                this.scrollArea.grabberTextureNormal = r.getResourceLocation();
+                this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
+                this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
         }
         if (this.scrollGrabberTextureHover != null) {
             ExternalTextureResourceLocation r = TextureHandler.getResource(this.scrollGrabberTextureHover);
             if (r != null) {
-                this.scrollArea.grabberTextureHover = r.getResourceLocation();
+                this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
+                this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
         }
 
+        LineScrollEntry borderTop = new LineScrollEntry(this.scrollArea, " ", false, 1.0F, this);
+        borderTop.setHeight(this.textBorder);
+        this.scrollArea.addEntry(borderTop);
+
         for (Map.Entry<String, Float> m : this.lines.entries()) {
-
-            TextElementLineEntry e = new TextElementLineEntry(this.scrollArea, this, m.getKey(), false, (this.scale * m.getValue()));
-            this.scrollArea.addEntry(e);
-
+            this.scrollArea.addEntry(new LineScrollEntry(this.scrollArea, m.getKey(), false, this.scale, this));
         }
 
-        //Add some empty space at the end of the scroll area
-        TextElementLineEntry e = new TextElementLineEntry(this.scrollArea, this, " ", false, 3.0F);
-        this.scrollArea.addEntry(e);
+        LineScrollEntry borderBottom = new LineScrollEntry(this.scrollArea, " ", false, 1.0F, this);
+        borderBottom.setHeight(this.textBorder);
+        this.scrollArea.addEntry(borderBottom);
 
     }
 
@@ -190,7 +219,7 @@ public class TextCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         try {
 
@@ -205,17 +234,18 @@ public class TextCustomizationItem extends CustomizationItem {
                     RenderSystem.enableBlend();
 
                     if (this.scrollArea != null) {
-                        this.scrollArea.x = this.getPosX(menu);
-                        this.scrollArea.y = this.getPosY(menu);
-                        this.scrollArea.width = this.getWidth();
-                        this.scrollArea.height = this.getHeight();
-                        this.scrollArea.render(matrix);
+                        this.scrollArea.customGuiScale = this.customGuiScale;
+                        this.scrollArea.setX(this.getPosX(menu), true);
+                        this.scrollArea.setY(this.getPosY(menu), true);
+                        this.scrollArea.setWidth(this.getWidth(), true);
+                        this.scrollArea.setHeight(this.getHeight(), true);
+                        this.scrollArea.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), UIBase.getPartialTick());
                     }
 
                 } else if (isEditorActive()) {
                     //Render "updating" view in editor
-                    fill(matrix, this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
-                    drawCenteredString(matrix, Minecraft.getInstance().font, Locals.localize("fancymenu.customization.items.text.status.loading"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+                    graphics.fill(this.getPosX(menu), this.getPosY(menu), this.getPosX(menu) + this.getWidth(), this.getPosY(menu) + this.getHeight(), Color.MAGENTA.getRGB());
+                    graphics.drawCenteredString(font, Locals.localize("fancymenu.customization.items.text.status.loading"), this.getPosX(menu) + (this.getWidth() / 2), this.getPosY(menu) + (this.getHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 
             }
@@ -258,7 +288,7 @@ public class TextCustomizationItem extends CustomizationItem {
                         }
                     } else if (this.sourceMode == SourceMode.WEB_SOURCE) {
                         if (WebUtils.isValidUrl(StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&"))) {
-                            //TODO übernehmen
+
                             String fixedSource = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&");
                             //Get raw github file
                             if (fixedSource.toLowerCase().contains("/blob/") && (fixedSource.toLowerCase().startsWith("http://github.com/")
@@ -412,95 +442,80 @@ public class TextCustomizationItem extends CustomizationItem {
 
     }
 
-    public static class TextElementLineEntry extends ScrollableScreen.ScrollAreaEntryBase {
+    public static class LineScrollEntry extends TextScrollAreaEntry {
 
-        public String text;
-        public boolean bold;
-        public TextCustomizationItem parentItem;
+        public final String textRaw;
+        public final boolean bold;
+        public final float scale;
+        public final TextCustomizationItem parentItem;
+        protected String lastTextToRender;
 
-        public TextElementLineEntry(ScrollArea parent, TextCustomizationItem parentItem, String text, boolean bold, float scale) {
-            super(parent, null);
-            this.parentItem = parentItem;
-            this.text = text;
+        public LineScrollEntry(ScrollArea parent, String textRaw, boolean bold, float scale, TextCustomizationItem parentItem) {
+            super(parent, Component.literal(""), (entry) -> {});
+            this.textRaw = textRaw;
             this.bold = bold;
-            this.setHeight((((int)(((float)Minecraft.getInstance().font.lineHeight) * scale))) + parentItem.lineSpacing);
-            this.renderBody = (render) -> {
-                if (this.text != null) {
-
-                    //Render Debug Border
-//                    fill(render.matrix, this.x, this.y, this.x + this.getWidth(), this.y + 1, Color.red.getRGB());
-//                    fill(render.matrix, this.x, this.y + this.getHeight() - 1, this.x + this.getWidth(), this.y + this.getHeight(), Color.red.getRGB());
-
-                    Font font = Minecraft.getInstance().font;
-                    String s = this.text;
-                    if (this.bold) {
-                        s = "§l" + this.text;
-                    }
-                    if (isEditorActive()) {
-                        s = StringUtils.convertFormatCodes(s, "&", "§");
-                    } else {
-                        //Update placeholders every render tick
-                        s = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(s);
-                        //Support for a second layer of placeholders (this is only useful for when getting text with the web text placeholder and similar placeholders)
-                        s = de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser.replacePlaceholders(s);
-                    }
-                    Color baseColor = this.parentItem.getBaseColor();
-                    int color = -1;
-                    if (baseColor != null) {
-                        color = baseColor.getRGB();
-                    }
-
-                    if (!s.contains("%n%")) {
-                        //Single line text entry
-                        renderLine(s, font, scale, color, 0, this, render);
-                    } else {
-                        //Multi line text entry
-                        List<String> lines = Arrays.asList(StringUtils.splitLines(s, "%n%"));
-                        this.setHeight(((((int)(((float)Minecraft.getInstance().font.lineHeight) * scale))) * lines.size()) + parentItem.lineSpacing + (parentItem.lineSpacing * lines.size()));
-                        int i = 0;
-                        for (String line : lines) {
-                            renderLine(line, font, scale, color, i, this, render);
-                            i++;
-                        }
-                    }
-
-                }
-            };
+            this.scale = scale;
+            this.parentItem = parentItem;
+            this.focusable = false;
+            this.playClickSound = false;
+            this.backgroundColorIdle = new Color(0,0,0,0);
+            this.backgroundColorHover = new Color(0,0,0,0);
+            this.buttonBase.setAlpha(0.0F);
+            this.setHeight(((int)(((float)Minecraft.getInstance().font.lineHeight) * scale)) + parentItem.lineSpacing);
         }
 
-        protected static void renderLine(String s, Font font, float scale, int color, int line, TextElementLineEntry entry, EntryRenderCallback render) {
+        @Override
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            float textWidth = font.width(s) * scale;
-            int y = (int) (render.entry.y / scale);
-            int x = (int) (render.entry.x / scale);
-            if (entry.parentItem.alignment == Alignment.LEFT) {
-                x += entry.parentItem.textBorder;
-            }
-            if (entry.parentItem.alignment == Alignment.RIGHT) {
-                x = (int) (x + (entry.getWidth() - textWidth) / scale);
-                x -= entry.parentItem.textBorder;
-            }
-            if (entry.parentItem.alignment == Alignment.CENTERED) {
-                x = (int) (x + (((entry.getWidth() - textWidth) / scale) / 2));
-            }
+            RenderSystem.enableBlend();
 
-            render.matrix.pushPose();
-            render.matrix.scale(scale, scale, scale);
-
-            int lineHeight = 10;
-            float textY = y + (lineHeight * line);
-            if (entry.parentItem.lineSpacing > 0) {
-                textY += (int) ((entry.parentItem.lineSpacing / scale) * line);
+            String textToRender = isEditorActive() ? StringUtils.convertFormatCodes(this.textRaw, "&", "§") : PlaceholderParser.replacePlaceholders(this.textRaw);
+            if (this.parentItem.caseMode == CaseMode.ALL_LOWER) {
+                textToRender = textToRender.toLowerCase();
+            } else if (this.parentItem.caseMode == CaseMode.ALL_UPPER) {
+                textToRender = textToRender.toUpperCase();
             }
+            if ((lastTextToRender == null) || !lastTextToRender.equals(textToRender)) {
+                this.setTextOfLine(Component.literal(textToRender));
+                ((MutableComponent)this.getText()).withStyle(Style.EMPTY.withBold(this.bold));
+            }
+            this.lastTextToRender = textToRender;
 
-            if (entry.parentItem.shadow) {
-                font.drawShadow(render.matrix, s, x, textY, color | Mth.ceil(entry.parentItem.opacity * 255.0F) << 24);
+            this.updateEntry();
+
+            this.buttonBase.render(graphics, mouseX, mouseY, partial);
+
+            int textX = (int)((float)this.getX() / this.scale);
+            if (this.parentItem.alignment == Alignment.LEFT) {
+                textX += this.parentItem.textBorder;
+            } else if (this.parentItem.alignment == Alignment.RIGHT) {
+                textX = (int) (textX + (this.getWidth() - this.textWidth) / this.scale);
+                textX -= this.parentItem.textBorder;
+            } else if (this.parentItem.alignment == Alignment.CENTERED) {
+                textX = (int) (textX + (((this.getWidth() - this.textWidth) / this.scale) / 2));
+            }
+            int centerY = (int)((float)this.getY() / this.scale) + (this.getHeight() / 2);
+            int textY = centerY - (int)((float)(this.font.lineHeight / 2) * this.scale);
+
+            graphics.pose().pushPose();
+            graphics.pose().scale(this.scale, this.scale, this.scale);
+            Color c = this.parentItem.getBaseColor();
+            int textColor;
+            if (c != null) {
+                textColor = FastColor.ARGB32.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), c.getRed(), c.getGreen(), c.getBlue());
             } else {
-                font.draw(render.matrix, s, x, textY, color | Mth.ceil(entry.parentItem.opacity * 255.0F) << 24);
+                textColor = FastColor.ARGB32.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), 255, 255, 255);
             }
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            graphics.drawString(font, this.text, textX, textY, textColor, this.parentItem.shadow);
+            graphics.pose().popPose();
 
-            render.matrix.popPose();
+        }
 
+        public void setTextOfLine(MutableComponent text) {
+            this.text = text;
+            this.textWidth = (int)((float)this.font.width(this.text) * this.scale);
+            this.setWidth(this.parentItem.textBorder + this.textWidth + this.parentItem.textBorder);
         }
 
     }

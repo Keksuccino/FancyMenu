@@ -58,7 +58,7 @@ public class ButtonIdentificator {
         }
     }
 
-    //TODO NEW IN 1.19
+    
     @Nullable
     public static String getLocalizationKeyForButton(AbstractWidget widget) {
 

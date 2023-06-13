@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMContextMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
@@ -21,21 +21,21 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.List;
 
-//TODO übernehmen (change name of DynamicValueTextfield)
+
 public class PlaceholderEditBox extends AdvancedTextField {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	private AdvancedImageButton variableButton;
-	//TODO übernehmen (make public)
+	
 	public FMContextMenu variableMenu;
 
-	//TODO übernehmen
+	
 	public boolean renderContextMenu = true;
 
 	private static final ResourceLocation VARIABLES_BUTTON_RESOURCE = new ResourceLocation("keksuccino", "add_btn.png");
 
-	//TODO übernehmen (whole constructor)
+	
 	public PlaceholderEditBox(Font font, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(font, x, y, width, height, handleTextField, filter);
 
@@ -100,36 +100,36 @@ public class PlaceholderEditBox extends AdvancedTextField {
 	}
 
 	@Override
-	public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+	public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		if (this.variableButton != null) {
 
 			this.variableButton.setWidth(this.height);
 			WidgetUtils.setHeight(this.variableButton, this.height);
 
-			super.renderWidget(matrix, mouseX, mouseY, partialTicks);
+			super.renderWidget(graphics, mouseX, mouseY, partialTicks);
 
 			this.variableButton.setX(this.x + this.width + 5);
 			this.variableButton.setY(this.y);
-			this.variableButton.render(matrix, mouseX, mouseY, partialTicks);
+			this.variableButton.render(graphics, mouseX, mouseY, partialTicks);
 
-			//TODO übernehmen
+			
 			if (this.renderContextMenu) {
-				this.renderContextMenu(matrix);
+				this.renderContextMenu(graphics);
 			}
 
 		}
 	}
 
-	//TODO übernehmen (move from renderButton method to this one)
-	public void renderContextMenu(PoseStack matrix) {
+	
+	public void renderContextMenu(GuiGraphics graphics) {
 		float scale = UIBase.getUIScale();
 		MouseInput.setRenderScale(scale);
-		matrix.pushPose();
-		matrix.scale(scale, scale, scale);
+		graphics.pose().pushPose();
+		graphics.pose().scale(scale, scale, scale);
 		if (this.variableMenu != null) {
-			this.variableMenu.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY());
+			this.variableMenu.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY());
 		}
-		matrix.popPose();
+		graphics.pose().popPose();
 		MouseInput.resetRenderScale();
 	}
 

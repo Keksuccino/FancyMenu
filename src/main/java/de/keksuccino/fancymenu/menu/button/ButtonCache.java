@@ -19,8 +19,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiInitCompletedEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
-import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 
@@ -51,9 +49,6 @@ public class ButtonCache {
 			cached = true;
 
 			if (s instanceof LayoutEditorScreen) {
-				return;
-			}
-			if (s instanceof SimpleLoadingScreen) {
 				return;
 			}
 			
@@ -170,7 +165,6 @@ public class ButtonCache {
 //			((IMixinScreen)s).getRenderablesFancyMenu().clear();
 
 			//Set all important variables and init screen
-			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
 //			s.init(Minecraft.getInstance(), screenWidth, screenHeight);

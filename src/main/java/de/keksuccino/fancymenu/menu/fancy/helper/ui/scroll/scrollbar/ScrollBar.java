@@ -1,12 +1,12 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ScrollBar extends GuiComponent {
+public class ScrollBar {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -69,7 +69,7 @@ public class ScrollBar extends GuiComponent {
         this.scrollAreaEndY = scrollAreaEndY;
     }
 
-    public void render(PoseStack matrix) {
+    public void render(GuiGraphics graphics) {
 
         int x = this.scrollAreaEndX - this.grabberWidth;
         int y = this.scrollAreaEndY - this.grabberHeight;
@@ -88,17 +88,17 @@ public class ScrollBar extends GuiComponent {
 
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
-                RenderUtils.bindTexture(this.hoverBarTexture);
-                blit(matrix, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+//                RenderUtils.bindTexture(this.hoverBarTexture);
+                graphics.blit(this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (this.hoverBarColor != null) {
-                fill(matrix, x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
+                graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
             }
         } else {
             if (this.idleBarTexture != null) {
-                RenderUtils.bindTexture(this.idleBarTexture);
-                blit(matrix, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+//                RenderUtils.bindTexture(this.idleBarTexture);
+                graphics.blit(this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (this.idleBarColor != null) {
-                fill(matrix, x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
+                graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
             }
         }
 

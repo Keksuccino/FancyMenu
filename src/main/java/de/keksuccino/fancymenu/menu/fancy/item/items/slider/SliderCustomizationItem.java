@@ -1,8 +1,8 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.slider;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.slider.AdvancedSliderButton;
@@ -125,7 +125,7 @@ public class SliderCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         if (this.shouldRender()) {
 
@@ -140,7 +140,7 @@ public class SliderCustomizationItem extends CustomizationItem {
             this.slider.y = this.getPosY(menu);
             this.slider.setWidth(this.getWidth());
             WidgetUtils.setHeight(this.slider, this.getHeight());
-            this.slider.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+            this.slider.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change
             if (this.linkedVariable != null) {

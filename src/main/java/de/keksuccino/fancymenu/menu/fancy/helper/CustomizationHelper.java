@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ITextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -34,8 +35,6 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 
 public class CustomizationHelper {
-
-	public static List<Runnable> mainThreadTasks = new ArrayList<>();
 	
 	public static void init() {
 		
@@ -48,23 +47,12 @@ public class CustomizationHelper {
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
 
-		List<Runnable> runs = new ArrayList<>();
-		runs.addAll(CustomizationHelper.mainThreadTasks);
-		for (Runnable r : runs) {
-			try {
-				r.run();
-				CustomizationHelper.mainThreadTasks.remove(r);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
-
 		if (!MenuCustomization.isBlacklistedMenu(e.getGui().getClass().getName())) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
 				if (!e.getGui().getClass().getName().startsWith("de.keksuccino.drippyloadingscreen.")) {
 					if (!e.getGui().getClass().getName().startsWith("de.keksuccino.fmaudio.")) {
 
-						CustomizationHelperUI.render(e.getMatrixStack(), e.getGui());
+						CustomizationHelperUI.render(e.getGuiGraphics(), e.getGui());
 
 					}
 				}
@@ -240,8 +228,10 @@ public class CustomizationHelper {
 		return false;
 	}
 
+	@Deprecated
+	/** Use {@link MainThreadTaskExecutor#executeInMainThread(Runnable, MainThreadTaskExecutor.ExecuteTiming)} instead! **/
 	public static void runTaskInMainThread(Runnable task) {
-		mainThreadTasks.add(task);
+		MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
 	}
 
 }

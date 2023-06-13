@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.LayoutElement;
@@ -59,10 +59,10 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
 
         if (!this.getDeepCustomizationItem().hidden) {
-            super.render(matrix, mouseX, mouseY);
+            super.render(graphics, mouseX, mouseY);
         } else {
             if (this.handler.isFocused(this)) {
                 this.handler.setObjectFocused(this, false, true);
@@ -131,12 +131,12 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
     }
 
     @Override
-    protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
+    protected void renderBorder(GuiGraphics graphics, int mouseX, int mouseY) {
         String cachedOri = this.object.orientation;
         if (!this.orientationCanBeChanged) {
             this.object.orientation = "original";
         }
-        super.renderBorder(matrix, mouseX, mouseY);
+        super.renderBorder(graphics, mouseX, mouseY);
         this.object.orientation = cachedOri;
     }
 

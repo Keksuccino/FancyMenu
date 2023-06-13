@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.menu.fancy.guicreator;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Component;
@@ -45,12 +45,12 @@ public class CustomGuiBase extends Screen {
 	}
 	
 	@Override
-	public void render(PoseStack matrix, int p_render_1_, int p_render_2_, float p_render_3_) {
-		this.renderBackground(matrix);
+	public void render(GuiGraphics graphics, int p_render_1_, int p_render_2_, float p_render_3_) {
+		this.renderBackground(graphics);
 		if (title != null) {
-			GuiComponent.drawCenteredString(matrix, this.font, this.menutitle, this.width / 2, 8, 16777215);
+			graphics.drawCenteredString(this.font, this.menutitle, this.width / 2, 8, 16777215);
 		}
-		super.render(matrix, p_render_1_, p_render_2_, p_render_3_);
+		super.render(graphics, p_render_1_, p_render_2_, p_render_3_);
 	}
 	
 	public String getIdentifier() {

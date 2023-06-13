@@ -11,15 +11,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.nio.file.Path;
+
 @Mixin(LevelStorageSource.LevelStorageAccess.class)
 public class MixinLevelStorageAccess {
 
     private static final Logger MIXIN_LOGGER = LogManager.getLogger("fancymenu/mixin/LevelStorageAccess");
 
-    @Shadow @Final private LevelStorageSource.LevelDirectory levelDirectory;
+    @Shadow @Final LevelStorageSource.LevelDirectory levelDirectory;
 
     @Inject(at = @At("TAIL"), method = "<init>")
-    private void onInit(LevelStorageSource this$0, String p_78276_, CallbackInfo info) {
+    private void onInit(LevelStorageSource p_289971_, String p_289967_, Path p_289988_, CallbackInfo info) {
         LastWorldHandler.setLastWorld(this.levelDirectory.path().toFile().getPath().replace("\\", "/"), false);
     }
 

@@ -6,13 +6,13 @@ import de.keksuccino.konkrete.events.EventPriority;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.util.Mth;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -37,9 +37,9 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
 				e.setCanceled(true);
 				
-				e.getGui().renderBackground(e.getMatrixStack());
+				e.getGui().renderBackground(e.getGuiGraphics());
 				
-				this.renderMenu(e.getMatrixStack(), e.getGui());
+				this.renderMenu(e.getGuiGraphics(), e.getGui());
 			}
 		}
 	}
@@ -98,7 +98,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 		super.onRenderListBackground(e);
 	}
 	
-	private void renderMenu(PoseStack matrix, Screen screen) {
+	private void renderMenu(GuiGraphics graphics, Screen screen) {
 		
 		StoringChunkProgressListener tracker = getTracker(screen);
 		Font font = Minecraft.getInstance().font;
@@ -115,12 +115,12 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 			}
 			
 			if (FancyMenu.config.getOrDefault("showloadingscreenanimation", true)) {
-				LevelLoadingScreen.renderChunks(matrix, getTracker(screen), j, k + 30, 2, 0);
+				LevelLoadingScreen.renderChunks(graphics, getTracker(screen), j, k + 30, 2, 0);
 			}
 		}
 		
 		if (FancyMenu.config.getOrDefault("showloadingscreenpercent", true)) {
-			GuiComponent.drawCenteredString(matrix, font, s, j, k - 9 / 2 - 30, 16777215);
+			graphics.drawCenteredString(font, s, j, k - 9 / 2 - 30, 16777215);
 		}
 		
 	}

@@ -23,6 +23,7 @@ import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.multiplayer.ServerData;
@@ -143,7 +144,7 @@ public class ButtonScriptEngine {
 						l.add(d, false);
 						l.save();
 					}
-					ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+					ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), d, false);
 				}
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
@@ -191,8 +192,16 @@ public class ButtonScriptEngine {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
-			if (action.equalsIgnoreCase("opengui")) {
-				if (value.equals(CreateWorldScreen.class.getName())) {
+			if (action.equalsIgnoreCase("opengui") && (value != null)) {
+				if (MenuCustomization.getValidMenuIdentifierFor(value).equals(PackSelectionScreen.class.getName())) {
+					Screen parent = Minecraft.getInstance().screen;
+					PackSelectionScreen s = new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
+						Minecraft.getInstance().options.updateResourcePacks(repo);
+						Minecraft.getInstance().setScreen(parent);
+					}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"));
+					Minecraft.getInstance().setScreen(s);
+				}
+				else if (value.equals(CreateWorldScreen.class.getName())) {
 					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
 				} else {
 					try {
@@ -353,7 +362,7 @@ public class ButtonScriptEngine {
 							l.add(d, false);
 							l.save();
 						}
-						ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+						ConnectScreen.startConnecting(s, Minecraft.getInstance(), new ServerAddress(ip, port), d, false);
 					}
 				}
 			}

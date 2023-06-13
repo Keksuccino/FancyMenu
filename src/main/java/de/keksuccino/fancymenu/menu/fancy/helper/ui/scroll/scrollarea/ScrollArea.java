@@ -1,9 +1,9 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar.ScrollBar;
@@ -37,6 +37,7 @@ public class ScrollArea extends UIBase {
     public int overriddenTotalScrollWidth = -1;
     public int overriddenTotalScrollHeight = -1;
     public boolean correctYOnAddingRemovingEntries = true;
+    public float customGuiScale = -1F;
 
     public ScrollArea(int x, int y, int width, int height) {
         this.setX(x, true);
@@ -49,7 +50,7 @@ public class ScrollArea extends UIBase {
         this.updateScrollArea();
     }
 
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateScrollArea();
 
@@ -57,33 +58,33 @@ public class ScrollArea extends UIBase {
 
         this.resetScrollOnFit();
 
-        this.renderBackground(matrix, mouseX, mouseY, partial);
+        this.renderBackground(graphics, mouseX, mouseY, partial);
 
-        this.renderEntries(matrix, mouseX, mouseY, partial);
+        this.renderEntries(graphics, mouseX, mouseY, partial);
 
-        this.renderBorder(matrix, mouseX, mouseY, partial);
+        this.renderBorder(graphics, mouseX, mouseY, partial);
 
         if (this.verticalScrollBar.active) {
-            this.verticalScrollBar.render(matrix);
+            this.verticalScrollBar.render(graphics);
         }
         if (this.horizontalScrollBar.active) {
-            this.horizontalScrollBar.render(matrix);
+            this.horizontalScrollBar.render(graphics);
         }
 
     }
 
-    public void renderBackground(PoseStack matrix, int mouseX, int mouseY, float partial) {
-        fill(matrix, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        graphics.fill(this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
-    public void renderBorder(PoseStack matrix, int mouseX, int mouseY, float partial) {
-        renderBorder(matrix, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor, true, true, true, true);
+    public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor, true, true, true, true);
     }
 
-    public void renderEntries(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         Window win = Minecraft.getInstance().getWindow();
-        double scale = win.getGuiScale();
+        double scale = (this.customGuiScale != -1F) ? this.customGuiScale : win.getGuiScale();
         int sciBottomY = this.getInnerY() + this.getInnerHeight();
         RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
 
@@ -95,7 +96,7 @@ public class ScrollArea extends UIBase {
                     entry.setWidth(this.getInnerWidth());
                 }
             }
-            entry.render(matrix, mouseX, mouseY, partial);
+            entry.render(graphics, mouseX, mouseY, partial);
             if (cachedWidth != -1) {
                 entry.setWidth(cachedWidth);
             }

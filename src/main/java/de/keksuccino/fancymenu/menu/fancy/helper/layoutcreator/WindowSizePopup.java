@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.konkrete.localization.Locals;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -60,30 +60,30 @@ public class WindowSizePopup extends FMPopup {
 	}
 	
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
-		super.render(matrix, mouseX, mouseY, renderIn);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, Screen renderIn) {
+		super.render(graphics, mouseX, mouseY, renderIn);
 		
 		float partial = Minecraft.getInstance().getFrameTime();
 		Font font = Minecraft.getInstance().font;	
 		
 		if (this.type == ActionType.BIGGERTHAN) {
-			drawCenteredString(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.biggerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
+			graphics.drawCenteredString(font, "§l" + Locals.localize("helper.creator.windowsize.biggerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 		} else {
-			drawCenteredString(matrix, font, "§l" + Locals.localize("helper.creator.windowsize.smallerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
+			graphics.drawCenteredString(font, "§l" + Locals.localize("helper.creator.windowsize.smallerthan.desc"), renderIn.width / 2, (renderIn.height / 2) - 110, Color.WHITE.getRGB());
 		}
 		
-		drawCenteredString(matrix, font, Locals.localize("general.width"), renderIn.width / 2, (renderIn.height / 2) - 80, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("general.width"), renderIn.width / 2, (renderIn.height / 2) - 80, Color.WHITE.getRGB());
 		this.widthText.x = (renderIn.width / 2) - (this.widthText.getWidth() / 2);
 		this.widthText.y = (renderIn.height / 2) - 65;
-		this.widthText.render(matrix, mouseX, mouseY, partial);
+		this.widthText.render(graphics, mouseX, mouseY, partial);
 		
-		drawCenteredString(matrix, font, Locals.localize("general.height"), renderIn.width / 2, (renderIn.height / 2) - 37, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("general.height"), renderIn.width / 2, (renderIn.height / 2) - 37, Color.WHITE.getRGB());
 		this.heightText.x = (renderIn.width / 2) - (this.heightText.getWidth() / 2);
 		this.heightText.y = (renderIn.height / 2) - 22;
-		this.heightText.render(matrix, mouseX, mouseY, partial);
+		this.heightText.render(graphics, mouseX, mouseY, partial);
 
-		drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
-		drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), renderIn.width / 2, (renderIn.height / 2) + 15, Color.WHITE.getRGB());
+		graphics.drawCenteredString(font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), renderIn.width / 2, (renderIn.height / 2) + 30, Color.WHITE.getRGB());
 		
 		this.doneButton.x = (renderIn.width / 2) - this.doneButton.getWidth() - 5;
 		this.doneButton.y = (renderIn.height / 2) + 80;
@@ -91,7 +91,7 @@ public class WindowSizePopup extends FMPopup {
 		this.cancelButton.x = (renderIn.width / 2) + 5;
 		this.cancelButton.y = (renderIn.height / 2) + 80;
 
-		this.renderButtons(matrix, mouseX, mouseY);
+		this.renderButtons(graphics, mouseX, mouseY);
 		
 	}
 	

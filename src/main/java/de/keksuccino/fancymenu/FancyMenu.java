@@ -47,9 +47,10 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.14.0";
+	public static final String VERSION = "2.14.7";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -89,7 +90,7 @@ public class FancyMenu implements ModInitializer {
 	    		panoramaPath.mkdirs();
 	    		slideshowPath.mkdirs();
 
-	    		updateConfig();
+	    		initConfig();
 
 				DeepCustomizationLayers.registerAll();
 
@@ -226,6 +227,12 @@ public class FancyMenu implements ModInitializer {
 		Locals.getLocalsFromDir(f.getPath());
 	}
 
+	public static void initConfig() {
+		if (config == null) {
+			updateConfig();
+		}
+	}
+
     public static void updateConfig() {
     	try {
 
@@ -331,7 +338,7 @@ public class FancyMenu implements ModInitializer {
 
 	public static boolean isDrippyLoadingScreenLoaded() {
 		try {
-			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -339,7 +346,7 @@ public class FancyMenu implements ModInitializer {
 
 	public static boolean isKonkreteLoaded() {
 		try {
-			Class.forName("de.keksuccino.konkrete.Konkrete");
+			Class.forName("de.keksuccino.konkrete.Konkrete", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -347,7 +354,7 @@ public class FancyMenu implements ModInitializer {
 
 	public static boolean isAudioExtensionLoaded() {
 		try {
-			Class.forName("de.keksuccino.fmaudio.FmAudio");
+			Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;

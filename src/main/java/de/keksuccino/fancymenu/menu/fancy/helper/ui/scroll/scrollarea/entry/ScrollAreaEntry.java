@@ -1,7 +1,7 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -44,7 +44,7 @@ public abstract class ScrollAreaEntry extends UIBase {
                 }
             }
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     this.isHovered = false;
                 }
@@ -68,11 +68,11 @@ public abstract class ScrollAreaEntry extends UIBase {
         this.updateEntry();
     }
 
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateEntry();
 
-        this.buttonBase.render(matrix, mouseX, mouseY, partial);
+        this.buttonBase.render(graphics, mouseX, mouseY, partial);
 
     }
 

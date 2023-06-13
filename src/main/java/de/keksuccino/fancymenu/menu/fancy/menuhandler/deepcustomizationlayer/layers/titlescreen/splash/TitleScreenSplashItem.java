@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.layers.titlescreen.splash;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.client.IMixinSplashRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationElement;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationItem;
@@ -67,19 +68,19 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         this.setWidth(60);
         this.setHeight(30);
 
         if (!this.hidden) {
             RenderSystem.enableBlend();
-            this.renderSplash(matrix, Minecraft.getInstance().font, menu);
+            this.renderSplash(graphics, Minecraft.getInstance().font, menu);
         }
 
     }
 
-    protected void renderSplash(PoseStack matrix, Font font, Screen s) {
+    protected void renderSplash(GuiGraphics graphics, Font font, Screen s) {
 
         float finalPosX = (s.width / 2 + 90);
         float finalPosY = 70.0F;
@@ -127,31 +128,36 @@ public class TitleScreenSplashItem extends DeepCustomizationItem {
             this.cachedSplashText = "§c< ERROR! UNABLE TO GET SPLASH TEXT! >";
         }
 
-        matrix.pushPose();
-        matrix.translate(finalPosX, finalPosY, 0.0F);
-        matrix.mulPose(Axis.ZP.rotationDegrees(this.splashRotation));
+        graphics.pose().pushPose();
+        graphics.pose().translate(finalPosX, finalPosY, 0.0F);
+        graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.splashRotation));
         float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         f = f * 100.0F / (float) (font.width(this.cachedSplashText) + 32);
-        matrix.scale(f, f, f);
+        graphics.pose().scale(f, f, f);
 
-        drawCenteredString(matrix, font, Component.literal(this.cachedSplashText), 0, -8, this.splashColor.getRGB());
+        graphics.drawCenteredString(font, Component.literal(this.cachedSplashText), 0, -8, this.splashColor.getRGB());
 
-        matrix.popPose();
+        graphics.pose().popPose();
 
     }
 
     public String getRandomSplashText() {
-        if ((splashTextFilePath != null) && !splashTextFilePath.replace(" ", "").equals("")) {
-            File f = new File(splashTextFilePath);
-            if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
-                List<String> l = FileUtils.getFileLines(f);
-                if ((l != null) && !l.isEmpty()) {
-                    int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
-                    return l.get(random);
+        try {
+            if ((splashTextFilePath != null) && !splashTextFilePath.replace(" ", "").equals("")) {
+                File f = new File(splashTextFilePath);
+                if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
+                    List<String> l = FileUtils.getFileLines(f);
+                    if ((l != null) && !l.isEmpty()) {
+                        int random = MathUtils.getRandomNumberInRange(0, l.size()-1);
+                        return l.get(random);
+                    }
                 }
             }
+            return ((IMixinSplashRenderer)Minecraft.getInstance().getSplashManager().getSplash()).getSplashStringFancyMenu();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        return Minecraft.getInstance().getSplashManager().getSplash();
+        return "";
     }
 
 }

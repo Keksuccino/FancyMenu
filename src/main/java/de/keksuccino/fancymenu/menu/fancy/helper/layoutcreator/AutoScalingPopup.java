@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator;
 
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -56,30 +56,30 @@ public class AutoScalingPopup extends FMPopup {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
-        super.render(matrix, mouseX, mouseY, renderIn);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, Screen renderIn) {
+        super.render(graphics, mouseX, mouseY, renderIn);
 
         float partial = Minecraft.getInstance().getFrameTime();
         Font font = Minecraft.getInstance().font;
         int screenCenterX = renderIn.width / 2;
         int screenCenterY = renderIn.height / 2;
         
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1"), screenCenterX, screenCenterY - 90, -1);
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2"), screenCenterX, screenCenterY - 80, -1);
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3"), screenCenterX, screenCenterY - 70, -1);
+        graphics.drawCenteredString(font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line1"), screenCenterX, screenCenterY - 90, -1);
+        graphics.drawCenteredString(font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2"), screenCenterX, screenCenterY - 80, -1);
+        graphics.drawCenteredString(font, Locals.localize("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3"), screenCenterX, screenCenterY - 70, -1);
 
-        drawCenteredString(matrix, font, Locals.localize("general.width"), screenCenterX, screenCenterY - 50, -1);
+        graphics.drawCenteredString(font, Locals.localize("general.width"), screenCenterX, screenCenterY - 50, -1);
         this.widthTextField.x = screenCenterX - (this.widthTextField.getWidth() / 2);
         this.widthTextField.y = screenCenterY - 35;
-        this.widthTextField.render(matrix, mouseX, mouseY, partial);
+        this.widthTextField.render(graphics, mouseX, mouseY, partial);
 
-        drawCenteredString(matrix, font, Locals.localize("general.height"), screenCenterX, screenCenterY - 5, -1);
+        graphics.drawCenteredString(font, Locals.localize("general.height"), screenCenterX, screenCenterY - 5, -1);
         this.heightTextField.x = screenCenterX - (this.heightTextField.getWidth() / 2);
         this.heightTextField.y = screenCenterY + 10;
-        this.heightTextField.render(matrix, mouseX, mouseY, partial);
+        this.heightTextField.render(graphics, mouseX, mouseY, partial);
 
-        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), screenCenterX, screenCenterY + 45, -1);
-        drawCenteredString(matrix, font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), screenCenterX, screenCenterY + 55, -1);
+        graphics.drawCenteredString(font, Locals.localize("helper.creator.windowsize.currentwidth") + ": " + Minecraft.getInstance().getWindow().getScreenWidth(), screenCenterX, screenCenterY + 45, -1);
+        graphics.drawCenteredString(font, Locals.localize("helper.creator.windowsize.currentheight") + ": " + Minecraft.getInstance().getWindow().getScreenHeight(), screenCenterX, screenCenterY + 55, -1);
 
         this.doneButton.x = screenCenterX - this.doneButton.getWidth() - 5;
         this.doneButton.y = screenCenterY + 80;
@@ -87,7 +87,7 @@ public class AutoScalingPopup extends FMPopup {
         this.cancelButton.x = screenCenterX + 5;
         this.cancelButton.y = screenCenterY + 80;
 
-        this.renderButtons(matrix, mouseX, mouseY);
+        this.renderButtons(graphics, mouseX, mouseY);
     }
 
     protected void onDoneButtonPressed() {

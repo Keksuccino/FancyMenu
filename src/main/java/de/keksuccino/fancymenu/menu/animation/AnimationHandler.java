@@ -11,14 +11,11 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.menu.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.konkrete.Konkrete;
-import de.keksuccino.konkrete.events.client.GuiOpenEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
-import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 
 public class AnimationHandler {
@@ -337,6 +334,10 @@ public class AnimationHandler {
 	
 	public static boolean isReady() {
 		return ready;
+	}
+
+	public static void setReady(boolean ready) {
+		AnimationHandler.ready = ready;
 	}
 
 	public static void setupAnimationSizes() {

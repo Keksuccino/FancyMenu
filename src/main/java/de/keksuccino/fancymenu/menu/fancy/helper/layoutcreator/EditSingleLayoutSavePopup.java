@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.konkrete.localization.Locals;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.Popup;
 import de.keksuccino.konkrete.input.KeyboardData;
@@ -65,13 +65,13 @@ public class EditSingleLayoutSavePopup extends Popup {
 	}
 	
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, Screen renderIn) {
-		super.render(matrix, mouseX, mouseY, renderIn);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, Screen renderIn) {
+		super.render(graphics, mouseX, mouseY, renderIn);
 		
 		if (this.isDisplayed()) {
 			int i = 0;
 			for (String s : this.text) {
-				drawCenteredString(matrix, Minecraft.getInstance().font, s, renderIn.width / 2, (renderIn.height / 2) - 50 + i, Color.WHITE.getRGB());
+				graphics.drawCenteredString(Minecraft.getInstance().font, s, renderIn.width / 2, (renderIn.height / 2) - 50 + i, Color.WHITE.getRGB());
 				i += 10;
 			}
 			
@@ -87,7 +87,7 @@ public class EditSingleLayoutSavePopup extends Popup {
 			this.cancelButton.setX((renderIn.width / 2) - (this.cancelButton.getWidth() / 2));
 			this.cancelButton.setY(((renderIn.height / 2) + 75));
 			
-			this.renderButtons(matrix, mouseX, mouseY);
+			this.renderButtons(graphics, mouseX, mouseY);
 		}
 	}
 	

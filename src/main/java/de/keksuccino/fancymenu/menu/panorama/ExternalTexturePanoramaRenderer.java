@@ -4,19 +4,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
@@ -25,7 +22,7 @@ import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import org.joml.Matrix4f;
 
-public class ExternalTexturePanoramaRenderer extends GuiComponent {
+public class ExternalTexturePanoramaRenderer {
 
 	private ExternalTextureResourceLocation overlay_texture;
 	private float time;
@@ -37,6 +34,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	private double fov = 85.0D;
 	private float angle = 25.0F;
 	private Minecraft mc = Minecraft.getInstance();
+	public float opacity = 1.0F;
 
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -125,16 +123,16 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 		}
 	}
 
-	public void render() {
+	public void render(GuiGraphics graphics) {
 		try {
-			this.renderRaw(1.0F);
+			this.renderRaw(graphics, this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	@SuppressWarnings("resource")
-	public void renderRaw(float panoramaAlpha) {
+	public void renderRaw(GuiGraphics graphics, float panoramaAlpha) {
 		if (this.prepared) {
 
 			this.time += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
@@ -147,14 +145,14 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
 			Matrix4f matrix4f = new Matrix4f().setPerspective(fovf, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
-			RenderSystem.setProjectionMatrix(matrix4f);
+			RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
 			PoseStack poseStack = RenderSystem.getModelViewStack();
 			poseStack.pushPose();
 			poseStack.setIdentity();
 			poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
 			RenderSystem.enableBlend();
 			RenderSystem.disableCull();
 			RenderSystem.depthMask(false);
@@ -235,14 +233,15 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				if (!this.overlay_texture.isReady()) {
 					this.overlay_texture.loadTexture();
 				}
-				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+//				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
 				RenderSystem.enableBlend();
-				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
-				blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+//				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
+				graphics.blit(this.overlay_texture.getResourceLocation(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0F);
 	}
 
 	public String getName() {

@@ -1,8 +1,8 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.inputfield;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
@@ -63,7 +63,7 @@ public class InputFieldCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack matrix, Screen menu) throws IOException {
+    public void render(GuiGraphics graphics, Screen menu) throws IOException {
 
         if (this.shouldRender()) {
 
@@ -85,7 +85,7 @@ public class InputFieldCustomizationItem extends CustomizationItem {
             this.textField.y = this.getPosY(menu);
             this.textField.setWidth(this.getWidth());
             WidgetUtils.setHeight(this.textField, this.getHeight());
-            this.textField.render(matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+            this.textField.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change
             if (!isEditorActive()) {

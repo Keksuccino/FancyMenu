@@ -19,10 +19,12 @@ public class MixinConnectScreen {
     private static final Logger MIXIN_LOGGER = LogManager.getLogger("fancymenu/mixin/ConnectScreen");
 
     @Inject(at = @At("HEAD"), method = "startConnecting")
-    private static void onStartConnecting(Screen screen, Minecraft mc, ServerAddress address, ServerData data, CallbackInfo info) {
+    private static void onStartConnecting(Screen screen, Minecraft mc, ServerAddress address, ServerData data, boolean p_279117_, CallbackInfo ci) {
+
         if (address != null) {
             LastWorldHandler.setLastWorld(address.getHost() + ":" + address.getPort(), true);
         }
+
     }
 
     @Inject(at = @At("HEAD"), method = "connect", cancellable = true)

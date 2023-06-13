@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -71,7 +71,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 		}
 	}
 
-	public void render(PoseStack matrix, Screen menu) throws IOException {
+	public void render(GuiGraphics graphics, Screen menu) throws IOException {
 		if (this.shouldRender()) {
 			
 			int x = this.getPosX(menu);
@@ -94,7 +94,7 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				this.gif.setHeight(this.getHeight());
 				this.gif.setOpacity(this.opacity);
 				
-				this.gif.render(matrix);
+				this.gif.render(graphics);
 
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 				
@@ -106,12 +106,11 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				
 			} else if (this.texture != null) {
 				
-				RenderSystem.setShader(GameRenderer::getPositionTexShader);
-				RenderSystem.setShaderTexture(0, this.texture.getResourceLocation());
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+//				RenderSystem.setShader(GameRenderer::getPositionTexShader);
+//				RenderSystem.setShaderTexture(0, this.texture.getResourceLocation());
 				RenderSystem.enableBlend();
-			    RenderSystem.defaultBlendFunc();
-				blit(matrix, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+				graphics.blit(this.texture.getResourceLocation(), x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 				
 			}
 			

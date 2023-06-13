@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.PlayerEntityItemRenderer;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.PlayerEntityProperties;

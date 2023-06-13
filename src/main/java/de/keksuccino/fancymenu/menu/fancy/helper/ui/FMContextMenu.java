@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -24,9 +24,10 @@ public class FMContextMenu extends ContextMenu {
 	@Override
 	public void addContent(AdvancedButton button) {
 		super.addContent(button);
-		
 		Color c = new Color(0, 0, 0, 0);
 		button.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), c, c, 0);
+		button.ignoreBlockedInput = true;
+		button.ignoreLeftMouseDownClickBlock = true;
 	}
 	
 	public void addSeparator() {
@@ -70,7 +71,7 @@ public class FMContextMenu extends ContextMenu {
 	}
 	
 	@Override
-	public void render(PoseStack matrix, int mouseX, int mouseY, int screenWidth, int screenHeight) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, int screenWidth, int screenHeight) {
 		
 		if (this.parent != null) {
 			if (this.parent instanceof FMContextMenu) {
@@ -79,18 +80,18 @@ public class FMContextMenu extends ContextMenu {
 			}
 		}
 		
-		super.render(matrix, mouseX, mouseY, screenWidth, screenHeight);
+		super.render(graphics, mouseX, mouseY, screenWidth, screenHeight);
 		
 		if (this.opened) {
 			
 			if (this.alwaysOnTop) {
-				RenderUtils.setZLevelPre(matrix, 400);
-				this.renderBorder(matrix);
-				this.renderSeparators(matrix);
-				RenderUtils.setZLevelPost(matrix);
+				RenderUtils.setZLevelPre(graphics, 400);
+				this.renderBorder(graphics);
+				this.renderSeparators(graphics);
+				RenderUtils.setZLevelPost(graphics);
 			} else {
-				this.renderBorder(matrix);
-				this.renderSeparators(matrix);
+				this.renderBorder(graphics);
+				this.renderSeparators(graphics);
 			}
 			
 			
@@ -103,29 +104,29 @@ public class FMContextMenu extends ContextMenu {
 		}
 	}
 	
-	protected void renderSeparators(PoseStack matrix) {
+	protected void renderSeparators(GuiGraphics graphics) {
 		if (!this.content.isEmpty()) {
 			for (Integer i : this.separators) {
 				if (this.content.size() >= i+1) {
 					AdvancedButton b = this.content.get(i);
 					Color c = new Color(UIBase.getButtonBorderIdleColor().getRed(), UIBase.getButtonBorderIdleColor().getGreen(), UIBase.getButtonBorderIdleColor().getBlue(), 100);
-					UIBase.fill(matrix, b.x, b.y, b.x + this.width, b.y + 1, c.getRGB());
+					graphics.fill(b.x, b.y, b.x + this.width, b.y + 1, c.getRGB());
 				}
 			}
 		}
 	}
 	
-	protected void renderBorder(PoseStack matrix) {
+	protected void renderBorder(GuiGraphics graphics) {
 		if (!this.content.isEmpty()) {
 			AdvancedButton b = this.content.get(0);
 			//TOP
-			UIBase.fill(matrix, b.x, b.y, b.x + this.width, b.y + 1, UIBase.getButtonBorderIdleColor().getRGB());
+			graphics.fill(b.x, b.y, b.x + this.width, b.y + 1, UIBase.getButtonBorderIdleColor().getRGB());
 			//LEFT
-			UIBase.fill(matrix, b.x, b.y + 1, b.x + 1, b.y + this.lastHeight, UIBase.getButtonBorderIdleColor().getRGB());
+			graphics.fill(b.x, b.y + 1, b.x + 1, b.y + this.lastHeight, UIBase.getButtonBorderIdleColor().getRGB());
 			//BOTTOM
-			UIBase.fill(matrix, b.x + 1, b.y + this.lastHeight - 1, b.x + this.width, b.y + this.lastHeight, UIBase.getButtonBorderIdleColor().getRGB());
+			graphics.fill(b.x + 1, b.y + this.lastHeight - 1, b.x + this.width, b.y + this.lastHeight, UIBase.getButtonBorderIdleColor().getRGB());
 			//RIGHT
-			UIBase.fill(matrix, b.x + this.width - 1, b.y + 1, b.x + this.width, b.y + this.lastHeight - 1, UIBase.getButtonBorderIdleColor().getRGB());
+			graphics.fill(b.x + this.width - 1, b.y + 1, b.x + this.width, b.y + this.lastHeight - 1, UIBase.getButtonBorderIdleColor().getRGB());
 		}
 	}
 	

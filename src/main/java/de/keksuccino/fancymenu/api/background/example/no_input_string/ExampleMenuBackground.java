@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.api.background.example.no_input_string;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.Nonnull;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import java.awt.*;
-import net.minecraft.client.gui.GuiComponent;
+
 import net.minecraft.client.gui.screens.Screen;
 
 //This is an example menu background that simply renders a color.
@@ -31,13 +31,13 @@ public class ExampleMenuBackground extends MenuBackground {
     //Here you will render the background instance.
     //You should always render backgrounds over the full size of the screen, otherwise it will look ugly.
     @Override
-    public void render(PoseStack matrix, Screen screen, boolean keepAspectRatio) {
+    public void render(GuiGraphics graphics, Screen screen, boolean keepAspectRatio) {
 
         try {
 
             //Simply renders a colored background to the full size of the screen it is rendered in.
             //We will ignore the keepAspectRatio param here, because, well, a simple colored background has no aspect ratio.
-            GuiComponent.fill(matrix, 0, 0, screen.width, screen.height, this.color.getRGB());
+            graphics.fill(0, 0, screen.width, screen.height, this.color.getRGB());
 
         } catch (Exception e) {
             e.printStackTrace();

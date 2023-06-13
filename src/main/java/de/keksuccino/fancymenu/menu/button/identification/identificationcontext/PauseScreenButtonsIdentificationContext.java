@@ -13,7 +13,7 @@ public class PauseScreenButtonsIdentificationContext extends MenuButtonsIdentifi
         return PauseScreen.class;
     }
 
-    //TODO NEW IN 1.19
+
     @Override
     protected String getRawCompatibilityIdentifierForButton(ButtonData data) {
         if (data.getScreen().getClass() != this.getMenu()) {

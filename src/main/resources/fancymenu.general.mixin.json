@@ -2,7 +2,8 @@
   "required": true,
   "package": "de.keksuccino.fancymenu.mixin.client",
   "compatibilityLevel": "JAVA_17",
-  "mixins": [],
+  "mixins": [
+  ],
   "client": [
     "IMixinAbstractWidget",
     "IMixinChatScreen",
@@ -13,12 +14,13 @@
     "IMixinPlayerModel",
     "IMixinScreen",
     "IMixinServerList",
+    "IMixinSplashManager",
+    "IMixinSplashRenderer",
     "IMixinTitleScreen",
     "MixinAbstractButton",
     "MixinAbstractSelectionList",
     "MixinAbstractWidget",
     "MixinConnectScreen",
-    "MixinGuiComponent",
     "MixinImageButton",
     "MixinLevelStorageAccess",
     "MixinLoadingOverlay",
@@ -26,6 +28,7 @@
     "MixinMusicManager",
     "MixinOnlineServerEntry",
     "MixinScreen",
+    "MixinTitleScreen",
     "MixinWorldListEntry"
   ],
   "server": [],

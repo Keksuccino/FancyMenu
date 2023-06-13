@@ -50,7 +50,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     private static boolean isKonkreteLoaded() {
         try {
-            Class.forName("de.keksuccino.konkrete.Konkrete");
+            Class.forName("de.keksuccino.konkrete.Konkrete", false, FMMixinPlugin.class.getClassLoader());
             return true;
         } catch (Exception e) {}
         return false;

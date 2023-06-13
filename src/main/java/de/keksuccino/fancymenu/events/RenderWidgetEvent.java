@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.events;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.events.EventBase;
 import net.minecraft.client.gui.components.AbstractWidget;
 
@@ -8,12 +9,12 @@ public class RenderWidgetEvent extends EventBase {
 	
 	protected AbstractWidget widget;
 	protected float alpha;
-	protected PoseStack matrix;
+	protected GuiGraphics graphics;
 	
-	public RenderWidgetEvent(PoseStack matrix, AbstractWidget widget, float alpha) {
+	public RenderWidgetEvent(GuiGraphics graphics, AbstractWidget widget, float alpha) {
 		this.widget = widget;
 		this.alpha = alpha;
-		this.matrix = matrix;
+		this.graphics = graphics;
 	}
 	
 	@Override
@@ -28,15 +29,24 @@ public class RenderWidgetEvent extends EventBase {
 	public float getAlpha() {
 		return this.alpha;
 	}
-	
+
+	public GuiGraphics getGuiGraphics() {
+		return this.graphics;
+	}
+
+	public PoseStack getPoseStack() {
+		return this.graphics.pose();
+	}
+
+	@Deprecated
 	public PoseStack getMatrixStack() {
-		return this.matrix;
+		return this.graphics.pose();
 	}
 	
 	public static class Pre extends RenderWidgetEvent {
 
-		public Pre(PoseStack matrix, AbstractWidget widget, float alpha) {
-			super(matrix, widget, alpha);
+		public Pre(GuiGraphics graphics, AbstractWidget widget, float alpha) {
+			super(graphics, widget, alpha);
 		}
 		
 		public void setAlpha(float alpha) {
@@ -47,8 +57,8 @@ public class RenderWidgetEvent extends EventBase {
 	
 	public static class Post extends RenderWidgetEvent {
 
-		public Post(PoseStack matrix, AbstractWidget widget, float alpha) {
-			super(matrix, widget, alpha);
+		public Post(GuiGraphics graphics, AbstractWidget widget, float alpha) {
+			super(graphics, widget, alpha);
 		}
 		
 		@Override
