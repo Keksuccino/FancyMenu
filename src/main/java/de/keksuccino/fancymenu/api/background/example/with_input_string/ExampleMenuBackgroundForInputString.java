@@ -52,13 +52,13 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
             if ((this.imageLocation != null) && this.imageLocation.isReady()) {
 
                 RenderSystem.enableBlend();
-                RenderUtils.bindTexture(this.imageLocation.getResourceLocation());
+//                RenderUtils.bindTexture(this.imageLocation.getResourceLocation());
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
                 //If the keep-aspect-ratio toggle is disabled, just stretch the image background to the full size of the screen it is rendered in
                 if (!keepAspectRatio) {
 
-                    GuiComponent.blit(graphics, 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
+                    graphics.blit(this.imageLocation.getResourceLocation(), 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
 
                 //If the background image should keep its aspect ratio, try to keep the aspect ratio as long as possible.
                 //As soon as it's not possible to keep the aspect ratio anymore, just stretch it.
@@ -70,9 +70,9 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
                     int wfinal = (int)(screen.height * ratio);
                     int screenCenterX = screen.width / 2;
                     if (wfinal < screen.width) {
-                        GuiComponent.blit(graphics, 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
+                        graphics.blit(this.imageLocation.getResourceLocation(), 0, 0, 1.0F, 1.0F, screen.width, screen.height, screen.width, screen.height);
                     } else {
-                        GuiComponent.blit(graphics, screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal, screen.height, wfinal, screen.height);
+                        graphics.blit(this.imageLocation.getResourceLocation(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal, screen.height, wfinal, screen.height);
                     }
 
                 }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.render.layers;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
@@ -24,7 +25,7 @@ public class PlayerEntityCapeLayer extends PlayerEntityRenderLayer {
         this.renderer = renderer;
     }
 
-    public void render(GuiGraphics graphics, MultiBufferSource p_116616_, int p_116617_, @Nullable Entity entity, float p_116619_, float p_116620_, float p_116621_, float p_116622_, float p_116623_, float p_116624_) {
+    public void render(PoseStack graphics, MultiBufferSource p_116616_, int p_116617_, @Nullable Entity entity, float p_116619_, float p_116620_, float p_116621_, float p_116622_, float p_116623_, float p_116624_) {
         if (!this.properties.invisible && this.properties.isModelPartShown(PlayerModelPart.CAPE) && this.properties.getCapeTextureLocation() != null) {
             graphics.pushPose();
             graphics.translate(0.0F, 0.0F, 0.125F);

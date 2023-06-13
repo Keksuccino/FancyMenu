@@ -153,9 +153,9 @@ public class BuildActionScreen extends Screen {
         graphics.fill(0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(graphics, titleComp, 20, 20, -1);
+        graphics.drawString(this.font, titleComp, 20, 20, -1, false);
 
-        this.font.draw(graphics, Locals.localize("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, -1);
+        graphics.drawString(this.font, Locals.localize("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, -1, false);
 
         this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionsListScrollArea.setHeight(this.height - 85, true);
@@ -165,7 +165,7 @@ public class BuildActionScreen extends Screen {
 
         String descLabelString = Locals.localize("fancymenu.editor.action.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(graphics, descLabelString, this.width - 20 - descLabelWidth, 50, -1);
+        graphics.drawString(this.font, descLabelString, this.width - 20 - descLabelWidth, 50, -1, false);
 
         this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);

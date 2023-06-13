@@ -18,7 +18,7 @@ import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 
 import net.minecraft.resources.ResourceLocation;
 
-public class ExternalTextureSlideshowRenderer extends GuiComponent {
+public class ExternalTextureSlideshowRenderer {
 	
 	protected List<ExternalTextureResourceLocation> images = new ArrayList<ExternalTextureResourceLocation>();
 	protected ExternalTextureResourceLocation overlay_texture;
@@ -219,7 +219,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			if (!this.previous.isReady()) {
 				this.previous.loadTexture();
 			}
-			graphics.pushPose();
+			graphics.pose().pushPose();
 			RenderSystem.enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
@@ -228,11 +228,11 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, o);
 			ResourceLocation r = this.previous.getResourceLocation();
 			if (r != null) {
-				RenderUtils.bindTexture(r);
-				blit(graphics, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+//				RenderUtils.bindTexture(r);
+				graphics.blit(r, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			graphics.popPose();
+			graphics.pose().popPose();
 		}
 	}
 
@@ -245,8 +245,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ResourceLocation r = this.current.getResourceLocation();
 			if (r != null) {
-				RenderUtils.bindTexture(r);
-				blit(graphics, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+//				RenderUtils.bindTexture(r);
+				graphics.blit(r, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
@@ -260,8 +260,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			ResourceLocation r = this.overlay_texture.getResourceLocation();
 			if (r != null) {
-				RenderUtils.bindTexture(r);
-				blit(graphics, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+//				RenderUtils.bindTexture(r);
+				graphics.blit(r, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}

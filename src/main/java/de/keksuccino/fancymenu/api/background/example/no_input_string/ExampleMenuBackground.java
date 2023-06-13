@@ -38,7 +38,7 @@ public class ExampleMenuBackground extends MenuBackground {
 
             //Simply renders a colored background to the full size of the screen it is rendered in.
             //We will ignore the keepAspectRatio param here, because, well, a simple colored background has no aspect ratio.
-            GuiComponent.graphics.fill(0, 0, screen.width, screen.height, this.color.getRGB());
+            graphics.fill(0, 0, screen.width, screen.height, this.color.getRGB());
 
         } catch (Exception e) {
             e.printStackTrace();

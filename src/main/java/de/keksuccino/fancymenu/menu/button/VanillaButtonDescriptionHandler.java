@@ -48,7 +48,7 @@ public class VanillaButtonDescriptionHandler {
 	}
 	
 	private static void renderDescriptionBackground(GuiGraphics graphics, int x, int y, int width, int height) {
-		GuiComponent.graphics.fill(x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
+		graphics.fill(x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
 	}
 	
 	private static void renderDescription(GuiGraphics graphics, int mouseX, int mouseY, String desc) {
@@ -78,7 +78,7 @@ public class VanillaButtonDescriptionHandler {
 				mouseY -= height + 10;
 			}
 
-			RenderUtils.setZLevelPre(graphics, 600);
+			RenderUtils.setZLevelPre(graphics.pose(), 600);
 			
 			renderDescriptionBackground(graphics, mouseX, mouseY, width, height);
 
@@ -86,11 +86,11 @@ public class VanillaButtonDescriptionHandler {
 
 			int i2 = 5;
 			for (String s : descArray) {
-				GuiComponent.graphics.drawString(Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+				graphics.drawString(Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
 				i2 += 10;
 			}
 
-			RenderUtils.setZLevelPost(graphics);
+			RenderUtils.setZLevelPost(graphics.pose());
 			
 			RenderSystem.disableBlend();
 		}

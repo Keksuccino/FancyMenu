@@ -104,7 +104,8 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 				RenderSystem.disableBlend();
 				
 			} else if (this.texture != null) {
-				
+
+				RenderSystem.enableBlend();
 //				RenderUtils.bindTexture(this.texture.getResourceLocation());
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 				graphics.blit(this.texture.getResourceLocation(), x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());

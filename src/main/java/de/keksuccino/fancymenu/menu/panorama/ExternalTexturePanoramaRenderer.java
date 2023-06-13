@@ -16,11 +16,14 @@ import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
 
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
-import org.joml.graphics4f;
+import org.joml.Matrix4f;
 
-public class ExternalTexturePanoramaRenderer extends GuiComponent {
+public class ExternalTexturePanoramaRenderer {
 
 	private ExternalTextureResourceLocation overlay_texture;
 	private float time;
@@ -122,17 +125,15 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 		}
 	}
 
-	public void render() {
+	public void render(GuiGraphics graphics) {
 		try {
-			
-			this.renderRaw(this.opacity);
+			this.renderRaw(graphics, this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	@SuppressWarnings("resource")
-	public void renderRaw(float panoramaAlpha) {
+	public void renderRaw(GuiGraphics graphics, float panoramaAlpha) {
 		if (this.prepared) {
 
 			this.time += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
@@ -143,14 +144,14 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 			Tesselator tesselator = Tesselator.getInstance();
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			graphics4f graphics4f = new graphics4f().setPerspective(fovf, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
-			RenderSystem.backupProjectiongraphics();
-			RenderSystem.setProjectiongraphics(graphics4f);
-			GuiGraphics GuiGraphics = RenderSystem.getModelViewStack();
-			GuiGraphics.pushPose();
-			GuiGraphics.setIdentity();
-			GuiGraphics.mulPose(Axis.XP.rotationDegrees(180.0f));
-			RenderSystem.applyModelViewgraphics();
+			Matrix4f matrix4f = new Matrix4f().setPerspective(fovf, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+			RenderSystem.backupProjectionMatrix();
+			RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
+			PoseStack matrix = RenderSystem.getModelViewStack();
+			matrix.pushPose();
+			matrix.setIdentity();
+			matrix.mulPose(Axis.XP.rotationDegrees(180.0f));
+			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 			
 			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
@@ -160,13 +161,13 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 			RenderSystem.defaultBlendFunc();
 
 			for(int j = 0; j < 4; ++j) {
-				GuiGraphics.pushPose();
+				matrix.pushPose();
 				float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
 				float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
-				GuiGraphics.translate(k, l, 0.0f);
-				GuiGraphics.mulPose(Axis.XP.rotationDegrees(pitch));
-				GuiGraphics.mulPose(Axis.YP.rotationDegrees(yaw));
-				RenderSystem.applyModelViewgraphics();
+				matrix.translate(k, l, 0.0f);
+				matrix.mulPose(Axis.XP.rotationDegrees(pitch));
+				matrix.mulPose(Axis.YP.rotationDegrees(yaw));
+				RenderSystem.applyModelViewMatrix();
 				for (int n = 0; n < 6; ++n) {
 					ExternalTextureResourceLocation r = this.pano.get(n);
 					if (r != null) {
@@ -217,15 +218,15 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					}
 				}
 
-				GuiGraphics.popPose();
-				RenderSystem.applyModelViewgraphics();
+				matrix.popPose();
+				RenderSystem.applyModelViewMatrix();
 				RenderSystem.colorMask(true, true, true, false);
 			}
 
 			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.restoreProjectiongraphics();
-			GuiGraphics.popPose();
-			RenderSystem.applyModelViewgraphics();
+			RenderSystem.restoreProjectionMatrix();
+			matrix.popPose();
+			RenderSystem.applyModelViewMatrix();
 			RenderSystem.depthMask(true);
 			RenderSystem.enableCull();
 			RenderSystem.enableDepthTest();
@@ -234,12 +235,13 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				if (!this.overlay_texture.isReady()) {
 					this.overlay_texture.loadTexture();
 				}
-				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				
+//				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 				RenderSystem.enableBlend();
-				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
-				blit(CurrentScreenHandler.getGuiGraphics(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+//				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
+				Screen screen = Minecraft.getInstance().screen;
+				if (screen == null) screen = new TitleScreen();
+				graphics.blit(this.overlay_texture.getResourceLocation(), 0, 0, 0.0F, 0.0F, screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}

@@ -22,11 +22,10 @@ import de.keksuccino.fancymenu.mixin.client.IMixinTitleScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 
+import net.minecraft.client.gui.components.LogoRenderer;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -41,14 +40,16 @@ import net.minecraftforge.internal.BrandingControl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 public class MainMenuHandler extends MenuHandlerBase {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static final CubeMap PANORAMA_CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
 	private static final ResourceLocation PANORAMA_OVERLAY = new ResourceLocation("textures/gui/title/background/panorama_overlay.png");
-	private static final ResourceLocation MINECRAFT_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/minecraft.png");
-	private static final ResourceLocation EDITION_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/edition.png");
+//	private static final ResourceLocation MINECRAFT_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/minecraft.png");
+//	private static final ResourceLocation EDITION_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/edition.png");
+	private static final LogoRenderer LOGO_RENDERER = new LogoRenderer(false);
 	private static final Random RANDOM = new Random();
 
 	private PanoramaRenderer panorama = new PanoramaRenderer(PANORAMA_CUBE_MAP);
@@ -190,51 +191,36 @@ public class MainMenuHandler extends MenuHandlerBase {
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
 			int mouseY = MouseInput.getMouseY();
-			GuiGraphics graphics = CurrentScreenHandler.getGuiGraphics();
 
 			RenderSystem.enableBlend();
 
 			//Draw the panorama skybox and a semi-transparent overlay over it
 			if (!this.canRenderBackground()) {
 				this.panorama.render(Minecraft.getInstance().getDeltaFrameTime(), 1.0F);
-				RenderUtils.bindTexture(PANORAMA_OVERLAY);
+//				RenderUtils.bindTexture(PANORAMA_OVERLAY);
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-				blit(graphics, 0, 0, e.getScreen().width, e.getScreen().height, 0.0F, 0.0F, 16, 128, 16, 128);
+				e.getGuiGraphics().blit(PANORAMA_OVERLAY, 0, 0, e.getScreen().width, e.getScreen().height, 0.0F, 0.0F, 16, 128, 16, 128);
 			}
 
 			super.drawToBackground(e);
 
 			if (this.showLogo) {
-				RenderUtils.bindTexture(MINECRAFT_TITLE_TEXTURE);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-				if ((double) minecraftLogoSpelling < 1.0E-4D) {
-					blit(graphics, j + 0, 30, 0, 0, 99, 44);
-					blit(graphics, j + 99, 30, 129, 0, 27, 44);
-					blit(graphics, j + 99 + 26, 30, 126, 0, 3, 44);
-					blit(graphics, j + 99 + 26 + 3, 30, 99, 0, 26, 44);
-					blit(graphics, j + 155, 30, 0, 45, 155, 44);
-				} else {
-					blit(graphics, j + 0, 30, 0, 0, 155, 44);
-					blit(graphics, j + 155, 30, 0, 45, 155, 44);
-				}
-
-				RenderSystem.setShaderTexture(0, EDITION_TITLE_TEXTURE);
-				blit(graphics, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+				LOGO_RENDERER.renderLogo(e.getGuiGraphics(), e.getScreen().width, 1.0F);
 			}
 
 			if (this.showBranding) {
 				BrandingControl.forEachLine(true, true, (brdline, brd) -> {
-					GuiComponent.graphics.drawString(font, brd, 2, e.getScreen().height - (10 + brdline * (font.lineHeight + 1)), 16777215);
+					e.getGuiGraphics().drawString(font, brd, 2, e.getScreen().height - (10 + brdline * (font.lineHeight + 1)), 16777215);
 				});
 			}
 
 			if (this.showForgeNotificationTop) {
-				ForgeHooksClient.renderMainMenu((TitleScreen) e.getScreen(), graphics, Minecraft.getInstance().font, e.getScreen().width, e.getScreen().height, 255);
+				ForgeHooksClient.renderMainMenu((TitleScreen) e.getScreen(), e.getGuiGraphics(), Minecraft.getInstance().font, e.getScreen().width, e.getScreen().height, 255);
 			}
 			if (this.showForgeNotificationCopyright) {
 				BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {
-					GuiComponent.graphics.drawString(font, brd, e.getScreen().width - font.width(brd) - 1, e.getScreen().height - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
+					e.getGuiGraphics().drawString(font, brd, e.getScreen().width - font.width(brd) - 1, e.getScreen().height - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
 				});
 			}
 
@@ -243,10 +229,10 @@ public class MainMenuHandler extends MenuHandlerBase {
 			}
 
 			if (this.showRealmsNotification) {
-				this.drawRealmsNotification(graphics, e.getScreen());
+				this.drawRealmsNotification(e.getGuiGraphics(), e.getScreen());
 			}
 
-			this.renderSplash(graphics, e.getScreen());
+			this.renderSplash(e.getGuiGraphics(), e.getScreen());
 
 		}
 	}
@@ -268,7 +254,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 		float partial = Minecraft.getInstance().getFrameTime();
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
-				buttons.get(i).render(CurrentScreenHandler.getGuiGraphics(), mouseX, mouseY, partial);
+				buttons.get(i).render(e.getGuiGraphics(), mouseX, mouseY, partial);
 			}
 		}
 	}

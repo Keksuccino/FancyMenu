@@ -35,12 +35,12 @@ public class TitleScreenRealmsNotificationItem extends DeepCustomizationItem {
         int realmsButtonWidth = 98;
 //        int realmsButtonHeight = 20;
 
-        RenderSystem.setShaderTexture(0, NEWS_ICON_LOCATION);
+//        RenderSystem.setShaderTexture(0, NEWS_ICON_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        graphics.pushPose();
-        graphics.scale(0.4F, 0.4F, 0.4F);
-        GuiComponent.blit(graphics, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
-        graphics.popPose();
+        graphics.pose().pushPose();
+        graphics.pose().scale(0.4F, 0.4F, 0.4F);
+        graphics.blit(NEWS_ICON_LOCATION, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
+        graphics.pose().popPose();
 
         this.width = 13;
         this.height = 13;

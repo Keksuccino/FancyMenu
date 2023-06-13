@@ -89,15 +89,15 @@ public class GameIntroScreen extends Screen {
 		
 		if (this.skipable) {
 			RenderSystem.enableBlend();
-			graphics.pushPose();
-			graphics.scale(1.05F, 1.05F, 1.05F);
+			graphics.pose().pushPose();
+			graphics.pose().scale(1.05F, 1.05F, 1.05F);
 			String text = Locals.localize("gameintro.skip");
 			String customtext = StringUtils.convertFormatCodes(FancyMenu.config.getOrDefault("customgameintroskiptext", ""), "&", "§");
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;
 			}
 			graphics.drawCenteredString(Minecraft.getInstance().font, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
-			graphics.popPose();
+			graphics.pose().popPose();
 		}
 	}
 

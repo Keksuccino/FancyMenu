@@ -76,9 +76,9 @@ public class LayoutButtonDummyCustomizationItem  extends CustomizationItemBase {
 		}
 
 		if (texture != null) {
-			RenderUtils.bindTexture(texture);
+//			RenderUtils.bindTexture(texture);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			Screen.blit(graphics, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+			graphics.blit(texture, this.getPosX(menu), this.getPosY(menu), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 		} else if (animation != null) {
 			int aniX = animation.getPosX();
 			int aniY = animation.getPosY();

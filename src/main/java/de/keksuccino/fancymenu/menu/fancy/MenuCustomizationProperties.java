@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.menu.fancy;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import de.keksuccino.fancymenu.FancyMenu;
@@ -15,6 +14,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.versions.mcp.MCPVersion;
 
+@SuppressWarnings("all")
 public class MenuCustomizationProperties {
 	
 	private static List<PropertiesSet> properties = new ArrayList<PropertiesSet>();

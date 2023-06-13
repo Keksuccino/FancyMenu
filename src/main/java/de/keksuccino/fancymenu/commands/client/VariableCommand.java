@@ -75,7 +75,7 @@ public class VariableCommand {
                 if (getOrSet.equalsIgnoreCase("get")) {
                     String s = VariableHandler.getVariable(variableName);
                     if (s != null) {
-                        stack.sendSuccess(Component.literal(Locals.localize("fancymenu.commands.variable.get.success", s)), false);
+                        stack.sendSuccess(() -> Component.literal(Locals.localize("fancymenu.commands.variable.get.success", s)), false);
                     } else {
                         stack.sendFailure(Component.literal(Locals.localize("fancymenu.commands.variable.not_found")));
                     }
@@ -94,7 +94,7 @@ public class VariableCommand {
                 if (getOrSet.equalsIgnoreCase("set")) {
                     VariableHandler.setVariable(variableName, setToValue);
                     if (sendFeedback) {
-                        stack.sendSuccess(Component.literal(Locals.localize("fancymenu.commands.variable.set.success", setToValue)), false);
+                        stack.sendSuccess(() -> Component.literal(Locals.localize("fancymenu.commands.variable.set.success", setToValue)), false);
                     }
                 }
             } catch (Exception e) {

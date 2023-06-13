@@ -1,17 +1,18 @@
 package de.keksuccino.fancymenu.menu.fancy.item.items.inputfield;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.konkrete.gui.content.ExtendedEditBox;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
-import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 import java.io.IOException;
 
@@ -21,7 +22,7 @@ public class InputFieldCustomizationItem extends CustomizationItem {
     public InputFieldType type = InputFieldType.TEXT;
     public int maxTextLength = 10000;
 
-    public AdvancedTextField textField;
+    public ExtendedEditBox textField;
     public String lastValue = "";
 
     public InputFieldCustomizationItem(CustomizationItemContainer parentContainer, PropertiesSection item) {
@@ -49,7 +50,8 @@ public class InputFieldCustomizationItem extends CustomizationItem {
         }
 
         Screen current = Minecraft.getInstance().screen;
-        this.textField = new AdvancedTextField(Minecraft.getInstance().font, this.getPosX(current), this.getPosY(current), this.getWidth(), this.getHeight(), true, this.type.filter);
+        this.textField = new ExtendedEditBox(Minecraft.getInstance().font, this.getPosX(current), this.getPosY(current), this.getWidth(), this.getHeight(), Component.empty(), true);
+        this.textField.setCharacterFilter(this.type.filter);
         this.textField.setMaxLength(this.maxTextLength);
         if (this.linkedVariable != null) {
             String var = VariableHandler.getVariable(this.linkedVariable);
@@ -83,7 +85,8 @@ public class InputFieldCustomizationItem extends CustomizationItem {
             this.textField.y = this.getPosY(menu);
             this.textField.setWidth(this.getWidth());
             this.textField.setHeight(this.getHeight());
-            this.textField.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+//            this.textField.tick();
+            this.textField.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getFrameTime());
 
             //Update variable value on change
             if (!isEditorActive()) {

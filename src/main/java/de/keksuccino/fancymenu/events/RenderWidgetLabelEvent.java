@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.events;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -29,8 +30,8 @@ public class RenderWidgetLabelEvent extends Event {
 	public float getAlpha() {
 		return this.alpha;
 	}
-	
-	public GuiGraphics getGuiGraphics() {
+
+	public PoseStack getPoseStack() {
 		return this.graphics.pose();
 	}
 

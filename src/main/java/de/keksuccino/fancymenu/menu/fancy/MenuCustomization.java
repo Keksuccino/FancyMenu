@@ -28,6 +28,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.common.MinecraftForge;
 
+@SuppressWarnings("all")
 public class MenuCustomization {
 
 	private static PropertiesSet customizableMenus;

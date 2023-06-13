@@ -55,6 +55,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("all")
 public class ButtonScriptEngine {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -144,7 +145,7 @@ public class ButtonScriptEngine {
 						l.add(d, false);
 						l.save();
 					}
-					ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+					ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, false);
 				}
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
@@ -358,7 +359,7 @@ public class ButtonScriptEngine {
 							l.add(d, false);
 							l.save();
 						}
-						ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+						ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, false);
 					}
 				}
 			}

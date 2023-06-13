@@ -25,7 +25,7 @@ public class TitleScreenForgeCopyrightItem extends DeepCustomizationItem {
 
         String line = Locals.localize("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright.example.line1");
         int lineCount = 0;
-        GuiComponent.graphics.drawString(font, line, menu.width - font.width(line) - 1, menu.height - (11 + (lineCount + 1) * ( font.lineHeight + 1)), 16777215);
+        graphics.drawString(font, line, menu.width - font.width(line) - 1, menu.height - (11 + (lineCount + 1) * ( font.lineHeight + 1)), 16777215);
 
         this.width = font.width(line);
         this.height = font.lineHeight;

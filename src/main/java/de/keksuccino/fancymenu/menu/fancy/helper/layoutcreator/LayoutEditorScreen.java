@@ -10,6 +10,7 @@ import java.util.Map;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.fancymenu.TextInputScreen;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button.ButtonBackgroundPopup;
 import de.keksuccino.fancymenu.menu.fancy.item.*;
@@ -874,7 +875,7 @@ public class LayoutEditorScreen extends Screen {
 		}
 
 		if (this.backgroundPanorama != null) {
-			this.backgroundPanorama.render();
+			this.backgroundPanorama.render(graphics);
 		}
 
 		if (this.backgroundSlideshow != null) {
@@ -1498,11 +1499,11 @@ public class LayoutEditorScreen extends Screen {
 	}
 
 	public void saveLayoutAs() {
-		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), CharacterFilter.getBasicFilenameCharacterFilter(), 240, (call) -> {
+
+		TextInputScreen s = new TextInputScreen(Component.literal(Locals.localize("helper.editor.ui.layout.saveas.entername")), CharacterFilter.getBasicFilenameCharacterFilter(), (call) -> {
+			Minecraft.getInstance().setScreen(this);
 			try {
-
 				if ((call != null) && (call.length() > 0)) {
-
 					String file = FancyMenu.getCustomizationPath().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
 					File f = new File(file);
 					if (!f.exists()) {
@@ -1510,15 +1511,12 @@ public class LayoutEditorScreen extends Screen {
 							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
 						} else {
 							Snapshot snap = this.history.createSnapshot();
-
 							List<PropertiesSet> l = new ArrayList<PropertiesSet>();
 							l.add(snap.snapshot);
-
 							PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.screen, l);
 							neweditor.history = this.history;
 							this.history.editor = neweditor;
 							neweditor.single = file;
-
 							Minecraft.getInstance().setScreen(neweditor);
 						}
 					} else {
@@ -1527,12 +1525,49 @@ public class LayoutEditorScreen extends Screen {
 				} else {
 					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
 				}
-
 			} catch (Exception e) {
 				e.printStackTrace();
 				PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
 			}
-		}));
+		});
+		Minecraft.getInstance().setScreen(s);
+
+//		PopupHandler.displayPopup(new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.editor.ui.layout.saveas.entername"), CharacterFilter.getBasicFilenameCharacterFilter(), 240, (call) -> {
+//			try {
+//
+//				if ((call != null) && (call.length() > 0)) {
+//
+//					String file = FancyMenu.getCustomizationPath().getAbsolutePath().replace("\\", "/")+ "/" + call + ".txt";
+//					File f = new File(file);
+//					if (!f.exists()) {
+//						if (!CustomizationHelper.saveLayoutTo(this.getAllProperties(), file)) {
+//							PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//						} else {
+//							Snapshot snap = this.history.createSnapshot();
+//
+//							List<PropertiesSet> l = new ArrayList<PropertiesSet>();
+//							l.add(snap.snapshot);
+//
+//							PreloadedLayoutEditorScreen neweditor = new PreloadedLayoutEditorScreen(this.screen, l);
+//							neweditor.history = this.history;
+//							this.history.editor = neweditor;
+//							neweditor.single = file;
+//
+//							Minecraft.getInstance().setScreen(neweditor);
+//						}
+//					} else {
+//						PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//					}
+//				} else {
+//					PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//				}
+//
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, Locals.localize("helper.editor.ui.layout.saveas.failed")));
+//			}
+//		}));
+
 	}
 
 	public void copySelectedElements() {

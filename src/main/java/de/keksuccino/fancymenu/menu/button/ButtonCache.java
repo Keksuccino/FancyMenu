@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
-import de.keksuccino.konkrete.gui.screens.SimpleLoadingScreen;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -23,6 +22,7 @@ import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+@SuppressWarnings("all")
 public class ButtonCache {
 
 	private static Map<Long, ButtonData> buttons = new HashMap<Long, ButtonData>();
@@ -50,9 +50,6 @@ public class ButtonCache {
 			cached = true;
 
 			if (s instanceof LayoutEditorScreen) {
-				return;
-			}
-			if (s instanceof SimpleLoadingScreen) {
 				return;
 			}
 
@@ -167,7 +164,7 @@ public class ButtonCache {
 //			s.renderables.clear();
 
 			//Set all important variables and init screen
-			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
+//			((IMixinScreen)s).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
 			//TODO EXPERIMENTAL

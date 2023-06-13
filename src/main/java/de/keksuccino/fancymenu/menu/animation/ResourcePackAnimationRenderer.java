@@ -113,17 +113,16 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         int w = this.width;
         int x2 = this.x;
         int y2 = this.y;
-
         if (this.stretch) {
             h = Minecraft.getInstance().screen.height;
             w = Minecraft.getInstance().screen.width;
             x2 = 0;
             y2 = 0;
         }
-
-        RenderUtils.bindTexture(this.resources.get(this.frame));
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-        GuiComponent.blit(graphics, x2, y2, 0.0F, 0.0F, w, h, w, h);
+        RenderSystem.enableBlend();
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+        graphics.blit(this.resources.get(this.frame), x2, y2, 0.0F, 0.0F, w, h, w, h);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableBlend();
     }
 

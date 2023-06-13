@@ -204,9 +204,9 @@ public class ManageActionsScreen extends Screen {
         graphics.fill(0, 0, this.width, this.height, UIBase.SCREEN_BACKGROUND_COLOR.getRGB());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(graphics, titleComp, 20, 20, -1);
+        graphics.drawString(this.font, titleComp, 20, 20, -1, false);
 
-        this.font.draw(graphics, Locals.localize("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, -1);
+        graphics.drawString(this.font, Locals.localize("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, -1, false);
 
         this.actionsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
@@ -311,10 +311,10 @@ public class ManageActionsScreen extends Screen {
             RenderSystem.enableBlend();
 
             renderListingDot(graphics, this.getX() + 5, centerYLine1 - 2, LISTING_DOT_RED);
-            this.font.draw(graphics, this.displayNameComponent, (float)(this.getX() + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
+            graphics.drawString(this.font, this.displayNameComponent, (this.getX() + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
             renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine2 - 2, LISTING_DOT_BLUE);
-            this.font.draw(graphics, this.valueComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
+            graphics.drawString(this.font, this.valueComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
 
         }
 

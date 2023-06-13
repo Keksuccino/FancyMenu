@@ -32,14 +32,14 @@ public class TitleScreenLogoItem extends DeepCustomizationItem {
 
         RenderSystem.enableBlend();
 
-        RenderUtils.bindTexture(MINECRAFT_LOGO);
+//        RenderUtils.bindTexture(MINECRAFT_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        blit(graphics, j + 0, 30, 0, 0, 155, 44);
-        blit(graphics, j + 155, 30, 0, 45, 155, 44);
+        graphics.blit(MINECRAFT_LOGO, j + 0, 30, 0, 0, 155, 44);
+        graphics.blit(MINECRAFT_LOGO, j + 155, 30, 0, 45, 155, 44);
 
-        RenderUtils.bindTexture(MINECRAFT_EDITION);
+//        RenderUtils.bindTexture(MINECRAFT_EDITION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        blit(graphics, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
+        graphics.blit(MINECRAFT_EDITION, j + 88, 67, 0.0F, 0.0F, 98, 14, 128, 16);
 
     }
 

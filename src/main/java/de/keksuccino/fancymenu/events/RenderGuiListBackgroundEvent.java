@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.events;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -25,7 +26,7 @@ public class RenderGuiListBackgroundEvent extends Event {
 		return this.list;
 	}
 
-	public GuiGraphics getGuiGraphics() {
+	public PoseStack getPoseStack() {
 		return this.graphics.pose();
 	}
 

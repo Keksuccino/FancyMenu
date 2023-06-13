@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.fancymenu.RenderUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
@@ -61,7 +62,6 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -80,6 +80,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 public class MenuHandlerBase {
 
 	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuHandlerBase");
@@ -1370,9 +1371,8 @@ public class MenuHandlerBase {
 					this.backgroundAnimation.setOpacity(1.0F);
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
-//					RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-					
-					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
+					RenderSystem.defaultBlendFunc();
+					graphics.setColor(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
 					if (!this.panoramaback) {
 						if (!this.keepBackgroundAspectRatio) {
 							graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
@@ -1439,21 +1439,21 @@ public class MenuHandlerBase {
 						if (wfinal <= s.width) {
 							graphics.blit(this.backgroundTexture.getResourceLocation(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
-							RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
+							RenderSystem.enableBlend();
+							graphics.setColor(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
+							RenderUtils.doubleBlit(graphics, this.backgroundTexture.getResourceLocation(), panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
 						}
 					}
 
 					RenderSystem.disableBlend();
 					
-					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+					graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
 				} else if (this.panoramacube != null) {
 
-					
 					float opacity = this.panoramacube.opacity;
 					this.panoramacube.opacity = this.backgroundOpacity;
-					this.panoramacube.render();
+					this.panoramacube.render(graphics);
 					this.panoramacube.opacity = opacity;
 					//-----------------
 
@@ -1496,13 +1496,10 @@ public class MenuHandlerBase {
 					
 					this.slideshow.slideshowOpacity = opacity;
 				} else if (this.customMenuBackground != null) {
-
-					
 					this.customMenuBackground.opacity = this.backgroundOpacity;
 					this.customMenuBackground.render(graphics, s, this.keepBackgroundAspectRatio);
 					this.customMenuBackground.opacity = 1.0F;
 					//-------------------
-
 				}
 			}
 
@@ -1656,10 +1653,10 @@ public class MenuHandlerBase {
 							} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
 								ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
 								if (back != null) {
-									RenderUtils.bindTexture(back.getResourceLocation());
+//									RenderUtils.bindTexture(back.getResourceLocation());
 									RenderSystem.enableBlend();
 									RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha());
-									GuiComponent.blit(graphics, w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
+									e.getGuiGraphics().blit(back.getResourceLocation(), w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
 									return true;
 								}
 							}
