@@ -37,24 +37,10 @@ public class ConfirmationScreen extends Screen {
      * Confirmation screen that opens its parent screen on close.
      */
     public ConfirmationScreen(@Nullable Screen parentScreen, @NotNull Consumer<Boolean> callback, @NotNull String... text) {
-
         super(Component.literal(""));
         this.parentScreen = parentScreen;
         this.callback = callback;
         this.text = text;
-
-        this.confirmButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.confirm"), (button) -> {
-            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
-            this.callback.accept(true);
-        }).setAutoRegisterToScreen(true);
-        UIBase.applyDefaultButtonSkinTo(this.confirmButton);
-
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
-            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
-            this.callback.accept(false);
-        }).setAutoRegisterToScreen(true);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
-
     }
 
     @Override
@@ -66,6 +52,20 @@ public class ConfirmationScreen extends Screen {
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
         super.init();
+
+        this.confirmButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.confirm"), (button) -> {
+            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
+            this.callback.accept(true);
+        });
+        this.addWidget(this.confirmButton);
+        UIBase.applyDefaultButtonSkinTo(this.confirmButton);
+
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
+            if (this.openParentScreen) Minecraft.getInstance().setScreen(this.parentScreen);
+            this.callback.accept(false);
+        });
+        this.addWidget(this.cancelButton);
+        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }
 

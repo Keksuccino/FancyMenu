@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -45,6 +44,18 @@ public class ManageActionsScreen extends Screen {
         this.instances = instances;
         this.updateActionInstanceScrollArea(false);
 
+    }
+
+    @Override
+    protected void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+        super.init();
+
         this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
             BuildActionScreen s = new BuildActionScreen(this, null, (call) -> {
                 if (call != null) {
@@ -53,7 +64,8 @@ public class ManageActionsScreen extends Screen {
                 }
             });
             Minecraft.getInstance().setScreen(s);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.addActionButton);
         this.addActionButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")));
         UIBase.applyDefaultButtonSkinTo(this.addActionButton);
 
@@ -86,7 +98,8 @@ public class ManageActionsScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.moveUpButton);
         UIBase.applyDefaultButtonSkinTo(this.moveUpButton);
 
         this.moveDownButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_down"), (button) -> {
@@ -118,7 +131,8 @@ public class ManageActionsScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.moveDownButton);
         UIBase.applyDefaultButtonSkinTo(this.moveDownButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
@@ -141,7 +155,8 @@ public class ManageActionsScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.editButton);
         UIBase.applyDefaultButtonSkinTo(this.editButton);
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), (button) -> {
@@ -168,25 +183,15 @@ public class ManageActionsScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.removeButton);
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.instances);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
-
-    }
-
-    @Override
-    protected void init() {
-
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-
-        super.init();
 
     }
 

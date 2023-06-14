@@ -51,6 +51,13 @@ public class ChooseSlideshowScreen extends Screen {
             }
         }
 
+    }
+
+    @Override
+    protected void init() {
+
+        super.init();
+
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.selectedSlideshowName);
         }) {
@@ -64,12 +71,14 @@ public class ChooseSlideshowScreen extends Screen {
                 }
                 super.renderWidget(pose, mouseX, mouseY, partial);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

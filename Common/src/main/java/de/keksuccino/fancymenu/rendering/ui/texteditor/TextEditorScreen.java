@@ -180,7 +180,8 @@ public class TextEditorScreen extends Screen {
 
         this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             this.onClose();
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
@@ -188,7 +189,8 @@ public class TextEditorScreen extends Screen {
                 this.callback.accept(this.getText());
             }
             Minecraft.getInstance().setScreen(this.parentScreen);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         if (this.allowPlaceholders) {
@@ -199,7 +201,8 @@ public class TextEditorScreen extends Screen {
                     showPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setAutoRegisterToScreen(true).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultBackgroundColor());
+            }).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultBackgroundColor());
+            this.addWidget(this.placeholderButton);
             UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
             if (showPlaceholderMenu) {
                 this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().elementBackgroundColorNormal, UIBase.getUIColorScheme().elementBackgroundColorHover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));

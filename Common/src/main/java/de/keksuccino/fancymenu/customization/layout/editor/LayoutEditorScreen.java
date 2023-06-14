@@ -79,6 +79,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		super(Component.literal(""));
 
 		this.layoutTargetScreen = layoutTargetScreen;
+		layout.updateLastEditedTime();
+		layout.saveToFileIfPossible();
 		this.layout = layout.copy();
 
 		if (this.layoutTargetScreen != null) {
@@ -538,8 +540,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	public void saveLayout() {
 		if (this.layout.layoutFile != null) {
+			this.layout.updateLastEditedTime();
 			this.serializeElementInstancesToLayoutInstance();
-			if (!LayoutHandler.saveLayoutToFile(this.layout, this.layout.layoutFile.getAbsolutePath())) {
+			if (!this.layout.saveToFileIfPossible()) {
 				//TODO replace with NotificationScreen (does not exist yet)
 				Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 			}
@@ -552,6 +555,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		//TODO replace with TextInputScreen (does not exist yet)
 		FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.editor.save_as"), CharacterFilter.getFilenameFilterWithUppercaseSupport(), 240, (call) -> {
 			if (call != null) {
+				this.layout.updateLastEditedTime();
 				this.serializeElementInstancesToLayoutInstance();
 				File f = new File(FancyMenu.getCustomizationsDirectory().getAbsolutePath() + "/" + call + ".txt");
 				if (f.isFile()) {

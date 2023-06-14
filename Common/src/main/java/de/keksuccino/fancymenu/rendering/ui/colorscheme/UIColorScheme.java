@@ -7,6 +7,8 @@ import java.awt.*;
 
 public class UIColorScheme {
 
+    public DrawableColor menuBarBottomLineColor = DrawableColor.of(new Color(93, 97, 100));
+
     public DrawableColor layoutEditorMouseSelectionRectangleColor = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layoutEditorGridColorNormal = DrawableColor.of(new Color(255, 255, 255, 100));
     public DrawableColor layoutEditorGridColorCenter = DrawableColor.of(new Color(150, 105, 255, 100));
@@ -29,7 +31,9 @@ public class UIColorScheme {
     public DrawableColor listingDotColor1 = DrawableColor.of(new Color(62, 134, 160));
     public DrawableColor listingDotColor2 = DrawableColor.of(new Color(173, 108, 121));
     public DrawableColor listingDotColor3 = DrawableColor.of(new Color(170, 130, 63));
+
     public DrawableColor contextMenuShaderColor = DrawableColor.of(new Color(43, 43, 43, 100));
+    public DrawableColor contextMenuBorderColor = DrawableColor.of(new Color(93, 97, 100));
 
     public DrawableColor uiTextureColor = DrawableColor.of(new Color(255, 255, 255));
 

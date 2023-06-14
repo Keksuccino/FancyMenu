@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
@@ -18,7 +17,6 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -42,7 +40,6 @@ public class ExtendedButton extends Button {
     protected DrawableColor labelBaseColorNormal = DrawableColor.of(new Color(0xFFFFFF));
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
-    protected boolean autoRegister = false;
     protected Tooltip tooltip = null;
     protected boolean forceDefaultTooltipStyle = false;
 
@@ -72,7 +69,6 @@ public class ExtendedButton extends Button {
             }
             TooltipHandler.INSTANCE.addTooltip(this.tooltip, () -> true, false, true);
         }
-        this.handleAutoRegister();
         this.handleHover();
         super.render(pose, mouseX, mouseY, partial);
     }
@@ -136,15 +132,6 @@ public class ExtendedButton extends Button {
     protected int getHoverState() {
         if (this.isHovered) return 1;
         return 0;
-    }
-
-    protected void handleAutoRegister() {
-        if (this.autoRegister) {
-            Screen s = Minecraft.getInstance().screen;
-            if ((s != null) && !((IMixinScreen)s).getChildrenFancyMenu().contains(this)) {
-                ((IMixinScreen)s).invokeAddWidgetFancyMenu(this);
-            }
-        }
     }
 
     protected int getTextureY() {
@@ -220,15 +207,6 @@ public class ExtendedButton extends Button {
     public ExtendedButton setBackground(@NotNull ButtonBackground background) {
         this.background = background;
         this.background.setParent(this);
-        return this;
-    }
-
-    public boolean isAutoRegisteringToScreen() {
-        return this.autoRegister;
-    }
-
-    public ExtendedButton setAutoRegisterToScreen(boolean autoRegister) {
-        this.autoRegister = autoRegister;
         return this;
     }
 

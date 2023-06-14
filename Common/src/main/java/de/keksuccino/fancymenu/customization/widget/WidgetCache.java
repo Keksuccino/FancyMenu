@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
+import de.keksuccino.fancymenu.event.events.WidgetCacheUpdatedEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
@@ -40,13 +40,13 @@ public class WidgetCache {
 	private static void cacheWidgets(Screen s) {
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(s) || ScreenCustomization.isScreenBlacklisted(s)) {
 			WIDGET_METAS.clear();
-			EventHandler.INSTANCE.postEvent(new ButtonCacheUpdatedEvent(s, new ArrayList<>(), false));
+			EventHandler.INSTANCE.postEvent(new WidgetCacheUpdatedEvent(s, new ArrayList<>(), false));
 			return;
 		}
 		if ((s == Minecraft.getInstance().screen)) {
 			updateWidgetCache(s);
 		}
-		EventHandler.INSTANCE.postEvent(new ButtonCacheUpdatedEvent(s, getWidgets(), true));
+		EventHandler.INSTANCE.postEvent(new WidgetCacheUpdatedEvent(s, getWidgets(), true));
 	}
 
 	public static void updateWidgetCache(Screen s) {

@@ -33,7 +33,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             for (ActionExecutor.ActionContainer c : element.getActionList()) {
                 c.execute();
             }
-        }).setAutoRegisterToScreen(!isEditor());
+        });
         return element;
     }
 
@@ -85,7 +85,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             for (ActionExecutor.ActionContainer c : element.getActionList()) {
                 c.execute();
             }
-        }).setAutoRegisterToScreen(!isEditor());
+        });
 
         element.clickSound = serialized.getValue("clicksound");
         if (element.clickSound != null) {

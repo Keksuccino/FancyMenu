@@ -9,6 +9,8 @@ public class LightUIColorScheme extends UIColorScheme {
 
     public LightUIColorScheme() {
 
+        menuBarBottomLineColor = DrawableColor.of(new Color(119, 119, 119));
+
         layoutEditorMouseSelectionRectangleColor = DrawableColor.of(new Color(3, 148, 252));
         layoutEditorGridColorNormal = DrawableColor.of(new Color(101, 101, 101, 100));
         layoutEditorGridColorCenter = DrawableColor.of(new Color(161, 79, 255, 100));
@@ -31,6 +33,8 @@ public class LightUIColorScheme extends UIColorScheme {
         listingDotColor1 = DrawableColor.of(new Color(67, 141, 208));
         listingDotColor2 = DrawableColor.of(new Color(171, 57, 80));
         listingDotColor3 = DrawableColor.of(new Color(178, 116, 12));
+
+        contextMenuBorderColor = DrawableColor.of(new Color(119, 119, 119));
 
         uiTextureColor = DrawableColor.of(new Color(45, 45, 45));
 

@@ -67,6 +67,13 @@ public class ChooseMenuBackgroundScreen extends Screen {
             }
         }
 
+    }
+
+    @Override
+    protected void init() {
+
+        super.init();
+
         this.configureButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), (button) -> {
             if (this.backgroundType != null) {
                 this.backgroundType.buildNewOrEditInstanceInternal(this, this.background, (back) -> {
@@ -86,7 +93,8 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.configureButton);
         UIBase.applyDefaultButtonSkinTo(this.configureButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
@@ -105,20 +113,15 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 }
                 super.renderWidget(pose, mouseX, mouseY, partial);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
-
-    }
-
-    @Override
-    protected void init() {
-
-        super.init();
 
         this.setDescription(this.backgroundType);
 

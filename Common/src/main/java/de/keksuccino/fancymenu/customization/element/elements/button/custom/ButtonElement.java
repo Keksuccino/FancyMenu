@@ -18,15 +18,19 @@ import de.keksuccino.fancymenu.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -96,6 +100,12 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
+    }
+
+    @Override
+    public @Nullable List<GuiEventListener> getWidgetsToRegister() {
+        if (this.getButton() == null) return null;
+        return ListUtils.build(this.getButton());
     }
 
     protected void tick() {

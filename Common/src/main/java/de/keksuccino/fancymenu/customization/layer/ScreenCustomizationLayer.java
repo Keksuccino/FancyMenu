@@ -21,7 +21,7 @@ import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.events.screen.*;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
+import de.keksuccino.fancymenu.event.events.WidgetCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -37,6 +37,8 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -233,7 +235,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	}
 
 	@EventListener
-	public void onButtonsCached(ButtonCacheUpdatedEvent e) {
+	public void onWidgetsCached(WidgetCacheUpdatedEvent e) {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
@@ -242,7 +244,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
-		this.constructElementInstances(this.identifier, e.getButtonDataList(), this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
+		this.constructElementInstances(this.identifier, e.getCachedWidgetMetaList(), this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
 		this.allElements.addAll(this.normalElements.foregroundElements);
 		this.allElements.addAll(this.deepElements);
@@ -250,15 +252,24 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
 		if (e.getScreen() != null) {
-			for (WidgetMeta d : e.getButtonDataList()) {
+			for (WidgetMeta d : e.getCachedWidgetMetaList()) {
 				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
 			}
 		}
 
-		//Handle appearance delay
 		for (AbstractElement i : this.allElements) {
+			//Handle appearance delay
 			if (this.isNewMenu) {
 				this.handleAppearanceDelayFor(i);
+			}
+			//Add widgets of element to screen
+			List<GuiEventListener> widgetsToRegister = i.getWidgetsToRegister();
+			if (widgetsToRegister != null) {
+				for (GuiEventListener w : widgetsToRegister) {
+					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
+						e.addWidgetToScreen(w);
+					}
+				}
 			}
 		}
 

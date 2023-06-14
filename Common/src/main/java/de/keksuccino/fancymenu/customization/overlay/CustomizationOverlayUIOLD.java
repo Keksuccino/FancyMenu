@@ -22,7 +22,7 @@ import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.event.events.ButtonCacheUpdatedEvent;
+import de.keksuccino.fancymenu.event.events.WidgetCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -930,8 +930,8 @@ public class CustomizationOverlayUIOLD extends UIBase {
 	}
 
 	@EventListener
-	public void onButtonsCached(ButtonCacheUpdatedEvent e) {
-		buttons = e.getButtonDataList();
+	public void onButtonsCached(WidgetCacheUpdatedEvent e) {
+		buttons = e.getCachedWidgetMetaList();
 	}
 
 	@EventListener

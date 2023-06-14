@@ -49,6 +49,18 @@ public class ManageRequirementsScreen extends Screen {
         this.callback = callback;
         this.updateRequirementsScrollArea();
 
+    }
+
+    @Override
+    protected void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+        super.init();
+
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_requirement"), (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this, this.container, null, (call) -> {
                 if (call != null) {
@@ -57,7 +69,8 @@ public class ManageRequirementsScreen extends Screen {
                 }
             });
             Minecraft.getInstance().setScreen(s);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.add_requirement.desc")).setDefaultBackgroundColor());
         UIBase.applyDefaultButtonSkinTo(this.addRequirementButton);
 
@@ -69,7 +82,8 @@ public class ManageRequirementsScreen extends Screen {
                 }
             });
             Minecraft.getInstance().setScreen(s);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.addGroupButton);
         this.addGroupButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.add_group.desc")).setDefaultBackgroundColor());
         UIBase.applyDefaultButtonSkinTo(this.addGroupButton);
 
@@ -110,7 +124,8 @@ public class ManageRequirementsScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.editButton);
         UIBase.applyDefaultButtonSkinTo(this.editButton);
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
@@ -154,32 +169,23 @@ public class ManageRequirementsScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.removeButton);
         UIBase.applyDefaultButtonSkinTo(this.removeButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
             Minecraft.getInstance().setScreen(this.parentScreen);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.container);
             Minecraft.getInstance().setScreen(this.parentScreen);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
-
-    }
-
-    @Override
-    protected void init() {
-
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-
-        super.init();
 
     }
 

@@ -50,6 +50,7 @@ public class ImageEditorElement extends AbstractEditorElement {
                         this.editor.history.saveSnapshot();
                         ((ImageElement)this.element).source = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
                     }
+                    Minecraft.getInstance().setScreen(this.editor);
                 });
                 s.setFileFilter(FileChooserScreen.IMAGE_AND_GIF_FILE_FILTER);
                 Minecraft.getInstance().setScreen(s);

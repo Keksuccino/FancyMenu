@@ -66,6 +66,18 @@ public class BuildRequirementScreen extends Screen {
             }
         }
 
+    }
+
+    @Override
+    protected void init() {
+
+        //Reset the GUI scale in case the layout editor changed it
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+
+        super.init();
+
         this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), (button) -> {
             TextEditorScreen s = new TextEditorScreen(button.getMessage(), this, null, (call) -> {
                 if (call != null) {
@@ -94,7 +106,8 @@ public class BuildRequirementScreen extends Screen {
                 this.active = (r != null) && r.hasValue();
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.editValueButton);
         UIBase.applyDefaultButtonSkinTo(this.editValueButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
@@ -115,7 +128,8 @@ public class BuildRequirementScreen extends Screen {
                 }
                 super.renderWidget(matrix, mouseX, mouseY, partialTicks);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
@@ -125,7 +139,8 @@ public class BuildRequirementScreen extends Screen {
             } else {
                 this.callback.accept(null);
             }
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
         this.requirementModeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
@@ -144,21 +159,10 @@ public class BuildRequirementScreen extends Screen {
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.requirementModeButton);
         this.requirementModeButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.desc")));
         UIBase.applyDefaultButtonSkinTo(this.requirementModeButton);
-
-    }
-
-    @Override
-    protected void init() {
-
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-
-        super.init();
 
         this.setDescription(this.instance.requirement);
 

@@ -37,6 +37,13 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         this.background = background;
         this.callback = callback;
 
+    }
+
+    @Override
+    protected void init() {
+
+        super.init();
+
         this.chooseAnimationButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.animation.configure.choose_animation"), (press) -> {
             ChooseAnimationScreen s = new ChooseAnimationScreen(this.background.animationName, (call) -> {
                 if (call != null) {
@@ -45,7 +52,8 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
                 Minecraft.getInstance().setScreen(this);
             });
             Minecraft.getInstance().setScreen(s);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.chooseAnimationButton);
         UIBase.applyDefaultButtonSkinTo(this.chooseAnimationButton);
 
         this.toggleRestartOnLoadButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
@@ -60,7 +68,8 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.toggleRestartOnLoadButton);
         UIBase.applyDefaultButtonSkinTo(this.toggleRestartOnLoadButton);
 
         this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
@@ -75,12 +84,14 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.doneButton);
         UIBase.applyDefaultButtonSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
             this.onClose();
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

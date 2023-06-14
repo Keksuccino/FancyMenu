@@ -122,6 +122,13 @@ public class FileChooserScreen extends Screen {
         this.updateTextPreview(null);
         this.updateFilesList();
 
+    }
+
+    @Override
+    protected void init() {
+
+        super.init();
+
         this.okButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
             FileScrollAreaEntry selected = this.getSelectedEntry();
             if (selected != null) {
@@ -134,12 +141,14 @@ public class FileChooserScreen extends Screen {
                 this.active = (e != null) && (e.file.isFile());
                 super.render(pose, mouseX, mouseY, partial);
             }
-        }.setAutoRegisterToScreen(true);
+        };
+        this.addWidget(this.okButton);
         UIBase.applyDefaultButtonSkinTo(this.okButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-        }).setAutoRegisterToScreen(true);
+        });
+        this.addWidget(this.cancelButton);
         UIBase.applyDefaultButtonSkinTo(this.cancelButton);
 
     }

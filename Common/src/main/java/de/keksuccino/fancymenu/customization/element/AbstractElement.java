@@ -12,9 +12,14 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractElement extends GuiComponent implements Renderable {
 
@@ -60,6 +65,14 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	@Override
 	public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+
+	/**
+	 * Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}.
+	 */
+	@Nullable
+	public List<GuiEventListener> getWidgetsToRegister() {
+		return null;
+	}
 
 	/**
 	 * Should be used to get the ACTUAL X position of the element.<br>

@@ -140,7 +140,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
         UIBase.resetShaderColor();
         //Render border
-        UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
+        UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().contextMenuBorderColor.getColor(), true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry e : renderEntries) {
@@ -1332,7 +1332,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.getUIColorScheme().elementBorderColorNormal.getColorInt());
+            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.getUIColorScheme().contextMenuBorderColor.getColorInt());
         }
 
         @Override

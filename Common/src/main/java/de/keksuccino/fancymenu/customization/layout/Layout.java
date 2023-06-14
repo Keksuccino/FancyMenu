@@ -56,6 +56,7 @@ public class Layout extends LayoutBase {
 
     public String menuIdentifier;
     public File layoutFile;
+    public long lastEditedTime = -1;
 
     public boolean renderElementsBehindVanilla = false;
     public boolean randomMode = false;
@@ -94,6 +95,7 @@ public class Layout extends LayoutBase {
 
         meta.putProperty("identifier", this.menuIdentifier);
         meta.putProperty("render_custom_elements_behind_vanilla", "" + this.renderElementsBehindVanilla);
+        meta.putProperty("last_edited_time", "" + this.lastEditedTime);
 
         meta.putProperty("randommode", "" + this.randomMode);
         meta.putProperty("randomgroup", this.randomGroup);
@@ -207,6 +209,11 @@ public class Layout extends LayoutBase {
                     if ((randomOnlyFirstTime != null) && randomOnlyFirstTime.equalsIgnoreCase("true")) {
                         layout.randomOnlyFirstTime = true;
                     }
+                }
+
+                String lastEdited = meta.getValue("last_edited_time");
+                if ((lastEdited != null) && MathUtils.isLong(lastEdited)) {
+                    layout.lastEditedTime = Long.parseLong(lastEdited);
                 }
 
                 layout.customMenuTitle = meta.getValue("custom_menu_title");
@@ -392,6 +399,17 @@ public class Layout extends LayoutBase {
 
         return null;
 
+    }
+
+    public boolean saveToFileIfPossible() {
+        if ((this.layoutFile != null) && this.layoutFile.exists()) {
+            return LayoutHandler.saveLayoutToFile(this, ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutFile.getAbsolutePath()));
+        }
+        return false;
+    }
+
+    public void updateLastEditedTime() {
+        this.lastEditedTime = System.currentTimeMillis();
     }
 
     public void setMenuIdentifier(String identifier) {

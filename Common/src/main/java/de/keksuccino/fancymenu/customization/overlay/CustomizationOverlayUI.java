@@ -1,10 +1,17 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +42,84 @@ public class CustomizationOverlayUI {
         // LAYOUT
         ContextMenu layoutMenu = new ContextMenu();
         menuBar.addContextMenuEntry("layout", Component.translatable("fancymenu.overlay.menu_bar.layout"), layoutMenu);
+
+        ContextMenu layoutNewMenu = new ContextMenu();
+        layoutMenu.addSubMenuEntry("layout.new", Component.translatable("fancymenu.overlay.menu_bar.layout.new"), layoutNewMenu);
+
+        layoutNewMenu.addClickableEntry("layout.new.current", Component.translatable("fancymenu.overlay.menu_bar.layout.new.current"), (menu, entry) -> {
+            if (Minecraft.getInstance().screen != null) {
+                LayoutHandler.openLayoutEditor(new Layout(Minecraft.getInstance().screen), Minecraft.getInstance().screen);
+            }
+        });
+
+        layoutNewMenu.addClickableEntry("layout.new.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.new.universal"), (menu, entry) -> {
+            LayoutHandler.openLayoutEditor(new Layout(), null);
+        });
+
+        ContextMenu layoutManageMenu = new ContextMenu();
+        layoutMenu.addSubMenuEntry("layout.manage", Component.translatable("fancymenu.overlay.menu_bar.layout.manage"), layoutManageMenu);
+
+        ContextMenu layoutManageCurrentMenu = new ContextMenu();
+        layoutManageMenu.addSubMenuEntry("layout.manage.current", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.current"), layoutManageCurrentMenu);
+
+        String identifier = null;
+        if (Minecraft.getInstance().screen != null) {
+            if (Minecraft.getInstance().screen instanceof CustomGuiBase c) {
+                identifier = c.getIdentifier();
+            } else {
+                identifier = Minecraft.getInstance().screen.getClass().getName();
+            }
+        }
+        if (identifier != null) {
+            LOGGER.info("############ ADDING CURRENTS");
+            int i = 0;
+            for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(identifier)) {
+                LOGGER.info("########### ABOUT TO ADD CURRENT");
+                //TODO replace with sub menu entry
+                layoutManageCurrentMenu.addClickableEntry("layout.manage.current.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
+                    LayoutHandler.openLayoutEditor(l, Minecraft.getInstance().screen);
+                    //TODO remove debug
+                    try {
+                        LOGGER.info("########### RECENTLY EDITED CURRENT: " + java.nio.file.Files.getLastModifiedTime(l.layoutFile.toPath()));
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                });
+                i++;
+            }
+        } else {
+            LOGGER.info("############ IDENTIFIER WAS NULL");
+        }
+
+        layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
+
+        layoutManageCurrentMenu.addClickableEntry("layout.manage.current.all", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu, entry) -> {
+           //TODO open manage layouts screen for current layouts (manage screen shows both enabled and disabled layouts)
+        });
+
+        ContextMenu layoutManageUniversalMenu = new ContextMenu();
+        layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.universal"), layoutManageUniversalMenu);
+
+        int i = 0;
+        for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
+            //TODO replace with sub menu entry
+            layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
+                LayoutHandler.openLayoutEditor(l, null);
+                //TODO remove debug
+                try {
+                    LOGGER.info("########### RECENTLY EDITED UNIVERSAL: " + java.nio.file.Files.getLastModifiedTime(l.layoutFile.toPath()));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+            i++;
+        }
+
+        layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");
+
+        layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu, entry) -> {
+            //TODO open manage layouts screen for universal layouts (manage screen shows both enabled and disabled layouts)
+        });
 
         // TOOLS
         ContextMenu toolsMenu = new ContextMenu();

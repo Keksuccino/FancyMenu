@@ -110,7 +110,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     }
 
     protected void renderBottomLine(PoseStack pose, int width, int height) {
-        fill(pose, 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorScheme().elementBorderColorNormal.getColorInt());
+        fill(pose, 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorScheme().menuBarBottomLineColor.getColorInt());
         UIBase.resetShaderColor();
     }
 

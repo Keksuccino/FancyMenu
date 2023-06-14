@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.layout;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.attribute.FileTime;
+import java.util.*;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -11,12 +11,14 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -73,7 +75,12 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getEnabledLayoutsForMenuIdentifier(String menuIdentifier) {
+	public static List<Layout> getAllLayouts() {
+		return ListUtils.mergeLists(getEnabledLayouts(), getDisabledLayouts());
+	}
+
+	@NotNull
+	public static List<Layout> getEnabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : ENABLED_LAYOUTS) {
 			if (layout.menuIdentifier.equals(menuIdentifier)) {
@@ -94,7 +101,7 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getDisabledLayoutsForMenuIdentifier(String menuIdentifier) {
+	public static List<Layout> getDisabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : DISABLED_LAYOUTS) {
 			if (layout.menuIdentifier.equals(menuIdentifier)) {
@@ -102,6 +109,24 @@ public class LayoutHandler {
 			}
 		}
 		return l;
+	}
+
+	@NotNull
+	public static List<Layout> getAllLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
+		return ListUtils.mergeLists(getEnabledLayoutsForMenuIdentifier(menuIdentifier), getDisabledLayoutsForMenuIdentifier(menuIdentifier));
+	}
+
+	@NotNull
+	public static List<Layout> getRecentlyEditedLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
+		List<Layout> all = getAllLayoutsForMenuIdentifier(menuIdentifier);
+		all.sort(Comparator.comparingLong(value -> value.lastEditedTime));
+		Collections.reverse(all);
+		all.removeIf(l -> (l.lastEditedTime == -1));
+		if (!menuIdentifier.equals(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
+			all.removeIf(l -> Objects.equals(l.menuIdentifier, Layout.UNIVERSAL_LAYOUT_IDENTIFIER));
+		}
+		if (!all.isEmpty()) return all.subList(0, Math.min(5, all.size()));
+		return new ArrayList<>();
 	}
 
 	public static void enableLayout(File layoutFile) {
@@ -147,7 +172,7 @@ public class LayoutHandler {
 		}
 	}
 
-	public static void openLayoutEditor(@Nullable Layout layout, @Nullable Screen layoutTargetScreen) {
+	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
 			SoundRegistry.stopSounds();
 			SoundRegistry.resetSounds();
