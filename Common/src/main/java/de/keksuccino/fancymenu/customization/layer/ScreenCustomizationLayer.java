@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
+import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.acara.EventListener;
@@ -21,7 +22,6 @@ import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.events.screen.*;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.event.events.WidgetCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -69,6 +69,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
 	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
+	protected List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
 
@@ -128,7 +129,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	}
 
 	@EventListener
-	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
+	public void onInitOrResizeScreenPre(InitOrResizeScreenEvent.Pre e) {
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
@@ -199,6 +200,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		if (this.layoutBase.overrideMenuWith != null) {
 			if (CustomGuiLoader.guiExists(this.layoutBase.overrideMenuWith)) {
 				CustomGuiBase cus = CustomGuiLoader.getGui(this.layoutBase.overrideMenuWith, null, e.getScreen(), (onClose) -> {
+					//TODO tf is this and why did I add it???
 					e.getScreen().removed();
 				});
 				Minecraft.getInstance().setScreen(cus);
@@ -235,7 +237,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	}
 
 	@EventListener
-	public void onWidgetsCached(WidgetCacheUpdatedEvent e) {
+	public void onInitOrResizeScreenPost(InitOrResizeScreenEvent.Post e) {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
@@ -244,18 +246,21 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
-		this.constructElementInstances(this.identifier, e.getCachedWidgetMetaList(), this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
+		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetMetasOfScreen(e.getScreen());
+
+		this.constructElementInstances(this.identifier, this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
 		this.allElements.addAll(this.normalElements.foregroundElements);
 		this.allElements.addAll(this.deepElements);
 		this.allElements.addAll(this.vanillaButtonElements);
 
-		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
-		if (e.getScreen() != null) {
-			for (WidgetMeta d : e.getCachedWidgetMetaList()) {
-				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
-			}
-		}
+		//TODO experimental
+//		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
+//		if (e.getScreen() != null) {
+//			for (WidgetMeta d : widgetMetas) {
+//				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
+//			}
+//		}
 
 		for (AbstractElement i : this.allElements) {
 			//Handle appearance delay
@@ -267,7 +272,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			if (widgetsToRegister != null) {
 				for (GuiEventListener w : widgetsToRegister) {
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
-						e.addWidgetToScreen(w);
+						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(w);
 					}
 				}
 			}
@@ -338,10 +343,17 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
+		//Remove vanilla widgets from the renderables list before rendering the screen and let the vanilla button elements render them instead
+		if (e.getScreen() != null) {
+			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
+				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
+			}
+		}
+
 		//Re-init screen if layout-wide loading requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
-				e.getScreen().resize(Minecraft.getInstance(), e.getScreen().width, e.getScreen().height);
+				ScreenCustomization.reInitCurrentScreen();
 				break;
 			}
 		}
@@ -376,6 +388,14 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+		}
+
+		//Add back vanilla widgets after screen rendering
+		//Info: Adding back widgets is important for screens that don't clear their widgets on resize, like the CreateWorldScreen
+		if (e.getScreen() != null) {
+			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
+				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().add(d.getWidget());
+			}
 		}
 
 	}

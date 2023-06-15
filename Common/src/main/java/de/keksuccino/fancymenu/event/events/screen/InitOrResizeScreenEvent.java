@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-import org.apache.logging.log4j.LogManager;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,14 +44,16 @@ public class InitOrResizeScreenEvent extends EventBase {
         }
 
         public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
-            //TODO remove debug
-            LogManager.getLogger().info("############## ADDING SCREEN WIDGET VIA InitOrResizeScreenEvent..");
             ((IMixinScreen)this.getScreen()).getChildrenFancyMenu().add(widget);
         }
 
         public <T extends GuiEventListener & NarratableEntry & Renderable> void addRenderableWidget(T widget) {
             this.addWidget(widget);
             ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu().add(widget);
+        }
+
+        public List<GuiEventListener> getWidgets() {
+            return ((IMixinScreen)this.getScreen()).getChildrenFancyMenu();
         }
 
         public List<Renderable> getRenderables() {

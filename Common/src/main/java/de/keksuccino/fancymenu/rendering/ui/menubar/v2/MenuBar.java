@@ -38,12 +38,15 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
     protected int height = 28;
     protected float scale = UIBase.getUIScale();
+    protected boolean hovered = false;
     protected boolean forceUIScale = true;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
+
+        this.hovered = this.isMouseOver(mouseX, mouseY);
 
         float scale = UIBase.calculateFixedScale(this.scale);
         int scaledMouseX = (int) ((float)mouseX / scale);
@@ -354,6 +357,20 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         return this;
     }
 
+    public boolean isHovered() {
+        return this.hovered;
+    }
+
+    public boolean isUserNavigatingInMenuBar() {
+        if (this.isHovered()) return true;
+        for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
+            if (e instanceof ContextMenuBarEntry c) {
+                if (c.contextMenu.isUserNavigatingInMenu()) return true;
+            }
+        }
+        return false;
+    }
+
     public boolean isForceUIScale() {
         return this.forceUIScale;
     }
@@ -411,7 +428,17 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             }
             if (e.isVisible()) e.mouseClicked(scaledMouseX, scaledMouseY, button);
         }
+        if (this.isUserNavigatingInMenuBar()) return true;
         return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        float scale = UIBase.calculateFixedScale(this.scale);
+        int width = ScreenUtils.getScreenWidth();
+        int scaledWidth = (width != 0) ? (int)((float)width / scale) : 0;
+        int scaledHeight = (this.getHeight() != 0) ? (int)((float)this.getHeight() / scale) : 0;
+        return UIBase.isXYInArea((int)mouseX, (int)mouseY, 0, 0, scaledWidth, scaledHeight);
     }
 
     public static abstract class MenuBarEntry extends GuiComponent implements Renderable, GuiEventListener {

@@ -71,24 +71,14 @@ public class CustomizationOverlayUI {
             }
         }
         if (identifier != null) {
-            LOGGER.info("############ ADDING CURRENTS");
             int i = 0;
             for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(identifier)) {
-                LOGGER.info("########### ABOUT TO ADD CURRENT");
                 //TODO replace with sub menu entry
                 layoutManageCurrentMenu.addClickableEntry("layout.manage.current.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
                     LayoutHandler.openLayoutEditor(l, Minecraft.getInstance().screen);
-                    //TODO remove debug
-                    try {
-                        LOGGER.info("########### RECENTLY EDITED CURRENT: " + java.nio.file.Files.getLastModifiedTime(l.layoutFile.toPath()));
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
                 });
                 i++;
             }
-        } else {
-            LOGGER.info("############ IDENTIFIER WAS NULL");
         }
 
         layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
@@ -105,12 +95,6 @@ public class CustomizationOverlayUI {
             //TODO replace with sub menu entry
             layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
                 LayoutHandler.openLayoutEditor(l, null);
-                //TODO remove debug
-                try {
-                    LOGGER.info("########### RECENTLY EDITED UNIVERSAL: " + java.nio.file.Files.getLastModifiedTime(l.layoutFile.toPath()));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
             });
             i++;
         }

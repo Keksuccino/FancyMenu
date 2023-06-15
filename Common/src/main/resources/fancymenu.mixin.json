@@ -29,6 +29,7 @@
     "client.MixinRealmsNotificationsScreen",
     "client.MixinScreen",
     "client.MixinStringDecomposer",
+    "client.MixinTabManager",
     "client.MixinTitleScreen",
     "client.MixinWorldListEntry"
   ],

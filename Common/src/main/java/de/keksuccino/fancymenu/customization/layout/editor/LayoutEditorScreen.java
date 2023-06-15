@@ -11,7 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.widget.WidgetCache;
+import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -278,11 +278,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<VanillaButtonElement> vanillaButtonElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
-		if (this.layoutTargetScreen != null) {
-			WidgetCache.updateWidgetCache(this.layoutTargetScreen);
-		}
-
-		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? WidgetCache.getWidgets() : null;
+		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
+		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
+		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
+		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
+		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetMetasOfScreen(this.layoutTargetScreen) : null;
 
 		this.constructElementInstances(this.layout.menuIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaButtonElements, deepElements);
 

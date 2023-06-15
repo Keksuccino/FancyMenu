@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.event.acara.EventBase;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -37,8 +36,6 @@ public class WidgetCacheUpdatedEvent extends EventBase {
 	 * Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}.
 	 */
 	public void addWidgetToScreen(@NotNull GuiEventListener widget) {
-		//TODO remove debug
-		LOGGER.info("############## ADDING SCREEN WIDGET VIA WidgetCacheUpdatedEvent..");
 		if (widget instanceof NarratableEntry) {
 			((IMixinScreen)this.getScreen()).getChildrenFancyMenu().add(widget);
 		} else {

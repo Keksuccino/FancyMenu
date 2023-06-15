@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUIOLD;
-import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
@@ -33,6 +32,9 @@ import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.properties.PropertyContainer;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
@@ -99,8 +101,6 @@ public class ScreenCustomization {
 		GameIntroHandler.init();
 
 		CustomizationOverlay.init();
-
-		WidgetCache.init();
 
 		LayoutHandler.init();
 
@@ -264,6 +264,16 @@ public class ScreenCustomization {
 			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public static void reInitCurrentScreen() {
+		if (Minecraft.getInstance().screen != null) {
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen));
+			Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen));
 		}
 	}
 

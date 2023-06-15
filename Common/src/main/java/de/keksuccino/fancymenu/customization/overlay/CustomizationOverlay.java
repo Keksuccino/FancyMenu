@@ -23,7 +23,7 @@ public class CustomizationOverlay {
 	@EventListener(priority = -1000)
 	public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
 		rebuildMenuBar();
-		e.addWidget(overlayMenuBar);
+		e.getWidgets().add(0, overlayMenuBar);
 	}
 
 	@EventListener(priority = EventPriority.LOW)

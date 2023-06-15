@@ -92,6 +92,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
             } else {
                 this.button.active = false;
             }
+            this.button.setTooltip(null);
         }
 
         this.getButton().render(pose, mouseX, mouseY, partial);

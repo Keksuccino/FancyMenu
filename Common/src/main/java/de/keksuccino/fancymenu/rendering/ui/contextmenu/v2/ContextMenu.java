@@ -632,17 +632,20 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        float scale = UIBase.calculateFixedScale(this.scale);
-        int scaledMouseX = (int) ((float)mouseX / scale);
-        int scaledMouseY = (int) ((float)mouseY / scale);
-        for (ContextMenuEntry entry : this.entries) {
-            entry.mouseClicked(scaledMouseX, scaledMouseY, button);
-        }
-        //Handle click for sub context menus
-        for (ContextMenuEntry e : this.entries) {
-            if (e instanceof SubMenuContextMenuEntry s) {
-                s.subContextMenu.mouseClicked(mouseX, mouseY, button);
+        if (this.isUserNavigatingInMenu()) {
+            float scale = UIBase.calculateFixedScale(this.scale);
+            int scaledMouseX = (int) ((float)mouseX / scale);
+            int scaledMouseY = (int) ((float)mouseY / scale);
+            for (ContextMenuEntry entry : this.entries) {
+                entry.mouseClicked(scaledMouseX, scaledMouseY, button);
             }
+            //Handle click for sub context menus
+            for (ContextMenuEntry e : this.entries) {
+                if (e instanceof SubMenuContextMenuEntry s) {
+                    s.subContextMenu.mouseClicked(mouseX, mouseY, button);
+                }
+            }
+            return true;
         }
         return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
     }

@@ -50,7 +50,7 @@ public class ButtonIdentificator {
         return null;
     }
 
-    public static void setCompatibilityIdentifierToWidgetMeta(WidgetMeta data) {
+    public static void setCompatibilityIdentifierOfWidgetMeta(WidgetMeta data) {
         if (data != null) {
             data.setCompatibilityId(getCompatibilityIdentifierForButton(data));
         }

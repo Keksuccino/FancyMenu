@@ -5,13 +5,11 @@ import java.io.IOException;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.event.acara.EventPriority;
 import de.keksuccino.fancymenu.event.acara.EventListener;
 import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
@@ -20,7 +18,6 @@ import de.keksuccino.fancymenu.event.events.ModReloadEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,16 +30,16 @@ public class ScreenCustomizationEvents {
 	private boolean scaleChecked = false;
 	private boolean resumeWorldMusic = false;
 	protected Screen lastScreen = null;
-	protected boolean fixedSelectWorldScreen = false;
+//	protected boolean fixedSelectWorldScreen = false;
 
-	@EventListener
-	public void onRenderScreenPost(RenderScreenEvent.Post e) {
-		//Fix bugged Singleplayer menu in 1.19
-		if ((e.getScreen() instanceof SelectWorldScreen) && !this.fixedSelectWorldScreen) {
-			this.fixedSelectWorldScreen = true;
-			Minecraft.getInstance().setScreen(e.getScreen());
-		}
-	}
+//	@EventListener
+//	public void onRenderScreenPost(RenderScreenEvent.Post e) {
+//		//Fix bugged Singleplayer menu in 1.19
+//		if ((e.getScreen() instanceof SelectWorldScreen) && !this.fixedSelectWorldScreen) {
+//			this.fixedSelectWorldScreen = true;
+//			Minecraft.getInstance().setScreen(e.getScreen());
+//		}
+//	}
 
 	@EventListener(priority = EventPriority.HIGH)
 	public void onModReloaded(ModReloadEvent e) {
@@ -120,16 +117,15 @@ public class ScreenCustomizationEvents {
 			}
 		}
 
+		//Handle default GUI scale
 		if (!scaleChecked) {
 			scaleChecked = true;
-			
 			int scale = FancyMenu.getConfig().getOrDefault("defaultguiscale", -1);
 			if ((scale != -1) && (scale != 0)) {
 				File f = FancyMenu.INSTANCE_DATA_DIR;
 				if (!f.exists()) {
 					f.mkdirs();
 				}
-
 				File f2 = new File(f.getPath() + "/default_scale_set.fm");
 				File f3 = new File("mods/fancymenu/defaultscaleset.fancymenu");
 				if (!f2.exists() && !f3.exists()) {
@@ -139,7 +135,6 @@ public class ScreenCustomizationEvents {
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
-
 					LOGGER.info("[FANCYMENU] Setting default GUI scale..");
 					Minecraft.getInstance().options.guiScale().set(scale);
 					Minecraft.getInstance().options.save();

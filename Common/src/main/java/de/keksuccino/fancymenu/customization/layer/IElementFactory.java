@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.layer;
 
-import de.keksuccino.fancymenu.customization.widget.WidgetCache;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
@@ -12,6 +11,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +53,7 @@ public interface IElementFactory {
             if (vanillaButtonElements != null) {
                 //Construct vanilla button element instances
                 for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
-                    WidgetMeta d = WidgetCache.getWidget(element.getInstanceIdentifier());
+                    WidgetMeta d = findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList);
                     if (d != null) {
                         element.setVanillaButton(d);
                         if (!unstackedVanillaButtonElements.containsKey(d)) {
@@ -145,6 +145,39 @@ public interface IElementFactory {
      */
     default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull Layout layout, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
         this.constructElementInstances(menuIdentifier, vanillaWidgetMetaList, ListUtils.build(layout), normalElements, vanillaButtonElements, deepElements);
+    }
+
+    /**
+     * Returns the widget with the given identifier or NULL if no widget for the given identifier was found in the list.
+     */
+    @Nullable
+    private static WidgetMeta findWidgetMeta(String identifier, List<WidgetMeta> metas) {
+        identifier = identifier.replace("vanillabtn:", "");
+        WidgetMeta data = findWidgetMetaForCompatibilityId(identifier, metas);
+        if ((data == null) && MathUtils.isLong(identifier)) {
+            data = findWidgetMetaForId(Long.parseLong(identifier), metas);
+        }
+        return data;
+    }
+
+    @Nullable
+    private static WidgetMeta findWidgetMetaForId(long id, List<WidgetMeta> metas) {
+        for (WidgetMeta m : metas) {
+            if (m.getLongIdentifier() == id) return m;
+        }
+        return null;
+    }
+
+    @Nullable
+    private static WidgetMeta findWidgetMetaForCompatibilityId(String compId, List<WidgetMeta> metas) {
+        for (WidgetMeta m : metas) {
+            if (m.getCompatibilityIdentifier() != null) {
+                if (m.getCompatibilityIdentifier().equals(compId)) {
+                    return m;
+                }
+            }
+        }
+        return null;
     }
 
 }

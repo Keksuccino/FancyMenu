@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout;
 
 import java.io.File;
-import java.nio.file.attribute.FileTime;
 import java.util.*;
 
 import com.google.common.io.Files;
@@ -18,10 +17,10 @@ import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("unused")
 public class LayoutHandler {
 	
 	private static final List<Layout> ENABLED_LAYOUTS = new ArrayList<>();
@@ -116,6 +115,9 @@ public class LayoutHandler {
 		return ListUtils.mergeLists(getEnabledLayoutsForMenuIdentifier(menuIdentifier), getDisabledLayoutsForMenuIdentifier(menuIdentifier));
 	}
 
+	/**
+	 * Gets the 8 most recently edited layouts.
+	 */
 	@NotNull
 	public static List<Layout> getRecentlyEditedLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
 		List<Layout> all = getAllLayoutsForMenuIdentifier(menuIdentifier);
@@ -125,7 +127,7 @@ public class LayoutHandler {
 		if (!menuIdentifier.equals(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
 			all.removeIf(l -> Objects.equals(l.menuIdentifier, Layout.UNIVERSAL_LAYOUT_IDENTIFIER));
 		}
-		if (!all.isEmpty()) return all.subList(0, Math.min(5, all.size()));
+		if (!all.isEmpty()) return all.subList(0, Math.min(8, all.size()));
 		return new ArrayList<>();
 	}
 
