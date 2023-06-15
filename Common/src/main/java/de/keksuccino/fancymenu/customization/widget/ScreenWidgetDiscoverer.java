@@ -22,13 +22,25 @@ public class ScreenWidgetDiscoverer {
 	 * It is recommended to only call this in {@link InitOrResizeScreenCompletedEvent}s, if the target screen is currently active.
 	 */
 	@NotNull
-	public static List<WidgetMeta> getWidgetMetasOfScreen(Screen screen) {
+	public static List<WidgetMeta> getWidgetMetasOfScreen(Screen screen, boolean updateScreenSize) {
+		int newWidth = screen.width;
+		int newHeight = screen.height;
+		if (updateScreenSize) {
+			newWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+			newHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+		}
+		return getWidgetMetasOfScreen(screen, newWidth, newHeight);
+	}
+
+	/**
+	 * It is recommended to only call this in {@link InitOrResizeScreenCompletedEvent}s, if the target screen is currently active.
+	 */
+	@NotNull
+	public static List<WidgetMeta> getWidgetMetasOfScreen(Screen screen, int newWidth, int newHeight) {
 		Map<Long, WidgetMeta> widgetMetas = new LinkedHashMap<>();
 		try {
-			int oriScreenWidth = screen.width;
-			int oriScreenHeight = screen.height;
-			List<WidgetMeta> ids = getWidgetMetasOfScreen(screen, 1000, 1000);
-			List<WidgetMeta> buttons = getWidgetMetasOfScreen(screen, oriScreenWidth, oriScreenHeight);
+			List<WidgetMeta> ids = getWidgetMetasOfScreenInternal(screen, 1000, 1000);
+			List<WidgetMeta> buttons = getWidgetMetasOfScreenInternal(screen, newWidth, newHeight);
 			if (buttons.size() == ids.size()) {
 				int i = 0;
 				for (WidgetMeta id : ids) {
@@ -55,7 +67,7 @@ public class ScreenWidgetDiscoverer {
 	}
 
 	@NotNull
-	protected static List<WidgetMeta> getWidgetMetasOfScreen(Screen screen, int screenWidth, int screenHeight) {
+	protected static List<WidgetMeta> getWidgetMetasOfScreenInternal(Screen screen, int screenWidth, int screenHeight) {
 		List<WidgetMeta> widgetMetaList = new ArrayList<>();
 		List<Long> ids = new ArrayList<>();
 		try {

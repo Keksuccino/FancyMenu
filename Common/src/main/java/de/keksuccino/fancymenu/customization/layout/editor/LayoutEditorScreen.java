@@ -278,11 +278,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<VanillaButtonElement> vanillaButtonElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
-		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
-		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
-		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
-		//TODO FIXEN: vanilla widgets sind nach resize in editor an falscher position
-		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetMetasOfScreen(this.layoutTargetScreen) : null;
+		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetMetasOfScreen(this.layoutTargetScreen, true) : null;
 
 		this.constructElementInstances(this.layout.menuIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaButtonElements, deepElements);
 

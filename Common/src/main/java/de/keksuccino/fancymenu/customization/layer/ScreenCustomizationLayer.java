@@ -246,21 +246,13 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
-		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetMetasOfScreen(e.getScreen());
+		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetMetasOfScreen(e.getScreen(), false);
 
 		this.constructElementInstances(this.identifier, this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
 		this.allElements.addAll(this.normalElements.foregroundElements);
 		this.allElements.addAll(this.deepElements);
 		this.allElements.addAll(this.vanillaButtonElements);
-
-		//TODO experimental
-//		//Remove vanilla buttons from the renderables list and let the vanilla button elements render them instead
-//		if (e.getScreen() != null) {
-//			for (WidgetMeta d : widgetMetas) {
-//				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
-//			}
-//		}
 
 		for (AbstractElement i : this.allElements) {
 			//Handle appearance delay

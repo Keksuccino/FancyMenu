@@ -122,7 +122,7 @@ public class ButtonMimeHandler {
         public boolean init(Screen screenToGetButtonsFrom) {
             if (screenToGetButtonsFrom != null) {
                 List<String> compIds = new ArrayList<>();
-                for (WidgetMeta d : ScreenWidgetDiscoverer.getWidgetMetasOfScreen(screenToGetButtonsFrom, 1000, 1000)) {
+                for (WidgetMeta d : ScreenWidgetDiscoverer.getWidgetMetasOfScreenInternal(screenToGetButtonsFrom, 1000, 1000)) {
                     ButtonIdentificator.setCompatibilityIdentifierOfWidgetMeta(d);
                     if (compIds.contains(d.compatibilityId)) {
                         d.compatibilityId = null;
