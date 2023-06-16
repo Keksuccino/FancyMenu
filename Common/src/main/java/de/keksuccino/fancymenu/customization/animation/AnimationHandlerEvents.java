@@ -15,7 +15,7 @@ public class AnimationHandlerEvents {
 	@EventListener
 	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		//Stopping audio and resetting to intro (if enabled) for all advanced animations when changing the screen
-		if (AnimationHandler.isReady() && (this.lastScreen != e.getScreen())) {
+		if (this.lastScreen != e.getScreen()) {
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 				if (r instanceof AdvancedAnimation a) {
 					a.stopAudio();
@@ -32,7 +32,7 @@ public class AnimationHandlerEvents {
 	@EventListener
 	public void onTick(ClientTickEvent.Pre e) {
 		//Stopping audio for all advanced animations if no screen is being displayed
-		if ((Minecraft.getInstance().screen == null) && AnimationHandler.isReady() && !this.idle) {
+		if ((Minecraft.getInstance().screen == null) && !this.idle) {
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 				if (r instanceof AdvancedAnimation) {
 					((AdvancedAnimation)r).stopAudio();

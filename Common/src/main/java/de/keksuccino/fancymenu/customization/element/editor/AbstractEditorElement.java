@@ -934,7 +934,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	protected ContextMenu.ClickableContextMenuEntry addBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-		return addSwitcherContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(true, false), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
+		return addSwitcherContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
 				return Component.translatable(labelLocalizationKeyBase + ".on");
 			}

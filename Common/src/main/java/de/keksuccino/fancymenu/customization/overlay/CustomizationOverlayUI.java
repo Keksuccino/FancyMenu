@@ -72,7 +72,7 @@ public class CustomizationOverlayUI {
         }
         if (identifier != null) {
             int i = 0;
-            for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(identifier)) {
+            for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(identifier, false)) {
                 //TODO replace with sub menu entry
                 layoutManageCurrentMenu.addClickableEntry("layout.manage.current.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
                     LayoutHandler.openLayoutEditor(l, Minecraft.getInstance().screen);
@@ -91,7 +91,7 @@ public class CustomizationOverlayUI {
         layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.universal"), layoutManageUniversalMenu);
 
         int i = 0;
-        for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
+        for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true)) {
             //TODO replace with sub menu entry
             layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
                 LayoutHandler.openLayoutEditor(l, null);

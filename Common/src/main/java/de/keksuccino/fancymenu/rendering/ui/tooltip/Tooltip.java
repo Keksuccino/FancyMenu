@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -29,6 +30,7 @@ import java.util.List;
  * A tooltip that gets rendered at the mouse position by default.<br>
  * It's possible to set a custom X and Y position to not render it at the mouse position.
  **/
+@SuppressWarnings("unused")
 public class Tooltip extends GuiComponent implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -54,6 +56,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     protected boolean textShadow = true;
     protected TooltipTextAlignment textAlignment = TooltipTextAlignment.LEFT;
     protected Color textBaseColor = null;
+    protected Float scale = null;
 
     @NotNull
     public static Tooltip create() {
@@ -83,12 +86,18 @@ public class Tooltip extends GuiComponent implements Renderable {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
+            RenderSystem.enableBlend();
+
             this.updateAspectRatio();
 
             int x = this.calculateX(s, mouseX);
             int y = this.calculateY(s, mouseY);
 
-            RenderSystem.enableBlend();
+            if (this.scale != null) {
+                pose.pushPose();
+                float scale = UIBase.calculateFixedScale(this.scale);
+                pose.scale(scale, scale, scale);
+            }
             RenderUtils.setZLevelPre(pose, 400);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
@@ -97,6 +106,10 @@ public class Tooltip extends GuiComponent implements Renderable {
 
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderUtils.setZLevelPost(pose);
+            if (this.scale != null) {
+                pose.popPose();
+            }
+
             RenderSystem.disableBlend();
 
         }
@@ -173,33 +186,49 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     protected int calculateX(Screen screen, int mouseX) {
+        float scale = 1;
+        if (this.scale != null) {
+            scale = UIBase.calculateFixedScale(this.scale);
+        }
         if (this.x != null) {
             mouseX = this.x;
         }
-        mouseX += this.mouseOffset;
-        int w = this.getWidth();
+        int width = this.getWidth();
         if (this.vanillaLike) {
-            w += 4;
+            width += 4;
         }
-        if ((mouseX + w) > screen.width) {
-            return mouseX - ((mouseX + w) - screen.width);
+        int scaledWidth = (int)((float)width * scale);
+        int scaledMouseX = (int)((float)mouseX / scale) + this.mouseOffset;
+        int scaledScreenWidth = (int)((float)screen.width / scale);
+        int x = (mouseX + this.mouseOffset);
+        if ((x + scaledWidth) > screen.width) {
+            int offset = (x + scaledWidth) - screen.width;
+            x = x - offset;
         }
-        return mouseX;
+        return (int)((float)x / scale);
     }
 
     protected int calculateY(Screen screen, int mouseY) {
+        float scale = 1;
+        if (this.scale != null) {
+            scale = UIBase.calculateFixedScale(this.scale);
+        }
         if (this.y != null) {
             mouseY = this.y;
         }
-        mouseY += this.mouseOffset;
-        int h = this.getHeight();
+        int height = this.getHeight();
         if (this.vanillaLike) {
-            h += 4;
+            height += 4;
         }
-        if ((mouseY + h) > screen.height) {
-            return mouseY - ((mouseY + h) - screen.height);
+        int scaledHeight = (int)((float)height * scale);
+        int scaledMouseY = (int)((float)mouseY / scale) + this.mouseOffset;
+        int scaledScreenHeight = (int)((float)screen.height / scale);
+        int y = (mouseY + this.mouseOffset);
+        if ((y + scaledHeight) > screen.height) {
+            int offset = (y + scaledHeight) - screen.height;
+            y = y - offset;
         }
-        return mouseY;
+        return (int)((float)y / scale);
     }
 
     protected int getWidth() {
@@ -416,6 +445,16 @@ public class Tooltip extends GuiComponent implements Renderable {
     @Nullable
     public Integer getCustomY() {
         return y;
+    }
+
+    @Nullable
+    public Float getScale() {
+        return this.scale;
+    }
+
+    public Tooltip setScale(@Nullable Float scale) {
+        this.scale = scale;
+        return this;
     }
 
     public enum TooltipTextAlignment {

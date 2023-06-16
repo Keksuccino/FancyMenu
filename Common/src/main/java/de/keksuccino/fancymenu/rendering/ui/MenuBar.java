@@ -249,100 +249,98 @@ public class MenuBar extends UIBase {
 	}
 	
 	public void render(PoseStack matrix, Screen screen) {
-		
-		if (AnimationHandler.isReady()) {
-			if (screen != null) {
-				
-				if (this.visible) {
-					
-					if (this.isChildOpen()) {
-						MouseInput.blockVanillaInput("fmcustomizationhelper");
-					} else {
-						MouseInput.unblockVanillaInput("fmcustomizationhelper");
-					}
-					
-					MouseInput.setRenderScale(this.getScale());
-					
-					int mouseX = MouseInput.getMouseX();
-					int mouseY = MouseInput.getMouseY();
-					int width = screen.width;
-					float partialTicks = Minecraft.getInstance().getFrameTime();
-					
-					MouseInput.resetRenderScale();
-					
-					RenderUtils.setZLevelPre(matrix, 400);
-					
-					matrix.scale(this.getScale(), this.getScale(), this.getScale());
 
-					RenderSystem.enableBlend();
-					
-					if (this.expanded) {
-						
-						this.renderBackground(matrix, screen);
-						
-						//Render all child context menus.
-						//It's important to render child menus first, so height, width and scale updates
-						//made by button clicks can be applied before the menu is getting rendered.
-						for (ContextMenu m : this.children.values()) {
-							m.setButtonHeight(this.height);
-							m.render(matrix, mouseX, mouseY);
-						}
-						
-						//Render left bar elements
-						int xl = 0;
-						for (AdvancedButton b : this.leftElements.values()) {
-							if (b.visible) {
-								((IMixinAbstractWidget)b).setHeightFancyMenu(this.height);
-								if (!(b instanceof AdvancedImageButton)) {
-									int i = Minecraft.getInstance().font.width(b.getMessageString());
-									b.setWidth(i + 12);
-								}
-								b.x = xl;
-								b.y = 0;
-								applyDefaultButtonSkinTo(b);
-								b.render(matrix, mouseX, mouseY, partialTicks);
-								xl += b.getWidth() + this.elementSpace;
-							}
-						}
-						
-						//Render right bar elements
-						int xr = (int) (width / this.getScale());
-						for (AdvancedButton b : this.rightElements.values()) {
-							if (b.visible) {
-								((IMixinAbstractWidget)b).setHeightFancyMenu(this.height);
-								if (!(b instanceof AdvancedImageButton)) {
-									int i = Minecraft.getInstance().font.width(b.getMessageString());
-									b.setWidth(i + 12);
-								}
-								xr -= b.getWidth();
-								b.x = xr;
-								b.y = 0;
-								applyDefaultButtonSkinTo(b);
-								b.render(matrix, mouseX, mouseY, partialTicks);
-								xr -= this.elementSpace;
-							}
-						}
-						
-					} else {
-						
-						AdvancedButton right = this.rightElements.get("menubar.default.extendbtn");
-						if (right != null) {
+		if (screen != null) {
 
-							((IMixinAbstractWidget)right).setHeightFancyMenu(this.height);
-							right.x = (int) ((width / this.getScale()) - right.getWidth());
-							right.y = 0;
-							applyDefaultButtonSkinTo(right);
-							right.render(matrix, mouseX, mouseY, partialTicks);
-							
-						}
-						
-					}
-					
-					RenderUtils.setZLevelPost(matrix);
-					
+			if (this.visible) {
+
+				if (this.isChildOpen()) {
+					MouseInput.blockVanillaInput("fmcustomizationhelper");
+				} else {
+					MouseInput.unblockVanillaInput("fmcustomizationhelper");
 				}
-				
+
+				MouseInput.setRenderScale(this.getScale());
+
+				int mouseX = MouseInput.getMouseX();
+				int mouseY = MouseInput.getMouseY();
+				int width = screen.width;
+				float partialTicks = Minecraft.getInstance().getFrameTime();
+
+				MouseInput.resetRenderScale();
+
+				RenderUtils.setZLevelPre(matrix, 400);
+
+				matrix.scale(this.getScale(), this.getScale(), this.getScale());
+
+				RenderSystem.enableBlend();
+
+				if (this.expanded) {
+
+					this.renderBackground(matrix, screen);
+
+					//Render all child context menus.
+					//It's important to render child menus first, so height, width and scale updates
+					//made by button clicks can be applied before the menu is getting rendered.
+					for (ContextMenu m : this.children.values()) {
+						m.setButtonHeight(this.height);
+						m.render(matrix, mouseX, mouseY);
+					}
+
+					//Render left bar elements
+					int xl = 0;
+					for (AdvancedButton b : this.leftElements.values()) {
+						if (b.visible) {
+							((IMixinAbstractWidget)b).setHeightFancyMenu(this.height);
+							if (!(b instanceof AdvancedImageButton)) {
+								int i = Minecraft.getInstance().font.width(b.getMessageString());
+								b.setWidth(i + 12);
+							}
+							b.x = xl;
+							b.y = 0;
+							applyDefaultButtonSkinTo(b);
+							b.render(matrix, mouseX, mouseY, partialTicks);
+							xl += b.getWidth() + this.elementSpace;
+						}
+					}
+
+					//Render right bar elements
+					int xr = (int) (width / this.getScale());
+					for (AdvancedButton b : this.rightElements.values()) {
+						if (b.visible) {
+							((IMixinAbstractWidget)b).setHeightFancyMenu(this.height);
+							if (!(b instanceof AdvancedImageButton)) {
+								int i = Minecraft.getInstance().font.width(b.getMessageString());
+								b.setWidth(i + 12);
+							}
+							xr -= b.getWidth();
+							b.x = xr;
+							b.y = 0;
+							applyDefaultButtonSkinTo(b);
+							b.render(matrix, mouseX, mouseY, partialTicks);
+							xr -= this.elementSpace;
+						}
+					}
+
+				} else {
+
+					AdvancedButton right = this.rightElements.get("menubar.default.extendbtn");
+					if (right != null) {
+
+						((IMixinAbstractWidget)right).setHeightFancyMenu(this.height);
+						right.x = (int) ((width / this.getScale()) - right.getWidth());
+						right.y = 0;
+						applyDefaultButtonSkinTo(right);
+						right.render(matrix, mouseX, mouseY, partialTicks);
+
+					}
+
+				}
+
+				RenderUtils.setZLevelPost(matrix);
+
 			}
+
 		}
 		
 	}

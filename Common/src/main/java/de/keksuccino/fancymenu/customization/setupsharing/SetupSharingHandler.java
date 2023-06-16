@@ -651,7 +651,7 @@ public class SetupSharingHandler {
 
     protected static List<AdvancedAnimationMeta> getAnimationMetas() {
         List<AdvancedAnimationMeta> l = new ArrayList<>();
-        for (String s : AnimationHandler.getCustomAnimationNames()) {
+        for (String s : AnimationHandler.getExternalAnimationNames()) {
             AdvancedAnimationMeta meta = new AdvancedAnimationMeta();
             meta.name = s;
             if (AnimationHandler.animationExists(s)) {

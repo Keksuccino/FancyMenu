@@ -262,13 +262,13 @@ public class LayoutEditorUI extends UIBase {
 
 			String identifier = this.editor.layout.menuIdentifier;
 
-			List<Layout> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
+			List<Layout> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier, false);
 			if (!enabled.isEmpty()) {
 				int count = 0;
 				for (Layout l : enabled) {
 					String name = "huh? unknown layout, who dis?";
-					if (this.editor.layout.layoutFile != null) {
-						name = Files.getNameWithoutExtension(this.editor.layout.layoutFile.getName());
+					if (l.layoutFile != null) {
+						name = Files.getNameWithoutExtension(l.layoutFile.getName());
 					}
 					menu.addClickableEntry("layout_" + count, false, Component.literal(name).withStyle(ChatFormatting.GREEN), null, Boolean.class, (entry, inherited, pass) -> {
 						this.displayUnsavedWarning((call) -> {
@@ -284,8 +284,8 @@ public class LayoutEditorUI extends UIBase {
 				int count = 0;
 				for (Layout l : disabled) {
 					String name = "huh? unknown layout, who dis?";
-					if (this.editor.layout.layoutFile != null) {
-						name = Files.getNameWithoutExtension(this.editor.layout.layoutFile.getName());
+					if (l.layoutFile != null) {
+						name = Files.getNameWithoutExtension(l.layoutFile.getName());
 					}
 					menu.addClickableEntry("layout_" + count, false, Component.literal(name).withStyle(ChatFormatting.RED), null, Boolean.class, (entry, inherited, pass) -> {
 						this.displayUnsavedWarning((call) -> {

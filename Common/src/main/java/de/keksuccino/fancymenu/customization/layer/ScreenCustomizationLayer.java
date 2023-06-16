@@ -138,7 +138,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getIdentifier());
+		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getIdentifier(), true);
 		List<Layout> normalLayouts = new ArrayList<>();
 
 		this.activeLayouts.clear();

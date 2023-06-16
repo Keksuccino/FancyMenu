@@ -44,6 +44,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class ScreenCustomization {
 
 	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
@@ -54,7 +55,7 @@ public class ScreenCustomization {
 	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static ScreenCustomizationEvents eventsInstance = new ScreenCustomizationEvents();
-	public static boolean allowScreenCustomization = false;
+	protected static boolean screenCustomizationEnabled = true;
 
 	private static boolean initialized = false;
 	
@@ -90,7 +91,7 @@ public class ScreenCustomization {
 		ButtonIdentificator.init();
 
 		AnimationHandler.init();
-		AnimationHandler.loadCustomAnimations();
+		AnimationHandler.discoverAndRegisterExternalAnimations();
 
 		PanoramaHandler.init();
 
@@ -114,11 +115,19 @@ public class ScreenCustomization {
 
 	}
 
+	public static boolean isScreenCustomizationEnabled() {
+		return screenCustomizationEnabled;
+	}
+
+	public static void setScreenCustomizationEnabled(boolean enabled) {
+		ScreenCustomization.screenCustomizationEnabled = enabled;
+	}
+
 	public static void enableCustomizationForScreen(Screen screen) {
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
-		if (screen != null) {
+		if ((screen != null) && !isCustomizationEnabledForScreen(screen, true)) {
 			if (!(screen instanceof CustomGuiBase)) {
 				String identifier = screen.getClass().getName();
 				PropertyContainer sec = new PropertyContainer(identifier);
@@ -151,10 +160,14 @@ public class ScreenCustomization {
 	}
 
 	public static boolean isCustomizationEnabledForScreen(@NotNull Screen screen) {
+		return isCustomizationEnabledForScreen(screen, false);
+	}
+
+	public static boolean isCustomizationEnabledForScreen(@NotNull Screen screen, boolean ignoreAllowScreenCustomization) {
 		if (isScreenBlacklisted(screen)) {
 			return false;
 		}
-		if (!allowScreenCustomization) {
+		if (!screenCustomizationEnabled && !ignoreAllowScreenCustomization) {
 			return false;
 		}
 		if (customizableScreens == null) {
@@ -164,7 +177,7 @@ public class ScreenCustomization {
 			return true;
 		}
 		List<PropertyContainer> s = customizableScreens.getSectionsOfType(screen.getClass().getName());
-		return (s != null) && !s.isEmpty();
+		return !s.isEmpty();
 	}
 
 	private static void writeCustomizableScreensToFile() {
@@ -182,11 +195,12 @@ public class ScreenCustomization {
 				PropertiesSerializer.serializePropertyContainerSet(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
 				s = PropertiesSerializer.deserializePropertyContainerSet(CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
+			Objects.requireNonNull(s, "[FANCYMENU] Unable to read customizable menus file! PropertyContainer was NULL!");
 			PropertyContainerSet s2 = new PropertyContainerSet("customizablemenus");
 			for (PropertyContainer sec : s.getContainers()) {
 				String identifier = null;
 				try {
-					if ((sec.getType() != null) && (sec.getType().length() > 5)) {
+					if (sec.getType().length() > 5) {
 						Class.forName(sec.getType(), false, ScreenCustomization.class.getClassLoader());
 						identifier = sec.getType();
 					}

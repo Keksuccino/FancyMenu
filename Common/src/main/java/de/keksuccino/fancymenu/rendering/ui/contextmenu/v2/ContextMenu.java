@@ -921,6 +921,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected Supplier<Component> labelSupplier;
         @Nullable
         protected Supplier<Component> shortcutTextSupplier;
+        protected boolean tooltipIconHovered = false;
+        protected boolean tooltipActive = false;
         protected long tooltipIconHoverStart = -1;
 
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
@@ -951,33 +953,43 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         protected void renderTooltipIconAndRegisterTooltip(PoseStack pose, int mouseX, int mouseY, int offsetX) {
+
             if (this.tooltipSupplier != null) {
 
-                boolean iconHovered = this.isTooltipIconHovered(mouseX, mouseY, offsetX);
-                if (iconHovered) {
+                this.tooltipIconHovered = this.isTooltipIconHovered(mouseX, mouseY, offsetX);
+                if (this.tooltipIconHovered) {
                     if (this.tooltipIconHoverStart == -1) {
                         this.tooltipIconHoverStart = System.currentTimeMillis();
                     }
                 } else {
                     this.tooltipIconHoverStart = -1;
                 }
-                boolean showTooltip = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
+                this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                UIBase.getUIColorScheme().setUITextureShaderColor(iconHovered ? 1.0F : 0.2F);
+                UIBase.getUIColorScheme().setUITextureShaderColor(this.tooltipIconHovered ? 1.0F : 0.2F);
                 RenderUtils.bindTexture(CONTEXT_MENU_TOOLTIP_ICON);
                 blit(pose, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
                 UIBase.resetShaderColor();
 
-                Tooltip tooltip = this.getTooltip();
-                if (tooltip != null) {
-                    if (this.parent.isForceDefaultTooltipStyle()) {
-                        tooltip.setDefaultBackgroundColor();
+                if (this.tooltipActive) {
+                    Tooltip tooltip = this.getTooltip();
+                    if (tooltip != null) {
+                        if (this.parent.isForceDefaultTooltipStyle()) {
+                            tooltip.setDefaultBackgroundColor();
+                        }
+                        tooltip.setScale(this.parent.scale);
+                        TooltipHandler.INSTANCE.addTooltip(tooltip, () ->this.tooltipActive, false, true);
+                    } else {
+                        this.tooltipActive = false;
                     }
-                    TooltipHandler.INSTANCE.addTooltip(tooltip, () -> showTooltip, false, true);
                 }
 
+            } else {
+                this.tooltipIconHovered = false;
+                this.tooltipActive = false;
             }
+
         }
 
         protected boolean isTooltipIconHovered(int mouseX, int mouseY, int offsetX) {
@@ -1187,7 +1199,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 this.parentMenuHoverStartTime = -1;
             }
             //Open sub menu on entry hover
-            if (this.isActive() && this.isHovered() && !this.parent.isSubMenuHovered()) {
+            if (this.isActive() && this.isHovered() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 long now = System.currentTimeMillis();
                 if (this.entryHoverStartTime == -1) {
                     this.entryHoverStartTime = now;
@@ -1210,6 +1222,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 }
             } else {
                 this.entryNotHoveredStartTime = -1;
+            }
+            //Close sub menu if tooltip is active
+            if (this.tooltipActive && this.subContextMenu.isOpen()) {
+                this.subContextMenu.closeMenu();
             }
         }
 

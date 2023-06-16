@@ -79,12 +79,12 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getEnabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
+	public static List<Layout> getEnabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : ENABLED_LAYOUTS) {
 			if (layout.menuIdentifier.equals(menuIdentifier)) {
 				l.add(layout);
-			} else if (layout.isUniversalLayout()) {
+			} else if (layout.isUniversalLayout() && includeUniversalLayouts) {
 				if (!layout.universalLayoutMenuWhitelist.isEmpty() || !layout.universalLayoutMenuBlacklist.isEmpty()) {
 					if (!layout.universalLayoutMenuWhitelist.isEmpty() && layout.universalLayoutMenuWhitelist.contains(menuIdentifier)) {
 						l.add(layout);
@@ -111,22 +111,22 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getAllLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
-		return ListUtils.mergeLists(getEnabledLayoutsForMenuIdentifier(menuIdentifier), getDisabledLayoutsForMenuIdentifier(menuIdentifier));
+	public static List<Layout> getAllLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
+		return ListUtils.mergeLists(getEnabledLayoutsForMenuIdentifier(menuIdentifier, includeUniversalLayouts), getDisabledLayoutsForMenuIdentifier(menuIdentifier));
 	}
 
 	/**
 	 * Gets the 8 most recently edited layouts.
 	 */
 	@NotNull
-	public static List<Layout> getRecentlyEditedLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
-		List<Layout> all = getAllLayoutsForMenuIdentifier(menuIdentifier);
+	public static List<Layout> getRecentlyEditedLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
+		List<Layout> all = getAllLayoutsForMenuIdentifier(menuIdentifier, includeUniversalLayouts);
 		all.sort(Comparator.comparingLong(value -> value.lastEditedTime));
 		Collections.reverse(all);
 		all.removeIf(l -> (l.lastEditedTime == -1));
-		if (!menuIdentifier.equals(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
-			all.removeIf(l -> Objects.equals(l.menuIdentifier, Layout.UNIVERSAL_LAYOUT_IDENTIFIER));
-		}
+//		if (!menuIdentifier.equals(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
+//			all.removeIf(l -> Objects.equals(l.menuIdentifier, Layout.UNIVERSAL_LAYOUT_IDENTIFIER));
+//		}
 		if (!all.isEmpty()) return all.subList(0, Math.min(8, all.size()));
 		return new ArrayList<>();
 	}

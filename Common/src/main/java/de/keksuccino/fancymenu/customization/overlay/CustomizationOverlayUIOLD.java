@@ -691,7 +691,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			if (bar != null) {
 				if (!PopupHandler.isPopupActive()) {
 					if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-						if (AnimationHandler.isReady() && !ScreenCustomization.isScreenBlacklisted(screen)) {
+						if (!ScreenCustomization.isScreenBlacklisted(screen)) {
 
 							RenderUtils.setZLevelPre(matrix, 400);
 
@@ -1107,7 +1107,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 				identifier = "%fancymenu:universal_layout%";
 			}
 
-			List<Layout> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier);
+			List<Layout> enabled = LayoutHandler.getEnabledLayoutsForMenuIdentifier(identifier, true);
 			if (!this.isUniversal) {
 				List<Layout> sets = new ArrayList<>();
 				for (Layout s : enabled) {

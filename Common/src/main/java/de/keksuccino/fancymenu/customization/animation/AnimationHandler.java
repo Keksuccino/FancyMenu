@@ -13,37 +13,42 @@ import de.keksuccino.fancymenu.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("unused")
 public class AnimationHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private static final Map<String, AnimationData> ANIMATIONS = new HashMap<>();
-	private static final List<String> CUSTOM = new ArrayList<>();
-	protected static boolean ready = false;
+	private static final List<String> EXTERNAL_ANIMATION_NAMES = new ArrayList<>();
+	protected static boolean preloadCompleted = false;
+	protected static boolean initialized = false;
 
 	public static void init() {
-		EventHandler.INSTANCE.registerListenersOf(new AnimationHandlerEvents());
+		if (!initialized) {
+			EventHandler.INSTANCE.registerListenersOf(new AnimationHandlerEvents());
+		}
+		initialized = true;
 	}
 	
-	public static void registerAnimation(IAnimationRenderer animation, String name, Type type) {
+	public static void register(@NotNull IAnimationRenderer animation, @NotNull String name, @NotNull Type type) {
 		if (!ANIMATIONS.containsKey(name)) {
 			ANIMATIONS.put(name, new AnimationData(animation, name, type));
 			if (type == Type.EXTERNAL) {
-				CUSTOM.add(name);
+				EXTERNAL_ANIMATION_NAMES.add(name);
 			}
 		} else {
-			LOGGER.error("[FANCYMENU] AnimationHandler: Duplicate animation name: " + name);
+			LOGGER.error("[FANCYMENU] Failed to register animation! Animation with same name already exists: " + name);
 		}
 	}
 	
-	public static void unregisterAnimation(IAnimationRenderer animation) {
+	public static void unregister(@NotNull IAnimationRenderer animation) {
 		AnimationData d = null;
 		for (AnimationData a : ANIMATIONS.values()) {
 			if (a.animation == animation) {
@@ -52,29 +57,30 @@ public class AnimationHandler {
 			}
 		}
 		if (d != null) {
-			unregisterAnimation(d.name);
+			unregister(d.name);
 		}
 	}
 	
-	public static void unregisterAnimation(String name) {
+	public static void unregister(@NotNull String name) {
 		if (animationExists(name)) {
 			ANIMATIONS.remove(name);
-			if (CUSTOM.contains(name)) {
-				CUSTOM.remove(name);
-			}
+			EXTERNAL_ANIMATION_NAMES.remove(name);
 		}
 	}
 
-	public static void loadCustomAnimations() {
+	public static void discoverAndRegisterExternalAnimations() {
+
 		File f = FancyMenu.getAnimationPath();
 		if (!f.exists() || !f.isDirectory()) {
 			return;
 		}
-		
-		ready = false;
-		clearCustomAnimations();
-		
-		for (File a : f.listFiles()) {
+
+		preloadCompleted = false;
+		clearExternalAnimations();
+
+		File[] filesArray = f.listFiles();
+		if (filesArray == null) return;
+		for (File a : filesArray) {
 			String name;
 			String mainAudio = null;
 			String introAudio = null;
@@ -145,19 +151,12 @@ public class AnimationHandler {
 						}
 					}
 				}
-				Collections.sort(mainFrameKeys, (o1, o2) -> {
+				mainFrameKeys.sort((o1, o2) -> {
 					String n1 = o1.split("_", 2)[1];
 					String n2 = o2.split("_", 2)[1];
 					int i1 = Integer.parseInt(n1);
 					int i2 = Integer.parseInt(n2);
-
-					if (i1 > i2) {
-						return 1;
-					}
-					if (i1 < i2) {
-						return -1;
-					}
-					return 0;
+					return Integer.compare(i1, i2);
 				});
 				for (String s : mainFrameKeys) {
 					frameNamesMain.add("frames_main/" + mainFramesMap.get(s));
@@ -168,28 +167,21 @@ public class AnimationHandler {
 				if (!introFrameSecs.isEmpty()) {
 					PropertyContainer introFrames = introFrameSecs.get(0);
 					Map<String, String> introFramesMap = introFrames.getProperties();
-					List<String> introFrameKeys = new ArrayList<String>();
+					List<String> introFrameKeys = new ArrayList<>();
 					for (Map.Entry<String, String> me : introFramesMap.entrySet()) {
 						if (me.getKey().startsWith("frame_")) {
-							String frameNumber = me.getKey().split("[_]", 2)[1];
+							String frameNumber = me.getKey().split("_", 2)[1];
 							if (MathUtils.isInteger(frameNumber)) {
 								introFrameKeys.add(me.getKey());
 							}
 						}
 					}
-					Collections.sort(introFrameKeys, (o1, o2) -> {
+					introFrameKeys.sort((o1, o2) -> {
 						String n1 = o1.split("_", 2)[1];
 						String n2 = o2.split("_", 2)[1];
 						int i1 = Integer.parseInt(n1);
 						int i2 = Integer.parseInt(n2);
-
-						if (i1 > i2) {
-							return 1;
-						}
-						if (i1 < i2) {
-							return -1;
-						}
-						return 0;
+						return Integer.compare(i1, i2);
 					});
 					for (String s : introFrameKeys) {
 						frameNamesIntro.add("frames_intro/" + introFramesMap.get(s));
@@ -206,65 +198,64 @@ public class AnimationHandler {
 					introAudio = audio2.getPath();
 				}
 
-				if (name != null) {
-					IAnimationRenderer in = null;
-					IAnimationRenderer an = null;
+				IAnimationRenderer in = null;
+				IAnimationRenderer an = null;
 
-					if (!frameNamesIntro.isEmpty() && !frameNamesMain.isEmpty()) {
-						in = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesIntro, fps, loop, 0, 0, 100, 100);
-						an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
-					} else if (!frameNamesMain.isEmpty()) {
-						an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+				if (!frameNamesIntro.isEmpty() && !frameNamesMain.isEmpty()) {
+					in = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesIntro, fps, loop, 0, 0, 100, 100);
+					an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+				} else if (!frameNamesMain.isEmpty()) {
+					an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+				}
+
+				try {
+					if (in != null) {
+						AdvancedAnimation ani = new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro);
+						ani.propertiesPath = a.getPath();
+						register(ani, name, Type.EXTERNAL);
+						ani.prepareAnimation();
+						LOGGER.info("[FANCYMENU] Animation found: " + name);
+					} else if (an != null) {
+						AdvancedAnimation ani = new AdvancedAnimation(null, an, introAudio, mainAudio, false);
+						ani.propertiesPath = a.getPath();
+						register(ani, name, Type.EXTERNAL);
+						ani.prepareAnimation();
+						LOGGER.info("[FANCYMENU] Animation found:  " + name);
+					} else {
+						LOGGER.error("[FANCYMENU] Failed to register animation: " + name);
 					}
-					
-					try {
-						if ((in != null) && (an != null)) {
-							AdvancedAnimation ani = new AdvancedAnimation(in, an, introAudio, mainAudio, replayIntro);
-							ani.propertiesPath = a.getPath();
-							registerAnimation(ani, name, Type.EXTERNAL);
-							ani.prepareAnimation();
-							LOGGER.info("[FANCYMENU] AnimationHandler: Animation registered: " + name + "");
-						} else if (an != null) {
-							AdvancedAnimation ani = new AdvancedAnimation(null, an, introAudio, mainAudio, false);
-							ani.propertiesPath = a.getPath();
-							registerAnimation(ani, name, Type.EXTERNAL);
-							ani.prepareAnimation();
-							LOGGER.info("[FANCYMENU] AnimationHandler: Animation registered: " + name + "");
-						} else {
-							LOGGER.error("[FANCYMENU] AnimationHandler: This is not a valid animation: " + name);
-						}
-					} catch (AnimationNotFoundException e) {
-						e.printStackTrace();
-					}
+				} catch (AnimationNotFoundException e) {
+					e.printStackTrace();
 				}
 			}
 		}
 	}
-	
-	public static List<String> getCustomAnimationNames() {
-		return new ArrayList<>(CUSTOM);
+
+	@NotNull
+	public static List<String> getExternalAnimationNames() {
+		return new ArrayList<>(EXTERNAL_ANIMATION_NAMES);
 	}
 	
-	private static void clearCustomAnimations() {
-		for (String s : CUSTOM) {
-			if (ANIMATIONS.containsKey(s)) {
-				ANIMATIONS.remove(s);
-			}
+	private static void clearExternalAnimations() {
+		for (String s : EXTERNAL_ANIMATION_NAMES) {
+			ANIMATIONS.remove(s);
 		}
 	}
 	
-	public static boolean animationExists(String name) {
+	public static boolean animationExists(@NotNull String name) {
 		return ANIMATIONS.containsKey(name);
 	}
-	
+
+	@NotNull
 	public static List<IAnimationRenderer> getAnimations() {
-		List<IAnimationRenderer> renderers = new ArrayList<IAnimationRenderer>();
+		List<IAnimationRenderer> renderers = new ArrayList<>();
 		for (Map.Entry<String, AnimationData> m : ANIMATIONS.entrySet()) {
 			renderers.add(m.getValue().animation);
 		}
 		return renderers;
 	}
-	
+
+	@Nullable
 	public static IAnimationRenderer getAnimation(String name) {
 		if (animationExists(name)) {
 			return ANIMATIONS.get(name).animation;
@@ -293,16 +284,8 @@ public class AnimationHandler {
 			}
 		}
 	}
-	
-	public static boolean isReady() {
-		return ready;
-	}
 
-	public static void setReady(boolean ready) {
-		AnimationHandler.ready = ready;
-	}
-
-	public static void setupAnimationSizes() {
+	public static void updateAnimationSizes() {
 		for (IAnimationRenderer a : getAnimations()) {
 			if (a instanceof ResourcePackAnimationRenderer) {
 				((ResourcePackAnimationRenderer) a).setupAnimationSize();
@@ -319,58 +302,56 @@ public class AnimationHandler {
 		}
 	}
 
-	public static void preloadAnimations() {
-
-		LOGGER.info("[FANCYMENU] Updating animation sizes..");
-		AnimationHandler.setupAnimationSizes();
+	public static void preloadAnimations(boolean ignoreAlreadyPreloaded) {
 
 		boolean errors = false;
 
-		//Pre-load animation frames to prevent them from lagging when rendered for the first time
-		if (FancyMenu.getConfig().getOrDefault("preloadanimations", true)) {
-			if (!ready) {
-				LOGGER.info("[FANCYMENU] LOADING ANIMATION TEXTURES! THIS CAUSES THE LOADING SCREEN TO FREEZE FOR A WHILE!");
-				try {
-					List<ResourcePackAnimationRenderer> l = new ArrayList<ResourcePackAnimationRenderer>();
-					for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-						if (r instanceof AdvancedAnimation) {
-							IAnimationRenderer main = ((AdvancedAnimation) r).getMainAnimationRenderer();
-							IAnimationRenderer intro = ((AdvancedAnimation) r).getIntroAnimationRenderer();
-							if (main instanceof ResourcePackAnimationRenderer) {
-								l.add((ResourcePackAnimationRenderer) main);
-							}
-							if (intro instanceof ResourcePackAnimationRenderer) {
-								l.add((ResourcePackAnimationRenderer) intro);
-							}
-						} else if (r instanceof ResourcePackAnimationRenderer) {
-							l.add((ResourcePackAnimationRenderer) r);
+		if (!preloadCompleted || ignoreAlreadyPreloaded) {
+
+			LOGGER.info("[FANCYMENU] Preloading animations! This could cause the loading screen to freeze for a while..");
+
+			try {
+				List<ResourcePackAnimationRenderer> l = new ArrayList<>();
+				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
+					if (r instanceof AdvancedAnimation) {
+						IAnimationRenderer main = ((AdvancedAnimation) r).getMainAnimationRenderer();
+						IAnimationRenderer intro = ((AdvancedAnimation) r).getIntroAnimationRenderer();
+						if (main instanceof ResourcePackAnimationRenderer) {
+							l.add((ResourcePackAnimationRenderer) main);
 						}
-					}
-					for (ResourcePackAnimationRenderer r : l) {
-						for (ResourceLocation rl : r.getAnimationFrames()) {
-							TextureManager t = Minecraft.getInstance().getTextureManager();
-							AbstractTexture to = t.getTexture(rl);
-							if (to == null) {
-								to = new SimpleTexture(rl);
-								t.register(rl, to);
-							}
+						if (intro instanceof ResourcePackAnimationRenderer) {
+							l.add((ResourcePackAnimationRenderer) intro);
 						}
+					} else if (r instanceof ResourcePackAnimationRenderer) {
+						l.add((ResourcePackAnimationRenderer) r);
 					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
-					errors = true;
 				}
-				if (!errors) {
-					LOGGER.info("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES!");
-				} else {
-					LOGGER.warn("[FANCYMENU] FINISHED LOADING ANIMATION TEXTURES WITH ERRORS! PLEASE CHECK YOUR ANIMATIONS!");
+				for (ResourcePackAnimationRenderer r : l) {
+					for (ResourceLocation rl : r.getAnimationFrames()) {
+						TextureManager t = Minecraft.getInstance().getTextureManager();
+						//This is to trigger the texture registration in TextureManager#getTexture
+						t.getTexture(rl);
+					}
 				}
-				ready = true;
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				errors = true;
 			}
-		} else {
-			ready = true;
+
+			if (!errors) {
+				LOGGER.info("[FANCYMENU] Finished preloading animations!");
+			} else {
+				LOGGER.warn("[FANCYMENU] Finished preloading animations with errors! Check your animations!");
+			}
+
+			preloadCompleted = true;
+
 		}
 
+	}
+
+	public static boolean preloadingCompleted() {
+		return preloadCompleted;
 	}
 	
 }

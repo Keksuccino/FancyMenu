@@ -65,19 +65,6 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "setOverlay", at = @At(value = "HEAD"))
-	private void headSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
-		if (overlay == null) {
-			//Second attempt on enabling the animation engine and customization engine when loading screen is done (in case something goes wrong in the actual loading screen)
-			AnimationHandler.setReady(true);
-			ScreenCustomization.allowScreenCustomization = true;
-		} else {
-			//Disable animation engine and customization engine in loading screen to not load the current screen's customizations too early
-			AnimationHandler.setReady(false);
-			ScreenCustomization.allowScreenCustomization = false;
-		}
-	}
-
 	@Inject(method = "setScreen", at = @At("HEAD"))
 	private void headSetScreenFancyMenu(Screen screen, CallbackInfo info) {
 		//Reset GUI scale in case some layout changed it

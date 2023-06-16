@@ -170,7 +170,7 @@ public class ChooseAnimationScreen extends Screen {
 
     protected void updateAnimationScrollAreaContent() {
         this.animationListScrollArea.clearEntries();
-        for (String s : AnimationHandler.getCustomAnimationNames()) {
+        for (String s : AnimationHandler.getExternalAnimationNames()) {
             AnimationScrollEntry e = new AnimationScrollEntry(this.animationListScrollArea, s, (entry) -> {
                 this.setSelectedAnimation((AnimationScrollEntry)entry);
             });
