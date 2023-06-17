@@ -24,16 +24,9 @@ public class EnableLayoutAction extends Action {
 
         if (value != null) {
 
-            List<Layout> disabled = LayoutHandler.getDisabledLayouts();
-
-            for (Layout l : disabled) {
-                if (l.layoutFile != null) {
-                    String name = Files.getNameWithoutExtension(l.layoutFile.getName());
-                    if (name.equals(value)) {
-                        LayoutHandler.enableLayout(l);
-                        return;
-                    }
-                }
+            Layout l = LayoutHandler.getLayout(value);
+            if ((l != null) && !l.isEnabled()) {
+                l.setEnabled(true);
             }
 
         }

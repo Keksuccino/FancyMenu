@@ -86,9 +86,9 @@ public class BuildRequirementGroupScreen extends Screen {
             @Override
             public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
                 if (BuildRequirementGroupScreen.this.group.mode == LoadingRequirementGroup.GroupMode.AND) {
-                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.and"));
+                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.and"));
                 } else {
-                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.or"));
+                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.or"));
                 }
                 super.render(matrix, mouseX, mouseY, partial);
             }

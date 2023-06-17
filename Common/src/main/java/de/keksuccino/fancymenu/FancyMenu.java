@@ -29,6 +29,10 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO FIXEN: Nach ändern von anchor point springt das element manchmal beim ersten resizen (gesehen bei vanilla button)
+
+	//TODO per action ermöglichen, zu disconnecten/welt zu verlassen und dabei den zielscreen zu wählen
+
 	//TODO An inject point von TextColorFormatters (custom string color codes) system für HEX color codes adden ( format: §[#ffffff] / §[ffffff] )
 
 	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)

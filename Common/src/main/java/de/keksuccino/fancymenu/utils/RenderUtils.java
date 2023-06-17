@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
 import net.minecraft.client.Minecraft;
 
-public class RenderUtils {
+public class RenderUtils extends de.keksuccino.konkrete.rendering.RenderUtils {
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();

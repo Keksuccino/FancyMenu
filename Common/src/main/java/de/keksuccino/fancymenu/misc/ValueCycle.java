@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-public class ValueSwitcher<T> {
+public class ValueCycle<T> {
 
     protected List<T> values = new ArrayList<>();
     protected int currentIndex = 0;
@@ -17,14 +17,14 @@ public class ValueSwitcher<T> {
      * A value toggle.<br>
      * <b>The value list needs at least two entries!</b>
      */
-    public static <T> ValueSwitcher<T> fromList(@NotNull List<T> values) {
+    public static <T> ValueCycle<T> fromList(@NotNull List<T> values) {
         Objects.requireNonNull(values);
         if (values.size() < 2) {
             throw new InvalidParameterException("Failed to create ValueSwitcher! Value list size too small (<2)!");
         }
-        ValueSwitcher<T> valueSwitcher = new ValueSwitcher<>();
-        valueSwitcher.values.addAll(values);
-        return valueSwitcher;
+        ValueCycle<T> valueCycle = new ValueCycle<>();
+        valueCycle.values.addAll(values);
+        return valueCycle;
     }
 
     /**
@@ -32,12 +32,12 @@ public class ValueSwitcher<T> {
      * <b>The value array needs at least two entries!</b>
      */
     @SafeVarargs
-    public static <T> ValueSwitcher<T> fromArray(@NotNull T... values) {
+    public static <T> ValueCycle<T> fromArray(@NotNull T... values) {
         Objects.requireNonNull(values);
         return fromList(Arrays.asList(values));
     }
 
-    protected ValueSwitcher() {
+    protected ValueCycle() {
     }
 
     public List<T> getValues() {

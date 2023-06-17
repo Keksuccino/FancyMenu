@@ -42,8 +42,9 @@ public class UIColorScheme {
     public DrawableColor elementLabelColorInactive = DrawableColor.of(new Color(137, 147, 150));
     public DrawableColor descriptionAreaTextColor = DrawableColor.of(new Color(158, 170, 184));
     public DrawableColor textEditorTextColor = DrawableColor.of(new Color(158, 170, 184));
+    public DrawableColor successTextColor = DrawableColor.of(new Color(49, 206, 5));
     public DrawableColor errorTextColor = DrawableColor.of(new Color(237, 69, 69));
-    public DrawableColor warningTextColor = DrawableColor.of(new Color(170, 130, 63));
+    public DrawableColor warningTextColor = DrawableColor.of(new Color(229, 155, 18));
 
     public DrawableColor textEditorTextFormattingNestedTextColor1 = DrawableColor.of(new Color(235, 127, 127));
     public DrawableColor textEditorTextFormattingNestedTextColor2 = DrawableColor.of(new Color(235, 201, 127));
@@ -59,10 +60,6 @@ public class UIColorScheme {
     public DrawableColor textEditorTextFormattingNestedTextColor12 = DrawableColor.of(new Color(54, 137, 245));
 
     public DrawableColor textEditorTextFormattingBracketsColor = DrawableColor.of(new Color(252, 223, 3));
-
-    public DrawableColor fontRendererTextFormattingColorOrange = DrawableColor.of(new Color(16755200));
-    public DrawableColor fontRendererTextFormattingColorGreen = DrawableColor.of(new Color(5635925));
-    public DrawableColor fontRendererTextFormattingColorRed = DrawableColor.of(new Color(16733525));
 
     public void setUITextureShaderColor(float alpha) {
         UIBase.setShaderColor(uiTextureColor, alpha);

@@ -43,7 +43,8 @@ public class LightUIColorScheme extends UIColorScheme {
         elementLabelColorInactive = DrawableColor.of(new Color(154, 154, 154));
         descriptionAreaTextColor = DrawableColor.of(new Color(72, 78, 83));
         textEditorTextColor = DrawableColor.of(new Color(72, 78, 83));
-        errorTextColor = DrawableColor.of(new Color(183, 51, 51));
+        successTextColor = DrawableColor.of(new Color(25, 126, 2));
+        errorTextColor = DrawableColor.of(new Color(164, 27, 27));
         warningTextColor = DrawableColor.of(new Color(155, 97, 5));
 
         textEditorTextFormattingNestedTextColor1 = DrawableColor.of(new Color(161, 15, 15));
@@ -60,10 +61,6 @@ public class LightUIColorScheme extends UIColorScheme {
         textEditorTextFormattingNestedTextColor12 = DrawableColor.of(new Color(54, 60, 245));
 
         textEditorTextFormattingBracketsColor = DrawableColor.of(new Color(255, 58, 0, 100));
-
-        fontRendererTextFormattingColorOrange = DrawableColor.of(new Color(0xAB7103));
-        fontRendererTextFormattingColorGreen = DrawableColor.of(new Color(0x038103));
-        fontRendererTextFormattingColorRed = DrawableColor.of(new Color(0xC40707));
 
     }
 

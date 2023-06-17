@@ -153,9 +153,9 @@ public class BuildRequirementScreen extends Screen {
             @Override
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (BuildRequirementScreen.this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
-                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.normal"));
+                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.normal"));
                 } else {
-                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.opposite"));
+                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.opposite"));
                 }
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }

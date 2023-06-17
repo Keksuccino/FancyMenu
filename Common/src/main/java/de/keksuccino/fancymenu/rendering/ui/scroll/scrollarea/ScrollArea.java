@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.rendering.ui.scroll.scrollarea;
 
 import com.mojang.blaze3d.platform.Window;
@@ -18,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 public class ScrollArea extends UIBase {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -377,6 +377,7 @@ public class ScrollArea extends UIBase {
                 this.correctYScrollAfterAddingOrRemovingEntries(false, entry);
             }
         }
+        this.makeCurrentEntriesSameWidth();
     }
 
     public void addEntryAtIndex(ScrollAreaEntry entry, int index) {
@@ -387,6 +388,7 @@ public class ScrollArea extends UIBase {
         if (this.correctYOnAddingRemovingEntries) {
             this.correctYScrollAfterAddingOrRemovingEntries(false, entry);
         }
+        this.makeCurrentEntriesSameWidth();
     }
 
     public void removeEntry(ScrollAreaEntry entry) {
@@ -394,6 +396,7 @@ public class ScrollArea extends UIBase {
         if (this.correctYOnAddingRemovingEntries) {
             this.correctYScrollAfterAddingOrRemovingEntries(true, entry);
         }
+        this.makeCurrentEntriesSameWidth();
     }
 
     public void removeEntryAtIndex(int index) {
@@ -403,6 +406,7 @@ public class ScrollArea extends UIBase {
                 this.correctYScrollAfterAddingOrRemovingEntries(true, entry);
             }
         }
+        this.makeCurrentEntriesSameWidth();
     }
 
     public void clearEntries() {
@@ -416,6 +420,13 @@ public class ScrollArea extends UIBase {
      */
     public int getIndexOfEntry(ScrollAreaEntry entry) {
         return this.entries.indexOf(entry);
+    }
+
+    public void makeCurrentEntriesSameWidth() {
+        int totalWidth = this.getTotalEntryWidth();
+        for (ScrollAreaEntry e : this.getEntries()) {
+            e.setWidth(totalWidth);
+        }
     }
 
 }

@@ -43,6 +43,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ScreenCustomization {
@@ -289,6 +290,15 @@ public class ScreenCustomization {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen));
 		}
+	}
+
+	@Nullable
+	public static String getScreenIdentifier(Screen screen) {
+		if (screen == null) return null;
+		if (screen instanceof CustomGuiBase c) {
+			return c.getIdentifier();
+		}
+		return screen.getClass().getName();
 	}
 
 	public static boolean isOverridingOtherScreen(Screen current) {

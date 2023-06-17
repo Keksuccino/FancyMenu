@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.rendering.ui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.misc.ConsumingSupplier;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
@@ -40,29 +42,39 @@ public class ExtendedButton extends Button {
     protected DrawableColor labelBaseColorNormal = DrawableColor.of(new Color(0xFFFFFF));
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
+    @NotNull
+    protected ConsumingSupplier<ExtendedButton, Component> labelSupplier;
     protected Tooltip tooltip = null;
     protected boolean forceDefaultTooltipStyle = false;
+    @Nullable
+    protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
 
     protected int lastHoverState = -1;
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Component.literal(label), onPress, DEFAULT_NARRATION);
+        super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
+        this.labelSupplier = consumes -> Component.literal(label);
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress, CreateNarration narration) {
-        super(x, y, width, height, Component.literal(label), onPress, narration);
+        super(x, y, width, height, Component.literal(""), onPress, narration);
+        this.labelSupplier = consumes -> Component.literal(label);
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress) {
-        super(x, y, width, height, label, onPress, DEFAULT_NARRATION);
+        super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
+        this.labelSupplier = consumes -> label;
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress, CreateNarration narration) {
-        super(x, y, width, height, label, onPress, narration);
+        super(x, y, width, height, Component.literal(""), onPress, narration);
+        this.labelSupplier = consumes -> label;
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.updateIsActive();
+        this.updateLabel();
         if ((this.tooltip != null) && this.isHovered() && this.isActive() && this.visible) {
             if (this.forceDefaultTooltipStyle) {
                 this.tooltip.setDefaultBackgroundColor();
@@ -129,6 +141,19 @@ public class ExtendedButton extends Button {
         this.lastHoverState = this.getHoverState();
     }
 
+    protected void updateLabel() {
+        Component c = this.labelSupplier.get(this);
+        if (c == null) c = Component.literal("");
+        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(c);
+    }
+
+    protected void updateIsActive() {
+        if (this.activeSupplier != null) {
+            Boolean b = this.activeSupplier.get(this);
+            if (b != null) this.active = b;
+        }
+    }
+
     protected int getHoverState() {
         if (this.isHovered) return 1;
         return 0;
@@ -142,11 +167,6 @@ public class ExtendedButton extends Button {
             i = 2;
         }
         return 46 + i * 20;
-    }
-
-    public ExtendedButton setMessage(String message) {
-        this.setMessage(Component.literal(message));
-        return this;
     }
 
     public Tooltip getTooltip() {
@@ -164,6 +184,32 @@ public class ExtendedButton extends Button {
 
     public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
         this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
+    }
+
+    @Deprecated
+    @Override
+    public void setMessage(@NotNull Component msg) {
+        this.setLabel(msg);
+    }
+
+    public ExtendedButton setLabel(@NotNull Component label) {
+        this.labelSupplier = (btn) -> label;
+        return this;
+    }
+
+    public ExtendedButton setLabel(@NotNull String label) {
+        this.labelSupplier = (btn) -> Component.literal(label);
+        return this;
+    }
+
+    public ExtendedButton setLabelSupplier(@NotNull ConsumingSupplier<ExtendedButton, Component> labelSupplier) {
+        this.labelSupplier = labelSupplier;
+        return this;
+    }
+
+    @NotNull
+    public ConsumingSupplier<ExtendedButton, Component> getLabelSupplier() {
+        return this.labelSupplier;
     }
 
     public boolean isLabelEnabled() {
@@ -197,6 +243,16 @@ public class ExtendedButton extends Button {
 
     public void setLabelShadowEnabled(boolean enabled) {
         this.labelShadow = enabled;
+    }
+
+    public ExtendedButton setIsActiveSupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> isActiveSupplier) {
+        this.activeSupplier = isActiveSupplier;
+        return this;
+    }
+
+    @Nullable
+    public ConsumingSupplier<ExtendedButton, Boolean> getIsActiveSupplier() {
+        return this.activeSupplier;
     }
 
     @NotNull

@@ -6,12 +6,14 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +32,8 @@ public class CustomizationOverlayUI {
     protected static MenuBar buildMenuBar() {
 
         MenuBar menuBar = new MenuBar();
+        Screen screen = Minecraft.getInstance().screen;
+        String identifier = ScreenCustomization.getScreenIdentifier(screen);
 
         // FANCYMENU ICON
         ContextMenu fmMenu = new ContextMenu();
@@ -47,8 +51,8 @@ public class CustomizationOverlayUI {
         layoutMenu.addSubMenuEntry("layout.new", Component.translatable("fancymenu.overlay.menu_bar.layout.new"), layoutNewMenu);
 
         layoutNewMenu.addClickableEntry("layout.new.current", Component.translatable("fancymenu.overlay.menu_bar.layout.new.current"), (menu, entry) -> {
-            if (Minecraft.getInstance().screen != null) {
-                LayoutHandler.openLayoutEditor(new Layout(Minecraft.getInstance().screen), Minecraft.getInstance().screen);
+            if (screen != null) {
+                LayoutHandler.openLayoutEditor(new Layout(screen), screen);
             }
         });
 
@@ -62,20 +66,13 @@ public class CustomizationOverlayUI {
         ContextMenu layoutManageCurrentMenu = new ContextMenu();
         layoutManageMenu.addSubMenuEntry("layout.manage.current", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.current"), layoutManageCurrentMenu);
 
-        String identifier = null;
-        if (Minecraft.getInstance().screen != null) {
-            if (Minecraft.getInstance().screen instanceof CustomGuiBase c) {
-                identifier = c.getIdentifier();
-            } else {
-                identifier = Minecraft.getInstance().screen.getClass().getName();
-            }
-        }
         if (identifier != null) {
             int i = 0;
-            for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(identifier, false)) {
+            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), true, 8)) {
                 //TODO replace with sub menu entry
+                //TODO je nach enabled/disabled entsprechenden suffix adden
                 layoutManageCurrentMenu.addClickableEntry("layout.manage.current.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
-                    LayoutHandler.openLayoutEditor(l, Minecraft.getInstance().screen);
+                    LayoutHandler.openLayoutEditor(l, screen);
                 });
                 i++;
             }
@@ -84,15 +81,20 @@ public class CustomizationOverlayUI {
         layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
 
         layoutManageCurrentMenu.addClickableEntry("layout.manage.current.all", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu, entry) -> {
-           //TODO open manage layouts screen for current layouts (manage screen shows both enabled and disabled layouts)
+            if (identifier != null) {
+                Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), screen, layouts -> {
+                    Minecraft.getInstance().setScreen(screen);
+                }));
+            }
         });
 
         ContextMenu layoutManageUniversalMenu = new ContextMenu();
         layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.universal"), layoutManageUniversalMenu);
 
         int i = 0;
-        for (Layout l : LayoutHandler.getRecentlyEditedLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true)) {
+        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
             //TODO replace with sub menu entry
+            //TODO je nach enabled/disabled entsprechenden suffix adden
             layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
                 LayoutHandler.openLayoutEditor(l, null);
             });
@@ -102,7 +104,9 @@ public class CustomizationOverlayUI {
         layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");
 
         layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu, entry) -> {
-            //TODO open manage layouts screen for universal layouts (manage screen shows both enabled and disabled layouts)
+            Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
+                Minecraft.getInstance().setScreen(screen);
+            })));
         });
 
         // TOOLS

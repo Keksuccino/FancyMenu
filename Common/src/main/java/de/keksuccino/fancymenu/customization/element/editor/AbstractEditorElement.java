@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.misc.ConsumingSupplier;
-import de.keksuccino.fancymenu.misc.ValueSwitcher;
+import de.keksuccino.fancymenu.misc.ValueCycle;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
@@ -914,7 +914,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return addTo.addClickableEntry(entryIdentifier, Component.literal(""), (menu, entry) ->
 				{
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					ValueSwitcher<V> switcher = this.setupValueToggle("switcher", ValueSwitcher.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+					ValueCycle<V> switcher = this.setupValueToggle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
 					this.editor.history.saveSnapshot();
 					if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
 						V next = switcher.next();
@@ -928,7 +928,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					if (!entry.getStackMeta().getProperties().hasProperty("switcher")) {
 						selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					}
-					ValueSwitcher<V> switcher = this.setupValueToggle("switcher", ValueSwitcher.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+					ValueCycle<V> switcher = this.setupValueToggle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
 					return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry) entry, switcher.current());
 				});
 	}
@@ -943,9 +943,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	@SuppressWarnings("all")
-	protected <T, E extends AbstractEditorElement> ValueSwitcher<T> setupValueToggle(String toggleIdentifier, ValueSwitcher<T> toggle, List<E> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier<E, T> defaultValue) {
+	protected <T, E extends AbstractEditorElement> ValueCycle<T> setupValueToggle(String toggleIdentifier, ValueCycle<T> toggle, List<E> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier<E, T> defaultValue) {
 		boolean hasProperty = stackMeta.getProperties().hasProperty(toggleIdentifier);
-		ValueSwitcher<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, toggle);
+		ValueCycle<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, toggle);
 		if (!elements.isEmpty()) {
 			E firstElement = elements.get(0);
 			if (!stackMeta.isPartOfStack()) {

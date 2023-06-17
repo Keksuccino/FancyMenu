@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.misc.FilenameComparator;
+import de.keksuccino.fancymenu.misc.Legacy;
 import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.fancymenu.properties.PropertiesSerializer;
@@ -23,34 +25,35 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class LayoutHandler {
 	
-	private static final List<Layout> ENABLED_LAYOUTS = new ArrayList<>();
-	private static final List<Layout> DISABLED_LAYOUTS = new ArrayList<>();
+	private static final List<Layout> LAYOUTS = new ArrayList<>();
 
 	public static void init() {
+		convertLegacyDisabledLayouts();
 		reloadLayouts();
 	}
 
 	public static void reloadLayouts() {
 		ScreenCustomization.readCustomizableScreensFromFile();
-		ENABLED_LAYOUTS.clear();
-		DISABLED_LAYOUTS.clear();
-		ENABLED_LAYOUTS.addAll(deserializeLayoutFilesInDirectory(FancyMenu.getCustomizationsDirectory()));
-		DISABLED_LAYOUTS.addAll(deserializeLayoutFilesInDirectory(new File(FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled")));
+		LAYOUTS.clear();
+		LAYOUTS.addAll(deserializeLayoutFilesInDirectory(FancyMenu.getCustomizationsDirectory()));
 	}
 
-	@SuppressWarnings("all")
-	public static List<Layout> deserializeLayoutFilesInDirectory(File dir) {
+	@NotNull
+	public static List<Layout> deserializeLayoutFilesInDirectory(File directory) {
 		List<Layout> layouts = new ArrayList<>();
-		if (!dir.exists()) {
-			dir.mkdirs();
+		if (!directory.exists()) {
+			directory.mkdirs();
 		}
-		for (File f : dir.listFiles()) {
-			if (f.getPath().toLowerCase().endsWith(".txt")) {
-				PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(f.getAbsolutePath().replace("\\", "/"));
-				if (s != null) {
-					Layout layout = deserializeLayout(s, f);
-					if (layout != null) {
-						layouts.add(layout);
+		File[] filesArray = directory.listFiles();
+		if (filesArray != null) {
+			for (File f : filesArray) {
+				if (f.getPath().toLowerCase().endsWith(".txt")) {
+					PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(f.getAbsolutePath().replace("\\", "/"));
+					if (s != null) {
+						Layout layout = deserializeLayout(s, f);
+						if (layout != null) {
+							layouts.add(layout);
+						}
 					}
 				}
 			}
@@ -65,23 +68,27 @@ public class LayoutHandler {
 
 	@NotNull
 	public static List<Layout> getEnabledLayouts() {
-		return new ArrayList<>(ENABLED_LAYOUTS);
+		List<Layout> enabled = new ArrayList<>();
+		LAYOUTS.forEach(layout -> { if (layout.isEnabled()) enabled.add(layout); });
+		return enabled;
 	}
 
 	@NotNull
 	public static List<Layout> getDisabledLayouts() {
-		return new ArrayList<>(DISABLED_LAYOUTS);
+		List<Layout> disabled = new ArrayList<>();
+		LAYOUTS.forEach(layout -> { if (!layout.isEnabled()) disabled.add(layout); });
+		return disabled;
 	}
 
 	@NotNull
 	public static List<Layout> getAllLayouts() {
-		return ListUtils.mergeLists(getEnabledLayouts(), getDisabledLayouts());
+		return new ArrayList<>(LAYOUTS);
 	}
 
 	@NotNull
 	public static List<Layout> getEnabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
 		List<Layout> l = new ArrayList<>();
-		for (Layout layout : ENABLED_LAYOUTS) {
+		for (Layout layout : getEnabledLayouts()) {
 			if (layout.menuIdentifier.equals(menuIdentifier)) {
 				l.add(layout);
 			} else if (layout.isUniversalLayout() && includeUniversalLayouts) {
@@ -102,7 +109,7 @@ public class LayoutHandler {
 	@NotNull
 	public static List<Layout> getDisabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
 		List<Layout> l = new ArrayList<>();
-		for (Layout layout : DISABLED_LAYOUTS) {
+		for (Layout layout : getDisabledLayouts()) {
 			if (layout.menuIdentifier.equals(menuIdentifier)) {
 				l.add(layout);
 			}
@@ -115,63 +122,73 @@ public class LayoutHandler {
 		return ListUtils.mergeLists(getEnabledLayoutsForMenuIdentifier(menuIdentifier, includeUniversalLayouts), getDisabledLayoutsForMenuIdentifier(menuIdentifier));
 	}
 
-	/**
-	 * Gets the 8 most recently edited layouts.
-	 */
+	@Nullable
+	public static Layout getLayout(String name) {
+		for (Layout l : LAYOUTS) {
+			if (l.getLayoutName().equals(name)) return l;
+		}
+		return null;
+	}
+
 	@NotNull
-	public static List<Layout> getRecentlyEditedLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
-		List<Layout> all = getAllLayoutsForMenuIdentifier(menuIdentifier, includeUniversalLayouts);
-		all.sort(Comparator.comparingLong(value -> value.lastEditedTime));
-		Collections.reverse(all);
-		all.removeIf(l -> (l.lastEditedTime == -1));
-//		if (!menuIdentifier.equals(Layout.UNIVERSAL_LAYOUT_IDENTIFIER)) {
-//			all.removeIf(l -> Objects.equals(l.menuIdentifier, Layout.UNIVERSAL_LAYOUT_IDENTIFIER));
-//		}
-		if (!all.isEmpty()) return all.subList(0, Math.min(8, all.size()));
-		return new ArrayList<>();
+	public static List<Layout> sortLayoutListByLastEdited(@NotNull List<Layout> layouts, boolean removeNeverEdited) {
+		layouts.sort(Comparator.comparingLong(value -> value.lastEditedTime));
+		Collections.reverse(layouts);
+		if (removeNeverEdited) layouts.removeIf(l -> (l.lastEditedTime == -1));
+		return layouts;
 	}
 
-	public static void enableLayout(File layoutFile) {
-		try {
-			String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(layoutFile.getPath()), "txt");
-			FileUtils.copyFile(layoutFile, new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name));
-			layoutFile.delete();
-		} catch (Exception e) {
-			e.printStackTrace();
+	@NotNull
+	public static List<Layout> sortLayoutListByLastEdited(@NotNull List<Layout> layouts, boolean removeNeverEdited, int maxLayouts) {
+		sortLayoutListByLastEdited(layouts, removeNeverEdited);
+		if (!layouts.isEmpty()) {
+			List<Layout> temp = new ArrayList<>(layouts.subList(0, Math.min(maxLayouts, layouts.size())));
+			layouts.clear();
+			layouts.addAll(temp);
 		}
-		ScreenCustomization.reloadFancyMenu();
+		return layouts;
 	}
 
-	public static void enableLayout(Layout layout) {
-		if (layout.layoutFile != null) {
-			enableLayout(layout.layoutFile);
+	@NotNull
+	public static List<Layout> sortLayoutListByName(@NotNull List<Layout> layouts) {
+		FilenameComparator comp = new FilenameComparator();
+		layouts.sort((o1, o2) -> comp.compare(o1.getLayoutName(), o2.getLayoutName()));
+		return layouts;
+	}
+
+	@NotNull
+	public static List<Layout> sortLayoutListByStatus(@NotNull List<Layout> layouts, boolean disabledFirst) {
+		sortLayoutListByName(layouts);
+		List<Layout> enabled = new ArrayList<>();
+		List<Layout> disabled = new ArrayList<>();
+		layouts.forEach(layout -> {
+			if (layout.isEnabled()) {
+				enabled.add(layout);
+			} else {
+				disabled.add(layout);
+			}
+		});
+		layouts.clear();
+		if (disabledFirst) {
+			layouts.addAll(disabled);
+			layouts.addAll(enabled);
 		} else {
-			DISABLED_LAYOUTS.remove(layout);
-			ENABLED_LAYOUTS.add(layout);
-			ScreenCustomization.reloadFancyMenu();
+			layouts.addAll(enabled);
+			layouts.addAll(disabled);
 		}
+		return layouts;
 	}
 
-	public static void disableLayout(File layoutFile) {
+	public static void deleteLayout(@NotNull Layout layout) {
 		try {
-			String disPath = FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled";
-			String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(layoutFile.getPath()), "txt");
-			FileUtils.copyFile(layoutFile, new File(disPath + "/" + name));
-			layoutFile.delete();
-		} catch (Exception e) {
-			e.printStackTrace();
+			if (layout.layoutFile != null) {
+				layout.layoutFile.delete();
+			}
+			LAYOUTS.remove(layout);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
-		ScreenCustomization.reloadFancyMenu();
-	}
-
-	public static void disableLayout(Layout layout) {
-		if (layout.layoutFile != null) {
-			disableLayout(layout.layoutFile);
-		} else {
-			ENABLED_LAYOUTS.remove(layout);
-			DISABLED_LAYOUTS.add(layout);
-			ScreenCustomization.reloadFancyMenu();
-		}
+		ScreenCustomization.reInitCurrentScreen();
 	}
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
@@ -211,6 +228,29 @@ public class LayoutHandler {
 			}
 		}
 		return false;
+	}
+
+	@Legacy("This basically copies all layouts from the old '.disabled' directory to the main directory and sets them to disabled.")
+	private static void convertLegacyDisabledLayouts() {
+		File disabledDir = new File(FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled");
+		if (disabledDir.isDirectory()) {
+			List<Layout> legacyDisabled = deserializeLayoutFilesInDirectory(disabledDir);
+			for (Layout l : legacyDisabled) {
+				try {
+					if (l.layoutFile != null) {
+						String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(l.layoutFile.getPath()), "txt");
+						File newFile = new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name);
+						FileUtils.copyFile(l.layoutFile, newFile);
+						l.layoutFile.delete();
+						l.layoutFile = newFile;
+						l.enabled = false;
+						l.saveToFileIfPossible();
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
 	}
 
 }

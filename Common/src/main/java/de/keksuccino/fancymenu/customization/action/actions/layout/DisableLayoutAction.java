@@ -1,12 +1,9 @@
 package de.keksuccino.fancymenu.customization.action.actions.layout;
 
-import com.google.common.io.Files;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import net.minecraft.client.resources.language.I18n;
-
-import java.util.List;
 
 public class DisableLayoutAction extends Action {
 
@@ -24,16 +21,9 @@ public class DisableLayoutAction extends Action {
 
         if (value != null) {
 
-            List<Layout> enabled = LayoutHandler.getEnabledLayouts();
-
-            for (Layout l : enabled) {
-                if (l.layoutFile != null) {
-                    String name = Files.getNameWithoutExtension(l.layoutFile.getName());
-                    if (name.equals(value)) {
-                        LayoutHandler.disableLayout(l);
-                        return;
-                    }
-                }
+            Layout l = LayoutHandler.getLayout(value);
+            if ((l != null) && l.isEnabled()) {
+                l.setEnabled(false);
             }
 
         }

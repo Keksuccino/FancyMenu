@@ -4,6 +4,7 @@ package de.keksuccino.fancymenu.rendering.ui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.misc.FilenameComparator;
 import de.keksuccino.fancymenu.misc.InputConstants;
 import de.keksuccino.fancymenu.rendering.AspectRatio;
 import de.keksuccino.fancymenu.rendering.ui.UIBase;
@@ -287,11 +288,12 @@ public class FileChooserScreen extends Screen {
                     folders.add(f);
                 }
             }
+            FilenameComparator comp = new FilenameComparator();
             Collections.sort(folders, (o1, o2) -> {
-                return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+                return comp.compare(o1.getName(), o2.getName());
             });
             Collections.sort(files, (o1, o2) -> {
-                return String.CASE_INSENSITIVE_ORDER.compare(o1.getName(), o2.getName());
+                return comp.compare(o1.getName(), o2.getName());
             });
             for (File f : folders) {
                 FileScrollAreaEntry e = new FileScrollAreaEntry(this.fileListScrollArea, f);
@@ -302,10 +304,6 @@ public class FileChooserScreen extends Screen {
                 FileScrollAreaEntry e = new FileScrollAreaEntry(this.fileListScrollArea, f);
                 this.fileListScrollArea.addEntry(e);
             }
-        }
-        int totalWidth = this.fileListScrollArea.getTotalEntryWidth();
-        for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
-            e.setWidth(totalWidth);
         }
     }
 

@@ -110,14 +110,14 @@ public class ManageRequirementsScreen extends Screen {
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
-                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
+                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
                     this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected")).setDefaultBackgroundColor());
                     this.active = false;
                 } else {
                     if (s.isInstanceSelected()) {
-                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.edit_requirement"));
+                        this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.edit_requirement"));
                     } else {
-                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.edit_group"));
+                        this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.edit_group"));
                     }
                     this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.edit.desc")).setDefaultBackgroundColor());
                     this.active = true;
@@ -155,14 +155,14 @@ public class ManageRequirementsScreen extends Screen {
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
-                    this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
+                    this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
                     this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.no_entry_selected")).setDefaultBackgroundColor());
                     this.active = false;
                 } else {
                     if (s.isInstanceSelected()) {
-                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement"));
+                        this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement"));
                     } else {
-                        this.setMessage(I18n.get("fancymenu.editor.loading_requirement.screens.remove_group"));
+                        this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.remove_group"));
                     }
                     this.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc")).setDefaultBackgroundColor());
                     this.active = true;

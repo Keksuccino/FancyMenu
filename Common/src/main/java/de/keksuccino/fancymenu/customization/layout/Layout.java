@@ -35,6 +35,7 @@ import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.misc.Legacy;
+import de.keksuccino.fancymenu.misc.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.rendering.DrawableColor;
 import de.keksuccino.fancymenu.utils.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -43,13 +44,16 @@ import de.keksuccino.fancymenu.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public class Layout extends LayoutBase {
 
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
@@ -57,6 +61,7 @@ public class Layout extends LayoutBase {
     public String menuIdentifier;
     public File layoutFile;
     public long lastEditedTime = -1;
+    protected boolean enabled = true;
 
     public boolean renderElementsBehindVanilla = false;
     public boolean randomMode = false;
@@ -96,6 +101,7 @@ public class Layout extends LayoutBase {
         meta.putProperty("identifier", this.menuIdentifier);
         meta.putProperty("render_custom_elements_behind_vanilla", "" + this.renderElementsBehindVanilla);
         meta.putProperty("last_edited_time", "" + this.lastEditedTime);
+        meta.putProperty("is_enabled", "" + this.enabled);
 
         meta.putProperty("randommode", "" + this.randomMode);
         meta.putProperty("randomgroup", this.randomGroup);
@@ -214,6 +220,11 @@ public class Layout extends LayoutBase {
                 String lastEdited = meta.getValue("last_edited_time");
                 if ((lastEdited != null) && MathUtils.isLong(lastEdited)) {
                     layout.lastEditedTime = Long.parseLong(lastEdited);
+                }
+
+                String isEnabled = meta.getValue("is_enabled");
+                if ((isEnabled != null) && isEnabled.equals("false")) {
+                    layout.enabled = false;
                 }
 
                 layout.customMenuTitle = meta.getValue("custom_menu_title");
@@ -408,22 +419,50 @@ public class Layout extends LayoutBase {
         return false;
     }
 
-    public void updateLastEditedTime() {
+    public Layout updateLastEditedTime() {
         this.lastEditedTime = System.currentTimeMillis();
+        return this;
     }
 
-    public void setMenuIdentifier(String identifier) {
+    public Layout setMenuIdentifier(String identifier) {
         if (identifier != null) {
             this.menuIdentifier = ScreenCustomization.findValidMenuIdentifierFor(identifier);
         }
+        return this;
     }
 
     public boolean isUniversalLayout() {
         return (this.menuIdentifier != null) && this.menuIdentifier.equals(UNIVERSAL_LAYOUT_IDENTIFIER);
     }
 
-    public void setToUniversalLayout() {
+    public Layout setToUniversalLayout() {
         this.menuIdentifier = UNIVERSAL_LAYOUT_IDENTIFIER;
+        return this;
+    }
+
+    @NotNull
+    public String getLayoutName() {
+        if (this.layoutFile != null) return com.google.common.io.Files.getNameWithoutExtension(this.layoutFile.getPath());
+        return "Nameless Layout";
+    }
+
+    public LayoutStatus getStatus() {
+        return this.isEnabled() ? LayoutStatus.ENABLED : LayoutStatus.DISABLED;
+    }
+
+    public boolean isEnabled() {
+        return this.enabled;
+    }
+
+    public Layout setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        this.saveToFileIfPossible();
+        ScreenCustomization.reInitCurrentScreen();
+        return this;
+    }
+
+    public void delete() {
+        LayoutHandler.deleteLayout(this);
     }
 
     public boolean layoutWideLoadingRequirementsMet() {
@@ -533,9 +572,6 @@ public class Layout extends LayoutBase {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
                         e.color = DrawableColor.of(sec.getValue("color"));
-                        if (e.color == null) {
-                            e.color = DrawableColor.of(255, 255, 255);
-                        }
                         elements.add(Elements.SHAPE.serializeElementInternal(e));
                     }
                 }
@@ -576,9 +612,6 @@ public class Layout extends LayoutBase {
                         String baseColor = sec.getValue("basecolor");
                         if (baseColor != null) {
                             e.baseColor = DrawableColor.of(baseColor);
-                            if (e.baseColor == null) {
-                                e.baseColor = DrawableColor.of(255, 255, 255);
-                            }
                         }
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
                     }
@@ -855,6 +888,36 @@ public class Layout extends LayoutBase {
 
         public List<AbstractElement> foregroundElements = new ArrayList<>();
         public List<AbstractElement> backgroundElements = new ArrayList<>();
+
+    }
+
+    public enum LayoutStatus implements LocalizedCycleEnum {
+
+        ENABLED("enabled", SUCCESS_TEXT_STYLE),
+        DISABLED("disabled", ERROR_TEXT_STYLE);
+
+        final String name;
+        final Supplier<Style> style;
+
+        LayoutStatus(String name, Supplier<Style> style) {
+            this.name = name;
+            this.style = style;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.layout.status";
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        @Override
+        public @NotNull Style getEntryComponentStyle() {
+            return this.style.get();
+        }
 
     }
 
