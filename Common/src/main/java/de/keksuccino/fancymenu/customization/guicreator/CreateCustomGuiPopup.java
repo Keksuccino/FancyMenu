@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMPopup;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;

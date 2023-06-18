@@ -1,8 +1,8 @@
 
 package de.keksuccino.fancymenu.customization.loadingrequirement;
 
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

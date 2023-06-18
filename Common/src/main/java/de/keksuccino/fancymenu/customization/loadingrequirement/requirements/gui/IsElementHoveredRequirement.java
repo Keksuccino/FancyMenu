@@ -3,10 +3,10 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gu
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

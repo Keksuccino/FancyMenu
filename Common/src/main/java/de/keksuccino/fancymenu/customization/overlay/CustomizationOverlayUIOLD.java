@@ -14,15 +14,15 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.event.events.WidgetCacheUpdatedEvent;
+import de.keksuccino.fancymenu.events.WidgetCacheUpdatedEvent;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -30,13 +30,13 @@ import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.guicreator.CreateCustomGuiPopup;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.MenuBar;
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.rendering.ui.MenuBar.ElementAlignment;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMYesNoPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.MenuBar.ElementAlignment;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
@@ -44,12 +44,12 @@ import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertiesSerializer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
@@ -180,7 +180,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 
 				} else {
 
-					for (String s : FileUtils.getFiles(FancyMenu.getCustomizationsDirectory().getPath())) {
+					for (String s : FileUtils.getFiles(FancyMenu.CUSTOMIZATIONS_DIR.getPath())) {
 						PropertyContainerSet props = PropertiesSerializer.deserializePropertyContainerSet(s);
 						if (props == null) {
 							continue;
@@ -1211,11 +1211,11 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			}
 			OverlayButton toggleLayoutBtn = new OverlayButton(0, 0, 0, 0, toggleLabel, (press) -> {
 				if (disabled) {
-					String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
-					FileUtils.copyFile(layout.layoutFile, new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name));
+					String name = FileUtils.generateAvailableFilename(FancyMenu.CUSTOMIZATIONS_DIR.getPath(), Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
+					FileUtils.copyFile(layout.layoutFile, new File(FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/" + name));
 					layout.layoutFile.delete();
 				} else {
-					String disPath = FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled";
+					String disPath = FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/.disabled";
 					String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
 					FileUtils.copyFile(layout.layoutFile, new File(disPath + "/" + name));
 					layout.layoutFile.delete();
@@ -1324,9 +1324,9 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			if (screenname.contains(".")) {
 				screenname = new StringBuilder(new StringBuilder(screenname).reverse().toString().split("[.]", 2)[0]).reverse().toString();
 			}
-			String filename = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), "overridemenu_" + screenname, "txt");
+			String filename = FileUtils.generateAvailableFilename(FancyMenu.CUSTOMIZATIONS_DIR.getPath(), "overridemenu_" + screenname, "txt");
 
-			String finalpath = FancyMenu.getCustomizationsDirectory().getPath() + "/" + filename;
+			String finalpath = FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/" + filename;
 			PropertiesSerializer.serializePropertyContainerSet(props, finalpath);
 
 			ScreenCustomization.reloadFancyMenu();

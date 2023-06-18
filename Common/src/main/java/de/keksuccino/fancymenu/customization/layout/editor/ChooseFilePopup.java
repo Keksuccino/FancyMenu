@@ -8,8 +8,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMFilePickerPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMFilePickerPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;

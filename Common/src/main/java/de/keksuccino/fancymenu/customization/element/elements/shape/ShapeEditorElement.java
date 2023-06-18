@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.customization.element.elements.shape;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.DrawableColor;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
-import de.keksuccino.fancymenu.rendering.text.color.TextColorFormatter;
-import de.keksuccino.fancymenu.rendering.text.color.TextColorFormatterRegistry;
+import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
+import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatterRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSink;

@@ -18,20 +18,20 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.misc.ConsumingSupplier;
-import de.keksuccino.fancymenu.misc.ValueCycle;
-import de.keksuccino.fancymenu.rendering.AspectRatio;
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
-import de.keksuccino.fancymenu.utils.ObjectUtils;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.ValueCycle;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -403,7 +403,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.rightClickMenu.addSubMenuEntry("appearance_delay", Component.translatable("fancymenu.element.general.appearance_delay"), appearanceDelayMenu)
 					.setStackable(true);
 
-			this.addSwitcherContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_type",
+			this.addCycleContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_type",
 							ListUtils.build(AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME),
 							consumes -> consumes.settings.isDelayable(),
 							consumes -> consumes.element.appearanceDelay,
@@ -777,16 +777,16 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		{
 			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 			if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
-				File startDir = FancyMenu.getGameDirectory();
+				File startDir = FancyMenu.ASSETS_DIR;
 				List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, targetFieldGetter);
 				if (ListUtils.allInListEqual(allPaths)) {
 					String path = allPaths.get(0);
 					if (path != null) {
 						startDir = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
-						if (startDir == null) startDir = FancyMenu.getGameDirectory();
+						if (startDir == null) startDir = FancyMenu.ASSETS_DIR;
 					}
 				}
-				FileChooserScreen fileChooser = new FileChooserScreen(FancyMenu.getGameDirectory(), startDir, (call) -> {
+				FileChooserScreen fileChooser = new FileChooserScreen(FancyMenu.ASSETS_DIR, startDir, (call) -> {
 					if (call != null) {
 						this.editor.history.saveSnapshot();
 						for (AbstractEditorElement e : selectedElements) {
@@ -910,14 +910,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}, false, false, label);
 	}
 
-	protected <V> ContextMenu.ClickableContextMenuEntry addSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, V> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
+	protected <V> ContextMenu.ClickableContextMenuEntry addCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, V> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
 		return addTo.addClickableEntry(entryIdentifier, Component.literal(""), (menu, entry) ->
 				{
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					ValueCycle<V> switcher = this.setupValueToggle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+					ValueCycle<V> cycle = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
 					this.editor.history.saveSnapshot();
 					if (!selectedElements.isEmpty() && entry.getStackMeta().isFirstInStack()) {
-						V next = switcher.next();
+						V next = cycle.next();
 						for (AbstractEditorElement e : selectedElements) {
 							targetFieldSetter.accept(e, next);
 						}
@@ -928,13 +928,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					if (!entry.getStackMeta().getProperties().hasProperty("switcher")) {
 						selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					}
-					ValueCycle<V> switcher = this.setupValueToggle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
+					ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
 					return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry) entry, switcher.current());
 				});
 	}
 
 	protected ContextMenu.ClickableContextMenuEntry addBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-		return addSwitcherContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
+		return addCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
 				return Component.translatable(labelLocalizationKeyBase + ".on");
 			}
@@ -943,9 +943,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	@SuppressWarnings("all")
-	protected <T, E extends AbstractEditorElement> ValueCycle<T> setupValueToggle(String toggleIdentifier, ValueCycle<T> toggle, List<E> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier<E, T> defaultValue) {
+	protected <T, E extends AbstractEditorElement> ValueCycle<T> setupValueCycle(String toggleIdentifier, ValueCycle<T> cycle, List<E> elements, ContextMenu.ContextMenuStackMeta stackMeta, ConsumingSupplier<E, T> defaultValue) {
 		boolean hasProperty = stackMeta.getProperties().hasProperty(toggleIdentifier);
-		ValueCycle<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, toggle);
+		ValueCycle<T> t = stackMeta.getProperties().putPropertyIfAbsentAndGet(toggleIdentifier, cycle);
 		if (!elements.isEmpty()) {
 			E firstElement = elements.get(0);
 			if (!stackMeta.isPartOfStack()) {

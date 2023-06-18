@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import net.minecraft.client.gui.screens.Screen;
 
 public class CustomGuiLoader {

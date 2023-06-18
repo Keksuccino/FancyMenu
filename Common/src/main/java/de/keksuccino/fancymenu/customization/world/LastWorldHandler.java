@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.world;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertiesSerializer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 
 import java.io.File;
 import java.util.List;

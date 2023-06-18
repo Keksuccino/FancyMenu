@@ -6,13 +6,13 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.rendering.DrawableColor;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ public class TextEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_mode",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
                         ListUtils.build(TextElement.SourceMode.DIRECT, TextElement.SourceMode.LOCAL_SOURCE, TextElement.SourceMode.WEB_SOURCE),
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).sourceMode,
@@ -51,7 +51,7 @@ public class TextEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addClickableEntry("set_source", Component.literal(""), (menu, entry) ->
                 {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-                        FileChooserScreen s = new FileChooserScreen(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), call -> {
+                        FileChooserScreen s = new FileChooserScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, call -> {
                             if (call != null) {
                                 this.editor.history.saveSnapshot();
                                 this.getTextElement().source = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
@@ -108,7 +108,7 @@ public class TextEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("text_separator_1");
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
                 ListUtils.build(TextElement.CaseMode.NORMAL, TextElement.CaseMode.ALL_LOWER, TextElement.CaseMode.ALL_UPPER),
                 consumes -> (consumes instanceof TextEditorElement),
                 consumes -> ((TextElement)consumes.element).caseMode,
@@ -148,7 +148,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         "fancymenu.customization.items.text.shadow")
                 .setStackable(true);
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_alignment",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_alignment",
                         ListUtils.build(AbstractElement.Alignment.LEFT, AbstractElement.Alignment.CENTERED, AbstractElement.Alignment.RIGHT),
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).alignment,

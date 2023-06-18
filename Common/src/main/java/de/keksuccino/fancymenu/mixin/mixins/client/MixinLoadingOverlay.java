@@ -2,14 +2,14 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.events.ScreenReloadEvent;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.events.ScreenReloadEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.utils.ScreenUtils;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.server.packs.resources.ReloadInstance;

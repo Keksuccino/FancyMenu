@@ -7,9 +7,9 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +73,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.async.desc")));
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
                         ListUtils.build(TickerElement.TickMode.NORMAL, TickerElement.TickMode.ONCE_PER_SESSION, TickerElement.TickMode.ON_MENU_LOAD),
                         consumes -> (consumes instanceof TickerEditorElement),
                         consumes -> ((TickerElement)consumes.element).tickMode,

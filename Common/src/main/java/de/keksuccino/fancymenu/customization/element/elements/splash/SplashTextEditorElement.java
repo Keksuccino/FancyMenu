@@ -4,11 +4,11 @@ package de.keksuccino.fancymenu.customization.element.elements.splash;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.DrawableColor;
-import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +23,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_mode",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
                 ListUtils.build(SplashTextElement.SourceMode.VANILLA, SplashTextElement.SourceMode.DIRECT_TEXT, SplashTextElement.SourceMode.TEXT_FILE),
                 consumes -> (consumes instanceof SplashTextEditorElement),
                 consumes -> ((SplashTextElement)consumes.element).sourceMode,

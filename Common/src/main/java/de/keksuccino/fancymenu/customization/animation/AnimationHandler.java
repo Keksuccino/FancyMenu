@@ -5,12 +5,12 @@ import java.util.*;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.customization.animation.AnimationData.Type;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertiesSerializer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.ListUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

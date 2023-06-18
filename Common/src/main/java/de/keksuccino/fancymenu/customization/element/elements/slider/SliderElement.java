@@ -4,19 +4,16 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.rendering.ui.slider.AdvancedSliderButton;
-import de.keksuccino.fancymenu.rendering.ui.slider.ListSliderButton;
-import de.keksuccino.fancymenu.rendering.ui.slider.RangeSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.slider.AdvancedSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.slider.ListSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.slider.RangeSliderButton;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

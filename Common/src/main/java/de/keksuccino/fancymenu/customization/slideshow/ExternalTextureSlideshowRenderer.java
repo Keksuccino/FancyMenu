@@ -10,12 +10,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.resources.texture.LocalTexture;
-import de.keksuccino.fancymenu.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertiesSerializer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;

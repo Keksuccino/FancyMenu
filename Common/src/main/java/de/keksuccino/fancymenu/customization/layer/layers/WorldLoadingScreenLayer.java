@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.layer.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinLevelLoadingScreen;

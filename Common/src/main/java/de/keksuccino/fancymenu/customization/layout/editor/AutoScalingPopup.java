@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;

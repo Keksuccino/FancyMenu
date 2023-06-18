@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.konkrete.Konkrete;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

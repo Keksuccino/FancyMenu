@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.action;
 
-import de.keksuccino.fancymenu.rendering.ui.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.EventPriority;
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventPriority;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 
 public class CustomizationOverlay {
 

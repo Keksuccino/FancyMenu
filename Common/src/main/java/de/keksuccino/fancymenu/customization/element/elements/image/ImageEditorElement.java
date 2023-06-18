@@ -5,9 +5,9 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
-import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -28,7 +28,7 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.build(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.build(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
                 consumes -> (consumes instanceof ImageEditorElement),
                 consumes -> ((ImageElement)consumes.element).sourceMode,
                 (element1, sourceMode) -> {
@@ -45,7 +45,7 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.image.set_source"), (menu, entry) -> {
             if (((ImageElement)this.element).sourceMode == ImageElement.SourceMode.LOCAL) {
-                FileChooserScreen s = new FileChooserScreen(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
+                FileChooserScreen s = new FileChooserScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, (call) -> {
                     if (call != null) {
                         this.editor.history.saveSnapshot();
                         ((ImageElement)this.element).source = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());

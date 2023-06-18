@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;

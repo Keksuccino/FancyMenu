@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.variables;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertiesSerializer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;

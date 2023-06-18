@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
-import de.keksuccino.fancymenu.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;

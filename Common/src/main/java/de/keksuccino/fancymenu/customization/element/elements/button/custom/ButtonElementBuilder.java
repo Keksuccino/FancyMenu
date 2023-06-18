@@ -1,16 +1,15 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
-import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

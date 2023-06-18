@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.resources.ResourceLocation;

@@ -2,11 +2,11 @@ package de.keksuccino.fancymenu.customization.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.event.events.widget.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.event.events.widget.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
+import de.keksuccino.fancymenu.events.widget.PlayWidgetClickSoundEvent;
+import de.keksuccino.fancymenu.events.widget.RenderWidgetBackgroundEvent;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.sound.SoundHandler;

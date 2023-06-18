@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
-import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;

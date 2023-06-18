@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layout;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;

@@ -1,12 +1,13 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
+import java.nio.file.Files;
 
-import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
-import de.keksuccino.fancymenu.rendering.text.color.colors.TextColorFormatters;
-import de.keksuccino.fancymenu.rendering.ui.colorscheme.schemes.UIColorSchemes;
-import de.keksuccino.fancymenu.window.WindowHandler;
+import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
+import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.schemes.UIColorSchemes;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -19,6 +20,7 @@ import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
@@ -89,8 +91,6 @@ public class FancyMenu {
 
 	//TODO GameIntro stuff komplett reworken/rewriten
 
-	//TODO Alle dirs aus FancyMenu class nach MenuCustomization verschieben
-
 	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -99,12 +99,14 @@ public class FancyMenu {
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
-	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
-	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
-	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
+	public static final File MOD_DIR = createDirectory(new File(getGameDirectory(), "/config/fancymenu"));
+	public static final File INSTANCE_DATA_DIR = createDirectory(new File(getGameDirectory(), "/.fancymenu_data"));
+	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
+	public static final File CUSTOMIZATIONS_DIR = createDirectory(new File(MOD_DIR, "/customization"));
+	public static final File ASSETS_DIR = createDirectory(new File(MOD_DIR, "/assets"));
 
+	//TODO Move these to their actual classes
 	private static final File ANIMATIONS_DIR = new File(MOD_DIR, "/animations");
-	private static final File CUSTOMIZATIONS_DIR = new File(MOD_DIR, "/customization");
 	private static final File CUSTOM_GUIS_DIR = new File(MOD_DIR, "/customguis");
 	private static final File BUTTONSCRIPT_DIR = new File(MOD_DIR, "/buttonscripts");
 	private static final File PANORAMA_DIR = new File(MOD_DIR, "/panoramas");
@@ -253,13 +255,6 @@ public class FancyMenu {
 		return ANIMATIONS_DIR;
 	}
 	
-	public static File getCustomizationsDirectory() {
-		if (!CUSTOMIZATIONS_DIR.exists()) {
-			CUSTOMIZATIONS_DIR.mkdirs();
-		}
-		return CUSTOMIZATIONS_DIR;
-	}
-	
 	public static File getCustomGuisDirectory() {
 		if (!CUSTOM_GUIS_DIR.exists()) {
 			CUSTOM_GUIS_DIR.mkdirs();
@@ -310,6 +305,22 @@ public class FancyMenu {
 		} else {
 			return new File("");
 		}
+	}
+
+	private static File createDirectory(@NotNull File directory) {
+		try {
+			if (!directory.isDirectory()) {
+				directory.mkdirs();
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		if (directory.getName().startsWith(".")) {
+			try {
+				Files.setAttribute(directory.toPath(), "dos:hidden", true);
+			} catch (Exception ignore) {}
+		}
+		return directory;
 	}
 
 }

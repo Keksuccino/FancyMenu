@@ -4,12 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.rendering.ui.screen.FileChooserScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.rendering.ui.widget.ExtendedButton;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -47,7 +47,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
         super.init();
 
         this.chooseImageButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.image.configure.choose_image"), (press) -> {
-            FileChooserScreen s = new FileChooserScreen(FancyMenu.getGameDirectory(), FancyMenu.getGameDirectory(), (call) -> {
+            FileChooserScreen s = new FileChooserScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, (call) -> {
                 if (call != null) {
                     this.background.imagePath = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
                 }

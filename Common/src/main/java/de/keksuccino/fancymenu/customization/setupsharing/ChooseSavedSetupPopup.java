@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.setupsharing;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.rendering.ui.MenuBar;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollAreaEntry;

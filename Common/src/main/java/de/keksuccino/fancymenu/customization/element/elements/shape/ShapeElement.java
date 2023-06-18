@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;

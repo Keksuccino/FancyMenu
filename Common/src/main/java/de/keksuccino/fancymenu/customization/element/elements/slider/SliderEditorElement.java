@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.customization.element.elements.slider;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +33,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("slider_separator_1");
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_slider_type",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_slider_type",
                         ListUtils.build(SliderElement.SliderType.LIST, SliderElement.SliderType.RANGE),
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).type,

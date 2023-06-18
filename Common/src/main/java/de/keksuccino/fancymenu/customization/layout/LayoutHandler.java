@@ -5,17 +5,17 @@ import java.util.*;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.misc.FilenameComparator;
-import de.keksuccino.fancymenu.misc.Legacy;
-import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.fancymenu.util.FilenameComparator;
+import de.keksuccino.fancymenu.util.Legacy;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.fancymenu.properties.PropertiesSerializer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -35,7 +35,7 @@ public class LayoutHandler {
 	public static void reloadLayouts() {
 		ScreenCustomization.readCustomizableScreensFromFile();
 		LAYOUTS.clear();
-		LAYOUTS.addAll(deserializeLayoutFilesInDirectory(FancyMenu.getCustomizationsDirectory()));
+		LAYOUTS.addAll(deserializeLayoutFilesInDirectory(FancyMenu.CUSTOMIZATIONS_DIR));
 	}
 
 	@NotNull
@@ -232,14 +232,14 @@ public class LayoutHandler {
 
 	@Legacy("This basically copies all layouts from the old '.disabled' directory to the main directory and sets them to disabled.")
 	private static void convertLegacyDisabledLayouts() {
-		File disabledDir = new File(FancyMenu.getCustomizationsDirectory().getPath() + "/.disabled");
+		File disabledDir = new File(FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/.disabled");
 		if (disabledDir.isDirectory()) {
 			List<Layout> legacyDisabled = deserializeLayoutFilesInDirectory(disabledDir);
 			for (Layout l : legacyDisabled) {
 				try {
 					if (l.layoutFile != null) {
-						String name = FileUtils.generateAvailableFilename(FancyMenu.getCustomizationsDirectory().getPath(), Files.getNameWithoutExtension(l.layoutFile.getPath()), "txt");
-						File newFile = new File(FancyMenu.getCustomizationsDirectory().getPath() + "/" + name);
+						String name = FileUtils.generateAvailableFilename(FancyMenu.CUSTOMIZATIONS_DIR.getPath(), Files.getNameWithoutExtension(l.layoutFile.getPath()), "txt");
+						File newFile = new File(FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/" + name);
 						FileUtils.copyFile(l.layoutFile, newFile);
 						l.layoutFile.delete();
 						l.layoutFile = newFile;

@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.objecthunter.exp4j.Expression;
 import de.keksuccino.konkrete.objecthunter.exp4j.ExpressionBuilder;

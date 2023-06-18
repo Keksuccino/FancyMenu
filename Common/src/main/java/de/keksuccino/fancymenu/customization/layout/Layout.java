@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout;
 
-import de.keksuccino.fancymenu.audio.SoundRegistry;
+import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -34,13 +34,13 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
-import de.keksuccino.fancymenu.misc.Legacy;
-import de.keksuccino.fancymenu.misc.LocalizedCycleEnum;
-import de.keksuccino.fancymenu.rendering.DrawableColor;
-import de.keksuccino.fancymenu.utils.ListUtils;
+import de.keksuccino.fancymenu.util.Legacy;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.properties.PropertyContainer;
-import de.keksuccino.fancymenu.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

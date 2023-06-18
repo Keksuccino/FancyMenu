@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
-import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;

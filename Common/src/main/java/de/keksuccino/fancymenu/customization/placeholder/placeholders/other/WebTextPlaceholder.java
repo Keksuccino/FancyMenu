@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.other;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.fancymenu.event.events.ModReloadEvent;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.events.ModReloadEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.web.WebUtils;

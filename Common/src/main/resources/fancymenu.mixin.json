@@ -33,12 +33,12 @@
     "client.MixinTitleScreen",
     "client.MixinWorldListEntry"
   ],
+  "mixins": [
+  ],
   "injectors": {
     "defaultRequire": 1
   },
   "refmap": "fancymenu.mixin-refmap.json",
   "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
-  "minVersion": "0.8",
-  "mixins": [
-  ]
+  "minVersion": "0.8"
 }

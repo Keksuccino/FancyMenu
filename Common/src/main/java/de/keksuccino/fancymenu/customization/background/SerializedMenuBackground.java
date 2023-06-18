@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.background;
 
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 
 public class SerializedMenuBackground extends PropertyContainer {
 

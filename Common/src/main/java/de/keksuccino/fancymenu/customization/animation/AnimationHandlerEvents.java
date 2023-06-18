@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.animation;
 
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenEvent;
-import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

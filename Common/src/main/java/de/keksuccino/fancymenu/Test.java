@@ -1,12 +1,7 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.event.acara.EventListener;
-import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.resources.texture.WrappedTexture;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.network.chat.Component;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

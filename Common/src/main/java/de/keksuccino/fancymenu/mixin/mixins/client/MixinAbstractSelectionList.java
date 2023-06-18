@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import de.keksuccino.fancymenu.event.events.widget.RenderGuiListBackgroundEvent;
+import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 
 @Mixin(value = AbstractSelectionList.class)
 public abstract class MixinAbstractSelectionList {

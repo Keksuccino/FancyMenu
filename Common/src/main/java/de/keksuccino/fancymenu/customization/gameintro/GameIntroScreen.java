@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.input.KeyboardHandler;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.gameintro;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 

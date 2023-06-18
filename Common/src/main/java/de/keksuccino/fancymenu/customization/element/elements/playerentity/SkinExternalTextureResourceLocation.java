@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import de.keksuccino.fancymenu.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
-import de.keksuccino.fancymenu.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.IOUtils;

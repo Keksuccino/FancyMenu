@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.network.chat.Component;
 

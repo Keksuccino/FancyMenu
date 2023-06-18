@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.element;
 
-import de.keksuccino.fancymenu.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 
 /**
  * A serialized {@link AbstractElement}.

@@ -1,13 +1,10 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.events.screen.*;
-import de.keksuccino.fancymenu.event.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.utils.RenderUtils;
-import net.minecraft.client.gui.screens.Overlay;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.events.screen.*;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.rendering.RenderUtils;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import de.keksuccino.fancymenu.window.WindowHandler;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 
 @Mixin(value = Minecraft.class)

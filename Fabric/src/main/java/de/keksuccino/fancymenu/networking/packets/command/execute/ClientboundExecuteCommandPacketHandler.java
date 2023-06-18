@@ -1,7 +1,7 @@
 
 package de.keksuccino.fancymenu.networking.packets.command.execute;
 
-import de.keksuccino.fancymenu.utils.LocalPlayerUtils;
+import de.keksuccino.fancymenu.util.LocalPlayerUtils;
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;

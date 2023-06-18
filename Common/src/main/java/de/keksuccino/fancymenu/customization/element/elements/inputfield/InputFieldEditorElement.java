@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.utils.ListUtils;
-import de.keksuccino.fancymenu.utils.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +30,7 @@ public class InputFieldEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
 
-        this.addSwitcherContextMenuEntryTo(this.rightClickMenu, "set_type",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_type",
                         ListUtils.build(InputFieldElement.InputFieldType.TEXT, InputFieldElement.InputFieldType.URL, InputFieldElement.InputFieldType.INTEGER_ONLY, InputFieldElement.InputFieldType.DECIMAL_ONLY),
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         consumes -> ((InputFieldElement)consumes.element).type,

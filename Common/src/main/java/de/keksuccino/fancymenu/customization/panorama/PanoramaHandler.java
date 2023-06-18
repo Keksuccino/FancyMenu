@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.event.events.ModReloadEvent;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.acara.EventListener;
+import de.keksuccino.fancymenu.events.ModReloadEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

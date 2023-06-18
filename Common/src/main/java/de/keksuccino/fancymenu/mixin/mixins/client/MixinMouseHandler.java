@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.events.screen.MouseScrollScreenEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.events.screen.MouseScrollScreenEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;

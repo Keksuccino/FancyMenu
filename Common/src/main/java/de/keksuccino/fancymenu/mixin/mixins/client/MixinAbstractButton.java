@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.event.acara.EventHandler;
-import de.keksuccino.fancymenu.event.events.widget.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.event.events.widget.RenderWidgetLabelEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.events.widget.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.widget.RenderWidgetLabelEvent;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;

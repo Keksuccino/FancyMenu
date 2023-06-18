@@ -12,7 +12,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import de.keksuccino.fancymenu.event.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 
 public class ScreenWidgetDiscoverer {
 

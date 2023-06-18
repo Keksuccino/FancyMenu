@@ -27,13 +27,14 @@ import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.misc.InputConstants;
-import de.keksuccino.fancymenu.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.AdvancedContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.utils.*;
+import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.AdvancedContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
@@ -553,7 +554,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			if (call != null) {
 				this.layout.updateLastEditedTime();
 				this.serializeElementInstancesToLayoutInstance();
-				File f = new File(FancyMenu.getCustomizationsDirectory().getAbsolutePath() + "/" + call + ".txt");
+				File f = new File(FancyMenu.CUSTOMIZATIONS_DIR.getAbsolutePath() + "/" + call + ".txt");
 				if (f.isFile()) {
 					//TODO replace with NotificationScreen (does not exist yet)
 					Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.file_exists")));

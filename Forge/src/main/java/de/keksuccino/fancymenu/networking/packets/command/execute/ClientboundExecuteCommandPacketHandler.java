@@ -1,8 +1,8 @@
 
 package de.keksuccino.fancymenu.networking.packets.command.execute;
 
-import de.keksuccino.fancymenu.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.utils.LocalPlayerUtils;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.LocalPlayerUtils;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
