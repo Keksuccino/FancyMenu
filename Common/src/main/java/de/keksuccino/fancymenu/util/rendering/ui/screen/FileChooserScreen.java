@@ -4,7 +4,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.util.FilenameComparator;
+import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.text.component.ComponentWidget;
@@ -98,6 +98,7 @@ public class FileChooserScreen extends Screen {
     protected FileFilter fileFilter;
     @NotNull
     protected Consumer<File> callback;
+    protected int visibleDirectoryLevelsAboveRoot = 0;
 
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -136,7 +137,7 @@ public class FileChooserScreen extends Screen {
         this.okButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
             FileScrollAreaEntry selected = this.getSelectedEntry();
             if (selected != null) {
-                this.callback.accept(selected.file);
+                this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));
             }
         }) {
             @Override
@@ -233,36 +234,73 @@ public class FileChooserScreen extends Screen {
         return yEnd;
     }
 
-    //TODO path width fixen (darf nicht zu lang werden)
-    //TODO path width fixen (darf nicht zu lang werden)
-    //TODO path width fixen (darf nicht zu lang werden)
-    //TODO path width fixen (darf nicht zu lang werden)
     protected void updateCurrentDirectoryComponent() {
-        if (this.currentDirectoryComponent != null) {
-            this.removeWidget(this.currentDirectoryComponent);
+        try {
+
+            if (this.currentDirectoryComponent != null) {
+                this.removeWidget(this.currentDirectoryComponent);
+            }
+            this.currentDirectoryComponent = ComponentWidget.literal("/", 0, 0);
+            if (this.visibleDirectoryLevelsAboveRoot > 0) {
+                List<File> aboveRootFiles = new ArrayList<>();
+                File f = this.rootDirectory.getAbsoluteFile().getParentFile();
+                if (f != null) {
+                    int i = this.visibleDirectoryLevelsAboveRoot;
+                    while (true) {
+                        i--;
+                        f = f.getAbsoluteFile();
+                        aboveRootFiles.add(f);
+                        f = f.getParentFile();
+                        if ((f == null) || (i <= 0)) {
+                            break;
+                        }
+                    }
+                    Collections.reverse(aboveRootFiles);
+                    for (File f2 : aboveRootFiles) {
+                        File fFinal = f2;
+                        this.currentDirectoryComponent.append(ComponentWidget.empty(0, 0)
+                                .setTextSupplier(consumes -> {
+                                    if (consumes.isHoveredOrFocused()) return Component.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUIColorScheme().errorTextColor.getColorInt()));
+                                    return Component.literal(fFinal.getName());
+                                })
+                        );
+                        this.currentDirectoryComponent.append(ComponentWidget.literal("/", 0, 0));
+                    }
+                }
+            }
+            for (File f : this.splitCurrentIntoSeparateDirectories()) {
+                ComponentWidget w = ComponentWidget.empty(0, 0)
+                        .setTextSupplier(consumes -> {
+                            if (consumes.isHoveredOrFocused()) return Component.literal(f.getName()).withStyle(Style.EMPTY.withUnderlined(true));
+                            return Component.literal(f.getName());
+                        })
+                        .setOnClick(componentWidget -> {
+                            this.setDirectory(f, true);
+                        });
+                this.currentDirectoryComponent.append(w);
+                this.currentDirectoryComponent.append(ComponentWidget.literal("/", 0, 0));
+            }
+
+            //Trim path to fit into the path area
+            while (this.currentDirectoryComponent.getWidth() > ((this.width / 2) - 40 - 8)) {
+                if (!this.currentDirectoryComponent.getChildren().isEmpty()) {
+                    this.currentDirectoryComponent.getChildren().remove(0);
+                } else {
+                    break;
+                }
+            }
+            if (!this.currentDirectoryComponent.getChildren().isEmpty()) {
+                ComponentWidget firstChild = this.currentDirectoryComponent.getChildren().get(0);
+                if (firstChild.getText().getString().equals("/")) this.currentDirectoryComponent.getChildren().remove(0);
+            }
+
+            this.currentDirectoryComponent.setShadow(false);
+            this.currentDirectoryComponent.setBaseColorSupplier(consumes -> UIBase.getUIColorScheme().descriptionAreaTextColor);
+            this.addWidget(this.currentDirectoryComponent);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        this.currentDirectoryComponent = ComponentWidget.literal("/", 0, 0);
-        for (File f : this.splitCurrentIntoSeparateDirectories()) {
-            ComponentWidget w = ComponentWidget.literal("", 0, 0)
-                    .setTextSupplier(consumes -> {
-                        if (consumes.isHoveredOrFocused()) return Component.literal(f.getName()).withStyle(Style.EMPTY.withUnderlined(true));
-                        return Component.literal(f.getName());
-                    })
-                    .setOnHoverOrFocusStart(componentWidget -> {
-                        componentWidget.getText().setStyle(Style.EMPTY.withUnderlined(true));
-                    })
-                    .setOnHoverOrFocusEnd(componentWidget -> {
-                        componentWidget.getText().setStyle(Style.EMPTY.withUnderlined(false));
-                    })
-                    .setOnClick(componentWidget -> {
-                        this.setDirectory(f, true);
-                    });
-            this.currentDirectoryComponent.append(w);
-            this.currentDirectoryComponent.append(ComponentWidget.literal("/", 0, 0));
-        }
-        this.currentDirectoryComponent.setShadow(false);
-        this.currentDirectoryComponent.setBaseColor(UIBase.getUIColorScheme().descriptionAreaTextColor);
-        this.addWidget(this.currentDirectoryComponent);
     }
 
     @NotNull
@@ -276,6 +314,9 @@ public class FileChooserScreen extends Screen {
                     f = f.getParentFile();
                     if (f != null) {
                         dirs.add(f);
+                        if (this.isRootDirectory(f)) {
+                            break;
+                        }
                     } else {
                         break;
                     }
@@ -309,6 +350,15 @@ public class FileChooserScreen extends Screen {
         lastDirectory = newDirectory;
         this.updateFilesList();
         MainThreadTaskExecutor.executeInMainThread(this::updateCurrentDirectoryComponent, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+        return this;
+    }
+
+    public int getVisibleDirectoryLevelsAboveRoot() {
+        return this.visibleDirectoryLevelsAboveRoot;
+    }
+
+    public FileChooserScreen setVisibleDirectoryLevelsAboveRoot(int visibleDirectoryLevelsAboveRoot) {
+        this.visibleDirectoryLevelsAboveRoot = visibleDirectoryLevelsAboveRoot;
         return this;
     }
 
@@ -382,8 +432,12 @@ public class FileChooserScreen extends Screen {
     }
 
     protected boolean currentIsRootDirectory() {
+        return this.isRootDirectory(this.currentDir);
+    }
+
+    protected boolean isRootDirectory(File dir) {
         if (this.rootDirectory == null) return false;
-        return this.rootDirectory.getAbsolutePath().equals(this.currentDir.getAbsolutePath());
+        return this.rootDirectory.getAbsolutePath().equals(dir.getAbsolutePath());
     }
 
     @Nullable
@@ -402,7 +456,7 @@ public class FileChooserScreen extends Screen {
         if (button == InputConstants.KEY_ENTER) {
             FileScrollAreaEntry selected = this.getSelectedEntry();
             if (selected != null) {
-                this.callback.accept(selected.file);
+                this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));
                 return true;
             }
         }
@@ -461,7 +515,7 @@ public class FileChooserScreen extends Screen {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
                 if (this.file.isFile()) {
-                    FileChooserScreen.this.callback.accept(this.file);
+                    FileChooserScreen.this.callback.accept(new File(this.file.getPath().replace("\\", "/")));
                 } else if (this.file.isDirectory()) {
                     FileChooserScreen.this.setDirectory(this.file, true);
                 }

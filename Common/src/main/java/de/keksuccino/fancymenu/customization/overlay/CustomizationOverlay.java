@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import org.jetbrains.annotations.Nullable;
 
 public class CustomizationOverlay {
 
@@ -18,6 +19,11 @@ public class CustomizationOverlay {
 
 	public static void rebuildMenuBar() {
 		overlayMenuBar = CustomizationOverlayUI.buildMenuBar();
+	}
+
+	@Nullable
+	public static MenuBar getCurrentMenuBarInstance() {
+		return overlayMenuBar;
 	}
 
 	@EventListener(priority = -1000)

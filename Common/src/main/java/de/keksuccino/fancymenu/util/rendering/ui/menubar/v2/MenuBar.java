@@ -706,7 +706,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             this.clickAction = (bar, entry) -> this.openContextMenu();
         }
 
-        protected void openContextMenu() {
+        public void openContextMenu() {
             this.contextMenu.setScale(this.parent.scale);
             this.contextMenu.openMenuAt(this.x, this.y + this.height - 1);
         }
@@ -723,6 +723,10 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
                 this.parent.closeAllContextMenus();
                 this.openContextMenu();
             }
+        }
+
+        public ContextMenu getContextMenu() {
+            return this.contextMenu;
         }
 
         @Override

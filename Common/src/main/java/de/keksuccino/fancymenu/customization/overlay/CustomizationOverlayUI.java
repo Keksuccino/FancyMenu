@@ -6,13 +6,19 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,8 +32,16 @@ public class CustomizationOverlayUI {
     private static final WrappedTexture LIGHT_MODE_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/light_mode_icon.png"));
     private static final WrappedTexture DARK_MODE_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/dark_mode_icon.png"));
 
+    private static MenuBar grandfatheredMenuBar = null;
+
     @NotNull
     protected static MenuBar buildMenuBar() {
+
+        MenuBar grand = grandfatheredMenuBar;
+        if (grand != null) {
+            grandfatheredMenuBar = null;
+            return grand;
+        }
 
         MenuBar menuBar = new MenuBar();
         Screen screen = Minecraft.getInstance().screen;
@@ -52,7 +66,7 @@ public class CustomizationOverlayUI {
             if (screen != null) {
                 LayoutHandler.openLayoutEditor(new Layout(screen), screen);
             }
-        });
+        }).setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen));
 
         layoutNewMenu.addClickableEntry("layout.new.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.new.universal"), (menu, entry) -> {
             LayoutHandler.openLayoutEditor(new Layout(), null);
@@ -62,16 +76,21 @@ public class CustomizationOverlayUI {
         layoutMenu.addSubMenuEntry("layout.manage", Component.translatable("fancymenu.overlay.menu_bar.layout.manage"), layoutManageMenu);
 
         ContextMenu layoutManageCurrentMenu = new ContextMenu();
-        layoutManageMenu.addSubMenuEntry("layout.manage.current", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.current"), layoutManageCurrentMenu);
+        layoutManageMenu.addSubMenuEntry("layout.manage.current", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.current"), layoutManageCurrentMenu)
+                .setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen));
 
         if (identifier != null) {
             int i = 0;
             for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), true, 8)) {
-                //TODO replace with sub menu entry
-                //TODO je nach enabled/disabled entsprechenden suffix adden
-                layoutManageCurrentMenu.addClickableEntry("layout.manage.current.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
-                    LayoutHandler.openLayoutEditor(l, screen);
-                });
+                layoutManageCurrentMenu.addSubMenuEntry("layout.manage.current.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
+                        .setLabelSupplier((menu, entry) -> {
+                            Style style = l.getStatus().getEntryComponentStyle();
+                            MutableComponent c = Component.literal(l.getLayoutName());
+                            c.append(Component.literal(" (").setStyle(style));
+                            c.append(l.getStatus().getEntryComponent());
+                            c.append(Component.literal(")").setStyle(style));
+                            return c;
+                        });
                 i++;
             }
         }
@@ -91,11 +110,15 @@ public class CustomizationOverlayUI {
 
         int i = 0;
         for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
-            //TODO replace with sub menu entry
-            //TODO je nach enabled/disabled entsprechenden suffix adden
-            layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.recent_" + i, Component.literal(Files.getNameWithoutExtension(l.layoutFile.getName())), (menu, entry) -> {
-                LayoutHandler.openLayoutEditor(l, null);
-            });
+            layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
+                    .setLabelSupplier((menu, entry) -> {
+                        Style style = l.getStatus().getEntryComponentStyle();
+                        MutableComponent c = Component.literal(l.getLayoutName());
+                        c.append(Component.literal(" (").setStyle(style));
+                        c.append(l.getStatus().getEntryComponent());
+                        c.append(Component.literal(")").setStyle(style));
+                        return c;
+                    });
             i++;
         }
 
@@ -119,6 +142,8 @@ public class CustomizationOverlayUI {
         ContextMenu helpMenu = new ContextMenu();
         menuBar.addContextMenuEntry("help", Component.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
 
+        //TODO Link zu CurseForge FancyMenu Kategorie zu HELP Tab adden
+
         // DARK/LIGHT MODE SWITCHER
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "dark_light_mode_switcher", Component.literal(""), (bar, entry) -> {
             LOGGER.info("CLICK");
@@ -136,6 +161,46 @@ public class CustomizationOverlayUI {
         });
 
         return menuBar;
+
+    }
+
+    @NotNull
+    protected static ContextMenu buildManageLayoutSubMenu(Layout layout) {
+
+        ContextMenu menu = new ContextMenu();
+        Screen screen = Minecraft.getInstance().screen;
+
+        menu.addClickableEntry("toggle_layout_status", Component.empty(), (menu1, entry) -> {
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
+                layout.setEnabled(!layout.isEnabled(), true);
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        }).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent());
+
+        menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
+            menu1.closeMenu();
+            MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : screen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        });
+
+        menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
+            menu1.closeMenu();
+            ConfirmationScreen s = new ConfirmationScreen(call -> {
+                if (call) {
+                    layout.delete(false);
+                }
+                Minecraft.getInstance().setScreen(screen);
+            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm"));
+            Minecraft.getInstance().setScreen(s);
+        });
+
+        menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
+            if (layout.layoutFile != null) {
+                menu1.closeMenu();
+                ScreenCustomization.openFile(layout.layoutFile);
+            }
+        });
+
+        return menu;
 
     }
 

@@ -23,7 +23,7 @@ public class DisableLayoutAction extends Action {
 
             Layout l = LayoutHandler.getLayout(value);
             if ((l != null) && l.isEnabled()) {
-                l.setEnabled(false);
+                l.setEnabled(false, true);
             }
 
         }

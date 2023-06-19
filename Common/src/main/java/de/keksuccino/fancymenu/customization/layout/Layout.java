@@ -178,8 +178,10 @@ public class Layout extends LayoutBase {
         this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(meta);
 
         this.serializedElements.forEach(set::putContainer);
-        this.serializedVanillaButtonElements.forEach(set::putContainer);
-        this.serializedDeepElements.forEach(set::putContainer);
+        if (!this.isUniversalLayout()) {
+            this.serializedVanillaButtonElements.forEach(set::putContainer);
+            this.serializedDeepElements.forEach(set::putContainer);
+        }
 
         return set;
 
@@ -454,15 +456,15 @@ public class Layout extends LayoutBase {
         return this.enabled;
     }
 
-    public Layout setEnabled(boolean enabled) {
+    public Layout setEnabled(boolean enabled, boolean reInitCurrentScreen) {
         this.enabled = enabled;
         this.saveToFileIfPossible();
-        ScreenCustomization.reInitCurrentScreen();
+        if (reInitCurrentScreen) ScreenCustomization.reInitCurrentScreen();
         return this;
     }
 
-    public void delete() {
-        LayoutHandler.deleteLayout(this);
+    public void delete(boolean reInitCurrentScreen) {
+        LayoutHandler.deleteLayout(this, reInitCurrentScreen);
     }
 
     public boolean layoutWideLoadingRequirementsMet() {

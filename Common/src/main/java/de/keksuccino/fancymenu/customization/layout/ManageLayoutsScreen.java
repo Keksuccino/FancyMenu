@@ -72,7 +72,7 @@ public class ManageLayoutsScreen extends Screen {
         this.editButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.edit"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                LayoutHandler.openLayoutEditor(e.layout, this.layoutTargetScreen);
+                LayoutHandler.openLayoutEditor(e.layout, e.layout.isUniversalLayout() ? null : this.layoutTargetScreen);
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.editButton);
@@ -83,7 +83,7 @@ public class ManageLayoutsScreen extends Screen {
             if (e != null) {
                 ConfirmationScreen s = new ConfirmationScreen(call -> {
                     if (call) {
-                        e.layout.delete();
+                        e.layout.delete(false);
                         this.layouts.remove(e.layout);
                         this.updateLayoutScrollArea();
                     }
@@ -107,7 +107,7 @@ public class ManageLayoutsScreen extends Screen {
         this.toggleStatusButton = new ExtendedButton(0, 0, 150, 20, Component.literal(""), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                e.layout.setEnabled(!e.layout.isEnabled());
+                e.layout.setEnabled(!e.layout.isEnabled(), false);
                 e.updateName();
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null))

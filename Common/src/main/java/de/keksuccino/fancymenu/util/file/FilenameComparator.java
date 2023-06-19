@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util;
+package de.keksuccino.fancymenu.util.file;
 
 import java.math.BigInteger;
 import java.util.Comparator;

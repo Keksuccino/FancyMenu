@@ -160,11 +160,12 @@ public class ScreenCustomization {
 		}
 	}
 
-	public static boolean isCustomizationEnabledForScreen(@NotNull Screen screen) {
+	public static boolean isCustomizationEnabledForScreen(Screen screen) {
 		return isCustomizationEnabledForScreen(screen, false);
 	}
 
-	public static boolean isCustomizationEnabledForScreen(@NotNull Screen screen, boolean ignoreAllowScreenCustomization) {
+	public static boolean isCustomizationEnabledForScreen(Screen screen, boolean ignoreAllowScreenCustomization) {
+		if (screen == null) return false;
 		if (isScreenBlacklisted(screen)) {
 			return false;
 		}

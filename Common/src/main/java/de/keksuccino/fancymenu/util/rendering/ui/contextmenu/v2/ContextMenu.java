@@ -1229,7 +1229,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             }
         }
 
-        protected void openSubMenu() {
+        public void openSubMenu() {
             this.subContextMenu.openMenuAt(0,0);
         }
 

@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.FilenameComparator;
+import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -179,7 +179,7 @@ public class LayoutHandler {
 		return layouts;
 	}
 
-	public static void deleteLayout(@NotNull Layout layout) {
+	public static void deleteLayout(@NotNull Layout layout, boolean reInitCurrentScreen) {
 		try {
 			if (layout.layoutFile != null) {
 				layout.layoutFile.delete();
@@ -188,7 +188,7 @@ public class LayoutHandler {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		ScreenCustomization.reInitCurrentScreen();
+		if (reInitCurrentScreen) ScreenCustomization.reInitCurrentScreen();
 	}
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {

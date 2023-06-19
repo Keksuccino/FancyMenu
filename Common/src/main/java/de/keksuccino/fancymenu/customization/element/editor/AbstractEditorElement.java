@@ -346,6 +346,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isOrderable()) {
 
+			//TODO move up/down buttons deaktivieren, wenn unterste Ebene erreicht
+
+			//TODO danach in CustomizationOverlayUI weiter machen
+
 			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"), (menu, entry) -> {
 				AbstractEditorElement o = this.editor.moveElementUp(this);
 				if (o != null) {
@@ -795,6 +799,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					}
 					Minecraft.getInstance().setScreen(this.editor);
 				});
+				fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
 				fileChooser.setFileFilter(fileFilter);
 				Minecraft.getInstance().setScreen(fileChooser);
 			}

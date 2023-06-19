@@ -26,7 +26,7 @@ public class ToggleLayoutAction extends Action {
 
             Layout l = LayoutHandler.getLayout(value);
             if (l != null) {
-                l.setEnabled(!l.isEnabled());
+                l.setEnabled(!l.isEnabled(), true);
             }
 
         }

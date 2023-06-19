@@ -31,6 +31,21 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO "SaveFileScreen" bauen, der genutzt wird, um layouts zu speichern
+	// - Als Basis FileChooserScreen nutzen, aber Files können nicht "ausgewählt" werden, sondern sind nur sichtbar (damit man sieht, welche Files schon in Dir sind)
+	// - Wenn kein Ordner in currentDir ausgewählt, dann File in currentDir speichern
+	// - Wenn Ordner angewählt, File in angewähltem Ordner speichern
+	// - Unter file list area ist Eingabefeld für File Name
+	// - Klick auf "Done" returnt ZWEI FILES! (save directory UND file name)
+
+	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
+
+	//TODO Overlay durch schnelles, wiederholtes drücken von C togglen (Shortcut in Einstellungen entfernen; kann nicht deaktiviert werden)
+
+	//TODO Bei 4K Auflösung UI Scale automatisch auf 2 bei erstem Start
+
+	//TODO Alle Config Optionen auf Untermenüs von MenuBars aufteilen (kein Config Screen mehr)
+
 	//TODO FIXEN: Nach ändern von anchor point springt das element manchmal beim ersten resizen (gesehen bei vanilla button)
 
 	//TODO per action ermöglichen, zu disconnecten/welt zu verlassen und dabei den zielscreen zu wählen
