@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.ValueCycle;
+import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -346,23 +346,15 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isOrderable()) {
 
-			//TODO move up/down buttons deaktivieren, wenn unterste Ebene erreicht
-
-			//TODO danach in CustomizationOverlayUI weiter machen
-
 			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"), (menu, entry) -> {
-				AbstractEditorElement o = this.editor.moveElementUp(this);
-				if (o != null) {
-					entry.setTooltipSupplier((menu1, entry1) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc", I18n.get("fancymenu.editor.object.moveup.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
-				}
-			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")));
+				this.editor.moveElementUp(this);
+			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
+					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedUp(this));
 
 			this.rightClickMenu.addClickableEntry("move_down_element", Component.translatable("fancymenu.editor.object.movedown"), (menu, entry) -> {
-				AbstractEditorElement o = this.editor.moveElementDown(this);
-				if (o != null) {
-					entry.setTooltipSupplier((menu1, entry1) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc", I18n.get("fancymenu.editor.object.movedown.desc.subtext", o.element.builder.getDisplayName(o.element).getString()))));
-				}
-			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")));
+				this.editor.moveElementDown(this);
+			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
+					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedDown(this));
 
 		}
 

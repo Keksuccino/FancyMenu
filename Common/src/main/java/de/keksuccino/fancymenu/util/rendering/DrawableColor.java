@@ -9,6 +9,7 @@ import java.util.Objects;
 public class DrawableColor {
 
     public static final DrawableColor WHITE = DrawableColor.of(new Color(255, 255, 255));
+    public static final DrawableColor EMPTY = WHITE.copy();
 
     protected Color color;
     protected int colorInt;

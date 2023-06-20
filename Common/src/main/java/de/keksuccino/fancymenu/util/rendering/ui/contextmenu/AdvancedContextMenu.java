@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+//TODO delete class
 public class AdvancedContextMenu implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();

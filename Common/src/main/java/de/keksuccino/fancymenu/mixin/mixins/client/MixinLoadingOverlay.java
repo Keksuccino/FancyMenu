@@ -32,7 +32,7 @@ public abstract class MixinLoadingOverlay {
 	@Inject(method = "<init>", at = @At(value = "RETURN"))
 	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer<?> consumer, boolean b, CallbackInfo info) {
 		//Preload animation frames to avoid lagging when rendering them for the first time
-		if (FancyMenu.getConfig().getOrDefault("preloadanimations", true) && !AnimationHandler.preloadingCompleted()) {
+		if (FancyMenu.getOptions().preLoadAnimations.getValue() && !AnimationHandler.preloadingCompleted()) {
 			AnimationHandler.preloadAnimations(false);
 		}
 	}
@@ -59,10 +59,10 @@ public abstract class MixinLoadingOverlay {
 			//Update resource pack animation sizes after reloading textures and when starting the game
 			LOGGER.info("[FANCYMENU] Updating animation sizes..");
 			AnimationHandler.updateAnimationSizes();
-			//If it's the first time a screen gets initialized, soft-reload the screen's handler, so first-time stuff works when fading to the Title menu
-			ScreenCustomizationLayer menuHandler = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
-			if ((menuHandler != null) && firstScreenInit) {
-				menuHandler.onScreenReload(new ScreenReloadEvent(Minecraft.getInstance().screen));
+			//If it's the first time a screen gets initialized, soft-reload the screen's layer, so first-time stuff works when fading to the Title menu
+			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
+			if ((layer != null) && firstScreenInit) {
+				layer.resetLayer();
 			}
 			firstScreenInit = false;
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly, because the menu got initialized already (this is after screen init)

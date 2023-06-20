@@ -50,12 +50,10 @@ public class FancyMenuForge {
 
     @SubscribeEvent
     public void registerKeyMappings(RegisterKeyMappingsEvent e) {
-        if (FancyMenu.getConfig().getOrDefault("enablehotkeys", true)) {
-            for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
-                e.register(m);
-            }
-            KeyMappings.init();
-        }
+//        for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
+//            e.register(m);
+//        }
+//        KeyMappings.init();
     }
 
 }

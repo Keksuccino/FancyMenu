@@ -675,7 +675,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && (this.isActive() && this.isVisible() && this.isHovered())) {
-                if (FancyMenu.getConfig().getOrDefault("play_ui_click_sounds", true)) {
+                if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.onClick(this.parent, this);

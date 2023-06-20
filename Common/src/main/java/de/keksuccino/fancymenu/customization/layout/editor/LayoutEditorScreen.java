@@ -210,9 +210,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	protected void renderGrid(PoseStack pose) {
 
-		if (FancyMenu.getConfig().getOrDefault("showgrid", false)) {
+		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
 
-			int gridSize = FancyMenu.getConfig().getOrDefault("gridsize", 10);
+			int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
 			int lineThickness = 1;
 
 			//Draw centered vertical line
@@ -440,6 +440,17 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			if (!e.settings.isMovable()) return false;
 		}
 		return true;
+	}
+
+	public boolean canBeMovedUp(AbstractEditorElement element) {
+		int index = this.normalEditorElements.indexOf(element);
+		if (index == -1) return false;
+		return index < this.normalEditorElements.size()-1;
+	}
+
+	public boolean canBeMovedDown(AbstractEditorElement element) {
+		int index = this.normalEditorElements.indexOf(element);
+		return index > 0;
 	}
 
 	/**
@@ -822,7 +833,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		//CTRL + G
 		if (key.equals("g") && hasControlDown()) {
 			try {
-				FancyMenu.getConfig().setValue("showgrid", !FancyMenu.getConfig().getOrDefault("showgrid", false));
+				FancyMenu.getOptions().showLayoutEditorGrid.setValue(!FancyMenu.getOptions().showLayoutEditorGrid.getValue());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -215,6 +216,30 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     @NotNull
     public SeparatorContextMenuEntry addSeparatorEntry(@NotNull String identifier) {
         SeparatorContextMenuEntry e = new SeparatorContextMenuEntry(identifier, this);
+        return this.addEntry(e);
+    }
+
+    @NotNull
+    public <T> ValueCycleContextMenuEntry<T> addValueCycleEntryAt(int index, @NotNull String identifier, @NotNull ILocalizedValueCycle<T> valueCycle) {
+        ValueCycleContextMenuEntry<T> e = new ValueCycleContextMenuEntry<>(identifier, this, valueCycle);
+        return this.addEntryAt(index, e);
+    }
+
+    @NotNull
+    public <T> ValueCycleContextMenuEntry<T> addValueCycleEntryAfter(@NotNull String addAfterIdentifier, @NotNull String identifier, @NotNull ILocalizedValueCycle<T> valueCycle) {
+        ValueCycleContextMenuEntry<T> e = new ValueCycleContextMenuEntry<>(identifier, this, valueCycle);
+        return this.addEntryAfter(addAfterIdentifier, e);
+    }
+
+    @NotNull
+    public <T> ValueCycleContextMenuEntry<T> addValueCycleEntryBefore(@NotNull String addBeforeIdentifier, @NotNull String identifier, @NotNull ILocalizedValueCycle<T> valueCycle) {
+        ValueCycleContextMenuEntry<T> e = new ValueCycleContextMenuEntry<>(identifier, this, valueCycle);
+        return this.addEntryBefore(addBeforeIdentifier, e);
+    }
+
+    @NotNull
+    public <T> ValueCycleContextMenuEntry<T> addValueCycleEntry(@NotNull String identifier, @NotNull ILocalizedValueCycle<T> valueCycle) {
+        ValueCycleContextMenuEntry<T> e = new ValueCycleContextMenuEntry<>(identifier, this, valueCycle);
         return this.addEntry(e);
     }
 
@@ -1109,7 +1134,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered()) {
-                if (FancyMenu.getConfig().getOrDefault("play_ui_click_sounds", true)) {
+                if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.onClick(this.parent, this);
@@ -1121,6 +1146,35 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @FunctionalInterface
         public interface ClickAction {
             void onClick(ContextMenu menu, ClickableContextMenuEntry entry);
+        }
+
+    }
+
+    public static class ValueCycleContextMenuEntry<T> extends ClickableContextMenuEntry {
+
+        protected final ILocalizedValueCycle<T> valueCycle;
+
+        public ValueCycleContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull ILocalizedValueCycle<T> valueCycle) {
+            super(identifier, parent, Component.empty(), (menu, entry) -> valueCycle.next());
+            this.valueCycle = valueCycle;
+            this.labelSupplier = (menu, entry) -> this.valueCycle.getCycleComponent();
+        }
+
+        @NotNull
+        public ILocalizedValueCycle<T> getValueCycle() {
+            return this.valueCycle;
+        }
+
+        @Override
+        public @NotNull ClickableContextMenuEntry setLabelSupplier(@NotNull Supplier<Component> labelSupplier) {
+            LOGGER.error("[FANCYMENU] You can't set the label of ValueCycleContextMenuEntries!");
+            return this;
+        }
+
+        @Override
+        public @NotNull ClickableContextMenuEntry setClickAction(@NotNull ClickAction clickAction) {
+            LOGGER.error("[FANCYMENU] You can't set the click action of ValueCycleContextMenuEntries!");
+            return this;
         }
 
     }

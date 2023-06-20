@@ -1,13 +1,11 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
-import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.schemes.UIColorSchemes;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
@@ -49,11 +47,28 @@ public class CustomizationOverlayUI {
 
         // FANCYMENU ICON
         ContextMenu fmMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("fancymenu_icon", Component.literal(""), fmMenu).setIconTexture(WrappedTexture.of(FM_LOGO_ICON_LOCATION));
+        menuBar.addContextMenuEntry("fancymenu_icon", Component.empty(), fmMenu).setIconTexture(WrappedTexture.of(FM_LOGO_ICON_LOCATION));
 
         // SCREEN
         ContextMenu screenMenu = new ContextMenu();
         menuBar.addContextMenuEntry("screen", Component.translatable("fancymenu.overlay.menu_bar.screen"), screenMenu);
+
+        //TODO cycleEntries von context menu nutzen
+
+        // - Current Screen Customization (Toggle On/Off)
+        // - Override Current with Custom GUI
+        // ---------------
+        // - Settings
+        //   - Play Menu Music
+        //   - Set Default GUI Scale
+        //   - Force Fullscreen
+        //   - Game Intro
+        //     - Set Game Intro Animation
+        //     - Allow Skip
+        //     - Set Custom Skip Text
+        //   - Pre-Load Animations
+        // - Reload FancyMenu | CTRL + ALT + R
+        // - Disable Customization for All Screens (öffnet confirm screen)
 
         // LAYOUT
         ContextMenu layoutMenu = new ContextMenu();
@@ -130,13 +145,28 @@ public class CustomizationOverlayUI {
             })));
         });
 
+        // VARIABLES
+        ContextMenu variablesMenu = new ContextMenu();
+        menuBar.addContextMenuEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables"), variablesMenu);
+
+        // - Manage Variables (reset, delete, set, etc.)
+        // - Set Variables to reset on launch
+
         // TOOLS
         ContextMenu toolsMenu = new ContextMenu();
         menuBar.addContextMenuEntry("tools", Component.translatable("fancymenu.overlay.menu_bar.tools"), toolsMenu);
 
-        // SETTINGS
-        ContextMenu settingsMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("settings", Component.translatable("fancymenu.overlay.menu_bar.settings"), settingsMenu);
+        // WINDOW
+        ContextMenu uiMenu = new ContextMenu();
+        menuBar.addContextMenuEntry("window", Component.translatable("fancymenu.overlay.menu_bar.window"), uiMenu);
+
+        // - Custom Window Icon (Toggle On/Off)
+        // - Custom Window Title (Input)
+        // -------------
+        // - UI Scale (Cycle 1-2-3)
+        // - UI Text Shadow (Toggle On/Off)
+        // - UI Click Sounds (Toggle On/Off)
+        // - UI Theme (erstmal nur light/dark mode, später mehr)
 
         // HELP
         ContextMenu helpMenu = new ContextMenu();
@@ -146,15 +176,10 @@ public class CustomizationOverlayUI {
 
         // DARK/LIGHT MODE SWITCHER
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "dark_light_mode_switcher", Component.literal(""), (bar, entry) -> {
-            LOGGER.info("CLICK");
-            try {
-                FancyMenu.getConfig().setValue("light_mode", !FancyMenu.getConfig().getOrDefault("light_mode", false));
-                UIColorSchemes.updateActiveScheme();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+            FancyMenu.getOptions().lightMode.setValue(!FancyMenu.getOptions().lightMode.getValue());
+            UIColorSchemes.updateActiveScheme();
         }).setIconTextureSupplier((bar, entry) -> {
-            if (FancyMenu.getConfig().getOrDefault("light_mode", false)) {
+            if (FancyMenu.getOptions().lightMode.getValue()) {
                 return LIGHT_MODE_ICON_TEXTURE;
             }
             return DARK_MODE_ICON_TEXTURE;

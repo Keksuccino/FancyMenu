@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Supplier;
 
-public interface LocalizedEnum {
+public interface LocalizedEnum extends NamedEnum {
 
     Supplier<Style> SUCCESS_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorScheme().successTextColor.getColorInt());
     Supplier<Style> WARNING_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorScheme().warningTextColor.getColorInt());
@@ -16,9 +16,6 @@ public interface LocalizedEnum {
 
     @NotNull
     String getLocalizationKeyBase();
-
-    @NotNull
-    String getName();
 
     @NotNull
     default String getEntryLocalizationKey() {

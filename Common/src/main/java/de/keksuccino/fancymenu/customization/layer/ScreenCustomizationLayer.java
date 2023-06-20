@@ -18,7 +18,6 @@ import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -87,24 +86,17 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		return this.identifier;
 	}
 
-	@EventListener
-	public void onScreenReload(ScreenReloadEvent e) {
-		if (this.shouldCustomize(e.getScreen())) {
-			this.delayAppearanceFirstTime.clear();
-			this.isNewMenu = true;
-			for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
-				c.lastLayoutPath = null;
-			}
-		}
-	}
-
-	@EventListener
-	public void onModReload(ModReloadEvent e) {
+	public void resetLayer() {
 		this.delayAppearanceFirstTime.clear();
 		this.isNewMenu = true;
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
 			c.lastLayoutPath = null;
 		}
+	}
+
+	@EventListener
+	public void onModReload(ModReloadEvent e) {
+		this.resetLayer();
 	}
 
 	@EventListener

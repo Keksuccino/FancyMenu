@@ -50,13 +50,13 @@ public class UIBase extends GuiComponent {
 		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().elementBackgroundColorNormal, UIBase.getUIColorScheme().elementBackgroundColorHover, UIBase.getUIColorScheme().elementBorderColorNormal, UIBase.getUIColorScheme().elementBorderColorHover, ELEMENT_BORDER_THICKNESS));
 		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().elementLabelColorNormal);
 		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().elementLabelColorInactive);
-		button.setLabelShadowEnabled(FancyMenu.getConfig().getOrDefault("ui_text_shadow", true));
+		button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
 		button.setForceDefaultTooltipStyle(true);
 		return button;
 	}
 
 	public static float getUIScale() {
-		float uiScale = FancyMenu.getConfig().getOrDefault("uiscale", 1.0F);
+		float uiScale = FancyMenu.getOptions().uiScale.getValue();
 		if (Minecraft.getInstance().isEnforceUnicode() && (uiScale > 2.0F)) {
 			uiScale = 2.0F;
 		}
@@ -130,7 +130,7 @@ public class UIBase extends GuiComponent {
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y, int baseColor) {
-		return FancyMenu.getConfig().getOrDefault("ui_text_shadow", true) ? font.drawShadow(pose, text, x, y, baseColor) : font.draw(pose, text, x, y, baseColor);
+		return FancyMenu.getOptions().enableUiTextShadow.getValue() ? font.drawShadow(pose, text, x, y, baseColor) : font.draw(pose, text, x, y, baseColor);
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y, int baseColor) {

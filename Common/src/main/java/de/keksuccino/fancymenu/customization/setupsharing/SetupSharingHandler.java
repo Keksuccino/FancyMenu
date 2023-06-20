@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+//TODO completely rewrite this! all layout assets are now in config/fancymenu/assets, so just export config/fancymenu and that's it
 public class SetupSharingHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -457,28 +458,6 @@ public class SetupSharingHandler {
             }
             for (String s : failedToExportAnimations) {
                 unableToExport.add("ANIMATION: " + s);
-            }
-
-            //Export custom splash text file from mod config
-            try {
-                String splashPath = FancyMenu.getConfig().getOrDefault("splashtextfile", "");
-                if (splashPath.toLowerCase().endsWith(".txt")) {
-                    File splashFile = new File(splashPath);
-                    if (splashFile.isFile()) {
-                        File parent = splashFile.getParentFile();
-                        if (parent != null) {
-                            File targetParent = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(parent.getPath()));
-                            targetParent.mkdirs();
-                        }
-                        File copyTo = new File(exportToTempSetup.getAbsolutePath().replace("\\", "/") + "/" + getShortPath(splashFile.getPath()));
-                        FileUtils.copyFile(splashFile, copyTo);
-                    } else {
-                        unableToExport.add("CONFIG: CUSTOM VANILLA SPLASH FILE: " + splashPath);
-                    }
-                }
-            } catch (Exception e2) {
-                unableToExport.add("CONFIG: CUSTOM VANILLA SPLASH FILE: " + FancyMenu.getConfig().getOrDefault("splashtextfile", ""));
-                e2.printStackTrace();
             }
 
             //Export setup (config/fancymenu)

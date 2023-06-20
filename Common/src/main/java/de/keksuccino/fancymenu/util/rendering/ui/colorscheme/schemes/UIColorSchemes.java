@@ -22,7 +22,7 @@ public class UIColorSchemes {
     }
 
     public static void updateActiveScheme() {
-        if (FancyMenu.getConfig().getOrDefault("light_mode", false)) {
+        if (FancyMenu.getOptions().lightMode.getValue()) {
             UIColorSchemeRegistry.setActiveScheme("light");
         } else {
             UIColorSchemeRegistry.setActiveScheme("dark");

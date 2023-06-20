@@ -15,9 +15,6 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
-import de.keksuccino.konkrete.Konkrete;
-import de.keksuccino.konkrete.config.Config;
-import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +34,16 @@ public class FancyMenu {
 	// - Wenn Ordner angewählt, File in angewähltem Ordner speichern
 	// - Unter file list area ist Eingabefeld für File Name
 	// - Klick auf "Done" returnt ZWEI FILES! (save directory UND file name)
+
+	//TODO rewrite SetupSharingEngine
+	// - All layout assets are now in config/fancymenu/assets, so just export config/fancymenu and that's it
+	// - Pack exported setup to ZIP
+	// - Allow import of ZIP setups
+	// - Use SaveFileScreen to save setup
+
+	//TODO re-implement GameIntroScreen
+
+	//TODO Mixin für WorldLoadingScreen adden, um showAnimation und showPercent optionen zu handlen
 
 	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
 
@@ -127,7 +134,7 @@ public class FancyMenu {
 	private static final File PANORAMA_DIR = new File(MOD_DIR, "/panoramas");
 	private static final File SLIDESHOW_DIR = new File(MOD_DIR, "/slideshows");
 
-	private static Config config;
+	private static Options options;
 
 	public static void init() {
 
@@ -167,10 +174,6 @@ public class FancyMenu {
 					LOGGER.info("[FANCYMENU] OptiFine compatibility mode enabled!");
 				}
 
-				if (FancyMenu.getConfig().getOrDefault("allow_level_registry_interactions", false)) {
-					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
-				}
-
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 	    	}
@@ -199,68 +202,15 @@ public class FancyMenu {
 
 	}
 
-	public static Config getConfig() {
-		initConfig();
-		return config;
-	}
-	
-	public static void initConfig() {
-		if (config == null) {
-			updateConfig();
+	public static Options getOptions() {
+		if (options == null) {
+			reloadOptions();
 		}
+		return options;
 	}
 
-	public static void updateConfig() {
-    	try {
-
-    		config = new Config(MOD_DIR.getAbsolutePath().replace("\\", "/") + "/config.txt");
-
-    		config.registerValue("enablehotkeys", true, "general", "A minecraft restart is required after changing this value.");
-    		config.registerValue("playmenumusic", true, "general");
-    		config.registerValue("playbackgroundsounds", true, "general", "If menu background sounds added by FancyMenu should be played or not.");
-    		config.registerValue("playbackgroundsoundsinworld", false, "general", "If menu background sounds added by FancyMenu should be played when a world is loaded.");
-    		config.registerValue("defaultguiscale", -1, "general", "Sets the default GUI scale on first launch. Useful for modpacks. Cache data is saved in '/mods/fancymenu/'.");
-    		config.registerValue("showdebugwarnings", true, "general");
-			config.registerValue("forcefullscreen", false, "general");
-			config.registerValue("variables_to_reset_on_launch", "", "general");
-    		
-    		config.registerValue("showcustomizationbuttons", true, "customization");
-			config.registerValue("advancedmode", false, "customization");
-			
-			config.registerValue("gameintroanimation", "", "loading");
-			config.registerValue("showanimationloadingstatus", true, "loading");
-			config.registerValue("allowgameintroskip", true, "loading");
-			config.registerValue("customgameintroskiptext", "", "loading");
-			config.registerValue("preloadanimations", false, "loading");
-
-			config.registerValue("customwindowicon", false, "minecraftwindow", "A minecraft restart is required after changing this value.");
-			config.registerValue("customwindowtitle", "", "minecraftwindow", "A minecraft restart is required after changing this value.");
-
-			config.registerValue("showloadingscreenanimation", true, "world_loading_screen");
-			config.registerValue("showloadingscreenpercent", true, "world_loading_screen");
-
-			config.registerValue("show_server_icons", true, "multiplayer_screen");
-
-			config.registerValue("show_world_icons", true, "singleplayer_screen");
-
-			config.registerValue("showgrid", true, "layouteditor");
-			config.registerValue("gridsize", 10, "layouteditor");
-
-			config.registerValue("uiscale", 1.0F, "ui");
-			config.registerValue("show_unicode_warning", true, "ui");
-			config.registerValue("play_ui_click_sounds", true, "ui");
-			config.registerValue("light_mode", false, "ui");
-			config.registerValue("ui_text_shadow", false, "ui");
-
-			config.registerValue("allow_level_registry_interactions", true, "compatibility");
-			
-			config.syncConfig();
-			
-			config.clearUnusedValues();
-
-		} catch (InvalidValueException e) {
-			e.printStackTrace();
-		}
+	public static void reloadOptions() {
+		options = new Options();
 	}
 	
 	public static File getAnimationPath() {
@@ -299,7 +249,11 @@ public class FancyMenu {
 	}
 
 	public static boolean isOptiFineLoaded() {
-		return Konkrete.isOptifineLoaded;
+		try {
+			Class.forName("optifine.Installer", false, FancyMenu.class.getClassLoader());
+			return true;
+		} catch (Exception ignored) {}
+		return false;
 	}
 
 	public static boolean isAudioExtensionLoaded() {

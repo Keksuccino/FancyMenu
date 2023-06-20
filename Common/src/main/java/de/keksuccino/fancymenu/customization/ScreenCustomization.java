@@ -5,11 +5,11 @@ import java.net.URL;
 import java.util.*;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
-import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUIOLD;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
@@ -18,7 +18,6 @@ import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
-import de.keksuccino.fancymenu.customization.layer.layers.ScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.LoadingRequirements;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -30,7 +29,6 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
-import de.keksuccino.fancymenu.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
@@ -71,7 +69,6 @@ public class ScreenCustomization {
 		addDefaultScreenBlacklistRules();
 
 		ScreenCustomizationLayerHandler.init();
-		ScreenCustomizationLayers.registerAll();
 
 		VanillaButtonHandler.init();
 
@@ -253,16 +250,15 @@ public class ScreenCustomization {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if (isCustomizationEnabledForScreen(s)) {
-				setIsNewMenu(true);
-				ScreenReloadEvent e = new ScreenReloadEvent(s);
-				EventHandler.INSTANCE.postEvent(e);
-				Minecraft.getInstance().setScreen(s);
+				ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
+				if (layer != null) layer.resetLayer();
+				reInitCurrentScreen();
 			}
 		}
 	}
 
 	public static void reloadFancyMenu() {
-		FancyMenu.updateConfig();
+		FancyMenu.reloadOptions();
 		TextureHandler.INSTANCE.clearResources();
 		SoundRegistry.resetSounds();
 		SoundRegistry.stopSounds();
@@ -271,16 +267,8 @@ public class ScreenCustomization {
 		AnimationHandler.stopAnimationSounds();
 		LayoutHandler.reloadLayouts();
 		CustomGuiLoader.loadCustomGuis();
-		if (!FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-			CustomizationOverlayUIOLD.showButtonInfo = false;
-			CustomizationOverlayUIOLD.showMenuInfo = false;
-		}
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
-		try {
-			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		reInitCurrentScreen();
 	}
 
 	public static void reInitCurrentScreen() {

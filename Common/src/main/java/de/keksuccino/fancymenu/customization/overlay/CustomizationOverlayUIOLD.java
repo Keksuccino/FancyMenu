@@ -259,7 +259,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 				advancedButton.active = false;
 			}
 			advancedButton.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.current.advanced.desc")));
-			if (FancyMenu.getConfig().getOrDefault("advancedmode", false)) {
+			if (FancyMenu.getOptions().advancedCustomizationMode.getValue()) {
 				currentMenu.addContent(advancedButton);
 			}
 
@@ -487,7 +487,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 				customGuiMenu.setParentButton((AdvancedButton) press);
 				customGuiMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
-			if (FancyMenu.getConfig().getOrDefault("advancedmode", false)) {
+			if (FancyMenu.getOptions().advancedCustomizationMode.getValue()) {
 				bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
 			}
 			/** CUSTOM GUI TAB END **/
@@ -683,35 +683,23 @@ public class CustomizationOverlayUIOLD extends UIBase {
 	}
 
 	public static void render(PoseStack matrix, Screen screen) {
-
-//		if (true) return; //TODO remove debug
-
 		try {
-
 			if (bar != null) {
 				if (!PopupHandler.isPopupActive()) {
-					if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-						if (!ScreenCustomization.isScreenBlacklisted(screen)) {
+					if (!ScreenCustomization.isScreenBlacklisted(screen)) {
 
-							RenderUtils.setZLevelPre(matrix, 400);
+						RenderUtils.setZLevelPre(matrix, 400);
+						renderMenuInfo(matrix, screen);
+						renderUnicodeWarning(matrix, screen);
+						renderButtonInfo(matrix, screen);
+						renderButtonInfoWarning(matrix, screen);
+						RenderUtils.setZLevelPost(matrix);
 
-							renderMenuInfo(matrix, screen);
+						bar.render(matrix, screen);
 
-							renderUnicodeWarning(matrix, screen);
-
-							renderButtonInfo(matrix, screen);
-
-							renderButtonInfoWarning(matrix, screen);
-
-							RenderUtils.setZLevelPost(matrix);
-
-							bar.render(matrix, screen);
-
-						}
 					}
 				}
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -891,10 +879,11 @@ public class CustomizationOverlayUIOLD extends UIBase {
 		}
 	}
 
+	//TODO remove this
 	protected static void renderUnicodeWarning(PoseStack matrix, Screen screen) {
-		if (!FancyMenu.getConfig().getOrDefault("show_unicode_warning", true)) {
-			return;
-		}
+//		if (!FancyMenu.getConfig().getOrDefault("show_unicode_warning", true)) {
+//			return;
+//		}
 		if (Minecraft.getInstance().options.forceUnicodeFont().get()) {
 			String title = I18n.get("fancymenu.overlay.ui.warning");
 			int w = Minecraft.getInstance().font.width(title);
@@ -937,15 +926,9 @@ public class CustomizationOverlayUIOLD extends UIBase {
 	@EventListener
 	public void onInitScreen(InitOrResizeScreenEvent.Pre e) {
 		try {
-
 			if (e.getScreen() != null) {
-				if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
-
-					updateUI();
-
-				}
+				updateUI();
 			}
-
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

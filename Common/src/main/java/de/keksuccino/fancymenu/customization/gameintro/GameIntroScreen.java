@@ -19,8 +19,8 @@ import net.minecraft.network.chat.Component;
 
 public class GameIntroScreen extends Screen {
 
-	private IAnimationRenderer renderer;
-	private TitleScreen main;
+	private final IAnimationRenderer renderer;
+	private final TitleScreen main;
 	private boolean pre;
 	private boolean loop;
 	private boolean stretched;
@@ -74,9 +74,7 @@ public class GameIntroScreen extends Screen {
 			
 			if (!this.renderer.isFinished()) {
 				this.renderer.render(matrix);
-				if (FancyMenu.getConfig().getOrDefault("allowgameintroskip", true)) {
-					this.skipable = true;
-				}
+				this.skipable = FancyMenu.getOptions().allowGameIntroSkip.getValue();
 			} else {
 				this.renderer.setLooped(this.loop);
 				this.renderer.setStretchImageToScreensize(this.stretched);
@@ -92,9 +90,9 @@ public class GameIntroScreen extends Screen {
 			matrix.pushPose();
 			matrix.scale(1.05F, 1.05F, 1.05F);
 			String text = I18n.get("fancymenu.gameintro.skip");
-			String customtext = StringUtils.convertFormatCodes(FancyMenu.getConfig().getOrDefault("customgameintroskiptext", ""), "&", "§");
-			if ((customtext != null) && !customtext.equals("")) {
-				text = customtext;
+			String customText = StringUtils.convertFormatCodes(FancyMenu.getOptions().customGameIntroSkipText.getValue(), "&", "§");
+			if ((customText != null) && !customText.equals("")) {
+				text = customText;
 			}
 			GuiComponent.drawCenteredString(matrix, Minecraft.getInstance().font, text, (int) ((this.width / 2) / 1.05), (int) ((this.height - 30) / 1.05), new Color(255, 255, 255, 180).getRGB());
 			matrix.popPose();

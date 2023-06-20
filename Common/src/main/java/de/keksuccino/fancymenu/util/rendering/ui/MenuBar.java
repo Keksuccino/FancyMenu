@@ -11,7 +11,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.FMConfigScreen;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.gui.content.ContextMenu;
@@ -23,6 +22,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 
+//TODO delete class
+@SuppressWarnings("all")
 public class MenuBar extends UIBase {
 	
 	public static final ResourceLocation FM_LOGO_TEXTURE = new ResourceLocation("keksuccino", "fancymenu_logo_icon.png");
@@ -47,7 +48,7 @@ public class MenuBar extends UIBase {
 		//Add default FancyMenu button
 		AdvancedButton fmBtn = new AdvancedImageButton(0, 0, 0, 0, FM_LOGO_TEXTURE, true, (press) -> {
 
-			Minecraft.getInstance().setScreen(new FMConfigScreen(Minecraft.getInstance().screen));
+//			Minecraft.getInstance().setScreen(new FMConfigScreen(Minecraft.getInstance().screen));
 
 		}) {
 			@Override

@@ -82,7 +82,7 @@ public class ScreenCustomizationEvents {
 
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
-			if (!FancyMenu.getConfig().getOrDefault("playmenumusic", true)) {
+			if (!FancyMenu.getOptions().playMenuMusic.getValue()) {
 				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
 		}
@@ -120,7 +120,7 @@ public class ScreenCustomizationEvents {
 		//Handle default GUI scale
 		if (!scaleChecked) {
 			scaleChecked = true;
-			int scale = FancyMenu.getConfig().getOrDefault("defaultguiscale", -1);
+			int scale = FancyMenu.getOptions().defaultGuiScale.getValue();
 			if ((scale != -1) && (scale != 0)) {
 				File f = FancyMenu.INSTANCE_DATA_DIR;
 				if (!f.exists()) {

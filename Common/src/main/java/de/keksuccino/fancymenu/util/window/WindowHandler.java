@@ -7,7 +7,6 @@ import javax.imageio.ImageIO;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,16 +27,11 @@ public class WindowHandler {
 
 	public static void handleForceFullscreen() {
 		try {
-			if ((Minecraft.getInstance() != null) && (Minecraft.getInstance().getWindow() != null)) {
-				if (FancyMenu.getConfig().getOrDefault("forcefullscreen", false)) {
-					if (!Minecraft.getInstance().getWindow().isFullscreen()) {
-						Minecraft.getInstance().getWindow().toggleFullScreen();
-						LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
-					}
+			if (FancyMenu.getOptions().forceFullscreen.getValue()) {
+				if (!Minecraft.getInstance().getWindow().isFullscreen()) {
+					Minecraft.getInstance().getWindow().toggleFullScreen();
+					LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
 				}
-			} else {
-				//This should basically never happen, but just in case, you know
-				LOGGER.error("[FANCYMENU] Failed to force fullscreen! Instance or window was NULL!");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -45,7 +39,7 @@ public class WindowHandler {
 	}
 	
 	public static void updateWindowIcon() {
-		if (FancyMenu.getConfig().getOrDefault("customwindowicon", false)) {
+		if (FancyMenu.getOptions().showCustomWindowIcon.getValue()) {
 			try {
 				File i16 = new File(ICON_DIR.getPath() + "/icon16x16.png");
 				File i32 = new File(ICON_DIR.getPath() + "/icon32x32.png");
@@ -74,8 +68,8 @@ public class WindowHandler {
 	}
 	
 	public static void updateWindowTitle() {
-		String s = FancyMenu.getConfig().getOrDefault("customwindowtitle", "");
-		if ((s != null) && (!s.equals(""))) {
+		String s = FancyMenu.getOptions().customWindowTitle.getValue();
+		if (!s.isEmpty()) {
 			windowTitle = s;
 			setWindowTitle();
 		} else {
@@ -91,38 +85,6 @@ public class WindowHandler {
 	
 	public static String getCustomWindowTitle() {
 		return windowTitle;
-	}
-
-	/**
-	 * Will return the correct window width <b>while in a GUI</b>.<br>
-	 * <b>Returns 0 if no GUI is active!</b>
-	 */
-	public static int getWindowGuiWidth() {
-		Screen s = Minecraft.getInstance().screen;
-		if (s != null) {
-			double mcScale = Minecraft.getInstance().getWindow().calculateScale((int) Minecraft.getInstance().getWindow().getGuiScale(), Minecraft.getInstance().options.forceUnicodeFont().get());
-			float baseUIScale = 1.0F;
-			float sc = (float) (((double)baseUIScale) * (((double)baseUIScale) / mcScale));
-			
-			return (int) (s.width / sc);
-		}
-		return 0;
-	}
-
-	/**
-	 * Will return the correct window height <b>while in a GUI</b>.<br>
-	 * <b>Returns 0 if no GUI is active!</b>
-	 */
-	public static int getWindowGuiHeight() {
-		Screen s = Minecraft.getInstance().screen;
-		if (s != null) {
-			double mcScale = Minecraft.getInstance().getWindow().calculateScale((int) Minecraft.getInstance().getWindow().getGuiScale(), Minecraft.getInstance().options.forceUnicodeFont().get());
-			float baseUIScale = 1.0F;
-			float sc = (float) (((double)baseUIScale) * (((double)baseUIScale) / mcScale));
-			
-			return (int) (s.height / sc);
-		}
-		return 0;
 	}
 
 }

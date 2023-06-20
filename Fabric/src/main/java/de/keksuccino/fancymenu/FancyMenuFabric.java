@@ -55,12 +55,10 @@ public class FancyMenuFabric implements ModInitializer {
     }
 
     public void registerKeyMappings() {
-        if (FancyMenu.getConfig().getOrDefault("enablehotkeys", true)) {
-            for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
-                KeyBindingHelper.registerKeyBinding(m);
-            }
-            KeyMappings.init();
-        }
+//        for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
+//            KeyBindingHelper.registerKeyBinding(m);
+//        }
+//        KeyMappings.init();
     }
 
 }

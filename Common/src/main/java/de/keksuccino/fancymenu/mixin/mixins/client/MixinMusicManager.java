@@ -17,7 +17,7 @@ public abstract class MixinMusicManager {
 
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
     private void stopMusicIfDisabledInConfigFancyMenu(Music $$0, CallbackInfo info) {
-        if ((Minecraft.getInstance().level == null) && !FancyMenu.getConfig().getOrDefault("playmenumusic", true)) {
+        if ((Minecraft.getInstance().level == null) && !FancyMenu.getOptions().playMenuMusic.getValue()) {
             this.stopPlaying();
             info.cancel();
         }

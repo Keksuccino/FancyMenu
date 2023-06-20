@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util;
+package de.keksuccino.fancymenu.util.cycle;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
-public class ValueCycle<T> {
+public class ValueCycle<T> implements IValueCycle<T> {
 
     protected List<T> values = new ArrayList<>();
     protected int currentIndex = 0;
+    protected List<Consumer<T>> cycleListeners = new ArrayList<>();
 
     /**
      * A value toggle.<br>
@@ -20,7 +22,7 @@ public class ValueCycle<T> {
     public static <T> ValueCycle<T> fromList(@NotNull List<T> values) {
         Objects.requireNonNull(values);
         if (values.size() < 2) {
-            throw new InvalidParameterException("Failed to create ValueSwitcher! Value list size too small (<2)!");
+            throw new InvalidParameterException("Failed to create ValueCycle! Value list size too small (<2)!");
         }
         ValueCycle<T> valueCycle = new ValueCycle<>();
         valueCycle.values.addAll(values);
@@ -62,19 +64,40 @@ public class ValueCycle<T> {
         } else {
             this.currentIndex++;
         }
+        this.notifyListeners();
         return this.current();
     }
 
-    public void setCurrentValue(T value) {
+    public ValueCycle<T> setCurrentValue(T value) {
         int i = this.values.indexOf(value);
         if (i != -1) {
             this.currentIndex = i;
+            this.notifyListeners();
         }
+        return this;
     }
 
-    public void setCurrentValueByIndex(int index) {
+    public ValueCycle<T> setCurrentValueByIndex(int index) {
         if ((index > 0) && (index < this.values.size())) {
             this.currentIndex = index;
+            this.notifyListeners();
+        }
+        return this;
+    }
+
+    public ValueCycle<T> addCycleListener(@NotNull Consumer<T> listener) {
+        this.cycleListeners.add(listener);
+        return this;
+    }
+
+    public ValueCycle<T> clearCycleListeners() {
+        this.cycleListeners.clear();
+        return this;
+    }
+
+    protected void notifyListeners() {
+        for (Consumer<T> listener : this.cycleListeners) {
+            listener.accept(this.current());
         }
     }
 

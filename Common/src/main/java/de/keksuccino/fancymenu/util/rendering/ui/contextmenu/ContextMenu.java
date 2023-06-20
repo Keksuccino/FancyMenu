@@ -10,6 +10,7 @@ import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 
+//TODO delete class
 public class ContextMenu extends de.keksuccino.konkrete.gui.content.ContextMenu {
 
 	protected boolean resetParentButtonOnClose = false;
