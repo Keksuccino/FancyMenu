@@ -560,14 +560,14 @@ public class SetupSharingHandler {
 
             PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(propsFilePath);
             if (set != null) {
-                List<PropertyContainer> metas = set.getSectionsOfType("setup-meta");
+                List<PropertyContainer> metas = set.getContainersOfType("setup-meta");
                 if (!metas.isEmpty()) {
                     PropertyContainer meta = metas.get(0);
                     sp.modLoader = meta.getValue("modloader");
                     sp.mcVersion = meta.getValue("mcversion");
                     sp.fmVersion = meta.getValue("fmversion");
                 }
-                List<PropertyContainer> modLists = set.getSectionsOfType("mod-list");
+                List<PropertyContainer> modLists = set.getContainersOfType("mod-list");
                 if (!modLists.isEmpty()) {
                     PropertyContainer modList = modLists.get(0);
                     for (Map.Entry<String, String> m : modList.getProperties().entrySet()) {
@@ -586,7 +586,7 @@ public class SetupSharingHandler {
 
     protected static List<String> getLayoutResources(PropertyContainerSet layout) {
         List<String> l = new ArrayList<>();
-        for (PropertyContainer s : layout.getSectionsOfType("customization")) {
+        for (PropertyContainer s : layout.getContainersOfType("customization")) {
             String action = s.getValue("action");
             if (action != null) {
                 for (Map.Entry<String, String> m : s.getProperties().entrySet()) {
@@ -948,9 +948,9 @@ public class SetupSharingHandler {
         protected boolean allMenuIdentifiersValid() {
             try {
                 for (Map.Entry<String, PropertyContainerSet> m : getLayouts().entrySet()) {
-                    List<PropertyContainer> metas = m.getValue().getSectionsOfType("customization-meta");
+                    List<PropertyContainer> metas = m.getValue().getContainersOfType("customization-meta");
                     if (metas.isEmpty()) {
-                        metas = m.getValue().getSectionsOfType("type-meta");
+                        metas = m.getValue().getContainersOfType("type-meta");
                     }
                     if (!metas.isEmpty()) {
                         PropertyContainer meta = metas.get(0);
@@ -982,9 +982,9 @@ public class SetupSharingHandler {
         protected void fixMenuIdentifiers() {
             try {
                 for (Map.Entry<String, PropertyContainerSet> m : getLayouts().entrySet()) {
-                    List<PropertyContainer> metas = m.getValue().getSectionsOfType("customization-meta");
+                    List<PropertyContainer> metas = m.getValue().getContainersOfType("customization-meta");
                     if (metas.isEmpty()) {
-                        metas = m.getValue().getSectionsOfType("type-meta");
+                        metas = m.getValue().getContainersOfType("type-meta");
                     }
                     if (!metas.isEmpty()) {
                         PropertyContainer meta = metas.get(0);
@@ -1110,7 +1110,7 @@ public class SetupSharingHandler {
             try {
                 PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(dbFile.getPath());
                 if (set != null) {
-                    for (PropertyContainer s : set.getSectionsOfType("identifier-group")) {
+                    for (PropertyContainer s : set.getContainersOfType("identifier-group")) {
                         List<String> l = new ArrayList<>();
                         for (Map.Entry<String, String> m : s.getProperties().entrySet()) {
                             l.add(m.getValue());

@@ -10,6 +10,7 @@ import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILocalizedValueCycle<T> {
@@ -61,6 +62,11 @@ public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILoc
     public LocalizedGenericValueCycle<T> setCurrentValueComponentStyleSupplier(@NotNull ConsumingSupplier<T, Style> supplier) {
         this.valueStyle = supplier;
         return this;
+    }
+
+    @Override
+    public LocalizedGenericValueCycle<T> addCycleListener(@NotNull Consumer<T> listener) {
+        return (LocalizedGenericValueCycle<T>) super.addCycleListener(listener);
     }
 
 }

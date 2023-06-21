@@ -26,7 +26,7 @@ public class PropertyContainerSet {
     }
 
     @NotNull
-    public List<PropertyContainer> getSectionsOfType(String type) {
+    public List<PropertyContainer> getContainersOfType(String type) {
         List<PropertyContainer> sections = new ArrayList<>();
         for (PropertyContainer sec : this.containers) {
             if (sec.getType().equals(type)) {

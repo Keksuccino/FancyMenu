@@ -11,6 +11,7 @@ import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class LocalizedValueCycle<T extends LocalizedEnum> extends ValueCycle<T> implements ILocalizedValueCycle<T> {
@@ -50,6 +51,11 @@ public class LocalizedValueCycle<T extends LocalizedEnum> extends ValueCycle<T> 
     public LocalizedValueCycle<T> setCycleComponentStyleSupplier(@NotNull ConsumingSupplier<T, Style> supplier) {
         this.cycleStyle = supplier;
         return this;
+    }
+
+    @Override
+    public LocalizedValueCycle<T> addCycleListener(@NotNull Consumer<T> listener) {
+        return (LocalizedValueCycle<T>) super.addCycleListener(listener);
     }
 
 }

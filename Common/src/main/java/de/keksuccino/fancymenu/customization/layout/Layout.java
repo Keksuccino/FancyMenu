@@ -195,9 +195,9 @@ public class Layout extends LayoutBase {
             Layout layout = new Layout();
             layout.layoutFile = layoutFile;
 
-            List<PropertyContainer> metaList = serialized.getSectionsOfType("layout-meta");
+            List<PropertyContainer> metaList = serialized.getContainersOfType("layout-meta");
             if (metaList.isEmpty()) {
-                metaList = serialized.getSectionsOfType("customization-meta");
+                metaList = serialized.getContainersOfType("customization-meta");
             }
             if (!metaList.isEmpty()) {
 
@@ -266,7 +266,7 @@ public class Layout extends LayoutBase {
             }
 
             //Handle vanilla button elements
-            for (PropertyContainer sec : serialized.getSectionsOfType("vanilla_button")) {
+            for (PropertyContainer sec : serialized.getContainersOfType("vanilla_button")) {
                 SerializedElement serializedVanilla = convertSectionToElement(sec);
                 serializedVanilla.setType("vanilla_button");
                 layout.serializedVanillaButtonElements.add(serializedVanilla);
@@ -275,7 +275,7 @@ public class Layout extends LayoutBase {
             layout.serializedVanillaButtonElements.addAll(convertLegacyVanillaButtonCustomizations(serialized));
 
             //Handle normal elements
-            for (PropertyContainer sec : ListUtils.mergeLists(serialized.getSectionsOfType("element"), serialized.getSectionsOfType("customization"))) {
+            for (PropertyContainer sec : ListUtils.mergeLists(serialized.getContainersOfType("element"), serialized.getContainersOfType("customization"))) {
                 String elementType = sec.getValue("element_type");
                 if (elementType == null) {
                     elementType = sec.getValue("action");
@@ -295,7 +295,7 @@ public class Layout extends LayoutBase {
             //Handle deep elements
             layout.deepScreenCustomizationLayer = ((layout.menuIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.menuIdentifier) : null;
             if (layout.deepScreenCustomizationLayer != null) {
-                for (PropertyContainer sec : ListUtils.mergeLists(serialized.getSectionsOfType("deep_element"), serialized.getSectionsOfType("customization"))) {
+                for (PropertyContainer sec : ListUtils.mergeLists(serialized.getContainersOfType("deep_element"), serialized.getContainersOfType("customization"))) {
                     String elementType = sec.getValue("element_type");
                     if (elementType == null) {
                         elementType = sec.getValue("action");
@@ -313,7 +313,7 @@ public class Layout extends LayoutBase {
             }
 
             //Handle menu backgrounds
-            List<PropertyContainer> menuBackgroundSections = serialized.getSectionsOfType("menu_background");
+            List<PropertyContainer> menuBackgroundSections = serialized.getContainersOfType("menu_background");
             if (!menuBackgroundSections.isEmpty()) {
                 PropertyContainer menuBack = menuBackgroundSections.get(0);
                 String backgroundIdentifier = menuBack.getValue("background_type");
@@ -331,7 +331,7 @@ public class Layout extends LayoutBase {
             }
 
             //Handle everything else
-            for (PropertyContainer sec : serialized.getSectionsOfType("customization")) {
+            for (PropertyContainer sec : serialized.getContainersOfType("customization")) {
 
                 String action = sec.getValue("action");
 
@@ -539,7 +539,7 @@ public class Layout extends LayoutBase {
 
         List<SerializedElement> elements = new ArrayList<>();
 
-        for (PropertyContainer sec : layout.getSectionsOfType("customization")) {
+        for (PropertyContainer sec : layout.getContainersOfType("customization")) {
 
             String action = sec.getValue("action");
             if (action != null) {
@@ -632,7 +632,7 @@ public class Layout extends LayoutBase {
     @Nullable
     protected static MenuBackground convertLegacyMenuBackground(PropertyContainerSet layout) {
 
-        for (PropertyContainer sec : layout.getSectionsOfType("customization")) {
+        for (PropertyContainer sec : layout.getContainersOfType("customization")) {
 
             String action = sec.getValue("action");
             if (action != null) {
@@ -709,7 +709,7 @@ public class Layout extends LayoutBase {
 
         Map<String, VanillaButtonElement> elements = new HashMap<>();
 
-        for (PropertyContainer sec : layout.getSectionsOfType("customization")) {
+        for (PropertyContainer sec : layout.getContainersOfType("customization")) {
             VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance();
             String action = sec.getValue("action");
             String identifier = sec.getValue("identifier");

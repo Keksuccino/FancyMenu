@@ -84,7 +84,7 @@ public class VariableHandler {
             variables.clear();
             PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(VARIABLES_FILE.getPath());
             if (set != null) {
-                List<PropertyContainer> secs = set.getSectionsOfType("variables");
+                List<PropertyContainer> secs = set.getContainersOfType("variables");
                 if (!secs.isEmpty()) {
                     PropertyContainer sec = secs.get(0);
                     for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {

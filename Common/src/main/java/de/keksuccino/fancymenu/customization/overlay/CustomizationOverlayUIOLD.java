@@ -106,11 +106,11 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			OverlayButton toggleCustomizationButton = new OverlayButton(0, 0, 0, 0, toggleLabel, true, (press) -> {
 				if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
 					press.setMessage(Component.literal(I18n.get("fancymenu.overlay.ui.customization.off")));
-					ScreenCustomization.disableCustomizationForScreen(Minecraft.getInstance().screen);
+					ScreenCustomization.setCustomizationForScreenEnabled(Minecraft.getInstance().screen, false);
 					ScreenCustomization.reloadFancyMenu();
 				} else {
 					press.setMessage(Component.literal(I18n.get("fancymenu.overlay.ui.customization.on")));
-					ScreenCustomization.enableCustomizationForScreen(Minecraft.getInstance().screen);
+					ScreenCustomization.setCustomizationForScreenEnabled(Minecraft.getInstance().screen, true);
 					ScreenCustomization.reloadFancyMenu();
 				}
 			});
@@ -190,9 +190,9 @@ public class CustomizationOverlayUIOLD extends UIBase {
 						List<PropertyContainer> l2 = new ArrayList<>();
 						boolean b = false;
 
-						List<PropertyContainer> metas = props.getSectionsOfType("customization-meta");
+						List<PropertyContainer> metas = props.getContainersOfType("customization-meta");
 						if ((metas == null) || metas.isEmpty()) {
-							metas = props.getSectionsOfType("type-meta");
+							metas = props.getContainersOfType("type-meta");
 						}
 						if (metas != null) {
 							if (metas.isEmpty()) {

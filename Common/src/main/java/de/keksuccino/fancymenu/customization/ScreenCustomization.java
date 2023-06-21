@@ -121,7 +121,15 @@ public class ScreenCustomization {
 		ScreenCustomization.screenCustomizationEnabled = enabled;
 	}
 
-	public static void enableCustomizationForScreen(Screen screen) {
+	public static void setCustomizationForScreenEnabled(Screen screen, boolean enabled) {
+		if (enabled) {
+			enableCustomizationForScreen(screen);
+		} else {
+			disableCustomizationForScreen(screen);
+		}
+	}
+
+	private static void enableCustomizationForScreen(Screen screen) {
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
@@ -135,7 +143,7 @@ public class ScreenCustomization {
 		}
 	}
 
-	public static void disableCustomizationForScreen(Screen screen) {
+	private static void disableCustomizationForScreen(Screen screen) {
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
@@ -175,8 +183,16 @@ public class ScreenCustomization {
 		if (screen instanceof CustomGuiBase) {
 			return true;
 		}
-		List<PropertyContainer> s = customizableScreens.getSectionsOfType(screen.getClass().getName());
+		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());
 		return !s.isEmpty();
+	}
+
+	public static void disableCustomizationForAllScreens() {
+		if (customizableScreens == null) {
+			readCustomizableScreensFromFile();
+		}
+		customizableScreens.getContainers().clear();
+		writeCustomizableScreensToFile();
 	}
 
 	private static void writeCustomizableScreensToFile() {

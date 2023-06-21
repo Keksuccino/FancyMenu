@@ -57,7 +57,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(props.getPath());
 			
 			if (s != null) {
-				List<PropertyContainer> l = s.getSectionsOfType("slideshow-meta");
+				List<PropertyContainer> l = s.getContainersOfType("slideshow-meta");
 				if ((l != null) && !l.isEmpty()) {
 					this.name = l.get(0).getValue("name");
 					

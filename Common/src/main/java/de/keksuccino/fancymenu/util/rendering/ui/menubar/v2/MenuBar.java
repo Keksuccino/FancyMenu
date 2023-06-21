@@ -97,6 +97,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
             if (e instanceof ContextMenuBarEntry c) {
                 c.contextMenu.setOverriddenRenderScale((float) Minecraft.getInstance().getWindow().getGuiScale());
+                c.contextMenu.setOverriddenTooltipScale(this.getScale());
                 c.contextMenu.render(pose, scaledMouseX, scaledMouseY, partial);
             }
         }

@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -61,9 +60,7 @@ public abstract class MixinLoadingOverlay {
 			AnimationHandler.updateAnimationSizes();
 			//If it's the first time a screen gets initialized, soft-reload the screen's layer, so first-time stuff works when fading to the Title menu
 			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
-			if ((layer != null) && firstScreenInit) {
-				layer.resetLayer();
-			}
+			if ((layer != null) && firstScreenInit) layer.resetLayer();
 			firstScreenInit = false;
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly, because the menu got initialized already (this is after screen init)
 			ScreenCustomization.setIsNewMenu(true);

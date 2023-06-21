@@ -104,7 +104,7 @@ public class AnimationHandler {
 				}
 
 				// ANIMATION META
-				List<PropertyContainer> metas = props.getSectionsOfType("animation-meta");
+				List<PropertyContainer> metas = props.getContainersOfType("animation-meta");
 				if (metas.isEmpty()) {
 					continue;
 				}
@@ -136,7 +136,7 @@ public class AnimationHandler {
 				}
 
 				// MAIN FRAME NAMES
-				List<PropertyContainer> mainFrameSecs = props.getSectionsOfType("frames-main");
+				List<PropertyContainer> mainFrameSecs = props.getContainersOfType("frames-main");
 				if (mainFrameSecs.isEmpty()) {
 					continue;
 				}
@@ -163,7 +163,7 @@ public class AnimationHandler {
 				}
 
 				// INTRO FRAME NAMES
-				List<PropertyContainer> introFrameSecs = props.getSectionsOfType("frames-intro");
+				List<PropertyContainer> introFrameSecs = props.getContainersOfType("frames-intro");
 				if (!introFrameSecs.isEmpty()) {
 					PropertyContainer introFrames = introFrameSecs.get(0);
 					Map<String, String> introFramesMap = introFrames.getProperties();

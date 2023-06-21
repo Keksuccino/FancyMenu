@@ -45,7 +45,7 @@ public class LastWorldHandler {
             }
             PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(LAST_WORLD_SAVE_FILE.getPath());
             if (set != null) {
-                List<PropertyContainer> secs = set.getSectionsOfType("last_world");
+                List<PropertyContainer> secs = set.getContainersOfType("last_world");
                 if (!secs.isEmpty()) {
                     PropertyContainer sec = secs.get(0);
                     String isServerString = sec.getValue("is_server");
