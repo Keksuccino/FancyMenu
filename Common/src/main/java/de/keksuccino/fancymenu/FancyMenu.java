@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
-import java.nio.file.Files;
 
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
-import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.schemes.UIColorSchemes;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
@@ -159,7 +159,7 @@ public class FancyMenu {
 	    		PANORAMA_DIR.mkdirs();
 	    		SLIDESHOW_DIR.mkdirs();
 
-				UIColorSchemes.registerAll();
+				UIColorThemes.registerAll();
 
 				TextColorFormatters.registerAll();
 
@@ -277,19 +277,7 @@ public class FancyMenu {
 	}
 
 	private static File createDirectory(@NotNull File directory) {
-		try {
-			if (!directory.isDirectory()) {
-				directory.mkdirs();
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		if (directory.getName().startsWith(".")) {
-			try {
-				Files.setAttribute(directory.toPath(), "dos:hidden", true);
-			} catch (Exception ignore) {}
-		}
-		return directory;
+		return FileUtils.createDirectory(directory);
 	}
 
 }

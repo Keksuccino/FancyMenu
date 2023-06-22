@@ -5,10 +5,12 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class IsVariableValueRequirement extends LoadingRequirement {
 
@@ -26,11 +28,13 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
         if (value != null) {
             if (value.contains(":")) {
-                String name = value.split("[:]", 2)[0];
-                String val = value.split("[:]", 2)[1];
-                String storedVal = VariableHandler.getVariable(name);
-                if (storedVal != null) {
-                    return val.equals(storedVal);
+                String name = value.split(":", 2)[0];
+                String val = value.split(":", 2)[1];
+                if (VariableHandler.variableExists(name)) {
+                    String storedVal = Objects.requireNonNull(VariableHandler.getVariable(name)).value;
+                    if (storedVal != null) {
+                        return val.equals(storedVal);
+                    }
                 }
             }
         }
@@ -40,7 +44,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value");
     }
 

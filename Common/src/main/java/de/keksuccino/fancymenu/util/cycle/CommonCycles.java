@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
@@ -43,17 +45,28 @@ public class CommonCycles {
                 .setCurrentValue(CycleEnabledDisabled.getByBoolean(selectedValue));
     }
 
+    @SuppressWarnings("all")
     @NotNull
-    @SafeVarargs
-    public static <T> LocalizedGenericValueCycle<T> cycleOrangeValue(@NotNull String cycleLocalizationKey, @NotNull T... values) {
-        return LocalizedGenericValueCycle.of(cycleLocalizationKey, values)
+    public static <T> LocalizedGenericValueCycle<T> cycleOrangeValue(@NotNull String cycleLocalizationKey, @NotNull List<T> values) {
+        return (LocalizedGenericValueCycle<T>) LocalizedGenericValueCycle.of(cycleLocalizationKey, values.toArray())
                 .setCurrentValueComponentStyleSupplier(consumes -> LocalizedEnum.WARNING_TEXT_STYLE.get());
     }
 
     @NotNull
-    @SafeVarargs
-    public static <T> LocalizedGenericValueCycle<T> cycleOrangeValue(@NotNull String cycleLocalizationKey, @NotNull T selectedValue, @NotNull T... values) {
+    public static <T> LocalizedGenericValueCycle<T> cycleOrangeValue(@NotNull String cycleLocalizationKey, @NotNull List<T> values, @NotNull T selectedValue) {
         return (LocalizedGenericValueCycle<T>) cycleOrangeValue(cycleLocalizationKey, values)
+                .setCurrentValue(selectedValue);
+    }
+
+    @SuppressWarnings("all")
+    @NotNull
+    public static <T> LocalizedGenericValueCycle<T> cycle(@NotNull String cycleLocalizationKey, @NotNull List<T> values) {
+        return (LocalizedGenericValueCycle<T>) LocalizedGenericValueCycle.of(cycleLocalizationKey, values.toArray());
+    }
+
+    @NotNull
+    public static <T> LocalizedGenericValueCycle<T> cycle(@NotNull String cycleLocalizationKey, @NotNull List<T> values, @NotNull T selectedValue) {
+        return (LocalizedGenericValueCycle<T>) cycle(cycleLocalizationKey, values)
                 .setCurrentValue(selectedValue);
     }
 

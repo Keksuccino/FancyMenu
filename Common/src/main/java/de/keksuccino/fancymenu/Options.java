@@ -13,8 +13,6 @@ public class Options {
     public final Option<Integer> defaultGuiScale = new Option<>(config, "default_gui_scale", -1, "general");
     public final Option<Boolean> forceFullscreen = new Option<>(config, "force_fullscreen", false, "general");
 
-    public final Option<String> variablesToResetOnLaunch = new Option<>(config, "variables_to_reset_on_launch", "", "variables");
-
     public final Option<Boolean> advancedCustomizationMode = new Option<>(config, "advanced_customization_mode", false, "customization");
 
     public final Option<String> gameIntroAnimation = new Option<>(config, "game_intro_animation_name", "", "loading");
@@ -38,7 +36,7 @@ public class Options {
     public final Option<Float> uiScale = new Option<>(config, "ui_scale", 1.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");
     public final Option<Boolean> enableUiTextShadow = new Option<>(config, "enable_ui_text_shadow", false, "ui");
-    public final Option<Boolean> lightMode = new Option<>(config, "light_mode", false, "ui");
+    public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
 
     public Options() {
         this.config.syncConfig();

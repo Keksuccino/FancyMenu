@@ -71,13 +71,13 @@ public class ConfirmationScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color_darker.getColorInt());
 
         int y = (this.height / 2) - ((this.text.length * 14) / 2);
         for (String s : this.text) {
             if (s.length() > 0) {
                 int textWidth = this.font.width(s);
-                drawString(pose, this.font, Component.literal(s), (this.width / 2) - (textWidth / 2), y, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+                drawString(pose, this.font, Component.literal(s), (this.width / 2) - (textWidth / 2), y, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
             }
             y += 14;
         }

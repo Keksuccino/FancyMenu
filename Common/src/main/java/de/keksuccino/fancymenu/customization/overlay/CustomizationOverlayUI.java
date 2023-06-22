@@ -6,15 +6,26 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
+import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.schemes.UIColorSchemes;
+import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
+import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
+import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -30,8 +41,6 @@ public class CustomizationOverlayUI {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ResourceLocation FM_LOGO_ICON_LOCATION = new ResourceLocation("fancymenu", "textures/fancymenu_logo_icon.png");
-    private static final WrappedTexture LIGHT_MODE_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/light_mode_icon.png"));
-    private static final WrappedTexture DARK_MODE_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/dark_mode_icon.png"));
 
     private static MenuBar grandfatheredMenuBar = null;
 
@@ -85,9 +94,16 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().playMenuMusic.setValue(cycle.getAsBoolean());
                 }));
 
-        screenSettingsMenu.addClickableEntry("custom_gui_scale", Component.translatable("fancymenu.overlay.menu_bar.screen.settings.set_default_gui_scale"), (menu, entry) -> {
-           //TODO open TextInputScreen here
-        });
+        screenSettingsMenu.addClickableEntry("default_gui_scale", Component.translatable("fancymenu.overlay.menu_bar.screen.settings.set_default_gui_scale"), (menu, entry) -> {
+           TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.screen.settings.set_default_gui_scale"), CharacterFilter.getIntegerCharacterFiler(), call -> {
+               if ((call != null) && MathUtils.isInteger(call)) {
+                   FancyMenu.getOptions().defaultGuiScale.setValue(Integer.parseInt(call));
+               }
+               Minecraft.getInstance().setScreen(screen);
+           });
+           s.setText("" + FancyMenu.getOptions().defaultGuiScale.getValue());
+           Minecraft.getInstance().setScreen(s);
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.screen.settings.set_default_gui_scale.tooltip")));
 
         screenSettingsMenu.addValueCycleEntry("force_fullscreen", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.force_fullscreen", FancyMenu.getOptions().forceFullscreen.getValue())
                 .addCycleListener(cycle -> {
@@ -113,8 +129,15 @@ public class CustomizationOverlayUI {
                 }));
 
         screenSettingsGameIntroMenu.addClickableEntry("game_intro_set_custom_skip_text", Component.translatable("fancymenu.overlay.menu_bar.screen.settings.game_intro.set_custom_skip_text"), (menu, entry) -> {
-           //TODO open TextInputScreen here
-        });
+           TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.screen.settings.game_intro.set_custom_skip_text"), null, call -> {
+               if (call != null) {
+                   FancyMenu.getOptions().customGameIntroSkipText.setValue(call);
+               }
+               Minecraft.getInstance().setScreen(screen);
+           });
+           s.setText(FancyMenu.getOptions().customGameIntroSkipText.getValue());
+           Minecraft.getInstance().setScreen(s);
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.screen.settings.game_intro.set_custom_skip_text.tooltip")));
 
         screenSettingsMenu.addValueCycleEntry("preload_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.preload_animations", FancyMenu.getOptions().preLoadAnimations.getValue())
                 .addCycleListener(cycle -> {
@@ -223,41 +246,89 @@ public class CustomizationOverlayUI {
         ContextMenu variablesMenu = new ContextMenu();
         menuBar.addContextMenuEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables"), variablesMenu);
 
-        // - Manage Variables (reset, delete, set, etc.)
-        // - Set Variables to reset on launch
+        variablesMenu.addClickableEntry("manage_variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
+            ManageVariablesScreen s = new ManageVariablesScreen(call -> {
+                Minecraft.getInstance().setScreen(screen);
+            });
+            Minecraft.getInstance().setScreen(s);
+        });
 
         // TOOLS
         ContextMenu toolsMenu = new ContextMenu();
         menuBar.addContextMenuEntry("tools", Component.translatable("fancymenu.overlay.menu_bar.tools"), toolsMenu);
 
-        // WINDOW
-        ContextMenu uiMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("window", Component.translatable("fancymenu.overlay.menu_bar.window"), uiMenu);
+        toolsMenu.addClickableEntry("copy_current_screen_identifier", Component.translatable("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier"), (menu, entry) -> {
+            if (identifier != null) {
+                Minecraft.getInstance().keyboardHandler.setClipboard(identifier);
+                menu.closeMenu();
+            }
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier.tooltip")));
 
-        // - Custom Window Icon (Toggle On/Off)
-        // - Custom Window Title (Input)
-        // -------------
-        // - UI Scale (Cycle 1-2-3)
-        // - UI Text Shadow (Toggle On/Off)
-        // - UI Click Sounds (Toggle On/Off)
-        // - UI Theme (erstmal nur light/dark mode, später mehr)
+        // WINDOW
+        ContextMenu windowMenu = new ContextMenu();
+        menuBar.addContextMenuEntry("window", Component.translatable("fancymenu.overlay.menu_bar.window"), windowMenu);
+
+        windowMenu.addValueCycleEntry("window_icon", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.window.custom_window_icon", FancyMenu.getOptions().showCustomWindowIcon.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().showCustomWindowIcon.setValue(cycle.getAsBoolean());
+                }));
+
+        windowMenu.addClickableEntry("window_title", Component.translatable("fancymenu.overlay.menu_bar.window.custom_window_title"), (menu, entry) -> {
+            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.window.custom_window_title"), null, (call) -> {
+                if (call != null) {
+                    FancyMenu.getOptions().customWindowTitle.setValue(call);
+                    WindowHandler.updateWindowTitle();
+                }
+                Minecraft.getInstance().setScreen(screen);
+            });
+            s.setText(FancyMenu.getOptions().customWindowTitle.getValue());
+            Minecraft.getInstance().setScreen(s);
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.window.custom_window_title.tooltip")));
+
+        windowMenu.addSeparatorEntry("separator_3");
+
+        int preSelectedUiScale = (int)FancyMenu.getOptions().uiScale.getValue().floatValue();
+        if ((preSelectedUiScale != 1) && (preSelectedUiScale != 2) && (preSelectedUiScale != 3)) {
+            preSelectedUiScale = 1;
+        }
+        windowMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.window.ui_scale", ListUtils.build(1,2,3), preSelectedUiScale)
+                .addCycleListener(integer -> {
+                    FancyMenu.getOptions().uiScale.setValue(Float.valueOf(integer));
+                }));
+
+        windowMenu.addValueCycleEntry("ui_text_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.window.ui_text_shadow", FancyMenu.getOptions().enableUiTextShadow.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().enableUiTextShadow.setValue(cycle.getAsBoolean());
+                }));
+
+        windowMenu.addValueCycleEntry("ui_click_sounds", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.window.ui_click_sounds", FancyMenu.getOptions().playUiClickSounds.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().playUiClickSounds.setValue(cycle.getAsBoolean());
+                }));
+
+        ContextMenu windowUiThemeMenu = new ContextMenu();
+        windowMenu.addSubMenuEntry("ui_theme", Component.translatable("fancymenu.overlay.menu_bar.window.ui_theme"), windowUiThemeMenu);
+
+        int i2 = 0;
+        for (UIColorTheme s : UIColorThemeRegistry.getThemes()) {
+            windowUiThemeMenu.addClickableEntry("ui_theme_" + i2, s.getDisplayName(), (menu, entry) -> {
+                FancyMenu.getOptions().uiTheme.setValue(s.getIdentifier());
+                UIColorThemeRegistry.setActiveTheme(s.getIdentifier());
+            });
+            i2++;
+        }
 
         // HELP
         ContextMenu helpMenu = new ContextMenu();
         menuBar.addContextMenuEntry("help", Component.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
 
-        //TODO Link zu CurseForge FancyMenu Kategorie zu HELP Tab adden
+        helpMenu.addClickableEntry("fancymenu_wiki", Component.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
+            WebUtils.openWebLink("https://fm.keksuccino.dev");
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")));
 
-        // DARK/LIGHT MODE SWITCHER
-        menuBar.addClickableEntry(MenuBar.Side.RIGHT, "dark_light_mode_switcher", Component.literal(""), (bar, entry) -> {
-            FancyMenu.getOptions().lightMode.setValue(!FancyMenu.getOptions().lightMode.getValue());
-            UIColorSchemes.updateActiveScheme();
-        }).setIconTextureSupplier((bar, entry) -> {
-            if (FancyMenu.getOptions().lightMode.getValue()) {
-                return LIGHT_MODE_ICON_TEXTURE;
-            }
-            return DARK_MODE_ICON_TEXTURE;
-        });
+        helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
+            WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
 
         return menuBar;
 

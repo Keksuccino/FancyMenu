@@ -170,12 +170,12 @@ public class FileChooserScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         int currentDirFieldYEnd = this.renderCurrentDirectoryField(pose, mouseX, mouseY, partial, 20, 50 + 15, (this.width / 2) - 40, this.font.lineHeight + 6);
 
@@ -187,7 +187,7 @@ public class FileChooserScreen extends Screen {
 
         Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.okButton.setX(this.width - 20 - this.okButton.getWidth());
         this.okButton.setY(this.height - 20 - 20);
@@ -205,12 +205,12 @@ public class FileChooserScreen extends Screen {
             int x = this.width - 20 - w;
             int y = 50 + 15;
             UIBase.resetShaderColor();
-            fill(pose, x, y, x + w, y + h, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
+            fill(pose, x, y, x + w, y + h, UIBase.getUIColorScheme().area_background_color.getColorInt());
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderUtils.bindTexture(this.previewTexture.getResourceLocation());
             blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
             UIBase.resetShaderColor();
-            UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
+            UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().element_border_color_normal.getColor(), true, true, true, true);
         } else {
             this.textFilePreviewScrollArea.setWidth((this.width / 2) - 40, true);
             this.textFilePreviewScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -226,8 +226,8 @@ public class FileChooserScreen extends Screen {
     protected int renderCurrentDirectoryField(PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        fill(pose, x + 1, y + 1, xEnd - 2, yEnd - 2, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
-        UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
+        fill(pose, x + 1, y + 1, xEnd - 2, yEnd - 2, UIBase.getUIColorScheme().area_background_color.getColorInt());
+        UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorScheme().element_border_color_normal.getColor(), true, true, true, true);
         this.currentDirectoryComponent.x = x + 4;
         this.currentDirectoryComponent.y = y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2);
         this.currentDirectoryComponent.render(pose, mouseX, mouseY, partial);
@@ -260,7 +260,7 @@ public class FileChooserScreen extends Screen {
                         File fFinal = f2;
                         this.currentDirectoryComponent.append(ComponentWidget.empty(0, 0)
                                 .setTextSupplier(consumes -> {
-                                    if (consumes.isHoveredOrFocused()) return Component.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUIColorScheme().errorTextColor.getColorInt()));
+                                    if (consumes.isHoveredOrFocused()) return Component.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
                                     return Component.literal(fFinal.getName());
                                 })
                         );
@@ -295,7 +295,7 @@ public class FileChooserScreen extends Screen {
             }
 
             this.currentDirectoryComponent.setShadow(false);
-            this.currentDirectoryComponent.setBaseColorSupplier(consumes -> UIBase.getUIColorScheme().descriptionAreaTextColor);
+            this.currentDirectoryComponent.setBaseColorSupplier(consumes -> UIBase.getUIColorScheme().description_area_text_color);
             this.addWidget(this.currentDirectoryComponent);
 
         } catch (Exception ex) {
@@ -376,7 +376,7 @@ public class FileChooserScreen extends Screen {
         this.textFilePreviewScrollArea.clearEntries();
         if ((file != null) && file.isFile() && PLAIN_TEXT_FILE_FILTER.checkFile(file)) {
             for (String s : FileUtils.getFileLines(file)) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), (entry) -> {});
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
@@ -387,7 +387,7 @@ public class FileChooserScreen extends Screen {
                 e.setWidth(totalWidth);
             }
         } else {
-            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), (entry) -> {});
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), (entry) -> {});
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorIdle());
             e.setPlayClickSound(false);
@@ -479,7 +479,7 @@ public class FileChooserScreen extends Screen {
 
             super(parent, 100, 30);
             this.file = file;
-            this.fileNameComponent = Component.literal(this.file.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
+            this.fileNameComponent = Component.literal(this.file.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
 
             this.setWidth(this.font.width(this.fileNameComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);
@@ -547,7 +547,7 @@ public class FileChooserScreen extends Screen {
         public ParentDirScrollAreaEntry(@NotNull ScrollArea parent) {
 
             super(parent, 100, 30);
-            this.labelComponent = Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt()).withBold(true));
+            this.labelComponent = Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().element_label_color_normal.getColorInt()).withBold(true));
 
             this.setWidth(this.font.width(this.labelComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);

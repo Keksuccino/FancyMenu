@@ -216,12 +216,12 @@ public class BuildRequirementGroupScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.group_requirements"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
@@ -263,7 +263,7 @@ public class BuildRequirementGroupScreen extends Screen {
 
         String idLabel = I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.group_identifier");
         int idLabelWidth = this.font.width(idLabel);
-        this.font.draw(matrix, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, idLabel, this.width - 20 - idLabelWidth, this.groupIdentifierTextField.getY() - 15, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         super.render(matrix, mouseX, mouseY, partial);
 

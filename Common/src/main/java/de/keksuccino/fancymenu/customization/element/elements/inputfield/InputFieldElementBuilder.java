@@ -13,6 +13,8 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, InputFieldEditorElement> {
 
     public InputFieldElementBuilder() {
@@ -55,9 +57,11 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
         element.textField = new AdvancedTextField(Minecraft.getInstance().font, element.getX(), element.getY(), element.getWidth(), element.getHeight(), true, element.type.filter);
         element.textField.setMaxLength(element.maxTextLength);
         if (element.linkedVariable != null) {
-            String var = VariableHandler.getVariable(element.linkedVariable);
-            if (var != null) {
-                element.textField.setValue(var);
+            if (VariableHandler.variableExists(element.linkedVariable)) {
+                String var = Objects.requireNonNull(VariableHandler.getVariable(element.linkedVariable)).value;
+                if (var != null) {
+                    element.textField.setValue(var);
+                }
             }
         }
 

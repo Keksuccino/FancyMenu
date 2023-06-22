@@ -10,6 +10,8 @@ import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class InputFieldElement extends AbstractElement {
 
     public String linkedVariable;
@@ -35,9 +37,11 @@ public class InputFieldElement extends AbstractElement {
                 this.textField.active = false;
                 this.textField.setEditable(false);
                 if (this.linkedVariable != null) {
-                    String var = VariableHandler.getVariable(this.linkedVariable);
-                    if (var != null) {
-                        this.textField.setValue(var);
+                    if (VariableHandler.variableExists(this.linkedVariable)) {
+                        String var = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).value;
+                        if (var != null) {
+                            this.textField.setValue(var);
+                        }
                     }
                 }
             }
@@ -54,10 +58,14 @@ public class InputFieldElement extends AbstractElement {
                     if (!this.lastValue.equals(this.textField.getValue())) {
                         VariableHandler.setVariable(linkedVariable, this.textField.getValue());
                     }
-                    String val = VariableHandler.getVariable(this.linkedVariable);
-                    if (val != null) {
-                        if (!this.textField.getValue().equals(val)) {
-                            this.textField.setValue(val);
+                    if (VariableHandler.variableExists(this.linkedVariable)) {
+                        String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).value;
+                        if (val != null) {
+                            if (!this.textField.getValue().equals(val)) {
+                                this.textField.setValue(val);
+                            }
+                        } else {
+                            this.textField.setValue("");
                         }
                     } else {
                         this.textField.setValue("");

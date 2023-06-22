@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.commands.client;
 
+import com.google.errorprone.annotations.Var;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -20,6 +21,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class VariableCommand {
 
@@ -74,7 +76,8 @@ public class VariableCommand {
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("get")) {
-                    String s = VariableHandler.getVariable(variableName);
+                    String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).value : null;
+                    if (VariableHandler.variableExists(variableName) && (s == null)) s = "";
                     if (s != null) {
                         stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
                     } else {

@@ -150,12 +150,12 @@ public class BuildActionScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionsListScrollArea.setHeight(this.height - 85, true);
@@ -165,7 +165,7 @@ public class BuildActionScreen extends Screen {
 
         String descLabelString = I18n.get("fancymenu.editor.action.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -228,7 +228,7 @@ public class BuildActionScreen extends Screen {
         public Action action;
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
+            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), UIBase.getUIColorScheme().listing_dot_color_1.getColor(), onClick);
             this.action = action;
         }
 

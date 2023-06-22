@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SliderElement extends AbstractElement {
 
@@ -36,7 +37,9 @@ public class SliderElement extends AbstractElement {
     public void initializeSlider() {
         String valString = null;
         if (linkedVariable != null) {
-            valString = VariableHandler.getVariable(linkedVariable);
+            if (VariableHandler.variableExists(linkedVariable)) {
+                valString = Objects.requireNonNull(VariableHandler.getVariable(linkedVariable)).value;
+            }
         }
         if (this.type == SliderType.RANGE) {
             int selectedRangeValue = this.minRangeValue;
@@ -93,28 +96,30 @@ public class SliderElement extends AbstractElement {
 
             //Update variable value on change
             if (this.linkedVariable != null) {
-                String valString = VariableHandler.getVariable(this.linkedVariable);
-                if (valString != null) {
-                    if (this.type == SliderType.RANGE) {
-                        if (MathUtils.isInteger(valString)) {
-                            int val = Integer.parseInt(valString);
-                            if (((RangeSliderButton)this.slider).getSelectedRangeValue() != val) {
-                                ((RangeSliderButton)this.slider).setSelectedRangeValue(val);
+                if (VariableHandler.variableExists(this.linkedVariable)) {
+                    String valString = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).value;
+                    if (valString != null) {
+                        if (this.type == SliderType.RANGE) {
+                            if (MathUtils.isInteger(valString)) {
+                                int val = Integer.parseInt(valString);
+                                if (((RangeSliderButton)this.slider).getSelectedRangeValue() != val) {
+                                    ((RangeSliderButton)this.slider).setSelectedRangeValue(val);
+                                }
                             }
                         }
-                    }
-                    if (this.type == SliderType.LIST) {
-                        if (!((ListSliderButton)this.slider).getSelectedListValue().equals(valString)) {
-                            int newIndex = 0;
-                            int i = 0;
-                            for (String s : this.listValues) {
-                                if (s.equals(valString)) {
-                                    newIndex = i;
-                                    break;
+                        if (this.type == SliderType.LIST) {
+                            if (!((ListSliderButton)this.slider).getSelectedListValue().equals(valString)) {
+                                int newIndex = 0;
+                                int i = 0;
+                                for (String s : this.listValues) {
+                                    if (s.equals(valString)) {
+                                        newIndex = i;
+                                        break;
+                                    }
+                                    i++;
                                 }
-                                i++;
+                                ((ListSliderButton)this.slider).setSelectedIndex(newIndex);
                             }
-                            ((ListSliderButton)this.slider).setSelectedIndex(newIndex);
                         }
                     }
                 }

@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class GetVariablePlaceholder extends Placeholder {
 
@@ -22,7 +23,7 @@ public class GetVariablePlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String name = dps.values.get("name");
         if (name != null) {
-            String val = VariableHandler.getVariable(name);
+            String val = VariableHandler.variableExists(name) ? Objects.requireNonNull(VariableHandler.getVariable(name)).value : "0";
             if (val == null) {
                 val = "0";
             }
@@ -39,7 +40,7 @@ public class GetVariablePlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.placeholder.get_variable");
     }
 

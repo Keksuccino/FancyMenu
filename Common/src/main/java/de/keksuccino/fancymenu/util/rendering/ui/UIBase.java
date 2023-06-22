@@ -6,9 +6,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.UIColorSchemeRegistry;
-import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.UIColorScheme;
-import de.keksuccino.fancymenu.util.rendering.ui.colorscheme.schemes.UIColorSchemes;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
@@ -36,8 +36,8 @@ public class UIBase extends GuiComponent {
 	 * @return The input button.
 	 */
 	public static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
-		UIColorScheme darkScheme = UIColorSchemes.DARK;
-		button.setBackgroundColor(darkScheme.elementBackgroundColorNormal.getColor(), darkScheme.elementBackgroundColorHover.getColor(), darkScheme.elementBorderColorNormal.getColor(), darkScheme.elementBorderColorHover.getColor(), ELEMENT_BORDER_THICKNESS);
+		UIColorTheme darkScheme = UIColorThemes.DARK;
+		button.setBackgroundColor(darkScheme.element_background_color_normal.getColor(), darkScheme.element_background_color_hover.getColor(), darkScheme.element_border_color_normal.getColor(), darkScheme.element_border_color_hover.getColor(), ELEMENT_BORDER_THICKNESS);
 		return button;
 	}
 
@@ -47,9 +47,9 @@ public class UIBase extends GuiComponent {
 	 * @return The input button.
 	 */
 	public static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
-		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().elementBackgroundColorNormal, UIBase.getUIColorScheme().elementBackgroundColorHover, UIBase.getUIColorScheme().elementBorderColorNormal, UIBase.getUIColorScheme().elementBorderColorHover, ELEMENT_BORDER_THICKNESS));
-		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().elementLabelColorNormal);
-		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().elementLabelColorInactive);
+		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_background_color_hover, UIBase.getUIColorScheme().element_border_color_normal, UIBase.getUIColorScheme().element_border_color_hover, ELEMENT_BORDER_THICKNESS));
+		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().element_label_color_normal);
+		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().element_label_color_inactive);
 		button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
 		button.setForceDefaultTooltipStyle(true);
 		return button;
@@ -160,8 +160,8 @@ public class UIBase extends GuiComponent {
 	}
 
 	@NotNull
-	public static UIColorScheme getUIColorScheme() {
-		return UIColorSchemeRegistry.getActiveScheme();
+	public static UIColorTheme getUIColorScheme() {
+		return UIColorThemeRegistry.getActiveTheme();
 	}
 
 }

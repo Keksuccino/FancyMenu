@@ -181,12 +181,12 @@ public class BuildRequirementScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementsListScrollArea.setHeight(this.height - 85, true);
@@ -196,7 +196,7 @@ public class BuildRequirementScreen extends Screen {
 
         String descLabelString = I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.requirementDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -234,7 +234,7 @@ public class BuildRequirementScreen extends Screen {
 
         if ((requirement != null) && (requirement.getDescription() != null)) {
             for (String s : requirement.getDescription()) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.requirementDescriptionScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), (entry) -> {});
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.requirementDescriptionScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
@@ -254,8 +254,8 @@ public class BuildRequirementScreen extends Screen {
 
             //Add category entries
             for (Map.Entry<String, List<LoadingRequirement>> m : categories.entrySet()) {
-                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
-                TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listingDotColor2.getColor(), (entry) -> {
+                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
+                TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listing_dot_color_2.getColor(), (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
                     this.setDescription(null);
@@ -265,8 +265,8 @@ public class BuildRequirementScreen extends Screen {
             }
             //Add requirement entries without category
             for (LoadingRequirement r : LoadingRequirementRegistry.getRequirementsWithoutCategory()) {
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
-                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listingDotColor1.getColor(), (entry) -> {
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
+                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listing_dot_color_1.getColor(), (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
@@ -277,8 +277,8 @@ public class BuildRequirementScreen extends Screen {
         } else {
 
             //Add "Back" button
-            Component backLabel = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.lists.back")).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().warningTextColor.getColorInt()));
-            TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUIColorScheme().listingDotColor2.getColor(), (entry) -> {
+            Component backLabel = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.lists.back")).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().warning_text_color.getColorInt()));
+            TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUIColorScheme().listing_dot_color_2.getColor(), (entry) -> {
                 BuildRequirementScreen.this.setContentOfRequirementsList(null);
                 BuildRequirementScreen.this.instance.requirement = null;
                 this.setDescription(null);
@@ -290,8 +290,8 @@ public class BuildRequirementScreen extends Screen {
             List<LoadingRequirement> l = categories.get(category);
             if (l != null) {
                 for (LoadingRequirement r : l) {
-                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
-                    RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listingDotColor1.getColor(), (entry) -> {
+                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
+                    RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorScheme().listing_dot_color_1.getColor(), (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);
                     });

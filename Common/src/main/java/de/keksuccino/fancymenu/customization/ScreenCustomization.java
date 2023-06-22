@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
@@ -276,6 +277,7 @@ public class ScreenCustomization {
 	public static void reloadFancyMenu() {
 		FancyMenu.reloadOptions();
 		TextureHandler.INSTANCE.clearResources();
+		UIColorThemes.reloadThemes();
 		SoundRegistry.resetSounds();
 		SoundRegistry.stopSounds();
 		AnimationHandler.resetAnimations();

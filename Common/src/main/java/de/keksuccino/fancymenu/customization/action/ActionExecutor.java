@@ -247,18 +247,6 @@ public class ActionExecutor {
 					runButtonScript(value);
 				}
 			}
-//			if (action.equalsIgnoreCase("mutebackgroundsounds")) {
-//				if (value != null) {
-//					if (value.equalsIgnoreCase("true")) {
-//						FancyMenu.getConfig().setValue("playbackgroundsounds", false);
-//						SoundRegistry.stopSounds();
-//					}
-//					if (value.equalsIgnoreCase("false")) {
-//						FancyMenu.getConfig().setValue("playbackgroundsounds", true);
-//						ScreenCustomization.reloadFancyMenu();
-//					}
-//				}
-//			}
 			if (action.equalsIgnoreCase("runcmd")) {
 				runCMD(value);
 			}

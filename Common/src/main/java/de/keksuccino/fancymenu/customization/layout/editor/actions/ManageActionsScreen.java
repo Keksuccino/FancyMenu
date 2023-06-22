@@ -203,12 +203,12 @@ public class ManageActionsScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.actionsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
@@ -293,9 +293,9 @@ public class ManageActionsScreen extends Screen {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt()));
+            this.displayNameComponent = Component.literal(this.instance.action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
             String valueString = ((this.instance.value != null) && this.instance.action.hasValue()) ? this.instance.value : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt())));
+            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().element_label_color_normal.getColorInt())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 2) + (HEADER_FOOTER_HEIGHT * 2));
@@ -312,10 +312,10 @@ public class ManageActionsScreen extends Screen {
 
             RenderSystem.enableBlend();
 
-            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorScheme().listingDotColor2.getColor());
+            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorScheme().listing_dot_color_2.getColor());
             this.font.draw(matrix, this.displayNameComponent, (float)(this.getX() + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
 
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorScheme().listingDotColor1.getColor());
+            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorScheme().listing_dot_color_1.getColor());
             this.font.draw(matrix, this.valueComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
 
         }

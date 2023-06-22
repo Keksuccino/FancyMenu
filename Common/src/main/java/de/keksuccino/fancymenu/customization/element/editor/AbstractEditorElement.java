@@ -57,9 +57,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = new ResourceLocation("fancymenu", "textures/not_allowed.png");
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
-			return UIBase.getUIColorScheme().layoutEditorElementBorderColorSelected.getColorInt();
+			return UIBase.getUIColorScheme().layout_editor_element_border_color_selected.getColorInt();
 		}
-		return UIBase.getUIColorScheme().layoutEditorElementBorderColorNormal.getColorInt();
+		return UIBase.getUIColorScheme().layout_editor_element_border_color_normal.getColorInt();
 	};
 	protected static final long CURSOR_HORIZONTAL_RESIZE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
 	protected static final long CURSOR_VERTICAL_RESIZE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
@@ -477,7 +477,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			RenderSystem.enableBlend();
-			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorScheme().layoutEditorElementDraggingNotAllowedColor.getColorInt());
+			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorScheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];

@@ -109,12 +109,12 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     }
 
     protected void renderBackground(PoseStack pose, int width, int height) {
-        fill(pose, 0, 0, width, height, UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
+        fill(pose, 0, 0, width, height, UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
         UIBase.resetShaderColor();
     }
 
     protected void renderBottomLine(PoseStack pose, int width, int height) {
-        fill(pose, 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorScheme().menuBarBottomLineColor.getColorInt());
+        fill(pose, 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorScheme().menu_bar_bottom_line_color.getColorInt());
         UIBase.resetShaderColor();
     }
 
@@ -576,7 +576,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
                 RenderUtils.bindTexture((iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION);
                 blit(pose, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
             } else {
-                UIBase.drawElementLabel(pose, this.font, label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+                UIBase.drawElementLabel(pose, this.font, label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
             }
             UIBase.resetShaderColor();
         }
@@ -622,8 +622,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         @NotNull
         protected DrawableColor getBackgroundColor() {
-            if (this.isHovered() && this.isActive()) return UIBase.getUIColorScheme().elementBackgroundColorHover;
-            return UIBase.getUIColorScheme().elementBackgroundColorNormal;
+            if (this.isHovered() && this.isActive()) return UIBase.getUIColorScheme().element_background_color_hover;
+            return UIBase.getUIColorScheme().element_background_color_normal;
         }
 
         @NotNull
@@ -783,7 +783,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         @Override
         protected @NotNull DrawableColor getBackgroundColor() {
-            if (this.contextMenu.isOpen()) return UIBase.getUIColorScheme().elementBackgroundColorHover;
+            if (this.contextMenu.isOpen()) return UIBase.getUIColorScheme().element_background_color_hover;
             return super.getBackgroundColor();
         }
 
@@ -813,7 +813,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         protected void renderBackground(PoseStack pose) {
-            fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
+            fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
             UIBase.resetShaderColor();
         }
 
@@ -852,7 +852,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     public static class SeparatorMenuBarEntry extends MenuBarEntry {
 
         @NotNull
-        protected DrawableColor color = UIBase.getUIColorScheme().elementBorderColorNormal;
+        protected DrawableColor color = UIBase.getUIColorScheme().element_border_color_normal;
 
         public SeparatorMenuBarEntry(@NotNull String identifier, @NotNull MenuBar parent) {
             super(identifier, parent);

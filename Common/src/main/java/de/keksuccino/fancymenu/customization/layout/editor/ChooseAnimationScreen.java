@@ -94,12 +94,12 @@ public class ChooseAnimationScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.animation.choose.available_animations"), 20, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, Component.translatable("fancymenu.animation.choose.available_animations"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.animationListScrollArea.setWidth((this.width / 2) - 40, true);
         this.animationListScrollArea.setHeight(this.height - 85, true);
@@ -109,7 +109,7 @@ public class ChooseAnimationScreen extends Screen {
 
         Component previewLabel = Component.translatable("fancymenu.animation.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         if (this.selectedAnimation != null) {
             int aniW = (this.width / 2) - 40;
@@ -121,7 +121,7 @@ public class ChooseAnimationScreen extends Screen {
             int aniX = this.width - 20 - aniW;
             int aniY = 50 + 15;
             boolean cachedLooped = this.selectedAnimation.isGettingLooped();
-            fill(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
+            fill(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.getUIColorScheme().area_background_color.getColorInt());
             this.selectedAnimation.setLooped(false);
             this.selectedAnimation.setPosX(aniX);
             this.selectedAnimation.setPosY(aniY);
@@ -129,7 +129,7 @@ public class ChooseAnimationScreen extends Screen {
             this.selectedAnimation.setHeight(aniH);
             this.selectedAnimation.render(pose);
             this.selectedAnimation.setLooped(cachedLooped);
-            UIBase.renderBorder(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
+            UIBase.renderBorder(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().element_border_color_normal.getColor(), true, true, true, true);
         }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
@@ -204,7 +204,7 @@ public class ChooseAnimationScreen extends Screen {
         public String animation;
 
         public AnimationScrollEntry(ScrollArea parent, @NotNull String animation, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().descriptionAreaTextColor.getColorInt())), UIBase.getUIColorScheme().listingDotColor1.getColor(), onClick);
+            super(parent, Component.literal(animation).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), UIBase.getUIColorScheme().listing_dot_color_1.getColor(), onClick);
             this.animation = animation;
         }
 

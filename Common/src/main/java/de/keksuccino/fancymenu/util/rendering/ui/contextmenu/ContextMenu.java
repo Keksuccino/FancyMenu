@@ -27,7 +27,7 @@ public class ContextMenu extends de.keksuccino.konkrete.gui.content.ContextMenu 
 	public void addContent(AdvancedButton button) {
 		super.addContent(button);
 		Color c = new Color(0, 0, 0, 0);
-		button.setBackgroundColor(UIBase.getUIColorScheme().elementBackgroundColorNormal.getColor(), UIBase.getUIColorScheme().elementBackgroundColorHover.getColor(), c, c, 0);
+		button.setBackgroundColor(UIBase.getUIColorScheme().element_background_color_normal.getColor(), UIBase.getUIColorScheme().element_background_color_hover.getColor(), c, c, 0);
 		button.ignoreBlockedInput = true;
 		button.ignoreLeftMouseDownClickBlock = true;
 	}
@@ -111,7 +111,7 @@ public class ContextMenu extends de.keksuccino.konkrete.gui.content.ContextMenu 
 			for (Integer i : this.separators) {
 				if (this.content.size() >= i+1) {
 					AdvancedButton b = this.content.get(i);
-					UIBase.fill(matrix, b.x, b.y, b.x + this.width, b.y + 1, UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorIntWithAlpha(100));
+					UIBase.fill(matrix, b.x, b.y, b.x + this.width, b.y + 1, UIBase.getUIColorScheme().element_background_color_normal.getColorIntWithAlpha(100));
 				}
 			}
 		}
@@ -120,7 +120,7 @@ public class ContextMenu extends de.keksuccino.konkrete.gui.content.ContextMenu 
 	protected void renderBorder(PoseStack matrix) {
 		if (!this.content.isEmpty()) {
 			AdvancedButton b = this.content.get(0);
-			int c = UIBase.getUIColorScheme().elementBorderColorNormal.getColorInt();
+			int c = UIBase.getUIColorScheme().element_border_color_normal.getColorInt();
 			//TOP
 			UIBase.fill(matrix, b.x, b.y, b.x + this.width, b.y + 1, c);
 			//LEFT

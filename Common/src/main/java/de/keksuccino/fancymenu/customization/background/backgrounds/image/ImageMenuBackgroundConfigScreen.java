@@ -104,14 +104,14 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screenBackgroundColor.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
         MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
         int titleWidth = this.font.width(title);
-        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
+        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
         this.chooseImageButton.setX(centerX - (this.chooseImageButton.getWidth() / 2));
         this.chooseImageButton.setY(centerY - 20 - 3);

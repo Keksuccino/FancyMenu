@@ -117,11 +117,11 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         //Render shadow
         if (this.hasShadow()) {
-            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, UIBase.getUIColorScheme().contextMenuShaderColor.getColorInt());
+            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, UIBase.getUIColorScheme().context_menu_shader_color.getColorInt());
             UIBase.resetShaderColor();
         }
         //Render background
-        fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), UIBase.getUIColorScheme().elementBackgroundColorNormal.getColorInt());
+        fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
         UIBase.resetShaderColor();
         //Update + render entries
         int entryY = scaledY;
@@ -142,7 +142,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
         UIBase.resetShaderColor();
         //Render border
-        UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().contextMenuBorderColor.getColor(), true, true, true, true);
+        UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().context_menu_border_color.getColor(), true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry e : renderEntries) {
@@ -974,14 +974,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
             int labelX = this.x + 10;
             int labelY = this.y + (this.height / 2) - (this.font.lineHeight / 2);
-            UIBase.drawElementLabel(pose, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+            UIBase.drawElementLabel(pose, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
                 shortcutTextWidth = this.font.width(shortcutText);
                 int shortcutX = this.x + this.width - 10 - shortcutTextWidth;
-                UIBase.drawElementLabel(pose, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().elementLabelColorNormal.getColorInt() : UIBase.getUIColorScheme().elementLabelColorInactive.getColorInt());
+                UIBase.drawElementLabel(pose, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
             }
 
             this.renderTooltipIconAndRegisterTooltip(pose, mouseX, mouseY, (shortcutTextWidth > 0) ? -(shortcutTextWidth + 8) : 0);
@@ -1043,7 +1043,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         protected void renderBackground(@NotNull PoseStack pose) {
             if (this.isHovered() && this.isActive()) {
-                fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, UIBase.getUIColorScheme().elementBackgroundColorHover.getColorInt());
+                fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
             }
         }
 
@@ -1417,7 +1417,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.getUIColorScheme().contextMenuBorderColor.getColorInt());
+            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.getUIColorScheme().context_menu_border_color.getColorInt());
         }
 
         @Override

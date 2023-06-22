@@ -49,13 +49,7 @@ public class MixinMinecraft {
 	
 	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	private void changeWindowTitleFancyMenu(CallbackInfoReturnable<String> info) {
-		//TODO WindowHandler rewriten
-		if (!customWindowInit) {
-			WindowHandler.init();
-			WindowHandler.updateWindowIcon();
-			WindowHandler.updateWindowTitle();
-			customWindowInit = true;
-		}
+		WindowHandler.init();
 		String title = WindowHandler.getCustomWindowTitle();
 		if (title != null) {
 			info.setReturnValue(title);
