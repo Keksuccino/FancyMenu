@@ -28,7 +28,7 @@ public class ManageVariablesScreen extends Screen {
 
     protected Consumer<List<Variable>> callback;
 
-    protected ScrollArea layoutListScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ScrollArea variableListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedButton doneButton;
     protected ExtendedButton setValueButton;
     protected ExtendedButton deleteVariableButton;
@@ -69,13 +69,11 @@ public class ManageVariablesScreen extends Screen {
             if (e != null) {
                 TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), null, (call) -> {
                     if (call != null) {
-                        e.variable.value = call;
+                        e.variable.setValue(call);
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
-                if (e.variable.value != null) {
-                    s.setText(e.variable.value);
-                }
+                s.setText(e.variable.getValue());
                 Minecraft.getInstance().setScreen(s);
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
@@ -87,7 +85,7 @@ public class ManageVariablesScreen extends Screen {
             if (e != null) {
                 ConfirmationScreen s = new ConfirmationScreen(call -> {
                     if (call) {
-                        VariableHandler.removeVariable(e.variable.name);
+                        VariableHandler.removeVariable(e.variable.getName());
                         this.updateVariableScrollArea();
                     }
                     Minecraft.getInstance().setScreen(this);
@@ -102,15 +100,14 @@ public class ManageVariablesScreen extends Screen {
         this.toggleResetOnLaunchButton = new ExtendedButton(0, 0, 220, 20, Component.empty(), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                e.variable.resetOnLaunch = !e.variable.resetOnLaunch;
-                VariableHandler.writeToFile();
+                e.variable.setResetOnLaunch(!e.variable.isResetOnLaunch());
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null))
                 .setLabelSupplier(consumes -> {
                     VariableScrollEntry e = this.getSelectedEntry();
                     if (e != null) {
                         LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> enabledDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch");
-                        enabledDisabled.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(e.variable.resetOnLaunch));
+                        enabledDisabled.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(e.variable.isResetOnLaunch()));
                         return enabledDisabled.getCycleComponent();
                     }
                     return resetOnLaunchDisabled.getCycleComponent();
@@ -143,13 +140,13 @@ public class ManageVariablesScreen extends Screen {
 
         this.font.draw(pose, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.layoutListScrollArea.setWidth((this.width / 2) - 40, true);
-        this.layoutListScrollArea.setHeight(this.height - 85, true);
-        this.layoutListScrollArea.setX(20, true);
-        this.layoutListScrollArea.setY(50 + 15, true);
-        this.layoutListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.variableListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.variableListScrollArea.setHeight(this.height - 85, true);
+        this.variableListScrollArea.setX(20, true);
+        this.variableListScrollArea.setY(50 + 15, true);
+        this.variableListScrollArea.render(pose, mouseX, mouseY, partial);
 
-        int buttonWidth = (this.width - 20) - ((this.layoutListScrollArea.getXWithBorder() + (this.layoutListScrollArea.getWidthWithBorder() + 20)));
+        int buttonWidth = (this.width - 20) - ((this.variableListScrollArea.getXWithBorder() + (this.variableListScrollArea.getWidthWithBorder() + 20)));
         if (buttonWidth < 150) buttonWidth = 150;
         if (buttonWidth > 220) buttonWidth = 220;
 
@@ -184,7 +181,7 @@ public class ManageVariablesScreen extends Screen {
 
     @Nullable
     protected ManageVariablesScreen.VariableScrollEntry getSelectedEntry() {
-        for (ScrollAreaEntry e : this.layoutListScrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.variableListScrollArea.getEntries()) {
             if (e instanceof VariableScrollEntry s) {
                 if (s.isSelected()) return s;
             }
@@ -193,14 +190,14 @@ public class ManageVariablesScreen extends Screen {
     }
 
     protected void updateVariableScrollArea() {
-        this.layoutListScrollArea.clearEntries();
+        this.variableListScrollArea.clearEntries();
         for (Variable v : VariableHandler.getVariables()) {
-            VariableScrollEntry e = new VariableScrollEntry(this.layoutListScrollArea, v, (entry) -> {
+            VariableScrollEntry e = new VariableScrollEntry(this.variableListScrollArea, v, (entry) -> {
             });
-            this.layoutListScrollArea.addEntry(e);
+            this.variableListScrollArea.addEntry(e);
         }
-        if (this.layoutListScrollArea.getEntries().isEmpty()) {
-            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt())), (entry) -> {}));
+        if (this.variableListScrollArea.getEntries().isEmpty()) {
+            this.variableListScrollArea.addEntry(new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt())), (entry) -> {}));
         }
     }
 

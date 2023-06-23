@@ -30,7 +30,7 @@ public class MixinFabricGameRenderer {
         MixinCache.currentRenderScreen = instance;
         RenderScreenEvent.Pre e = new RenderScreenEvent.Pre(Minecraft.getInstance().screen, poseStack, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(e);
-        return !e.isCanceled();
+        return true;
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltip(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))

@@ -11,9 +11,6 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
-import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
-import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
@@ -84,10 +81,17 @@ public class CustomizationOverlayUI {
                     return null;
                 });
 
-        screenMenu.addSeparatorEntry("separator_1");
+        screenMenu.addSeparatorEntry("separator_after_override_current");
 
         ContextMenu screenSettingsMenu = new ContextMenu();
         screenMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.screen.settings"), screenSettingsMenu);
+
+        screenSettingsMenu.addValueCycleEntry("advanced_customization_mode", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.advanced_customization_mode", FancyMenu.getOptions().advancedCustomizationMode.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().advancedCustomizationMode.setValue(cycle.getAsBoolean());
+                })).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.screen.settings.advanced_customization_mode.tooltip")));
+
+        screenSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
 
         screenSettingsMenu.addValueCycleEntry("play_menu_music", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.play_menu_music", FancyMenu.getOptions().playMenuMusic.getValue())
                 .addCycleListener(cycle -> {
@@ -144,7 +148,32 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().preLoadAnimations.setValue(cycle.getAsBoolean());
                 }));
 
-        screenMenu.addSeparatorEntry("separator_2");
+        screenSettingsMenu.addSeparatorEntry("separator_after_preload_animations");
+
+        ContextMenu worldLoadingScreenSettingsMenu = new ContextMenu();
+        screenSettingsMenu.addSubMenuEntry("world_loading_screen", Component.translatable("fancymenu.overlay.menu_bar.screen.settings.world_loading_screen"), worldLoadingScreenSettingsMenu);
+
+        worldLoadingScreenSettingsMenu.addValueCycleEntry("world_loading_screen_animation", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.world_loading_screen.animation", FancyMenu.getOptions().showLevelLoadingScreenChunkAnimation.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().showLevelLoadingScreenChunkAnimation.setValue(cycle.getAsBoolean());
+                }));
+
+        worldLoadingScreenSettingsMenu.addValueCycleEntry("world_loading_screen_percent", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.world_loading_screen.percent", FancyMenu.getOptions().showLevelLoadingScreenPercent.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().showLevelLoadingScreenPercent.setValue(cycle.getAsBoolean());
+                }));
+
+        screenSettingsMenu.addValueCycleEntry("singleplayer_world_icons", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.singleplayer_screen.world_icons", FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().showSingleplayerScreenWorldIcons.setValue(cycle.getAsBoolean());
+                }));
+
+        screenSettingsMenu.addValueCycleEntry("multiplayer_server_icons", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.screen.settings.multiplayer_screen.server_icons", FancyMenu.getOptions().showMultiplayerScreenServerIcons.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().showMultiplayerScreenServerIcons.setValue(cycle.getAsBoolean());
+                }));
+
+        screenMenu.addSeparatorEntry("separator_after_settings");
 
         screenMenu.addClickableEntry("reload_fancymenu", Component.translatable("fancymenu.overlay.menu_bar.screen.reload_fancymenu"), (menu, entry) -> {
             MainThreadTaskExecutor.executeInMainThread(() -> {
@@ -326,9 +355,29 @@ public class CustomizationOverlayUI {
             WebUtils.openWebLink("https://fm.keksuccino.dev");
         }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")));
 
+        helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
+            WebUtils.openWebLink("https://discord.gg/UzmeWkD");
+        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")));
+
+        helpMenu.addClickableEntry("report_issue", Component.translatable("fancymenu.overlay.menu_bar.help.report_issue"), (menu, entry) -> {
+            WebUtils.openWebLink("https://github.com/Keksuccino/FancyMenu/issues");
+        });
+
+        helpMenu.addSeparatorEntry("separator_after_report_issue");
+
         helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
         }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
+
+        helpMenu.addSeparatorEntry("separator_after_curseforge");
+
+        helpMenu.addClickableEntry("keksuccino_patreon", Component.translatable("fancymenu.overlay.menu_bar.help.patreon"), (menu, entry) -> {
+            WebUtils.openWebLink("https://www.patreon.com/keksuccino");
+        });
+
+        helpMenu.addClickableEntry("paypal_tip_jar", Component.translatable("fancymenu.overlay.menu_bar.help.paypal"), (menu, entry) -> {
+            WebUtils.openWebLink("https://www.paypal.com/paypalme/TimSchroeter");
+        });
 
         return menuBar;
 

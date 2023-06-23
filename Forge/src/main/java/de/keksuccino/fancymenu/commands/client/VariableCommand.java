@@ -76,8 +76,7 @@ public class VariableCommand {
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
                 if (getOrSet.equalsIgnoreCase("get")) {
-                    String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).value : null;
-                    if (VariableHandler.variableExists(variableName) && (s == null)) s = "";
+                    String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).getValue() : null;
                     if (s != null) {
                         stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
                     } else {

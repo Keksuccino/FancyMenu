@@ -31,10 +31,8 @@ public class IsVariableValueRequirement extends LoadingRequirement {
                 String name = value.split(":", 2)[0];
                 String val = value.split(":", 2)[1];
                 if (VariableHandler.variableExists(name)) {
-                    String storedVal = Objects.requireNonNull(VariableHandler.getVariable(name)).value;
-                    if (storedVal != null) {
-                        return val.equals(storedVal);
-                    }
+                    String storedVal = Objects.requireNonNull(VariableHandler.getVariable(name)).getValue();
+                    return val.equals(storedVal);
                 }
             }
         }

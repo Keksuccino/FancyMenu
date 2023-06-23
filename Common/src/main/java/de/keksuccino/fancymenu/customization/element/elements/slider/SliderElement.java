@@ -38,7 +38,7 @@ public class SliderElement extends AbstractElement {
         String valString = null;
         if (linkedVariable != null) {
             if (VariableHandler.variableExists(linkedVariable)) {
-                valString = Objects.requireNonNull(VariableHandler.getVariable(linkedVariable)).value;
+                valString = Objects.requireNonNull(VariableHandler.getVariable(linkedVariable)).getValue();
             }
         }
         if (this.type == SliderType.RANGE) {
@@ -97,29 +97,27 @@ public class SliderElement extends AbstractElement {
             //Update variable value on change
             if (this.linkedVariable != null) {
                 if (VariableHandler.variableExists(this.linkedVariable)) {
-                    String valString = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).value;
-                    if (valString != null) {
-                        if (this.type == SliderType.RANGE) {
-                            if (MathUtils.isInteger(valString)) {
-                                int val = Integer.parseInt(valString);
-                                if (((RangeSliderButton)this.slider).getSelectedRangeValue() != val) {
-                                    ((RangeSliderButton)this.slider).setSelectedRangeValue(val);
-                                }
+                    String valString = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                    if (this.type == SliderType.RANGE) {
+                        if (MathUtils.isInteger(valString)) {
+                            int val = Integer.parseInt(valString);
+                            if (((RangeSliderButton) this.slider).getSelectedRangeValue() != val) {
+                                ((RangeSliderButton) this.slider).setSelectedRangeValue(val);
                             }
                         }
-                        if (this.type == SliderType.LIST) {
-                            if (!((ListSliderButton)this.slider).getSelectedListValue().equals(valString)) {
-                                int newIndex = 0;
-                                int i = 0;
-                                for (String s : this.listValues) {
-                                    if (s.equals(valString)) {
-                                        newIndex = i;
-                                        break;
-                                    }
-                                    i++;
+                    }
+                    if (this.type == SliderType.LIST) {
+                        if (!((ListSliderButton)this.slider).getSelectedListValue().equals(valString)) {
+                            int newIndex = 0;
+                            int i = 0;
+                            for (String s : this.listValues) {
+                                if (s.equals(valString)) {
+                                    newIndex = i;
+                                    break;
                                 }
-                                ((ListSliderButton)this.slider).setSelectedIndex(newIndex);
+                                i++;
                             }
+                            ((ListSliderButton)this.slider).setSelectedIndex(newIndex);
                         }
                     }
                 }

@@ -14,6 +14,7 @@ public class Options {
     public final Option<Boolean> forceFullscreen = new Option<>(config, "force_fullscreen", false, "general");
 
     public final Option<Boolean> advancedCustomizationMode = new Option<>(config, "advanced_customization_mode", false, "customization");
+    public final Option<Boolean> showCustomizationOverlay = new Option<>(config, "show_customization_overlay", true, "customization");
 
     public final Option<String> gameIntroAnimation = new Option<>(config, "game_intro_animation_name", "", "loading");
     public final Option<Boolean> allowGameIntroSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
@@ -23,8 +24,8 @@ public class Options {
     public final Option<Boolean> showCustomWindowIcon = new Option<>(config, "show_custom_window_icon", false, "window");
     public final Option<String> customWindowTitle = new Option<>(config, "custom_window_title", "", "window");
 
-    public final Option<Boolean> showWorldLoadingScreenAnimation = new Option<>(config, "show_world_loading_screen_animation", true, "world_loading_screen");
-    public final Option<Boolean> showWorldLoadingScreenPercent = new Option<>(config, "show_world_loading_screen_percent", true, "world_loading_screen");
+    public final Option<Boolean> showLevelLoadingScreenChunkAnimation = new Option<>(config, "show_world_loading_screen_animation", true, "world_loading_screen");
+    public final Option<Boolean> showLevelLoadingScreenPercent = new Option<>(config, "show_world_loading_screen_percent", true, "world_loading_screen");
 
     public final Option<Boolean> showMultiplayerScreenServerIcons = new Option<>(config, "show_multiplayer_screen_server_icons", true, "multiplayer_screen");
 

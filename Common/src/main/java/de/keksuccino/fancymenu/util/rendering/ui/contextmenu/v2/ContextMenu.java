@@ -162,6 +162,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 s.subContextMenu.scale = this.scale;
                 s.subContextMenu.forceUIScale = this.forceUIScale;
                 s.subContextMenu.overriddenRenderScale = this.overriddenRenderScale;
+                s.subContextMenu.overriddenTooltipScale = this.overriddenTooltipScale;
                 s.subContextMenu.render(pose, mouseX, mouseY, partial);
             }
         }
@@ -744,6 +745,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
             stacked.forceUIScale = menusToStack[0].forceUIScale;
             stacked.overriddenRenderScale = menusToStack[0].overriddenRenderScale;
+            stacked.overriddenTooltipScale = menusToStack[0].overriddenTooltipScale;
             stacked.keepDistanceToEdges = menusToStack[0].keepDistanceToEdges;
             stacked.forceRawXY = menusToStack[0].forceRawXY;
             stacked.forceSide = menusToStack[0].forceSide;

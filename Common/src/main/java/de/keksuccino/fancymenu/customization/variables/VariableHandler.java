@@ -25,6 +25,7 @@ public class VariableHandler {
         for (Variable v : getVariables()) {
             if (v.resetOnLaunch) v.value = "";
         }
+        writeToFile();
 
     }
 
@@ -34,7 +35,7 @@ public class VariableHandler {
             v = new Variable(name);
             VARIABLES.put(name, v);
         }
-        v.value = value;
+        v.setValue(value);
         writeToFile();
     }
 

@@ -123,9 +123,9 @@ public class ExtendedButton extends Button {
             disableScissor();
         } else {
             if (!this.labelShadow) {
-                font.draw(pose, text, ((xMin + xMax) / 2F) - (font.width(text) / 2F), textPosY, textColor);
+                font.draw(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
             } else {
-                font.drawShadow(pose, text, ((xMin + xMax) / 2F) - (font.width(text) / 2F), textPosY, textColor);
+                font.drawShadow(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
             }
         }
     }

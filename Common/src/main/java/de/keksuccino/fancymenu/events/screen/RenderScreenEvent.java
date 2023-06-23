@@ -51,11 +51,6 @@ public class RenderScreenEvent extends EventBase {
             super(screen, poseStack, mouseX, mouseY, partial);
         }
 
-        @Override
-        public boolean isCancelable() {
-            return true;
-        }
-
     }
 
     public static class Post extends RenderScreenEvent {

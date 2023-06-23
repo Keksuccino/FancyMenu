@@ -22,15 +22,15 @@ public class MixinForgeGameRenderer {
     private float cachedPartial = 0.0F;
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;drawScreen(Lnet/minecraft/client/gui/screens/Screen;Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
-    private boolean wrapRenderScreenFancyMenu(Screen instance, PoseStack poseStack, int mouseX, int mouseY, float partial) {
+    private boolean wrapRenderScreenFancyMenu(Screen screen, PoseStack poseStack, int mouseX, int mouseY, float partial) {
         this.cachedStack = poseStack;
         this.cachedMouseX = mouseX;
         this.cachedMouseY = mouseY;
         this.cachedPartial = partial;
-        MixinCache.currentRenderScreen = instance;
+        MixinCache.currentRenderScreen = screen;
         RenderScreenEvent.Pre e = new RenderScreenEvent.Pre(Minecraft.getInstance().screen, poseStack, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(e);
-        return !e.isCanceled();
+        return true;
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;drawScreen(Lnet/minecraft/client/gui/screens/Screen;Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))

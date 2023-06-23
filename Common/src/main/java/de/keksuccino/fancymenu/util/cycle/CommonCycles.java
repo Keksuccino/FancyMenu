@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")

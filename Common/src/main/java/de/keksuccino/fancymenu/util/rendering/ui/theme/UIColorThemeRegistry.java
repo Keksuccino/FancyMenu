@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.theme;
 
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.events.UIColorSchemeChangedEvent;
+import de.keksuccino.fancymenu.events.UIColorThemeChangedEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,7 @@ public class UIColorThemeRegistry {
             LOGGER.error("[FANCYMENU] Falling back to DARK theme!");
             activeTheme = UIColorThemes.DARK;
         }
-        EventHandler.INSTANCE.postEvent(new UIColorSchemeChangedEvent(getActiveTheme()));
+        EventHandler.INSTANCE.postEvent(new UIColorThemeChangedEvent(getActiveTheme()));
     }
 
     @Nullable

@@ -38,10 +38,8 @@ public class InputFieldElement extends AbstractElement {
                 this.textField.setEditable(false);
                 if (this.linkedVariable != null) {
                     if (VariableHandler.variableExists(this.linkedVariable)) {
-                        String var = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).value;
-                        if (var != null) {
-                            this.textField.setValue(var);
-                        }
+                        String var = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                        this.textField.setValue(var);
                     }
                 }
             }
@@ -59,13 +57,9 @@ public class InputFieldElement extends AbstractElement {
                         VariableHandler.setVariable(linkedVariable, this.textField.getValue());
                     }
                     if (VariableHandler.variableExists(this.linkedVariable)) {
-                        String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).value;
-                        if (val != null) {
-                            if (!this.textField.getValue().equals(val)) {
-                                this.textField.setValue(val);
-                            }
-                        } else {
-                            this.textField.setValue("");
+                        String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
+                        if (!this.textField.getValue().equals(val)) {
+                            this.textField.setValue(val);
                         }
                     } else {
                         this.textField.setValue("");

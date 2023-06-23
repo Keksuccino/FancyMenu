@@ -58,10 +58,8 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
         element.textField.setMaxLength(element.maxTextLength);
         if (element.linkedVariable != null) {
             if (VariableHandler.variableExists(element.linkedVariable)) {
-                String var = Objects.requireNonNull(VariableHandler.getVariable(element.linkedVariable)).value;
-                if (var != null) {
-                    element.textField.setValue(var);
-                }
+                String var = Objects.requireNonNull(VariableHandler.getVariable(element.linkedVariable)).getValue();
+                element.textField.setValue(var);
             }
         }
 
