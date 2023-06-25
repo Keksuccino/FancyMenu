@@ -327,7 +327,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							if (allEqual) {
 								Minecraft.getInstance().setScreen(s);
 							} else {
-								Minecraft.getInstance().setScreen(new ConfirmationScreen((call) -> {
+								Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
 									if (call) {
 										Minecraft.getInstance().setScreen(s);
 									} else {

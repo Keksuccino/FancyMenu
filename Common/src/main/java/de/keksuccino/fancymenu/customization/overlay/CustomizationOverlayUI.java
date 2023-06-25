@@ -183,7 +183,7 @@ public class CustomizationOverlayUI {
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.screen.reload_fancymenu.shortcut"));
 
         screenMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.screen.disable_customization_for_all"), (menu, entry) -> {
-            ConfirmationScreen s = new ConfirmationScreen((call) -> {
+            Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                 Minecraft.getInstance().setScreen(screen);
                 if (call) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
@@ -192,8 +192,7 @@ public class CustomizationOverlayUI {
                         ScreenCustomization.reInitCurrentScreen();
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
-            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.screen.disable_customization_for_all.confirm"));
-            Minecraft.getInstance().setScreen(s);
+            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.screen.disable_customization_for_all.confirm")));
         }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.screen.disable_customization_for_all.tooltip")));
 
         // LAYOUT
@@ -403,13 +402,12 @@ public class CustomizationOverlayUI {
 
         menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
             menu1.closeMenu();
-            ConfirmationScreen s = new ConfirmationScreen(call -> {
+            Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
                 if (call) {
                     layout.delete(false);
                 }
                 Minecraft.getInstance().setScreen(screen);
-            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm"));
-            Minecraft.getInstance().setScreen(s);
+            }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
         });
 
         menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {

@@ -17,39 +17,48 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class ConfirmationScreen extends Screen {
+public class NotificationScreen extends Screen {
 
     protected List<Component> textLines;
     protected DrawableColor headlineColor;
     protected boolean headlineBold = false;
     protected Consumer<Boolean> callback;
 
-    protected ExtendedButton confirmButton;
-    protected ExtendedButton cancelButton;
+    protected ExtendedButton okayButton;
 
     @NotNull
-    public static ConfirmationScreen critical(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
+    public static NotificationScreen error(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
         return ofComponents(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().error_text_color);
     }
 
     @NotNull
-    public static ConfirmationScreen critical(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
+    public static NotificationScreen error(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
         return ofStrings(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().error_text_color);
     }
 
     @NotNull
-    public static ConfirmationScreen warning(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
+    public static NotificationScreen warning(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
         return ofComponents(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().warning_text_color);
     }
 
     @NotNull
-    public static ConfirmationScreen warning(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
+    public static NotificationScreen warning(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
         return ofStrings(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().warning_text_color);
     }
 
     @NotNull
-    public static ConfirmationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
-        ConfirmationScreen s = new ConfirmationScreen(callback, new ArrayList<>());
+    public static NotificationScreen notificationWithHeadline(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
+        return ofComponents(callback, textLines).setHeadlineBold(true);
+    }
+
+    @NotNull
+    public static NotificationScreen notificationWithHeadline(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
+        return ofStrings(callback, textLines).setHeadlineBold(true);
+    }
+
+    @NotNull
+    public static NotificationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
+        NotificationScreen s = new NotificationScreen(callback, new ArrayList<>());
         for (String line : textLines) {
             s.textLines.add(Component.literal(line));
         }
@@ -57,21 +66,21 @@ public class ConfirmationScreen extends Screen {
     }
 
     @NotNull
-    public static ConfirmationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull List<String> textLines) {
+    public static NotificationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull List<String> textLines) {
         return ofStrings(callback, textLines.toArray(new String[0]));
     }
 
     @NotNull
-    public static ConfirmationScreen ofComponents(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
-        return new ConfirmationScreen(callback, Arrays.asList(textLines));
+    public static NotificationScreen ofComponents(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
+        return new NotificationScreen(callback, Arrays.asList(textLines));
     }
 
     @NotNull
-    public static ConfirmationScreen ofComponents(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
-        return new ConfirmationScreen(callback, textLines);
+    public static NotificationScreen ofComponents(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
+        return new NotificationScreen(callback, textLines);
     }
 
-    protected ConfirmationScreen(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
+    protected NotificationScreen(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
         super((!textLines.isEmpty()) ? textLines.get(0) : Component.empty());
         this.callback = callback;
         this.textLines = textLines;
@@ -80,17 +89,11 @@ public class ConfirmationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.confirm"), (button) -> {
+        this.okayButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
             this.callback.accept(true);
         });
-        this.addWidget(this.confirmButton);
-        UIBase.applyDefaultButtonSkinTo(this.confirmButton);
-
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
-            this.callback.accept(false);
-        });
-        this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        this.addWidget(this.okayButton);
+        UIBase.applyDefaultButtonSkinTo(this.okayButton);
 
     }
 
@@ -113,13 +116,9 @@ public class ConfirmationScreen extends Screen {
             lineCounter++;
         }
 
-        this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
-        this.confirmButton.setY(this.height - 40);
-        this.confirmButton.render(pose, mouseX, mouseY, partial);
-
-        this.cancelButton.setX((this.width / 2) + 5);
-        this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.okayButton.setX((this.width / 2) - (this.okayButton.getWidth() / 2));
+        this.okayButton.setY(this.height - 40);
+        this.okayButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);
 
@@ -130,7 +129,7 @@ public class ConfirmationScreen extends Screen {
         return this.headlineColor;
     }
 
-    public ConfirmationScreen setHeadlineColor(@Nullable DrawableColor headlineColor) {
+    public NotificationScreen setHeadlineColor(@Nullable DrawableColor headlineColor) {
         this.headlineColor = headlineColor;
         return this;
     }
@@ -139,7 +138,7 @@ public class ConfirmationScreen extends Screen {
         return this.headlineBold;
     }
 
-    public ConfirmationScreen setHeadlineBold(boolean headlineBold) {
+    public NotificationScreen setHeadlineBold(boolean headlineBold) {
         this.headlineBold = headlineBold;
         return this;
     }
@@ -147,7 +146,6 @@ public class ConfirmationScreen extends Screen {
     @Override
     public boolean keyPressed(int button, int p_96553_, int p_96554_) {
 
-        //ENTER
         if (button == InputConstants.KEY_ENTER) {
             this.callback.accept(true);
             return true;
@@ -159,7 +157,7 @@ public class ConfirmationScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.callback.accept(false);
+        this.callback.accept(true);
     }
 
 }

@@ -23,12 +23,13 @@ public class InitOrResizeScreenCompletedEvent extends EventBase {
 	}
 
 	public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
-		((IMixinScreen)this.getScreen()).getChildrenFancyMenu().add(widget);
+		this.getWidgets().add(widget);
+		this.getNarratables().add(widget);
 	}
 
 	public <T extends GuiEventListener & NarratableEntry & Renderable> void addRenderableWidget(T widget) {
 		this.addWidget(widget);
-		((IMixinScreen)this.getScreen()).getRenderablesFancyMenu().add(widget);
+		this.getRenderables().add(widget);
 	}
 
 	public List<GuiEventListener> getWidgets() {
@@ -37,6 +38,10 @@ public class InitOrResizeScreenCompletedEvent extends EventBase {
 
 	public List<Renderable> getRenderables() {
 		return ((IMixinScreen)this.getScreen()).getRenderablesFancyMenu();
+	}
+
+	public List<NarratableEntry> getNarratables() {
+		return ((IMixinScreen)this.getScreen()).getNarratablesFancyMenu();
 	}
 	
 	public Screen getScreen() {

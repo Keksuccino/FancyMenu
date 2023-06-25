@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+//TODO rewrite this class
+@Deprecated
 public class ChooseFromStringListScreen extends ScrollableScreen {
 
     protected Consumer<String> callback;

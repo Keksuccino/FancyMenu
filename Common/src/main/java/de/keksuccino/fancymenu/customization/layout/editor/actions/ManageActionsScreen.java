@@ -162,13 +162,13 @@ public class ManageActionsScreen extends Screen {
         this.removeButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), (button) -> {
             if (this.isInstanceSelected()) {
                 ActionInstance i = this.getSelectedInstance();
-                Screen s = new ConfirmationScreen(this, (call) -> {
+                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
                         this.instances.remove(i);
                         this.updateActionInstanceScrollArea(false);
                     }
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.confirm"));
-                Minecraft.getInstance().setScreen(s);
+                    Minecraft.getInstance().setScreen(this);
+                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.confirm")));
             }
         }) {
             @Override

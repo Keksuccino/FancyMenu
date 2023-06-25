@@ -83,14 +83,13 @@ public class ManageVariablesScreen extends Screen {
         this.deleteVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                ConfirmationScreen s = new ConfirmationScreen(call -> {
+                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
                     if (call) {
                         VariableHandler.removeVariable(e.variable.getName());
                         this.updateVariableScrollArea();
                     }
                     Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm"));
-                Minecraft.getInstance().setScreen(s);
+                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm")));
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.deleteVariableButton);

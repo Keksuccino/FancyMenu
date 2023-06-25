@@ -81,15 +81,14 @@ public class ManageLayoutsScreen extends Screen {
         this.deleteButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.delete"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                ConfirmationScreen s = new ConfirmationScreen(call -> {
+                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
                     if (call) {
                         e.layout.delete(false);
                         this.layouts.remove(e.layout);
                         this.updateLayoutScrollArea();
                     }
                     Minecraft.getInstance().setScreen(this);
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm"));
-                Minecraft.getInstance().setScreen(s);
+                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.deleteButton);

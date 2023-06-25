@@ -132,19 +132,21 @@ public class ManageRequirementsScreen extends Screen {
             Screen s = null;
             if (this.isInstanceSelected()) {
                 LoadingRequirementInstance i = this.getSelectedInstance();
-                s = new ConfirmationScreen(this, (call) -> {
+                s = ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
                         this.container.removeInstance(i);
                         this.updateRequirementsScrollArea();
                     }
+                    Minecraft.getInstance().setScreen(this);
                 }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.remove_requirement.confirm"));
             } else if (this.isGroupSelected()) {
                 LoadingRequirementGroup g = this.getSelectedGroup();
-                s = new ConfirmationScreen(this, (call) -> {
+                s = ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
                         this.container.removeGroup(g);
                         this.updateRequirementsScrollArea();
                     }
+                    Minecraft.getInstance().setScreen(this);
                 }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.remove_group.confirm"));
             }
             if (s != null) {

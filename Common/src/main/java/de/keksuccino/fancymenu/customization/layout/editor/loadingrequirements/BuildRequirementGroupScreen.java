@@ -139,13 +139,13 @@ public class BuildRequirementGroupScreen extends Screen {
         this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement"), (button) -> {
             LoadingRequirementInstance i = this.getSelectedInstance();
             if (i != null) {
-                ConfirmationScreen s = new ConfirmationScreen(this, (call) -> {
+                Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
                         this.group.removeInstance(i);
                         this.updateRequirementsScrollArea();
                     }
-                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.remove_requirement.confirm"));
-                Minecraft.getInstance().setScreen(s);
+                    Minecraft.getInstance().setScreen(this);
+                }, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.remove_requirement.confirm")));
             }
         }) {
             @Override

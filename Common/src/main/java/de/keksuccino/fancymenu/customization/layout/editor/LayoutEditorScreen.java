@@ -35,6 +35,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.*;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
@@ -551,8 +553,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.layout.updateLastEditedTime();
 			this.serializeElementInstancesToLayoutInstance();
 			if (!this.layout.saveToFileIfPossible()) {
-				//TODO replace with NotificationScreen (does not exist yet)
-				Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+				Minecraft.getInstance().setScreen(NotificationScreen.ofStrings((call) -> {
+					Minecraft.getInstance().setScreen(this);
+				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 			}
 		} else {
 			this.saveLayoutAs();
@@ -560,19 +563,21 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	}
 
 	public void saveLayoutAs() {
-		//TODO replace with TextInputScreen (does not exist yet)
+		//TODO replace with SaveFileScreen
 		FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.editor.save_as"), CharacterFilter.getFilenameFilterWithUppercaseSupport(), 240, (call) -> {
 			if (call != null) {
 				this.layout.updateLastEditedTime();
 				this.serializeElementInstancesToLayoutInstance();
 				File f = new File(FancyMenu.CUSTOMIZATIONS_DIR.getAbsolutePath() + "/" + call + ".txt");
 				if (f.isFile()) {
-					//TODO replace with NotificationScreen (does not exist yet)
-					Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.file_exists")));
+					Minecraft.getInstance().setScreen(NotificationScreen.ofStrings((call2) -> {
+						Minecraft.getInstance().setScreen(this);
+					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.file_exists")));
 				} else {
 					if (!LayoutHandler.saveLayoutToFile(this.layout, f.getAbsolutePath())) {
-						//TODO replace with NotificationScreen (does not exist yet)
-						Minecraft.getInstance().setScreen(new ConfirmationScreen(this, (call2) -> {}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+						Minecraft.getInstance().setScreen(NotificationScreen.ofStrings((call2) -> {
+							Minecraft.getInstance().setScreen(this);
+						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 					}
 				}
 			}

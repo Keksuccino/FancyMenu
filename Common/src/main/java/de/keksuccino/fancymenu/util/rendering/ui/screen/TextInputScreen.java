@@ -3,9 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.RenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.snapshot.SimpleDrawableScreenSnapshot;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -24,18 +22,20 @@ public class TextInputScreen extends Screen {
     @NotNull
     protected Consumer<String> callback;
 
-    protected SimpleDrawableScreenSnapshot background;
     protected ExtendedEditBox input;
     protected ExtendedButton cancelButton;
     protected ExtendedButton doneButton;
+
+    @NotNull
+    public static TextInputScreen build(@NotNull Component title, @Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
+        return new TextInputScreen(title, filter, callback);
+    }
 
     public TextInputScreen(@NotNull Component title, @Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
 
         super(title);
 
         this.callback = callback;
-
-        this.background = SimpleDrawableScreenSnapshot.create();
 
         this.input = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 200, 20, Component.empty());
         this.input.setMaxLength(10000);
@@ -64,17 +64,6 @@ public class TextInputScreen extends Screen {
     }
 
     @Override
-    public void resize(@NotNull Minecraft $$0, int $$1, int $$2) {
-        super.resize($$0, $$1, $$2);
-    }
-
-    @Override
-    public void removed() {
-        if (this.background != null) this.background.close();
-        super.removed();
-    }
-
-    @Override
     public void tick() {
         this.input.tick();
     }
@@ -85,14 +74,6 @@ public class TextInputScreen extends Screen {
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color_darker.getColorInt());
-
-        if ((this.background != null) && (this.background.getSnapshotLocation() != null)) {
-//            RenderSystem.enableBlend();
-//            RenderUtils.bindTexture(this.background.getSnapshotLocation());
-//            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-//            blit(pose, 0, 0, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
-            RenderUtils.renderBlurredTexture(pose, this.background.getSnapshotLocation(), 0, 0, this.width, this.height);
-        }
 
         RenderSystem.enableBlend();
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));
@@ -116,7 +97,6 @@ public class TextInputScreen extends Screen {
     @Override
     public boolean keyPressed(int button, int p_96553_, int p_96554_) {
 
-        // ENTER
         if (button == InputConstants.KEY_ENTER) {
             this.callback.accept(this.input.getValue());
             return true;
@@ -131,8 +111,9 @@ public class TextInputScreen extends Screen {
         this.callback.accept(null);
     }
 
-    public void setText(@NotNull String text) {
+    public TextInputScreen setText(@NotNull String text) {
         this.input.setValue(text);
+        return this;
     }
 
 }

@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMYesNoPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.util.rendering.ui.MenuBar.ElementAlignment;
@@ -339,65 +340,65 @@ public class LayoutEditorUI extends UIBase {
 				universalLayoutMenu.addClickableEntry("remove_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
 					ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.editor, this.editor.layout.universalLayoutMenuBlacklist, (call) -> {
 						if (call != null) {
-							ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
+							Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call2) -> {
 								if (call2) {
 									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 									this.editor.layout.universalLayoutMenuBlacklist.remove(call);
 								}
-							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm"));
-							Minecraft.getInstance().setScreen(s2);
+								Minecraft.getInstance().setScreen(this.editor);
+							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm")));
 						}
 					});
 					Minecraft.getInstance().setScreen(s);
 				});
 
 				universalLayoutMenu.addClickableEntry("clear_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
-					ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
+					Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call2) -> {
 						if (call2) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							this.editor.layout.universalLayoutMenuBlacklist.clear();
 						}
-					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm"));
-					Minecraft.getInstance().setScreen(s2);
+						Minecraft.getInstance().setScreen(this.editor);
+					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist.confirm")));
 				});
 
 				universalLayoutMenu.addSeparatorEntry("separator_1", false);
 
 				universalLayoutMenu.addClickableEntry("add_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
-					FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, 240, (call) -> {
+					Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.input_menu_identifier"), null, (call) -> {
 						if (call != null) {
 							if (!this.editor.layout.universalLayoutMenuWhitelist.contains(call)) {
 								this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 								this.editor.layout.universalLayoutMenuWhitelist.add(call);
 							}
 						}
-					});
-					PopupHandler.displayPopup(p);
+						Minecraft.getInstance().setScreen(this.editor);
+					}));
 				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
 				universalLayoutMenu.addClickableEntry("remove_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
 					ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.editor, this.editor.layout.universalLayoutMenuWhitelist, (call) -> {
 						if (call != null) {
-							ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
+							Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call2) -> {
 								if (call2) {
 									this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 									this.editor.layout.universalLayoutMenuWhitelist.remove(call);
 								}
-							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm"));
-							Minecraft.getInstance().setScreen(s2);
+								Minecraft.getInstance().setScreen(this.editor);
+							}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm")));
 						}
 					});
 					Minecraft.getInstance().setScreen(s);
 				});
 
 				universalLayoutMenu.addClickableEntry("clear_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
-					ConfirmationScreen s2 = new ConfirmationScreen(this.editor, (call2) -> {
+					Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call2) -> {
 						if (call2) {
 							this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 							this.editor.layout.universalLayoutMenuWhitelist.clear();
 						}
-					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm"));
-					Minecraft.getInstance().setScreen(s2);
+						Minecraft.getInstance().setScreen(this.editor);
+					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist.confirm")));
 				});
 
 			}

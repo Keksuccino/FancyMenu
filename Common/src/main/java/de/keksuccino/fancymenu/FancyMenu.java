@@ -28,6 +28,8 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO Arm rotation für player elements
+
 	//TODO "SaveFileScreen" bauen, der genutzt wird, um layouts zu speichern
 	// - Als Basis FileChooserScreen nutzen, aber Files können nicht "ausgewählt" werden, sondern sind nur sichtbar (damit man sieht, welche Files schon in Dir sind)
 	// - Wenn kein Ordner in currentDir ausgewählt, dann File in currentDir speichern
