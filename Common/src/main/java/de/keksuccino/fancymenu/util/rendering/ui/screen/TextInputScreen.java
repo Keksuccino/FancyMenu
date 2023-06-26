@@ -40,6 +40,7 @@ public class TextInputScreen extends Screen {
         this.input = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 200, 20, Component.empty());
         this.input.setMaxLength(10000);
         this.input.setCharacterFilter(filter);
+        UIBase.applyDefaultWidgetSkinTo(this.input);
 
     }
 
@@ -53,13 +54,13 @@ public class TextInputScreen extends Screen {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.input.getValue());
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
     }
 
@@ -73,7 +74,7 @@ public class TextInputScreen extends Screen {
 
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color_darker.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         RenderSystem.enableBlend();
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));

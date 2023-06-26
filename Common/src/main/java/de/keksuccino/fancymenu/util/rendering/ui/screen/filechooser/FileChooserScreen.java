@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.util.rendering.ui.screen;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -151,13 +151,13 @@ public class FileChooserScreen extends Screen {
             }
         };
         this.addWidget(this.okButton);
-        UIBase.applyDefaultButtonSkinTo(this.okButton);
+        UIBase.applyDefaultWidgetSkinTo(this.okButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.updateCurrentDirectoryComponent();
 
@@ -229,7 +229,7 @@ public class FileChooserScreen extends Screen {
     protected int renderCurrentDirectoryField(PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        fill(pose, x + 1, y + 1, xEnd - 2, yEnd - 2, UIBase.getUIColorScheme().area_background_color.getColorInt());
+        fill(pose, x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorScheme().area_background_color.getColorInt());
         UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorScheme().element_border_color_normal.getColor(), true, true, true, true);
         this.currentDirectoryComponent.x = x + 4;
         this.currentDirectoryComponent.y = y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2);

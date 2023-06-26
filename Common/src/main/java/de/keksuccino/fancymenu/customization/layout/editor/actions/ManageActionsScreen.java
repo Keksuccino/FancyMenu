@@ -67,7 +67,7 @@ public class ManageActionsScreen extends Screen {
         });
         this.addWidget(this.addActionButton);
         this.addActionButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.add_action.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.addActionButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addActionButton);
 
         this.moveUpButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_up"), (button) -> {
             if (this.isInstanceSelected()) {
@@ -100,7 +100,7 @@ public class ManageActionsScreen extends Screen {
             }
         };
         this.addWidget(this.moveUpButton);
-        UIBase.applyDefaultButtonSkinTo(this.moveUpButton);
+        UIBase.applyDefaultWidgetSkinTo(this.moveUpButton);
 
         this.moveDownButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_down"), (button) -> {
             if (this.isInstanceSelected()) {
@@ -133,7 +133,7 @@ public class ManageActionsScreen extends Screen {
             }
         };
         this.addWidget(this.moveDownButton);
-        UIBase.applyDefaultButtonSkinTo(this.moveDownButton);
+        UIBase.applyDefaultWidgetSkinTo(this.moveDownButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
             if (this.isInstanceSelected()) {
@@ -157,7 +157,7 @@ public class ManageActionsScreen extends Screen {
             }
         };
         this.addWidget(this.editButton);
-        UIBase.applyDefaultButtonSkinTo(this.editButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), (button) -> {
             if (this.isInstanceSelected()) {
@@ -185,13 +185,13 @@ public class ManageActionsScreen extends Screen {
             }
         };
         this.addWidget(this.removeButton);
-        UIBase.applyDefaultButtonSkinTo(this.removeButton);
+        UIBase.applyDefaultWidgetSkinTo(this.removeButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.instances);
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
     }
 

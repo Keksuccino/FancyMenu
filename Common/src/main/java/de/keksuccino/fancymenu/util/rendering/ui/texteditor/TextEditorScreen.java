@@ -182,7 +182,7 @@ public class TextEditorScreen extends Screen {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             if (this.callback != null) {
@@ -191,7 +191,7 @@ public class TextEditorScreen extends Screen {
             Minecraft.getInstance().setScreen(this.parentScreen);
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         if (this.allowPlaceholders) {
             this.placeholderButton = new ExtendedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), (button) -> {
@@ -203,7 +203,7 @@ public class TextEditorScreen extends Screen {
                 this.rebuildWidgets();
             }).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultBackgroundColor());
             this.addWidget(this.placeholderButton);
-            UIBase.applyDefaultButtonSkinTo(this.placeholderButton);
+            UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
             if (showPlaceholderMenu) {
                 this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_background_color_hover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));
                 ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));

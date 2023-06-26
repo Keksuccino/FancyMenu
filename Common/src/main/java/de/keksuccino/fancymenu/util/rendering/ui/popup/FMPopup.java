@@ -12,7 +12,7 @@ public class FMPopup extends Popup {
 	
 	@Override
 	protected void colorizePopupButton(AdvancedButton b) {
-		UIBase.applyDefaultButtonSkinTo(b);
+		UIBase.applyDefaultWidgetSkinTo(b);
 	}
 
 }

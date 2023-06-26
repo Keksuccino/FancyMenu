@@ -72,7 +72,7 @@ public class ManageRequirementsScreen extends Screen {
         });
         this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.add_requirement.desc")).setDefaultBackgroundColor());
-        UIBase.applyDefaultButtonSkinTo(this.addRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton);
 
         this.addGroupButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_group"), (button) -> {
             BuildRequirementGroupScreen s = new BuildRequirementGroupScreen(this, this.container, null, (call) -> {
@@ -85,7 +85,7 @@ public class ManageRequirementsScreen extends Screen {
         });
         this.addWidget(this.addGroupButton);
         this.addGroupButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.add_group.desc")).setDefaultBackgroundColor());
-        UIBase.applyDefaultButtonSkinTo(this.addGroupButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addGroupButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             Screen s = null;
@@ -126,7 +126,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         };
         this.addWidget(this.editButton);
-        UIBase.applyDefaultButtonSkinTo(this.editButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             Screen s = null;
@@ -173,21 +173,21 @@ public class ManageRequirementsScreen extends Screen {
             }
         };
         this.addWidget(this.removeButton);
-        UIBase.applyDefaultButtonSkinTo(this.removeButton);
+        UIBase.applyDefaultWidgetSkinTo(this.removeButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
             Minecraft.getInstance().setScreen(this.parentScreen);
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.container);
             Minecraft.getInstance().setScreen(this.parentScreen);
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
     }
 

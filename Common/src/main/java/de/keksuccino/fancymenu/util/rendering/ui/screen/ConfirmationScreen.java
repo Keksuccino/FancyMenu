@@ -23,6 +23,7 @@ public class ConfirmationScreen extends Screen {
     protected DrawableColor headlineColor;
     protected boolean headlineBold = false;
     protected Consumer<Boolean> callback;
+    protected long delayEnd = -1;
 
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
@@ -80,24 +81,24 @@ public class ConfirmationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.confirm"), (button) -> {
+        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
             this.callback.accept(true);
         });
         this.addWidget(this.confirmButton);
-        UIBase.applyDefaultButtonSkinTo(this.confirmButton);
+        UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(false);
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color_darker.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         int y = (this.height / 2) - ((this.textLines.size() * 14) / 2);
         int lineCounter = 0;
@@ -108,11 +109,12 @@ public class ConfirmationScreen extends Screen {
                 if (this.headlineBold) line.setStyle(line.getStyle().withBold(true));
             }
             int textWidth = this.font.width(line);
-            drawString(pose, this.font, line, (this.width / 2) - (textWidth / 2), y, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+            this.font.draw(pose, line, (int)((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
             y += 14;
             lineCounter++;
         }
 
+        this.confirmButton.active = this.delayEnd <= System.currentTimeMillis();
         this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
         this.confirmButton.setY(this.height - 40);
         this.confirmButton.render(pose, mouseX, mouseY, partial);
@@ -123,6 +125,11 @@ public class ConfirmationScreen extends Screen {
 
         super.render(pose, mouseX, mouseY, partial);
 
+    }
+
+    public ConfirmationScreen setDelay(long delay) {
+        this.delayEnd = System.currentTimeMillis() + delay;
+        return this;
     }
 
     @Nullable

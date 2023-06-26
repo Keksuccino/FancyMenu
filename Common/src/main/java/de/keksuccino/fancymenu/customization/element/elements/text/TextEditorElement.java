@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;

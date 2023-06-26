@@ -98,7 +98,7 @@ public class BuildActionScreen extends Screen {
             }
         };
         this.addWidget(this.editValueButton);
-        UIBase.applyDefaultButtonSkinTo(this.editValueButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editValueButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -120,7 +120,7 @@ public class BuildActionScreen extends Screen {
             }
         };
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -131,7 +131,7 @@ public class BuildActionScreen extends Screen {
             }
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.setDescription(this.instance.action);
 

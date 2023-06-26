@@ -437,9 +437,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     public boolean isMouseOver(double mouseX, double mouseY) {
         float scale = UIBase.calculateFixedScale(this.scale);
         int width = ScreenUtils.getScreenWidth();
-        int scaledWidth = (width != 0) ? (int)((float)width / scale) : 0;
-        int scaledHeight = (this.getHeight() != 0) ? (int)((float)this.getHeight() / scale) : 0;
-        return UIBase.isXYInArea((int)mouseX, (int)mouseY, 0, 0, scaledWidth, scaledHeight);
+        int scaledHeight = (this.getHeight() != 0) ? (int)((float)this.getHeight() * scale) : 0;
+        return UIBase.isXYInArea((int)mouseX, (int)mouseY, 0, 0, width, scaledHeight);
     }
 
     public static abstract class MenuBarEntry extends GuiComponent implements Renderable, GuiEventListener {

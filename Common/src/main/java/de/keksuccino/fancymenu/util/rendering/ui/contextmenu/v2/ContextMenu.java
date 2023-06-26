@@ -992,7 +992,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         protected void renderTooltipIconAndRegisterTooltip(PoseStack pose, int mouseX, int mouseY, int offsetX) {
 
-            if (this.tooltipSupplier != null) {
+            Tooltip tooltip = this.getTooltip();
+
+            if (tooltip != null) {
 
                 this.tooltipIconHovered = this.isTooltipIconHovered(mouseX, mouseY, offsetX);
                 if (this.tooltipIconHovered) {
@@ -1011,17 +1013,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 UIBase.resetShaderColor();
 
                 if (this.tooltipActive) {
-                    Tooltip tooltip = this.getTooltip();
-                    if (tooltip != null) {
-                        if (this.parent.isForceDefaultTooltipStyle()) {
-                            tooltip.setDefaultBackgroundColor();
-                        }
-                        float tooltipScale = (this.parent.overriddenTooltipScale != null) ? this.parent.overriddenTooltipScale : this.parent.scale;
-                        tooltip.setScale(tooltipScale);
-                        TooltipHandler.INSTANCE.addTooltip(tooltip, () ->this.tooltipActive, false, true);
-                    } else {
-                        this.tooltipActive = false;
+                    if (this.parent.isForceDefaultTooltipStyle()) {
+                        tooltip.setDefaultBackgroundColor();
                     }
+                    float tooltipScale = (this.parent.overriddenTooltipScale != null) ? this.parent.overriddenTooltipScale : this.parent.scale;
+                    tooltip.setScale(tooltipScale);
+                    TooltipHandler.INSTANCE.addTooltip(tooltip, () ->this.tooltipActive, false, true);
                 }
 
             } else {

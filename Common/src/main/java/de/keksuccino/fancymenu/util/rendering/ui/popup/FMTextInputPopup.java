@@ -20,7 +20,7 @@ public class FMTextInputPopup extends TextInputPopup {
 	
 	@Override
 	protected void colorizePopupButton(AdvancedButton b) {
-		UIBase.applyDefaultButtonSkinTo(b);
+		UIBase.applyDefaultWidgetSkinTo(b);
 	}
 
 }

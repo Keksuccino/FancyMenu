@@ -94,7 +94,7 @@ public class BuildRequirementGroupScreen extends Screen {
         };
         this.addWidget(this.groupModeButton);
         this.groupModeButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.mode.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.groupModeButton);
+        UIBase.applyDefaultWidgetSkinTo(this.groupModeButton);
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_requirement"), (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this, this.parent, null, (call) -> {
@@ -107,7 +107,7 @@ public class BuildRequirementGroupScreen extends Screen {
         });
         this.addWidget(this.addRequirementButton);
         this.addRequirementButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.add_requirement.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.addRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addRequirementButton);
 
         this.editRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.edit_requirement"), (button) -> {
             LoadingRequirementInstance i = this.getSelectedInstance();
@@ -134,7 +134,7 @@ public class BuildRequirementGroupScreen extends Screen {
         };
         this.addWidget(this.editRequirementButton);
         this.editRequirementButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.edit_requirement.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.editRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editRequirementButton);
 
         this.removeRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.remove_requirement"), (button) -> {
             LoadingRequirementInstance i = this.getSelectedInstance();
@@ -162,7 +162,7 @@ public class BuildRequirementGroupScreen extends Screen {
         };
         this.addWidget(this.removeRequirementButton);
         this.removeRequirementButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.remove_requirement.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.removeRequirementButton);
+        UIBase.applyDefaultWidgetSkinTo(this.removeRequirementButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -188,7 +188,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         };
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -199,7 +199,7 @@ public class BuildRequirementGroupScreen extends Screen {
             }
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
     }
 

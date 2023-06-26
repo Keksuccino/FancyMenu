@@ -26,7 +26,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;

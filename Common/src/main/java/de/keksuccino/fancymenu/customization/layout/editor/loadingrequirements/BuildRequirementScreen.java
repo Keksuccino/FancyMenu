@@ -108,7 +108,7 @@ public class BuildRequirementScreen extends Screen {
             }
         };
         this.addWidget(this.editValueButton);
-        UIBase.applyDefaultButtonSkinTo(this.editValueButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editValueButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -130,7 +130,7 @@ public class BuildRequirementScreen extends Screen {
             }
         };
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             Minecraft.getInstance().setScreen(this.parentScreen);
@@ -141,7 +141,7 @@ public class BuildRequirementScreen extends Screen {
             }
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.requirementModeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
@@ -162,7 +162,7 @@ public class BuildRequirementScreen extends Screen {
         };
         this.addWidget(this.requirementModeButton);
         this.requirementModeButton.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.desc")));
-        UIBase.applyDefaultButtonSkinTo(this.requirementModeButton);
+        UIBase.applyDefaultWidgetSkinTo(this.requirementModeButton);
 
         this.setDescription(this.instance.requirement);
 

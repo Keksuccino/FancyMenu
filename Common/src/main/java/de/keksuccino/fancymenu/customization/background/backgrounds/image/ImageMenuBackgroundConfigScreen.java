@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
@@ -57,7 +57,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
             Minecraft.getInstance().setScreen(s);
         });
         this.addWidget(this.chooseImageButton);
-        UIBase.applyDefaultButtonSkinTo(this.chooseImageButton);
+        UIBase.applyDefaultWidgetSkinTo(this.chooseImageButton);
 
         this.toggleSlideButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
             this.background.slideLeftRight = !this.background.slideLeftRight;
@@ -73,7 +73,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
             }
         };
         this.addWidget(this.toggleSlideButton);
-        UIBase.applyDefaultButtonSkinTo(this.toggleSlideButton);
+        UIBase.applyDefaultWidgetSkinTo(this.toggleSlideButton);
 
         this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
@@ -89,13 +89,13 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
             }
         };
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
     }
 

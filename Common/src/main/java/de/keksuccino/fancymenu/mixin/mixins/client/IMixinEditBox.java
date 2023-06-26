@@ -14,6 +14,8 @@ import java.util.function.BiFunction;
 @Mixin(EditBox.class)
 public interface IMixinEditBox {
 
+    @Accessor("isEditable") boolean getIsEditableFancyMenu();
+
     @Accessor("displayPos") int getDisplayPosFancyMenu();
 
     @Accessor("displayPos") void setDisplayPosFancyMenu(int displayPos);

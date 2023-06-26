@@ -12,12 +12,14 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -31,22 +33,40 @@ public class UIBase extends GuiComponent {
 	public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
 
 	/**
-	 * Applies the default skin to the input button and returns it.
-	 *
-	 * @return The input button.
+	 * Applies the default UI skin to the given widget and returns it.
 	 */
-	public static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
+	@SuppressWarnings("all")
+	public static <T extends GuiEventListener> T applyDefaultWidgetSkinTo(T widget) {
+		if (widget instanceof AdvancedButton a) {
+			return (T) applyDefaultButtonSkinTo(a);
+		}
+		if (widget instanceof ExtendedButton e) {
+			return (T) applyDefaultButtonSkinTo(e);
+		}
+		if (widget instanceof ExtendedEditBox e) {
+			return (T) applyDefaultEditBoxSkinTo(e);
+		}
+		return widget;
+	}
+
+	private static ExtendedEditBox applyDefaultEditBoxSkinTo(ExtendedEditBox editBox) {
+		UIColorTheme theme = UIBase.getUIColorScheme();
+		editBox.setTextColor(theme.edit_box_text_color_normal);
+		editBox.setTextColorUneditable(theme.edit_box_text_color_uneditable);
+		editBox.setBackgroundColor(theme.edit_box_background_color);
+		editBox.setBorderNormalColor(theme.edit_box_border_color_normal);
+		editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
+		editBox.setTextShadow(false);
+		return editBox;
+	}
+
+	private static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
 		UIColorTheme darkScheme = UIColorThemes.DARK;
 		button.setBackgroundColor(darkScheme.element_background_color_normal.getColor(), darkScheme.element_background_color_hover.getColor(), darkScheme.element_border_color_normal.getColor(), darkScheme.element_border_color_hover.getColor(), ELEMENT_BORDER_THICKNESS);
 		return button;
 	}
 
-	/**
-	 * Applies the default skin to the input button and returns it.
-	 *
-	 * @return The input button.
-	 */
-	public static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
+	private static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
 		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_background_color_hover, UIBase.getUIColorScheme().element_border_color_normal, UIBase.getUIColorScheme().element_border_color_hover, ELEMENT_BORDER_THICKNESS));
 		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().element_label_color_normal);
 		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().element_label_color_inactive);
@@ -114,18 +134,26 @@ public class UIBase extends GuiComponent {
 		fill(matrix, x, y, x + 4, y + 4, color.getRGB());
 	}
 
+	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+		renderBorder(matrix, xMin, yMin, xMax, yMax, borderThickness, borderColor.getColorInt(), renderTop, renderLeft, renderRight, renderBottom);
+	}
+
 	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+		renderBorder(matrix, xMin, yMin, xMax, yMax, borderThickness, borderColor.getRGB(), renderTop, renderLeft, renderRight, renderBottom);
+	}
+
+	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		if (renderTop) {
-			fill(matrix, xMin, yMin, xMax, yMin + borderThickness, borderColor.getRGB());
+			fill(matrix, xMin, yMin, xMax, yMin + borderThickness, borderColor);
 		}
 		if (renderLeft) {
-			fill(matrix, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor.getRGB());
+			fill(matrix, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor);
 		}
 		if (renderRight) {
-			fill(matrix, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor.getRGB());
+			fill(matrix, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor);
 		}
 		if (renderBottom) {
-			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor.getRGB());
+			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor);
 		}
 	}
 

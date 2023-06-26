@@ -93,14 +93,14 @@ public class NotificationScreen extends Screen {
             this.callback.accept(true);
         });
         this.addWidget(this.okayButton);
-        UIBase.applyDefaultButtonSkinTo(this.okayButton);
+        UIBase.applyDefaultWidgetSkinTo(this.okayButton);
 
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color_darker.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
 
         int y = (this.height / 2) - ((this.textLines.size() * 14) / 2);
         int lineCounter = 0;
@@ -111,7 +111,7 @@ public class NotificationScreen extends Screen {
                 if (this.headlineBold) line.setStyle(line.getStyle().withBold(true));
             }
             int textWidth = this.font.width(line);
-            drawString(pose, this.font, line, (this.width / 2) - (textWidth / 2), y, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+            this.font.draw(pose, line, (int)((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
             y += 14;
             lineCounter++;
         }

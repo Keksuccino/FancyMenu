@@ -16,7 +16,7 @@ public class OverlayButton extends AdvancedButton {
 		this.ignoreLeftMouseDownClickBlock = true;
 		this.enableRightclick = true;
 		this.setLabelShadow(false);
-		UIBase.applyDefaultButtonSkinTo(this);
+		UIBase.applyDefaultWidgetSkinTo(this);
 	}
 
 	@Deprecated
@@ -31,7 +31,7 @@ public class OverlayButton extends AdvancedButton {
 		this.ignoreLeftMouseDownClickBlock = true;
 		this.enableRightclick = true;
 		this.setLabelShadow(false);
-		UIBase.applyDefaultButtonSkinTo(this);
+		UIBase.applyDefaultWidgetSkinTo(this);
 	}
 
 	@Deprecated

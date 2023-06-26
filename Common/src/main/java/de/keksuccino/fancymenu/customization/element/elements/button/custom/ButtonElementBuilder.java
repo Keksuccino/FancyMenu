@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
+import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ActionExecutor;
@@ -29,8 +30,10 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.height = 20;
         element.label = "New Button";
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
-            for (ActionExecutor.ActionContainer c : element.getActionList()) {
-                c.execute();
+            if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
+                for (ActionExecutor.ActionContainer c : element.getActionList()) {
+                    c.execute();
+                }
             }
         });
         return element;

@@ -2,9 +2,7 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.SaveFileScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.SaveFileScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -22,9 +20,9 @@ public class Test {
     @EventListener(priority = -2000)
     public void onInit(InitOrResizeScreenEvent.Post e) {
 
-        if (!(e.getScreen() instanceof TitleScreen)) return;
-
-//        Button b = new Button(30, 30, 100, 20, Component.literal("open save screen"), (button) -> {
+//        if (!(e.getScreen() instanceof TitleScreen)) return;
+//
+//        e.addRenderableWidget(Button.builder(Component.literal("open save screen"), (button) -> {
 //            LOGGER.info("################## CLICK");
 //            Minecraft.getInstance().setScreen(SaveFileScreen.build(FancyMenu.getGameDirectory(), null, "txt", (call) -> {
 //                LOGGER.info("################ CLICK CALLBACK");
@@ -39,27 +37,7 @@ public class Test {
 //                }
 //                Minecraft.getInstance().setScreen(e.getScreen());
 //            }));
-//        }, var1 -> Component.empty());
-
-        //TODO fixen: click not working for whatever frickin reason
-        //TODO fixen: click not working for whatever frickin reason
-        //TODO fixen: click not working for whatever frickin reason
-        e.addRenderableWidget(Button.builder(Component.literal("open save screen"), (button) -> {
-            LOGGER.info("################## CLICK");
-            Minecraft.getInstance().setScreen(SaveFileScreen.build(FancyMenu.getGameDirectory(), null, "txt", (call) -> {
-                LOGGER.info("################ CLICK CALLBACK");
-                if (call != null) {
-                    try {
-                        if (call.isFile()) call.delete();
-                        call.createNewFile();
-                        LogManager.getLogger().info("FILE SAVED AS: " + call.getPath());
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
-                Minecraft.getInstance().setScreen(e.getScreen());
-            }));
-        }).size(100, 20).pos(30, 30).build());
+//        }).size(100, 20).pos(30, 30).build());
 
     }
 

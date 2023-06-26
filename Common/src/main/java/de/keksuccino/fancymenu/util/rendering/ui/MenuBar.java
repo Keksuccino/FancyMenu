@@ -298,7 +298,7 @@ public class MenuBar extends UIBase {
 							}
 							b.x = xl;
 							b.y = 0;
-							applyDefaultButtonSkinTo(b);
+							applyDefaultWidgetSkinTo(b);
 							b.render(matrix, mouseX, mouseY, partialTicks);
 							xl += b.getWidth() + this.elementSpace;
 						}
@@ -316,7 +316,7 @@ public class MenuBar extends UIBase {
 							xr -= b.getWidth();
 							b.x = xr;
 							b.y = 0;
-							applyDefaultButtonSkinTo(b);
+							applyDefaultWidgetSkinTo(b);
 							b.render(matrix, mouseX, mouseY, partialTicks);
 							xr -= this.elementSpace;
 						}
@@ -330,7 +330,7 @@ public class MenuBar extends UIBase {
 						((IMixinAbstractWidget)right).setHeightFancyMenu(this.height);
 						right.x = (int) ((width / this.getScale()) - right.getWidth());
 						right.y = 0;
-						applyDefaultButtonSkinTo(right);
+						applyDefaultWidgetSkinTo(right);
 						right.render(matrix, mouseX, mouseY, partialTicks);
 
 					}

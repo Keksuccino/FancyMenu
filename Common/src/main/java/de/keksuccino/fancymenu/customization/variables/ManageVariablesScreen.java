@@ -62,7 +62,7 @@ public class ManageVariablesScreen extends Screen {
             Minecraft.getInstance().setScreen(s);
         });
         this.addWidget(this.addVariableButton);
-        UIBase.applyDefaultButtonSkinTo(this.addVariableButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addVariableButton);
 
         this.setValueButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
@@ -78,7 +78,7 @@ public class ManageVariablesScreen extends Screen {
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.setValueButton);
-        UIBase.applyDefaultButtonSkinTo(this.setValueButton);
+        UIBase.applyDefaultWidgetSkinTo(this.setValueButton);
 
         this.deleteVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
@@ -93,7 +93,7 @@ public class ManageVariablesScreen extends Screen {
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.deleteVariableButton);
-        UIBase.applyDefaultButtonSkinTo(this.deleteVariableButton);
+        UIBase.applyDefaultWidgetSkinTo(this.deleteVariableButton);
 
         LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> resetOnLaunchDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch", false);
         this.toggleResetOnLaunchButton = new ExtendedButton(0, 0, 220, 20, Component.empty(), (button) -> {
@@ -112,13 +112,13 @@ public class ManageVariablesScreen extends Screen {
                     return resetOnLaunchDisabled.getCycleComponent();
                 });
         this.addWidget(this.toggleResetOnLaunchButton);
-        UIBase.applyDefaultButtonSkinTo(this.toggleResetOnLaunchButton);
+        UIBase.applyDefaultWidgetSkinTo(this.toggleResetOnLaunchButton);
 
         this.doneButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
     }
 

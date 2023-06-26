@@ -31,6 +31,9 @@ public class UIColorTheme {
     public DrawableColor element_background_color_normal = DrawableColor.of(new Color(71, 71, 71));
     public DrawableColor element_background_color_hover = DrawableColor.of(new Color(83, 156, 212));
     public DrawableColor area_background_color = DrawableColor.of(new Color(43, 43, 43));
+    public DrawableColor edit_box_background_color = DrawableColor.of(new Color(43, 43, 43));
+    public DrawableColor edit_box_border_color_normal = DrawableColor.of(new Color(209, 194, 209));
+    public DrawableColor edit_box_border_color_focused = DrawableColor.of(new Color(227, 211, 227));
     public DrawableColor list_entry_color_selected_hovered = DrawableColor.of(new Color(50, 50, 50));
     public DrawableColor text_editor_sidebar_color = DrawableColor.of(new Color(49, 51, 53));
     public DrawableColor text_editor_line_number_text_color_normal = DrawableColor.of(new Color(91, 92, 94));
@@ -46,8 +49,10 @@ public class UIColorTheme {
 
     public DrawableColor generic_text_base_color = DrawableColor.of(new Color(255, 255, 255));
     public DrawableColor element_label_color_normal = DrawableColor.of(new Color(206, 221, 237));
-    public DrawableColor element_label_color_inactive = DrawableColor.of(new Color(137, 147, 150));
-    public DrawableColor description_area_text_color = DrawableColor.of(new Color(158, 170, 184));
+    public DrawableColor element_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
+    public DrawableColor edit_box_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
+    public DrawableColor edit_box_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
+    public DrawableColor description_area_text_color = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor text_editor_text_color = DrawableColor.of(new Color(158, 170, 184));
     public DrawableColor success_text_color = DrawableColor.of(new Color(49, 206, 5));
     public DrawableColor error_text_color = DrawableColor.of(new Color(237, 69, 69));

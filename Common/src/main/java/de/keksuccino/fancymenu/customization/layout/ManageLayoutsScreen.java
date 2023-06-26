@@ -61,13 +61,13 @@ public class ManageLayoutsScreen extends Screen {
             this.updateLayoutScrollArea();
         }).setLabelSupplier(consumes -> this.sortBy.current().getCycleComponent());
         this.addWidget(this.sortingButton);
-        UIBase.applyDefaultButtonSkinTo(this.sortingButton);
+        UIBase.applyDefaultWidgetSkinTo(this.sortingButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.layouts);
         });
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.edit"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
@@ -76,7 +76,7 @@ public class ManageLayoutsScreen extends Screen {
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.editButton);
-        UIBase.applyDefaultButtonSkinTo(this.editButton);
+        UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
         this.deleteButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.delete"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
@@ -92,7 +92,7 @@ public class ManageLayoutsScreen extends Screen {
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.deleteButton);
-        UIBase.applyDefaultButtonSkinTo(this.deleteButton);
+        UIBase.applyDefaultWidgetSkinTo(this.deleteButton);
 
         this.openInTextEditorButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
@@ -101,7 +101,7 @@ public class ManageLayoutsScreen extends Screen {
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.openInTextEditorButton);
-        UIBase.applyDefaultButtonSkinTo(this.openInTextEditorButton);
+        UIBase.applyDefaultWidgetSkinTo(this.openInTextEditorButton);
 
         this.toggleStatusButton = new ExtendedButton(0, 0, 150, 20, Component.literal(""), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
@@ -116,7 +116,7 @@ public class ManageLayoutsScreen extends Screen {
                     return Layout.LayoutStatus.DISABLED.getCycleComponent();
                 });
         this.addWidget(this.toggleStatusButton);
-        UIBase.applyDefaultButtonSkinTo(this.toggleStatusButton);
+        UIBase.applyDefaultWidgetSkinTo(this.toggleStatusButton);
 
     }
 

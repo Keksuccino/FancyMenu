@@ -1,13 +1,15 @@
-package de.keksuccino.fancymenu.util.rendering.ui.screen;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.text.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
@@ -60,6 +62,7 @@ public class SaveFileScreen extends Screen {
     @NotNull
     protected Consumer<File> callback;
     protected int visibleDirectoryLevelsAboveRoot = 0;
+    protected String defaultFileName;
 
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -100,18 +103,36 @@ public class SaveFileScreen extends Screen {
         this.updateTextPreview(null);
         this.updateFilesList();
 
-        this.fileNameEditBox = new ExtendedEditBox(this.font, 0, 0, 150, 20, Component.translatable("fancymenu.ui.save_file.file_name")) {
+        this.fileNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.translatable("fancymenu.ui.save_file.file_name")) {
             @Override
-            public boolean canConsumeInput() {
+            public boolean charTyped(char character, int modifiers) {
                 if (forcedFileExtension != null) {
                     if (this.getCursorPosition() >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
                         return false;
                     }
                 }
-                return super.canConsumeInput();
+                return super.charTyped(character, modifiers);
             }
-        };
+            @Override
+            public boolean keyPressed(int keycode, int scancode, int $$2) {
+                if (isSelectAll(keycode)) return false;
+                if (forcedFileExtension != null) {
+                    if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
+                        if ((keycode != InputConstants.KEY_LEFT) && (keycode != InputConstants.KEY_RIGHT) && (keycode != InputConstants.KEY_UP) && (keycode != InputConstants.KEY_DOWN)) {
+                            return false;
+                        }
+                    }
+                }
+                return super.keyPressed(keycode, scancode, $$2);
+            }
+        }.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
+            if (characterIndex >= Math.max(0, (editBox.getValue().length() - forcedFileExtension.length())-1)) {
+                component.withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().edit_box_text_color_uneditable.getColorInt()));
+            }
+            return component;
+        });
         this.fileNameEditBox.setMaxLength(10000);
+        UIBase.applyDefaultWidgetSkinTo(this.fileNameEditBox);
 
         String editBoxPresetValue = "new_file";
         if (fileNamePreset != null) {
@@ -124,6 +145,7 @@ public class SaveFileScreen extends Screen {
             editBoxPresetValue += "." + this.forcedFileExtension;
         }
         this.fileNameEditBox.setValue(editBoxPresetValue);
+        this.defaultFileName = editBoxPresetValue;
 
     }
 
@@ -133,23 +155,7 @@ public class SaveFileScreen extends Screen {
         this.addWidget(this.fileNameEditBox);
 
         this.saveButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.save_file.save"), (button) -> {
-            File f = this.getSaveFile();
-            if (f != null) {
-                if (!f.isFile()) {
-                    this.callback.accept(new File(f.getPath().replace("\\", "/")));
-                } else {
-                    Minecraft.getInstance().setScreen(ConfirmationScreen.warning((call) -> {
-                        Minecraft.getInstance().setScreen(this);
-                        if (call) {
-                            try {
-                                this.callback.accept(new File(f.getPath().replace("\\", "/")));
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }, LocalizationUtils.splitLocalizedLines("fancymenu.ui.save_file.save.override_warning")));
-                }
-            }
+            this.trySave();
         }) {
             @Override
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -159,13 +165,13 @@ public class SaveFileScreen extends Screen {
             }
         };
         this.addWidget(this.saveButton);
-        UIBase.applyDefaultButtonSkinTo(this.saveButton);
+        UIBase.applyDefaultWidgetSkinTo(this.saveButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.updateCurrentDirectoryComponent();
 
@@ -183,6 +189,10 @@ public class SaveFileScreen extends Screen {
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        if ((this.forcedFileExtension != null) && !this.fileNameEditBox.getValue().toLowerCase().endsWith("." + this.forcedFileExtension.toLowerCase())) {
+            this.fileNameEditBox.setValue(this.defaultFileName);
+        }
 
         RenderSystem.enableBlend();
 
@@ -205,8 +215,8 @@ public class SaveFileScreen extends Screen {
         int previewLabelWidth = this.font.width(previewLabel);
         this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
-        this.fileNameEditBox.setWidth(this.fileListScrollArea.getWidthWithBorder());
-        this.fileNameEditBox.setX(20);
+        this.fileNameEditBox.setWidth(this.fileListScrollArea.getWidthWithBorder() - 2);
+        this.fileNameEditBox.setX(21);
         this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5);
         this.fileNameEditBox.render(pose, mouseX, mouseY, partial);
 
@@ -247,12 +257,32 @@ public class SaveFileScreen extends Screen {
     protected int renderCurrentDirectoryField(PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        fill(pose, x + 1, y + 1, xEnd - 2, yEnd - 2, UIBase.getUIColorScheme().area_background_color.getColorInt());
+        fill(pose, x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorScheme().area_background_color.getColorInt());
         UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorScheme().element_border_color_normal.getColor(), true, true, true, true);
         this.currentDirectoryComponent.x = x + 4;
         this.currentDirectoryComponent.y = y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2);
         this.currentDirectoryComponent.render(pose, mouseX, mouseY, partial);
         return yEnd;
+    }
+
+    protected void trySave() {
+        File f = this.getSaveFile();
+        if (f != null) {
+            if (!f.isFile()) {
+                this.callback.accept(new File(f.getPath().replace("\\", "/")));
+            } else {
+                Minecraft.getInstance().setScreen(ConfirmationScreen.warning((call) -> {
+                    Minecraft.getInstance().setScreen(this);
+                    if (call) {
+                        try {
+                            this.callback.accept(new File(f.getPath().replace("\\", "/")));
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }, LocalizationUtils.splitLocalizedLines("fancymenu.ui.save_file.save.override_warning")));
+            }
+        }
     }
 
     protected boolean canSave() {
@@ -509,17 +539,27 @@ public class SaveFileScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int button, int $$1, int $$2) {
+    public boolean keyPressed(int keycode, int scancode, int $$2) {
 
-        if (button == InputConstants.KEY_ENTER) {
-            SaveFileScrollAreaEntry selected = this.getSelectedEntry();
-            if (selected != null) {
-                this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));
-                return true;
+        String key = InputUtils.getKeyName(keycode, scancode);
+
+        if (key.equals("a") && hasControlDown() && this.fileNameEditBox.isFocused()) {
+            this.fileNameEditBox.setHighlightPos(0);
+            int cursorPos = this.fileNameEditBox.getValue().length();
+            if (this.forcedFileExtension != null) {
+                cursorPos = Math.max(0, this.fileNameEditBox.getValue().length() - (this.forcedFileExtension.length() + 1));
             }
+            this.fileNameEditBox.setCursorPosition(cursorPos);
+            if (this.forcedFileExtension != null)
+            return true;
         }
 
-        return super.keyPressed(button, $$1, $$2);
+        if (keycode == InputConstants.KEY_ENTER) {
+            this.trySave();
+            return true;
+        }
+
+        return super.keyPressed(keycode, scancode, $$2);
 
     }
 
@@ -585,13 +625,12 @@ public class SaveFileScreen extends Screen {
         public void onClick(ScrollAreaEntry entry) {
             long now = System.currentTimeMillis();
             if ((now - this.lastClick) < 400) {
-                if (this.file.isFile()) {
-                    SaveFileScreen.this.callback.accept(new File(this.file.getPath().replace("\\", "/")));
-                } else if (this.file.isDirectory()) {
+                if (this.file.isDirectory()) {
                     SaveFileScreen.this.setDirectory(this.file, true);
                 }
             }
             if (this.file.isFile()) {
+                SaveFileScreen.this.fileNameEditBox.setValue(this.file.getName());
                 SaveFileScreen.this.updateTextPreview(this.file);
                 if (FileChooserScreen.IMAGE_FILE_FILTER.checkFile(this.file)) {
                     SaveFileScreen.this.previewTexture = TextureHandler.INSTANCE.getTexture(this.file);

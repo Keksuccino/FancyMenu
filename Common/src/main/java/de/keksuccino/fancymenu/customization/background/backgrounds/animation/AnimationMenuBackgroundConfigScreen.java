@@ -54,7 +54,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
             Minecraft.getInstance().setScreen(s);
         });
         this.addWidget(this.chooseAnimationButton);
-        UIBase.applyDefaultButtonSkinTo(this.chooseAnimationButton);
+        UIBase.applyDefaultWidgetSkinTo(this.chooseAnimationButton);
 
         this.toggleRestartOnLoadButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
             this.background.restartOnMenuLoad = !this.background.restartOnMenuLoad;
@@ -70,7 +70,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
             }
         };
         this.addWidget(this.toggleRestartOnLoadButton);
-        UIBase.applyDefaultButtonSkinTo(this.toggleRestartOnLoadButton);
+        UIBase.applyDefaultWidgetSkinTo(this.toggleRestartOnLoadButton);
 
         this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
@@ -86,13 +86,13 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
             }
         };
         this.addWidget(this.doneButton);
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
     }
 

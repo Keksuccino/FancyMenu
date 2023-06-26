@@ -82,12 +82,12 @@ public class PlayerEntityRotationScreen extends Screen {
         this.doneButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (press) -> {
             this.applyChanges();
         });
-        UIBase.applyDefaultButtonSkinTo(this.doneButton);
+        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         this.cancelButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), true, (press) -> {
             this.onClose();
         });
-        UIBase.applyDefaultButtonSkinTo(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
     }
 

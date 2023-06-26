@@ -9,14 +9,12 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
 public class CustomizationOverlay {
 
 	private static MenuBar overlayMenuBar;
-
-	private static long lastToggleOverlayKeyPress = -1;
-	private static int toggleOverlayKeyPressCounter = 0;
 	
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
@@ -51,19 +49,10 @@ public class CustomizationOverlay {
 
 		String keyName = e.getKeyName();
 
-		//Toggle Customization Overlay
-		if (keyName.equals("c")) {
-			long now = System.currentTimeMillis();
-			if ((lastToggleOverlayKeyPress + 500) < now) {
-				toggleOverlayKeyPressCounter = 0;
-			}
-			lastToggleOverlayKeyPress = now;
-			toggleOverlayKeyPressCounter++;
-			if (toggleOverlayKeyPressCounter >= 4) {
-				toggleOverlayKeyPressCounter = 0;
-				FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
-				ScreenCustomization.reInitCurrentScreen();
-			}
+		//Toggle Menu Bar
+		if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
+			FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
+			ScreenCustomization.reInitCurrentScreen();
 		}
 
 		//TODO add CTRL + ALT + R --> Reload FancyMenu

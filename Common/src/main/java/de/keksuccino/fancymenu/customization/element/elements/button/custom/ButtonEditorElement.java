@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;

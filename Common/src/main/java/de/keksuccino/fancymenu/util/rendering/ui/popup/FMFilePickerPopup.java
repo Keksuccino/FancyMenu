@@ -27,7 +27,7 @@ public class FMFilePickerPopup extends FilePickerPopup {
 	
 	@Override
 	protected void colorizePopupButton(AdvancedButton b) {
-		UIBase.applyDefaultButtonSkinTo(b);
+		UIBase.applyDefaultWidgetSkinTo(b);
 	}
 
 }
