@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
@@ -47,7 +48,8 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
                         Minecraft.getInstance().keyboardHandler.setClipboard(((VanillaButtonElement)this.element).widgetMeta.getLocator());
                         menu.closeMenu();
                     })
-                    .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")));
+                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")))
+                    .setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
         }
 

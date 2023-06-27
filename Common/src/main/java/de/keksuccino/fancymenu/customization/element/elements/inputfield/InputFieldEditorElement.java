@@ -26,7 +26,7 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         consumes -> ((InputFieldElement)consumes.element).linkedVariable,
                         (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
                         false, false, Component.translatable("fancymenu.customization.items.input_field.editor.set_variable"))
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")));
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
 
@@ -47,7 +47,7 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                             }
                             return Component.translatable("fancymenu.customization.items.input_field.type.url");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_type.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_type.desc")));
 
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",

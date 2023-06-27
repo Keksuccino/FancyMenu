@@ -61,7 +61,7 @@ public class ChoosePanoramaScreen extends Screen {
             @Override
             public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.panorama.choose.no_panorama_selected")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.panorama.choose.no_panorama_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;

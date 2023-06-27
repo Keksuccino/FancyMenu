@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -35,8 +36,8 @@ public class Tooltip extends GuiComponent implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final Color DEFAULT_BACKGROUND_COLOR = new Color(26, 26, 26, 250);
-    public static final Color DEFAULT_BORDER_COLOR = new Color(197, 197, 197, 250);
+    public static final DrawableColor DEFAULT_BACKGROUND_COLOR = DrawableColor.of(new Color(26, 26, 26, 250));
+    public static final DrawableColor DEFAULT_BORDER_COLOR = DrawableColor.of(new Color(197, 197, 197, 250));
 
     protected Font font = Minecraft.getInstance().font;
     protected List<Component> textLines = new ArrayList<>();
@@ -49,22 +50,22 @@ public class Tooltip extends GuiComponent implements Renderable {
     protected int textBorderSize = 5;
     protected int mouseOffset = 12;
     protected WrappedTexture backgroundTexture = null;
-    protected Color backgroundColor = null;
-    protected Color borderColor = null;
+    protected DrawableColor backgroundColor = null;
+    protected DrawableColor borderColor = null;
     protected boolean vanillaLike = true;
     protected boolean keepBackgroundAspectRatio = true;
     protected boolean textShadow = true;
     protected TooltipTextAlignment textAlignment = TooltipTextAlignment.LEFT;
-    protected Color textBaseColor = null;
+    protected DrawableColor textBaseColor = null;
     protected Float scale = null;
 
     @NotNull
-    public static Tooltip create() {
+    public static Tooltip empty() {
         return new Tooltip();
     }
 
     @NotNull
-    public static Tooltip create(String... tooltip) {
+    public static Tooltip of(String... tooltip) {
         Tooltip t = new Tooltip();
         if (tooltip != null) {
             t.setTooltipText(tooltip);
@@ -73,7 +74,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     @NotNull
-    public static Tooltip create(Component... tooltip) {
+    public static Tooltip of(Component... tooltip) {
         Tooltip t = new Tooltip();
         if (tooltip != null) {
             t.setTooltipText(tooltip);
@@ -129,9 +130,9 @@ public class Tooltip extends GuiComponent implements Renderable {
                 x2 = x + Math.max(0, (this.getWidth() / 2) - (w / 2));
             }
             if (this.hasTextShadow()) {
-                this.font.drawShadow(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getRGB() : -1);
+                this.font.drawShadow(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1);
             } else {
-                this.font.draw(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getRGB() : -1);
+                this.font.draw(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1);
             }
             yLine += this.font.lineHeight + 2;
         }
@@ -146,17 +147,17 @@ public class Tooltip extends GuiComponent implements Renderable {
         } else {
             if (this.borderColor != null) {
                 //BACKGROUND
-                fill(pose, x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getRGB());
+                fill(pose, x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
                 //TOP
-                fill(pose, x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getRGB());
+                fill(pose, x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
                 //BOTTOM
-                fill(pose, x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getRGB());
+                fill(pose, x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //LEFT
-                fill(pose, x, y, x + 1, y + this.getHeight(), this.borderColor.getRGB());
+                fill(pose, x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //RIGHT
-                fill(pose, x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getRGB());
+                fill(pose, x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
             } else {
-                fill(pose, x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getRGB());
+                fill(pose, x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
             }
         }
     }
@@ -333,7 +334,7 @@ public class Tooltip extends GuiComponent implements Renderable {
         return backgroundTexture;
     }
 
-    public Tooltip setBackgroundColor(@NotNull Color backgroundColor, @Nullable Color borderColor) {
+    public Tooltip setBackgroundColor(@NotNull DrawableColor backgroundColor, @Nullable DrawableColor borderColor) {
         this.backgroundColor = backgroundColor;
         this.borderColor = borderColor;
         this.backgroundTexture = null;
@@ -346,12 +347,12 @@ public class Tooltip extends GuiComponent implements Renderable {
     }
 
     @Nullable
-    public Color getBackgroundColor() {
+    public DrawableColor getBackgroundColor() {
         return this.backgroundColor;
     }
 
     @Nullable
-    public Color getBorderColor() {
+    public DrawableColor getBorderColor() {
         return this.borderColor;
     }
 
@@ -393,13 +394,13 @@ public class Tooltip extends GuiComponent implements Renderable {
         return textAlignment;
     }
 
-    public Tooltip setTextBaseColor(@Nullable Color textBaseColor) {
+    public Tooltip setTextBaseColor(@Nullable DrawableColor textBaseColor) {
         this.textBaseColor = textBaseColor;
         return this;
     }
 
     @Nullable
-    public Color getTextBaseColor() {
+    public DrawableColor getTextBaseColor() {
         return textBaseColor;
     }
 

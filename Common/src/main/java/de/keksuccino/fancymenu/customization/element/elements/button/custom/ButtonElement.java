@@ -111,7 +111,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     protected void tick() {
         if ((this.tooltip != null) && (this.getButton() != null) && this.getButton().isHoveredOrFocused() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.create(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
         if ((this.label != null) && (this.getButton() != null)) {
             this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.label)));

@@ -119,7 +119,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((SplashTextElement)element1.element).refreshOnMenuReload = s,
                         "fancymenu.editor.items.splash.refresh")
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.splash.refresh.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.splash.refresh.desc")));
 
     }
 

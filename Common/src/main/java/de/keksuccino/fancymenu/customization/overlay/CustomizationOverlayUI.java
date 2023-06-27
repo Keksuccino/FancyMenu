@@ -76,7 +76,7 @@ public class CustomizationOverlayUI {
         }).setIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!FancyMenu.getOptions().advancedCustomizationMode.getValue()) {
-                        return Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.current_override.disabled.tooltip"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.current_override.disabled.tooltip"));
                     }
                     return null;
                 });
@@ -89,7 +89,7 @@ public class CustomizationOverlayUI {
         screenSettingsMenu.addValueCycleEntry("advanced_customization_mode", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode", FancyMenu.getOptions().advancedCustomizationMode.getValue())
                 .addCycleListener(cycle -> {
                     FancyMenu.getOptions().advancedCustomizationMode.setValue(cycle.getAsBoolean());
-                })).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode.tooltip")));
+                })).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode.tooltip")));
 
         screenSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
 
@@ -107,7 +107,7 @@ public class CustomizationOverlayUI {
            });
            s.setText("" + FancyMenu.getOptions().defaultGuiScale.getValue());
            Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale.tooltip")));
 
         screenSettingsMenu.addValueCycleEntry("force_fullscreen", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.force_fullscreen", FancyMenu.getOptions().forceFullscreen.getValue())
                 .addCycleListener(cycle -> {
@@ -141,7 +141,7 @@ public class CustomizationOverlayUI {
            });
            s.setText(FancyMenu.getOptions().customGameIntroSkipText.getValue());
            Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip")));
 
         screenSettingsMenu.addValueCycleEntry("preload_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.preload_animations", FancyMenu.getOptions().preLoadAnimations.getValue())
                 .addCycleListener(cycle -> {
@@ -193,7 +193,7 @@ public class CustomizationOverlayUI {
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm")));
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.tooltip")));
 
         screenMenu.addSeparatorEntry("separator_before_hide_menu_bar");
 
@@ -220,7 +220,7 @@ public class CustomizationOverlayUI {
         }).setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
                 .setTooltipSupplier((menu, entry) -> {
                     if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
-                        return Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.layout.new.current.disabled.tooltip"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.layout.new.current.disabled.tooltip"));
                     }
                     return null;
                 });
@@ -237,7 +237,7 @@ public class CustomizationOverlayUI {
                 .setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
                 .setTooltipSupplier((menu, entry) -> {
                     if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
-                        return Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.layout.manage.current.disabled.tooltip"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.layout.manage.current.disabled.tooltip"));
                     }
                     return null;
                 });
@@ -313,7 +313,7 @@ public class CustomizationOverlayUI {
                 Minecraft.getInstance().keyboardHandler.setClipboard(identifier);
                 menu.closeMenu();
             }
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier.tooltip")));
 
         // WINDOW
         ContextMenu windowMenu = new ContextMenu();
@@ -334,7 +334,7 @@ public class CustomizationOverlayUI {
             });
             s.setText(FancyMenu.getOptions().customWindowTitle.getValue());
             Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.window.custom_window_title.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.window.custom_window_title.tooltip")));
 
         windowMenu.addSeparatorEntry("separator_3");
 
@@ -375,11 +375,11 @@ public class CustomizationOverlayUI {
 
         helpMenu.addClickableEntry("fancymenu_wiki", Component.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
             WebUtils.openWebLink("https://fm.keksuccino.dev");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")));
 
         helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
             WebUtils.openWebLink("https://discord.gg/UzmeWkD");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")));
 
         helpMenu.addClickableEntry("report_issue", Component.translatable("fancymenu.overlay.menu_bar.help.report_issue"), (menu, entry) -> {
             WebUtils.openWebLink("https://github.com/Keksuccino/FancyMenu/issues");
@@ -389,7 +389,7 @@ public class CustomizationOverlayUI {
 
         helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
 
         helpMenu.addSeparatorEntry("separator_after_curseforge");
 

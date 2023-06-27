@@ -44,7 +44,7 @@ public class ExtendedButton extends Button {
     protected boolean labelShadow = true;
     @NotNull
     protected ConsumingSupplier<ExtendedButton, Component> labelSupplier;
-    protected Tooltip tooltip = null;
+    protected ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier = null;
     protected boolean forceDefaultTooltipStyle = false;
     @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
@@ -75,11 +75,12 @@ public class ExtendedButton extends Button {
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
         this.updateLabel();
-        if ((this.tooltip != null) && this.isHovered() && this.isActive() && this.visible) {
+        Tooltip tooltip = this.getTooltip();
+        if ((tooltip != null) && this.isHovered() && this.visible) {
             if (this.forceDefaultTooltipStyle) {
-                this.tooltip.setDefaultBackgroundColor();
+                tooltip.setDefaultBackgroundColor();
             }
-            TooltipHandler.INSTANCE.addTooltip(this.tooltip, () -> true, false, true);
+            TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
         }
         this.handleHover();
         super.render(pose, mouseX, mouseY, partial);
@@ -169,12 +170,30 @@ public class ExtendedButton extends Button {
         return 46 + i * 20;
     }
 
+    @Nullable
+    public ConsumingSupplier<ExtendedButton, Tooltip> getTooltipSupplier() {
+        return this.tooltipSupplier;
+    }
+
+    public ExtendedButton setTooltipSupplier(@Nullable ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier) {
+        this.tooltipSupplier = tooltipSupplier;
+        return this;
+    }
+
+    @Nullable
     public Tooltip getTooltip() {
-        return this.tooltip;
+        if (this.tooltipSupplier != null) {
+            return this.tooltipSupplier.get(this);
+        }
+        return null;
     }
 
     public ExtendedButton setTooltip(@Nullable Tooltip tooltip) {
-        this.tooltip = tooltip;
+        if (tooltip == null) {
+            this.tooltipSupplier = null;
+        } else {
+            this.tooltipSupplier = (button) -> tooltip;
+        }
         return this;
     }
 
@@ -182,8 +201,9 @@ public class ExtendedButton extends Button {
         return this.forceDefaultTooltipStyle;
     }
 
-    public void setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
+    public ExtendedButton setForceDefaultTooltipStyle(boolean forceDefaultTooltipStyle) {
         this.forceDefaultTooltipStyle = forceDefaultTooltipStyle;
+        return this;
     }
 
     @Deprecated
@@ -241,8 +261,9 @@ public class ExtendedButton extends Button {
         return this.labelShadow;
     }
 
-    public void setLabelShadowEnabled(boolean enabled) {
+    public ExtendedButton setLabelShadowEnabled(boolean enabled) {
         this.labelShadow = enabled;
+        return this;
     }
 
     public ExtendedButton setIsActiveSupplier(@Nullable ConsumingSupplier<ExtendedButton, Boolean> isActiveSupplier) {

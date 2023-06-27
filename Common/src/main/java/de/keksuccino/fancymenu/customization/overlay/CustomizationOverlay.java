@@ -47,15 +47,22 @@ public class CustomizationOverlay {
 	@EventListener
 	public void onScreenKeyPressed(KeyPressedScreenEvent e) {
 
-		String keyName = e.getKeyName();
+		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
 
-		//Toggle Menu Bar
-		if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
-			FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
-			ScreenCustomization.reInitCurrentScreen();
+			String keyName = e.getKeyName();
+
+			//Toggle Menu Bar
+			if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
+				ScreenCustomization.reInitCurrentScreen();
+			}
+
+			//Reload FancyMenu
+			if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
+				ScreenCustomization.reloadFancyMenu();
+			}
+
 		}
-
-		//TODO add CTRL + ALT + R --> Reload FancyMenu
 
 	}
 

@@ -83,7 +83,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 this.active = ImageMenuBackgroundConfigScreen.this.background.imagePath != null;
                 if (!this.active) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen")).setDefaultBackgroundColor(), false, true);
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }

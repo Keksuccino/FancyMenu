@@ -52,7 +52,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 Minecraft.getInstance().setScreen(this.editor);
             });
             Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.button.manage_actions.desc")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.button.manage_actions.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
 
@@ -184,7 +185,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
                         false, true, Component.translatable("fancymenu.editor.items.button.editlabel"))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label", null,
                         consumes -> (consumes instanceof ButtonEditorElement),
@@ -192,7 +194,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
                         false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"))
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
 
@@ -203,7 +206,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((ButtonElement)element1.element).hoverSound = s,
                         Component.translatable("fancymenu.editor.items.button.hoversound"),
                         true, FileChooserScreen.WAV_AUDIO_FILE_FILTER)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_click_sound",
                         consumes -> (consumes instanceof ButtonEditorElement),
@@ -212,7 +216,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((ButtonElement)element1.element).clickSound = s,
                         Component.translatable("fancymenu.editor.items.button.clicksound"),
                         true, FileChooserScreen.WAV_AUDIO_FILE_FILTER)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("button_separator_4").setStackable(true);
 
@@ -232,7 +237,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         },
                         true, true, Component.translatable("fancymenu.editor.items.button.btndescription"))
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
     }
 

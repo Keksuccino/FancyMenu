@@ -46,7 +46,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             }
                             return Component.translatable("fancymenu.customization.items.text.source_mode.mode.direct");
                         })
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.source_mode.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.source_mode.desc")));
 
         this.rightClickMenu.addClickableEntry("set_source", Component.literal(""), (menu, entry) ->
                 {
@@ -89,12 +89,12 @@ public class TextEditorElement extends AbstractEditorElement {
                 })
                 .setTooltipSupplier((menu, entry) -> {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-                        return Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.local.desc"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.local.desc"));
                     }
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.WEB_SOURCE) {
-                        return Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.web.desc"));
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.web.desc"));
                     }
-                    return Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.direct.desc"));
+                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.set_source.direct.desc"));
                 })
                 .setLabelSupplier((menu, entry) -> {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
@@ -180,7 +180,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element.element).updateContent();
                         }, false, false, Component.translatable("fancymenu.customization.items.text.base_color"))
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -192,7 +192,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.customization.items.text.text_border"))
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.text_border.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.text_border.desc")));
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -250,7 +250,7 @@ public class TextEditorElement extends AbstractEditorElement {
         ContextMenu grabberColorMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.customization.items.text.scroll_grabber_color"), grabberTextureMenu)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.scroll_grabber_color.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.scroll_grabber_color.desc")));
 
         this.addStringInputContextMenuEntryTo(grabberColorMenu, "normal_grabber_color", null,
                         consumes -> (consumes instanceof TextEditorElement),

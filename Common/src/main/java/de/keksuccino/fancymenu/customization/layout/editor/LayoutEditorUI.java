@@ -195,7 +195,7 @@ public class LayoutEditorUI extends UIBase {
 				this.elementMenu.getContextMenu().addChild(hiddenVanillaMenu.getContextMenu());
 				hiddenVanillaMenu.getContextMenu().setParentButton(entry.getButton());
 				hiddenVanillaMenu.openMenu(0, entry.getButton().y);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.element.deleted_vanilla_elements.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.element.deleted_vanilla_elements.desc")));
 
 			// CLOSE GUI BUTTON TAB
 			AdvancedImageButton exitButton = new AdvancedImageButton(20, 20, 0, 0, CLOSE_BUTTON_TEXTURE, true, (press) -> {
@@ -223,7 +223,7 @@ public class LayoutEditorUI extends UIBase {
 				@Override
 				@SuppressWarnings("all")
 				public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-					TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.exit.desc")), false, true);
+					TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.exit.desc")), false, true);
 					this.width = this.height;
 					super.render(pose, mouseX, mouseY, partial);
 				}
@@ -335,7 +335,7 @@ public class LayoutEditorUI extends UIBase {
 						}
 					});
 					PopupHandler.displayPopup(p);
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
 				universalLayoutMenu.addClickableEntry("remove_blacklist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), null, Boolean.class, (entry, inherited, pass) -> {
 					ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.editor, this.editor.layout.universalLayoutMenuBlacklist, (call) -> {
@@ -374,7 +374,7 @@ public class LayoutEditorUI extends UIBase {
 						}
 						Minecraft.getInstance().setScreen(this.editor);
 					}));
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
 				universalLayoutMenu.addClickableEntry("remove_whitelist", false, Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), null, Boolean.class, (entry, inherited, pass) -> {
 					ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), this.editor, this.editor.layout.universalLayoutMenuWhitelist, (call) -> {
@@ -415,7 +415,7 @@ public class LayoutEditorUI extends UIBase {
 					Minecraft.getInstance().setScreen(this.editor);
 				});
 				Minecraft.getInstance().setScreen(s);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")));
 
 			// KEEP BACKGROUND ASPECT RATIO
 			menu.addClickableEntry("keep_background_aspect_ratio", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
@@ -460,7 +460,7 @@ public class LayoutEditorUI extends UIBase {
 						s.setText(defaultMenuTitleRaw);
 					}
 					Minecraft.getInstance().setScreen(s);
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")));
 
 				// RESET MENU TITLE
 				menu.addClickableEntry("reset_menu_title", false, Component.translatable("fancymenu.helper.editor.edit_menu_title.reset"), null, Boolean.class, (entry, inherited, pass) -> {
@@ -468,7 +468,7 @@ public class LayoutEditorUI extends UIBase {
 						this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					}
 					this.editor.layout.customMenuTitle = null;
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.desc")));
 
 			}
 
@@ -486,7 +486,7 @@ public class LayoutEditorUI extends UIBase {
 						e.setLabel(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.off"));
 					}
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")));
 
 			menu.addClickableEntry("random_mode_group", false, Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), null, Boolean.class, (entry, inherited, pass) -> {
 				FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
@@ -508,7 +508,7 @@ public class LayoutEditorUI extends UIBase {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
 					e.getButton().active = this.editor.layout.randomMode;
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc")));
 
 			menu.addClickableEntry("random_mode_first_time", false, Component.literal(""), null, Boolean.class, (entry, inherited, pass) -> {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
@@ -525,7 +525,7 @@ public class LayoutEditorUI extends UIBase {
 				if (entry instanceof AdvancedContextMenu.ClickableMenuEntry<?> e) {
 					e.getButton().active = this.editor.layout.randomMode;
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc")));
 
 			menu.addSeparatorEntry("separator_4", false);
 
@@ -541,7 +541,7 @@ public class LayoutEditorUI extends UIBase {
 						e.setLabel(Component.translatable("fancymenu.editor.render_custom_behind_vanilla.off"));
 					}
 				}
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.render_custom_behind_vanilla.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.render_custom_behind_vanilla.desc")));
 
 			menu.addSeparatorEntry("separator_5", false);
 
@@ -569,10 +569,10 @@ public class LayoutEditorUI extends UIBase {
 					}
 					if (this.editor.layout.forcedScale != 0) {
 						e.getButton().active = true;
-						e.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.btn.desc")));
+						e.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.btn.desc")));
 					} else {
 						e.getButton().active = false;
-						e.setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed")));
+						e.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed")));
 						e.setLabel(Component.translatable("fancymenu.helper.editor.properties.autoscale.off"));
 					}
 				}
@@ -599,7 +599,7 @@ public class LayoutEditorUI extends UIBase {
 				});
 				p.setText("" + this.editor.layout.forcedScale);
 				PopupHandler.displayPopup(p);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")));
 
 			menu.addSeparatorEntry("separator_6", false);
 
@@ -629,7 +629,7 @@ public class LayoutEditorUI extends UIBase {
 					p.setText(this.editor.layout.openAudio);
 				}
 				PopupHandler.displayPopup(p);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")));
 
 			// CLOSE-AUDIO
 			menu.addClickableEntry("close_audio", false, Component.translatable("fancymenu.editor.close_audio"), null, Boolean.class, (entry, inherited, pass) -> {
@@ -657,7 +657,7 @@ public class LayoutEditorUI extends UIBase {
 					p.setText(this.editor.layout.closeAudio);
 				}
 				PopupHandler.displayPopup(p);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")));
 
 			menu.addSeparatorEntry("separator_7", false);
 
@@ -666,7 +666,7 @@ public class LayoutEditorUI extends UIBase {
 				this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 				ManageRequirementsScreen s = new ManageRequirementsScreen(this.editor, this.editor.layout.layoutWideLoadingRequirementContainer, (call) -> {});
 				Minecraft.getInstance().setScreen(s);
-			}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")));
+			}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")));
 
 			menu.addSeparatorEntry("separator_8", false);
 
@@ -707,7 +707,7 @@ public class LayoutEditorUI extends UIBase {
 			if (!FancyMenu.isAudioExtensionLoaded()) {
 				menu.addClickableEntry("install_audio_extension", false, Component.translatable("fancymenu.editor.add.audio"), null, Boolean.class, (entry, inherited, pass) -> {
 					ActionExecutor.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.extension.dummy.audio.btn.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.extension.dummy.audio.btn.desc")));
 			}
 
 			// ADD ALL ELEMENT TYPES
@@ -718,7 +718,7 @@ public class LayoutEditorUI extends UIBase {
 					this.editor.normalEditorElements.add(builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), this.editor));
 					//TODO remove debug
 					LogManager.getLogger().info("ADDING NEW ELEMENT: " + builder.getIdentifier());
-				}).setTooltip((desc != null) ? Tooltip.create(desc) : null);
+				}).setTooltip((desc != null) ? Tooltip.of(desc) : null);
 			}
 
 		} catch (Exception ex) {
@@ -755,7 +755,7 @@ public class LayoutEditorUI extends UIBase {
 					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					e.setHidden(false);
 					menu.closeMenu();
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
 				count++;
 			}
 			for (AbstractDeepEditorElement e : hiddenDeepElements) {
@@ -763,7 +763,7 @@ public class LayoutEditorUI extends UIBase {
 					this.editor.history.saveSnapshot(this.editor.history.createSnapshot());
 					e.setHidden(false);
 					menu.closeMenu();
-				}).setTooltip(Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+				}).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
 				count++;
 			}
 

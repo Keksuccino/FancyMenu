@@ -85,7 +85,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             @Override
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else {
                     this.active = ChooseMenuBackgroundScreen.this.backgroundType != NO_BACKGROUND_TYPE;
@@ -102,10 +102,10 @@ public class ChooseMenuBackgroundScreen extends Screen {
             @Override
             public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else if (ChooseMenuBackgroundScreen.this.background == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_configured")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_configured")).setDefaultBackgroundColor(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;

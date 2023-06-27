@@ -40,6 +40,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -83,6 +84,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected int leftMouseDownBaseHeight = 0;
 	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
+	protected AspectRatio resizeAspectRatio = new AspectRatio(10, 10);
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
 	public boolean recentlyLeftClickSelected = false;
@@ -142,7 +144,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			}
 		};
 		this.rightClickMenu.addSubMenuEntry("pick_element", Component.translatable("fancymenu.element.general.pick_element"), pickElementMenu)
-				.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
 
 		this.rightClickMenu.addSeparatorEntry("separator_1");
 
@@ -151,11 +153,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.rightClickMenu.addClickableEntry("copy_id", Component.translatable("fancymenu.helper.editor.items.copyid"), (menu, entry) -> {
 				Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
 				menu.closeMenu();
-			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")));
+			}).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
 		}
-
-		//TODO add vanilla button locator button in vanilla button editor element HERE
 
 		this.rightClickMenu.addSeparatorEntry("separator_2");
 
@@ -163,8 +164,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu anchorPointMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("anchor_point", Component.translatable("fancymenu.editor.items.setorientation"), anchorPointMenu)
-					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
-					.setStackable(true);
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
+					.setStackable(true)
+					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
 
 			if (this.settings.isElementAnchorPointAllowed()) {
 
@@ -194,7 +196,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								menu.closeMenu();
 							}
 						})
-						.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.btn.desc")))
+						.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.btn.desc")))
 						.setStackable(true);
 
 			}
@@ -213,7 +215,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							}
 							menu.closeMenu();
 						}
-					}).setStackable(true);
+					}).setStackable(true)
+							.setIcon(ContextMenu.IconFactory.getIcon("anchor_" + p.getName().replace("-", "_")));
 				}
 			}
 
@@ -223,8 +226,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu advancedPositioningMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning"), advancedPositioningMenu)
-					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
-					.setStackable(true);
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
+					.setStackable(true)
+					.setIcon(ContextMenu.IconFactory.getIcon("move"));
 
 			this.addStringInputContextMenuEntryTo(advancedPositioningMenu, "advanced_positioning_x", null,
 							element -> element.settings.isAdvancedPositioningSupported(),
@@ -248,8 +252,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu advancedSizingMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing"), advancedSizingMenu)
-					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
-					.setStackable(true);
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
+					.setStackable(true)
+					.setIcon(ContextMenu.IconFactory.getIcon("resize"));
 
 			this.addStringInputContextMenuEntryTo(advancedSizingMenu, "advanced_sizing_width", null,
 							element -> element.settings.isAdvancedSizingSupported(),
@@ -282,7 +287,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							(element, switcherValue) -> element.element.stretchX = switcherValue,
 							"fancymenu.editor.object.stretch.x")
 					.setStackable(true)
-					.setIsActiveSupplier((menu, entry) -> element.advancedWidth == null);
+					.setIsActiveSupplier((menu, entry) -> element.advancedWidth == null)
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
 
 			this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "stretch_y",
 							consumes -> consumes.settings.isStretchable(),
@@ -290,7 +296,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							(element, switcherValue) -> element.element.stretchY = switcherValue,
 							"fancymenu.editor.object.stretch.y")
 					.setStackable(true)
-					.setIsActiveSupplier((menu, entry) -> element.advancedHeight == null);
+					.setIsActiveSupplier((menu, entry) -> element.advancedHeight == null)
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"));
 
 		}
 
@@ -337,8 +344,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							}
 						}
 					})
-					.setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")))
-					.setStackable(true);
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.elements.loading_requirements.desc")))
+					.setStackable(true)
+					.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		}
 
@@ -348,13 +356,15 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"), (menu, entry) -> {
 				this.editor.moveElementUp(this);
-			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
-					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedUp(this));
+			}).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
+					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedUp(this))
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
 
 			this.rightClickMenu.addClickableEntry("move_down_element", Component.translatable("fancymenu.editor.object.movedown"), (menu, entry) -> {
 				this.editor.moveElementDown(this);
-			}).setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
-					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedDown(this));
+			}).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
+					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedDown(this))
+					.setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
 
 		}
 
@@ -397,7 +407,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			ContextMenu appearanceDelayMenu = new ContextMenu();
 			this.rightClickMenu.addSubMenuEntry("appearance_delay", Component.translatable("fancymenu.element.general.appearance_delay"), appearanceDelayMenu)
-					.setStackable(true);
+					.setStackable(true)
+					.setIcon(ContextMenu.IconFactory.getIcon("timer"));
 
 			this.addCycleContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_type",
 							ListUtils.build(AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME),
@@ -555,6 +566,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					this.leftMouseDownBaseY = this.element.baseY;
 					this.leftMouseDownBaseWidth = this.element.width;
 					this.leftMouseDownBaseHeight = this.element.height;
+					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
 				}
 			}
 		}
@@ -590,13 +602,15 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
-			//TODO add SHIFT-resize (aspect ratio)
 			if (this.leftMouseDown && this.isGettingResized()) {
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
 					if (i >= 2) {
 						this.element.width = i;
 						this.element.baseX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+						if (Screen.hasShiftDown()) {
+							this.element.height = this.resizeAspectRatio.getAspectRatioHeight(this.element.width);
+						}
 					}
 				}
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
@@ -604,6 +618,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					if (i >= 2) {
 						this.element.height = i;
 						this.element.baseY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+						if (Screen.hasShiftDown()) {
+							this.element.width = this.resizeAspectRatio.getAspectRatioWidth(this.element.height);
+						}
 					}
 				}
 			}
@@ -766,10 +783,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	}
 
-	protected ContextMenu.ContextMenuEntry addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetEntry, @Nullable FileChooserScreen.FileFilter fileFilter) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetEntry, @Nullable FileChooserScreen.FileFilter fileFilter) {
 		ContextMenu subMenu = new ContextMenu();
 		ContextMenu addToFinal = addResetEntry ? subMenu : addTo;
-		ContextMenu.ContextMenuEntry chooseEntry = addToFinal.addClickableEntry(addResetEntry ? "choose_file" : entryIdentifier, addResetEntry ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) ->
+		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = addToFinal.addClickableEntry(addResetEntry ? "choose_file" : entryIdentifier, addResetEntry ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) ->
 		{
 			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 			if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
@@ -812,7 +829,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return chooseEntry;
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable CharacterFilter inputCharacterFilter, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable CharacterFilter inputCharacterFilter, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label) {
 		return addTo.addClickableEntry(entryIdentifier, label, (menu, entry) ->
 				{
 					if (entry.getStackMeta().isFirstInStack()) {
@@ -841,7 +858,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				});
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable CharacterFilter inputCharacterFilter, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable CharacterFilter inputCharacterFilter, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label) {
 		return addInputContextMenuEntryTo(addTo, entryIdentifier, inputCharacterFilter, selectedElementsFilter, targetFieldGetter, (e, s) -> {
 			if (s.replace(" ", "").isEmpty()) {
 				targetFieldSetter.accept(e, defaultValue);
@@ -851,7 +868,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}, multiLineInput, allowPlaceholders, label);
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, int defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Integer> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Integer> targetFieldSetter, @NotNull Component label) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, int defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Integer> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Integer> targetFieldSetter, @NotNull Component label) {
 		return addInputContextMenuEntryTo(addTo, entryIdentifier, CharacterFilter.getIntegerCharacterFiler(), selectedElementsFilter, consumes -> {
 			Integer i = targetFieldGetter.get(consumes);
 			if (i == null) i = 0;
@@ -865,7 +882,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}, false, false, label);
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, long defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Long> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Long> targetFieldSetter, @NotNull Component label) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, long defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Long> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Long> targetFieldSetter, @NotNull Component label) {
 		return addInputContextMenuEntryTo(addTo, entryIdentifier, CharacterFilter.getIntegerCharacterFiler(), selectedElementsFilter, consumes -> {
 			Long l = targetFieldGetter.get(consumes);
 			if (l == null) l = 0L;
@@ -879,7 +896,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}, false, false, label);
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, double defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Double> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Double> targetFieldSetter, @NotNull Component label) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, double defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Double> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Double> targetFieldSetter, @NotNull Component label) {
 		return addInputContextMenuEntryTo(addTo, entryIdentifier, CharacterFilter.getDoubleCharacterFiler(), selectedElementsFilter, consumes -> {
 			Double d = targetFieldGetter.get(consumes);
 			if (d == null) d = 0D;
@@ -893,7 +910,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}, false, false, label);
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, float defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Float> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Float> targetFieldSetter, @NotNull Component label) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, float defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, Float> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Float> targetFieldSetter, @NotNull Component label) {
 		return addInputContextMenuEntryTo(addTo, entryIdentifier, CharacterFilter.getDoubleCharacterFiler(), selectedElementsFilter, consumes -> {
 			Float d = targetFieldGetter.get(consumes);
 			if (d == null) d = 0F;
@@ -907,7 +924,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}, false, false, label);
 	}
 
-	protected <V> ContextMenu.ClickableContextMenuEntry addCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, V> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
+	protected <V> ContextMenu.ClickableContextMenuEntry<?> addCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, V> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
 		return addTo.addClickableEntry(entryIdentifier, Component.literal(""), (menu, entry) ->
 				{
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
@@ -926,11 +943,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					}
 					ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
-					return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry) entry, switcher.current());
+					return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, switcher.current());
 				});
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry addBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
 		return addCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
 				return Component.translatable(labelLocalizationKeyBase + ".on");
@@ -967,7 +984,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	@FunctionalInterface
 	protected interface SwitcherContextMenuEntryLabelSupplier<V> {
-		Component get(ContextMenu menu, ContextMenu.ClickableContextMenuEntry entry, V switcherValue);
+		Component get(ContextMenu menu, ContextMenu.ClickableContextMenuEntry<?> entry, V switcherValue);
 	}
 
 	public enum ResizeGrabberType {

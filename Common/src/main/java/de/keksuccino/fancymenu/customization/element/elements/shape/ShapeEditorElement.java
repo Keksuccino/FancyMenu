@@ -31,7 +31,7 @@ public class ShapeEditorElement extends AbstractEditorElement {
                             }
                         }, false, false, Component.translatable("fancymenu.editor.items.shape.color"))
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.shape.color.btndesc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.shape.color.btndesc")));
 
     }
 

@@ -80,7 +80,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 this.active = AnimationMenuBackgroundConfigScreen.this.background.animationName != null;
                 if (!this.active) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.create(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.animation.configure.no_animation_chosen")).setDefaultBackgroundColor(), false, true);
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }

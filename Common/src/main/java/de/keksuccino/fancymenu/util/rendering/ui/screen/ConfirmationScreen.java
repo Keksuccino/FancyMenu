@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -83,6 +85,12 @@ public class ConfirmationScreen extends Screen {
 
         this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
             this.callback.accept(true);
+        }).setForceDefaultTooltipStyle(true).setTooltipSupplier(consumes -> {
+            if (!consumes.active) {
+                int secs = (int)((this.delayEnd - System.currentTimeMillis()) / 1000);
+                return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ui.confirmation_screen.delay.tooltip", "" + secs));
+            }
+            return null;
         });
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
