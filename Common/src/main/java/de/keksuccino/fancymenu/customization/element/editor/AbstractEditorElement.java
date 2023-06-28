@@ -692,6 +692,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return this.activeResizeGrabber != null;
 	}
 
+	public boolean isDragged() {
+		return this.recentlyMovedByDragging;
+	}
+
 	@Nullable
 	public ResizeGrabber getHoveredResizeGrabber() {
 		if (!this.settings.isResizeable()) {

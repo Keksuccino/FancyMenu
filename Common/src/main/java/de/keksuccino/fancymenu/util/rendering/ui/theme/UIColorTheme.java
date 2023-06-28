@@ -22,6 +22,9 @@ public class UIColorTheme {
     public DrawableColor layout_editor_element_border_color_normal = DrawableColor.of(new Color(3, 148, 252));
     public DrawableColor layout_editor_element_border_color_selected = DrawableColor.of(new Color(3, 219, 252));
     public DrawableColor layout_editor_element_dragging_not_allowed_color = DrawableColor.of(new Color(232, 54, 9, 200));
+    public DrawableColor layout_editor_anchor_point_area_color_normal = DrawableColor.of(new Color(115, 255, 0));
+    public DrawableColor layout_editor_anchor_point_area_color_hover = DrawableColor.of(new Color(188, 255, 135));
+    public DrawableColor layout_editor_anchor_point_area_connection_line_color = DrawableColor.of(new Color(85, 255, 0));
     public DrawableColor scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
     public DrawableColor scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
     public DrawableColor screen_background_color = DrawableColor.of(new Color(60, 63, 65));

@@ -35,7 +35,7 @@ public class LayoutHandler {
 	public static void reloadLayouts() {
 		ScreenCustomization.readCustomizableScreensFromFile();
 		LAYOUTS.clear();
-		LAYOUTS.addAll(deserializeLayoutFilesInDirectory(FancyMenu.CUSTOMIZATIONS_DIR));
+		LAYOUTS.addAll(deserializeLayoutFilesInDirectory(FancyMenu.LAYOUT_DIR));
 	}
 
 	@NotNull
@@ -216,30 +216,27 @@ public class LayoutHandler {
 	 */
 	public static boolean saveLayoutToFile(Layout layout, String saveTo) {
 		File f = new File(saveTo);
-		String s = Files.getFileExtension(saveTo);
-		if (!s.equals("")) {
-			if (f.exists() && f.isFile()) {
-				f.delete();
-			}
-			PropertyContainerSet set = layout.serialize();
-			if (set != null) {
-				PropertiesSerializer.serializePropertyContainerSet(set, f.getPath());
-				return true;
-			}
+		if (f.isFile()) {
+			f.delete();
+		}
+		PropertyContainerSet set = layout.serialize();
+		if (set != null) {
+			PropertiesSerializer.serializePropertyContainerSet(set, f.getPath());
+			return true;
 		}
 		return false;
 	}
 
 	@Legacy("This basically copies all layouts from the old '.disabled' directory to the main directory and sets them to disabled.")
 	private static void convertLegacyDisabledLayouts() {
-		File disabledDir = new File(FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/.disabled");
+		File disabledDir = new File(FancyMenu.LAYOUT_DIR.getPath() + "/.disabled");
 		if (disabledDir.isDirectory()) {
 			List<Layout> legacyDisabled = deserializeLayoutFilesInDirectory(disabledDir);
 			for (Layout l : legacyDisabled) {
 				try {
 					if (l.layoutFile != null) {
-						String name = FileUtils.generateAvailableFilename(FancyMenu.CUSTOMIZATIONS_DIR.getPath(), Files.getNameWithoutExtension(l.layoutFile.getPath()), "txt");
-						File newFile = new File(FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/" + name);
+						String name = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getPath(), Files.getNameWithoutExtension(l.layoutFile.getPath()), "txt");
+						File newFile = new File(FancyMenu.LAYOUT_DIR.getPath() + "/" + name);
 						FileUtils.copyFile(l.layoutFile, newFile);
 						l.layoutFile.delete();
 						l.layoutFile = newFile;

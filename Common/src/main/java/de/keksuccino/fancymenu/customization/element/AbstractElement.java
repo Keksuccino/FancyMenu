@@ -18,7 +18,6 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractElement extends GuiComponent implements Renderable {
@@ -28,7 +27,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull PoseStack p, int i1, int i2, float f){}};
 
 	public final ElementBuilder<?,?> builder;
-	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.TOP_LEFT;
+	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.AUTO;
 	public String anchorPointElementIdentifier = null;
 	protected AbstractElement anchorPointElement = null;
 	/** Not the same as {@link AbstractElement#getX()}! This is the raw value without orientation and scale! **/

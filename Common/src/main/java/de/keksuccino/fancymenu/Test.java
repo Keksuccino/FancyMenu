@@ -1,15 +1,26 @@
 package de.keksuccino.fancymenu;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.SaveFileScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
+import net.minecraft.world.level.ChunkPos;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 
 public class Test {
 
@@ -38,6 +49,32 @@ public class Test {
 //                Minecraft.getInstance().setScreen(e.getScreen());
 //            }));
 //        }).size(100, 20).pos(30, 30).build());
+
+    }
+
+    @EventListener(priority = -2000)
+    public void onRenderPost(RenderScreenEvent.Post e) {
+        this.drawLine(e.getPoseStack(), 30, 30, e.getScreen().width - 30, e.getScreen().height - 30);
+    }
+
+    private void drawLine(PoseStack pose, int x1, int y1, int x2, int y2) {
+
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        RenderType type = RenderType.debugLineStrip(1.0D);
+        Matrix4f matrix4f = pose.last().pose();
+        bufferBuilder.begin(type.mode(), type.format());
+
+        bufferBuilder.vertex(matrix4f, x1, y1, 0).color(1.0F, 0.0F, 0.0F, 1.0F).endVertex();
+        bufferBuilder.vertex(matrix4f, x2, y2, 0).color(1.0F, 0.0F, 0.0F, 1.0F).endVertex();
+        bufferBuilder.vertex(matrix4f, x1+1, y1, 0).color(1.0F, 0.0F, 0.0F, 1.0F).endVertex();
+        bufferBuilder.vertex(matrix4f, x2+1, y2, 0).color(1.0F, 0.0F, 0.0F, 1.0F).endVertex();
+
+        BufferUploader.drawWithShader(bufferBuilder.end());
+        RenderSystem.disableBlend();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

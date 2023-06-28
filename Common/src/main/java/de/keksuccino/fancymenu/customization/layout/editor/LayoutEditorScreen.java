@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import java.awt.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -11,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
@@ -26,20 +25,19 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.AdvancedContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.SaveFileScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,6 +46,8 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class LayoutEditorScreen extends Screen implements IElementFactory {
+
+	//TODO add layer widget (photoshop-like)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -551,7 +551,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.layout.updateLastEditedTime();
 			this.serializeElementInstancesToLayoutInstance();
 			if (!this.layout.saveToFileIfPossible()) {
-				Minecraft.getInstance().setScreen(NotificationScreen.ofStrings((call) -> {
+				Minecraft.getInstance().setScreen(NotificationScreen.error((call) -> {
 					Minecraft.getInstance().setScreen(this);
 				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 			}
@@ -560,29 +560,40 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
-	//TODO add layer widget (photoshop-like)
-
 	public void saveLayoutAs() {
-		//TODO replace with SaveFileScreen
-		FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.editor.save_as"), CharacterFilter.getFilenameFilterWithUppercaseSupport(), 240, (call) -> {
+		String fileNamePreset = "universal_layout";
+		if (this.layoutTargetScreen != null) {
+			if (this.layoutTargetScreen instanceof CustomGuiBase c) {
+				fileNamePreset = c.getIdentifier() + "_layout";
+			} else {
+				fileNamePreset = this.layoutTargetScreen.getClass().getSimpleName() + "_layout";
+			}
+		}
+		fileNamePreset = CharacterFilter.getFilenameFilterWithUppercaseSupport().filterForAllowedChars(fileNamePreset);
+		fileNamePreset = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getAbsolutePath(), fileNamePreset, "txt");
+		if (this.layout.layoutFile != null) {
+			fileNamePreset = this.layout.layoutFile.getName();
+		}
+		Minecraft.getInstance().setScreen(SaveFileScreen.build(FancyMenu.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
 			if (call != null) {
-				this.layout.updateLastEditedTime();
-				this.serializeElementInstancesToLayoutInstance();
-				File f = new File(FancyMenu.CUSTOMIZATIONS_DIR.getAbsolutePath() + "/" + call + ".txt");
-				if (f.isFile()) {
-					Minecraft.getInstance().setScreen(NotificationScreen.ofStrings((call2) -> {
-						Minecraft.getInstance().setScreen(this);
-					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.file_exists")));
-				} else {
-					if (!LayoutHandler.saveLayoutToFile(this.layout, f.getAbsolutePath())) {
-						Minecraft.getInstance().setScreen(NotificationScreen.ofStrings((call2) -> {
+				try {
+					this.layout.updateLastEditedTime();
+					this.serializeElementInstancesToLayoutInstance();
+					this.layout.layoutFile = call.getAbsoluteFile();
+					if (!this.layout.saveToFileIfPossible()) {
+						Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
 							Minecraft.getInstance().setScreen(this);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
+						Minecraft.getInstance().setScreen(this);
+					}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 				}
 			}
-		});
-		PopupHandler.displayPopup(p);
+			Minecraft.getInstance().setScreen(this);
+		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(false));
 	}
 
 	public void onUpdateSelectedElements() {

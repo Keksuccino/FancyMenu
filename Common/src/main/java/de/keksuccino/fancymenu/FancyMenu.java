@@ -126,7 +126,7 @@ public class FancyMenu {
 	public static final File MOD_DIR = createDirectory(new File(getGameDirectory(), "/config/fancymenu"));
 	public static final File INSTANCE_DATA_DIR = createDirectory(new File(getGameDirectory(), "/.fancymenu_data"));
 	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
-	public static final File CUSTOMIZATIONS_DIR = createDirectory(new File(MOD_DIR, "/customization"));
+	public static final File LAYOUT_DIR = createDirectory(new File(MOD_DIR, "/customization"));
 	public static final File ASSETS_DIR = createDirectory(new File(MOD_DIR, "/assets"));
 
 	//TODO Move these to their actual classes
@@ -155,7 +155,7 @@ public class FancyMenu {
 	    		
 	    		//Create all important directories
 	    		ANIMATIONS_DIR.mkdirs();
-	    		CUSTOMIZATIONS_DIR.mkdirs();
+	    		LAYOUT_DIR.mkdirs();
 	    		CUSTOM_GUIS_DIR.mkdirs();
 	    		BUTTONSCRIPT_DIR.mkdirs();
 	    		PANORAMA_DIR.mkdirs();

@@ -415,7 +415,7 @@ public class Layout extends LayoutBase {
     }
 
     public boolean saveToFileIfPossible() {
-        if ((this.layoutFile != null) && this.layoutFile.exists()) {
+        if (this.layoutFile != null) {
             return LayoutHandler.saveLayoutToFile(this, ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutFile.getAbsolutePath()));
         }
         return false;

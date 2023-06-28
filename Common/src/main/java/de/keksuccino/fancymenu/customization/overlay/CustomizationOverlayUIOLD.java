@@ -180,7 +180,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 
 				} else {
 
-					for (String s : FileUtils.getFiles(FancyMenu.CUSTOMIZATIONS_DIR.getPath())) {
+					for (String s : FileUtils.getFiles(FancyMenu.LAYOUT_DIR.getPath())) {
 						PropertyContainerSet props = PropertiesSerializer.deserializePropertyContainerSet(s);
 						if (props == null) {
 							continue;
@@ -1194,11 +1194,11 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			}
 			OverlayButton toggleLayoutBtn = new OverlayButton(0, 0, 0, 0, toggleLabel, (press) -> {
 				if (disabled) {
-					String name = FileUtils.generateAvailableFilename(FancyMenu.CUSTOMIZATIONS_DIR.getPath(), Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
-					FileUtils.copyFile(layout.layoutFile, new File(FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/" + name));
+					String name = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getPath(), Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
+					FileUtils.copyFile(layout.layoutFile, new File(FancyMenu.LAYOUT_DIR.getPath() + "/" + name));
 					layout.layoutFile.delete();
 				} else {
-					String disPath = FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/.disabled";
+					String disPath = FancyMenu.LAYOUT_DIR.getPath() + "/.disabled";
 					String name = FileUtils.generateAvailableFilename(disPath, Files.getNameWithoutExtension(layout.layoutFile.getName()), "txt");
 					FileUtils.copyFile(layout.layoutFile, new File(disPath + "/" + name));
 					layout.layoutFile.delete();
@@ -1307,9 +1307,9 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			if (screenname.contains(".")) {
 				screenname = new StringBuilder(new StringBuilder(screenname).reverse().toString().split("[.]", 2)[0]).reverse().toString();
 			}
-			String filename = FileUtils.generateAvailableFilename(FancyMenu.CUSTOMIZATIONS_DIR.getPath(), "overridemenu_" + screenname, "txt");
+			String filename = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getPath(), "overridemenu_" + screenname, "txt");
 
-			String finalpath = FancyMenu.CUSTOMIZATIONS_DIR.getPath() + "/" + filename;
+			String finalpath = FancyMenu.LAYOUT_DIR.getPath() + "/" + filename;
 			PropertiesSerializer.serializePropertyContainerSet(props, finalpath);
 
 			ScreenCustomization.reloadFancyMenu();

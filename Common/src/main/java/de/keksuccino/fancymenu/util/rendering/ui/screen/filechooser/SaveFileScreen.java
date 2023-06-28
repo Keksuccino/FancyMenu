@@ -62,6 +62,7 @@ public class SaveFileScreen extends Screen {
     @NotNull
     protected Consumer<File> callback;
     protected int visibleDirectoryLevelsAboveRoot = 0;
+    protected boolean showSubDirectories = true;
     protected String defaultFileName;
 
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -445,6 +446,16 @@ public class SaveFileScreen extends Screen {
         return this;
     }
 
+    public boolean isShowSubDirectories() {
+        return this.showSubDirectories;
+    }
+
+    public SaveFileScreen setShowSubDirectories(boolean showSubDirectories) {
+        this.showSubDirectories = showSubDirectories;
+        this.updateFilesList();
+        return this;
+    }
+
     public SaveFileScreen setFileName(String fileName) {
         this.fileNameEditBox.setValue(fileName);
         return this;
@@ -507,9 +518,11 @@ public class SaveFileScreen extends Screen {
             Collections.sort(files, (o1, o2) -> {
                 return comp.compare(o1.getName(), o2.getName());
             });
-            for (File f : folders) {
-                SaveFileScrollAreaEntry e = new SaveFileScrollAreaEntry(this.fileListScrollArea, f);
-                this.fileListScrollArea.addEntry(e);
+            if (this.showSubDirectories) {
+                for (File f : folders) {
+                    SaveFileScrollAreaEntry e = new SaveFileScrollAreaEntry(this.fileListScrollArea, f);
+                    this.fileListScrollArea.addEntry(e);
+                }
             }
             for (File f : files) {
                 if ((this.fileFilter != null) && !this.fileFilter.checkFile(f)) continue;

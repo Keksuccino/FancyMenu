@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.element.anchor;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,6 +73,10 @@ public class ElementAnchorPoint {
 
     protected static int getScreenHeight() {
         return AbstractElement.getScreenHeight();
+    }
+
+    protected static boolean isEditor() {
+        return Minecraft.getInstance().screen instanceof LayoutEditorScreen;
     }
 
     // ---------------------------------
@@ -308,6 +314,62 @@ public class ElementAnchorPoint {
                 return anchor.getHeight();
             }
             return super.getDefaultElementBaseX(element);
+        }
+
+    }
+
+    public static class AnchorAuto extends ElementAnchorPoint {
+
+        public static final int EDGE_ZONE_SIZE = 10;
+
+        AnchorAuto() {
+            super("auto");
+        }
+
+        @Override
+        public int getOriginX(@NotNull AbstractElement element) {
+            return getScreenWidth() / 2;
+        }
+
+        @Override
+        public int getOriginY(@NotNull AbstractElement element) {
+            return getScreenHeight() / 2;
+        }
+
+        //Used when changing the anchor point
+        @Override
+        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
+            return -(element.getWidth() / 2);
+        }
+
+        //Used when changing the anchor point
+        @Override
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
+            return -(element.getHeight() / 2);
+        }
+
+        @Override
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            int x = super.getElementPositionX(element);
+            if (x < EDGE_ZONE_SIZE) {
+                x = EDGE_ZONE_SIZE;
+            }
+            if (x > (getScreenWidth() - EDGE_ZONE_SIZE - element.getWidth())) {
+                x = getScreenWidth() - EDGE_ZONE_SIZE - element.getWidth();
+            }
+            return x;
+        }
+
+        @Override
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            int y = super.getElementPositionY(element);
+            if (y < EDGE_ZONE_SIZE) {
+                y = EDGE_ZONE_SIZE;
+            }
+            if (y > (getScreenHeight() - EDGE_ZONE_SIZE - element.getHeight())) {
+                y = getScreenHeight() - EDGE_ZONE_SIZE - element.getHeight();
+            }
+            return y;
         }
 
     }

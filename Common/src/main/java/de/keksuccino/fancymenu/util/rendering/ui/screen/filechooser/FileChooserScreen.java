@@ -104,6 +104,7 @@ public class FileChooserScreen extends Screen {
     @NotNull
     protected Consumer<File> callback;
     protected int visibleDirectoryLevelsAboveRoot = 0;
+    protected boolean showSubDirectories = true;
 
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
@@ -365,6 +366,16 @@ public class FileChooserScreen extends Screen {
         return this;
     }
 
+    public boolean isShowSubDirectories() {
+        return this.showSubDirectories;
+    }
+
+    public FileChooserScreen setShowSubDirectories(boolean showSubDirectories) {
+        this.showSubDirectories = showSubDirectories;
+        this.updateFilesList();
+        return this;
+    }
+
     @Nullable
     protected FileScrollAreaEntry getSelectedEntry() {
         for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
@@ -422,9 +433,11 @@ public class FileChooserScreen extends Screen {
             Collections.sort(files, (o1, o2) -> {
                 return comp.compare(o1.getName(), o2.getName());
             });
-            for (File f : folders) {
-                FileScrollAreaEntry e = new FileScrollAreaEntry(this.fileListScrollArea, f);
-                this.fileListScrollArea.addEntry(e);
+            if (this.showSubDirectories) {
+                for (File f : folders) {
+                    FileScrollAreaEntry e = new FileScrollAreaEntry(this.fileListScrollArea, f);
+                    this.fileListScrollArea.addEntry(e);
+                }
             }
             for (File f : files) {
                 if ((this.fileFilter != null) && !this.fileFilter.checkFile(f)) continue;
