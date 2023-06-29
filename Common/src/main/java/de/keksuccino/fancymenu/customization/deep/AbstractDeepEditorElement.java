@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.deep;
 
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.editor.EditorElementSettings;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -29,6 +31,11 @@ public abstract class AbstractDeepEditorElement extends AbstractEditorElement im
         this.settings.setAdvancedPositioningSupported(false);
         this.settings.setAdvancedSizingSupported(false);
         this.settings.setHideInsteadOfDestroy(true);
+    }
+
+    @Override
+    public void setAnchorPointViaOverlay(ElementAnchorPoint p, int mouseX, int mouseY) {
+        //do nothing
     }
 
     @Override

@@ -89,8 +89,6 @@ public class ElementAnchorPoint {
 
     }
 
-    //TODO resize offset für alle anchor points adden
-
     public static class AnchorMidLeft extends ElementAnchorPoint {
 
         AnchorMidLeft() {
@@ -320,7 +318,7 @@ public class ElementAnchorPoint {
 
     public static class AnchorAuto extends ElementAnchorPoint {
 
-        public static final int EDGE_ZONE_SIZE = 10;
+        public static final int EDGE_ZONE_SIZE = 5;
 
         AnchorAuto() {
             super("auto");

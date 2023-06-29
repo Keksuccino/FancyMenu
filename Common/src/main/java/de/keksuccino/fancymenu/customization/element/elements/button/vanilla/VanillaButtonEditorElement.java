@@ -117,6 +117,13 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     }
 
     @Override
+    public void setAnchorPointViaOverlay(ElementAnchorPoint p, int mouseX, int mouseY) {
+        if (this.element.anchorPoint == ElementAnchorPoints.VANILLA) return;
+        this.lastAnchorPoint = p;
+        super.setAnchorPointViaOverlay(p, mouseX, mouseY);
+    }
+
+    @Override
     public void setSelected(boolean selected) {
         if (this.isHidden()) return;
         super.setSelected(selected);

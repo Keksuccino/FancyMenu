@@ -63,6 +63,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public LayoutEditorUI ui;
+	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
 	public ContextMenu activeElementContextMenu = null;
 
@@ -136,8 +137,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.renderElements(pose, mouseX, mouseY, partial);
 
-		this.ui.renderTopMenuBar(pose, this);
-
 		if (this.rightClickMenu != null) {
 			this.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
 		}
@@ -148,6 +147,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 
 		this.renderMouseSelectionRectangle(pose, mouseX, mouseY);
+
+		this.anchorPointOverlay.render(pose, mouseX, mouseY, partial);
+
+		//TODO rewrite menu bar
+		this.ui.renderTopMenuBar(pose, this);
 
 	}
 

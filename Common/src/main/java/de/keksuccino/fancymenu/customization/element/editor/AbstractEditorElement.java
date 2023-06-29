@@ -181,7 +181,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 											for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 												if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
 													e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
-													e.setAnchorPoint(ElementAnchorPoints.ELEMENT);
+													e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, true);
 												}
 											}
 										} else {
@@ -210,7 +210,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							this.editor.history.saveSnapshot();
 							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 								if (e.settings.isAnchorPointChangeable()) {
-									e.setAnchorPoint(p);
+									e.setAnchorPoint(p, false, true);
 								}
 							}
 							menu.closeMenu();
@@ -526,14 +526,39 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	}
 
-	public void setAnchorPoint(ElementAnchorPoint p) {
-		this.resetElementStates();
+	public void setAnchorPoint(ElementAnchorPoint p, boolean keepAbsolutePosition, boolean resetElementStates) {
+		if (resetElementStates) this.resetElementStates();
 		if (p == null) {
-			p = ElementAnchorPoints.TOP_LEFT;
+			p = ElementAnchorPoints.AUTO;
+		}
+		if (keepAbsolutePosition) {
+			this.element.baseX = this.calcNewBaseX(p);
+			this.element.baseY = this.calcNewBaseY(p);
+		} else {
+			this.element.baseX = p.getDefaultElementBaseX(this.element);
+			this.element.baseY = p.getDefaultElementBaseY(this.element);
 		}
 		this.element.anchorPoint = p;
-		this.element.baseX = p.getDefaultElementBaseX(this.element);
-		this.element.baseY = p.getDefaultElementBaseY(this.element);
+	}
+
+	public void setAnchorPointViaOverlay(ElementAnchorPoint p, int mouseX, int mouseY) {
+		if (!this.settings.isAnchorPointChangeable()) return;
+		this.setAnchorPoint(p, true, false);
+		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
+	}
+
+	protected int calcNewBaseX(ElementAnchorPoint newAnchor) {
+		int originX = newAnchor.getOriginX(this.element);
+		int elementX = this.getX();
+		int diff = Math.max(originX, elementX) - Math.min(originX, elementX);
+		return (elementX < originX) ? -diff : diff;
+	}
+
+	protected int calcNewBaseY(ElementAnchorPoint newAnchor) {
+		int originY = newAnchor.getOriginY(this.element);
+		int elementY = this.getY();
+		int diff = Math.max(originY, elementY) - Math.min(originY, elementY);
+		return (elementY < originY) ? -diff : diff;
 	}
 
 	public void resetElementStates() {
@@ -550,6 +575,15 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.init();
 	}
 
+	public void updateLeftMouseDownCachedValues(int mouseX, int mouseY) {
+		this.leftMouseDownMouseX = mouseX;
+		this.leftMouseDownMouseY = mouseY;
+		this.leftMouseDownBaseX = this.element.baseX;
+		this.leftMouseDownBaseY = this.element.baseY;
+		this.leftMouseDownBaseWidth = this.element.width;
+		this.leftMouseDownBaseHeight = this.element.height;
+	}
+
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		if (!this.isSelected()) {
@@ -560,12 +594,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
 				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized()) {
 					this.leftMouseDown = true;
-					this.leftMouseDownMouseX = mouseX;
-					this.leftMouseDownMouseY = mouseY;
-					this.leftMouseDownBaseX = this.element.baseX;
-					this.leftMouseDownBaseY = this.element.baseY;
-					this.leftMouseDownBaseWidth = this.element.width;
-					this.leftMouseDownBaseHeight = this.element.height;
+					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
 				}
 			}
@@ -593,8 +622,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			int diffY = (int)-(this.leftMouseDownMouseY - mouseY);
 			if (this.leftMouseDown && !this.isGettingResized()) {
 				if (this.editor.allSelectedElementsMovable()) {
-					this.element.baseX = this.leftMouseDownBaseX + diffX;
-					this.element.baseY = this.leftMouseDownBaseY + diffY;
+					if (!this.isMultiSelected() || (this.element.anchorPoint != ElementAnchorPoints.ELEMENT)) {
+						this.element.baseX = this.leftMouseDownBaseX + diffX;
+						this.element.baseY = this.leftMouseDownBaseY + diffY;
+					}
 					if ((diffX > 0) || (diffY > 0)) {
 						this.recentlyMovedByDragging = true;
 					}
@@ -694,6 +725,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	public boolean isDragged() {
 		return this.recentlyMovedByDragging;
+	}
+
+	public boolean isPressed() {
+		return this.leftMouseDown;
 	}
 
 	@Nullable
