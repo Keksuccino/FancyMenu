@@ -12,7 +12,7 @@ Source code for the FancyMenu Minecraft mod.
 **The source code for the different versions of FancyMenu (Forge, Fabric, multiple MC versions) is separated by branches.**<br>
 **For example, if you want to see the code for FancyMenu Forge MC 1.16, use the `forge-1.16` branch.**
 
-## How To Contribute Translations for the Mod
+## Localization
 
 You want to help me **translate the mod** to your language? That's great!<br>
 There is a [separate repository for FancyMenu translations](https://github.com/Keksuccino/FancyMenu-Translations) with all important details you need to know!
