@@ -78,7 +78,7 @@ public class ExtendedButton extends Button {
         Tooltip tooltip = this.getTooltip();
         if ((tooltip != null) && this.isHovered() && this.visible) {
             if (this.forceDefaultTooltipStyle) {
-                tooltip.setDefaultBackgroundColor();
+                tooltip.setDefaultStyle();
             }
             TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
         }

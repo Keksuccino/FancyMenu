@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
@@ -22,22 +23,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * A tooltip that gets rendered at the mouse position by default.<br>
- * It's possible to set a custom X and Y position to not render it at the mouse position.
+ * It is possible to set a custom X and Y position to not render it at the mouse position.
  **/
 @SuppressWarnings("unused")
 public class Tooltip extends GuiComponent implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    public static final DrawableColor DEFAULT_BACKGROUND_COLOR = DrawableColor.of(new Color(26, 26, 26, 250));
-    public static final DrawableColor DEFAULT_BORDER_COLOR = DrawableColor.of(new Color(197, 197, 197, 250));
 
     protected Font font = Minecraft.getInstance().font;
     protected List<Component> textLines = new ArrayList<>();
@@ -342,8 +339,10 @@ public class Tooltip extends GuiComponent implements Renderable {
         return this;
     }
 
-    public Tooltip setDefaultBackgroundColor() {
-        return this.setBackgroundColor(DEFAULT_BACKGROUND_COLOR, DEFAULT_BORDER_COLOR);
+    public Tooltip setDefaultStyle() {
+        this.setTextShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+        this.setTextBaseColor(UIBase.getUIColorScheme().element_label_color_normal);
+        return this.setBackgroundColor(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().tooltip_border_color);
     }
 
     @Nullable

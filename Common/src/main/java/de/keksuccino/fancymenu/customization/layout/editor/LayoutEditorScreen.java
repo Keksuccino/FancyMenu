@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
@@ -26,6 +27,7 @@ import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -33,9 +35,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.AdvancedContextMenu
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.SaveFileScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -558,6 +559,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				Minecraft.getInstance().setScreen(NotificationScreen.error((call) -> {
 					Minecraft.getInstance().setScreen(this);
 				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+			} else {
+				LayoutHandler.reloadLayouts();
 			}
 		} else {
 			this.saveLayoutAs();
@@ -573,7 +576,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				fileNamePreset = this.layoutTargetScreen.getClass().getSimpleName() + "_layout";
 			}
 		}
-		fileNamePreset = CharacterFilter.getFilenameFilterWithUppercaseSupport().filterForAllowedChars(fileNamePreset);
+		fileNamePreset = fileNamePreset.toLowerCase();
+		fileNamePreset = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(fileNamePreset);
 		fileNamePreset = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getAbsolutePath(), fileNamePreset, "txt");
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();
@@ -584,10 +588,18 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 					this.layout.updateLastEditedTime();
 					this.serializeElementInstancesToLayoutInstance();
 					this.layout.layoutFile = call.getAbsoluteFile();
+					//Unregister old layout if it gets overridden with new one
+					if (this.layout.layoutFile.isFile()) {
+						Layout old = LayoutHandler.getLayout(this.layout.getLayoutName());
+						if (old != null) old.delete(false);
+					}
 					if (!this.layout.saveToFileIfPossible()) {
 						Minecraft.getInstance().setScreen(NotificationScreen.error((call2) -> {
 							Minecraft.getInstance().setScreen(this);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
+					} else {
+//						LayoutHandler.addLayout(this.layout, false);
+						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {
 					ex.printStackTrace();

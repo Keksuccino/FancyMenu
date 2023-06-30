@@ -34,11 +34,6 @@ public abstract class AbstractDeepEditorElement extends AbstractEditorElement im
     }
 
     @Override
-    public void setAnchorPointViaOverlay(ElementAnchorPoint p, int mouseX, int mouseY) {
-        //do nothing
-    }
-
-    @Override
     public void setSelected(boolean selected) {
         if (this.isHidden()) return;
         super.setSelected(selected);

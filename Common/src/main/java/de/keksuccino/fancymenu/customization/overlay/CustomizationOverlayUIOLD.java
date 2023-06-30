@@ -428,7 +428,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 											FMYesNoPopup pop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call2) -> {
 												if (call2) {
 													try {
-														ScreenCustomization.openFile(SetupSharingHandler.SETUP_BACKUP_DIR);
+														de.keksuccino.fancymenu.util.file.FileUtils.openFile(SetupSharingHandler.SETUP_BACKUP_DIR);
 													} catch (Exception e3) {
 														e3.printStackTrace();
 													}
@@ -1220,7 +1220,7 @@ public class CustomizationOverlayUIOLD extends UIBase {
 			this.addContent(editLayoutBtn);
 
 			OverlayButton openInTextEditorBtn = new OverlayButton(0, 0, 0, 0, I18n.get("fancymenu.overlay.ui.customization.managelayouts.openintexteditor"), (press) -> {
-				ScreenCustomization.openFile(layout.layoutFile);
+				de.keksuccino.fancymenu.util.file.FileUtils.openFile(layout.layoutFile);
 			});
 			openInTextEditorBtn.setDescription(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.overlay.ui.customization.managelayouts.openintexteditor.desc")));
 			this.addContent(openInTextEditorBtn);

@@ -4,8 +4,8 @@ package de.keksuccino.fancymenu.customization.element.elements.splash;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -50,7 +50,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).updateSplash();
                         },
                         Component.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
-                        false, FileChooserScreen.TXT_FILE_FILTER)
+                        false, FileFilter.TXT_FILE_FILTER)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct", null,

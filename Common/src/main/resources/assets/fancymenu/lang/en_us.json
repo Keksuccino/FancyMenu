@@ -1161,6 +1161,8 @@
   "fancymenu.ui.filechooser.preview": "Preview",
   "fancymenu.ui.filechooser.go_up": "Go Up",
   "fancymenu.ui.filechooser.no_preview": "No preview available.",
+  "fancymenu.ui.filechooser.open_in_explorer": "Open in Explorer",
+  "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "The name of this directory or file contains\nunsupported characters.\nMake sure to only use [a-z], [0-9] and [_], [-], [.].\nSpaces and uppercase letters are not supported.",
   "fancymenu.editor.filechooser.reset": "Reset To Default",
   "fancymenu.ui.save_file": "Save File",
   "fancymenu.ui.save_file.file_name": "File Name",

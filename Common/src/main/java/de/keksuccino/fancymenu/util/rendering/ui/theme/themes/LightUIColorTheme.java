@@ -40,8 +40,8 @@ public class LightUIColorTheme extends UIColorTheme {
         listing_dot_color_1 = DrawableColor.of(new Color(67, 141, 208));
         listing_dot_color_2 = DrawableColor.of(new Color(171, 57, 80));
         listing_dot_color_3 = DrawableColor.of(new Color(178, 116, 12));
-
         context_menu_border_color = DrawableColor.of(new Color(119, 119, 119));
+        tooltip_border_color = DrawableColor.of(new Color(119, 119, 119));
 
         ui_texture_color = DrawableColor.of(new Color(45, 45, 45));
 

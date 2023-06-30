@@ -191,6 +191,13 @@ public class LayoutHandler {
 		if (reInitCurrentScreen) ScreenCustomization.reInitCurrentScreen();
 	}
 
+	public static void addLayout(@NotNull Layout layout, boolean saveToFile) {
+		if (!LAYOUTS.contains(layout)) {
+			LAYOUTS.add(layout);
+			if (saveToFile) layout.saveToFileIfPossible();
+		}
+	}
+
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
 			SoundRegistry.stopSounds();

@@ -26,6 +26,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
         InputFieldElement i = new InputFieldElement(this);
         i.width = 100;
         i.height = 20;
+        i.textField = new AdvancedTextField(Minecraft.getInstance().font, i.getX(), i.getY(), i.getWidth(), i.getHeight(), true, i.type.filter);
         return i;
     }
 

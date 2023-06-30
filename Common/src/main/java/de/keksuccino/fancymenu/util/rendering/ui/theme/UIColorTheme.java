@@ -42,9 +42,8 @@ public class UIColorTheme {
     public DrawableColor listing_dot_color_1 = DrawableColor.of(new Color(62, 134, 160));
     public DrawableColor listing_dot_color_2 = DrawableColor.of(new Color(173, 108, 121));
     public DrawableColor listing_dot_color_3 = DrawableColor.of(new Color(170, 130, 63));
-
-    public DrawableColor context_menu_shader_color = DrawableColor.of(new Color(43, 43, 43, 100));
     public DrawableColor context_menu_border_color = DrawableColor.of(new Color(93, 97, 100));
+    public DrawableColor tooltip_border_color = DrawableColor.of(new Color(93, 97, 100));
 
     public DrawableColor ui_texture_color = DrawableColor.of(new Color(255, 255, 255));
 

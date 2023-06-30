@@ -5,8 +5,9 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
@@ -45,14 +46,14 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.image.set_source"), (menu, entry) -> {
             if (((ImageElement)this.element).sourceMode == ImageElement.SourceMode.LOCAL) {
-                FileChooserScreen s = new FileChooserScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, (call) -> {
+                ChooseFileScreen s = new ChooseFileScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, (call) -> {
                     if (call != null) {
                         this.editor.history.saveSnapshot();
                         ((ImageElement)this.element).source = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
                     }
                     Minecraft.getInstance().setScreen(this.editor);
                 });
-                s.setFileFilter(FileChooserScreen.IMAGE_AND_GIF_FILE_FILTER);
+                s.setFileFilter(FileFilter.IMAGE_AND_GIF_FILE_FILTER);
                 Minecraft.getInstance().setScreen(s);
             } else {
                 FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.elements.image.set_source"), null, 240, (call) -> {

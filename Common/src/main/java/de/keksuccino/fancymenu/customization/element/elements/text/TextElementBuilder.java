@@ -5,11 +5,8 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,17 +24,19 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         TextElement i = new TextElement(this);
         i.width = 200;
         i.height = 40;
-        Screen s = Minecraft.getInstance().screen;
-        if (s instanceof LayoutEditorScreen) {
-            i.baseY = (int)(((LayoutEditorScreen)s).ui.topMenuBar.getHeight() * UIBase.getFixedUIScale());
-        }
+        i.source = "< EMPTY TEXT ELEMENT >";
+        i.updateContent();
         return i;
     }
 
     @Override
     public TextElement deserializeElement(@NotNull SerializedElement serialized) {
 
-        TextElement element = this.buildDefaultInstance();
+        //Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
+        TextElement element = new TextElement(this);
+        element.width = 200;
+        element.height = 40;
+        element.source = "< EMPTY TEXT ELEMENT >";
 
         element.source = serialized.getValue("source");
 

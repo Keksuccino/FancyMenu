@@ -4,8 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
@@ -47,13 +48,13 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
         super.init();
 
         this.chooseImageButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.image.configure.choose_image"), (press) -> {
-            FileChooserScreen s = new FileChooserScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, (call) -> {
+            ChooseFileScreen s = new ChooseFileScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, (call) -> {
                 if (call != null) {
                     this.background.imagePath = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
                 }
                 Minecraft.getInstance().setScreen(this);
             });
-            s.setFileFilter(FileChooserScreen.IMAGE_FILE_FILTER);
+            s.setFileFilter(FileFilter.IMAGE_FILE_FILTER);
             Minecraft.getInstance().setScreen(s);
         });
         this.addWidget(this.chooseImageButton);
@@ -83,7 +84,7 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 this.active = ImageMenuBackgroundConfigScreen.this.background.imagePath != null;
                 if (!this.active) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen")).setDefaultStyle(), false, true);
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }

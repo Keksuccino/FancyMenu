@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
@@ -101,7 +101,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 (element1, s) -> ((PlayerEntityElement) element1.element).setSkinTextureBySource(s, false),
                 Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"),
                 false,
-                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileChooserScreen.RESOURCE_NAME_FILTER.checkFile(file));
+                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
 
         this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin", null,
                 consumes -> (consumes instanceof PlayerEntityEditorElement),
@@ -176,7 +176,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 (element1, s) -> ((PlayerEntityElement) element1.element).setCapeTextureBySource(s, false),
                 Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.local"),
                 false,
-                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileChooserScreen.RESOURCE_NAME_FILTER.checkFile(file));
+                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
 
         this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape", null,
                 consumes -> (consumes instanceof PlayerEntityEditorElement),

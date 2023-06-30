@@ -349,28 +349,6 @@ public class ScreenCustomization {
 
 	}
 
-	public static void openFile(File f) {
-		try {
-			String url = f.toURI().toURL().toString();
-			String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-			URL u = new URL(url);
-			if (!Minecraft.ON_OSX) {
-				if (s.contains("win")) {
-					Runtime.getRuntime().exec(new String[]{"rundll32", "url.dll,FileProtocolHandler", url});
-				} else {
-					if (u.getProtocol().equals("file")) {
-						url = url.replace("file:", "file://");
-					}
-					Runtime.getRuntime().exec(new String[]{"xdg-open", url});
-				}
-			} else {
-				Runtime.getRuntime().exec(new String[]{"open", url});
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	public static String getAbsoluteGameDirectoryPath(@NotNull String path) {
 		try {
 			path = path.replace("\\", "/");

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -26,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +39,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = new ResourceLocation("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
     private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = new ResourceLocation("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
+    private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -129,7 +132,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         //Render shadow
         if (this.hasShadow()) {
-            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, UIBase.getUIColorScheme().context_menu_shader_color.getColorInt());
+            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, SHADOW_COLOR.getColorInt());
             UIBase.resetShaderColor();
         }
         //Render background
@@ -1044,7 +1047,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
                 if (this.tooltipActive) {
                     if (this.parent.isForceDefaultTooltipStyle()) {
-                        tooltip.setDefaultBackgroundColor();
+                        tooltip.setDefaultStyle();
                     }
                     float tooltipScale = (this.parent.overriddenTooltipScale != null) ? this.parent.overriddenTooltipScale : this.parent.scale;
                     tooltip.setScale(tooltipScale);

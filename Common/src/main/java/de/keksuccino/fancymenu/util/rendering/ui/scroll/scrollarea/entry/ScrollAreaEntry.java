@@ -128,6 +128,10 @@ public abstract class ScrollAreaEntry extends UIBase {
         return this.height;
     }
 
+    public boolean isHovered() {
+        return this.buttonBase.isHovered();
+    }
+
     public boolean isSelected() {
         return this.selectable && this.selected;
     }

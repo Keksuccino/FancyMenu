@@ -20,13 +20,14 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -822,7 +823,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetEntry, @Nullable FileChooserScreen.FileFilter fileFilter) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetEntry, @Nullable FileFilter fileFilter) {
 		ContextMenu subMenu = new ContextMenu();
 		ContextMenu addToFinal = addResetEntry ? subMenu : addTo;
 		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = addToFinal.addClickableEntry(addResetEntry ? "choose_file" : entryIdentifier, addResetEntry ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) ->
@@ -838,7 +839,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						if (startDir == null) startDir = FancyMenu.ASSETS_DIR;
 					}
 				}
-				FileChooserScreen fileChooser = new FileChooserScreen(FancyMenu.ASSETS_DIR, startDir, (call) -> {
+				ChooseFileScreen fileChooser = new ChooseFileScreen(FancyMenu.ASSETS_DIR, startDir, (call) -> {
 					if (call != null) {
 						this.editor.history.saveSnapshot();
 						for (AbstractEditorElement e : selectedElements) {

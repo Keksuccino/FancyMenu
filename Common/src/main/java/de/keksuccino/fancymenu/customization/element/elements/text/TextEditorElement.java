@@ -6,9 +6,9 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -51,7 +51,7 @@ public class TextEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addClickableEntry("set_source", Component.literal(""), (menu, entry) ->
                 {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-                        FileChooserScreen s = new FileChooserScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, call -> {
+                        ChooseFileScreen s = new ChooseFileScreen(FancyMenu.ASSETS_DIR, FancyMenu.ASSETS_DIR, call -> {
                             if (call != null) {
                                 this.editor.history.saveSnapshot();
                                 this.getTextElement().source = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
@@ -172,11 +172,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> ((TextElement)consumes.element).baseColorHex,
                         (element, colorHex) -> {
-                            if (DrawableColor.of(colorHex) != null) {
-                                ((TextElement)element.element).baseColorHex = colorHex;
-                            } else {
-                                ((TextElement)element.element).baseColorHex = null;
-                            }
+                            ((TextElement)element.element).baseColorHex = colorHex;
                             ((TextElement)element.element).updateContent();
                         }, false, false, Component.translatable("fancymenu.customization.items.text.base_color"))
                 .setStackable(true)
@@ -231,7 +227,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.normal"),
                         true,
-                        FileChooserScreen.IMAGE_FILE_FILTER)
+                        FileFilter.IMAGE_FILE_FILTER)
                 .setStackable(true);
 
         this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "hover_grabber_texture",
@@ -244,7 +240,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.hover"),
                         true,
-                        FileChooserScreen.IMAGE_FILE_FILTER)
+                        FileFilter.IMAGE_FILE_FILTER)
                 .setStackable(true);
 
         ContextMenu grabberColorMenu = new ContextMenu();
@@ -257,11 +253,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexNormal,
                         (element, colorHex) -> {
-                            if (DrawableColor.of(colorHex) != null) {
-                                ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
-                            } else {
-                                ((TextElement)element.element).scrollGrabberColorHexNormal = null;
-                            }
+                            ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
                             ((TextElement)element.element).updateContent();
                         }, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"))
                 .setStackable(true);
@@ -271,11 +263,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexHover,
                         (element, colorHex) -> {
-                            if (DrawableColor.of(colorHex) != null) {
-                                ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
-                            } else {
-                                ((TextElement)element.element).scrollGrabberColorHexHover = null;
-                            }
+                            ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
                             ((TextElement)element.element).updateContent();
                         }, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"))
                 .setStackable(true);

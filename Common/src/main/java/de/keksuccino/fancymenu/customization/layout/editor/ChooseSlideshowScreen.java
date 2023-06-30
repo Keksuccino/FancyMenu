@@ -64,7 +64,7 @@ public class ChooseSlideshowScreen extends Screen {
             @Override
             public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseSlideshowScreen.this.selectedSlideshowName == null) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.slideshow.choose.no_slideshow_selected")).setDefaultBackgroundColor(), false, true);
+                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.slideshow.choose.no_slideshow_selected")).setDefaultStyle(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;

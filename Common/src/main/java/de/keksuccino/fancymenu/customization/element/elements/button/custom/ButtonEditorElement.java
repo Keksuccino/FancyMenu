@@ -8,8 +8,8 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
+import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filechooser.FileChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -79,7 +79,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
                         false,
-                        FileChooserScreen.IMAGE_AND_GIF_FILE_FILTER)
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true);
 
         normalBackMenu.addClickableEntry("normal_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
@@ -127,7 +127,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
                         false,
-                        FileChooserScreen.IMAGE_AND_GIF_FILE_FILTER)
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true);
 
         hoverBackMenu.addClickableEntry("hover_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
@@ -205,7 +205,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         consumes -> ((ButtonElement)consumes.element).hoverSound,
                         (element1, s) -> ((ButtonElement)element1.element).hoverSound = s,
                         Component.translatable("fancymenu.editor.items.button.hoversound"),
-                        true, FileChooserScreen.WAV_AUDIO_FILE_FILTER)
+                        true, FileFilter.WAV_AUDIO_FILE_FILTER)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
@@ -215,7 +215,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         consumes -> ((ButtonElement)consumes.element).clickSound,
                         (element1, s) -> ((ButtonElement)element1.element).clickSound = s,
                         Component.translatable("fancymenu.editor.items.button.clicksound"),
-                        true, FileChooserScreen.WAV_AUDIO_FILE_FILTER)
+                        true, FileFilter.WAV_AUDIO_FILE_FILTER)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 

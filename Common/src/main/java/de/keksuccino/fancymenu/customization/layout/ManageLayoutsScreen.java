@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.ScrollArea;
@@ -97,7 +98,7 @@ public class ManageLayoutsScreen extends Screen {
         this.openInTextEditorButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if ((e != null) && (e.layout.layoutFile != null)) {
-                ScreenCustomization.openFile(e.layout.layoutFile);
+                FileUtils.openFile(e.layout.layoutFile);
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
         this.addWidget(this.openInTextEditorButton);

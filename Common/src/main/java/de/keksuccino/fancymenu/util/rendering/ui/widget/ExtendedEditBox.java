@@ -2,10 +2,9 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -232,7 +231,7 @@ public class ExtendedEditBox extends EditBox {
 
     @Override
     public boolean charTyped(char character, int modifiers) {
-        if ((this.characterFilter != null) && !this.characterFilter.isAllowed(character)) {
+        if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar(character)) {
             return false;
         }
         return super.charTyped(character, modifiers);

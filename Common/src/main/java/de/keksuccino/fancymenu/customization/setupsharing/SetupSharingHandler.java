@@ -286,7 +286,7 @@ public class SetupSharingHandler {
             File exportFailsFile = new File(exportTo.getPath() + "/export_fail_log_" + getTimestamp() + ".txt");
             exportFailsFile.createNewFile();
             de.keksuccino.konkrete.file.FileUtils.writeTextToFile(exportFailsFile, false, l.toArray(new String[0]));
-            ScreenCustomization.openFile(exportFailsFile);
+            de.keksuccino.fancymenu.util.file.FileUtils.openFile(exportFailsFile);
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -303,7 +303,7 @@ public class SetupSharingHandler {
         FMYesNoPopup pop = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call2) -> {
             try {
                 if (call2) {
-                    ScreenCustomization.openFile(exportTo);
+                    de.keksuccino.fancymenu.util.file.FileUtils.openFile(exportTo);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

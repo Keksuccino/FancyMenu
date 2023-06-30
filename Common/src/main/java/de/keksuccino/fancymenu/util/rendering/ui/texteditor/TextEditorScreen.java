@@ -201,7 +201,7 @@ public class TextEditorScreen extends Screen {
                     showPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultBackgroundColor());
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultStyle());
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
             if (showPlaceholderMenu) {
@@ -1634,7 +1634,7 @@ public class TextEditorScreen extends Screen {
         }
 
         public void setDescription(String... desc) {
-            this.buttonBase.setTooltip(Tooltip.of(desc).setDefaultBackgroundColor());
+            this.buttonBase.setTooltip(Tooltip.of(desc).setDefaultStyle());
         }
 
     }

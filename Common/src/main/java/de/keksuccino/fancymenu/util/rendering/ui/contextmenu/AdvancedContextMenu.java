@@ -25,10 +25,8 @@ public class AdvancedContextMenu implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final Tooltip DEFAULT_TOOLTIP_STYLE = Tooltip.empty().setBackgroundColor(Tooltip.DEFAULT_BACKGROUND_COLOR, Tooltip.DEFAULT_BORDER_COLOR);
-
     protected ContextMenu contextMenu = new ContextMenu();
-    protected Tooltip tooltipStyle = DEFAULT_TOOLTIP_STYLE;
+    protected Tooltip tooltipStyle = Tooltip.empty().setDefaultStyle();
     protected List<MenuEntry> entries = new ArrayList<>();
     protected boolean autoAlignment = true;
 
