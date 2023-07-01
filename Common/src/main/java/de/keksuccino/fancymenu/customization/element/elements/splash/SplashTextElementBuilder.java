@@ -45,8 +45,8 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
     @Override
     public @NotNull SplashTextElement buildDefaultInstance() {
         SplashTextElement i = new SplashTextElement(this);
-        i.width = 100;
-        i.height = 20;
+        i.baseWidth = 100;
+        i.baseHeight = 20;
         return i;
     }
 

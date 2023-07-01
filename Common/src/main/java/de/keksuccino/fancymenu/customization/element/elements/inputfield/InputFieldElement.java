@@ -44,10 +44,10 @@ public class InputFieldElement extends AbstractElement {
                 }
             }
 
-            this.textField.x = this.getX();
-            this.textField.y = this.getY();
-            this.textField.setWidth(this.getWidth());
-            ((IMixinAbstractWidget)this.textField).setHeightFancyMenu(this.getHeight());
+            this.textField.x = this.getAbsoluteX();
+            this.textField.y = this.getAbsoluteY();
+            this.textField.setWidth(this.getAbsoluteWidth());
+            ((IMixinAbstractWidget)this.textField).setHeightFancyMenu(this.getAbsoluteHeight());
             this.textField.render(pose, mouseX, mouseY, partial);
 
             //Update variable value on change

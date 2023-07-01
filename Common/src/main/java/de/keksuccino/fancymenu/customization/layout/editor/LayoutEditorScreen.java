@@ -394,6 +394,18 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		return l;
 	}
 
+	@SuppressWarnings("all")
+	@NotNull
+	protected <E extends AbstractEditorElement> List<E> getSelectedElementsOfType(@NotNull Class<E> type) {
+		List<E> l = new ArrayList<>();
+		for (AbstractEditorElement e : this.getSelectedElements()) {
+			if (type.isAssignableFrom(e.getClass())) {
+				l.add((E)e);
+			}
+		}
+		return l;
+	}
+
 	@Nullable
 	public AbstractEditorElement getElementByInstanceIdentifier(@NotNull String instanceIdentifier) {
 		for (AbstractEditorElement e : this.getAllElements()) {
@@ -598,7 +610,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 							Minecraft.getInstance().setScreen(this);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 					} else {
-//						LayoutHandler.addLayout(this.layout, false);
 						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {

@@ -75,10 +75,10 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
         this.tick();
 
         this.getButton().setAlpha(this.opacity);
-        this.getButton().setX(this.getX());
-        this.getButton().setY(this.getY());
-        this.getButton().setWidth(this.getWidth());
-        ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getHeight());
+        this.getButton().setX(this.getAbsoluteX());
+        this.getButton().setY(this.getAbsoluteY());
+        this.getButton().setWidth(this.getAbsoluteWidth());
+        ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getAbsoluteHeight());
 
         if (isEditor()) {
             this.button.visible = true;

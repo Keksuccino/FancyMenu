@@ -167,14 +167,14 @@ public class TextEditorElement extends AbstractEditorElement {
                         })
                 .setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).baseColorHex,
                         (element, colorHex) -> {
                             ((TextElement)element.element).baseColorHex = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, false, false, Component.translatable("fancymenu.customization.items.text.base_color"))
+                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.base_color"))
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
 
@@ -248,24 +248,24 @@ public class TextEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.scroll_grabber_color.desc")));
 
-        this.addStringInputContextMenuEntryTo(grabberColorMenu, "normal_grabber_color", null,
+        this.addStringInputContextMenuEntryTo(grabberColorMenu, "normal_grabber_color",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexNormal,
                         (element, colorHex) -> {
                             ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"))
+                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"))
                 .setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(grabberColorMenu, "hover_grabber_color", null,
+        this.addStringInputContextMenuEntryTo(grabberColorMenu, "hover_grabber_color",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexHover,
                         (element, colorHex) -> {
                             ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"))
+                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"))
                 .setStackable(true);
 
     }

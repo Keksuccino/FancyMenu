@@ -39,8 +39,8 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         blit(pose, (int)(((double)(l + 2 - j1) * 2.5D) + (xOffset / 0.4F)), (int)((double)i1 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
         pose.popPose();
 
-        this.width = 13;
-        this.height = 13;
+        this.baseWidth = 13;
+        this.baseHeight = 13;
         this.baseX = realmsButtonX + realmsButtonWidth + xOffset - 17;
         this.baseY = realmsButtonY + 4;
 

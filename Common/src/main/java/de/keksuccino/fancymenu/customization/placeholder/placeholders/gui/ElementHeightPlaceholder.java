@@ -29,7 +29,7 @@ public class ElementHeightPlaceholder extends Placeholder {
         if (id != null) {
             AbstractElement element = findElement(id);
             if (element != null) {
-                return "" + element.getHeight();
+                return "" + element.getAbsoluteHeight();
             }
         }
         return null;

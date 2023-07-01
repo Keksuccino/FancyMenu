@@ -46,7 +46,7 @@ public class SliderElement extends AbstractElement {
             if ((valString != null) && MathUtils.isInteger(valString)) {
                 selectedRangeValue = Integer.parseInt(valString);
             }
-            this.slider = new RangeSliderButton(this.getX(), this.getY(), this.getWidth(), this.getHeight(), true, this.minRangeValue, this.maxRangeValue, selectedRangeValue, (apply) -> {
+            this.slider = new RangeSliderButton(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), true, this.minRangeValue, this.maxRangeValue, selectedRangeValue, (apply) -> {
                 if (linkedVariable != null) {
                     VariableHandler.setVariable(linkedVariable, "" + ((RangeSliderButton)apply).getSelectedRangeValue());
                 }
@@ -64,7 +64,7 @@ public class SliderElement extends AbstractElement {
                     i++;
                 }
             }
-            this.slider = new ListSliderButton(this.getX(), this.getY(), this.getWidth(), this.getHeight(), true, this.listValues, selectedIndex, (apply) -> {
+            this.slider = new ListSliderButton(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), true, this.listValues, selectedIndex, (apply) -> {
                 if (linkedVariable != null) {
                     VariableHandler.setVariable(linkedVariable, ((ListSliderButton)apply).getSelectedListValue());
                 }
@@ -88,10 +88,10 @@ public class SliderElement extends AbstractElement {
                 this.slider.active = false;
             }
 
-            this.slider.x = this.getX();
-            this.slider.y = this.getY();
-            this.slider.setWidth(this.getWidth());
-            ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getHeight());
+            this.slider.x = this.getAbsoluteX();
+            this.slider.y = this.getAbsoluteY();
+            this.slider.setWidth(this.getAbsoluteWidth());
+            ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
             this.slider.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change

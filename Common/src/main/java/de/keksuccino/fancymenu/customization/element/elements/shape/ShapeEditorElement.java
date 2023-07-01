@@ -20,16 +20,13 @@ public class ShapeEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
                         consumes -> (consumes instanceof ShapeEditorElement),
                         "#ffffff",
                         consumes -> ((ShapeElement)consumes.element).color.getHex(),
                         (element, colorHex) -> {
-                            DrawableColor c = DrawableColor.of(colorHex);
-                            if (c != null) {
-                                ((ShapeElement)element.element).color = c;
-                            }
-                        }, false, false, Component.translatable("fancymenu.editor.items.shape.color"))
+                            ((ShapeElement) element.element).color = DrawableColor.of(colorHex);
+                        }, null, false, false, Component.translatable("fancymenu.editor.items.shape.color"))
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.shape.color.btndesc")));
 

@@ -45,10 +45,10 @@ public class AnimationElement extends AbstractElement {
             int cachedHeight = this.animation.getHeight();
 
             this.animation.setOpacity(this.opacity);
-            this.animation.setPosX(this.getX());
-            this.animation.setPosY(this.getY());
-            this.animation.setWidth(this.getWidth());
-            this.animation.setHeight(this.getHeight());
+            this.animation.setPosX(this.getAbsoluteX());
+            this.animation.setPosY(this.getAbsoluteY());
+            this.animation.setWidth(this.getAbsoluteWidth());
+            this.animation.setHeight(this.getAbsoluteHeight());
 
             this.animation.render(pose);
 
@@ -60,7 +60,7 @@ public class AnimationElement extends AbstractElement {
 
         } else {
             RenderUtils.bindTexture(MISSING);
-            blit(pose, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
         }
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -87,7 +87,7 @@ public class AnimationElement extends AbstractElement {
 
     public void restoreAspectRatio() {
         AspectRatio ratio = new AspectRatio(this.originalWidth, this.originalHeight);
-        this.setWidth(ratio.getAspectRatioWidth(this.getHeight()));
+        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
     }
 
 }

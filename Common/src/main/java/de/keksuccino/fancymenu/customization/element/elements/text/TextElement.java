@@ -63,7 +63,7 @@ public class TextElement extends AbstractElement {
 
     public void updateScrollArea() {
 
-        this.scrollArea = new ScrollArea(0, 0, this.getWidth(), this.getHeight()) {
+        this.scrollArea = new ScrollArea(0, 0, this.getAbsoluteWidth(), this.getAbsoluteHeight()) {
             @Override
             public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
                 super.render(matrix, mouseX, mouseY, partial);
@@ -73,8 +73,8 @@ public class TextElement extends AbstractElement {
             public void updateScrollArea() {
                 super.updateScrollArea();
                 if (Minecraft.getInstance().screen != null) {
-                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getX() + TextElement.this.getWidth() + 12;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getY() + TextElement.this.getHeight() + 12;
+                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + 12;
+                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + 12;
                 }
             }
         };
@@ -152,17 +152,17 @@ public class TextElement extends AbstractElement {
 
                     if (this.scrollArea != null) {
                         this.scrollArea.customGuiScale = this.customGuiScale;
-                        this.scrollArea.setX(this.getX(), true);
-                        this.scrollArea.setY(this.getY(), true);
-                        this.scrollArea.setWidth(this.getWidth(), true);
-                        this.scrollArea.setHeight(this.getHeight(), true);
+                        this.scrollArea.setX(this.getAbsoluteX(), true);
+                        this.scrollArea.setY(this.getAbsoluteY(), true);
+                        this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
+                        this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
                         this.scrollArea.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderUtils.getPartialTick());
                     }
 
                 } else if (isEditor()) {
                     //Render "updating" view in editor
-                    fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), Color.MAGENTA.getRGB());
-                    drawCenteredString(pose, font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (font.lineHeight / 2), -1);
+                    fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
+                    drawCenteredString(pose, font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

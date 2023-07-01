@@ -179,21 +179,21 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
-                        false, true, Component.translatable("fancymenu.editor.items.button.editlabel"))
+                        null, false, true, Component.translatable("fancymenu.editor.items.button.editlabel"))
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                        false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"))
+                        null, false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"))
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
@@ -221,7 +221,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_4").setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> {
@@ -235,7 +235,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                             }
                             ((ButtonElement)element1.element).tooltip = s;
                         },
-                        true, true, Component.translatable("fancymenu.editor.items.button.btndescription"))
+                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"))
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));

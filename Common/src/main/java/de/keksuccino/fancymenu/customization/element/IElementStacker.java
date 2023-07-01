@@ -31,11 +31,11 @@ public interface IElementStacker<E extends AbstractElement> {
         if (e.baseY != 0) {
             stack.baseY = e.baseY;
         }
-        if (e.width != 0) {
-            stack.width = e.width;
+        if (e.baseWidth != 0) {
+            stack.baseWidth = e.baseWidth;
         }
-        if (e.height != 0) {
-            stack.height = e.height;
+        if (e.baseHeight != 0) {
+            stack.baseHeight = e.baseHeight;
         }
         if (e.advancedX != null) {
             stack.advancedX = e.advancedX;

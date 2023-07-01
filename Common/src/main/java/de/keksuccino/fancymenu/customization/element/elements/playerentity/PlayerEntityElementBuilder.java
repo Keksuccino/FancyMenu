@@ -39,8 +39,8 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
     @Override
     public @NotNull PlayerEntityElement buildDefaultInstance() {
         PlayerEntityElement i = new PlayerEntityElement(this);
-        i.width = 100;
-        i.height = 300;
+        i.baseWidth = 100;
+        i.baseHeight = 300;
         return i;
     }
 

@@ -154,12 +154,12 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable {
         }
 
         protected ElementAnchorPointArea applyElement(AbstractElement e) {
-            this.x = e.getX();
-            this.y = e.getY();
-            this.width = e.getWidth();
-            this.height = e.getHeight();
-            this.hoverWidth = e.getWidth();
-            this.hoverHeight = e.getHeight();
+            this.x = e.getAbsoluteX();
+            this.y = e.getAbsoluteY();
+            this.width = e.getAbsoluteWidth();
+            this.height = e.getAbsoluteHeight();
+            this.hoverWidth = e.getAbsoluteWidth();
+            this.hoverHeight = e.getAbsoluteHeight();
             return this;
         }
 

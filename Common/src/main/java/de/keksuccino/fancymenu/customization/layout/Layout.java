@@ -547,6 +547,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addtexture")) {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
+                        e.stayOnScreen = false;
                         e.sourceMode = ImageElement.SourceMode.LOCAL;
                         e.source = sec.getValue("path");
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
@@ -556,6 +557,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addwebtexture")) {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
+                        e.stayOnScreen = false;
                         e.sourceMode = ImageElement.SourceMode.WEB;
                         e.source = sec.getValue("url");
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
@@ -565,6 +567,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addanimation")) {
                     AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
+                        e.stayOnScreen = false;
                         e.animationName = sec.getValue("name");
                         elements.add(Elements.ANIMATION.serializeElementInternal(e));
                     }
@@ -573,6 +576,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addshape")) {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
+                        e.stayOnScreen = false;
                         e.color = DrawableColor.of(sec.getValue("color"));
                         elements.add(Elements.SHAPE.serializeElementInternal(e));
                     }
@@ -581,6 +585,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addslideshow")) {
                     SlideshowElement e = Elements.SLIDESHOW.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
+                        e.stayOnScreen = false;
                         e.slideshowName = sec.getValue("name");
                         elements.add(Elements.SLIDESHOW.serializeElementInternal(e));
                     }
@@ -589,6 +594,7 @@ public class Layout extends LayoutBase {
                 if (action.equalsIgnoreCase("addbutton")) {
                     ButtonElement e = Elements.BUTTON.deserializeElementInternal(convertSectionToElement(sec));
                     if (e != null) {
+                        e.stayOnScreen = false;
                         elements.add(Elements.BUTTON.serializeElementInternal(e));
                     }
                 }
@@ -615,6 +621,7 @@ public class Layout extends LayoutBase {
                         if (baseColor != null) {
                             e.baseColor = DrawableColor.of(baseColor);
                         }
+                        e.stayOnScreen = false;
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
                     }
                 }
@@ -876,6 +883,7 @@ public class Layout extends LayoutBase {
 
         List<SerializedElement> l = new ArrayList<>();
         for (VanillaButtonElement e : elements.values()) {
+            e.stayOnScreen = false;
             SerializedElement serialized = VanillaButtonElementBuilder.INSTANCE.serializeElementInternal(e);
             if (serialized != null) {
                 l.add(serialized);

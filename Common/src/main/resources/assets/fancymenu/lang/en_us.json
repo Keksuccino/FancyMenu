@@ -1072,13 +1072,9 @@
   "fancymenu.editor.elements.button.manage_actions.desc": "Manage the actions this button\nshould execute when clicked.",
   "fancymenu.editor.elements.ticker.manage_actions.desc": "Manage the actions this ticker\nshould execute.",
   "fancymenu.guicomponents.confirm": "Confirm",
-  "fancymenu.keybinding.category": "FancyMenu",
-  "fancymenu.keybinding.keybind.reload_mod": "Reload FancyMenu | CTRL + ALT + ",
-  "fancymenu.keybinding.keybind.toggle_overlay": "Toggle Overlay | CTRL + ALT + ",
   "fancymenu.element.anchor_point": "Anchor Point",
   "fancymenu.element.anchor_point.vanilla": "Vanilla (Original)",
   "fancymenu.element.anchor_point.element": "Other Element",
-  "fancymenu.element.anchor_point.auto": "Auto",
   "fancymenu.element.anchor_point.top_left": "Top-Left Corner",
   "fancymenu.element.anchor_point.mid_left": "Center of Left Edge",
   "fancymenu.element.anchor_point.bottom_left": "Bottom-Left Corner",
@@ -1275,5 +1271,7 @@
   "fancymenu.general.cycle.on_off.off": "Off",
   "fancymenu.general.cycle.enabled_disabled.enabled": "Enabled",
   "fancymenu.general.cycle.enabled_disabled.disabled": "Disabled",
-  "fancymenu.ui.confirmation_screen.delay.tooltip": "Clickable in %s seconds.."
+  "fancymenu.ui.confirmation_screen.delay.tooltip": "Clickable in %s seconds..",
+  "fancymenu.elements.element.stay_on_screen": "Stay on Screen: %s",
+  "fancymenu.elements.element.stay_on_screen.tooltip": "Will prevent the element from going\nout of the visible screen area\nwhen resizing the window or changing\nthe GUI scale."
 }

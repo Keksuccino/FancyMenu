@@ -32,7 +32,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.playerentity.copy_client_player")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.desc")));
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_player_name", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_player_name",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         null,
                         consumes -> ((PlayerEntityElement) consumes.element).playerName,
@@ -46,7 +46,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                                 i.setSkinByPlayerName();
                             }
                         },
-                        false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.set_player_name"))
+                        null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.set_player_name"))
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
@@ -103,12 +103,12 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 false,
                 file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
 
-        this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin", null,
+        this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin",
                 consumes -> (consumes instanceof PlayerEntityEditorElement),
                 null,
                 consumes -> ((PlayerEntityElement) consumes.element).skinUrl,
                 (element, s) -> ((PlayerEntityElement) element.element).setSkinTextureBySource(s, false),
-                false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"));
+                null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"));
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "slim_skin",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
@@ -178,12 +178,12 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 false,
                 file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
 
-        this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape", null,
+        this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape",
                 consumes -> (consumes instanceof PlayerEntityEditorElement),
                 null,
                 consumes -> ((PlayerEntityElement) consumes.element).capeUrl,
                 (element, s) -> ((PlayerEntityElement) element.element).setCapeTextureBySource(s, false),
-                false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"));
+                null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"));
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_3");
 

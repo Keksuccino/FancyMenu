@@ -22,8 +22,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
     @Override
     public @NotNull TextElement buildDefaultInstance() {
         TextElement i = new TextElement(this);
-        i.width = 200;
-        i.height = 40;
+        i.baseWidth = 200;
+        i.baseHeight = 40;
         i.source = "< EMPTY TEXT ELEMENT >";
         i.updateContent();
         return i;
@@ -34,8 +34,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         //Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
         TextElement element = new TextElement(this);
-        element.width = 200;
-        element.height = 40;
+        element.baseWidth = 200;
+        element.baseHeight = 40;
         element.source = "< EMPTY TEXT ELEMENT >";
 
         element.source = serialized.getValue("source");

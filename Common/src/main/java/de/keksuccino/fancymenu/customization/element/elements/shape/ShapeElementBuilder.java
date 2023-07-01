@@ -23,8 +23,8 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
     @Override
     public @NotNull ShapeElement buildDefaultInstance() {
         ShapeElement i = new ShapeElement(this);
-        i.width = 200;
-        i.height = 200;
+        i.baseWidth = 200;
+        i.baseHeight = 200;
         return i;
     }
 

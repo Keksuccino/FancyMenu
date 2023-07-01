@@ -26,22 +26,25 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@SuppressWarnings("all")
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull PoseStack p, int i1, int i2, float f){}};
 
+	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
+
 	public final ElementBuilder<?,?> builder;
-	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.AUTO;
+	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	public String anchorPointElementIdentifier = null;
 	protected AbstractElement anchorPointElement = null;
-	/** Not the same as {@link AbstractElement#getX()}! This is the raw value without orientation and scale! **/
+	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the raw value without orientation and scale! **/
 	public int baseX = 0;
-	/** Not the same as {@link AbstractElement#getY()}! This is the raw value without orientation and scale! **/
+	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the raw value without orientation and scale! **/
 	public int baseY = 0;
-	public int width = 0;
-	public int height = 0;
+	public int baseWidth = 0;
+	public int baseHeight = 0;
 	public String advancedX;
 	public String advancedY;
 	public String advancedWidth;
 	public String advancedHeight;
 	public boolean stretchX = false;
 	public boolean stretchY = false;
+	public boolean stayOnScreen = true;
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
 	public volatile float appearanceDelayInSeconds = 1.0F;
@@ -77,40 +80,58 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 * Should be used to get the ACTUAL X position of the element.<br>
 	 * Not the same as {@link AbstractElement#baseX}!
 	 */
-	public int getX() {
+	public int getAbsoluteX() {
+		int x = 0;
 		if (this.advancedX != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedX).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
-				return (int) Double.parseDouble(s);
+				x = (int) Double.parseDouble(s);
 			}
 		}
 		if (this.stretchX) {
-			return 0;
+			x = 0;
 		}
 		if (this.anchorPoint != null) {
-			return this.anchorPoint.getElementPositionX(this);
+			x = this.anchorPoint.getElementPositionX(this);
 		}
-		return 0;
+		if (this.stayOnScreen && !this.stretchX) {
+			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+			}
+			if (x > (getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth())) {
+				x = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
+			}
+		}
+		return x;
 	}
 	
 	/**
 	 * Should be used to get the ACTUAL Y position of the element.<br>
 	 * Not the same as {@link AbstractElement#baseY}!
 	 */
-	public int getY() {
+	public int getAbsoluteY() {
+		int y = 0;
 		if (this.advancedY != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedY).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
-				return (int) Double.parseDouble(s);
+				y = (int) Double.parseDouble(s);
 			}
 		}
 		if (this.stretchY) {
-			return 0;
+			y = 0;
 		}
 		if (this.anchorPoint != null) {
-			return this.anchorPoint.getElementPositionY(this);
+			y = this.anchorPoint.getElementPositionY(this);
 		}
-		return 0;
+		if (this.stayOnScreen && !this.stretchY) {
+			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+				y = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+			}
+			if (y > (getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight())) {
+				y = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
+			}
+		}
+		return y;
 	}
 
 	@Nullable
@@ -144,7 +165,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return this.loadingRequirementContainer.requirementsMet();
 	}
 
-	public int getWidth() {
+	public int getAbsoluteWidth() {
 		if (this.advancedWidth != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
@@ -154,14 +175,10 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		if (this.stretchX) {
 			return getScreenWidth();
 		}
-		return this.width;
+		return this.baseWidth;
 	}
 
-	public void setWidth(int width) {
-		this.width = width;
-	}
-
-	public int getHeight() {
+	public int getAbsoluteHeight() {
 		if (this.advancedHeight != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
@@ -171,11 +188,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		if (this.stretchY) {
 			return getScreenHeight();
 		}
-		return this.height;
-	}
-
-	public void setHeight(int height) {
-		this.height = height;
+		return this.baseHeight;
 	}
 
 	public static String fixBackslashPath(String path) {

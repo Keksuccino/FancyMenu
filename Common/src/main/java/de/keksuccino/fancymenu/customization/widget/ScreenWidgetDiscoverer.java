@@ -78,20 +78,16 @@ public class ScreenWidgetDiscoverer {
 
 			screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 
-			List<AbstractWidget> widgets = new ArrayList<>();
 			for (Renderable r : ((IMixinScreen)screen).getRenderablesFancyMenu()) {
-				if (r instanceof AbstractWidget) {
-					widgets.add((AbstractWidget)r);
+				if (r instanceof AbstractWidget w) {
+					String idRaw = w.getX() + "" + w.getY();
+					long id = 0;
+					if (MathUtils.isLong(idRaw)) {
+						id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
+					}
+					ids.add(id);
+					widgetMetaList.add(new WidgetMeta(w, id, screen));
 				}
-			}
-			for (AbstractWidget w : widgets) {
-				String idRaw = w.x + "" + w.y;
-				long id = 0;
-				if (MathUtils.isLong(idRaw)) {
-					id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
-				}
-				ids.add(id);
-				widgetMetaList.add(new WidgetMeta(w, id, screen));
 			}
 
 		} catch (Exception ex) {

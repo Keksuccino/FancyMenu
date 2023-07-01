@@ -73,8 +73,8 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
     @Override
     public @NotNull TickerElement buildDefaultInstance() {
         TickerElement i = new TickerElement(this);
-        i.width = 70;
-        i.height = 70;
+        i.baseWidth = 70;
+        i.baseHeight = 70;
         return i;
     }
 

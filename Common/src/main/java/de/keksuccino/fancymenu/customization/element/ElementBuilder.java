@@ -146,10 +146,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                     element.stretchX = true;
                 } else {
                     if (MathUtils.isInteger(w)) {
-                        element.width = Integer.parseInt(w);
+                        element.baseWidth = Integer.parseInt(w);
                     }
-                    if (element.width < 0) {
-                        element.width = 0;
+                    if (element.baseWidth < 0) {
+                        element.baseWidth = 0;
                     }
                 }
             }
@@ -160,10 +160,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                     element.stretchY = true;
                 } else {
                     if (MathUtils.isInteger(h)) {
-                        element.height = Integer.parseInt(h);
+                        element.baseHeight = Integer.parseInt(h);
                     }
-                    if (element.height < 0) {
-                        element.height = 0;
+                    if (element.baseHeight < 0) {
+                        element.baseHeight = 0;
                     }
                 }
             }
@@ -182,6 +182,12 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.advancedHeight = serialized.getValue("advanced_height");
             element.advancedX = serialized.getValue("advanced_posx");
             element.advancedY = serialized.getValue("advanced_posy");
+
+            String stayOnScreen = serialized.getValue("stay_on_screen");
+            //Setting this to false if null should set it to false for all legacy elements, so old layouts don't break
+            if ((stayOnScreen == null) || stayOnScreen.equals("false")) {
+                element.stayOnScreen = false;
+            }
 
             element.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(serialized);
 
@@ -245,10 +251,12 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
             sec.putProperty("x", "" + element.baseX);
             sec.putProperty("y", "" + element.baseY);
-            sec.putProperty("width", "" + element.getWidth());
-            sec.putProperty("height", "" + element.getHeight());
+            sec.putProperty("width", "" + element.getAbsoluteWidth());
+            sec.putProperty("height", "" + element.getAbsoluteHeight());
             sec.putProperty("stretch_x", "" + element.stretchX);
             sec.putProperty("stretch_y", "" + element.stretchY);
+
+            sec.putProperty("stay_on_screen", "" + element.stayOnScreen);
 
             element.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 

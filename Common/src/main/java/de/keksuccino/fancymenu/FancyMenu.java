@@ -30,13 +30,6 @@ public class FancyMenu {
 
 	//TODO Arm rotation für player elements
 
-	//TODO "SaveFileScreen" bauen, der genutzt wird, um layouts zu speichern
-	// - Als Basis FileChooserScreen nutzen, aber Files können nicht "ausgewählt" werden, sondern sind nur sichtbar (damit man sieht, welche Files schon in Dir sind)
-	// - Wenn kein Ordner in currentDir ausgewählt, dann File in currentDir speichern
-	// - Wenn Ordner angewählt, File in angewähltem Ordner speichern
-	// - Unter file list area ist Eingabefeld für File Name
-	// - Klick auf "Done" returnt ZWEI FILES! (save directory UND file name)
-
 	//TODO rewrite SetupSharingEngine
 	// - All layout assets are now in config/fancymenu/assets, so just export config/fancymenu and that's it
 	// - Pack exported setup to ZIP
@@ -45,17 +38,9 @@ public class FancyMenu {
 
 	//TODO re-implement GameIntroScreen
 
-	//TODO Mixin für WorldLoadingScreen adden, um showAnimation und showPercent optionen zu handlen
-
 	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
 
-	//TODO Overlay durch schnelles, wiederholtes drücken von C togglen (Shortcut in Einstellungen entfernen; kann nicht deaktiviert werden)
-
 	//TODO Bei 4K Auflösung UI Scale automatisch auf 2 bei erstem Start
-
-	//TODO Alle Config Optionen auf Untermenüs von MenuBars aufteilen (kein Config Screen mehr)
-
-	//TODO FIXEN: Nach ändern von anchor point springt das element manchmal beim ersten resizen (gesehen bei vanilla button)
 
 	//TODO per action ermöglichen, zu disconnecten/welt zu verlassen und dabei den zielscreen zu wählen
 
@@ -69,17 +54,11 @@ public class FancyMenu {
 
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
-	//TODO move layout editor config stuff to separate config and make it editable via Menu Bar Tab in Editor
-
 	//TODO add opacity support for title screen deep cuz elements (splash, logo, branding, realms icon, forge stuff)
 
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
-
-	//TODO label von custom buttons ist bei fade-in am Anfang kurz unsichtbar
-
-	//TODO deep element customizations werden nicht in editor geladen, wenn editor neu geöffnet wird
 
 	//TODO add "Select All" option to editor right-click menu and "Edit" tab in menu bar
 
@@ -93,27 +72,13 @@ public class FancyMenu {
 
 	//TODO Text Element: auto line break (toggleable)
 
-	//TODO ChooseMenuBackgroundScreen: background setzen scheint nicht zu gehen (getestet mit Image)
-
 	//TODO Menu Bar in layout editor fixen
-
-	//TODO loading screen fade-out fixen
 
 	//TODO NOCH NICHT KOMPLETT: Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
 	// - Visibility Requirements (v1 stuff zu loading requirements machen)
 	// - Actions
 
-	//TODO Title Screen Mixins für customization adden
-	// - BackgroundRenderEvent nach rendern von panorama back callen
-	// - alle elemente entfernen, die durch Deep Cuz elemente ersetzt wurden
-
-	//TODO "not_allowed.png" textur ersetzen
-
-	//TODO File Picker GUI rewriten mit neuem Screen UI layout
-
 	//TODO TextBox class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
-
-	//TODO GameIntro stuff komplett reworken/rewriten
 
 	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 

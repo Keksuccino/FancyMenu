@@ -102,7 +102,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getHeight() / 2);
+            return -(element.getAbsoluteHeight() / 2);
         }
 
     }
@@ -120,7 +120,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -element.getHeight();
+            return -element.getAbsoluteHeight();
         }
 
     }
@@ -138,7 +138,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getWidth() / 2);
+            return -(element.getAbsoluteWidth() / 2);
         }
 
     }
@@ -161,12 +161,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getWidth() / 2);
+            return -(element.getAbsoluteWidth() / 2);
         }
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getHeight() / 2);
+            return -(element.getAbsoluteHeight() / 2);
         }
 
     }
@@ -189,12 +189,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getWidth() / 2);
+            return -(element.getAbsoluteWidth() / 2);
         }
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -element.getHeight();
+            return -element.getAbsoluteHeight();
         }
 
     }
@@ -212,7 +212,7 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -element.getWidth();
+            return -element.getAbsoluteWidth();
         }
 
     }
@@ -235,12 +235,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -element.getWidth();
+            return -element.getAbsoluteWidth();
         }
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getHeight() / 2);
+            return -(element.getAbsoluteHeight() / 2);
         }
 
     }
@@ -263,12 +263,12 @@ public class ElementAnchorPoint {
 
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -element.getWidth();
+            return -element.getAbsoluteWidth();
         }
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -element.getHeight();
+            return -element.getAbsoluteHeight();
         }
 
     }
@@ -291,7 +291,7 @@ public class ElementAnchorPoint {
         public int getOriginX(@NotNull AbstractElement element) {
             AbstractElement anchor = element.getElementAnchorPointElement();
             if (anchor != null) {
-                return anchor.getX();
+                return anchor.getAbsoluteX();
             }
             return super.getOriginX(element);
         }
@@ -300,7 +300,7 @@ public class ElementAnchorPoint {
         public int getOriginY(@NotNull AbstractElement element) {
             AbstractElement anchor = element.getElementAnchorPointElement();
             if (anchor != null) {
-                return anchor.getY();
+                return anchor.getAbsoluteY();
             }
             return super.getOriginY(element);
         }
@@ -309,7 +309,7 @@ public class ElementAnchorPoint {
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
             AbstractElement anchor = element.getElementAnchorPointElement();
             if (anchor != null) {
-                return anchor.getHeight();
+                return anchor.getAbsoluteHeight();
             }
             return super.getDefaultElementBaseX(element);
         }
@@ -337,13 +337,13 @@ public class ElementAnchorPoint {
         //Used when changing the anchor point
         @Override
         public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getWidth() / 2);
+            return -(element.getAbsoluteWidth() / 2);
         }
 
         //Used when changing the anchor point
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getHeight() / 2);
+            return -(element.getAbsoluteHeight() / 2);
         }
 
         @Override
@@ -352,8 +352,8 @@ public class ElementAnchorPoint {
             if (x < EDGE_ZONE_SIZE) {
                 x = EDGE_ZONE_SIZE;
             }
-            if (x > (getScreenWidth() - EDGE_ZONE_SIZE - element.getWidth())) {
-                x = getScreenWidth() - EDGE_ZONE_SIZE - element.getWidth();
+            if (x > (getScreenWidth() - EDGE_ZONE_SIZE - element.getAbsoluteWidth())) {
+                x = getScreenWidth() - EDGE_ZONE_SIZE - element.getAbsoluteWidth();
             }
             return x;
         }
@@ -364,8 +364,8 @@ public class ElementAnchorPoint {
             if (y < EDGE_ZONE_SIZE) {
                 y = EDGE_ZONE_SIZE;
             }
-            if (y > (getScreenHeight() - EDGE_ZONE_SIZE - element.getHeight())) {
-                y = getScreenHeight() - EDGE_ZONE_SIZE - element.getHeight();
+            if (y > (getScreenHeight() - EDGE_ZONE_SIZE - element.getAbsoluteHeight())) {
+                y = getScreenHeight() - EDGE_ZONE_SIZE - element.getAbsoluteHeight();
             }
             return y;
         }

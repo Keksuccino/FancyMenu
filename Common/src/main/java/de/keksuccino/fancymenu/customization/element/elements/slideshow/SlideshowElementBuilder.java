@@ -22,8 +22,8 @@ public class SlideshowElementBuilder extends ElementBuilder<SlideshowElement, Sl
     @Override
     public @NotNull SlideshowElement buildDefaultInstance() {
         SlideshowElement i = new SlideshowElement(this);
-        i.width = 200;
-        i.height = 200;
+        i.baseWidth = 200;
+        i.baseHeight = 200;
         return i;
     }
 

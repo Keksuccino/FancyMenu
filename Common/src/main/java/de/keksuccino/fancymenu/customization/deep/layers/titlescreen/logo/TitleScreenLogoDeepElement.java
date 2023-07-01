@@ -36,11 +36,11 @@ public class TitleScreenLogoDeepElement extends AbstractDeepElement {
 
         this.baseX = (getScreenWidth() / 2) - 137;
         this.baseY = 30;
-        this.width = 155 + 119;
-        this.height = 52;
+        this.baseWidth = 155 + 119;
+        this.baseHeight = 52;
 
         if (this.showEasterEgg) {
-            blitOutlineBlack(this.getX(), this.getY(), (i1, i2) -> {
+            blitOutlineBlack(this.getAbsoluteX(), this.getAbsoluteY(), (i1, i2) -> {
                 blit(pose, i1, i2, 0, 0, 99, 44);
                 blit(pose, i1 + 99, i2, 129, 0, 27, 44);
                 blit(pose, i1 + 99 + 26, i2, 126, 0, 3, 44);
@@ -48,13 +48,13 @@ public class TitleScreenLogoDeepElement extends AbstractDeepElement {
                 blit(pose, i1 + 155, i2, 0, 45, 155, 44);
             });
         } else {
-            blitOutlineBlack(this.getX(), this.getY(), (i1, i2) -> {
+            blitOutlineBlack(this.getAbsoluteX(), this.getAbsoluteY(), (i1, i2) -> {
                 blit(pose, i1, i2, 0, 0, 155, 44);
                 blit(pose, i1 + 155, i2, 0, 45, 155, 44);
             });
         }
         RenderSystem.setShaderTexture(0, MINECRAFT_EDITION);
-        blit(pose, this.getX() + 88, this.getY() + 37, 0.0F, 0.0F, 98, 14, 128, 16);
+        blit(pose, this.getAbsoluteX() + 88, this.getAbsoluteY() + 37, 0.0F, 0.0F, 98, 14, 128, 16);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 

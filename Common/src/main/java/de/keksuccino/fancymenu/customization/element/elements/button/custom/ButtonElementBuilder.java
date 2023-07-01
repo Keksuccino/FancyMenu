@@ -26,8 +26,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     @Override
     public @NotNull ButtonElement buildDefaultInstance() {
         ButtonElement element = new ButtonElement(this);
-        element.width = 100;
-        element.height = 20;
+        element.baseWidth = 100;
+        element.baseHeight = 20;
         element.label = "New Button";
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {

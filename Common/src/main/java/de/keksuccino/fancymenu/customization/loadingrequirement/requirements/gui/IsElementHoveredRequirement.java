@@ -42,10 +42,10 @@ public class IsElementHoveredRequirement extends LoadingRequirement {
                     if (i != null) {
                         int mX = MouseInput.getMouseX();
                         int mY = MouseInput.getMouseY();
-                        int iX = i.getX();
-                        int iY = i.getY();
-                        int iW = i.getWidth();
-                        int iH = i.getHeight();
+                        int iX = i.getAbsoluteX();
+                        int iY = i.getAbsoluteY();
+                        int iW = i.getAbsoluteWidth();
+                        int iH = i.getAbsoluteHeight();
                         if ((mX >= iX) && (mX <= (iX + iW)) && (mY >= iY) && (mY <= (iY + iH))) {
                             return true;
                         }

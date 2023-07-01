@@ -27,8 +27,8 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
 
         if (!this.shouldRender()) return;
 
-        this.width = 60;
-        this.height = 30;
+        this.baseWidth = 60;
+        this.baseHeight = 30;
 
         RenderSystem.enableBlend();
         this.renderSplash(pose, Minecraft.getInstance().font);
@@ -47,7 +47,7 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
         }
 
         pose.pushPose();
-        pose.translate(this.getX(), this.getY(), 0.0F);
+        pose.translate(this.getAbsoluteX(), this.getAbsoluteY(), 0.0F);
         pose.mulPose(Axis.ZP.rotationDegrees(-20));
         float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         f = f * 100.0F / (float) (font.width(cachedSplashText) + 32);
@@ -61,22 +61,22 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
     }
 
     @Override
-    public int getX() {
+    public int getAbsoluteX() {
         return (getScreenWidth() / 2) + 90;
     }
 
     @Override
-    public int getY() {
+    public int getAbsoluteY() {
         return 70;
     }
 
     @Override
-    public int getWidth() {
+    public int getAbsoluteWidth() {
         return 60;
     }
 
     @Override
-    public int getHeight() {
+    public int getAbsoluteHeight() {
         return 30;
     }
 

@@ -53,7 +53,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         false, FileFilter.TXT_FILE_FILTER)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         null,
                         consumes -> ((SplashTextElement)consumes.element).source,
@@ -61,7 +61,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).source = s;
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"))
+                        null, false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"))
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.DIRECT_TEXT);
 
         this.rightClickMenu.addSeparatorEntry("splash_separator_1");
@@ -88,7 +88,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         Component.translatable("fancymenu.editor.items.splash.rotation"))
                 .setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         DrawableColor.of(255, 255, 0).getHex(),
                         consumes -> ((SplashTextElement)consumes.element).baseColor.getHex(),
@@ -96,7 +96,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).baseColor = DrawableColor.of(s);
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"))
+                        null, false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"))
                 .setStackable(true);
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",

@@ -29,7 +29,7 @@ public class ElementWidthPlaceholder extends Placeholder {
         if (id != null) {
             AbstractElement element = findElement(id);
             if (element != null) {
-                return "" + element.getWidth();
+                return "" + element.getAbsoluteWidth();
             }
         }
         return null;

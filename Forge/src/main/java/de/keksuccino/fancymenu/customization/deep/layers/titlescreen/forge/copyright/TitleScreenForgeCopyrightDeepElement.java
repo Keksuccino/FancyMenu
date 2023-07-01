@@ -27,9 +27,9 @@ public class TitleScreenForgeCopyrightDeepElement extends AbstractDeepElement {
             String line = I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright.example.line1");
             int lineCount = 0;
             drawString(pose, font, line, getScreenWidth() - font.width(line) - 1, getScreenHeight() - (11 + (lineCount + 1) * (font.lineHeight + 1)), 16777215);
-            this.width = font.width(line);
-            this.height = font.lineHeight;
-            this.baseX = getScreenWidth() - this.getWidth() - 1;
+            this.baseWidth = font.width(line);
+            this.baseHeight = font.lineHeight;
+            this.baseX = getScreenWidth() - this.getAbsoluteWidth() - 1;
             this.baseY = getScreenHeight() - 11 - font.lineHeight;
         } else {
             BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {

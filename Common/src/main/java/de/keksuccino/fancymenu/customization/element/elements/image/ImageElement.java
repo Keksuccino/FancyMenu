@@ -56,8 +56,8 @@ public class ImageElement extends AbstractElement {
 
             this.updateResources();
 
-            int x = this.getX();
-            int y = this.getY();
+            int x = this.getAbsoluteX();
+            int y = this.getAbsoluteY();
 
             RenderSystem.enableBlend();
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
@@ -69,8 +69,8 @@ public class ImageElement extends AbstractElement {
                 int y2 = this.gif.getPosY();
                 this.gif.setPosX(x);
                 this.gif.setPosY(y);
-                this.gif.setWidth(this.getWidth());
-                this.gif.setHeight(this.getHeight());
+                this.gif.setWidth(this.getAbsoluteWidth());
+                this.gif.setHeight(this.getAbsoluteHeight());
                 this.gif.setOpacity(this.opacity);
                 this.gif.render(pose);
                 this.gif.setPosX(x2);
@@ -79,10 +79,10 @@ public class ImageElement extends AbstractElement {
                 this.gif.setHeight(h);
             } else if ((this.texture != null) && this.texture.isReady()) {
                 RenderUtils.bindTexture(this.texture.getResourceLocation());
-                blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+                blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             } else if (isEditor()) {
                 RenderUtils.bindTexture(MISSING);
-                blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+                blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -140,7 +140,7 @@ public class ImageElement extends AbstractElement {
 
     public void restoreAspectRatio() {
         AspectRatio ratio = new AspectRatio(this.originalWidth, this.originalHeight);
-        this.setWidth(ratio.getAspectRatioWidth(this.getHeight()));
+        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
     }
 
     public enum SourceMode {

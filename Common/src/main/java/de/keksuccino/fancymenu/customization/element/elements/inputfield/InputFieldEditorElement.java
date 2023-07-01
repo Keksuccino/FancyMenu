@@ -20,12 +20,12 @@ public class InputFieldEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable", null,
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         null,
                         consumes -> ((InputFieldElement)consumes.element).linkedVariable,
                         (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
-                        false, false, Component.translatable("fancymenu.customization.items.input_field.editor.set_variable"))
+                        null, false, false, Component.translatable("fancymenu.customization.items.input_field.editor.set_variable"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")));
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");

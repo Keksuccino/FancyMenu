@@ -79,49 +79,49 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    public int getX() {
+    public int getAbsoluteX() {
         if ((this.button != null) && (this.anchorPoint == ElementAnchorPoints.VANILLA)) {
             int bX = this.baseX;
             this.baseX = this.originalX;
-            int x = super.getX();
+            int x = super.getAbsoluteX();
             this.baseX = bX;
             return x;
         }
-        return super.getX();
+        return super.getAbsoluteX();
     }
 
     @Override
-    public int getY() {
+    public int getAbsoluteY() {
         if ((this.button != null) && (this.anchorPoint == ElementAnchorPoints.VANILLA)) {
             int bY = this.baseY;
             this.baseY = this.originalY;
-            int y = super.getY();
+            int y = super.getAbsoluteY();
             this.baseY = bY;
             return y;
         }
-        return super.getY();
+        return super.getAbsoluteY();
     }
 
     @Override
-    public int getWidth() {
-        if ((this.button != null) && ((this.anchorPoint == ElementAnchorPoints.VANILLA) || (this.width == 0))) {
-            this.width = this.originalWidth;
-            int w = super.getWidth();
-            this.width = 0;
+    public int getAbsoluteWidth() {
+        if ((this.button != null) && ((this.anchorPoint == ElementAnchorPoints.VANILLA) || (this.baseWidth == 0))) {
+            this.baseWidth = this.originalWidth;
+            int w = super.getAbsoluteWidth();
+            this.baseWidth = 0;
             return w;
         }
-        return super.getWidth();
+        return super.getAbsoluteWidth();
     }
 
     @Override
-    public int getHeight() {
-        if ((this.button != null) && ((this.anchorPoint == ElementAnchorPoints.VANILLA) || (this.height == 0))) {
-            this.height = this.originalHeight;
-            int h = super.getHeight();
-            this.height = 0;
+    public int getAbsoluteHeight() {
+        if ((this.button != null) && ((this.anchorPoint == ElementAnchorPoints.VANILLA) || (this.baseHeight == 0))) {
+            this.baseHeight = this.originalHeight;
+            int h = super.getAbsoluteHeight();
+            this.baseHeight = 0;
             return h;
         }
-        return super.getHeight();
+        return super.getAbsoluteHeight();
     }
 
     @Override

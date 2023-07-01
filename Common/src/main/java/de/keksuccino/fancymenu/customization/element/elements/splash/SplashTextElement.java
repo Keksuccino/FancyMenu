@@ -147,7 +147,7 @@ public class SplashTextElement extends AbstractElement {
         pose.scale(this.scale, this.scale, this.scale);
 
         pose.pushPose();
-        pose.translate(((this.getX() + (this.getWidth() / 2F)) / this.scale), this.getY() / this.scale, 0.0F);
+        pose.translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / this.scale), this.getAbsoluteY() / this.scale, 0.0F);
         pose.mulPose(Axis.ZP.rotationDegrees(this.rotation));
         pose.scale(splashBaseScale, splashBaseScale, splashBaseScale);
 

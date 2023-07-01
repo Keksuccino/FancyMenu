@@ -22,8 +22,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
     @Override
     public @NotNull SliderElement buildDefaultInstance() {
         SliderElement i = new SliderElement(this);
-        i.width = 100;
-        i.height = 20;
+        i.baseWidth = 100;
+        i.baseHeight = 20;
         return i;
     }
 

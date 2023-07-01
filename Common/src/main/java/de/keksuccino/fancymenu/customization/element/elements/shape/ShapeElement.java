@@ -38,7 +38,7 @@ public class ShapeElement extends AbstractElement {
             int c = FastColor.ARGB32.color(alpha, this.color.getColor().getRed(), this.color.getColor().getGreen(), this.color.getColor().getBlue());
 
             if (this.shape == Shape.RECTANGLE) {
-                fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), c);
+                fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), c);
             }
 
         }

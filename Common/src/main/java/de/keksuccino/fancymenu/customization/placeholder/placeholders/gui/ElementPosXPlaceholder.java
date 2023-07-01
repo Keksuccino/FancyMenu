@@ -29,7 +29,7 @@ public class ElementPosXPlaceholder extends Placeholder {
         if (id != null) {
             AbstractElement element = findElement(id);
             if (element != null) {
-                return "" + element.getX();
+                return "" + element.getAbsoluteX();
             }
         }
         return null;

@@ -96,13 +96,13 @@ public class PlayerEntityElement extends AbstractElement {
             this.setPlayerName(this.playerName, false);
 
             //Update element size based on entity size
-            this.setWidth((int)(this.getActiveEntityProperties().getDimensions().width*this.scale));
-            this.setHeight((int)(this.getActiveEntityProperties().getDimensions().height*this.scale));
+            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width*this.scale);
+            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height*this.scale);
 
             RenderSystem.enableBlend();
 
-            int x = this.getX();
-            int y = this.getY();
+            int x = this.getAbsoluteX();
+            int y = this.getAbsoluteY();
 
             this.renderPlayerEntity(x, y, this.scale, (float)x - MouseInput.getMouseX(), (float)(y - 50) - MouseInput.getMouseY());
 

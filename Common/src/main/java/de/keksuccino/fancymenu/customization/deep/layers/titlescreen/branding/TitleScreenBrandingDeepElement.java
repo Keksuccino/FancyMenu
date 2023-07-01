@@ -33,7 +33,7 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
             totalHeight--;
         }
 
-        this.height = totalHeight;
+        this.baseHeight = totalHeight;
         this.baseX = 2;
         this.baseY = getScreenHeight() - 2 - totalHeight;
 
@@ -49,7 +49,7 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
             i++;
         }
 
-        this.width = w;
+        this.baseWidth = w;
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 

@@ -22,8 +22,8 @@ public class AnimationElementBuilder extends ElementBuilder<AnimationElement, An
     @Override
     public @NotNull AnimationElement buildDefaultInstance() {
         AnimationElement i = new AnimationElement(this);
-        i.width = 200;
-        i.height = 200;
+        i.baseWidth = 200;
+        i.baseHeight = 200;
         return i;
     }
 

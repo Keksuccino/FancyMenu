@@ -66,8 +66,8 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
 
         if (isEditor()) {
             RenderSystem.enableBlend();
-            fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), Color.ORANGE.getRGB());
-            drawCenteredString(pose, Minecraft.getInstance().font, "§l" + I18n.get("fancymenu.customization.items.ticker"), this.getX() + (this.getWidth() / 2), this.getY() + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.ORANGE.getRGB());
+            drawCenteredString(pose, Minecraft.getInstance().font, "§l" + I18n.get("fancymenu.customization.items.ticker"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
         } else if (!this.isAsync) {
             this.tick();
         }

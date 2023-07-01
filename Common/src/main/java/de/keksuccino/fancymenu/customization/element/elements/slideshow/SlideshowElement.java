@@ -45,10 +45,10 @@ public class SlideshowElement extends AbstractElement {
             int cachedHeight = this.slideshow.height;
 
             this.slideshow.slideshowOpacity = this.opacity;
-            this.slideshow.x = this.getX();
-            this.slideshow.y = this.getY();
-            this.slideshow.width = this.getWidth();
-            this.slideshow.height = this.getHeight();
+            this.slideshow.x = this.getAbsoluteX();
+            this.slideshow.y = this.getAbsoluteY();
+            this.slideshow.width = this.getAbsoluteWidth();
+            this.slideshow.height = this.getAbsoluteHeight();
 
             this.slideshow.render(pose);
 
@@ -60,7 +60,7 @@ public class SlideshowElement extends AbstractElement {
 
         } else {
             RenderUtils.bindTexture(MISSING);
-            blit(pose, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
         }
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -87,7 +87,7 @@ public class SlideshowElement extends AbstractElement {
 
     public void restoreAspectRatio() {
         AspectRatio ratio = new AspectRatio(this.originalWidth, this.originalHeight);
-        this.setWidth(ratio.getAspectRatioWidth(this.getHeight()));
+        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
     }
 
 }

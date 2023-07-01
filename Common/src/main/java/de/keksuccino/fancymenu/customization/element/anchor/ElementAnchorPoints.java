@@ -17,7 +17,7 @@ public class ElementAnchorPoints {
 
     public static final ElementAnchorPoint ELEMENT = registerAnchorPoint(new ElementAnchorPoint.AnchorElement());
     public static final ElementAnchorPoint VANILLA = registerAnchorPoint(new ElementAnchorPoint.AnchorVanilla());
-    public static final ElementAnchorPoint AUTO = registerAnchorPoint(new ElementAnchorPoint.AnchorAuto());
+//    public static final ElementAnchorPoint AUTO = registerAnchorPoint(new ElementAnchorPoint.AnchorAuto());
     public static final ElementAnchorPoint TOP_LEFT = registerAnchorPoint(new ElementAnchorPoint.AnchorTopLeft());
     public static final ElementAnchorPoint MID_LEFT = registerAnchorPoint(new ElementAnchorPoint.AnchorMidLeft());
     public static final ElementAnchorPoint BOTTOM_LEFT = registerAnchorPoint(new ElementAnchorPoint.AnchorBottomLeft());

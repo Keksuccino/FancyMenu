@@ -24,9 +24,9 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
     @Override
     public @NotNull InputFieldElement buildDefaultInstance() {
         InputFieldElement i = new InputFieldElement(this);
-        i.width = 100;
-        i.height = 20;
-        i.textField = new AdvancedTextField(Minecraft.getInstance().font, i.getX(), i.getY(), i.getWidth(), i.getHeight(), true, i.type.filter);
+        i.baseWidth = 100;
+        i.baseHeight = 20;
+        i.textField = new AdvancedTextField(Minecraft.getInstance().font, i.getAbsoluteX(), i.getAbsoluteY(), i.getAbsoluteWidth(), i.getAbsoluteHeight(), true, i.type.filter);
         return i;
     }
 
@@ -55,7 +55,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             element.maxTextLength = 1;
         }
 
-        element.textField = new AdvancedTextField(Minecraft.getInstance().font, element.getX(), element.getY(), element.getWidth(), element.getHeight(), true, element.type.filter);
+        element.textField = new AdvancedTextField(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), true, element.type.filter);
         element.textField.setMaxLength(element.maxTextLength);
         if (element.linkedVariable != null) {
             if (VariableHandler.variableExists(element.linkedVariable)) {
