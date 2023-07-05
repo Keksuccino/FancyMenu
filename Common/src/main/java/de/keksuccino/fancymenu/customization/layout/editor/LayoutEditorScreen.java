@@ -142,17 +142,17 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
 		}
 
-		//Render active element context menu
-		if (this.activeElementContextMenu != null) {
-			this.activeElementContextMenu.render(pose, mouseX, mouseY, partial);
-		}
-
 		this.renderMouseSelectionRectangle(pose, mouseX, mouseY);
 
 		this.anchorPointOverlay.render(pose, mouseX, mouseY, partial);
 
 		//TODO rewrite menu bar
 		this.ui.renderTopMenuBar(pose, this);
+
+		//Render active element context menu
+		if (this.activeElementContextMenu != null) {
+			this.activeElementContextMenu.render(pose, mouseX, mouseY, partial);
+		}
 
 	}
 
@@ -709,6 +709,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 
+		this.anchorPointOverlay.mouseClicked(mouseX, mouseY, button);
+
 		return super.mouseClicked(mouseX, mouseY, button);
 
 	}
@@ -746,6 +748,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.history.saveSnapshot(this.preDragElementSnapshot);
 		}
 		this.preDragElementSnapshot = null;
+
+		this.anchorPointOverlay.mouseReleased(mouseX, mouseY, button);
 
 		return super.mouseReleased(mouseX, mouseY, button);
 

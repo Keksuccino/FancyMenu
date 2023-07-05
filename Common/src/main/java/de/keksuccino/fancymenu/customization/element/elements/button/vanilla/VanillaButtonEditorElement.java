@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
+import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -117,10 +118,10 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     }
 
     @Override
-    public void setAnchorPointViaOverlay(ElementAnchorPoint p, int mouseX, int mouseY) {
+    public void setAnchorPointViaOverlay(AnchorPointOverlay.AnchorPointArea anchor, int mouseX, int mouseY) {
         if (this.element.anchorPoint == ElementAnchorPoints.VANILLA) return;
-        this.lastAnchorPoint = p;
-        super.setAnchorPointViaOverlay(p, mouseX, mouseY);
+        this.lastAnchorPoint = anchor.anchorPoint;
+        super.setAnchorPointViaOverlay(anchor, mouseX, mouseY);
     }
 
     @Override

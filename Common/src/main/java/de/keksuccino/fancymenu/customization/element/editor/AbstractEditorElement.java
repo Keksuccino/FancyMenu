@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
@@ -549,9 +550,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.element.anchorPoint = p;
 	}
 
-	public void setAnchorPointViaOverlay(ElementAnchorPoint p, int mouseX, int mouseY) {
+	public void setAnchorPointViaOverlay(AnchorPointOverlay.AnchorPointArea anchor, int mouseX, int mouseY) {
 		if (!this.settings.isAnchorPointChangeable()) return;
-		this.setAnchorPoint(p, true, false);
+		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
+		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
+			this.element.anchorPointElementIdentifier = ea.element.element.getInstanceIdentifier();
+			this.element.cachedAnchorPointElement = ea.element.element;
+		}
+		this.setAnchorPoint(anchor.anchorPoint, true, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
 	}
 

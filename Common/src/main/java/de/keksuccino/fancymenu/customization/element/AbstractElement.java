@@ -31,7 +31,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	public String anchorPointElementIdentifier = null;
-	protected AbstractElement anchorPointElement = null;
+	public AbstractElement cachedAnchorPointElement = null;
 	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the raw value without orientation and scale! **/
 	public int baseX = 0;
 	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the raw value without orientation and scale! **/
@@ -134,13 +134,22 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return y;
 	}
 
+	//TODO FIXEN: Anchor Point -> Other Element -> Bei set von element ID crash
+	// - per overlay geht, aber offset nach set falsch
+
+	//TODO FIXEN: Anchor Point -> Other Element -> Bei set von element ID crash
+	// - per overlay geht, aber offset nach set falsch
+
+	//TODO FIXEN: Anchor Point -> Other Element -> Bei set von element ID crash
+	// - per overlay geht, aber offset nach set falsch
+
 	@Nullable
 	public AbstractElement getElementAnchorPointElement() {
 		if (this.anchorPointElementIdentifier == null) return null;
-		if (this.anchorPointElement == null) {
-			this.anchorPointElement = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
+		if (this.cachedAnchorPointElement == null) {
+			this.cachedAnchorPointElement = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
 		}
-		return this.anchorPointElement;
+		return this.cachedAnchorPointElement;
 	}
 	
 	public boolean shouldRender() {
