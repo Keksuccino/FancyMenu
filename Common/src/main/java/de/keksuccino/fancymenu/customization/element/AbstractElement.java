@@ -31,7 +31,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	public String anchorPointElementIdentifier = null;
-	public AbstractElement cachedAnchorPointElement = null;
+	protected AbstractElement cachedAnchorPointElement = null;
 	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the raw value without orientation and scale! **/
 	public int baseX = 0;
 	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the raw value without orientation and scale! **/
@@ -150,6 +150,10 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			this.cachedAnchorPointElement = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
 		}
 		return this.cachedAnchorPointElement;
+	}
+
+	public void setElementAnchorPointElement(AbstractElement element) {
+		this.cachedAnchorPointElement = element;
 	}
 	
 	public boolean shouldRender() {

@@ -555,7 +555,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
 		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
 			this.element.anchorPointElementIdentifier = ea.element.element.getInstanceIdentifier();
-			this.element.cachedAnchorPointElement = ea.element.element;
+			this.element.setElementAnchorPointElement(ea.element.element);
 		}
 		this.setAnchorPoint(anchor.anchorPoint, true, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
