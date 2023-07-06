@@ -28,6 +28,8 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO option für "keep position after anchor change" adden
+
 	//TODO Arm rotation für player elements
 
 	//TODO rewrite SetupSharingEngine

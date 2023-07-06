@@ -774,9 +774,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
-				return true;
+				break;
 			}
 		}
+
+		this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
 
 		return super.mouseDragged(mouseX, mouseY, button, $$3, $$4);
 

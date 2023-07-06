@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public abstract class AbstractElement extends GuiComponent implements Renderable {
 
@@ -58,11 +60,12 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 **/
 	public float customGuiScale = -1F;
 	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
-	protected String instanceIdentifier;
+	private String instanceIdentifier;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
 		this.builder = builder;
+		this.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
 	}
 
 	@Override
@@ -134,15 +137,6 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return y;
 	}
 
-	//TODO FIXEN: Anchor Point -> Other Element -> Bei set von element ID crash
-	// - per overlay geht, aber offset nach set falsch
-
-	//TODO FIXEN: Anchor Point -> Other Element -> Bei set von element ID crash
-	// - per overlay geht, aber offset nach set falsch
-
-	//TODO FIXEN: Anchor Point -> Other Element -> Bei set von element ID crash
-	// - per overlay geht, aber offset nach set falsch
-
 	@Nullable
 	public AbstractElement getElementAnchorPointElement() {
 		if (this.anchorPointElementIdentifier == null) return null;
@@ -163,12 +157,13 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return this.visible;
 	}
 
+	@NotNull
 	public String getInstanceIdentifier() {
 		return this.instanceIdentifier;
 	}
 
-	public void setInstanceIdentifier(String id) {
-		this.instanceIdentifier = id;
+	public void setInstanceIdentifier(@NotNull String id) {
+		this.instanceIdentifier = Objects.requireNonNull(id);
 	}
 
 	protected boolean loadingRequirementsMet() {

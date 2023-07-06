@@ -371,9 +371,7 @@ public class ScreenCustomization {
 	}
 
 	public static String generateUniqueIdentifier() {
-		long ms = System.currentTimeMillis();
-		String s = UUID.randomUUID().toString();
-		return s + ms;
+		return UUID.randomUUID() + "-" + System.currentTimeMillis();
 	}
 
 	@FunctionalInterface

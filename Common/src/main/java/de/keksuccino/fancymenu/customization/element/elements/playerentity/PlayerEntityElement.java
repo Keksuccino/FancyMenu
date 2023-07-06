@@ -67,7 +67,7 @@ public class PlayerEntityElement extends AbstractElement {
         if (isEditor()) {
             PlayerEntityElementBuilder.ELEMENT_CACHE.clear();
         } else {
-            PlayerEntityElementBuilder.ELEMENT_CACHE.put(this.instanceIdentifier, this);
+            PlayerEntityElementBuilder.ELEMENT_CACHE.put(this.getInstanceIdentifier(), this);
         }
     }
 
@@ -118,6 +118,7 @@ public class PlayerEntityElement extends AbstractElement {
         innerRenderPlayerEntity(i11, i12, i13, f, f1, this.getActiveEntityProperties(), this.getActiveRenderer());
     }
 
+    @SuppressWarnings("all")
     protected void innerRenderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushPose();
@@ -220,7 +221,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     public void setCapeByPlayerName() {
-        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
+        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.getInstanceIdentifier());
         if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
             this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
             return;
@@ -242,7 +243,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     public void setSkinByPlayerName() {
-        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
+        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.getInstanceIdentifier());
         if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
             this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
             return;
@@ -272,7 +273,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     public void setSkinTextureBySource(String sourcePathOrLink, boolean web) {
-        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
+        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.getInstanceIdentifier());
         if ((cachedInstance != null) && (cachedInstance.currentSkinLocation != null)) {
             this.setSkinTextureLocation(cachedInstance.currentSkinLocation);
             return;
@@ -360,7 +361,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     public void setCapeTextureBySource(String sourcePathOrLink, boolean web) {
-        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.instanceIdentifier);
+        PlayerEntityElement cachedInstance = PlayerEntityElementBuilder.ELEMENT_CACHE.get(this.getInstanceIdentifier());
         if ((cachedInstance != null) && (cachedInstance.currentCapeLocation != null)) {
             this.setCapeTextureLocation(cachedInstance.currentCapeLocation);
             return;

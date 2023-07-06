@@ -182,7 +182,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 											for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 												if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
 													e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
-													e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, true);
+													e.element.setElementAnchorPointElement(editorElement.element);
+													e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, e.getX(), e.getY(), true);
 												}
 											}
 										} else {
@@ -211,7 +212,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							this.editor.history.saveSnapshot();
 							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 								if (e.settings.isAnchorPointChangeable()) {
-									e.setAnchorPoint(p, false, true);
+									e.setAnchorPoint(p, false, e.getX(), e.getY(), true);
 								}
 							}
 							menu.closeMenu();
@@ -535,14 +536,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	}
 
-	public void setAnchorPoint(ElementAnchorPoint p, boolean keepAbsolutePosition, boolean resetElementStates) {
+	public void setAnchorPoint(ElementAnchorPoint p, boolean keepAbsolutePosition, int oldAbsoluteX, int oldAbsoluteY, boolean resetElementStates) {
 		if (resetElementStates) this.resetElementStates();
 		if (p == null) {
 			p = ElementAnchorPoints.MID_CENTERED;
 		}
 		if (keepAbsolutePosition) {
-			this.element.baseX = this.calcNewBaseX(p);
-			this.element.baseY = this.calcNewBaseY(p);
+			this.element.baseX = this.calcNewBaseX(p, oldAbsoluteX);
+			this.element.baseY = this.calcNewBaseY(p, oldAbsoluteY);
 		} else {
 			this.element.baseX = p.getDefaultElementBaseX(this.element);
 			this.element.baseY = p.getDefaultElementBaseY(this.element);
@@ -551,28 +552,31 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public void setAnchorPointViaOverlay(AnchorPointOverlay.AnchorPointArea anchor, int mouseX, int mouseY) {
+		int oldAbsoluteX = this.getX();
+		int oldAbsoluteY = this.getY();
 		if (!this.settings.isAnchorPointChangeable()) return;
 		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
 		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
-			this.element.anchorPointElementIdentifier = ea.element.element.getInstanceIdentifier();
-			this.element.setElementAnchorPointElement(ea.element.element);
+			this.element.anchorPointElementIdentifier = ea.elementIdentifier;
+			AbstractEditorElement ee = ea.getElement();
+			if (ee != null) {
+				this.element.setElementAnchorPointElement(ee.element);
+			} else {
+				LOGGER.error("[FANCYMENU] Failed to get element in AbstractEditorElement#setAnchorPointViaOverlay()! Element was NULL!");
+			}
 		}
-		this.setAnchorPoint(anchor.anchorPoint, true, false);
+		this.setAnchorPoint(anchor.anchorPoint, true, oldAbsoluteX, oldAbsoluteY, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
 	}
 
-	protected int calcNewBaseX(ElementAnchorPoint newAnchor) {
+	protected int calcNewBaseX(ElementAnchorPoint newAnchor, int oldAbsoluteX) {
 		int originX = newAnchor.getOriginX(this.element);
-		int elementX = this.getX();
-		int diff = Math.max(originX, elementX) - Math.min(originX, elementX);
-		return (elementX < originX) ? -diff : diff;
+		return oldAbsoluteX - originX;
 	}
 
-	protected int calcNewBaseY(ElementAnchorPoint newAnchor) {
+	protected int calcNewBaseY(ElementAnchorPoint newAnchor, int oldAbsoluteY) {
 		int originY = newAnchor.getOriginY(this.element);
-		int elementY = this.getY();
-		int diff = Math.max(originY, elementY) - Math.min(originY, elementY);
-		return (elementY < originY) ? -diff : diff;
+		return oldAbsoluteY - originY;
 	}
 
 	public void resetElementStates() {
@@ -675,7 +679,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
-		return (mouseX >= this.element.getAbsoluteX()) && (mouseX <= this.element.getAbsoluteX() + this.element.getAbsoluteWidth()) && (mouseY >= this.element.getAbsoluteY()) && mouseY <= this.element.getAbsoluteY() + this.element.getAbsoluteHeight();
+		return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
 	}
 
 	@Override

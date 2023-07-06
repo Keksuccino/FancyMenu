@@ -58,13 +58,14 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             E element = deserializeElement(serialized);
 
-            element.instanceIdentifier = serialized.getValue("instance_identifier");
-            if (element.instanceIdentifier == null) {
-                element.instanceIdentifier = serialized.getValue("actionid");
+            String id = serialized.getValue("instance_identifier");
+            if (id == null) id = serialized.getValue("actionid");
+            if (id == null) id = ScreenCustomization.generateUniqueIdentifier();
+            if (id.equals("null")) {
+                id = ScreenCustomization.generateUniqueIdentifier();
+                LOGGER.warn("[FANCYMENU] Automatically corrected broken element identifier from 'null' to '" + id + "'! This could break parts of its parent layout!");
             }
-            if (element.instanceIdentifier == null) {
-                element.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
-            }
+            element.setInstanceIdentifier(id);
 
             String fi = serialized.getValue("fade_in");
             if (fi == null) {

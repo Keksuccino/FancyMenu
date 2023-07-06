@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.deep;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractDeepElement extends AbstractElement implements IHideableElement {
 
@@ -22,7 +23,7 @@ public abstract class AbstractDeepElement extends AbstractElement implements IHi
     }
 
     @Override
-    public String getInstanceIdentifier() {
+    public @NotNull String getInstanceIdentifier() {
         return "deep:" + this.builder.getIdentifier();
     }
 

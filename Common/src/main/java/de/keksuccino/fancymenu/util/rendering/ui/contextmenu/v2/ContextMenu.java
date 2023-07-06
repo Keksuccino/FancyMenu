@@ -1161,7 +1161,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered()) {
+            if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }

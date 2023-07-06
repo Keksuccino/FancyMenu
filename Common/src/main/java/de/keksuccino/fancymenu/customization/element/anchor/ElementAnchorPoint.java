@@ -306,12 +306,12 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
+        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             AbstractElement anchor = element.getElementAnchorPointElement();
             if (anchor != null) {
                 return anchor.getAbsoluteHeight();
             }
-            return super.getDefaultElementBaseX(element);
+            return super.getDefaultElementBaseY(element);
         }
 
     }

@@ -125,7 +125,7 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    public String getInstanceIdentifier() {
+    public @NotNull String getInstanceIdentifier() {
         if (this.widgetMeta != null) {
             if (this.widgetMeta.getCompatibilityIdentifier() != null) {
                 return "vanillabtn:" + this.widgetMeta.getCompatibilityIdentifier();

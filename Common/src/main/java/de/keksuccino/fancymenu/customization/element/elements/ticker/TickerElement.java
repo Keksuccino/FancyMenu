@@ -38,13 +38,13 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
             if (this.ticked && (this.tickMode == TickMode.ON_MENU_LOAD)) {
                 return;
             }
-            if ((this.tickMode == TickMode.ONCE_PER_SESSION) && TickerElementBuilder.cachedOncePerSessionItems.contains(this.instanceIdentifier)) {
+            if ((this.tickMode == TickMode.ONCE_PER_SESSION) && TickerElementBuilder.cachedOncePerSessionItems.contains(this.getInstanceIdentifier())) {
                 return;
             }
             if (this.tickMode == TickMode.ONCE_PER_SESSION) {
-                TickerElementBuilder.cachedOncePerSessionItems.add(this.instanceIdentifier);
+                TickerElementBuilder.cachedOncePerSessionItems.add(this.getInstanceIdentifier());
             } else {
-                TickerElementBuilder.cachedOncePerSessionItems.remove(this.instanceIdentifier);
+                TickerElementBuilder.cachedOncePerSessionItems.remove(this.getInstanceIdentifier());
             }
             long now = System.currentTimeMillis();
             if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
