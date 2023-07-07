@@ -22,7 +22,11 @@ public interface IValueCycle<T> {
     @NotNull
     T next();
 
+    IValueCycle<T> setCurrentValue(T value, boolean notifyListeners);
+
     IValueCycle<T> setCurrentValue(T value);
+
+    IValueCycle<T> setCurrentValueByIndex(int index, boolean notifyListeners);
 
     IValueCycle<T> setCurrentValueByIndex(int index);
 

@@ -15,7 +15,7 @@ public class CharacterFilter {
     }
 
     @NotNull
-    public static CharacterFilter getIntegerCharacterFiler() {
+    public static CharacterFilter buildIntegerCharacterFiler() {
         CharacterFilter f = new CharacterFilter();
         f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "+");
         return f;

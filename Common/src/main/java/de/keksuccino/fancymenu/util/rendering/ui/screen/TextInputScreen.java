@@ -2,9 +2,11 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
@@ -25,6 +27,8 @@ public class TextInputScreen extends Screen {
     protected ExtendedEditBox input;
     protected ExtendedButton cancelButton;
     protected ExtendedButton doneButton;
+    protected ConsumingSupplier<TextInputScreen, Boolean> textValidator = null;
+    protected Tooltip textValidatorFeedbackTooltip = null;
 
     @NotNull
     public static TextInputScreen build(@NotNull Component title, @Nullable CharacterFilter filter, @NotNull Consumer<String> callback) {
@@ -89,6 +93,9 @@ public class TextInputScreen extends Screen {
         this.cancelButton.y = this.height - 40;
         this.cancelButton.render(pose, mouseX, mouseY, partial);
 
+        this.doneButton.active = this.isTextValid();
+        if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
+        this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
         this.doneButton.x = (this.width / 2) + 5;
         this.doneButton.y = this.height - 40;
         this.doneButton.render(pose, mouseX, mouseY, partial);
@@ -112,8 +119,28 @@ public class TextInputScreen extends Screen {
         this.callback.accept(null);
     }
 
-    public TextInputScreen setText(@NotNull String text) {
+    public TextInputScreen setText(@Nullable String text) {
+        if (text == null) text = "";
         this.input.setValue(text);
+        return this;
+    }
+
+    public String getText() {
+        return this.input.getValue();
+    }
+
+    protected boolean isTextValid() {
+        if (this.textValidator != null) return this.textValidator.get(this);
+        return true;
+    }
+
+    public TextInputScreen setTextValidator(@Nullable ConsumingSupplier<TextInputScreen, Boolean> textValidator) {
+        this.textValidator = textValidator;
+        return this;
+    }
+
+    public TextInputScreen setTextValidatorUserFeedback(@Nullable Tooltip feedback) {
+        this.textValidatorFeedbackTooltip = feedback;
         return this;
     }
 

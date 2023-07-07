@@ -100,7 +100,7 @@ public class CustomizationOverlayUI {
                 }));
 
         screenSettingsMenu.addClickableEntry("default_gui_scale", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"), (menu, entry) -> {
-           TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"), CharacterFilter.getIntegerCharacterFiler(), call -> {
+           TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"), CharacterFilter.buildIntegerCharacterFiler(), call -> {
                if ((call != null) && MathUtils.isInteger(call)) {
                    FancyMenu.getOptions().defaultGuiScale.setValue(Integer.parseInt(call));
                }

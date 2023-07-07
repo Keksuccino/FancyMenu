@@ -68,21 +68,29 @@ public class ValueCycle<T> implements IValueCycle<T> {
         return this.current();
     }
 
-    public ValueCycle<T> setCurrentValue(T value) {
+    public ValueCycle<T> setCurrentValue(T value, boolean notifyListeners) {
         int i = this.values.indexOf(value);
         if (i != -1) {
             this.currentIndex = i;
-            this.notifyListeners();
+            if (notifyListeners) this.notifyListeners();
+        }
+        return this;
+    }
+
+    public ValueCycle<T> setCurrentValue(T value) {
+        return this.setCurrentValue(value, true);
+    }
+
+    public ValueCycle<T> setCurrentValueByIndex(int index, boolean notifyListeners) {
+        if ((index > 0) && (index < this.values.size())) {
+            this.currentIndex = index;
+            if (notifyListeners) this.notifyListeners();
         }
         return this;
     }
 
     public ValueCycle<T> setCurrentValueByIndex(int index) {
-        if ((index > 0) && (index < this.values.size())) {
-            this.currentIndex = index;
-            this.notifyListeners();
-        }
-        return this;
+        return this.setCurrentValueByIndex(index, true);
     }
 
     public ValueCycle<T> addCycleListener(@NotNull Consumer<T> listener) {
