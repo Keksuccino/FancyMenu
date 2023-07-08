@@ -11,7 +11,7 @@ public interface FileFilter {
 
     FileFilter RESOURCE_NAME_FILTER = file -> {
         String name = ScreenCustomization.getPathWithoutGameDirectory(file.getAbsolutePath()).replace("/", "").replace("\\", "");
-        return CharacterFilter.getBasicFilenameCharacterFilter().isAllowedText(name);
+        return CharacterFilter.buildBasicFilenameCharacterFilter().isAllowedText(name);
     };
     FileFilter WAV_AUDIO_FILE_FILTER = file -> {
         return (file.getPath().toLowerCase().endsWith(".wav"));

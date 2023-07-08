@@ -76,6 +76,21 @@ public class Layout extends LayoutBase {
     @Nullable
     public DeepScreenCustomizationLayer deepScreenCustomizationLayer = null;
 
+    @NotNull
+    public static Layout buildUniversal() {
+        return new Layout();
+    }
+
+    @NotNull
+    public static Layout buildForScreen(@NotNull Screen screen) {
+        return new Layout(screen);
+    }
+
+    @NotNull
+    public static Layout buildForScreen(@NotNull String menuIdentifier) {
+        return new Layout(menuIdentifier);
+    }
+
     public Layout() {
         this.setToUniversalLayout();
     }

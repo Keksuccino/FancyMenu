@@ -61,7 +61,7 @@ public class TextInputScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
-            this.callback.accept(this.input.getValue());
+            if (this.isTextValid()) this.callback.accept(this.input.getValue());
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
@@ -105,7 +105,7 @@ public class TextInputScreen extends Screen {
     @Override
     public boolean keyPressed(int button, int p_96553_, int p_96554_) {
 
-        if (button == InputConstants.KEY_ENTER) {
+        if ((button == InputConstants.KEY_ENTER) && this.isTextValid()) {
             this.callback.accept(this.input.getValue());
             return true;
         }

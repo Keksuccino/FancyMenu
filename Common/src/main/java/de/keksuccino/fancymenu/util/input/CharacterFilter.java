@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public class CharacterFilter {
 
     @NotNull
-    public static CharacterFilter getDoubleCharacterFiler() {
+    public static CharacterFilter buildDoubleCharacterFiler() {
         CharacterFilter f = new CharacterFilter();
         f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-", "+");
         return f;
@@ -22,21 +22,21 @@ public class CharacterFilter {
     }
 
     @NotNull
-    public static CharacterFilter getBasicFilenameCharacterFilter() {
+    public static CharacterFilter buildBasicFilenameCharacterFilter() {
         CharacterFilter f = new CharacterFilter();
         f.addAllowedCharacters("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "_", "-");
         return f;
     }
 
     @NotNull
-    public static CharacterFilter getFilenameFilterWithUppercaseSupport() {
-        CharacterFilter f = getBasicFilenameCharacterFilter();
+    public static CharacterFilter buildFilenameFilterWithUppercaseSupport() {
+        CharacterFilter f = buildBasicFilenameCharacterFilter();
         f.addAllowedCharacters("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z");
         return f;
     }
 
     @NotNull
-    public static CharacterFilter getUrlCharacterFilter() {
+    public static CharacterFilter buildUrlCharacterFilter() {
         CharacterFilter f = new CharacterFilter();
         f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", ".", "-", "_", "~", "+", "#", ",", "%", "&", "=", "*", ";", ":", "@", "?", "/", "\\");
         return f;
@@ -102,6 +102,40 @@ public class CharacterFilter {
                 this.forbidden.add(s.charAt(0));
             }
         }
+    }
+
+    @NotNull
+    public de.keksuccino.konkrete.input.CharacterFilter convertToLegacyFilter() {
+        return new de.keksuccino.konkrete.input.CharacterFilter() {
+            @Override
+            public boolean isAllowed(char c) {
+                return CharacterFilter.this.isAllowedChar(c);
+            }
+            @Override
+            public boolean isAllowed(@NotNull String charString) {
+                return CharacterFilter.this.isAllowedChar(charString);
+            }
+            @Override
+            public void addAllowedCharacters(char... chars) {
+                CharacterFilter.this.addAllowedCharacters(chars);
+            }
+            @Override
+            public void addAllowedCharacters(@NotNull String... chars) {
+                CharacterFilter.this.addAllowedCharacters(chars);
+            }
+            @Override
+            public void addForbiddenCharacters(char... chars) {
+                CharacterFilter.this.addForbiddenCharacters(chars);
+            }
+            @Override
+            public void addForbiddenCharacters(@NotNull String... chars) {
+                CharacterFilter.this.addForbiddenCharacters(chars);
+            }
+            @Override
+            public String filterForAllowedChars(@NotNull String text) {
+                return CharacterFilter.this.filterForAllowedChars(text);
+            }
+        };
     }
 
 }

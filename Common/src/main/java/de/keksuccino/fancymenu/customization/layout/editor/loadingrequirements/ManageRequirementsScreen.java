@@ -28,7 +28,6 @@ import java.util.function.Consumer;
 
 public class ManageRequirementsScreen extends Screen {
 
-    protected Screen parentScreen;
     protected LoadingRequirementContainer container;
     protected Consumer<LoadingRequirementContainer> callback;
 
@@ -40,26 +39,15 @@ public class ManageRequirementsScreen extends Screen {
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
 
-    public ManageRequirementsScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
-
+    public ManageRequirementsScreen(@NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
         super(Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
-
-        this.parentScreen = parentScreen;
         this.container = container;
         this.callback = callback;
         this.updateRequirementsScrollArea();
-
     }
 
     @Override
     protected void init() {
-
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-
-        super.init();
 
         this.addRequirementButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.add_requirement"), (button) -> {
             BuildRequirementScreen s = new BuildRequirementScreen(this, this.container, null, (call) -> {
@@ -177,14 +165,12 @@ public class ManageRequirementsScreen extends Screen {
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
-            Minecraft.getInstance().setScreen(this.parentScreen);
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.container);
-            Minecraft.getInstance().setScreen(this.parentScreen);
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
@@ -194,7 +180,6 @@ public class ManageRequirementsScreen extends Screen {
     @Override
     public void onClose() {
         this.callback.accept(null);
-        Minecraft.getInstance().setScreen(this.parentScreen);
     }
 
     @Override

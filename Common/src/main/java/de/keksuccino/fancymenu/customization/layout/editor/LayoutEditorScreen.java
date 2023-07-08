@@ -31,9 +31,9 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.AdvancedContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.*;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -63,9 +63,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public List<AbstractDeepEditorElement> deepEditorElements = new ArrayList<>();
 
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
-	public LayoutEditorUI ui;
+	public MenuBar menuBar;
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
-	public AdvancedContextMenu rightClickMenu = new AdvancedContextMenu();
+	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
 
 	protected boolean isMouseSelection = false;
@@ -96,19 +96,22 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		//Load all element instances before init, so the layout instance elements don't get wiped when updating it
 		this.constructElementInstances();
 
-		this.ui = new LayoutEditorUI(this);
-
 	}
 
 	@Override
 	protected void init() {
 
-		this.ui.updateTopMenuBar();
+		this.menuBar = LayoutEditorUINEW.buildMenuBar(this);
+		this.addWidget(this.menuBar);
 
 		this.isMouseSelection = false;
 		this.preDragElementSnapshot = null;
 
-		this.rightClickMenu.closeMenu();
+		if (this.rightClickMenu != null) {
+			this.rightClickMenu.closeMenu();
+		}
+		this.rightClickMenu = LayoutEditorUINEW.buildRightClickContextMenu(this);
+		this.addWidget(this.rightClickMenu);
 
 		if (this.activeElementContextMenu != null) {
 			this.activeElementContextMenu.closeMenu();
@@ -138,16 +141,13 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.renderElements(pose, mouseX, mouseY, partial);
 
-		if (this.rightClickMenu != null) {
-			this.rightClickMenu.renderScaled(pose, mouseX, mouseY, partial);
-		}
-
 		this.renderMouseSelectionRectangle(pose, mouseX, mouseY);
 
 		this.anchorPointOverlay.render(pose, mouseX, mouseY, partial);
 
-		//TODO rewrite menu bar
-		this.ui.renderTopMenuBar(pose, this);
+		this.menuBar.render(pose, mouseX, mouseY, partial);
+
+		this.rightClickMenu.render(pose, mouseX, mouseY, partial);
 
 		//Render active element context menu
 		if (this.activeElementContextMenu != null) {
@@ -589,7 +589,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		fileNamePreset = fileNamePreset.toLowerCase();
-		fileNamePreset = CharacterFilter.getBasicFilenameCharacterFilter().filterForAllowedChars(fileNamePreset);
+		fileNamePreset = CharacterFilter.buildBasicFilenameCharacterFilter().filterForAllowedChars(fileNamePreset);
 		fileNamePreset = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getAbsolutePath(), fileNamePreset, "txt");
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();
@@ -638,7 +638,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-		if (PopupHandler.isPopupActive()) return false;
+		if (PopupHandler.isPopupActive()) return true;
+
+		if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
@@ -689,8 +691,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		//Open background right-click context menu
 		if (topHoverElement == null) {
 			if (button == 1) {
-				this.rightClickMenu = this.ui.buildEditorRightClickContextMenu();
-				this.rightClickMenu.openMenuAtMouseScaled();
+				this.rightClickMenu.openMenuAtMouse();
 			}
 		} else {
 			//Set and open active element context menu
@@ -711,7 +712,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.anchorPointOverlay.mouseClicked(mouseX, mouseY, button);
 
-		return super.mouseClicked(mouseX, mouseY, button);
+		return false;
 
 	}
 
@@ -724,7 +725,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.isMouseSelection = false;
 		}
 
-		if (PopupHandler.isPopupActive()) return false;
+		if (PopupHandler.isPopupActive()) return true;
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
@@ -758,7 +759,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
-		if (PopupHandler.isPopupActive()) return false;
+		if (PopupHandler.isPopupActive()) return true;
+
+		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
 
 		if (this.isMouseSelection) {
 			for (AbstractEditorElement e : this.getAllElements()) {
@@ -780,7 +783,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
 
-		return super.mouseDragged(mouseX, mouseY, button, $$3, $$4);
+		return false;
 
 	}
 

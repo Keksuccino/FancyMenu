@@ -2,38 +2,52 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
+import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
+import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
+import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ChooseFromStringListScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
-import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 public class LayoutEditorUINEW {
 
 	private static MenuBar grandfatheredMenuBar = null;
 
 	@NotNull
-	public static MenuBar buildMenuBar() {
+	public static MenuBar buildMenuBar(LayoutEditorScreen editor) {
 
 		if (grandfatheredMenuBar != null) {
 			MenuBar mb = grandfatheredMenuBar;
@@ -43,10 +57,64 @@ public class LayoutEditorUINEW {
 
 		MenuBar menuBar = new MenuBar();
 
-		//TODO ---
+		//LAYOUT TAB
+		ContextMenu layoutMenu = new ContextMenu();
+		menuBar.addContextMenuEntry("layout_tab", Component.translatable("fancymenu.editor.layout"), layoutMenu);
+
+		layoutMenu.addClickableEntry("new_layout", Component.translatable("fancymenu.editor.layout.new"), (menu, entry) -> {
+			displayUnsavedWarning(call -> {
+				if (call) {
+					if (editor.layout.isUniversalLayout()) {
+						LayoutHandler.openLayoutEditor(Layout.buildUniversal(), null);
+					} else {
+						LayoutHandler.openLayoutEditor(Layout.buildForScreen(Objects.requireNonNull(editor.layoutTargetScreen)), editor.layoutTargetScreen);
+					}
+				} else {
+					Minecraft.getInstance().setScreen(editor);
+				}
+			});
+		});
+
+		layoutMenu.addSubMenuEntry("open_layout", Component.translatable("fancymenu.editor.layout.open"), buildOpenLayoutContextMenu(editor));
+
+		layoutMenu.addSeparatorEntry("separator_after_open_layout");
+
+		layoutMenu.addClickableEntry("save_layout", Component.translatable("fancymenu.editor.layout.save"), (menu, entry) -> {
+			menu.closeMenu();
+			editor.saveLayout();
+		});
+
+		layoutMenu.addClickableEntry("save_layout_as", Component.translatable("fancymenu.editor.layout.saveas"), (menu, entry) -> {
+			menu.closeMenu();
+			editor.saveLayoutAs();
+		});
+
+		layoutMenu.addSeparatorEntry("separator_after_save_as");
+
+		layoutMenu.addSubMenuEntry("layout_settings", Component.translatable("fancymenu.editor.layout.properties"), buildRightClickContextMenu(editor));
+
+		//EDIT TAB
+		ContextMenu editMenu = new ContextMenu();
+		menuBar.addContextMenuEntry("edit_tab", Component.translatable("fancymenu.editor.edit"), editMenu);
+
+		editMenu.addClickableEntry("undo_action", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+			editor.history.stepBack();
+		});
+
+		editMenu.addClickableEntry("redo_action", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+			editor.history.stepForward();
+		});
+
+		editMenu.addSeparatorEntry("separator_after_redo");
+
+		//TODO hier weiter --------------------->
 
 		return menuBar;
 
+	}
+
+	protected static void displayUnsavedWarning(@NotNull Consumer<Boolean> callback) {
+		Minecraft.getInstance().setScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
 	}
 
 	@NotNull
@@ -161,23 +229,16 @@ public class LayoutEditorUINEW {
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
-			menu.addClickableEntry("edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"), (menu1, entry) -> {
-				TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.helper.editor.edit_menu_title"), editor, null, (call) -> {
-					if (call != null) {
-						editor.history.saveSnapshot();
-						if (!call.replace(" ", "").isEmpty()) {
-							editor.layout.customMenuTitle = call;
-						} else {
-							editor.layout.customMenuTitle = null;
-						}
-					}
-				});
-				s.multilineMode = false;
-				if (editor.layout.customMenuTitle != null) {
-					s.setText(editor.layout.customMenuTitle);
-				}
-				Minecraft.getInstance().setScreen(s);
-			}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")));
+			NonStackableOverlayUI.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
+							() -> editor.layout.customMenuTitle,
+							s -> {
+								editor.history.saveSnapshot();
+								editor.layout.customMenuTitle = s;
+							},
+							true, null, null, false, true,
+							consumes -> !consumes.isEmpty(),
+							consumes -> consumes.isEmpty() ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.invalid_title")) : null)
+					.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")));
 
 			menu.addSeparatorEntry("separator_after_edit_menu_title");
 
@@ -245,35 +306,70 @@ public class LayoutEditorUINEW {
 					return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"));
 				});
 
-		menu.addClickableEntry("forced_gui_scale", Component.translatable(""), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.editor.rightclick.scale"), CharacterFilter.buildIntegerCharacterFiler(), call -> {
-				if (call != null) {
-					int scale = 0;
-					if (MathUtils.isInteger(call)) {
-						scale = Integer.parseInt(call);
+		NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(menu, "forced_gui_scale", Component.translatable("fancymenu.editor.rightclick.scale"),
+				() -> (int) editor.layout.forcedScale,
+				integer -> {
+					editor.history.saveSnapshot();
+					editor.layout.forcedScale = integer;
+				},
+				true, 0, consumes -> {
+					if (MathUtils.isInteger(consumes)) {
+						return Integer.parseInt(consumes) >= 0;
 					}
-					if (editor.layout.forcedScale != scale) {
-						editor.history.saveSnapshot();
-					}
-					editor.layout.forcedScale = scale;
-				}
-				Minecraft.getInstance().setScreen(editor);
-			}).setText("" + editor.layout.forcedScale)
-					.setTextValidator(consumes -> {
-						if (MathUtils.isInteger(consumes.getText())) {
-							if (Integer.parseInt(consumes.getText()) < 0) {
-								consumes.setTextValidatorUserFeedback(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.rightclick.scale.invalid")));
-								return false;
-							}
+					return false;
+				}, consumes -> {
+					if (MathUtils.isInteger(consumes)) {
+						if (Integer.parseInt(consumes) < 0) {
+							return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.rightclick.scale.invalid"));
 						}
-						consumes.setTextValidatorUserFeedback(null);
-						return true;
-					}));
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")));
+					}
+					return null;
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")));
 
 		menu.addSeparatorEntry("separator_after_forced_scale");
 
-		//TODO hier weiter menü porten ------------
+		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "open_audio", Component.translatable("fancymenu.editor.open_audio"),
+						() -> editor.layout.openAudio,
+						s -> {
+							editor.history.saveSnapshot();
+							editor.layout.openAudio = s;
+						}, true, null, FileFilter.WAV_AUDIO_FILE_FILTER)
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")));
+
+		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "close_audio", Component.translatable("fancymenu.editor.close_audio"),
+						() -> editor.layout.closeAudio,
+						s -> {
+							editor.history.saveSnapshot();
+							editor.layout.closeAudio = s;
+						}, true, null, FileFilter.WAV_AUDIO_FILE_FILTER)
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")));
+
+		menu.addSeparatorEntry("separator_after_close_audio");
+
+		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (menu1, entry) -> {
+			Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(true), (call) -> {
+				if (call != null) {
+					editor.layout.layoutWideLoadingRequirementContainer = call;
+				}
+				Minecraft.getInstance().setScreen(editor);
+			}));
+		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")));
+
+		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
+
+		menu.addClickableEntry("paste_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu1, entry) -> {
+			editor.history.saveSnapshot();
+			editor.pasteElementsFromClipboard();
+		}).setIsActiveSupplier((menu1, entry) -> (LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.size() > 0));
+
+		menu.addClickableEntry("paste_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu1, entry) -> {
+			editor.history.saveSnapshot();
+			editor.pasteElementsFromClipboard();
+		}).setIsActiveSupplier((menu1, entry) -> (LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.size() > 0));
+
+		menu.addSeparatorEntry("separator_after_paste_elements");
+
+		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layoutproperties.newelement"), buildElementContextMenu(editor));
 
 		return menu;
 
@@ -306,6 +402,161 @@ public class LayoutEditorUINEW {
 			}
 			i++;
 		}
+
+		return menu;
+
+	}
+
+	@NotNull
+	public static ContextMenu buildHiddenVanillaElementsContextMenu(LayoutEditorScreen editor) {
+
+		return new ContextMenu() {
+
+			//This allows the menu to update itself on open, so it doesn't need to get rebuilt everytime the hidden elements change
+			@Override
+			public ContextMenu openMenuAt(int x, int y) {
+
+				this.entries.clear();
+
+				List<VanillaButtonEditorElement> hiddenVanillaButtons = new ArrayList<>();
+				for (VanillaButtonEditorElement e : editor.vanillaButtonEditorElements) {
+					if (e.isHidden()) {
+						hiddenVanillaButtons.add(e);
+					}
+				}
+				List<AbstractDeepEditorElement> hiddenDeepElements = new ArrayList<>();
+				for (AbstractDeepEditorElement e : editor.deepEditorElements) {
+					if (e.isHidden()) {
+						hiddenDeepElements.add(e);
+					}
+				}
+
+				int i = 0;
+				for (VanillaButtonEditorElement e : hiddenVanillaButtons) {
+					this.addClickableEntry("element_" + i, ((VanillaButtonElement)e.element).button.getMessage(), (menu1, entry) -> {
+						editor.history.saveSnapshot();
+						e.setHidden(false);
+						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+					}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+					i++;
+				}
+				for (AbstractDeepEditorElement e : hiddenDeepElements) {
+					this.addClickableEntry("element_" + i, ((VanillaButtonElement)e.element).button.getMessage(), (menu1, entry) -> {
+						editor.history.saveSnapshot();
+						e.setHidden(false);
+						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+					}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
+					i++;
+				}
+
+				return super.openMenuAt(x, y);
+
+			}
+
+		};
+
+	}
+
+	public static ContextMenu buildOpenLayoutContextMenu(LayoutEditorScreen editor) {
+
+		ContextMenu menu = new ContextMenu();
+
+		if (editor.layout.isUniversalLayout()) {
+
+			int i = 0;
+			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
+				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
+				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
+						.setLabelSupplier((menu1, entry) -> {
+							Style style = l.getStatus().getEntryComponentStyle();
+							MutableComponent c = Component.literal(l.getLayoutName());
+							c.append(Component.literal(" (").setStyle(style));
+							c.append(l.getStatus().getEntryComponent());
+							c.append(Component.literal(")").setStyle(style));
+							return c;
+						});
+				i++;
+			}
+
+			menu.addSeparatorEntry("separator_after_recent_layouts");
+
+			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu1, entry) -> {
+				displayUnsavedWarning(call -> {
+					if (call) {
+						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
+							Minecraft.getInstance().setScreen(editor);
+						}));
+					} else {
+						Minecraft.getInstance().setScreen(editor);
+					}
+				});
+			});
+
+		} else {
+
+			int i = 0;
+			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(editor.layout.menuIdentifier, false), true, 8)) {
+				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
+				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
+						.setLabelSupplier((menu1, entry) -> {
+							Style style = l.getStatus().getEntryComponentStyle();
+							MutableComponent c = Component.literal(l.getLayoutName());
+							c.append(Component.literal(" (").setStyle(style));
+							c.append(l.getStatus().getEntryComponent());
+							c.append(Component.literal(")").setStyle(style));
+							return c;
+						});
+				i++;
+			}
+
+			menu.addSeparatorEntry("separator_after_recent_layouts");
+
+			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu1, entry) -> {
+				displayUnsavedWarning(call -> {
+					if (call) {
+						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(editor.layout.menuIdentifier, false), editor.layoutTargetScreen, layouts -> {
+							Minecraft.getInstance().setScreen(editor);
+						}));
+					} else {
+						Minecraft.getInstance().setScreen(editor);
+					}
+				});
+			});
+
+		}
+
+		return menu;
+
+	}
+
+	@NotNull
+	protected static ContextMenu buildManageLayoutSubMenu(LayoutEditorScreen editor, Layout layout) {
+
+		ContextMenu menu = new ContextMenu();
+
+		menu.addClickableEntry("toggle_layout_status", Component.empty(), (menu1, entry) -> {
+			MainThreadTaskExecutor.executeInMainThread(() -> {
+				grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
+				layout.setEnabled(!layout.isEnabled(), true);
+			}, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+		}).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent());
+
+		menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
+			displayUnsavedWarning(call -> {
+				if (call) {
+					MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+				} else {
+					Minecraft.getInstance().setScreen(editor);
+				}
+			});
+		});
+
+		menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
+			if (layout.layoutFile != null) {
+				menu1.closeMenu();
+				FileUtils.openFile(layout.layoutFile);
+			}
+		});
 
 		return menu;
 

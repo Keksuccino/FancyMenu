@@ -891,16 +891,17 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				{
 					if (entry.getStackMeta().isFirstInStack()) {
 						List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-						TextEditorScreen s = new TextEditorScreen(label, this.editor, inputCharacterFilter, (call) -> {
+						TextEditorScreen s = new TextEditorScreen(label, inputCharacterFilter, (call) -> {
 							if (call != null) {
 								this.editor.history.saveSnapshot();
 								for (AbstractEditorElement e : selectedElements) {
 									targetFieldSetter.accept(e, call);
 								}
 							}
+							Minecraft.getInstance().setScreen(this.editor);
 							menu.closeMenu();
 						});
-						s.multilineMode = multiLineInput;
+						s.setMultilineMode(multiLineInput);
 						s.setPlaceholdersAllowed(allowPlaceholders);
 						List<String> targetValuesOfSelected = new ArrayList<>();
 						for (AbstractEditorElement e : selectedElements) {

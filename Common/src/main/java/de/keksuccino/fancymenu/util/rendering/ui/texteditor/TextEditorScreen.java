@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -57,70 +58,76 @@ public class TextEditorScreen extends Screen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public Screen parentScreen;
-    public CharacterFilter characterFilter;
-    public Consumer<String> callback;
-    public List<TextEditorLine> textFieldLines = new ArrayList<>();
-    public ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    public ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    public ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    public ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
-    public ContextMenu rightClickContextMenu;
-    public ExtendedButton cancelButton;
-    public ExtendedButton doneButton;
-    public ExtendedButton placeholderButton;
-    public int lastCursorPosSetByUser = 0;
-    public boolean justSwitchedLineByWordDeletion = false;
-    public boolean triggeredFocusedLineWasTooHighInCursorPosMethod = false;
-    public int headerHeight = 50;
-    public int footerHeight = 50;
-    public int borderLeft = 40;
-    public int borderRight = 20;
-    public int lineHeight = 14;
-    public Color screenBackgroundColor = UIBase.getUIColorScheme().screen_background_color.getColor();
-    public Color editorAreaBorderColor = UIBase.getUIColorScheme().element_border_color_normal.getColor();
-    public Color editorAreaBackgroundColor = UIBase.getUIColorScheme().area_background_color.getColor();
-    public Color textColor = UIBase.getUIColorScheme().text_editor_text_color.getColor();
-    public Color focusedLineColor = UIBase.getUIColorScheme().list_entry_color_selected_hovered.getColor();
-    public Color scrollGrabberIdleColor = UIBase.getUIColorScheme().scroll_grabber_color_normal.getColor();
-    public Color scrollGrabberHoverColor = UIBase.getUIColorScheme().scroll_grabber_color_hover.getColor();
-    public Color sideBarColor = UIBase.getUIColorScheme().text_editor_sidebar_color.getColor();
-    public Color lineNumberTextColorNormal = UIBase.getUIColorScheme().text_editor_line_number_text_color_normal.getColor();
-    public Color lineNumberTextColorFocused = UIBase.getUIColorScheme().text_editor_line_number_text_color_selected.getColor();
-    public Color multilineNotSupportedNotificationColor = UIBase.getUIColorScheme().error_text_color.getColor();
-    public Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorScheme().area_background_color.getColor();
-    public Color placeholderEntryBackgroundColorHover = UIBase.getUIColorScheme().list_entry_color_selected_hovered.getColor();
-    public Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorScheme().listing_dot_color_1.getColor();
-    public Color placeholderEntryDotColorCategory = UIBase.getUIColorScheme().listing_dot_color_2.getColor();
-    public Color placeholderEntryLabelColor = UIBase.getUIColorScheme().description_area_text_color.getColor();
-    public Color placeholderEntryBackToCategoriesLabelColor = UIBase.getUIColorScheme().warning_text_color.getColor();
-    public int currentLineWidth;
-    public int lastTickFocusedLineIndex = -1;
-    public TextEditorLine startHighlightLine = null;
-    public int startHighlightLineIndex = -1;
-    public int endHighlightLineIndex = -1;
-    public int overriddenTotalScrollHeight = -1;
-    public List<Runnable> lineNumberRenderQueue = new ArrayList<>();
-    public List<TextEditorFormattingRule> formattingRules = new ArrayList<>();
-    public int currentRenderCharacterIndexTotal = 0;
-    public static boolean showPlaceholderMenu = false;
-    public int placeholderMenuWidth = 120;
-    public int placeholderMenuEntryHeight = 16;
-    public List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
-    public boolean multilineMode = true;
+    protected final CharacterFilter characterFilter;
+    protected final Consumer<String> callback;
+    protected List<TextEditorLine> textFieldLines = new ArrayList<>();
+    protected ScrollBar verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    protected ScrollBar horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    protected ScrollBar verticalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    protected ScrollBar horizontalScrollBarPlaceholderMenu = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, UIBase.HORIZONTAL_SCROLL_BAR_WIDTH, UIBase.HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, (Color) null, null);
+    protected ContextMenu rightClickContextMenu;
+    protected ExtendedButton cancelButton;
+    protected ExtendedButton doneButton;
+    protected ExtendedButton placeholderButton;
+    protected int lastCursorPosSetByUser = 0;
+    protected boolean justSwitchedLineByWordDeletion = false;
+    protected boolean triggeredFocusedLineWasTooHighInCursorPosMethod = false;
+    protected int headerHeight = 50;
+    protected int footerHeight = 50;
+    protected int borderLeft = 40;
+    protected int borderRight = 20;
+    protected int lineHeight = 14;
+    protected Color screenBackgroundColor = UIBase.getUIColorScheme().screen_background_color.getColor();
+    protected Color editorAreaBorderColor = UIBase.getUIColorScheme().element_border_color_normal.getColor();
+    protected Color editorAreaBackgroundColor = UIBase.getUIColorScheme().area_background_color.getColor();
+    protected Color textColor = UIBase.getUIColorScheme().text_editor_text_color.getColor();
+    protected Color focusedLineColor = UIBase.getUIColorScheme().list_entry_color_selected_hovered.getColor();
+    protected Color scrollGrabberIdleColor = UIBase.getUIColorScheme().scroll_grabber_color_normal.getColor();
+    protected Color scrollGrabberHoverColor = UIBase.getUIColorScheme().scroll_grabber_color_hover.getColor();
+    protected Color sideBarColor = UIBase.getUIColorScheme().text_editor_sidebar_color.getColor();
+    protected Color lineNumberTextColorNormal = UIBase.getUIColorScheme().text_editor_line_number_text_color_normal.getColor();
+    protected Color lineNumberTextColorFocused = UIBase.getUIColorScheme().text_editor_line_number_text_color_selected.getColor();
+    protected Color multilineNotSupportedNotificationColor = UIBase.getUIColorScheme().error_text_color.getColor();
+    protected Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorScheme().area_background_color.getColor();
+    protected Color placeholderEntryBackgroundColorHover = UIBase.getUIColorScheme().list_entry_color_selected_hovered.getColor();
+    protected Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorScheme().listing_dot_color_1.getColor();
+    protected Color placeholderEntryDotColorCategory = UIBase.getUIColorScheme().listing_dot_color_2.getColor();
+    protected Color placeholderEntryLabelColor = UIBase.getUIColorScheme().description_area_text_color.getColor();
+    protected Color placeholderEntryBackToCategoriesLabelColor = UIBase.getUIColorScheme().warning_text_color.getColor();
+    protected int currentLineWidth;
+    protected int lastTickFocusedLineIndex = -1;
+    protected TextEditorLine startHighlightLine = null;
+    protected int startHighlightLineIndex = -1;
+    protected int endHighlightLineIndex = -1;
+    protected int overriddenTotalScrollHeight = -1;
+    protected List<Runnable> lineNumberRenderQueue = new ArrayList<>();
+    protected List<TextEditorFormattingRule> formattingRules = new ArrayList<>();
+    protected int currentRenderCharacterIndexTotal = 0;
+    /** This is to make different instances of the editor remember the state of the placeholder menu **/
+    protected static boolean extendedPlaceholderMenu = false;
+    protected int placeholderMenuWidth = 120;
+    protected int placeholderMenuEntryHeight = 16;
+    protected List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
+    protected boolean multilineMode = true;
     protected boolean allowPlaceholders = true;
-    public long multilineNotSupportedNotificationDisplayStart = -1L;
-    public boolean boldTitle = true;
+    protected long multilineNotSupportedNotificationDisplayStart = -1L;
+    protected boolean boldTitle = true;
+    protected ConsumingSupplier<TextEditorScreen, Boolean> textValidator = null;
+    protected Tooltip textValidatorFeedbackTooltip = null;
 
-    public TextEditorScreen(@Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
-        this(null, parent, characterFilter, callback);
+    @NotNull
+    public static TextEditorScreen build(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
+        return new TextEditorScreen(title, characterFilter, callback);
     }
 
-    public TextEditorScreen(@Nullable Component title, @Nullable Screen parent, @Nullable CharacterFilter characterFilter, Consumer<String> callback) {
+    public TextEditorScreen(@Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
+        this(null, characterFilter, callback);
+    }
+
+    public TextEditorScreen(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
         super((title != null) ? title : Component.literal(""));
         this.minecraft = Minecraft.getInstance();
         this.font = Minecraft.getInstance().font;
-        this.parentScreen = parent;
         this.characterFilter = characterFilter;
         this.callback = callback;
         this.addLine();
@@ -185,32 +192,29 @@ public class TextEditorScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
-            if (this.callback != null) {
-                this.callback.accept(this.getText());
-            }
-            Minecraft.getInstance().setScreen(this.parentScreen);
+            if (this.isTextValid()) this.callback.accept(this.getText());
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         if (this.allowPlaceholders) {
             this.placeholderButton = new ExtendedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), (button) -> {
-                if (showPlaceholderMenu) {
-                    showPlaceholderMenu = false;
+                if (extendedPlaceholderMenu) {
+                    extendedPlaceholderMenu = false;
                 } else {
-                    showPlaceholderMenu = true;
+                    extendedPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
             }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultStyle());
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
-            if (showPlaceholderMenu) {
+            if (extendedPlaceholderMenu) {
                 this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_background_color_hover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));
                 ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
             }
         } else {
             this.placeholderButton = null;
-            showPlaceholderMenu = false;
+            extendedPlaceholderMenu = false;
         }
 
     }
@@ -326,6 +330,9 @@ public class TextEditorScreen extends Screen {
         this.renderPlaceholderMenu(matrix, mouseX, mouseY, partial);
 
         this.cancelButton.render(matrix, mouseX, mouseY, partial);
+
+        this.doneButton.active = this.isTextValid();
+        this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
         this.renderMultilineNotSupportedNotification(matrix, mouseX, mouseY, partial);
@@ -356,7 +363,7 @@ public class TextEditorScreen extends Screen {
 
     protected void renderPlaceholderMenu(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        if (showPlaceholderMenu) {
+        if (extendedPlaceholderMenu) {
 
             if (this.getTotalPlaceholderEntriesWidth() <= this.placeholderMenuWidth) {
                 this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
@@ -1059,7 +1066,8 @@ public class TextEditorScreen extends Screen {
         this.resetHighlighting();
     }
 
-    public void setText(String text) {
+    public TextEditorScreen setText(@Nullable String text) {
+        if (text == null) text = "";
         TextEditorLine t = this.getLine(0);
         this.textFieldLines.clear();
         this.textFieldLines.add(t);
@@ -1070,8 +1078,10 @@ public class TextEditorScreen extends Screen {
         this.setFocusedLine(0);
         t.moveCursorTo(0);
         this.verticalScrollBar.setScroll(0.0F);
+        return this;
     }
 
+    @NotNull
     public String getText() {
         StringBuilder s = new StringBuilder();
         boolean b = false;
@@ -1085,13 +1095,47 @@ public class TextEditorScreen extends Screen {
         return s.toString();
     }
 
+    protected boolean isTextValid() {
+        if (this.textValidator != null) return this.textValidator.get(this);
+        return true;
+    }
+
+    public TextEditorScreen setTextValidator(@Nullable ConsumingSupplier<TextEditorScreen, Boolean> textValidator) {
+        this.textValidator = textValidator;
+        return this;
+    }
+
+    public TextEditorScreen setTextValidatorUserFeedback(@Nullable Tooltip feedback) {
+        this.textValidatorFeedbackTooltip = feedback;
+        return this;
+    }
+
     public boolean placeholdersAllowed() {
         return this.allowPlaceholders;
     }
 
-    public void setPlaceholdersAllowed(boolean allowed) {
+    public TextEditorScreen setPlaceholdersAllowed(boolean allowed) {
         this.allowPlaceholders = allowed;
         this.init();
+        return this;
+    }
+
+    public boolean isMultilineMode() {
+        return this.multilineMode;
+    }
+
+    public TextEditorScreen setMultilineMode(boolean multilineMode) {
+        this.multilineMode = multilineMode;
+        return this;
+    }
+
+    public boolean isBoldTitle() {
+        return this.boldTitle;
+    }
+
+    public TextEditorScreen setBoldTitle(boolean boldTitle) {
+        this.boldTitle = boldTitle;
+        return this;
     }
 
     /**
@@ -1353,14 +1397,7 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (this.callback != null) {
-            this.callback.accept(null);
-        }
-        if (this.parentScreen != null) {
-            Minecraft.getInstance().setScreen(this.parentScreen);
-        } else {
-            super.onClose();
-        }
+        this.callback.accept(null);
     }
 
     public boolean isMouseInteractingWithGrabbers() {
@@ -1541,7 +1578,7 @@ public class TextEditorScreen extends Screen {
 
     public int getEditorAreaWidth() {
         int i = (this.width - this.borderRight) - this.borderLeft;
-        if (showPlaceholderMenu) {
+        if (extendedPlaceholderMenu) {
             i = i - this.placeholderMenuWidth - 15;
         }
         return i;
@@ -1567,10 +1604,10 @@ public class TextEditorScreen extends Screen {
         public int x;
         public int y;
         public final int labelWidth;
-        public Color backgroundColorIdle = Color.GRAY;
-        public Color backgroundColorHover = Color.LIGHT_GRAY;
-        public Color dotColor = Color.BLUE;
-        public Color entryLabelColor = Color.WHITE;
+        protected Color backgroundColorIdle = Color.GRAY;
+        protected Color backgroundColorHover = Color.LIGHT_GRAY;
+        protected Color dotColor = Color.BLUE;
+        protected Color entryLabelColor = Color.WHITE;
         public ExtendedButton buttonBase;
         public Font font = Minecraft.getInstance().font;
 
