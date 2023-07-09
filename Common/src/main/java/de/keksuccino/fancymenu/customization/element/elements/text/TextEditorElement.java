@@ -62,7 +62,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         Minecraft.getInstance().setScreen(s);
                     }
                     if ((this.getTextElement().sourceMode == TextElement.SourceMode.DIRECT) || (this.getTextElement().sourceMode == TextElement.SourceMode.WEB_SOURCE)) {
-                        TextEditorScreen s = new TextEditorScreen(entry.getLabel(), this.editor, null, (call) -> {
+                        TextEditorScreen s = new TextEditorScreen(entry.getLabel(), null, (call) -> {
                             if (call != null) {
                                 this.editor.history.saveSnapshot();
                                 call = call.replace("\n", "%n%");
@@ -73,9 +73,10 @@ public class TextEditorElement extends AbstractEditorElement {
                                 }
                                 this.getTextElement().updateContent();
                             }
+                            Minecraft.getInstance().setScreen(this.editor);
                         });
                         if (this.getTextElement().sourceMode != TextElement.SourceMode.DIRECT) {
-                            s.multilineMode = false;
+                            s.setMultilineMode(false);
                         }
                         if (this.getTextElement().source != null) {
                             if (this.getTextElement().sourceMode == TextElement.SourceMode.DIRECT) {
@@ -128,13 +129,13 @@ public class TextEditorElement extends AbstractEditorElement {
 
         this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
                         consumes -> (consumes instanceof TextEditorElement),
-                        1.0F,
                         consumes -> ((TextElement)consumes.element).scale,
                         (element1, aFloat) -> {
                             ((TextElement)element1.element).scale = Math.min(0.2F, aFloat);
                             ((TextElement)element1.element).updateContent();
                         },
-                        Component.translatable("fancymenu.customization.items.text.scale"))
+                        Component.translatable("fancymenu.customization.items.text.scale"),
+                        true, 1.0F, null, null)
                 .setStackable(true);
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_shadow",
@@ -169,36 +170,36 @@ public class TextEditorElement extends AbstractEditorElement {
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
                         consumes -> (consumes instanceof TextEditorElement),
-                        null,
                         consumes -> ((TextElement)consumes.element).baseColorHex,
                         (element, colorHex) -> {
                             ((TextElement)element.element).baseColorHex = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.base_color"))
+                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.base_color"),
+                        true, null, buildHexColorTextValidator(), null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_border",
                         consumes -> (consumes instanceof TextEditorElement),
-                        10,
                         consumes -> ((TextElement)consumes.element).textBorder,
                         (element, border) -> {
                             ((TextElement)element.element).textBorder = Math.min(0, border);
                             ((TextElement)element.element).updateContent();
                         },
-                        Component.translatable("fancymenu.customization.items.text.text_border"))
+                        Component.translatable("fancymenu.customization.items.text.text_border"),
+                        true, 10, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.text_border.desc")));
 
         this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_line_spacing",
                         consumes -> (consumes instanceof TextEditorElement),
-                        10,
                         consumes -> ((TextElement)consumes.element).lineSpacing,
                         (element, border) -> {
                             ((TextElement)element.element).lineSpacing = Math.min(0, border);
                             ((TextElement)element.element).updateContent();
                         },
-                        Component.translatable("fancymenu.customization.items.text.line_spacing"))
+                        Component.translatable("fancymenu.customization.items.text.line_spacing"),
+                        true, 10, null, null)
                 .setStackable(true);
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_scrolling",
@@ -250,22 +251,22 @@ public class TextEditorElement extends AbstractEditorElement {
 
         this.addStringInputContextMenuEntryTo(grabberColorMenu, "normal_grabber_color",
                         consumes -> (consumes instanceof TextEditorElement),
-                        null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexNormal,
                         (element, colorHex) -> {
                             ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"))
+                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"),
+                        true, null, buildHexColorTextValidator(), null)
                 .setStackable(true);
 
         this.addStringInputContextMenuEntryTo(grabberColorMenu, "hover_grabber_color",
                         consumes -> (consumes instanceof TextEditorElement),
-                        null,
                         consumes -> ((TextElement)consumes.element).scrollGrabberColorHexHover,
                         (element, colorHex) -> {
                             ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"))
+                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"),
+                        true, null, buildHexColorTextValidator(), null)
                 .setStackable(true);
 
     }

@@ -58,10 +58,10 @@ public class TickerEditorElement extends AbstractEditorElement {
 
         this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay",
                         consumes -> (consumes instanceof TickerEditorElement),
-                        0L,
                         consumes -> ((TickerElement)consumes.element).tickDelayMs,
                         (element, delay) -> ((TickerElement)element.element).tickDelayMs = Math.min(0L, delay),
-                        Component.translatable("fancymenu.customization.items.ticker.tick_delay"))
+                        Component.translatable("fancymenu.customization.items.ticker.tick_delay"),
+                        true, 0L, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_delay.desc")));
 

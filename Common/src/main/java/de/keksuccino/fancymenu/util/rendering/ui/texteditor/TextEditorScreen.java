@@ -101,7 +101,7 @@ public class TextEditorScreen extends Screen {
     protected int endHighlightLineIndex = -1;
     protected int overriddenTotalScrollHeight = -1;
     protected List<Runnable> lineNumberRenderQueue = new ArrayList<>();
-    protected List<TextEditorFormattingRule> formattingRules = new ArrayList<>();
+    public List<TextEditorFormattingRule> formattingRules = new ArrayList<>();
     protected int currentRenderCharacterIndexTotal = 0;
     /** This is to make different instances of the editor remember the state of the placeholder menu **/
     protected static boolean extendedPlaceholderMenu = false;

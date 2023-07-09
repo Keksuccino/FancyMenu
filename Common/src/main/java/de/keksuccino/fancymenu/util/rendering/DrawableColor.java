@@ -5,11 +5,11 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.Objects;
 
-@SuppressWarnings("all")
 public class DrawableColor {
 
+    public static final DrawableColor EMPTY = DrawableColor.of(new Color(255, 255, 255));
     public static final DrawableColor WHITE = DrawableColor.of(new Color(255, 255, 255));
-    public static final DrawableColor EMPTY = WHITE.copy();
+    public static final DrawableColor BLACK = DrawableColor.of(new Color(0, 0, 0));
 
     protected Color color;
     protected int colorInt;
@@ -36,22 +36,17 @@ public class DrawableColor {
     /** Creates a {@link DrawableColor} out of the given HEX-{@link String}. **/
     @NotNull
     public static DrawableColor of(@NotNull String hex) {
-        if (hex != null) {
-            hex = hex.replace(" ", "");
-            if (!hex.startsWith("#")) {
-                hex = "#" + hex;
-            }
-            DrawableColor c = new DrawableColor();
-            c.color = convertHexStringToColor(hex);
-            if (c.color != null) {
-                c.colorInt = c.color.getRGB();
-            }
-            c.hex = hex;
-            if (c.color != null) {
-                return c;
-            }
+        Objects.requireNonNull(hex);
+        hex = hex.replace(" ", "");
+        if (!hex.startsWith("#")) {
+            hex = "#" + hex;
         }
-        return WHITE.copy();
+        DrawableColor c = new DrawableColor();
+        c.color = convertHexStringToColor(hex);
+        if (c.color == null) return EMPTY;
+        c.colorInt = c.color.getRGB();
+        c.hex = hex;
+        return c;
     }
 
     /** Creates a {@link DrawableColor} out of the given RGB integers. The alpha channel will get defaulted to 255. **/
@@ -64,13 +59,18 @@ public class DrawableColor {
     @NotNull
     public static DrawableColor of(int r, int g, int b, int a) {
         DrawableColor c = new DrawableColor();
-        c.color = new Color(r, g, b, a);
+        try {
+            c.color = new Color(r, g, b, a);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return EMPTY;
+        }
         c.colorInt = c.color.getRGB();
         c.hex = convertColorToHexString(c.color);
         if (c.hex != null) {
             return c;
         }
-        return WHITE.copy();
+        return EMPTY;
     }
 
     protected DrawableColor() {

@@ -55,48 +55,48 @@ public class SplashTextEditorElement extends AbstractEditorElement {
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct",
                         consumes -> (consumes instanceof SplashTextEditorElement),
-                        null,
                         consumes -> ((SplashTextElement)consumes.element).source,
                         (element1, s) -> {
                             ((SplashTextElement)element1.element).source = s;
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        null, false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"))
+                        null, false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"),
+                        false, null, buildNoEmptyStringTextValidator(), null)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.DIRECT_TEXT);
 
         this.rightClickMenu.addSeparatorEntry("splash_separator_1");
 
         this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
                         consumes -> (consumes instanceof SplashTextEditorElement),
-                        1.0F,
                         consumes -> ((SplashTextElement)consumes.element).scale,
                         (element, scale) -> {
                             ((SplashTextElement)element.element).scale = Math.max(0.2F, scale);
                             ((SplashTextElement)element.element).updateSplash();
                         },
-                        Component.translatable("fancymenu.elements.splash.set_scale"))
+                        Component.translatable("fancymenu.elements.splash.set_scale"),
+                        true, 1.0F, null, null)
                 .setStackable(true);
 
         this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_rotation",
                         consumes -> (consumes instanceof SplashTextEditorElement),
-                        20.0F,
                         consumes -> ((SplashTextElement)consumes.element).rotation,
                         (element, rot) -> {
                             ((SplashTextElement)element.element).rotation = rot;
                             ((SplashTextElement)element.element).updateSplash();
                         },
-                        Component.translatable("fancymenu.editor.items.splash.rotation"))
+                        Component.translatable("fancymenu.editor.items.splash.rotation"),
+                        true, 20.0F, null, null)
                 .setStackable(true);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
                         consumes -> (consumes instanceof SplashTextEditorElement),
-                        DrawableColor.of(255, 255, 0).getHex(),
                         consumes -> ((SplashTextElement)consumes.element).baseColor.getHex(),
                         (element1, s) -> {
                             ((SplashTextElement)element1.element).baseColor = DrawableColor.of(s);
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        null, false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"))
+                        null, false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"),
+                        true, DrawableColor.of(255, 255, 0).getHex(), buildHexColorTextValidator(), null)
                 .setStackable(true);
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",

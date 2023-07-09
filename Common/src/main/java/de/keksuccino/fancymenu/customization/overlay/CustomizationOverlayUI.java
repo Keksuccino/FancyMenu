@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
@@ -38,7 +39,7 @@ public class CustomizationOverlayUI {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation FM_LOGO_ICON_LOCATION = new ResourceLocation("fancymenu", "textures/fancymenu_logo_icon.png");
+    private static final ResourceLocation FM_LOGO_ICON_LOCATION = new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png");
 
     private static MenuBar grandfatheredMenuBar = null;
 
@@ -127,6 +128,12 @@ public class CustomizationOverlayUI {
                 Minecraft.getInstance().setScreen(screen);
             }));
         });
+
+        screenSettingsGameIntroMenu.addClickableEntry("game_intro_reset_animation", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.reset_intro_animation"), (menu, entry) -> {
+            FancyMenu.getOptions().gameIntroAnimation.resetToDefault();
+        });
+
+        screenSettingsGameIntroMenu.addSeparatorEntry("separator_after_game_intro_set_animation");
 
         screenSettingsGameIntroMenu.addValueCycleEntry("game_intro_allow_skip", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.game_intro.allow_skip", FancyMenu.getOptions().allowGameIntroSkip.getValue())
                 .addCycleListener(cycle -> {
@@ -325,17 +332,13 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().showCustomWindowIcon.setValue(cycle.getAsBoolean());
                 }));
 
-        windowMenu.addClickableEntry("window_title", Component.translatable("fancymenu.overlay.menu_bar.window.custom_window_title"), (menu, entry) -> {
-            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.window.custom_window_title"), null, (call) -> {
-                if (call != null) {
-                    FancyMenu.getOptions().customWindowTitle.setValue(call);
-                    WindowHandler.updateWindowTitle();
-                }
-                Minecraft.getInstance().setScreen(screen);
-            });
-            s.setText(FancyMenu.getOptions().customWindowTitle.getValue());
-            Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.window.custom_window_title.tooltip")));
+        NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "window_title", Component.translatable("fancymenu.overlay.menu_bar.window.custom_window_title"),
+                        () -> FancyMenu.getOptions().customWindowTitle.getValue(),
+                        s -> {
+                            FancyMenu.getOptions().customWindowTitle.setValue(s);
+                            WindowHandler.updateWindowTitle();
+                        }, true, FancyMenu.getOptions().customWindowTitle.getDefaultValue(), null, false, false, null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.window.custom_window_title.tooltip")));
 
         windowMenu.addSeparatorEntry("separator_3");
 

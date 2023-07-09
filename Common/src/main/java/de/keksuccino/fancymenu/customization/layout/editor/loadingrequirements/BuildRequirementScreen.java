@@ -79,15 +79,16 @@ public class BuildRequirementScreen extends Screen {
         super.init();
 
         this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), (button) -> {
-            TextEditorScreen s = new TextEditorScreen(button.getMessage(), this, null, (call) -> {
+            TextEditorScreen s = new TextEditorScreen(button.getMessage(), null, (call) -> {
                 if (call != null) {
                     this.instance.value = call;
                 }
+                Minecraft.getInstance().setScreen(this);
             });
             if ((this.instance.requirement != null) && (this.instance.requirement.getValueFormattingRules() != null)) {
                 s.formattingRules.addAll(this.instance.requirement.getValueFormattingRules());
             }
-            s.multilineMode = false;
+            s.setMultilineMode(false);
             if (this.instance.value != null) {
                 s.setText(this.instance.value);
             } else if (this.instance.requirement != null) {

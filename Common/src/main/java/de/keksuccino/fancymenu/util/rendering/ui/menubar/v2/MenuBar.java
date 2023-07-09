@@ -27,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
@@ -539,7 +540,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         protected MenuBarEntrySupplier<Component> labelSupplier;
         @Nullable
         protected MenuBarEntrySupplier<ITexture> iconTextureSupplier;
-        protected boolean applyUIShaderColorToIcon = true;
+        @Nullable
+        protected Supplier<DrawableColor> iconTextureColor = () -> UIBase.getUIColorScheme().ui_texture_color;
         @NotNull
         protected ClickAction clickAction;
         protected Font font = Minecraft.getInstance().font;
@@ -569,9 +571,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             if (iconTexture != null) {
                 int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), this.height);
                 UIBase.resetShaderColor();
-                if (this.applyUIShaderColorToIcon) {
-                    UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
-                }
+                DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
+                if (iconColor != null) UIBase.setShaderColor(iconColor);
                 RenderUtils.bindTexture((iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION);
                 blit(pose, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
             } else {
@@ -610,12 +611,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             return (ClickableMenuBarEntry) super.setVisibleSupplier(visibleSupplier);
         }
 
-        public boolean isApplyUIShaderColorToIcon() {
-            return this.applyUIShaderColorToIcon;
-        }
-
-        public ClickableMenuBarEntry setApplyUIShaderColorToIcon(boolean applyUIShaderColorToIcon) {
-            this.applyUIShaderColorToIcon = applyUIShaderColorToIcon;
+        public ClickableMenuBarEntry setIconTextureColor(@Nullable Supplier<DrawableColor> iconTextureColor) {
+            this.iconTextureColor = iconTextureColor;
             return this;
         }
 
@@ -767,11 +764,6 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         @Override
         public ContextMenuBarEntry setIconTextureSupplier(@Nullable MenuBarEntrySupplier<ITexture> iconTextureSupplier) {
             return (ContextMenuBarEntry) super.setIconTextureSupplier(iconTextureSupplier);
-        }
-
-        @Override
-        public ContextMenuBarEntry setApplyUIShaderColorToIcon(boolean applyUIShaderColorToIcon) {
-            return (ContextMenuBarEntry) super.setApplyUIShaderColorToIcon(applyUIShaderColorToIcon);
         }
 
         @Override

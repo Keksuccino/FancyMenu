@@ -42,7 +42,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
                 if (focusedLineIndex == editor.getLineCount()-1) {
                     lines.add(focusedLine);
                 } else {
-                    lines.addAll(editor.textFieldLines.subList(focusedLineIndex, editor.getLineCount()));
+                    lines.addAll(editor.getCopyOfLines().subList(focusedLineIndex, editor.getLineCount()));
                 }
                 int depth = 1;
                 for (TextEditorLine line : lines) {
@@ -78,7 +78,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
                 if (focusedLineIndex == 0) {
                     lines.add(focusedLine);
                 } else {
-                    lines.addAll(editor.textFieldLines.subList(0, focusedLineIndex+1));
+                    lines.addAll(editor.getCopyOfLines().subList(0, focusedLineIndex+1));
                 }
                 Collections.reverse(lines);
                 int depth = 1;

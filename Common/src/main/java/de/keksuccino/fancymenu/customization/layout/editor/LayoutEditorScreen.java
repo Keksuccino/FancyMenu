@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -71,6 +72,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	protected boolean isMouseSelection = false;
 	protected int mouseSelectionStartX = 0;
 	protected int mouseSelectionStartY = 0;
+	protected int rightClickMenuOpenPosX = -1000;
+	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
@@ -101,26 +104,50 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	protected void init() {
 
-		this.menuBar = LayoutEditorUINEW.buildMenuBar(this);
+		this.closeRightClickMenu();
+		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
+		this.addWidget(this.rightClickMenu);
+
+		this.menuBar = LayoutEditorUI.buildMenuBar(this);
 		this.addWidget(this.menuBar);
 
 		this.isMouseSelection = false;
 		this.preDragElementSnapshot = null;
 
-		if (this.rightClickMenu != null) {
-			this.rightClickMenu.closeMenu();
-		}
-		this.rightClickMenu = LayoutEditorUINEW.buildRightClickContextMenu(this);
-		this.addWidget(this.rightClickMenu);
-
-		if (this.activeElementContextMenu != null) {
-			this.activeElementContextMenu.closeMenu();
-			this.activeElementContextMenu = null;
-		}
+		this.closeActiveElementMenu();
 
 		this.serializeElementInstancesToLayoutInstance();
 
+		//Handle forced GUI scale
+		if (this.layout.forcedScale != 0) {
+			float newscale = this.layout.forcedScale;
+			if (newscale <= 0) {
+				newscale = 1;
+			}
+			Window m = Minecraft.getInstance().getWindow();
+			m.setGuiScale(newscale);
+			this.width = m.getGuiScaledWidth();
+			this.height = m.getGuiScaledHeight();
+		}
+
+		//Handle auto-scaling
+		if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
+			Window m = Minecraft.getInstance().getWindow();
+			double guiWidth = this.width * m.getGuiScale();
+			double guiHeight = this.height * m.getGuiScale();
+			double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
+			double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
+			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
+			double newScale = Math.min(newScaleX, newScaleY);
+			m.setGuiScale(newScale);
+			this.width = m.getGuiScaledWidth();
+			this.height = m.getGuiScaledHeight();
+		}
+
 		this.constructElementInstances();
+
+
 
 	}
 
@@ -351,12 +378,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<AbstractEditorElement> elements = new ArrayList<>();
 		List<AbstractEditorElement> selected = new ArrayList<>();
 		List<AbstractEditorElement> elementsFinal = new ArrayList<>();
-		if (this.layout.keepBackgroundAspectRatio) {
+		if (this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
 		}
 		elements.addAll(this.vanillaButtonEditorElements);
 		elements.addAll(this.deepEditorElements);
-		if (!this.layout.keepBackgroundAspectRatio) {
+		if (!this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
 		}
 		//Put selected elements at the end, because they are always on top
@@ -381,6 +408,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		return elements;
+	}
+
+	@Nullable
+	public AbstractEditorElement getTopHoveredElement() {
+		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
+		return (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
 	}
 
 	@NotNull
@@ -634,16 +667,51 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
+	protected void openRightClickMenuAtMouse(int mouseX, int mouseY) {
+		if (this.rightClickMenu != null) {
+			this.rightClickMenuOpenPosX = mouseX;
+			this.rightClickMenuOpenPosY = mouseY;
+			this.rightClickMenu.openMenuAtMouse();
+		}
+	}
+
+	protected void closeRightClickMenu() {
+		if (this.rightClickMenu != null) {
+			if (this.rightClickMenu.isUserNavigatingInMenu()) return;
+			this.rightClickMenuOpenPosX = -1000;
+			this.rightClickMenuOpenPosY = -1000;
+			this.rightClickMenu.closeMenu();
+		}
+	}
+
+	protected void closeActiveElementMenu() {
+		if (this.activeElementContextMenu != null) {
+			if (this.activeElementContextMenu.isUserNavigatingInMenu()) return;
+			this.activeElementContextMenu.closeMenu();
+			this.removeWidget(this.activeElementContextMenu);
+		}
+		this.activeElementContextMenu = null;
+	}
+
+	public boolean isUserNavigatingInRightClickMenu() {
+		return (this.rightClickMenu != null) && this.rightClickMenu.isUserNavigatingInMenu();
+	}
+
+	public boolean isUserNavigatingInElementMenu() {
+		return (this.activeElementContextMenu != null) && this.activeElementContextMenu.isUserNavigatingInMenu();
+	}
+
 	//Called before mouseDragged
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-		if (PopupHandler.isPopupActive()) return true;
+		if (PopupHandler.isPopupActive() || super.mouseClicked(mouseX, mouseY, button)) {
+			this.closeRightClickMenu();
+			this.closeActiveElementMenu();
+			return true;
+		}
 
-		if (super.mouseClicked(mouseX, mouseY, button)) return true;
-
-		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+		AbstractEditorElement topHoverElement = this.getTopHoveredElement();
 
 		boolean topHoverGotSelected = false;
 		if (topHoverElement != null) {
@@ -679,21 +747,18 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		//Close active element context menu
-		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isUserNavigatingInMenu()) {
-			this.activeElementContextMenu.closeMenu();
-			this.removeWidget(this.activeElementContextMenu);
-			this.activeElementContextMenu = null;
-		}
+		this.closeActiveElementMenu();
 		//Close background right-click context menu
 		if ((button == 0) && !this.rightClickMenu.isUserNavigatingInMenu()) {
-			this.rightClickMenu.closeMenu();
+			this.closeRightClickMenu();
 		}
 		//Open background right-click context menu
 		if (topHoverElement == null) {
 			if (button == 1) {
-				this.rightClickMenu.openMenuAtMouse();
+				this.openRightClickMenuAtMouse((int) mouseX, (int) mouseY);
 			}
 		} else {
+			this.closeRightClickMenu();
 			//Set and open active element context menu
 			if (button == 1) {
 				List<AbstractEditorElement> selectedElements = this.getSelectedElements();

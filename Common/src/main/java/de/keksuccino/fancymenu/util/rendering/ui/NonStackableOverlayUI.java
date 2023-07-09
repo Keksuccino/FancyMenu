@@ -62,7 +62,7 @@ public class NonStackableOverlayUI {
         ContextMenu addToFinal = addResetOption ? subMenu : addTo;
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = addToFinal.addClickableEntry(addResetOption ? "input_value" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.guicomponents.set") : label, (menu, entry) -> {
             Screen current = Minecraft.getInstance().screen;
-            Screen inputScreen = null;
+            Screen inputScreen;
             if (!multiLineInput && !allowPlaceholders) {
                 TextInputScreen s = TextInputScreen.build(label, inputCharacterFilter, call -> {
                     if (call != null) {
@@ -78,6 +78,7 @@ public class NonStackableOverlayUI {
                     });
                 }
                 s.setText(getter.get());
+                inputScreen = s;
             } else {
                 TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
                     if (call != null) {
@@ -112,7 +113,8 @@ public class NonStackableOverlayUI {
     public static ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Integer> getter, @NotNull Consumer<Integer> setter, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultIntegerValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isInteger(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
-                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")), s -> {
+                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
+                s -> {
                     if (MathUtils.isInteger(s)) setter.accept(Integer.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerCharacterFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
@@ -122,7 +124,8 @@ public class NonStackableOverlayUI {
     public static ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Double> getter, @NotNull Consumer<Double> setter, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultDoubleValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isDouble(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
-                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")), s -> {
+                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
+                s -> {
                     if (MathUtils.isDouble(s)) setter.accept(Double.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildDoubleCharacterFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback);
@@ -132,7 +135,8 @@ public class NonStackableOverlayUI {
     public static ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Float> getter, @NotNull Consumer<Float> setter, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultFloatValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isFloat(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
-                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")), s -> {
+                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
+                s -> {
                     if (MathUtils.isFloat(s)) setter.accept(Float.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildDoubleCharacterFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback);
@@ -142,7 +146,8 @@ public class NonStackableOverlayUI {
     public static ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Long> getter, @NotNull Consumer<Long> setter, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ConsumingSupplier<String, Boolean> defaultLongValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isLong(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
-                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")), s -> {
+                () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
+                s -> {
                     if (MathUtils.isLong(s)) setter.accept(Long.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerCharacterFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);

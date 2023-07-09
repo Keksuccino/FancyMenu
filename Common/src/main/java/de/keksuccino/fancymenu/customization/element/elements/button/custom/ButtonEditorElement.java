@@ -181,19 +181,19 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
                         consumes -> (consumes instanceof ButtonEditorElement),
-                        null,
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
-                        null, false, true, Component.translatable("fancymenu.editor.items.button.editlabel"))
+                        null, false, true, Component.translatable("fancymenu.editor.items.button.editlabel"),
+                        true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
                         consumes -> (consumes instanceof ButtonEditorElement),
-                        null,
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                        null, false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"))
+                        null, false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"),
+                        true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
@@ -223,7 +223,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
                         consumes -> (consumes instanceof ButtonEditorElement),
-                        null,
                         consumes -> {
                             String t = ((ButtonElement)consumes.element).tooltip;
                             if (t != null) t = t.replace("%n%", "\n");
@@ -235,7 +234,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
                             }
                             ((ButtonElement)element1.element).tooltip = s;
                         },
-                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"))
+                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
+                        true, null, buildNoEmptyStringTextValidator(), null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));

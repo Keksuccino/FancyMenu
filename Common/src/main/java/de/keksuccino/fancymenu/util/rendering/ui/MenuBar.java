@@ -26,7 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 @SuppressWarnings("all")
 public class MenuBar extends UIBase {
 	
-	public static final ResourceLocation FM_LOGO_TEXTURE = new ResourceLocation("keksuccino", "fancymenu_logo_icon.png");
+	public static final ResourceLocation FM_LOGO_TEXTURE = new ResourceLocation("keksuccino", "fancymenu_logo.png");
 	public static final ResourceLocation SHRINK_BTN_TEXTURE = new ResourceLocation("keksuccino", "shrink_icon.png");
 	public static final ResourceLocation EXPAND_BTN_TEXTURE = new ResourceLocation("keksuccino", "expand_icon.png");
 	

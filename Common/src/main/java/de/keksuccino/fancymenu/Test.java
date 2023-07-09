@@ -11,7 +11,7 @@ public class Test {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation FM_LOGO_LOCATION = new ResourceLocation("fancymenu", "textures/fancymenu_logo_icon.png");
+    private static final ResourceLocation FM_LOGO_LOCATION = new ResourceLocation("fancymenu", "textures/fancymenu_logo.png");
 
     @EventListener(priority = -2000)
     public void onInit(InitOrResizeScreenEvent.Post e) {

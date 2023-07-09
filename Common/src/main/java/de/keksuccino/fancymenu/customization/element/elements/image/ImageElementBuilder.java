@@ -32,8 +32,8 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
     @Override
     public @NotNull ImageElement buildDefaultInstance() {
         ImageElement i = new ImageElement(this);
-        i.baseWidth = 200;
-        i.baseHeight = 200;
+        i.baseWidth = 100;
+        i.baseHeight = 100;
         return i;
     }
 

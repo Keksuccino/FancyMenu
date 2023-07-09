@@ -69,15 +69,16 @@ public class BuildActionScreen extends Screen {
         super.init();
 
         this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
-            TextEditorScreen s = new TextEditorScreen(Component.literal(this.instance.action.getValueDescription()), this, null, (call) -> {
+            TextEditorScreen s = new TextEditorScreen(Component.literal(this.instance.action.getValueDescription()), null, (call) -> {
                 if (call != null) {
                     this.instance.value = call;
                 }
+                Minecraft.getInstance().setScreen(this);
             });
             if ((this.instance.action != null) && (this.instance.action.getValueFormattingRules() != null)) {
                 s.formattingRules.addAll(this.instance.action.getValueFormattingRules());
             }
-            s.multilineMode = false;
+            s.setMultilineMode(false);
             if (this.instance.value != null) {
                 s.setText(this.instance.value);
             } else if (this.instance.action != null) {

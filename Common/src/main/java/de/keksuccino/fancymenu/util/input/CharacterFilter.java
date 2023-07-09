@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.input;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import de.keksuccino.fancymenu.util.Legacy;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
@@ -104,6 +106,7 @@ public class CharacterFilter {
         }
     }
 
+    @Legacy("Converts the new CharacterFilter to the old one from Konkrete. Remove this in the future.")
     @NotNull
     public de.keksuccino.konkrete.input.CharacterFilter convertToLegacyFilter() {
         return new de.keksuccino.konkrete.input.CharacterFilter() {
