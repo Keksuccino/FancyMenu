@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.slider;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -28,7 +29,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         consumes -> ((SliderElement)consumes.element).linkedVariable,
                         (element, varName) -> ((SliderElement)element.element).linkedVariable = varName,
                         null, false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_variable"),
-                        false, null, buildNoEmptyStringTextValidator(), null)
+                        false, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_variable.desc")));
 
         this.rightClickMenu.addSeparatorEntry("slider_separator_1");
@@ -70,7 +71,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             }
                         }, null, true, true,
                         Component.translatable("fancymenu.customization.items.slider.editor.list.set_list_values"),
-                        false, "", buildNoEmptyStringTextValidator(), null)
+                        false, "", TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.list.set_list_values.desc")))
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
 

@@ -2,8 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme.themes;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
-import net.minecraft.network.chat.Component;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
@@ -11,7 +9,7 @@ public class LightUIColorTheme extends UIColorTheme {
 
     public LightUIColorTheme() {
 
-        super("light", "Light");
+        super("light", "fancymenu.ui.themes.light");
 
         menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119));
 
@@ -73,11 +71,6 @@ public class LightUIColorTheme extends UIColorTheme {
 
         text_editor_text_formatting_brackets_color = DrawableColor.of(new Color(255, 58, 0, 100));
 
-    }
-
-    @Override
-    public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.ui.color_scheme.schemes.light");
     }
 
 }

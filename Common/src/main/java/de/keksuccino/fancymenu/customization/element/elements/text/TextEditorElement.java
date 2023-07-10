@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
@@ -175,7 +176,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element.element).baseColorHex = colorHex;
                             ((TextElement)element.element).updateContent();
                         }, null, false, false, Component.translatable("fancymenu.customization.items.text.base_color"),
-                        true, null, buildHexColorTextValidator(), null)
+                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
 
@@ -256,7 +257,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
                             ((TextElement)element.element).updateContent();
                         }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"),
-                        true, null, buildHexColorTextValidator(), null)
+                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
         this.addStringInputContextMenuEntryTo(grabberColorMenu, "hover_grabber_color",
@@ -266,7 +267,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
                             ((TextElement)element.element).updateContent();
                         }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"),
-                        true, null, buildHexColorTextValidator(), null)
+                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
     }

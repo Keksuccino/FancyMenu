@@ -11,9 +11,11 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
-import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
@@ -21,10 +23,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -34,6 +37,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
 
 public class CustomizationOverlayUI {
 
@@ -61,10 +66,10 @@ public class CustomizationOverlayUI {
         menuBar.addContextMenuEntry("fancymenu_icon", Component.empty(), fmMenu).setIconTexture(WrappedTexture.of(FM_LOGO_ICON_LOCATION));
 
         // CUSTOMIZATION
-        ContextMenu screenMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("screen", Component.translatable("fancymenu.overlay.menu_bar.customization"), screenMenu);
+        ContextMenu customizationMenu = new ContextMenu();
+        menuBar.addContextMenuEntry("screen", Component.translatable("fancymenu.overlay.menu_bar.customization"), customizationMenu);
 
-        screenMenu.addValueCycleEntry("toggle_current_customization", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.current_customization", ScreenCustomization.isCustomizationEnabledForScreen(screen))
+        customizationMenu.addValueCycleEntry("toggle_current_customization", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.current_customization", ScreenCustomization.isCustomizationEnabledForScreen(screen))
                 .addCycleListener(cycle -> {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
@@ -73,9 +78,9 @@ public class CustomizationOverlayUI {
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }));
 
-        screenMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.current_override"), (menu, entry) -> {
-            //TODO implement this
-        }).setIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue())
+        customizationMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.current_override"), (menu, entry) -> {
+                    //TODO implement this
+                }).setIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue())
                 .setTooltipSupplier((menu, entry) -> {
                     if (!FancyMenu.getOptions().advancedCustomizationMode.getValue()) {
                         return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.current_override.disabled.tooltip"));
@@ -83,10 +88,99 @@ public class CustomizationOverlayUI {
                     return null;
                 });
 
-        screenMenu.addSeparatorEntry("separator_after_override_current");
+        customizationMenu.addSeparatorEntry("separator_after_override_current");
+
+        ContextMenu layoutMenu = new ContextMenu();
+        customizationMenu.addSubMenuEntry("layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu);
+
+        ContextMenu layoutNewMenu = new ContextMenu();
+        layoutMenu.addSubMenuEntry("new_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new"), layoutNewMenu);
+
+        layoutNewMenu.addClickableEntry("new_layout_for_current", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current"), (menu, entry) -> {
+                    if (screen != null) {
+                        LayoutHandler.openLayoutEditor(new Layout(screen), screen);
+                    }
+                }).setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
+                .setTooltipSupplier((menu, entry) -> {
+                    if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.layout.new.current.disabled.tooltip"));
+                    }
+                    return null;
+                });
+
+        layoutNewMenu.addClickableEntry("new_universal_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.universal"), (menu, entry) -> {
+            LayoutHandler.openLayoutEditor(new Layout(), null);
+        });
+
+        ContextMenu layoutManageMenu = new ContextMenu();
+        layoutMenu.addSubMenuEntry("manage_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage"), layoutManageMenu);
+
+        ContextMenu layoutManageCurrentMenu = new ContextMenu();
+        layoutManageMenu.addSubMenuEntry("manage_layouts_for_current", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.current"), layoutManageCurrentMenu)
+                .setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
+                .setTooltipSupplier((menu, entry) -> {
+                    if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.layout.manage.current.disabled.tooltip"));
+                    }
+                    return null;
+                }).setSubMenuOpeningSide(ContextMenu.SubMenuOpeningSide.LEFT);
+
+        if (identifier != null) {
+            int i = 0;
+            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), true, 8)) {
+                layoutManageCurrentMenu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l))
+                        .setLabelSupplier((menu, entry) -> {
+                            Style style = l.getStatus().getEntryComponentStyle();
+                            MutableComponent c = Component.literal(l.getLayoutName());
+                            c.append(Component.literal(" (").setStyle(style));
+                            c.append(l.getStatus().getEntryComponent());
+                            c.append(Component.literal(")").setStyle(style));
+                            return c;
+                        });
+                i++;
+            }
+        }
+
+        layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
+
+        layoutManageCurrentMenu.addClickableEntry("layout.manage.current.all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
+            if (identifier != null) {
+                Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), screen, layouts -> {
+                    Minecraft.getInstance().setScreen(screen);
+                }));
+            }
+        });
+
+        ContextMenu layoutManageUniversalMenu = new ContextMenu();
+        layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.universal"), layoutManageUniversalMenu)
+                .setSubMenuOpeningSide(ContextMenu.SubMenuOpeningSide.LEFT);
+
+        int i = 0;
+        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
+            layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
+                    .setLabelSupplier((menu, entry) -> {
+                        Style style = l.getStatus().getEntryComponentStyle();
+                        MutableComponent c = Component.literal(l.getLayoutName());
+                        c.append(Component.literal(" (").setStyle(style));
+                        c.append(l.getStatus().getEntryComponent());
+                        c.append(Component.literal(")").setStyle(style));
+                        return c;
+                    });
+            i++;
+        }
+
+        layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");
+
+        layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
+            Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
+                Minecraft.getInstance().setScreen(screen);
+            })));
+        });
+
+        customizationMenu.addSeparatorEntry("separator_after_layout_menu");
 
         ContextMenu screenSettingsMenu = new ContextMenu();
-        screenMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), screenSettingsMenu);
+        customizationMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), screenSettingsMenu);
 
         screenSettingsMenu.addValueCycleEntry("advanced_customization_mode", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode", FancyMenu.getOptions().advancedCustomizationMode.getValue())
                 .addCycleListener(cycle -> {
@@ -100,16 +194,12 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().playMenuMusic.setValue(cycle.getAsBoolean());
                 }));
 
-        screenSettingsMenu.addClickableEntry("default_gui_scale", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"), (menu, entry) -> {
-           TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"), CharacterFilter.buildIntegerCharacterFiler(), call -> {
-               if ((call != null) && MathUtils.isInteger(call)) {
-                   FancyMenu.getOptions().defaultGuiScale.setValue(Integer.parseInt(call));
-               }
-               Minecraft.getInstance().setScreen(screen);
-           });
-           s.setText("" + FancyMenu.getOptions().defaultGuiScale.getValue());
-           Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale.tooltip")));
+        NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(screenSettingsMenu, "default_gui_scale",
+                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"),
+                        () -> FancyMenu.getOptions().defaultGuiScale.getValue(),
+                        integer -> FancyMenu.getOptions().defaultGuiScale.setValue(integer),
+                        true, FancyMenu.getOptions().defaultGuiScale.getDefaultValue(), null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale.tooltip")));
 
         screenSettingsMenu.addValueCycleEntry("force_fullscreen", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.force_fullscreen", FancyMenu.getOptions().forceFullscreen.getValue())
                 .addCycleListener(cycle -> {
@@ -141,14 +231,14 @@ public class CustomizationOverlayUI {
                 }));
 
         screenSettingsGameIntroMenu.addClickableEntry("game_intro_set_custom_skip_text", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"), (menu, entry) -> {
-           TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"), null, call -> {
-               if (call != null) {
-                   FancyMenu.getOptions().customGameIntroSkipText.setValue(call);
-               }
-               Minecraft.getInstance().setScreen(screen);
-           });
-           s.setText(FancyMenu.getOptions().customGameIntroSkipText.getValue());
-           Minecraft.getInstance().setScreen(s);
+            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"), null, call -> {
+                if (call != null) {
+                    FancyMenu.getOptions().customGameIntroSkipText.setValue(call);
+                }
+                Minecraft.getInstance().setScreen(screen);
+            });
+            s.setText(FancyMenu.getOptions().customGameIntroSkipText.getValue());
+            Minecraft.getInstance().setScreen(s);
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip")));
 
         screenSettingsMenu.addValueCycleEntry("preload_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.preload_animations", FancyMenu.getOptions().preLoadAnimations.getValue())
@@ -181,16 +271,120 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().showMultiplayerScreenServerIcons.setValue(cycle.getAsBoolean());
                 }));
 
-        screenMenu.addSeparatorEntry("separator_after_settings");
+        screenSettingsMenu.addSeparatorEntry("separator_after_mp_server_icons");
 
-        screenMenu.addClickableEntry("reload_fancymenu", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu"), (menu, entry) -> {
+        ContextMenu windowIconMenu = new ContextMenu();
+        screenSettingsMenu.addSubMenuEntry("window_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), windowIconMenu);
+
+        LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> windowIconToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle", FancyMenu.getOptions().showCustomWindowIcon.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().showCustomWindowIcon.setValue(cycle.getAsBoolean());
+                    if (cycle.getAsBoolean()) {
+                        WindowHandler.updateCustomWindowIcon();
+                    } else {
+                        WindowHandler.resetWindowIcon();
+                    }
+                });
+        windowIconMenu.addValueCycleEntry("window_icon_toggle", windowIconToggleCycle)
+                .setIsActiveSupplier((menu, entry) -> WindowHandler.allCustomWindowIconsSetAndFound())
+                .setTooltipSupplier((menu, entry) -> !WindowHandler.allCustomWindowIconsSetAndFound() ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle.disabled.tooltip")) : null);
+
+        ContextMenu.ClickableContextMenuEntry<?> icon16Entry = NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_16",
+                        Component.empty(),
+                        () -> FancyMenu.getOptions().customWindowIcon16.getValue(),
+                        s -> {
+                            FancyMenu.getOptions().customWindowIcon16.setValue(s);
+                            FancyMenu.getOptions().showCustomWindowIcon.setValue(false);
+                            windowIconToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED);
+                            WindowHandler.resetWindowIcon();
+                        },
+                        true, FancyMenu.getOptions().customWindowIcon16.getDefaultValue(),
+                        file -> {
+                            if (file.getName().toLowerCase().endsWith(".png")) {
+                                LocalTexture t = TextureHandler.INSTANCE.getTexture(file);
+                                return ((t != null) && (t.getWidth() == 16) && (t.getHeight() == 16));
+                            }
+                            return false;
+                        })
+                .setLabelSupplier((menu, entry) -> {
+                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
+                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().success_text_color.getColorInt()));
+                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", (WindowHandler.getCustomWindowIcon16() != null) ? found : notFound);
+                });
+        if (icon16Entry instanceof ContextMenu.SubMenuContextMenuEntry s) {
+            s.getSubContextMenu().setSubMenuOpeningSide(ContextMenu.SubMenuOpeningSide.LEFT);
+        }
+
+        ContextMenu.ClickableContextMenuEntry<?> icon32Entry = NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_32",
+                        Component.empty(),
+                        () -> FancyMenu.getOptions().customWindowIcon32.getValue(),
+                        s -> {
+                            FancyMenu.getOptions().customWindowIcon32.setValue(s);
+                            FancyMenu.getOptions().showCustomWindowIcon.setValue(false);
+                            windowIconToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED);
+                            WindowHandler.resetWindowIcon();
+                        },
+                        true, FancyMenu.getOptions().customWindowIcon32.getDefaultValue(),
+                        file -> {
+                            if (file.getName().toLowerCase().endsWith(".png")) {
+                                LocalTexture t = TextureHandler.INSTANCE.getTexture(file);
+                                return ((t != null) && (t.getWidth() == 32) && (t.getHeight() == 32));
+                            }
+                            return false;
+                        })
+                .setLabelSupplier((menu, entry) -> {
+                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
+                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().success_text_color.getColorInt()));
+                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", (WindowHandler.getCustomWindowIcon32() != null) ? found : notFound);
+                });
+        if (icon32Entry instanceof ContextMenu.SubMenuContextMenuEntry s) {
+            s.getSubContextMenu().setSubMenuOpeningSide(ContextMenu.SubMenuOpeningSide.LEFT);
+        }
+
+        ContextMenu.ClickableContextMenuEntry<?> iconMacOSEntry = NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_macos",
+                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos"),
+                        () -> FancyMenu.getOptions().customWindowIconMacOS.getValue(),
+                        s -> {
+                            FancyMenu.getOptions().customWindowIconMacOS.setValue(s);
+                            FancyMenu.getOptions().showCustomWindowIcon.setValue(false);
+                            windowIconToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED);
+                            WindowHandler.resetWindowIcon();
+                        },
+                        true, FancyMenu.getOptions().customWindowIconMacOS.getDefaultValue(),
+                        file -> file.getName().toLowerCase().endsWith(".icns"))
+                .setLabelSupplier((menu, entry) -> {
+                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
+                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().success_text_color.getColorInt()));
+                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", (WindowHandler.getCustomWindowIconMacOS() != null) ? found : notFound);
+                });
+        if (iconMacOSEntry instanceof ContextMenu.SubMenuContextMenuEntry s) {
+            s.getSubContextMenu().setSubMenuOpeningSide(ContextMenu.SubMenuOpeningSide.LEFT);
+        }
+
+        windowIconMenu.addSeparatorEntry("separator_after_macos_icon");
+
+        windowIconMenu.addClickableEntry("convert_png_to_macos_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.convert_to_macos_icon"), (menu, entry) -> {
+            WebUtils.openWebLink("https://miconv.com/convert-png-to-icns/");
+        });
+
+        NonStackableOverlayUI.addInputContextMenuEntryTo(screenSettingsMenu, "window_title", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_title"),
+                        () -> FancyMenu.getOptions().customWindowTitle.getValue(),
+                        s -> {
+                            FancyMenu.getOptions().customWindowTitle.setValue(s);
+                            WindowHandler.updateWindowTitle();
+                        }, true, FancyMenu.getOptions().customWindowTitle.getDefaultValue(), null, false, false, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_title.tooltip")));
+
+        customizationMenu.addSeparatorEntry("separator_after_settings");
+
+        customizationMenu.addClickableEntry("reload_fancymenu", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu"), (menu, entry) -> {
             MainThreadTaskExecutor.executeInMainThread(() -> {
                 grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
                 ScreenCustomization.reloadFancyMenu();
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu.shortcut"));
 
-        screenMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                 Minecraft.getInstance().setScreen(screen);
                 if (call) {
@@ -203,9 +397,9 @@ public class CustomizationOverlayUI {
             }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm")));
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.tooltip")));
 
-        screenMenu.addSeparatorEntry("separator_before_hide_menu_bar");
+        customizationMenu.addSeparatorEntry("separator_before_hide_menu_bar");
 
-        screenMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(ConfirmationScreen.critical((call) -> {
                 if (call) {
                     FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
@@ -213,93 +407,6 @@ public class CustomizationOverlayUI {
                 Minecraft.getInstance().setScreen(screen);
             }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm")).setDelay(4000));
         }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.shortcut"));
-
-        // LAYOUT
-        ContextMenu layoutMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("layout", Component.translatable("fancymenu.overlay.menu_bar.layout"), layoutMenu);
-
-        ContextMenu layoutNewMenu = new ContextMenu();
-        layoutMenu.addSubMenuEntry("layout.new", Component.translatable("fancymenu.overlay.menu_bar.layout.new"), layoutNewMenu);
-
-        layoutNewMenu.addClickableEntry("layout.new.current", Component.translatable("fancymenu.overlay.menu_bar.layout.new.current"), (menu, entry) -> {
-            if (screen != null) {
-                LayoutHandler.openLayoutEditor(new Layout(screen), screen);
-            }
-        }).setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
-                .setTooltipSupplier((menu, entry) -> {
-                    if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.layout.new.current.disabled.tooltip"));
-                    }
-                    return null;
-                });
-
-        layoutNewMenu.addClickableEntry("layout.new.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.new.universal"), (menu, entry) -> {
-            LayoutHandler.openLayoutEditor(new Layout(), null);
-        });
-
-        ContextMenu layoutManageMenu = new ContextMenu();
-        layoutMenu.addSubMenuEntry("layout.manage", Component.translatable("fancymenu.overlay.menu_bar.layout.manage"), layoutManageMenu);
-
-        ContextMenu layoutManageCurrentMenu = new ContextMenu();
-        layoutManageMenu.addSubMenuEntry("layout.manage.current", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.current"), layoutManageCurrentMenu)
-                .setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
-                .setTooltipSupplier((menu, entry) -> {
-                    if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.layout.manage.current.disabled.tooltip"));
-                    }
-                    return null;
-                });
-
-        if (identifier != null) {
-            int i = 0;
-            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), true, 8)) {
-                layoutManageCurrentMenu.addSubMenuEntry("layout.manage.current.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
-                        .setLabelSupplier((menu, entry) -> {
-                            Style style = l.getStatus().getEntryComponentStyle();
-                            MutableComponent c = Component.literal(l.getLayoutName());
-                            c.append(Component.literal(" (").setStyle(style));
-                            c.append(l.getStatus().getEntryComponent());
-                            c.append(Component.literal(")").setStyle(style));
-                            return c;
-                        });
-                i++;
-            }
-        }
-
-        layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
-
-        layoutManageCurrentMenu.addClickableEntry("layout.manage.current.all", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu, entry) -> {
-            if (identifier != null) {
-                Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), screen, layouts -> {
-                    Minecraft.getInstance().setScreen(screen);
-                }));
-            }
-        });
-
-        ContextMenu layoutManageUniversalMenu = new ContextMenu();
-        layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.universal"), layoutManageUniversalMenu);
-
-        int i = 0;
-        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
-            layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
-                    .setLabelSupplier((menu, entry) -> {
-                        Style style = l.getStatus().getEntryComponentStyle();
-                        MutableComponent c = Component.literal(l.getLayoutName());
-                        c.append(Component.literal(" (").setStyle(style));
-                        c.append(l.getStatus().getEntryComponent());
-                        c.append(Component.literal(")").setStyle(style));
-                        return c;
-                    });
-            i++;
-        }
-
-        layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");
-
-        layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
-                Minecraft.getInstance().setScreen(screen);
-            })));
-        });
 
         // VARIABLES
         ContextMenu variablesMenu = new ContextMenu();
@@ -323,46 +430,31 @@ public class CustomizationOverlayUI {
             }
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier.tooltip")));
 
-        // WINDOW
-        ContextMenu windowMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("window", Component.translatable("fancymenu.overlay.menu_bar.window"), windowMenu);
-
-        windowMenu.addValueCycleEntry("window_icon", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.window.custom_window_icon", FancyMenu.getOptions().showCustomWindowIcon.getValue())
-                .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().showCustomWindowIcon.setValue(cycle.getAsBoolean());
-                }));
-
-        NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "window_title", Component.translatable("fancymenu.overlay.menu_bar.window.custom_window_title"),
-                        () -> FancyMenu.getOptions().customWindowTitle.getValue(),
-                        s -> {
-                            FancyMenu.getOptions().customWindowTitle.setValue(s);
-                            WindowHandler.updateWindowTitle();
-                        }, true, FancyMenu.getOptions().customWindowTitle.getDefaultValue(), null, false, false, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.window.custom_window_title.tooltip")));
-
-        windowMenu.addSeparatorEntry("separator_3");
+        // USER INTERFACE
+        ContextMenu userInterfaceMenu = new ContextMenu();
+        menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
 
         int preSelectedUiScale = (int)FancyMenu.getOptions().uiScale.getValue().floatValue();
         if ((preSelectedUiScale != 1) && (preSelectedUiScale != 2) && (preSelectedUiScale != 3)) {
             preSelectedUiScale = 1;
         }
-        windowMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.window.ui_scale", ListUtils.build(1,2,3), preSelectedUiScale)
+        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.build(1,2,3), preSelectedUiScale)
                 .addCycleListener(integer -> {
                     FancyMenu.getOptions().uiScale.setValue(Float.valueOf(integer));
                 }));
 
-        windowMenu.addValueCycleEntry("ui_text_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.window.ui_text_shadow", FancyMenu.getOptions().enableUiTextShadow.getValue())
+        userInterfaceMenu.addValueCycleEntry("ui_text_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_text_shadow", FancyMenu.getOptions().enableUiTextShadow.getValue())
                 .addCycleListener(cycle -> {
                     FancyMenu.getOptions().enableUiTextShadow.setValue(cycle.getAsBoolean());
                 }));
 
-        windowMenu.addValueCycleEntry("ui_click_sounds", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.window.ui_click_sounds", FancyMenu.getOptions().playUiClickSounds.getValue())
+        userInterfaceMenu.addValueCycleEntry("ui_click_sounds", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_click_sounds", FancyMenu.getOptions().playUiClickSounds.getValue())
                 .addCycleListener(cycle -> {
                     FancyMenu.getOptions().playUiClickSounds.setValue(cycle.getAsBoolean());
                 }));
 
         ContextMenu windowUiThemeMenu = new ContextMenu();
-        windowMenu.addSubMenuEntry("ui_theme", Component.translatable("fancymenu.overlay.menu_bar.window.ui_theme"), windowUiThemeMenu);
+        userInterfaceMenu.addSubMenuEntry("ui_theme", Component.translatable("fancymenu.overlay.menu_bar.user_interface.ui_theme"), windowUiThemeMenu);
 
         int i2 = 0;
         for (UIColorTheme s : UIColorThemeRegistry.getThemes()) {

@@ -22,6 +22,9 @@ public class Options {
     public final Option<Boolean> preLoadAnimations = new Option<>(config, "preload_animations", true, "loading");
 
     public final Option<Boolean> showCustomWindowIcon = new Option<>(config, "show_custom_window_icon", false, "window");
+    public final Option<String> customWindowIcon16 = new Option<>(config, "custom_window_icon_16", "", "window");
+    public final Option<String> customWindowIcon32 = new Option<>(config, "custom_window_icon_32", "", "window");
+    public final Option<String> customWindowIconMacOS = new Option<>(config, "custom_window_icon_macos", "", "window");
     public final Option<String> customWindowTitle = new Option<>(config, "custom_window_title", "", "window");
 
     public final Option<Boolean> showLevelLoadingScreenChunkAnimation = new Option<>(config, "show_world_loading_screen_animation", true, "world_loading_screen");

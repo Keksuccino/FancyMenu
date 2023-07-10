@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -235,7 +236,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                             ((ButtonElement)element1.element).tooltip = s;
                         },
                         null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
-                        true, null, buildNoEmptyStringTextValidator(), null)
+                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));

@@ -5,14 +5,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -79,15 +77,6 @@ public class UIColorThemeSerializer {
     public static void serializeThemeToFile(@NotNull UIColorTheme theme, @NotNull File file) {
         Objects.requireNonNull(theme);
         Objects.requireNonNull(file);
-//        try {
-//            Gson gson = buildGsonInstance();
-//            JsonWriter writer = new JsonWriter(new FileWriter(file));
-//            gson.toJson(theme, UIColorTheme.class, writer);
-//            IOUtils.closeQuietly(writer);
-////            gson.toJson(gson.toJsonTree(theme), new JsonWriter(new FileWriter(file)));
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//        }
         try {
             Gson gson = buildGsonInstance();
             String json = gson.toJson(theme);

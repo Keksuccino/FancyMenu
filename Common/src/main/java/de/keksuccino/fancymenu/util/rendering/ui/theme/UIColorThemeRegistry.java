@@ -22,7 +22,7 @@ public class UIColorThemeRegistry {
         Objects.requireNonNull(theme);
         Objects.requireNonNull(theme.getIdentifier());
         if (THEMES.containsKey(theme.identifier)) {
-            LOGGER.warn("[FANCYMENU] UIColorScheme with identifier '" + theme.getIdentifier() + "' already exists! Overriding scheme!");
+            LOGGER.warn("[FANCYMENU] UIColorTheme with identifier '" + theme.getIdentifier() + "' already exists! Overriding theme!");
         }
         THEMES.put(theme.getIdentifier(), theme);
     }

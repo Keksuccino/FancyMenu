@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -61,7 +62,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).updateSplash();
                         },
                         null, false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"),
-                        false, null, buildNoEmptyStringTextValidator(), null)
+                        false, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.DIRECT_TEXT);
 
         this.rightClickMenu.addSeparatorEntry("splash_separator_1");
@@ -96,7 +97,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).updateSplash();
                         },
                         null, false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"),
-                        true, DrawableColor.of(255, 255, 0).getHex(), buildHexColorTextValidator(), null)
+                        true, DrawableColor.of(255, 255, 0).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",

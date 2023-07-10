@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderUtils;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.main.GameConfig;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,7 +22,10 @@ public class MixinMinecraft {
 
 	@Shadow @Nullable public Screen screen;
 
-	private static boolean customWindowInit = false;
+	@Inject(method = "<init>", at = @At(value = "RETURN"))
+	private void setCustomWindowIconFancyMenu(GameConfig $$0, CallbackInfo info) {
+		WindowHandler.updateCustomWindowIcon();
+	}
 
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void beforeGameTickFancyMenu(CallbackInfo info) {
@@ -49,7 +53,6 @@ public class MixinMinecraft {
 	
 	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
 	private void changeWindowTitleFancyMenu(CallbackInfoReturnable<String> info) {
-		WindowHandler.init();
 		String title = WindowHandler.getCustomWindowTitle();
 		if (title != null) {
 			info.setReturnValue(title);

@@ -93,6 +93,7 @@ public class UIColorTheme {
 
     @NotNull
     public Component getDisplayName() {
+        if (this.display_name.startsWith("fancymenu.ui.themes.")) return Component.translatable(this.display_name);
         return Component.literal(this.display_name);
     }
     

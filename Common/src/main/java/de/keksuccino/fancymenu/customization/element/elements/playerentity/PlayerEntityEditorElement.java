@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -108,7 +109,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 consumes -> ((PlayerEntityElement) consumes.element).skinUrl,
                 (element, s) -> ((PlayerEntityElement) element.element).setSkinTextureBySource(s, false),
                 null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
-                true, null, buildBasicUrlTextValidator(), null);
+                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
         this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "slim_skin",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
@@ -183,7 +184,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 consumes -> ((PlayerEntityElement) consumes.element).capeUrl,
                 (element, s) -> ((PlayerEntityElement) element.element).setCapeTextureBySource(s, false),
                 null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
-                true, null, buildBasicUrlTextValidator(), null);
+                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_3");
 

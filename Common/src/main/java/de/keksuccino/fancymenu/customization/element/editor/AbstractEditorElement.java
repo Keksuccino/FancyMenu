@@ -23,8 +23,8 @@ import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
@@ -247,7 +247,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							consumes -> consumes.element.advancedX,
 							(element, input) -> element.element.advancedX = input,
 							null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"),
-							true, null, buildNoEmptyStringTextValidator(), null)
+							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
 			this.addStringInputContextMenuEntryTo(advancedPositioningMenu, "advanced_positioning_y",
@@ -255,7 +255,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							consumes -> consumes.element.advancedY,
 							(element, input) -> element.element.advancedY = input,
 							null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"),
-							true, null, buildNoEmptyStringTextValidator(), null)
+							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
 		}
@@ -275,7 +275,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								element.element.advancedWidth = input;
 								element.element.baseWidth = 50;
 							}, null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"),
-							true, null, buildNoEmptyStringTextValidator(), null)
+							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
 			this.addStringInputContextMenuEntryTo(advancedSizingMenu, "advanced_sizing_height",
@@ -284,7 +284,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 								element.element.advancedHeight = input;
 								element.element.baseHeight = 50;
 							}, null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"),
-							true, null, buildNoEmptyStringTextValidator(), null)
+							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
 		}
@@ -888,26 +888,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
 		}
 		return chooseEntry;
-	}
-
-	@NotNull
-	protected ConsumingSupplier<String, Boolean> buildNoEmptyStringTextValidator() {
-		return consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty();
-	}
-
-	@NotNull
-	protected ConsumingSupplier<String, Boolean> buildBasicUrlTextValidator() {
-		return consumes -> {
-			if ((consumes != null) && !consumes.replace(" ", "").isEmpty()) {
-				if ((consumes.startsWith("http://") || consumes.startsWith("https://")) && consumes.contains(".")) return true;
-			}
-			return false;
-		};
-	}
-
-	@NotNull
-	protected ConsumingSupplier<String, Boolean> buildHexColorTextValidator() {
-		return consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && (DrawableColor.of(consumes) != DrawableColor.EMPTY);
 	}
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {

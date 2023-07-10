@@ -112,7 +112,7 @@ public class ScreenCustomizationEvents {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
-				WindowHandler.updateWindowIcon();
+				WindowHandler.updateCustomWindowIcon();
 				this.iconSetAfterFullscreen = true;
 			}
 		}
