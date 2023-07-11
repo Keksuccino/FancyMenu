@@ -94,16 +94,15 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         this.renderBottomLine(pose, scaledWidth, this.height);
 
+        pose.popPose();
+        UIBase.resetShaderColor();
+
         //Render context menus of ContextMenuBarEntries
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
             if (e instanceof ContextMenuBarEntry c) {
-                c.contextMenu.setOverriddenRenderScale((float) Minecraft.getInstance().getWindow().getGuiScale());
-                c.contextMenu.setOverriddenTooltipScale(this.getScale());
-                c.contextMenu.render(pose, scaledMouseX, scaledMouseY, partial);
+                c.contextMenu.render(pose, mouseX, mouseY, partial);
             }
         }
-
-        pose.popPose();
 
         UIBase.resetShaderColor();
 
@@ -700,12 +699,23 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             this.contextMenu.setForceUIScale(false);
             this.contextMenu.setForceRawXY(true);
             this.contextMenu.setForceSide(true);
+            this.contextMenu.setForceSideSubMenus(false);
+            for (ContextMenu.ContextMenuEntry<?> e : this.contextMenu.getEntries()) {
+                if (e instanceof ContextMenu.SubMenuContextMenuEntry s) {
+                    s.getSubContextMenu().setForceSide(true);
+                    s.getSubContextMenu().setForceSideSubMenus(false);
+                }
+            }
             this.clickAction = (bar, entry) -> this.openContextMenu();
         }
 
         public void openContextMenu() {
             this.contextMenu.setScale(this.parent.scale);
-            this.contextMenu.openMenuAt(this.x, this.y + this.height - 1);
+            float scale = UIBase.calculateFixedScale(this.parent.scale);
+            float scaledX = (float)this.x * scale;
+            float scaledY = (float)this.y * scale;
+            float scaledHeight = (float)this.height * scale;
+            this.contextMenu.openMenuAt(scaledX, scaledY + scaledHeight - this.contextMenu.getScaledBorderThickness());
         }
 
         @Override

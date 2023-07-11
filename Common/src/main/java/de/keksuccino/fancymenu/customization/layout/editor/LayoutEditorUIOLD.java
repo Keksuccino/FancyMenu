@@ -1,3 +1,4 @@
+//TODO remove class
 //package de.keksuccino.fancymenu.customization.layout.editor;
 //
 //import java.awt.Color;
@@ -187,7 +188,6 @@
 //				newElementMenu.openMenu(0, entry.getButton().y);
 //			});
 //
-//			//TODO add "Editor" tab with entry to toggle grid (+ shortcut text Ctrl+G)
 //
 //			this.elementMenu.addClickableEntry("hidden_vanilla_elements", false, Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), null, Boolean.class, (entry, inherited, pass) -> {
 //				AdvancedContextMenu hiddenVanillaMenu = this.buildHiddenVanillaElementContextMenu();

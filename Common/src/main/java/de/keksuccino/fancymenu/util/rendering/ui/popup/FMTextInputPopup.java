@@ -8,6 +8,8 @@ import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.TextInputPopup;
 import de.keksuccino.konkrete.input.CharacterFilter;
 
+//TODO remove this class
+@Deprecated
 public class FMTextInputPopup extends TextInputPopup {
 
 	public FMTextInputPopup(Color color, String title, CharacterFilter filter, int backgroundAlpha, Consumer<String> callback) {

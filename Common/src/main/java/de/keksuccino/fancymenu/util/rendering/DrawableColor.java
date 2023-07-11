@@ -86,7 +86,7 @@ public class DrawableColor {
     }
 
     public int getColorIntWithAlpha(float alpha) {
-        return RenderUtils.replaceAlphaInColor(this.colorInt, alpha);
+        return RenderingUtils.replaceAlphaInColor(this.colorInt, alpha);
     }
 
     @NotNull

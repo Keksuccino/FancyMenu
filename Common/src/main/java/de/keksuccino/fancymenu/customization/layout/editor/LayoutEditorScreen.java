@@ -30,7 +30,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.*;
@@ -189,7 +189,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
 			int endX = Math.max(this.mouseSelectionStartX, mouseX);
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
-			fill(pose, startX, startY, endX, endY, RenderUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
+			fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
 			UIBase.renderBorder(pose, startX, startY, endX, endY, 1, UIBase.getUIColorScheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		}

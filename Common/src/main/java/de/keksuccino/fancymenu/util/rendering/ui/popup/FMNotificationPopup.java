@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.NotificationPopup;
 
+//TODO remove this class
+@Deprecated
 public class FMNotificationPopup extends NotificationPopup {
 
 	public FMNotificationPopup(int width, Color color, int backgroundAlpha, Runnable callback, String... text) {

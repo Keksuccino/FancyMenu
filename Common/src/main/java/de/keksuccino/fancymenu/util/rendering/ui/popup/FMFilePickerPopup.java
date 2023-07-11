@@ -10,6 +10,8 @@ import de.keksuccino.konkrete.gui.screens.popup.FilePickerPopup;
 import de.keksuccino.konkrete.gui.screens.popup.Popup;
 import net.minecraft.client.gui.screens.Screen;
 
+//TODO remove this class
+@Deprecated
 public class FMFilePickerPopup extends FilePickerPopup {
 
 	public FMFilePickerPopup(String directory, String home, Popup fallback, boolean checkForLastPath, Consumer<File> callback, String[] filetypes) {

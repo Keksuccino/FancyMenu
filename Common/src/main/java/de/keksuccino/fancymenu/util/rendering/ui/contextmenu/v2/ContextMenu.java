@@ -6,11 +6,11 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
@@ -47,10 +47,10 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected Float overriddenTooltipScale = null;
     protected boolean forceUIScale = true;
     protected boolean open = false;
-    protected int rawX; // without border
-    protected int rawY; // without border
-    protected int rawWidth; // without border
-    protected int rawHeight; // without border
+    protected float rawX; // without border
+    protected float rawY; // without border
+    protected float rawWidth; // without border
+    protected float rawHeight; // without border
     protected SubMenuContextMenuEntry parentEntry = null;
     protected SubMenuOpeningSide subMenuOpeningSide = SubMenuOpeningSide.RIGHT;
     protected boolean shadow = true;
@@ -58,6 +58,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected boolean forceDefaultTooltipStyle = true;
     protected boolean forceRawXY = false;
     protected boolean forceSide = false;
+    protected boolean forceSideSubMenus = true;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -110,7 +111,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 e.tickAction.run(this, e, false);
             }
             //Update width + height
-            int w = e.getMinWidth();
+            float w = e.getMinWidth();
             if (w > this.rawWidth) {
                 this.rawWidth = w;
             }
@@ -122,24 +123,24 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
-        int x = this.getActualX();
-        int y = this.getActualY();
-        int scaledX = (int)((float)x/scale) + this.getBorderThickness();
-        int scaledY = (int)((float)y/scale) + this.getBorderThickness();
-        int scaledMouseX = (int) ((float)mouseX / scale);
-        int scaledMouseY = (int) ((float)mouseY / scale);
+        float x = this.getActualX();
+        float y = this.getActualY();
+        float scaledX = (float)((float)x/scale) + this.getBorderThickness();
+        float scaledY = (float)((float)y/scale) + this.getBorderThickness();
+        float scaledMouseX = (float) ((float)mouseX / scale);
+        float scaledMouseY = (float) ((float)mouseY / scale);
         boolean navigatingInSub = this.isUserNavigatingInSubMenu();
 
         //Render shadow
         if (this.hasShadow()) {
-            fill(pose, scaledX + 4, scaledY + 4, scaledX + this.getWidth() + 4, scaledY + this.getHeight() + 4, SHADOW_COLOR.getColorInt());
+            RenderingUtils.fillF(pose, (float) (scaledX + 4), (float) (scaledY + 4), (float) (scaledX + this.getWidth() + 4), (float) (scaledY + this.getHeight() + 4), SHADOW_COLOR.getColorInt());
             UIBase.resetShaderColor();
         }
         //Render background
-        fill(pose, scaledX, scaledY, scaledX + this.getWidth(), scaledY + this.getHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
+        RenderingUtils.fillF(pose, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + this.getHeight()), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
         UIBase.resetShaderColor();
         //Update + render entries
-        int entryY = scaledY;
+        float entryY = scaledY;
         for (ContextMenuEntry<?> e : renderEntries) {
             e.x = scaledX;
             e.y = entryY; //already scaled
@@ -152,12 +153,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             }
             RenderSystem.enableBlend();
             UIBase.resetShaderColor();
-            e.render(pose, scaledMouseX, scaledMouseY, partial);
+            e.render(pose, (int) scaledMouseX, (int) scaledMouseY, partial);
             entryY += e.getHeight(); //don't scale this, because already scaled via pose.scale()
         }
         UIBase.resetShaderColor();
         //Render border
-        UIBase.renderBorder(pose, scaledX - this.getBorderThickness(), scaledY - this.getBorderThickness(), scaledX + this.getWidth() + this.getBorderThickness(), scaledY + this.getHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().context_menu_border_color.getColor(), true, true, true, true);
+        UIBase.renderBorder(pose, (float) (scaledX - this.getBorderThickness()), (float) (scaledY - this.getBorderThickness()), (float) (scaledX + this.getWidth() + this.getBorderThickness()), (float) (scaledY + this.getHeight() + this.getBorderThickness()), (float) this.getBorderThickness(), UIBase.getUIColorScheme().context_menu_border_color.getColorInt(), true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -171,7 +172,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         //Render sub context menus
         for (ContextMenuEntry<?> e : renderEntries) {
             if (e instanceof SubMenuContextMenuEntry s) {
-                s.subContextMenu.forceSide = this.forceSide;
+                if (this.forceSideSubMenus) s.subContextMenu.forceSide = this.forceSide;
                 s.subContextMenu.forceRawXY = this.forceRawXY;
                 s.subContextMenu.shadow = this.shadow;
                 s.subContextMenu.scale = this.scale;
@@ -411,25 +412,25 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
-    protected int getMinDistanceToScreenEdge() {
+    protected float getMinDistanceToScreenEdge() {
         if (!this.keepDistanceToEdges) return 0;
         return 5;
     }
 
-    protected int getActualX() {
+    protected float getActualX() {
         if (this.isSubMenu()) {
             float cachedScale = this.parentEntry.parent.scale;
             if (this.parentEntry.parent.overriddenRenderScale != null) this.parentEntry.parent.scale = this.parentEntry.parent.overriddenRenderScale;
             float scale = UIBase.calculateFixedScale(this.scale);
-            int scaledOffsetX = (int) (5.0F * scale);
+            float scaledOffsetX = (float) (5.0F * scale);
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
             if (side == SubMenuOpeningSide.LEFT) {
-                int actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
+                float actualX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + scaledOffsetX;
                 this.parentEntry.parent.scale = cachedScale;
                 return actualX;
             }
             if (side == SubMenuOpeningSide.RIGHT) {
-                int actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
+                float actualX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - scaledOffsetX;
                 this.parentEntry.parent.scale = cachedScale;
                 return actualX;
             }
@@ -437,23 +438,25 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         if (this.forceRawXY) {
             return this.getX();
         }
+        //Force the menu to stay on screen
         if ((this.getX() + this.getScaledWidthWithBorder()) >= (getScreenWidth() - this.getMinDistanceToScreenEdge())) {
             return getScreenWidth() - this.getScaledWidthWithBorder() - this.getMinDistanceToScreenEdge() - 1;
         }
         return Math.max(this.getX(), this.getMinDistanceToScreenEdge());
     }
 
-    protected int getActualY() {
-        int y = this.getY();
+    protected float getActualY() {
+        float y = this.getY();
         if (this.isSubMenu()) {
             float scale = UIBase.calculateFixedScale((this.overriddenRenderScale != null) ? this.overriddenRenderScale : this.scale);
             int scaledOffsetY = (int) (10.0F * scale);
-            y = (int) ((float)this.parentEntry.y * scale);
+            y = (float) ((float)this.parentEntry.y * scale);
             y += scaledOffsetY;
         }
         if (this.forceRawXY) {
             return y;
         }
+        //Force the menu to stay on screen
         if ((y + this.getScaledHeightWithBorder()) >= (getScreenHeight() - this.getMinDistanceToScreenEdge())) {
             return getScreenHeight() - this.getScaledHeightWithBorder() - this.getMinDistanceToScreenEdge() - 1;
         }
@@ -466,64 +469,66 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return this.subMenuOpeningSide;
         }
         if (this.isSubMenu()) {
-            if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && ((this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5) < 5)) {
+            float potentialX = this.parentEntry.parent.getActualX() - this.getScaledWidth() + 5;
+            if ((this.subMenuOpeningSide == SubMenuOpeningSide.LEFT) && (potentialX < 5)) {
                 return SubMenuOpeningSide.RIGHT;
             }
-            if ((this.subMenuOpeningSide == SubMenuOpeningSide.RIGHT) && ((this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5 + this.getScaledWidth()) > (getScreenWidth() - 5))) {
+            potentialX = this.parentEntry.parent.getActualX() + this.parentEntry.parent.getScaledWidth() - 5 + this.getScaledWidth();
+            if ((this.subMenuOpeningSide == SubMenuOpeningSide.RIGHT) && (potentialX > (getScreenWidth() - 5))) {
                 return SubMenuOpeningSide.LEFT;
             }
         }
         return this.subMenuOpeningSide;
     }
 
-    public int getBorderThickness() {
+    public float getBorderThickness() {
         return 1;
     }
 
-    public int getScaledBorderThickness() {
+    public float getScaledBorderThickness() {
         float scale = UIBase.calculateFixedScale(this.scale);
-        return (int)((float)this.getBorderThickness() * scale);
+        return (float)((float)this.getBorderThickness() * scale);
     }
 
-    public int getX() {
+    public float getX() {
         return this.rawX;
     }
 
-    public int getY() {
+    public float getY() {
         return this.rawY;
     }
 
-    public int getWidth() {
+    public float getWidth() {
         return this.rawWidth;
     }
 
-    public int getWidthWithBorder() {
+    public float getWidthWithBorder() {
         return this.getWidth() + (this.getBorderThickness() * 2);
     }
 
-    public int getScaledWidth() {
+    public float getScaledWidth() {
         float scale = UIBase.calculateFixedScale(this.scale);
-        return (int) ((float)this.getWidth() * scale);
+        return (float) ((float)this.getWidth() * scale);
     }
 
-    public int getScaledWidthWithBorder() {
+    public float getScaledWidthWithBorder() {
         return this.getScaledWidth() + (this.getScaledBorderThickness() * 2);
     }
 
-    public int getHeight() {
+    public float getHeight() {
         return this.rawHeight;
     }
 
-    public int getHeightWithBorder() {
+    public float getHeightWithBorder() {
         return this.getHeight() + (this.getBorderThickness() * 2);
     }
 
-    public int getScaledHeight() {
+    public float getScaledHeight() {
         float scale = UIBase.calculateFixedScale(this.scale);
-        return (int) ((float)this.getHeight() * scale);
+        return (float) ((float)this.getHeight() * scale);
     }
 
-    public int getScaledHeightWithBorder() {
+    public float getScaledHeightWithBorder() {
         return this.getScaledHeight() + (this.getScaledBorderThickness() * 2);
     }
 
@@ -587,6 +592,15 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
+    public boolean isForceSideSubMenus() {
+        return this.forceSideSubMenus;
+    }
+
+    public ContextMenu setForceSideSubMenus(boolean forceSideSubMenus) {
+        this.forceSideSubMenus = forceSideSubMenus;
+        return this;
+    }
+
     @NotNull
     public SubMenuOpeningSide getSubMenuOpeningSide() {
         return this.subMenuOpeningSide;
@@ -627,7 +641,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return false;
     }
 
-    public ContextMenu openMenuAt(int x, int y) {
+    public ContextMenu openMenuAt(float x, float y) {
         this.closeSubMenus();
         this.unhoverAllEntries();
         this.rawX = x;
@@ -837,12 +851,12 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected String identifier;
         protected ContextMenu parent;
         /** Only for internal use. This gets set by the parent {@link ContextMenu}. **/
-        protected int x;
+        protected float x;
         /** Only for internal use. This gets set by the parent {@link ContextMenu}. **/
-        protected int y;
+        protected float y;
         /** Only for internal use. This gets set by the parent {@link ContextMenu}. **/
-        protected int width;
-        protected int height = 20;
+        protected float width;
+        protected float height = 20;
         @Nullable
         protected EntryTask tickAction;
         protected EntryTask hoverAction;
@@ -874,16 +888,16 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return parent;
         }
 
-        public int getHeight() {
+        public float getHeight() {
             return this.height;
         }
 
-        public T setHeight(int height) {
+        public T setHeight(float height) {
             this.height = height;
             return (T) this;
         }
 
-        public abstract int getMinWidth();
+        public abstract float getMinWidth();
 
         protected void setHovered(boolean hovered) {
             this.hovered = hovered;
@@ -994,16 +1008,16 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
             this.renderBackground(pose);
 
-            int labelX = this.x + 10;
+            int labelX = (int) (this.x + 10);
             if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
-            int labelY = this.y + (this.height / 2) - (this.font.lineHeight / 2);
+            int labelY = (int) (this.y + (this.height / 2) - (this.font.lineHeight / 2));
             UIBase.drawElementLabel(pose, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
                 shortcutTextWidth = this.font.width(shortcutText);
-                int shortcutX = this.x + this.width - 10 - shortcutTextWidth;
+                int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
                 UIBase.drawElementLabel(pose, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
             }
 
@@ -1017,8 +1031,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             if (this.icon != null) {
                 RenderSystem.enableBlend();
                 UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
-                RenderUtils.bindTexture(this.icon);
-                blit(pose, this.x + 10, this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+                RenderingUtils.bindTexture(this.icon);
+                blit(pose, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
                 UIBase.resetShaderColor();
             }
         }
@@ -1041,7 +1055,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
                 RenderSystem.enableBlend();
                 UIBase.getUIColorScheme().setUITextureShaderColor(this.tooltipIconHovered ? 1.0F : 0.2F);
-                RenderUtils.bindTexture(CONTEXT_MENU_TOOLTIP_ICON);
+                RenderingUtils.bindTexture(CONTEXT_MENU_TOOLTIP_ICON);
                 blit(pose, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
                 UIBase.resetShaderColor();
 
@@ -1066,16 +1080,16 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         protected int getTooltipIconX() {
-            return this.x + this.width - 20;
+            return (int) (this.x + this.width - 20);
         }
 
         protected int getTooltipIconY() {
-            return this.y + 5;
+            return (int) (this.y + 5);
         }
 
         protected void renderBackground(@NotNull PoseStack pose) {
             if (this.isHovered() && this.isActive()) {
-                fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
+                RenderingUtils.fillF(pose, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
             }
         }
 
@@ -1135,7 +1149,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public int getMinWidth() {
+        public float getMinWidth() {
             int i = Minecraft.getInstance().font.width(this.getLabel()) + 20;
             if (this.tooltipSupplier != null) {
                 i += 30;
@@ -1252,8 +1266,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected void renderSubMenuArrow(PoseStack pose) {
             RenderSystem.enableBlend();
             UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
-            RenderUtils.bindTexture(SUB_CONTEXT_MENU_ARROW_ICON);
-            blit(pose, this.x + this.width - 20, this.y + 5, 0.0F, 0.0F, 10, 10, 10, 10);
+            RenderingUtils.bindTexture(SUB_CONTEXT_MENU_ARROW_ICON);
+            blit(pose, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
             UIBase.resetShaderColor();
         }
 
@@ -1379,8 +1393,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public int getMinWidth() {
-            int i = super.getMinWidth();
+        public float getMinWidth() {
+            float i = super.getMinWidth();
             if (this.tooltipSupplier == null) {
                 i += 30;
             } else {
@@ -1412,7 +1426,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            fill(pose, this.x + 10, this.y + 4, this.x + this.width - 10, this.y + 5, UIBase.getUIColorScheme().context_menu_border_color.getColorInt());
+            RenderingUtils.fillF(pose, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.getUIColorScheme().context_menu_border_color.getColorInt());
         }
 
         @Override
@@ -1426,7 +1440,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public int getMinWidth() {
+        public float getMinWidth() {
             int i = 20;
             if (this.addSpaceForIcon) i += 20;
             return i;
@@ -1455,7 +1469,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public int getMinWidth() {
+        public float getMinWidth() {
             int i = 20;
             if (this.addSpaceForIcon) i += 20;
             return i;

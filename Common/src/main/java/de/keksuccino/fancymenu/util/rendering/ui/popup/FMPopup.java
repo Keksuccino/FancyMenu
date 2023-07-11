@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.Popup;
 
+//TODO remove this class
+@Deprecated
 public class FMPopup extends Popup {
 
 	public FMPopup(int backgroundAlpha) {

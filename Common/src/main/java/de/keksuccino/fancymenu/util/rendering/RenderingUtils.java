@@ -4,14 +4,13 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.resources.ResourceLocation;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.util.FastColor;
 import org.joml.Matrix4f;
 
-public class RenderUtils extends de.keksuccino.konkrete.rendering.RenderUtils {
+public class RenderingUtils extends RenderUtils {
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
@@ -41,32 +40,37 @@ public class RenderUtils extends de.keksuccino.konkrete.rendering.RenderUtils {
         return replaceAlphaInColor(color, (int)(newAlpha * 255.0F));
     }
 
-//    public static void renderBlurredTexture(@NotNull PoseStack pose, @NotNull ResourceLocation texture, int x, int y, int width, int height) {
-//
-//        float xF = x;
-//        float yF = y;
-//
-//        RenderSystem.enableBlend();
-//
-//        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-//        RenderUtils.bindTexture(texture);
-//        blitF(pose, xF, yF, 0.0F, 0.0F, width, height, width, height);
-//
-//        for (float f = 0; f < 1; f += 0.007F) {
-//            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.05F);
-//            blitF(pose, xF + f, yF, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF - f, yF, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF, yF + f, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF, yF - f, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF - f, yF - f, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF + f, yF - f, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF + f, yF + f, 0.0F, 0.0F, width, height, width, height);
-//            blitF(pose, xF - f, yF + f, 0.0F, 0.0F, width, height, width, height);
-//        }
-//
-//        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-//
-//    }
+    public static void fillF(PoseStack pose, float minX, float minY, float maxX, float maxY, int color) {
+        fillF(pose, minX, minY, maxX, maxY, 0F, color);
+    }
+
+    public static void fillF(PoseStack pose, float minX, float minY, float maxX, float maxY, float z, int color) {
+        Matrix4f matrix4f = pose.last().pose();
+        if (minX < maxX) {
+            float $$8 = minX;
+            minX = maxX;
+            maxX = $$8;
+        }
+        if (minY < maxY) {
+            float $$9 = minY;
+            minY = maxY;
+            maxY = $$9;
+        }
+        float red = (float)FastColor.ARGB32.red(color) / 255.0F;
+        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
+        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
+        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
+        RenderSystem.disableBlend();
+    }
 
     public static void blitF(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, int $$5, int $$6, int $$7, int $$8) {
         blit($$0, $$1, $$2, $$5, $$6, $$3, $$4, $$5, $$6, $$7, $$8);
@@ -84,10 +88,10 @@ public class RenderUtils extends de.keksuccino.konkrete.rendering.RenderUtils {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         BufferBuilder $$10 = Tesselator.getInstance().getBuilder();
         $$10.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        $$10.vertex($$0, (float)$$1, (float)$$3, (float)$$5).uv($$6, $$8).endVertex();
-        $$10.vertex($$0, (float)$$1, (float)$$4, (float)$$5).uv($$6, $$9).endVertex();
-        $$10.vertex($$0, (float)$$2, (float)$$4, (float)$$5).uv($$7, $$9).endVertex();
-        $$10.vertex($$0, (float)$$2, (float)$$3, (float)$$5).uv($$7, $$8).endVertex();
+        $$10.vertex($$0, $$1, $$3, $$5).uv($$6, $$8).endVertex();
+        $$10.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
+        $$10.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
+        $$10.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
         BufferUploader.drawWithShader($$10.end());
     }
 

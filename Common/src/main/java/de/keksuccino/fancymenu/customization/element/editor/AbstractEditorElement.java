@@ -101,7 +101,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.element = element;
 		this.rightClickMenu = new ContextMenu() {
 			@Override
-			public @NotNull ContextMenu openMenuAt(int x, int y) {
+			public @NotNull ContextMenu openMenuAt(float x, float y) {
 				cachedHoveredElementsOnRightClickMenuOpen.clear();
 				cachedHoveredElementsOnRightClickMenuOpen.addAll(editor.getHoveredElements());
 				return super.openMenuAt(x, y);
@@ -131,7 +131,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		ContextMenu pickElementMenu = new ContextMenu() {
 			@Override
-			public @NotNull ContextMenu openMenuAt(int x, int y) {
+			public @NotNull ContextMenu openMenuAt(float x, float y) {
 				this.clearEntries();
 				int i = 0;
 				for (AbstractEditorElement e : cachedHoveredElementsOnRightClickMenuOpen) {

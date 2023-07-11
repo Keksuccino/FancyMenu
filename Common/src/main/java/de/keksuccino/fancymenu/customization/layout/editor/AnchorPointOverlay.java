@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.util.ScreenUtils;
-import de.keksuccino.fancymenu.util.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
@@ -124,7 +124,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
                 int yElement = e.getY() + (e.getHeight() / 2);
                 int xArea = a.getX() + (a.getWidth() / 2);
                 int yArea = a.getY() + (a.getHeight() / 2);
-                this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * a.getAlphaMultiplier())));
+                this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * a.getAlphaMultiplier())));
             }
         }
     }
@@ -374,8 +374,8 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             int endX = this.getX() + this.getWidth();
             int endY = this.getY() + this.getHeight();
-            fill(pose, this.getX(), this.getY(), endX, endY, RenderUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_NORMAL * this.getAlphaMultiplier())));
-            UIBase.renderBorder(pose, this.getX(), this.getY(), endX, endY, 1, RenderUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * this.getAlphaMultiplier())), true, true, true, true);
+            fill(pose, this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_NORMAL * this.getAlphaMultiplier())));
+            UIBase.renderBorder(pose, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * this.getAlphaMultiplier())), true, true, true, true);
             UIBase.resetShaderColor();
         }
 
@@ -396,7 +396,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
                 endX = this.getX() + this.getWidth();
                 startY = endY - progressHeight;
             }
-            fill(pose, startX, startY, endX, endY, RenderUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_NORMAL * this.getAlphaMultiplier())));
+            fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_NORMAL * this.getAlphaMultiplier())));
             UIBase.resetShaderColor();
         }
 

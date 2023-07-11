@@ -6,21 +6,19 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
-import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -93,41 +91,11 @@ public class UIBase extends GuiComponent {
 	}
 
 	public static boolean isXYInArea(int targetX, int targetY, int x, int y, int width, int height) {
+		return isXYInArea((double)targetX, targetY, x, y, width, height);
+	}
+
+	public static boolean isXYInArea(double targetX, double targetY, double x, double y, double width, double height) {
 		return (targetX >= x) && (targetX < (x + width)) && (targetY >= y) && (targetY < (y + height));
-	}
-
-	@Deprecated
-	public static void openScaledContextMenuAt(ContextMenu menu, int x, int y) {
-		Screen s = Minecraft.getInstance().screen;
-		if (s != null) {
-			menu.openMenuAt((int) (x / UIBase.getFixedUIScale()), (int) (y / UIBase.getFixedUIScale()), (int) (s.width / getFixedUIScale()), (int) (s.height / getFixedUIScale()));
-		}
-	}
-
-	@Deprecated
-	public static void openScaledContextMenuAtMouse(ContextMenu menu) {
-		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
-	}
-
-	@Deprecated
-	public static void renderScaledContextMenu(PoseStack matrix, ContextMenu menu) {
-		Screen s = Minecraft.getInstance().screen;
-		if ((s != null) && (menu != null)) {
-
-			matrix.pushPose();
-
-			matrix.scale(UIBase.getFixedUIScale(), UIBase.getFixedUIScale(), UIBase.getFixedUIScale());
-
-			MouseInput.setRenderScale(UIBase.getFixedUIScale());
-			int mouseX = MouseInput.getMouseX();
-			int mouseY = MouseInput.getMouseY();
-			MouseInput.resetRenderScale();
-
-			menu.render(matrix, mouseX, mouseY, (int) (s.width / getFixedUIScale()), (int) (s.height / getFixedUIScale()));
-
-			matrix.popPose();
-
-		}
 	}
 
 	public static void renderListingDot(PoseStack matrix, int x, int y, Color color) {
@@ -142,18 +110,18 @@ public class UIBase extends GuiComponent {
 		renderBorder(matrix, xMin, yMin, xMax, yMax, borderThickness, borderColor.getRGB(), renderTop, renderLeft, renderRight, renderBottom);
 	}
 
-	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+	public static void renderBorder(PoseStack pose, float xMin, float yMin, float xMax, float yMax, float borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		if (renderTop) {
-			fill(matrix, xMin, yMin, xMax, yMin + borderThickness, borderColor);
+			RenderingUtils.fillF(pose, xMin, yMin, xMax, yMin + borderThickness, borderColor);
 		}
 		if (renderLeft) {
-			fill(matrix, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor);
+			RenderingUtils.fillF(pose, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor);
 		}
 		if (renderRight) {
-			fill(matrix, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor);
+			RenderingUtils.fillF(pose, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor);
 		}
 		if (renderBottom) {
-			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor);
+			RenderingUtils.fillF(pose, xMin, yMax - borderThickness, xMax, yMax, borderColor);
 		}
 	}
 

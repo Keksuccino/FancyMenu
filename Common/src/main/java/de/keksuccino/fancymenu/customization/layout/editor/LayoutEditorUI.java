@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -61,10 +60,9 @@ public class LayoutEditorUI {
 			return  mb;
 		}
 
-		//TODO add new tabs and entries (stuff from config, etc.)
-		//TODO add new tabs and entries (stuff from config, etc.)
-		//TODO add new tabs and entries (stuff from config, etc.)
-		//TODO add new tabs and entries (stuff from config, etc.)
+		//TODO Neue Tabs und Entries adden (config stuff, etc.)
+
+		//TODO Option adden, mit der man Grid togglen kann (+ shortcut Ctrl + G zu entry adden)
 
 		MenuBar menuBar = new MenuBar();
 
@@ -454,7 +452,7 @@ public class LayoutEditorUI {
 
 			//This allows the menu to update itself on open, so it doesn't need to get rebuilt everytime the hidden elements change
 			@Override
-			public ContextMenu openMenuAt(int x, int y) {
+			public ContextMenu openMenuAt(float x, float y) {
 
 				this.entries.clear();
 

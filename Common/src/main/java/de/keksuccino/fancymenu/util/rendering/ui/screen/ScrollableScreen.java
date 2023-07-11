@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+//TODO remove this screen
+@Deprecated
 public class ScrollableScreen extends Screen {
 
     protected static final Color ENTRY_BACKGROUND_COLOR = new Color(92, 92, 92);

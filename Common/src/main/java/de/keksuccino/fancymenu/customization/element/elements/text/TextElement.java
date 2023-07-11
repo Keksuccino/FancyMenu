@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.util.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -156,7 +156,7 @@ public class TextElement extends AbstractElement {
                         this.scrollArea.setY(this.getAbsoluteY(), true);
                         this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
                         this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
-                        this.scrollArea.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderUtils.getPartialTick());
+                        this.scrollArea.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick());
                     }
 
                 } else if (isEditor()) {

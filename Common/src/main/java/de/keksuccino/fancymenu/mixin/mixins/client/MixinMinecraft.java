@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.fancymenu.util.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.main.GameConfig;
 import org.jetbrains.annotations.Nullable;
@@ -62,7 +62,7 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At("HEAD"))
 	private void headSetScreenFancyMenu(Screen screen, CallbackInfo info) {
 		//Reset GUI scale in case some layout changed it
-		RenderUtils.resetGuiScale();
+		RenderingUtils.resetGuiScale();
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
@@ -94,7 +94,7 @@ public class MixinMinecraft {
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(D)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
-			RenderUtils.resetGuiScale();
+			RenderingUtils.resetGuiScale();
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.screen));
 		}
