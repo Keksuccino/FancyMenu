@@ -43,8 +43,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
-    protected Float overriddenRenderScale = null;
-    protected Float overriddenTooltipScale = null;
     protected boolean forceUIScale = true;
     protected boolean open = false;
     protected float rawX; // without border
@@ -66,8 +64,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         if (!this.isOpen()) return;
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
-        float cachedScale = this.scale;
-        if (this.overriddenRenderScale != null) this.scale = this.overriddenRenderScale;
 
         float scale = UIBase.calculateFixedScale(this.getScale());
 
@@ -177,13 +173,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 s.subContextMenu.shadow = this.shadow;
                 s.subContextMenu.scale = this.scale;
                 s.subContextMenu.forceUIScale = this.forceUIScale;
-                s.subContextMenu.overriddenRenderScale = this.overriddenRenderScale;
-                s.subContextMenu.overriddenTooltipScale = this.overriddenTooltipScale;
                 s.subContextMenu.render(pose, mouseX, mouseY, partial);
             }
         }
-
-        this.scale = cachedScale;
 
         UIBase.resetShaderColor();
 
@@ -383,26 +375,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return this;
     }
 
-    @Nullable
-    public Float getOverriddenRenderScale() {
-        return this.overriddenRenderScale;
-    }
-
-    public ContextMenu setOverriddenRenderScale(@Nullable Float overriddenRenderScale) {
-        this.overriddenRenderScale = overriddenRenderScale;
-        return this;
-    }
-
-    @Nullable
-    public Float getOverriddenTooltipScale() {
-        return this.overriddenTooltipScale;
-    }
-
-    public ContextMenu setOverriddenTooltipScale(@Nullable Float overriddenTooltipScale) {
-        this.overriddenTooltipScale = overriddenTooltipScale;
-        return this;
-    }
-
     public boolean isForceUIScale() {
         return this.forceUIScale;
     }
@@ -420,7 +392,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected float getActualX() {
         if (this.isSubMenu()) {
             float cachedScale = this.parentEntry.parent.scale;
-            if (this.parentEntry.parent.overriddenRenderScale != null) this.parentEntry.parent.scale = this.parentEntry.parent.overriddenRenderScale;
             float scale = UIBase.calculateFixedScale(this.scale);
             float scaledOffsetX = (float) (5.0F * scale);
             SubMenuOpeningSide side = this.getPossibleSubMenuOpeningSide();
@@ -448,7 +419,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     protected float getActualY() {
         float y = this.getY();
         if (this.isSubMenu()) {
-            float scale = UIBase.calculateFixedScale((this.overriddenRenderScale != null) ? this.overriddenRenderScale : this.scale);
+            float scale = UIBase.calculateFixedScale(this.scale);
             int scaledOffsetY = (int) (10.0F * scale);
             y = (float) ((float)this.parentEntry.y * scale);
             y += scaledOffsetY;
@@ -773,8 +744,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             stacked.shadow = menusToStack[0].shadow;
             stacked.forceDefaultTooltipStyle = menusToStack[0].forceDefaultTooltipStyle;
             stacked.forceUIScale = menusToStack[0].forceUIScale;
-            stacked.overriddenRenderScale = menusToStack[0].overriddenRenderScale;
-            stacked.overriddenTooltipScale = menusToStack[0].overriddenTooltipScale;
             stacked.keepDistanceToEdges = menusToStack[0].keepDistanceToEdges;
             stacked.forceRawXY = menusToStack[0].forceRawXY;
             stacked.forceSide = menusToStack[0].forceSide;
@@ -1063,8 +1032,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                     if (this.parent.isForceDefaultTooltipStyle()) {
                         tooltip.setDefaultStyle();
                     }
-                    float tooltipScale = (this.parent.overriddenTooltipScale != null) ? this.parent.overriddenTooltipScale : this.parent.scale;
-                    tooltip.setScale(tooltipScale);
+                    tooltip.setScale(this.parent.scale);
                     TooltipHandler.INSTANCE.addTooltip(tooltip, () ->this.tooltipActive, false, true);
                 }
 
