@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.setupsharing;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.ui.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMPopup;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.scrollarea.ScrollArea;
@@ -260,11 +259,11 @@ public class ChooseSavedSetupPopup extends FMPopup {
         @Override
         public void renderEntry(PoseStack matrix) {
 
-            //Render FM logo icon
-            RenderSystem.enableBlend();
-            RenderUtils.bindTexture(MenuBar.FM_LOGO_TEXTURE);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            blit(matrix, this.x, this.y, 0.0F, 0.0F, 20, 20, 20, 20);
+//            //Render FM logo icon
+//            RenderSystem.enableBlend();
+//            RenderUtils.bindTexture(MenuBar.FM_LOGO_TEXTURE);
+//            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+//            blit(matrix, this.x, this.y, 0.0F, 0.0F, 20, 20, 20, 20);
 
             //Render setup name
             Font font = Minecraft.getInstance().font;

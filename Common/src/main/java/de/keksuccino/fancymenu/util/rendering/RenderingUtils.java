@@ -4,13 +4,14 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
-public class RenderingUtils extends RenderUtils {
+public class RenderingUtils {
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
@@ -19,6 +20,17 @@ public class RenderingUtils extends RenderUtils {
     public static void resetGuiScale() {
         Window m = Minecraft.getInstance().getWindow();
         m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));
+    }
+
+    public static void bindTexture(@NotNull ResourceLocation texture, boolean depthTest) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, texture);
+        RenderSystem.enableBlend();
+        if (depthTest) RenderSystem.enableDepthTest();
+    }
+
+    public static void bindTexture(@NotNull ResourceLocation texture) {
+        bindTexture(texture, false);
     }
 
     /**
@@ -40,11 +52,11 @@ public class RenderingUtils extends RenderUtils {
         return replaceAlphaInColor(color, (int)(newAlpha * 255.0F));
     }
 
-    public static void fillF(PoseStack pose, float minX, float minY, float maxX, float maxY, int color) {
+    public static void fillF(@NotNull PoseStack pose, float minX, float minY, float maxX, float maxY, int color) {
         fillF(pose, minX, minY, maxX, maxY, 0F, color);
     }
 
-    public static void fillF(PoseStack pose, float minX, float minY, float maxX, float maxY, float z, int color) {
+    public static void fillF(@NotNull PoseStack pose, float minX, float minY, float maxX, float maxY, float z, int color) {
         Matrix4f matrix4f = pose.last().pose();
         if (minX < maxX) {
             float $$8 = minX;
@@ -72,8 +84,8 @@ public class RenderingUtils extends RenderUtils {
         RenderSystem.disableBlend();
     }
 
-    public static void blitF(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, int $$5, int $$6, int $$7, int $$8) {
-        blit($$0, $$1, $$2, $$5, $$6, $$3, $$4, $$5, $$6, $$7, $$8);
+    public static void blitF(@NotNull PoseStack pose, float x, float y, float f3, float f4, int width, int height, int width2, int height2) {
+        blit(pose, x, y, width, height, f3, f4, width, height, width2, height2);
     }
 
     private static void blit(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, int $$7, int $$8, int $$9, int $$10) {

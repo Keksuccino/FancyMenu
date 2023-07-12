@@ -14,12 +14,9 @@ public class LightUIColorTheme extends UIColorTheme {
         menu_bar_bottom_line_color = DrawableColor.of(new Color(119, 119, 119));
 
         layout_editor_mouse_selection_rectangle_color = DrawableColor.of(new Color(3, 148, 252));
-        layout_editor_grid_color_normal = DrawableColor.of(new Color(101, 101, 101, 100));
-        layout_editor_grid_color_center = DrawableColor.of(new Color(161, 79, 255, 100));
         layout_editor_element_border_color_normal = DrawableColor.of(new Color(3, 148, 252));
         layout_editor_element_border_color_selected = DrawableColor.of(new Color(3, 219, 252));
         layout_editor_element_dragging_not_allowed_color = DrawableColor.of(new Color(232, 54, 9, 200));
-        layout_editor_anchor_point_overlay_color = DrawableColor.of(new Color(28, 28, 28));
         layout_editor_close_icon_color = DrawableColor.of(new Color(147, 40, 19));
         scroll_grabber_color_normal = DrawableColor.of(new Color(89, 91, 93, 100));
         scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));

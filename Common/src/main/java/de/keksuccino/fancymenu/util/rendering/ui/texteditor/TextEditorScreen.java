@@ -6,8 +6,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -114,6 +113,7 @@ public class TextEditorScreen extends Screen {
     protected boolean boldTitle = true;
     protected ConsumingSupplier<TextEditorScreen, Boolean> textValidator = null;
     protected Tooltip textValidatorFeedbackTooltip = null;
+    protected boolean selectedHoveredOnRightClickMenuOpen = false;
 
     @NotNull
     public static TextEditorScreen build(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
@@ -134,7 +134,6 @@ public class TextEditorScreen extends Screen {
         this.getLine(0).setFocused(true);
         this.verticalScrollBar.setScrollWheelAllowed(true);
         this.verticalScrollBarPlaceholderMenu.setScrollWheelAllowed(true);
-        this.updateRightClickContextMenu();
         this.formattingRules.addAll(TextEditorFormattingRules.getRules());
         this.updatePlaceholderEntries(null, true, true);
         this.updateCurrentLineWidth();
@@ -143,12 +142,8 @@ public class TextEditorScreen extends Screen {
     @Override
     public void init() {
 
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-
-        super.init();
+        this.updateRightClickContextMenu();
+        this.addWidget(this.rightClickContextMenu);
 
         this.verticalScrollBar.scrollAreaStartX = this.getEditorAreaX() + 1;
         this.verticalScrollBar.scrollAreaStartY = this.getEditorAreaY() + 1;
@@ -219,43 +214,39 @@ public class TextEditorScreen extends Screen {
 
     }
 
-    //TODO rewrite this !!!!!!!!!!!!!!!
     public void updateRightClickContextMenu() {
-
-        TextEditorLine hoveredLine = this.getHoveredLine();
 
         if (this.rightClickContextMenu != null) {
             this.rightClickContextMenu.closeMenu();
         }
         this.rightClickContextMenu = new ContextMenu();
 
-        AdvancedButton cutButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.cut"), true, (press) -> {
-            Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
-            this.rightClickContextMenu.closeMenu();
-        });
-        this.rightClickContextMenu.addContent(cutButton);
-        if ((hoveredLine == null) || !hoveredLine.isHighlightedHovered()) {
-            cutButton.active = false;
-        }
-
-        AdvancedButton copyButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.copy"), true, (press) -> {
+        this.rightClickContextMenu.addClickableEntry("copy", Component.translatable("fancymenu.ui.text_editor.copy"), (menu, entry) -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
-            this.rightClickContextMenu.closeMenu();
-        });
-        this.rightClickContextMenu.addContent(copyButton);
-        if ((hoveredLine == null) || !hoveredLine.isHighlightedHovered()) {
-            copyButton.active = false;
-        }
+            menu.closeMenu();
+        }).setIsActiveSupplier((menu, entry) -> {
+            if (!menu.isOpen()) return false;
+            return this.selectedHoveredOnRightClickMenuOpen;
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"));
 
-        AdvancedButton pasteButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.paste"), true, (press) -> {
+        this.rightClickContextMenu.addClickableEntry("paste", Component.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
-            this.rightClickContextMenu.closeMenu();
-        });
-        this.rightClickContextMenu.addContent(pasteButton);
+            menu.closeMenu();
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"));
 
-        this.rightClickContextMenu.addSeparator();
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_paste");
 
-        AdvancedButton selectAllButton = new AdvancedButton(0, 0, 0, 0, I18n.get("fancymenu.ui.text_editor.select_all"), true, (press) -> {
+        this.rightClickContextMenu.addClickableEntry("cut", Component.translatable("fancymenu.ui.text_editor.cut"), (menu, entry) -> {
+            Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
+            menu.closeMenu();
+        }).setIsActiveSupplier((menu, entry) -> {
+            if (!menu.isOpen()) return false;
+            return this.selectedHoveredOnRightClickMenuOpen;
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"));
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_cut");
+
+        this.rightClickContextMenu.addClickableEntry("select_all", Component.translatable("fancymenu.ui.text_editor.select_all"), (menu, entry) -> {
             for (TextEditorLine t : this.textFieldLines) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -263,14 +254,13 @@ public class TextEditorScreen extends Screen {
             this.setFocusedLine(this.getLineCount()-1);
             this.startHighlightLineIndex = 0;
             this.endHighlightLineIndex = this.getLineCount()-1;
-            this.rightClickContextMenu.closeMenu();
-        });
-        this.rightClickContextMenu.addContent(selectAllButton);
+            menu.closeMenu();
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"));
 
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
 
         //Reset scrolls if content fits editor area
         if (this.currentLineWidth <= this.getEditorAreaWidth()) {
@@ -287,9 +277,9 @@ public class TextEditorScreen extends Screen {
         //Adjust the scroll wheel speed depending on the amount of lines
         this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
-        this.renderScreenBackground(matrix);
+        this.renderScreenBackground(pose);
 
-        this.renderEditorAreaBackground(matrix);
+        this.renderEditorAreaBackground(pose);
 
         //TODO use GuiComponent#enableScissor instead
         Window win = Minecraft.getInstance().getWindow();
@@ -304,14 +294,14 @@ public class TextEditorScreen extends Screen {
         //Update positions and size of lines and render them
         this.updateLines((line) -> {
             if (line.isInEditorArea()) {
-                this.lineNumberRenderQueue.add(() -> this.renderLineNumber(matrix, line));
+                this.lineNumberRenderQueue.add(() -> this.renderLineNumber(pose, line));
             }
-            line.render(matrix, mouseX, mouseY, partial);
+            line.render(pose, mouseX, mouseY, partial);
         });
 
         RenderSystem.disableScissor();
 
-        this.renderLineNumberBackground(matrix, this.borderLeft);
+        this.renderLineNumberBackground(pose, this.borderLeft);
 
         RenderSystem.enableScissor(0, (int)(win.getHeight() - (sciBottom * scale)), (int)(this.borderLeft * scale), (int)(this.getEditorAreaHeight() * scale));
         for (Runnable r : this.lineNumberRenderQueue) {
@@ -322,28 +312,28 @@ public class TextEditorScreen extends Screen {
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
         this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        UIBase.renderBorder(matrix, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+        UIBase.renderBorder(pose, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
-        this.verticalScrollBar.render(matrix);
-        this.horizontalScrollBar.render(matrix);
+        this.verticalScrollBar.render(pose);
+        this.horizontalScrollBar.render(pose);
 
-        this.renderPlaceholderMenu(matrix, mouseX, mouseY, partial);
+        this.renderPlaceholderMenu(pose, mouseX, mouseY, partial);
 
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(pose, mouseX, mouseY, partial);
 
         this.doneButton.active = this.isTextValid();
         this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(pose, mouseX, mouseY, partial);
 
-        this.renderMultilineNotSupportedNotification(matrix, mouseX, mouseY, partial);
+        this.renderMultilineNotSupportedNotification(pose, mouseX, mouseY, partial);
 
-        UIBase.renderScaledContextMenu(matrix, this.rightClickContextMenu);
+        this.rightClickContextMenu.render(pose, mouseX, mouseY, partial);
 
         this.tickMouseHighlighting();
 
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
-        this.font.draw(matrix, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
 
     }
 
@@ -1322,6 +1312,12 @@ public class TextEditorScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        this.setFocused(null);
+
+        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+
+        this.selectedHoveredOnRightClickMenuOpen = false;
+
         if (!this.isMouseInteractingWithGrabbers()) {
 
             for (TextEditorLine l : this.textFieldLines) {
@@ -1359,8 +1355,8 @@ public class TextEditorScreen extends Screen {
                         }
                     }
                     if (button == 1) {
-                        this.updateRightClickContextMenu();
-                        UIBase.openScaledContextMenuAtMouse(this.rightClickContextMenu);
+                        this.selectedHoveredOnRightClickMenuOpen = this.isHighlightedTextHovered();
+                        this.rightClickContextMenu.openMenuAtMouse();
                     } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHovered()) {
                         this.rightClickContextMenu.closeMenu();
                         //Call mouseClicked of lines after closing the menu, so the focused line and cursor pos gets updated
@@ -1380,7 +1376,7 @@ public class TextEditorScreen extends Screen {
             e.buttonBase.mouseClicked(mouseX, mouseY, button);
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return false;
 
     }
 

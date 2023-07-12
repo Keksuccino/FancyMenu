@@ -28,6 +28,8 @@ public class FancyMenu {
 
 	//-----------------------------
 
+	//TODO text editor brackets highlighter broken
+
 	//TODO option für "keep position after anchor change" adden
 
 	//TODO Arm rotation für player elements
@@ -56,13 +58,9 @@ public class FancyMenu {
 
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
-	//TODO add opacity support for title screen deep cuz elements (splash, logo, branding, realms icon, forge stuff)
-
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
-
-	//TODO add "Select All" option to editor right-click menu and "Edit" tab in menu bar
 
 	//TODO add cancel button to ManageRequirementsScreen that returns NULL as callback (NULL gets handled already, just needs the return logic)
 
@@ -74,13 +72,11 @@ public class FancyMenu {
 
 	//TODO Text Element: auto line break (toggleable)
 
-	//TODO Menu Bar in layout editor fixen
-
 	//TODO NOCH NICHT KOMPLETT: Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
 	// - Visibility Requirements (v1 stuff zu loading requirements machen)
 	// - Actions
 
-	//TODO TextBox class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
+	//TODO TextView class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
 
 	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 

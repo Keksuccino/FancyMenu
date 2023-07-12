@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -57,7 +58,19 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) {
+            this.leftMouseDown = false;
+            this.initialHoverArea = null;
+            this.currentMouseOverArea = null;
+            this.lastTickMouseOverArea = null;
+            this.areaMouseOverStartTime = -1;
+            this.mouseDragged = false;
+            return;
+        }
+
         this.updateCachedElements();
+
+        if (!FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue() && !this.isElementPressed()) return;
 
         if ((this.initialHoverArea != null) && (!this.initialHoverArea.isMouseOver(mouseX, mouseY))) {
             this.initialHoverArea = null;
@@ -72,8 +85,10 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         this.handleAreaMouseOver(mouseX, mouseY);
 
+        int menuBarHeight = ((this.editor.menuBar != null) ? (int)((float)this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale())) : 0);
+
         this.topLeftArea.x = -1;
-        this.topLeftArea.y = -1;
+        this.topLeftArea.y = -1 + menuBarHeight;
         this.topLeftArea.render(pose, mouseX, mouseY, partial);
 
         this.midLeftArea.x = -1;
@@ -85,7 +100,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.bottomLeftArea.render(pose, mouseX, mouseY, partial);
 
         this.topCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.topCenteredArea.getWidth() / 2);
-        this.topCenteredArea.y = -1;
+        this.topCenteredArea.y = -1 + menuBarHeight;
         this.topCenteredArea.render(pose, mouseX, mouseY, partial);
 
         this.midCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.midCenteredArea.getWidth() / 2);
@@ -97,7 +112,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.bottomCenteredArea.render(pose, mouseX, mouseY, partial);
 
         this.topRightArea.x = ScreenUtils.getScreenWidth() - this.topRightArea.getWidth() + 1;
-        this.topRightArea.y = -1;
+        this.topRightArea.y = -1 + menuBarHeight;
         this.topRightArea.render(pose, mouseX, mouseY, partial);
 
         this.midRightArea.x = ScreenUtils.getScreenWidth() - this.midRightArea.getWidth() + 1;
@@ -108,7 +123,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.bottomRightArea.y = ScreenUtils.getScreenHeight() - this.bottomRightArea.getHeight() + 1;
         this.bottomRightArea.render(pose, mouseX, mouseY, partial);
 
-        if (this.currentMouseOverArea != null) {
+        if ((this.currentMouseOverArea != null) && FancyMenu.getOptions().changeAnchorOnHover.getValue()) {
             this.currentMouseOverArea.renderMouseOverProgress(pose, this.calculateMouseOverProgress());
         }
 
@@ -117,15 +132,27 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     }
 
     protected void renderConnectionLines(PoseStack pose) {
-        for (AbstractEditorElement e : this.elements) {
-            AnchorPointArea a = this.getAreaForElement(e);
-            if (a != null) {
-                int xElement = e.getX() + (e.getWidth() / 2);
-                int yElement = e.getY() + (e.getHeight() / 2);
-                int xArea = a.getX() + (a.getWidth() / 2);
-                int yArea = a.getY() + (a.getHeight() / 2);
-                this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * a.getAlphaMultiplier())));
+        if (FancyMenu.getOptions().showAllAnchorConnections.getValue()) {
+            for (AbstractEditorElement e : this.elements) {
+                this.renderConnectionLineFor(pose, e);
             }
+        } else if (this.leftMouseDown) {
+            for (AbstractEditorElement e : this.elements) {
+                if (e.isSelected() || e.isMultiSelected() || this.isParentSelected(e)) {
+                    this.renderConnectionLineFor(pose, e);
+                }
+            }
+        }
+    }
+
+    protected void renderConnectionLineFor(PoseStack pose, AbstractEditorElement e) {
+        AnchorPointArea a = this.getAreaForElement(e);
+        if (a != null) {
+            int xElement = e.getX() + (e.getWidth() / 2);
+            int yElement = e.getY() + (e.getHeight() / 2);
+            int xArea = a.getX() + (a.getWidth() / 2);
+            int yArea = a.getY() + (a.getHeight() / 2);
+            this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * a.getAlphaMultiplier())));
         }
     }
 
@@ -159,6 +186,8 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     protected void handleAreaMouseOver(int mouseX, int mouseY) {
         if (this.leftMouseDown && (this.initialHoverArea == null) && this.mouseDragged) {
             this.currentMouseOverArea = this.getMouseOverArea(mouseX, mouseY);
+            if (!FancyMenu.getOptions().changeAnchorOnHover.getValue()) this.currentMouseOverArea = null;
+            if (this.isElementGettingResized()) this.currentMouseOverArea = null;
             if ((this.lastTickMouseOverArea instanceof ElementAnchorPointArea a1) && (this.currentMouseOverArea instanceof ElementAnchorPointArea a2)) {
                 if (a1.elementIdentifier.equals(a2.elementIdentifier)) this.currentMouseOverArea = this.lastTickMouseOverArea;
             }
@@ -205,7 +234,40 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     protected boolean isElementPressed() {
         for (AbstractEditorElement e : this.elements) {
-            if (e.isPressed()) return true;
+            if (e.isPressed() && !e.isGettingResized()) return true;
+        }
+        return false;
+    }
+
+    protected boolean isElementGettingResized() {
+        for (AbstractEditorElement e : this.elements) {
+            if (e.isGettingResized()) return true;
+        }
+        return false;
+    }
+
+    protected boolean isSelectedElementParentOf(@NotNull AbstractEditorElement element) {
+        if (element.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
+        if (element.element.anchorPointElementIdentifier != null) {
+            AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(element.element.anchorPointElementIdentifier);
+            if (parent != null) {
+                for (AbstractEditorElement e : this.elements) {
+                    if ((e.isSelected() || e.isMultiSelected()) && (e != element)) {
+                        if (e == parent) return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    protected boolean isParentSelected(AbstractEditorElement e) {
+        if (e.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
+        if (e.element.anchorPointElementIdentifier == null) return false;
+        AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(e.element.anchorPointElementIdentifier);
+        if (parent != null) {
+            if (parent.isSelected() || parent.isMultiSelected()) return true;
+            return this.isParentSelected(parent);
         }
         return false;
     }
@@ -213,7 +275,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     @Nullable
     protected AbstractEditorElement getTopMouseOverAnchorElement(int mouseX, int mouseY) {
         for (AbstractEditorElement e : Lists.reverse(new ArrayList<>(this.elements))) {
-            if (e.isMouseOver(mouseX, mouseY) && !e.isSelected() && !e.isMultiSelected()) return e;
+            if (e.isMouseOver(mouseX, mouseY) && !e.isSelected() && !e.isMultiSelected() && !this.isSelectedElementParentOf(e)) return e;
         }
         return null;
     }
@@ -254,6 +316,8 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) return false;
+
         this.updateCachedElements();
 
         this.leftMouseDown = (this.getTopMouseOverElement((int) mouseX, (int) mouseY) != null);
@@ -265,6 +329,8 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+
+        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) return false;
 
         this.updateCachedElements();
 
@@ -281,6 +347,8 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     @Override
     public boolean mouseDragged(double $$0, double $$1, int $$2, double $$3, double $$4) {
+
+        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) return false;
 
         this.mouseDragged = true;
 
@@ -341,6 +409,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             return (element != null) ? element.getHeight() : 20;
         }
 
+        @SuppressWarnings("all")
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
             AbstractEditorElement element = this.getElement();

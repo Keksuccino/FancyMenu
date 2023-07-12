@@ -790,7 +790,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && (!this.isHovered() || !this.isActive() || !this.isVisible()) && !this.contextMenu.isUserNavigatingInMenu()) {
+            if ((!this.isHovered() || !this.isActive() || !this.isVisible()) && !this.contextMenu.isUserNavigatingInMenu()) {
                 this.contextMenu.closeMenu();
             }
             return super.mouseClicked(mouseX, mouseY, button);

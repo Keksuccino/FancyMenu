@@ -27,6 +27,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -48,6 +49,8 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class LayoutEditorScreen extends Screen implements IElementFactory {
+
+	//TODO grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getogglet wird
 
 	//TODO add layer widget (photoshop-like)
 
@@ -108,6 +111,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
 		this.addWidget(this.rightClickMenu);
 
+		if (this.menuBar != null) {
+			this.menuBar.closeAllContextMenus();
+		}
 		this.menuBar = LayoutEditorUI.buildMenuBar(this);
 		this.addWidget(this.menuBar);
 
@@ -705,11 +711,16 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
+
 		if (PopupHandler.isPopupActive() || super.mouseClicked(mouseX, mouseY, button)) {
 			this.closeRightClickMenu();
 			this.closeActiveElementMenu();
 			return true;
 		}
+
+		//Skip the first click out of the menu bar context menus
+		if (menuBarContextOpen) return true;
 
 		AbstractEditorElement topHoverElement = this.getTopHoveredElement();
 
@@ -764,12 +775,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				List<AbstractEditorElement> selectedElements = this.getSelectedElements();
 				if (selectedElements.size() == 1) {
 					this.activeElementContextMenu = topHoverElement.rightClickMenu;
-					this.addWidget(this.activeElementContextMenu);
+					((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
 					this.activeElementContextMenu.openMenuAtMouse();
 				} else if (selectedElements.size() > 1) {
 					List<ContextMenu> menus = ObjectUtils.getOfAll(ContextMenu.class, selectedElements, consumes -> consumes.rightClickMenu);
 					this.activeElementContextMenu = ContextMenu.stackContextMenus(menus);
-					this.addWidget(this.activeElementContextMenu);
+					((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
 					this.activeElementContextMenu.openMenuAtMouse();
 				}
 			}

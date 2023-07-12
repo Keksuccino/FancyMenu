@@ -13,6 +13,8 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
+import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
@@ -66,7 +68,10 @@ public class LayoutEditorUI {
 
 		MenuBar menuBar = new MenuBar();
 
-		//LAYOUT TAB
+		//FANCYMENU ICON
+		CustomizationOverlayUI.buildFMIconTabAndAddTo(menuBar);
+
+		//LAYOUT
 		ContextMenu layoutMenu = new ContextMenu();
 		menuBar.addContextMenuEntry("layout_tab", Component.translatable("fancymenu.editor.layout"), layoutMenu);
 
@@ -102,7 +107,7 @@ public class LayoutEditorUI {
 
 		layoutMenu.addSubMenuEntry("layout_settings", Component.translatable("fancymenu.editor.layout.properties"), buildRightClickContextMenu(editor));
 
-		//EDIT TAB
+		//EDIT
 		ContextMenu editMenu = new ContextMenu();
 		menuBar.addContextMenuEntry("edit_tab", Component.translatable("fancymenu.editor.edit"), editMenu);
 
@@ -127,13 +132,60 @@ public class LayoutEditorUI {
 		}).setIsActiveSupplier((menu, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
 				.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"));
 
-		//ELEMENT TAB
+		editMenu.addSeparatorEntry("separator_after_paste_copied");
+
+		editMenu.addClickableEntry("select_all_elements", Component.translatable("fancymenu.editor.menu_bar.edit.select_all"), (menu, entry) -> {
+			editor.selectAllElements();
+		}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"));
+
+		//ELEMENT
 		ContextMenu elementMenu = new ContextMenu();
 		menuBar.addContextMenuEntry("element_tab", Component.translatable("fancymenu.editor.element"), elementMenu);
 
 		elementMenu.addSubMenuEntry("new_element", Component.translatable("fancymenu.editor.element.new"), buildElementContextMenu(editor));
 
 		elementMenu.addSubMenuEntry("manage_hidden_vanilla_elements", Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), buildHiddenVanillaElementsContextMenu(editor));
+
+		//WINDOW
+		ContextMenu windowMenu = new ContextMenu();
+		menuBar.addContextMenuEntry("window_tab", Component.translatable("fancymenu.editor.menu_bar.window"), windowMenu);
+
+		windowMenu.addValueCycleEntry("enable_grid", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.grid", FancyMenu.getOptions().showLayoutEditorGrid.getValue()).addCycleListener(cycle -> {
+			FancyMenu.getOptions().showLayoutEditorGrid.setValue(cycle.getAsBoolean());
+		})).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.grid"));
+
+		int preSelectedGridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
+		if ((preSelectedGridSize != 10) && (preSelectedGridSize != 20) && (preSelectedGridSize != 30) && (preSelectedGridSize != 40)) {
+			preSelectedGridSize = 10;
+		}
+		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", ListUtils.build(10,20,30,40), preSelectedGridSize)
+				.addCycleListener(integer -> {
+					FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
+				}));
+
+		windowMenu.addSeparatorEntry("separator_after_grid_size");
+
+		windowMenu.addValueCycleEntry("show_anchor_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.show_anchor_overlay", FancyMenu.getOptions().showAnchorOverlay.getValue()).addCycleListener(cycle -> {
+			FancyMenu.getOptions().showAnchorOverlay.setValue(cycle.getAsBoolean());
+		}));
+
+		windowMenu.addValueCycleEntry("always_show_anchor_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.always_show_anchor_overlay", FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue()).addCycleListener(cycle -> {
+			FancyMenu.getOptions().alwaysShowAnchorOverlay.setValue(cycle.getAsBoolean());
+		}));
+
+		windowMenu.addValueCycleEntry("show_all_anchor_connections", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.show_all_anchor_connections", FancyMenu.getOptions().showAllAnchorConnections.getValue()).addCycleListener(cycle -> {
+			FancyMenu.getOptions().showAllAnchorConnections.setValue(cycle.getAsBoolean());
+		}));
+
+		windowMenu.addValueCycleEntry("change_anchor_on_hover", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.change_anchor_on_hover", FancyMenu.getOptions().changeAnchorOnHover.getValue()).addCycleListener(cycle -> {
+			FancyMenu.getOptions().changeAnchorOnHover.setValue(cycle.getAsBoolean());
+		}));
+
+		//USER INTERFACE
+		CustomizationOverlayUI.buildUITabAndAddTo(menuBar);
+
+		//HELP
+		CustomizationOverlayUI.buildHelpTabAndAddTo(menuBar);
 
 		//CLOSE EDITOR BUTTON
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
@@ -518,7 +570,7 @@ public class LayoutEditorUI {
 
 			menu.addSeparatorEntry("separator_after_recent_layouts");
 
-			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu1, entry) -> {
+			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
 				displayUnsavedWarning(call -> {
 					if (call) {
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {

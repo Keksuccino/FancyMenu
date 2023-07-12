@@ -42,7 +42,7 @@ public class CustomizationOverlayUI {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation FM_LOGO_ICON_LOCATION = new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png");
+    private static final WrappedTexture FM_LOGO_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
 
     private static MenuBar grandfatheredMenuBar = null;
 
@@ -60,8 +60,7 @@ public class CustomizationOverlayUI {
         String identifier = ScreenCustomization.getScreenIdentifier(screen);
 
         // FANCYMENU ICON
-        ContextMenu fmMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("fancymenu_icon", Component.empty(), fmMenu).setIconTexture(WrappedTexture.of(FM_LOGO_ICON_LOCATION));
+        buildFMIconTabAndAddTo(menuBar);
 
         // CUSTOMIZATION
         ContextMenu customizationMenu = new ContextMenu();
@@ -419,6 +418,58 @@ public class CustomizationOverlayUI {
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier.tooltip")));
 
         // USER INTERFACE
+        buildUITabAndAddTo(menuBar);
+
+        // HELP
+        buildHelpTabAndAddTo(menuBar);
+
+        return menuBar;
+
+    }
+
+    public static MenuBar.ClickableMenuBarEntry buildFMIconTabAndAddTo(MenuBar menuBar) {
+        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Component.empty(), (bar, entry) -> {}).setIconTexture(FM_LOGO_ICON_TEXTURE).setActive(false);
+    }
+
+    public static ContextMenu buildHelpTabAndAddTo(MenuBar menuBar) {
+
+        ContextMenu helpMenu = new ContextMenu();
+        menuBar.addContextMenuEntry("help", Component.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
+
+        helpMenu.addClickableEntry("fancymenu_wiki", Component.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
+            WebUtils.openWebLink("https://fm.keksuccino.dev");
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")));
+
+        helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
+            WebUtils.openWebLink("https://discord.gg/UzmeWkD");
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")));
+
+        helpMenu.addClickableEntry("report_issue", Component.translatable("fancymenu.overlay.menu_bar.help.report_issue"), (menu, entry) -> {
+            WebUtils.openWebLink("https://github.com/Keksuccino/FancyMenu/issues");
+        });
+
+        helpMenu.addSeparatorEntry("separator_after_report_issue");
+
+        helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
+            WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
+
+        helpMenu.addSeparatorEntry("separator_after_curseforge");
+
+        helpMenu.addClickableEntry("keksuccino_patreon", Component.translatable("fancymenu.overlay.menu_bar.help.patreon"), (menu, entry) -> {
+            WebUtils.openWebLink("https://www.patreon.com/keksuccino");
+        });
+
+        helpMenu.addClickableEntry("paypal_tip_jar", Component.translatable("fancymenu.overlay.menu_bar.help.paypal"), (menu, entry) -> {
+            WebUtils.openWebLink("https://www.paypal.com/paypalme/TimSchroeter");
+        });
+
+        return helpMenu;
+
+    }
+
+    public static ContextMenu buildUITabAndAddTo(MenuBar menuBar) {
+
         ContextMenu userInterfaceMenu = new ContextMenu();
         menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
 
@@ -454,39 +505,7 @@ public class CustomizationOverlayUI {
             i2++;
         }
 
-        // HELP
-        ContextMenu helpMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("help", Component.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
-
-        helpMenu.addClickableEntry("fancymenu_wiki", Component.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
-            WebUtils.openWebLink("https://fm.keksuccino.dev");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")));
-
-        helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
-            WebUtils.openWebLink("https://discord.gg/UzmeWkD");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")));
-
-        helpMenu.addClickableEntry("report_issue", Component.translatable("fancymenu.overlay.menu_bar.help.report_issue"), (menu, entry) -> {
-            WebUtils.openWebLink("https://github.com/Keksuccino/FancyMenu/issues");
-        });
-
-        helpMenu.addSeparatorEntry("separator_after_report_issue");
-
-        helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
-            WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
-
-        helpMenu.addSeparatorEntry("separator_after_curseforge");
-
-        helpMenu.addClickableEntry("keksuccino_patreon", Component.translatable("fancymenu.overlay.menu_bar.help.patreon"), (menu, entry) -> {
-            WebUtils.openWebLink("https://www.patreon.com/keksuccino");
-        });
-
-        helpMenu.addClickableEntry("paypal_tip_jar", Component.translatable("fancymenu.overlay.menu_bar.help.paypal"), (menu, entry) -> {
-            WebUtils.openWebLink("https://www.paypal.com/paypalme/TimSchroeter");
-        });
-
-        return menuBar;
+        return userInterfaceMenu;
 
     }
 
