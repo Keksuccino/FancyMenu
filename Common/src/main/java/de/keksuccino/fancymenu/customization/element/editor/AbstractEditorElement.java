@@ -885,7 +885,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					}
 				}
 			}).setStackable(true);
-			return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
+			return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
 		}
 		return chooseEntry;
 	}
@@ -1091,7 +1091,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					}
 					ValueCycle<V> switcher = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
 					return labelSupplier.get(menu, (ContextMenu.ClickableContextMenuEntry<?>) entry, switcher.current());
-				});
+				}).setStackable(true);
 	}
 
 	@SuppressWarnings("all")
@@ -1112,7 +1112,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			}
 			MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
 			return Component.translatable(labelLocalizationKeyBase, disabled);
-		});
+		}).setStackable(true);
 	}
 
 	/**
@@ -1127,7 +1127,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				return Component.translatable(labelLocalizationKeyBase + ".on");
 			}
 			return Component.translatable(labelLocalizationKeyBase + ".off");
-		});
+		}).setStackable(true);
 	}
 
 	@SuppressWarnings("all")
