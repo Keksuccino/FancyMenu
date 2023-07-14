@@ -22,6 +22,10 @@ public class RenderingUtils {
         m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));
     }
 
+    public static void resetShaderColor() {
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
     public static void bindTexture(@NotNull ResourceLocation texture, boolean depthTest) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, texture);

@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
@@ -71,6 +73,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
+	public List<AbstractLayoutEditorWidget> layoutEditorWidgets = LayoutEditorWidgetRegistry.buildWidgetInstances(this);
 
 	protected boolean isMouseSelection = false;
 	protected int mouseSelectionStartX = 0;
@@ -117,6 +120,10 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		this.menuBar = LayoutEditorUI.buildMenuBar(this);
 		this.addWidget(this.menuBar);
 
+		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+			this.addWidget(w);
+		}
+
 		this.isMouseSelection = false;
 		this.preDragElementSnapshot = null;
 
@@ -153,7 +160,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.constructElementInstances();
 
-
+		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+			w.refresh();
+		}
 
 	}
 
@@ -178,6 +187,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.anchorPointOverlay.render(pose, mouseX, mouseY, partial);
 
+		this.renderLayoutEditorWidgets(pose, mouseX, mouseY, partial);
+
 		this.menuBar.render(pose, mouseX, mouseY, partial);
 
 		this.rightClickMenu.render(pose, mouseX, mouseY, partial);
@@ -187,6 +198,16 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.activeElementContextMenu.render(pose, mouseX, mouseY, partial);
 		}
 
+	}
+
+	protected void renderLayoutEditorWidgets(PoseStack pose, int mouseX, int mouseY, float partial) {
+		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+			//TODO remove debug
+			w.setAbsoluteX(50);
+			w.setAbsoluteY(50);
+			//------------
+			if (w.isVisible()) w.render(pose, mouseX, mouseY, partial);
+		}
 	}
 
 	protected void renderMouseSelectionRectangle(PoseStack pose, int mouseX, int mouseY) {

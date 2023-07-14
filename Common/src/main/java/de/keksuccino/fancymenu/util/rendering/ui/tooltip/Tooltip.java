@@ -342,7 +342,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     public Tooltip setDefaultStyle() {
         this.setTextShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
         this.setTextBaseColor(UIBase.getUIColorScheme().element_label_color_normal);
-        return this.setBackgroundColor(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().tooltip_border_color);
+        return this.setBackgroundColor(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_border_color_normal);
     }
 
     @Nullable

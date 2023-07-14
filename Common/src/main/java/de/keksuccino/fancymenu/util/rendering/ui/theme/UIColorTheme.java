@@ -28,8 +28,10 @@ public class UIColorTheme {
     public DrawableColor scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
     public DrawableColor screen_background_color = DrawableColor.of(new Color(60, 63, 65));
     public DrawableColor screen_background_color_darker = DrawableColor.of(new Color(38, 38, 38));
-    public DrawableColor element_border_color_normal = DrawableColor.of(new Color(209, 194, 209));
-    public DrawableColor element_border_color_hover = DrawableColor.of(new Color(227, 211, 227));
+    public DrawableColor element_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
+    public DrawableColor element_border_color_hover = DrawableColor.of(new Color(93, 97, 100));
+//    public DrawableColor element_border_color_normal = DrawableColor.of(new Color(209, 194, 209));
+//    public DrawableColor element_border_color_hover = DrawableColor.of(new Color(227, 211, 227));
     public DrawableColor element_background_color_normal = DrawableColor.of(new Color(71, 71, 71));
     public DrawableColor element_background_color_hover = DrawableColor.of(new Color(83, 156, 212));
     public DrawableColor area_background_color = DrawableColor.of(new Color(43, 43, 43));
@@ -43,8 +45,8 @@ public class UIColorTheme {
     public DrawableColor listing_dot_color_1 = DrawableColor.of(new Color(62, 134, 160));
     public DrawableColor listing_dot_color_2 = DrawableColor.of(new Color(173, 108, 121));
     public DrawableColor listing_dot_color_3 = DrawableColor.of(new Color(170, 130, 63));
-    public DrawableColor context_menu_border_color = DrawableColor.of(new Color(93, 97, 100));
-    public DrawableColor tooltip_border_color = DrawableColor.of(new Color(93, 97, 100));
+//    public DrawableColor context_menu_border_color = DrawableColor.of(new Color(93, 97, 100));
+//    public DrawableColor tooltip_border_color = DrawableColor.of(new Color(93, 97, 100));
 
     public DrawableColor ui_texture_color = DrawableColor.of(new Color(255, 255, 255));
 

@@ -9,11 +9,9 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
-import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -35,9 +33,6 @@ public class UIBase extends GuiComponent {
 	 */
 	@SuppressWarnings("all")
 	public static <T extends GuiEventListener> T applyDefaultWidgetSkinTo(T widget) {
-		if (widget instanceof AdvancedButton a) {
-			return (T) applyDefaultButtonSkinTo(a);
-		}
 		if (widget instanceof ExtendedButton e) {
 			return (T) applyDefaultButtonSkinTo(e);
 		}
@@ -56,12 +51,6 @@ public class UIBase extends GuiComponent {
 		editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
 		editBox.setTextShadow(false);
 		return editBox;
-	}
-
-	private static AdvancedButton applyDefaultButtonSkinTo(AdvancedButton button) {
-		UIColorTheme darkScheme = UIColorThemes.DARK;
-		button.setBackgroundColor(darkScheme.element_background_color_normal.getColor(), darkScheme.element_background_color_hover.getColor(), darkScheme.element_border_color_normal.getColor(), darkScheme.element_border_color_hover.getColor(), ELEMENT_BORDER_THICKNESS);
-		return button;
 	}
 
 	private static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
@@ -148,9 +137,11 @@ public class UIBase extends GuiComponent {
 	}
 
 	public static void resetShaderColor() {
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		RenderingUtils.resetShaderColor();
 	}
 
+	//TODO remove this
+	@Deprecated
 	public static void displayNotification(String... notification) {
 		PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, notification));
 	}

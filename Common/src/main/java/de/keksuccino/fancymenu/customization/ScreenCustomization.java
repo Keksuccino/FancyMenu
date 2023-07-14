@@ -6,6 +6,7 @@ import java.util.*;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -109,6 +110,8 @@ public class ScreenCustomization {
 		ActionExecutor.init();
 
 		LastWorldHandler.init();
+
+		LayoutEditorWidgets.registerAll();
 
 		initialized = true;
 
