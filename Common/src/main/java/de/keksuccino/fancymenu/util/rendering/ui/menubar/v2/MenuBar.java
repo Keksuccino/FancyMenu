@@ -423,14 +423,18 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         float scale = UIBase.calculateFixedScale(this.scale);
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
+        boolean entryClick = false;
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
-            if (e instanceof ContextMenuBarEntry c) {
-                c.contextMenu.mouseClicked(mouseX, mouseY, button);
+            if (e.isVisible()) {
+                if (e instanceof ContextMenuBarEntry c) {
+                    if (c.contextMenu.mouseClicked(mouseX, mouseY, button)) entryClick = true;
+                }
+                if (e.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
             }
-            if (e.isVisible()) e.mouseClicked(scaledMouseX, scaledMouseY, button);
         }
         if (this.isUserNavigatingInMenuBar()) return true;
-        return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+        if (entryClick) return true;
+        return false;
     }
 
     @Override
@@ -790,8 +794,9 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((!this.isHovered() || !this.isActive() || !this.isVisible()) && !this.contextMenu.isUserNavigatingInMenu()) {
+            if ((!this.isHovered() || !this.isActive() || !this.isVisible()) && !this.contextMenu.isUserNavigatingInMenu() && this.contextMenu.isOpen()) {
                 this.contextMenu.closeMenu();
+                return true;
             }
             return super.mouseClicked(mouseX, mouseY, button);
         }

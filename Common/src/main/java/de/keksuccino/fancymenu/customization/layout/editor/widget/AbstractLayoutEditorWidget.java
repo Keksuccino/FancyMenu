@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
@@ -18,6 +19,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +35,21 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     protected static final ResourceLocation COLLAPSE_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/collapse_icon.png");
 
     protected final LayoutEditorScreen editor;
-    private int x;
-    private int y;
+    private int widgetOffsetX = -50;
+    private int widgetOffsetY = -50;
     private int innerWidth = 100;
     private int innerHeight = 100;
+    protected SnappingSide snappingSide = SnappingSide.TOP_RIGHT;
     protected List<HeaderButton> headerButtons = new ArrayList<>();
     protected boolean hovered = false;
     protected boolean headerHovered = false;
     protected boolean visible = true;
     protected boolean expanded = true;
+    protected boolean leftMouseDownHeader = false;
+    protected double leftMouseDownHeaderMouseX = 0;
+    protected double leftMouseDownHeaderMouseY = 0;
+    protected int leftMouseDownHeaderWidgetOffsetX = 0;
+    protected int leftMouseDownHeaderWidgetOffsetY = 0;
 
     /**
      * {@link AbstractLayoutEditorWidget}s need a constructor that takes only one parameter of type {@link LayoutEditorScreen}.
@@ -64,10 +72,17 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     public void refresh() {
+        this.leftMouseDownHeader = false;
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        //Fix offset on render tick, if needed
+        if (this.getAbsoluteX() < this.getMinAbsoluteX()) this.setWidgetOffsetX(this.widgetOffsetX);
+        if (this.getAbsoluteX() > this.getMaxAbsoluteX()) this.setWidgetOffsetX(this.widgetOffsetX);
+        if (this.getAbsoluteY() < this.getMinAbsoluteY()) this.setWidgetOffsetY(this.widgetOffsetY);
+        if (this.getAbsoluteY() > this.getMaxAbsoluteY()) this.setWidgetOffsetY(this.widgetOffsetY);
 
         int scaledMouseX = (int) ((float)mouseX / UIBase.getFixedUIScale());
         int scaledMouseY = (int) ((float)mouseY / UIBase.getFixedUIScale());
@@ -111,7 +126,7 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         if (this.isExpanded()) {
             UIBase.renderBorder(pose, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getScaledAbsoluteX() + this.getAbsoluteWidth(), this.getScaledAbsoluteY() + this.getAbsoluteHeight(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal, true, true, true, true);
         } else {
-            UIBase.renderBorder(pose, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getScaledAbsoluteX() + this.getAbsoluteWidth(), this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal, true, true, true, true);
+            UIBase.renderBorder(pose, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getScaledAbsoluteX() + this.getAbsoluteWidth(), this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal, true, true, true, true);
         }
 
         RenderingUtils.resetShaderColor();
@@ -136,20 +151,65 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
     }
 
-    public void setAbsoluteX(int x) {
-        this.x = x;
+    public void setWidgetOffsetX(int offsetX) {
+        this.widgetOffsetX = offsetX;
+        if (this.getAbsoluteX() < this.getMinAbsoluteX()) {
+            int i = this.getMinAbsoluteX() - this.getAbsoluteX();
+            this.widgetOffsetX += i;
+        }
+        if (this.getAbsoluteX() > this.getMaxAbsoluteX()) {
+            int i = this.getAbsoluteX() - this.getMaxAbsoluteX();
+            this.widgetOffsetX -= i;
+        }
     }
 
-    public void setAbsoluteY(int y) {
-        this.y = y;
+    public void setWidgetOffsetY(int offsetY) {
+        this.widgetOffsetY = offsetY;
+        if (this.getAbsoluteY() < this.getMinAbsoluteY()) {
+            int i = this.getMinAbsoluteY() - this.getAbsoluteY();
+            this.widgetOffsetY += i;
+        }
+        if (this.getAbsoluteY() > this.getMaxAbsoluteY()) {
+            int i = this.getAbsoluteY() - this.getMaxAbsoluteY();
+            this.widgetOffsetY -= i;
+        }
+    }
+
+    public int getWidgetOffsetX() {
+        return this.widgetOffsetX;
+    }
+
+    public int getWidgetOffsetY() {
+        return this.widgetOffsetY;
     }
 
     public int getAbsoluteX() {
-        return this.x;
+        return this.snappingSide.getOriginX(this) + this.widgetOffsetX;
     }
 
     public int getAbsoluteY() {
-        return this.y;
+        return this.snappingSide.getOriginY(this) + this.widgetOffsetY;
+    }
+
+    protected int getScreenEdgeBorderThickness() {
+        return 3;
+    }
+
+    protected int getMinAbsoluteX() {
+        return this.getScreenEdgeBorderThickness();
+    }
+
+    protected int getMaxAbsoluteX() {
+        return ScreenUtils.getScreenWidth() - this.getScreenEdgeBorderThickness() - this.getScaledAbsoluteWidth();
+    }
+
+    protected int getMinAbsoluteY() {
+        int scaledMenuBarHeight = (int)(this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale()));
+        return scaledMenuBarHeight + this.getScreenEdgeBorderThickness();
+    }
+
+    protected int getMaxAbsoluteY() {
+        return ScreenUtils.getScreenHeight() - this.getScreenEdgeBorderThickness() - this.getScaledAbsoluteHeight();
     }
 
     public int getScaledAbsoluteX() {
@@ -165,7 +225,7 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     public int getScaledInnerY() {
-        return this.getScaledAbsoluteY() + this.getBorderThickness();
+        return this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
     }
 
     public void setInnerWidth(int innerWidth) {
@@ -189,7 +249,16 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     public int getAbsoluteHeight() {
+        if (!this.isExpanded()) return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
         return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness() + this.innerHeight + this.getBorderThickness();
+    }
+
+    public int getScaledAbsoluteWidth() {
+        return (int) ((float)this.getAbsoluteWidth() * UIBase.getFixedUIScale());
+    }
+
+    public int getScaledAbsoluteHeight() {
+        return (int) ((float)this.getAbsoluteHeight() * UIBase.getFixedUIScale());
     }
 
     public int getHeaderHeight() {
@@ -246,11 +315,39 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         int scaledMouseX = (int) ((float)mouseX / UIBase.getFixedUIScale());
         int scaledMouseY = (int) ((float)mouseY / UIBase.getFixedUIScale());
         if (this.isVisible()) {
+            if (this.isHeaderHovered()) {
+                this.leftMouseDownHeader = true;
+                this.leftMouseDownHeaderMouseX = mouseX;
+                this.leftMouseDownHeaderMouseY = mouseY;
+                this.leftMouseDownHeaderWidgetOffsetX = this.widgetOffsetX;
+                this.leftMouseDownHeaderWidgetOffsetY = this.widgetOffsetY;
+            }
             for (HeaderButton b : this.headerButtons) {
                 if (b.mouseClicked(scaledMouseX, scaledMouseY, button)) return true;
             }
         }
         return this.isVisible() && this.isMouseOver(scaledMouseX, scaledMouseY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.leftMouseDownHeader = false;
+        return false;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
+
+        if (this.isVisible() && this.leftMouseDownHeader) {
+            double offsetX = mouseX - this.leftMouseDownHeaderMouseX;
+            double offsetY = mouseY - this.leftMouseDownHeaderMouseY;
+            this.setWidgetOffsetX((int)(this.leftMouseDownHeaderWidgetOffsetX + offsetX));
+            this.setWidgetOffsetY((int)(this.leftMouseDownHeaderWidgetOffsetY + offsetY));
+            return true;
+        }
+
+        return false;
+
     }
 
     @Override
@@ -336,6 +433,41 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
             return UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.parent.getHeaderHeight());
+        }
+
+    }
+
+    public enum SnappingSide {
+
+        TOP_LEFT("top-left", false, widget -> 0, AbstractLayoutEditorWidget::getMinAbsoluteY),
+        TOP_RIGHT("top-right", false, widget -> ScreenUtils.getScreenWidth(), AbstractLayoutEditorWidget::getMinAbsoluteY);
+
+        public final String name;
+        public final boolean horizontal;
+        private final ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originXSupplier;
+        private final ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originYSupplier;
+
+        SnappingSide(String name, boolean horizontal, ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originXSupplier, ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originYSupplier) {
+            this.name = name;
+            this.horizontal = horizontal;
+            this.originXSupplier = originXSupplier;
+            this.originYSupplier = originYSupplier;
+        }
+
+        public int getOriginX(AbstractLayoutEditorWidget widget) {
+            return this.originXSupplier.get(widget);
+        }
+
+        public int getOriginY(AbstractLayoutEditorWidget widget) {
+            return this.originYSupplier.get(widget);
+        }
+
+        @Nullable
+        public static SnappingSide getByName(@NotNull String name) {
+            for (SnappingSide s : SnappingSide.values()) {
+                if (s.name.equals(name)) return s;
+            }
+            return null;
         }
 
     }

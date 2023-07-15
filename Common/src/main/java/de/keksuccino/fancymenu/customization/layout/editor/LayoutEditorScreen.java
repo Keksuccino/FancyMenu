@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -42,6 +43,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -120,7 +122,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		this.menuBar = LayoutEditorUI.buildMenuBar(this);
 		this.addWidget(this.menuBar);
 
-		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+		for (AbstractLayoutEditorWidget w : Lists.reverse(new ArrayList<>(this.layoutEditorWidgets))) {
 			this.addWidget(w);
 		}
 
@@ -202,10 +204,6 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	protected void renderLayoutEditorWidgets(PoseStack pose, int mouseX, int mouseY, float partial) {
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
-			//TODO remove debug
-			w.setAbsoluteX(50);
-			w.setAbsoluteY(50);
-			//------------
 			if (w.isVisible()) w.render(pose, mouseX, mouseY, partial);
 		}
 	}
@@ -824,6 +822,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		if (PopupHandler.isPopupActive()) return true;
 
+		//Imitate super.mouseReleased in a way that doesn't suck
+		this.setDragging(false);
+		for(GuiEventListener child : this.children()) {
+			if (child.mouseReleased(mouseX, mouseY, button)) return true;
+		}
+
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
 
@@ -849,7 +853,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		this.anchorPointOverlay.mouseReleased(mouseX, mouseY, button);
 
-		return super.mouseReleased(mouseX, mouseY, button);
+		return false;
 
 	}
 
