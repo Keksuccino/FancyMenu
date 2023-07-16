@@ -62,10 +62,6 @@ public class LayoutEditorUI {
 			return  mb;
 		}
 
-		//TODO Neue Tabs und Entries adden (config stuff, etc.)
-
-		//TODO Option adden, mit der man Grid togglen kann (+ shortcut Ctrl + G zu entry adden)
-
 		MenuBar menuBar = new MenuBar();
 
 		//FANCYMENU ICON
@@ -78,6 +74,7 @@ public class LayoutEditorUI {
 		layoutMenu.addClickableEntry("new_layout", Component.translatable("fancymenu.editor.layout.new"), (menu, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
+					editor.saveWidgetSettings();
 					if (editor.layout.isUniversalLayout()) {
 						LayoutHandler.openLayoutEditor(Layout.buildUniversal(), null);
 					} else {
@@ -191,6 +188,7 @@ public class LayoutEditorUI {
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
+					editor.saveWidgetSettings();
 					Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
 				} else {
 					Minecraft.getInstance().setScreen(editor);
@@ -385,6 +383,7 @@ public class LayoutEditorUI {
 				editor.history.saveSnapshot();
 				editor.layout.autoScalingWidth = 0;
 				editor.layout.autoScalingHeight = 0;
+				editor.init();
 			}
 		});
 		menu.addValueCycleEntry("auto_scaling", cycleAutoScaling)
@@ -573,6 +572,7 @@ public class LayoutEditorUI {
 			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
 				displayUnsavedWarning(call -> {
 					if (call) {
+						editor.saveWidgetSettings();
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
 							Minecraft.getInstance().setScreen(editor);
 						}));
@@ -604,6 +604,7 @@ public class LayoutEditorUI {
 			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu1, entry) -> {
 				displayUnsavedWarning(call -> {
 					if (call) {
+						editor.saveWidgetSettings();
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(editor.layout.menuIdentifier, false), editor.layoutTargetScreen, layouts -> {
 							Minecraft.getInstance().setScreen(editor);
 						}));
@@ -634,6 +635,7 @@ public class LayoutEditorUI {
 		menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
+					editor.saveWidgetSettings();
 					MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
 				} else {
 					Minecraft.getInstance().setScreen(editor);

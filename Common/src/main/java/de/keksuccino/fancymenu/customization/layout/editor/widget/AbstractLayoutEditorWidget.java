@@ -17,12 +17,16 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
@@ -30,13 +34,17 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractLayoutEditorWidget extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     protected static final ResourceLocation HIDE_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/hide_icon.png");
     protected static final ResourceLocation EXPAND_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/expand_icon.png");
     protected static final ResourceLocation COLLAPSE_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/collapse_icon.png");
 
+    protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
-    private int widgetOffsetX = -50;
-    private int widgetOffsetY = -50;
+    protected Component displayLabel = Component.literal("Widgetttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
+    private int unscaledWidgetOffsetX = 0;
+    private int unscaledWidgetOffsetY = 0;
     private int innerWidth = 100;
     private int innerHeight = 100;
     protected SnappingSide snappingSide = SnappingSide.TOP_RIGHT;
@@ -51,11 +59,9 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     protected int leftMouseDownHeaderWidgetOffsetX = 0;
     protected int leftMouseDownHeaderWidgetOffsetY = 0;
 
-    /**
-     * {@link AbstractLayoutEditorWidget}s need a constructor that takes only one parameter of type {@link LayoutEditorScreen}.
-     */
-    public AbstractLayoutEditorWidget(LayoutEditorScreen editor) {
-        this.editor = editor;
+    public AbstractLayoutEditorWidget(@NotNull LayoutEditorScreen editor, @NotNull AbstractLayoutEditorWidgetBuilder<?> builder) {
+        this.editor = Objects.requireNonNull(editor);
+        this.builder = Objects.requireNonNull(builder);
         this.init();
     }
 
@@ -75,14 +81,21 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         this.leftMouseDownHeader = false;
     }
 
+    @NotNull
+    public AbstractLayoutEditorWidgetBuilder<?> getBuilder() {
+        return this.builder;
+    }
+
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+//        LOGGER.info("1 ########### Screen width: {} | origin X: {} | widgetOffsetX: {} | widget width: {} | widget scaled width: {} | absolute X: {} | absolute scaled X: {} | GUI Scale: {} | UI Scale: {}", ScreenUtils.getScreenWidth(), this.snappingSide.getOriginX(this), this.widgetOffsetX, this.getAbsoluteWidth(), this.getScaledAbsoluteWidth(), this.getAbsoluteX(), this.getScaledAbsoluteX(), Minecraft.getInstance().getWindow().getGuiScale(), UIBase.getFixedUIScale());
+
         //Fix offset on render tick, if needed
-        if (this.getAbsoluteX() < this.getMinAbsoluteX()) this.setWidgetOffsetX(this.widgetOffsetX);
-        if (this.getAbsoluteX() > this.getMaxAbsoluteX()) this.setWidgetOffsetX(this.widgetOffsetX);
-        if (this.getAbsoluteY() < this.getMinAbsoluteY()) this.setWidgetOffsetY(this.widgetOffsetY);
-        if (this.getAbsoluteY() > this.getMaxAbsoluteY()) this.setWidgetOffsetY(this.widgetOffsetY);
+        if (this.getAbsoluteX() < this.getMinAbsoluteX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+        if (this.getAbsoluteX() > this.getMaxAbsoluteX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+        if (this.getAbsoluteY() < this.getMinAbsoluteY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+        if (this.getAbsoluteY() > this.getMaxAbsoluteY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
 
         int scaledMouseX = (int) ((float)mouseX / UIBase.getFixedUIScale());
         int scaledMouseY = (int) ((float)mouseY / UIBase.getFixedUIScale());
@@ -149,46 +162,97 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
             b.render(pose, mouseX, mouseY, partial);
         }
 
+        this.renderLabel(pose, mouseX, mouseY, partial);
+
     }
 
-    public void setWidgetOffsetX(int offsetX) {
-        this.widgetOffsetX = offsetX;
-        if (this.getAbsoluteX() < this.getMinAbsoluteX()) {
-            int i = this.getMinAbsoluteX() - this.getAbsoluteX();
-            this.widgetOffsetX += i;
+    //TODO widget resizing adden
+
+    protected void renderLabel(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        int headerX = this.getScaledAbsoluteX() + this.getBorderThickness();
+        int headerY = this.getScaledAbsoluteY() + this.getBorderThickness();
+        int labelDisplayWidth = Math.max(1, this.getInnerWidth() - this.getCombinedHeaderButtonWidth() - 3);
+        int scissorWidth = (int) ((float)labelDisplayWidth * UIBase.getFixedUIScale());
+        int scissorHeight = (int) ((float)this.getHeaderHeight() * UIBase.getFixedUIScale());
+        RenderingUtils.resetShaderColor();
+        RenderSystem.enableBlend();
+        pose.pushPose();
+        //TODO scissor fixen (label unsichtbar)
+        GuiComponent.enableScissor(headerX, headerY, headerX + scissorWidth, headerY + scissorHeight);
+        UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.displayLabel, headerX + 3, headerY + (this.getHeaderHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2));
+        GuiComponent.disableScissor();
+        pose.popPose();
+        RenderingUtils.resetShaderColor();
+    }
+
+    public void setUnscaledWidgetOffsetX(int offsetX, boolean forceSet) {
+        if (!forceSet) {
+            if ((offsetX > this.unscaledWidgetOffsetX) && (this.getAbsoluteX() == this.getMaxAbsoluteX())) return;
+            if ((offsetX < this.unscaledWidgetOffsetX) && (this.getAbsoluteX() == this.getMinAbsoluteX())) return;
         }
-        if (this.getAbsoluteX() > this.getMaxAbsoluteX()) {
-            int i = this.getAbsoluteX() - this.getMaxAbsoluteX();
-            this.widgetOffsetX -= i;
+        this.unscaledWidgetOffsetX = offsetX;
+        if (!forceSet) {
+            if (this.getAbsoluteX() < this.getMinAbsoluteX()) {
+                int i = this.getMinAbsoluteX() - this.getAbsoluteX();
+                this.unscaledWidgetOffsetX += ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            }
+            if (this.getAbsoluteX() > this.getMaxAbsoluteX()) {
+                int i = this.getAbsoluteX() - this.getMaxAbsoluteX();
+                this.unscaledWidgetOffsetX -= ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            }
         }
     }
 
-    public void setWidgetOffsetY(int offsetY) {
-        this.widgetOffsetY = offsetY;
-        if (this.getAbsoluteY() < this.getMinAbsoluteY()) {
-            int i = this.getMinAbsoluteY() - this.getAbsoluteY();
-            this.widgetOffsetY += i;
+    public void setUnscaledWidgetOffsetY(int offsetY, boolean forceSet) {
+        if (!forceSet) {
+            if ((offsetY > this.unscaledWidgetOffsetY) && (this.getAbsoluteY() == this.getMaxAbsoluteY())) return;
+            if ((offsetY < this.unscaledWidgetOffsetY) && (this.getAbsoluteY() == this.getMinAbsoluteY())) return;
         }
-        if (this.getAbsoluteY() > this.getMaxAbsoluteY()) {
-            int i = this.getAbsoluteY() - this.getMaxAbsoluteY();
-            this.widgetOffsetY -= i;
+        this.unscaledWidgetOffsetY = offsetY;
+        if (!forceSet) {
+            if (this.getAbsoluteY() < this.getMinAbsoluteY()) {
+                int i = this.getMinAbsoluteY() - this.getAbsoluteY();
+                this.unscaledWidgetOffsetY += ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            }
+            if (this.getAbsoluteY() > this.getMaxAbsoluteY()) {
+                int i = this.getAbsoluteY() - this.getMaxAbsoluteY();
+                this.unscaledWidgetOffsetY -= ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            }
         }
     }
 
-    public int getWidgetOffsetX() {
-        return this.widgetOffsetX;
+    public int getCombinedHeaderButtonWidth() {
+        int i = 0;
+        for (HeaderButton b : this.headerButtons) {
+            i += b.width;
+        }
+        return i;
     }
 
-    public int getWidgetOffsetY() {
-        return this.widgetOffsetY;
+    public int getUnscaledWidgetOffsetX() {
+        return this.unscaledWidgetOffsetX;
+    }
+
+    public int getUnscaledWidgetOffsetY() {
+        return this.unscaledWidgetOffsetY;
     }
 
     public int getAbsoluteX() {
-        return this.snappingSide.getOriginX(this) + this.widgetOffsetX;
+        int guiScaledOffsetX = (int) ((double)this.unscaledWidgetOffsetX / Minecraft.getInstance().getWindow().getGuiScale());
+        return this.snappingSide.getOriginX(this) + guiScaledOffsetX;
     }
 
     public int getAbsoluteY() {
-        return this.snappingSide.getOriginY(this) + this.widgetOffsetY;
+        int guiScaledOffsetY = (int) ((double)this.unscaledWidgetOffsetY / Minecraft.getInstance().getWindow().getGuiScale());
+        return this.snappingSide.getOriginY(this) + guiScaledOffsetY;
+    }
+
+    public int getScaledAbsoluteX() {
+        return (int) ((float)this.getAbsoluteX() / UIBase.getFixedUIScale());
+    }
+
+    public int getScaledAbsoluteY() {
+        return (int) ((float)this.getAbsoluteY() / UIBase.getFixedUIScale());
     }
 
     protected int getScreenEdgeBorderThickness() {
@@ -210,14 +274,6 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
     protected int getMaxAbsoluteY() {
         return ScreenUtils.getScreenHeight() - this.getScreenEdgeBorderThickness() - this.getScaledAbsoluteHeight();
-    }
-
-    public int getScaledAbsoluteX() {
-        return (int) ((float)this.getAbsoluteX() / UIBase.getFixedUIScale());
-    }
-
-    public int getScaledAbsoluteY() {
-        return (int) ((float)this.getAbsoluteY() / UIBase.getFixedUIScale());
     }
 
     public int getScaledInnerX() {
@@ -319,8 +375,8 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
                 this.leftMouseDownHeader = true;
                 this.leftMouseDownHeaderMouseX = mouseX;
                 this.leftMouseDownHeaderMouseY = mouseY;
-                this.leftMouseDownHeaderWidgetOffsetX = this.widgetOffsetX;
-                this.leftMouseDownHeaderWidgetOffsetY = this.widgetOffsetY;
+                this.leftMouseDownHeaderWidgetOffsetX = this.unscaledWidgetOffsetX;
+                this.leftMouseDownHeaderWidgetOffsetY = this.unscaledWidgetOffsetY;
             }
             for (HeaderButton b : this.headerButtons) {
                 if (b.mouseClicked(scaledMouseX, scaledMouseY, button)) return true;
@@ -339,10 +395,10 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
         if (this.isVisible() && this.leftMouseDownHeader) {
-            double offsetX = mouseX - this.leftMouseDownHeaderMouseX;
-            double offsetY = mouseY - this.leftMouseDownHeaderMouseY;
-            this.setWidgetOffsetX((int)(this.leftMouseDownHeaderWidgetOffsetX + offsetX));
-            this.setWidgetOffsetY((int)(this.leftMouseDownHeaderWidgetOffsetY + offsetY));
+            double offsetX = (mouseX - this.leftMouseDownHeaderMouseX) * Minecraft.getInstance().getWindow().getGuiScale();
+            double offsetY = (mouseY - this.leftMouseDownHeaderMouseY) * Minecraft.getInstance().getWindow().getGuiScale();
+            this.setUnscaledWidgetOffsetX((int)(this.leftMouseDownHeaderWidgetOffsetX + offsetX), false);
+            this.setUnscaledWidgetOffsetY((int)(this.leftMouseDownHeaderWidgetOffsetY + offsetY), false);
             return true;
         }
 
@@ -392,7 +448,7 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
             ITexture icon = this.iconSupplier.get(this);
             if ((icon != null) && (icon.getResourceLocation() != null)) {
-                RenderingUtils.resetShaderColor();
+                UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
                 RenderSystem.enableBlend();
                 RenderingUtils.bindTexture(icon.getResourceLocation());
                 blit(pose, this.x, this.y, 0.0F, 0.0F, this.width, this.parent.getHeaderHeight(), this.width, this.parent.getHeaderHeight());

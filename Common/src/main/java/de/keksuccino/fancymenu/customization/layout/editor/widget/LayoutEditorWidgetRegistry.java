@@ -8,54 +8,47 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class LayoutEditorWidgetRegistry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final List<Class<? extends AbstractLayoutEditorWidget>> WIDGET_CLASSES = new ArrayList<>();
+    private static final List<AbstractLayoutEditorWidgetBuilder<?>> WIDGET_BUILDERS = new ArrayList<>();
 
-    /**
-     * {@link AbstractLayoutEditorWidget}s need a constructor that takes only one parameter of type {@link LayoutEditorScreen}.
-     */
-    public static void register(@NotNull Class<? extends AbstractLayoutEditorWidget> widgetClass) {
-        if (!isWidgetRegistered(widgetClass)) {
-            WIDGET_CLASSES.add(widgetClass);
+    public static void register(@NotNull AbstractLayoutEditorWidgetBuilder<?> widgetBuilder) {
+        if (!isBuilderRegistered(widgetBuilder.getIdentifier())) {
+            WIDGET_BUILDERS.add(widgetBuilder);
         } else {
-            LOGGER.error("[FANCYMENU] Failed to register AbstractLayoutEditorWidget! Already registered!");
+            LOGGER.error("[FANCYMENU] Failed to register AbstractLayoutEditorWidgetBuilder! Builder with same identifier already registered! (" + widgetBuilder.getIdentifier() + ")");
         }
     }
 
     @Nullable
-    public static Class<? extends AbstractLayoutEditorWidget> getWidget(@NotNull String classPath) {
-        for (Class<? extends AbstractLayoutEditorWidget> c : WIDGET_CLASSES) {
-            if (c.getName().equals(classPath)) return c;
+    public static AbstractLayoutEditorWidgetBuilder<?> getBuilder(@NotNull String identifier) {
+        for (AbstractLayoutEditorWidgetBuilder<?> b : WIDGET_BUILDERS) {
+            if (b.getIdentifier().equals(identifier)) return b;
         }
         return null;
     }
 
     @NotNull
-    public static List<Class<? extends AbstractLayoutEditorWidget>> getWidgets() {
-        return new ArrayList<>(WIDGET_CLASSES);
+    public static List<AbstractLayoutEditorWidgetBuilder<?>> getBuilders() {
+        return new ArrayList<>(WIDGET_BUILDERS);
     }
 
-    public static boolean isWidgetRegistered(@NotNull Class<? extends AbstractLayoutEditorWidget> widgetClass) {
-        return WIDGET_CLASSES.contains(widgetClass);
-    }
-
-    public static boolean isWidgetRegistered(@NotNull String classPath) {
-        return getWidget(classPath) != null;
+    public static boolean isBuilderRegistered(@NotNull String identifier) {
+        return getBuilder(identifier) != null;
     }
 
     @NotNull
     public static List<AbstractLayoutEditorWidget> buildWidgetInstances(@NotNull LayoutEditorScreen editor) {
         List<AbstractLayoutEditorWidget> instances = new ArrayList<>();
-        for (Class<? extends AbstractLayoutEditorWidget> c : WIDGET_CLASSES) {
+        for (AbstractLayoutEditorWidgetBuilder<?> b : WIDGET_BUILDERS) {
             try {
-                instances.add(c.getDeclaredConstructor(LayoutEditorScreen.class).newInstance(Objects.requireNonNull(editor)));
+                AbstractLayoutEditorWidget widget = b.buildWithSettingsInternal(editor);
+                if (widget != null) instances.add(widget);
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to create AbstractLayoutEditorWidget instance of " + c.getName() + "!");
+                LOGGER.error("[FANCYMENU] Failed to create AbstractLayoutEditorWidget instance! (" + b.getIdentifier() + ")");
                 ex.printStackTrace();
             }
         }

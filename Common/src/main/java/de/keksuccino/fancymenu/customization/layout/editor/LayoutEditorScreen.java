@@ -75,7 +75,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
-	public List<AbstractLayoutEditorWidget> layoutEditorWidgets = LayoutEditorWidgetRegistry.buildWidgetInstances(this);
+	public List<AbstractLayoutEditorWidget> layoutEditorWidgets = new ArrayList<>();
 
 	protected boolean isMouseSelection = false;
 	protected int mouseSelectionStartX = 0;
@@ -111,6 +111,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	@Override
 	protected void init() {
+
+		//Build widget instances only once (don't build in constructor to avoid stack overflows in builders)
+		if ((this.layoutEditorWidgets == null) || this.layoutEditorWidgets.isEmpty()) {
+			this.layoutEditorWidgets = LayoutEditorWidgetRegistry.buildWidgetInstances(this);
+		}
 
 		this.closeRightClickMenu();
 		this.rightClickMenu = LayoutEditorUI.buildRightClickContextMenu(this);
@@ -724,6 +729,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	public boolean isUserNavigatingInElementMenu() {
 		return (this.activeElementContextMenu != null) && this.activeElementContextMenu.isUserNavigatingInMenu();
+	}
+
+	public void saveWidgetSettings() {
+		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+			w.getBuilder().writeSettingsInternal(w);
+		}
 	}
 
 	//Called before mouseDragged

@@ -114,6 +114,14 @@ public class UIBase extends GuiComponent {
 		}
 	}
 
+	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y) {
+		return drawElementLabel(pose, font, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+	}
+
+	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y) {
+		return drawElementLabel(pose, font, Component.literal(text), x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+	}
+
 	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y, int baseColor) {
 		return FancyMenu.getOptions().enableUiTextShadow.getValue() ? font.drawShadow(pose, text, x, y, baseColor) : font.draw(pose, text, x, y, baseColor);
 	}
