@@ -42,7 +42,7 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
-    protected Component displayLabel = Component.literal("Widgetttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
+    protected Component displayLabel = Component.literal("Widget");
     private int unscaledWidgetOffsetX = 0;
     private int unscaledWidgetOffsetY = 0;
     private int innerWidth = 100;
@@ -58,6 +58,11 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     protected double leftMouseDownHeaderMouseY = 0;
     protected int leftMouseDownHeaderWidgetOffsetX = 0;
     protected int leftMouseDownHeaderWidgetOffsetY = 0;
+
+    //TODO widget resizing adden
+    //TODO widget resizing adden
+    //TODO widget resizing adden
+    //TODO widget resizing adden
 
     public AbstractLayoutEditorWidget(@NotNull LayoutEditorScreen editor, @NotNull AbstractLayoutEditorWidgetBuilder<?> builder) {
         this.editor = Objects.requireNonNull(editor);
@@ -166,19 +171,18 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
     }
 
-    //TODO widget resizing adden
-
     protected void renderLabel(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         int headerX = this.getScaledAbsoluteX() + this.getBorderThickness();
         int headerY = this.getScaledAbsoluteY() + this.getBorderThickness();
         int labelDisplayWidth = Math.max(1, this.getInnerWidth() - this.getCombinedHeaderButtonWidth() - 3);
+        int scissorX = this.getAbsoluteX() + this.getBorderThickness();
+        int scissorY = this.getAbsoluteY() + this.getBorderThickness();
         int scissorWidth = (int) ((float)labelDisplayWidth * UIBase.getFixedUIScale());
         int scissorHeight = (int) ((float)this.getHeaderHeight() * UIBase.getFixedUIScale());
         RenderingUtils.resetShaderColor();
         RenderSystem.enableBlend();
         pose.pushPose();
-        //TODO scissor fixen (label unsichtbar)
-        GuiComponent.enableScissor(headerX, headerY, headerX + scissorWidth, headerY + scissorHeight);
+        GuiComponent.enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
         UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.displayLabel, headerX + 3, headerY + (this.getHeaderHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2));
         GuiComponent.disableScissor();
         pose.popPose();
