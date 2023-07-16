@@ -38,8 +38,8 @@ public class TitleScreenForgeTopDeepElement extends AbstractDeepElement {
                 this.baseWidth = w2;
             }
             this.baseHeight = (font.lineHeight * 2) + 1;
-            this.baseX = (getScreenWidth() / 2) - (this.getAbsoluteWidth() / 2);
-            this.baseY = 4;
+            this.posOffsetX = (getScreenWidth() / 2) - (this.getAbsoluteWidth() / 2);
+            this.posOffsetY = 4;
         } else {
             ForgeHooksClient.renderMainMenu((TitleScreen) getScreen(), pose, font, getScreenWidth(), getScreenHeight(), (int) (this.opacity * 255.0F));
         }

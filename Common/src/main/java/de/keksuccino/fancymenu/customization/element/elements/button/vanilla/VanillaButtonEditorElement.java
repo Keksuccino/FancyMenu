@@ -99,19 +99,19 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     protected void handleCopyrightButtonPositionRestrictions() {
         if (this.isCopyrightButton()) {
             if ((this.getX() + this.getWidth()) > this.editor.width) {
-                this.element.baseX -= ((this.getX() + this.getWidth()) - this.editor.width);
+                this.element.posOffsetX -= ((this.getX() + this.getWidth()) - this.editor.width);
                 this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
             if (this.getX() < 0) {
-                this.element.baseX += Math.abs(this.getX());
+                this.element.posOffsetX += Math.abs(this.getX());
                 this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
             if ((this.getY() + this.getHeight()) > this.editor.height) {
-                this.element.baseY -= ((this.getY() + this.getHeight()) - this.editor.height);
+                this.element.posOffsetY -= ((this.getY() + this.getHeight()) - this.editor.height);
                 this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
             if (this.getY() < 0) {
-                this.element.baseY += Math.abs(this.getY());
+                this.element.posOffsetY += Math.abs(this.getY());
                 this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
             }
         }

@@ -112,13 +112,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             if (x != null) {
                 x = PlaceholderParser.replacePlaceholders(x);
                 if (MathUtils.isInteger(x)) {
-                    element.baseX = Integer.parseInt(x);
+                    element.posOffsetX = Integer.parseInt(x);
                 }
             }
             if (y != null) {
                 y = PlaceholderParser.replacePlaceholders(y);
                 if (MathUtils.isInteger(y)) {
-                    element.baseY = Integer.parseInt(y);
+                    element.posOffsetY = Integer.parseInt(y);
                 }
             }
 
@@ -250,8 +250,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             if (element.appearanceDelay == null) {
                 element.appearanceDelay = AbstractElement.AppearanceDelay.NO_DELAY;
             }
-            sec.putProperty("x", "" + element.baseX);
-            sec.putProperty("y", "" + element.baseY);
+            sec.putProperty("x", "" + element.posOffsetX);
+            sec.putProperty("y", "" + element.posOffsetY);
             sec.putProperty("width", "" + element.getAbsoluteWidth());
             sec.putProperty("height", "" + element.getAbsoluteHeight());
             sec.putProperty("stretch_x", "" + element.stretchX);

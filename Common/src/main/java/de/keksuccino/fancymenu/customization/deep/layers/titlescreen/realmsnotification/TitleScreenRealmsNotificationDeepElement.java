@@ -41,8 +41,8 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
 
         this.baseWidth = 13;
         this.baseHeight = 13;
-        this.baseX = realmsButtonX + realmsButtonWidth + xOffset - 17;
-        this.baseY = realmsButtonY + 4;
+        this.posOffsetX = realmsButtonX + realmsButtonWidth + xOffset - 17;
+        this.posOffsetY = realmsButtonY + 4;
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 

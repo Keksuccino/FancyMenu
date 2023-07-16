@@ -912,7 +912,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
-					e.element.baseX -= 1;
+					e.element.posOffsetX -= 1;
 				} else if (!e.settings.isMovable()) {
 					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
@@ -925,7 +925,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
-					e.element.baseY -= 1;
+					e.element.posOffsetY -= 1;
 				} else if (!e.settings.isMovable()) {
 					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
@@ -938,7 +938,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
-					e.element.baseX += 1;
+					e.element.posOffsetX += 1;
 				} else if (!e.settings.isMovable()) {
 					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
@@ -951,7 +951,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
 				if (this.allSelectedElementsMovable()) {
-					e.element.baseY += 1;
+					e.element.posOffsetY += 1;
 				} else if (!e.settings.isMovable()) {
 					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}

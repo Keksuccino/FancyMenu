@@ -34,8 +34,8 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
         }
 
         this.baseHeight = totalHeight;
-        this.baseX = 2;
-        this.baseY = getScreenHeight() - 2 - totalHeight;
+        this.posOffsetX = 2;
+        this.posOffsetY = getScreenHeight() - 2 - totalHeight;
 
         int w = 0;
         int i = 0;

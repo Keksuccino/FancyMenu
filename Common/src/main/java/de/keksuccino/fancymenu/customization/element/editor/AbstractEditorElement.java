@@ -546,11 +546,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			p = ElementAnchorPoints.MID_CENTERED;
 		}
 		if (keepAbsolutePosition) {
-			this.element.baseX = this.calcNewBaseX(p, oldAbsoluteX);
-			this.element.baseY = this.calcNewBaseY(p, oldAbsoluteY);
+			this.element.posOffsetX = this.calcNewBaseX(p, oldAbsoluteX);
+			this.element.posOffsetY = this.calcNewBaseY(p, oldAbsoluteY);
 		} else {
-			this.element.baseX = p.getDefaultElementBaseX(this.element);
-			this.element.baseY = p.getDefaultElementBaseY(this.element);
+			this.element.posOffsetX = p.getDefaultElementBaseX(this.element);
+			this.element.posOffsetY = p.getDefaultElementBaseY(this.element);
 		}
 		this.element.anchorPoint = p;
 	}
@@ -600,8 +600,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	public void updateLeftMouseDownCachedValues(int mouseX, int mouseY) {
 		this.leftMouseDownMouseX = mouseX;
 		this.leftMouseDownMouseY = mouseY;
-		this.leftMouseDownBaseX = this.element.baseX;
-		this.leftMouseDownBaseY = this.element.baseY;
+		this.leftMouseDownBaseX = this.element.posOffsetX;
+		this.leftMouseDownBaseY = this.element.posOffsetY;
 		this.leftMouseDownBaseWidth = this.element.baseWidth;
 		this.leftMouseDownBaseHeight = this.element.baseHeight;
 	}
@@ -645,8 +645,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			if (this.leftMouseDown && !this.isGettingResized()) {
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || (this.element.anchorPoint != ElementAnchorPoints.ELEMENT)) {
-						this.element.baseX = this.leftMouseDownBaseX + diffX;
-						this.element.baseY = this.leftMouseDownBaseY + diffY;
+						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
+						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
 					}
 					if ((diffX > 0) || (diffY > 0)) {
 						this.recentlyMovedByDragging = true;
@@ -660,7 +660,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
 					if (i >= 2) {
 						this.element.baseWidth = i;
-						this.element.baseX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+						this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
 						if (Screen.hasShiftDown()) {
 							this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
 						}
@@ -670,7 +670,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.TOP) ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
 					if (i >= 2) {
 						this.element.baseHeight = i;
-						this.element.baseY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+						this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
 						if (Screen.hasShiftDown()) {
 							this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
 						}

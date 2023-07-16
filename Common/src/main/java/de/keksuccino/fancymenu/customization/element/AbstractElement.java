@@ -34,10 +34,10 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	public String anchorPointElementIdentifier = null;
 	protected AbstractElement cachedAnchorPointElement = null;
-	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the raw value without orientation and scale! **/
-	public int baseX = 0;
-	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the raw value without orientation and scale! **/
-	public int baseY = 0;
+	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the X-offset from the origin of its anchor! **/
+	public int posOffsetX = 0;
+	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the Y-offset from the origin of its anchor! **/
+	public int posOffsetY = 0;
 	public int baseWidth = 0;
 	public int baseHeight = 0;
 	public String advancedX;
@@ -81,7 +81,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	/**
 	 * Should be used to get the ACTUAL X position of the element.<br>
-	 * Not the same as {@link AbstractElement#baseX}!
+	 * Not the same as {@link AbstractElement#posOffsetX}!
 	 */
 	public int getAbsoluteX() {
 		int x = 0;
@@ -110,7 +110,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	
 	/**
 	 * Should be used to get the ACTUAL Y position of the element.<br>
-	 * Not the same as {@link AbstractElement#baseY}!
+	 * Not the same as {@link AbstractElement#posOffsetY}!
 	 */
 	public int getAbsoluteY() {
 		int y = 0;

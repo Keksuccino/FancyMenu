@@ -137,8 +137,8 @@ public class PlayerEntityRotationScreen extends Screen {
         ElementAnchorPoint oriOrientation = this.element.anchorPoint;
         String oriAdX = this.element.advancedX;
         String oriAdY = this.element.advancedY;
-        int oriPosX = this.element.baseX;
-        int oriPosY = this.element.baseY;
+        int oriPosX = this.element.posOffsetX;
+        int oriPosY = this.element.posOffsetY;
 
         this.element.bodyRotationX = this.bodyRotationX;
         this.element.bodyRotationY = this.bodyRotationY;
@@ -148,8 +148,8 @@ public class PlayerEntityRotationScreen extends Screen {
         this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
         this.element.advancedX = null;
         this.element.advancedY = null;
-        this.element.baseX = posX;
-        this.element.baseY = posY;
+        this.element.posOffsetX = posX;
+        this.element.posOffsetY = posY;
 
         this.element.render(pose, mouseX, mouseY, partial);
 
@@ -161,8 +161,8 @@ public class PlayerEntityRotationScreen extends Screen {
         this.element.anchorPoint = oriOrientation;
         this.element.advancedX = oriAdX;
         this.element.advancedY = oriAdY;
-        this.element.baseX = oriPosX;
-        this.element.baseY = oriPosY;
+        this.element.posOffsetX = oriPosX;
+        this.element.posOffsetY = oriPosY;
 
     }
 

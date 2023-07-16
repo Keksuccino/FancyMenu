@@ -25,11 +25,11 @@ public interface IElementStacker<E extends AbstractElement> {
         if (e.anchorPointElementIdentifier != null) {
             stack.anchorPointElementIdentifier = e.anchorPointElementIdentifier;
         }
-        if (e.baseX != 0) {
-            stack.baseX = e.baseX;
+        if (e.posOffsetX != 0) {
+            stack.posOffsetX = e.posOffsetX;
         }
-        if (e.baseY != 0) {
-            stack.baseY = e.baseY;
+        if (e.posOffsetY != 0) {
+            stack.posOffsetY = e.posOffsetY;
         }
         if (e.baseWidth != 0) {
             stack.baseWidth = e.baseWidth;

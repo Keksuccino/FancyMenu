@@ -81,10 +81,10 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     @Override
     public int getAbsoluteX() {
         if ((this.button != null) && (this.anchorPoint == ElementAnchorPoints.VANILLA)) {
-            int bX = this.baseX;
-            this.baseX = this.originalX;
+            int bX = this.posOffsetX;
+            this.posOffsetX = this.originalX;
             int x = super.getAbsoluteX();
-            this.baseX = bX;
+            this.posOffsetX = bX;
             return x;
         }
         return super.getAbsoluteX();
@@ -93,10 +93,10 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     @Override
     public int getAbsoluteY() {
         if ((this.button != null) && (this.anchorPoint == ElementAnchorPoints.VANILLA)) {
-            int bY = this.baseY;
-            this.baseY = this.originalY;
+            int bY = this.posOffsetY;
+            this.posOffsetY = this.originalY;
             int y = super.getAbsoluteY();
-            this.baseY = bY;
+            this.posOffsetY = bY;
             return y;
         }
         return super.getAbsoluteY();

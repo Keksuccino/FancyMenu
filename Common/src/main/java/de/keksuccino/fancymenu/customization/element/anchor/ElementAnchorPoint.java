@@ -24,11 +24,11 @@ public class ElementAnchorPoint {
     }
 
     public int getElementPositionX(@NotNull AbstractElement element) {
-        return this.getOriginX(element) + element.baseX;
+        return this.getOriginX(element) + element.posOffsetX;
     }
 
     public int getElementPositionY(@NotNull AbstractElement element) {
-        return this.getOriginY(element) + element.baseY;
+        return this.getOriginY(element) + element.posOffsetY;
     }
 
     public int getOriginX(@NotNull AbstractElement element) {

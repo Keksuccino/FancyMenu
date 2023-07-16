@@ -781,13 +781,13 @@ public class Layout extends LayoutBase {
                     if (x != null) {
                         x = PlaceholderParser.replacePlaceholders(x);
                         if (MathUtils.isInteger(x)) {
-                            element.baseX = Integer.parseInt(x);
+                            element.posOffsetX = Integer.parseInt(x);
                         }
                     }
                     if (y != null) {
                         y = PlaceholderParser.replacePlaceholders(y);
                         if (MathUtils.isInteger(y)) {
-                            element.baseY = Integer.parseInt(y);
+                            element.posOffsetY = Integer.parseInt(y);
                         }
                     }
 

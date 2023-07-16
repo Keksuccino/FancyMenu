@@ -34,8 +34,8 @@ public class TitleScreenLogoDeepElement extends AbstractDeepElement {
         RenderSystem.setShaderTexture(0, MINECRAFT_LOGO);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 
-        this.baseX = (getScreenWidth() / 2) - 137;
-        this.baseY = 30;
+        this.posOffsetX = (getScreenWidth() / 2) - 137;
+        this.posOffsetY = 30;
         this.baseWidth = 155 + 119;
         this.baseHeight = 52;
 
