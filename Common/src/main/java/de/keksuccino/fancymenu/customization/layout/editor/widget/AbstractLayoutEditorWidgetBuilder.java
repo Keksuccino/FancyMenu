@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
@@ -23,7 +24,13 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
 
     private final String identifier;
 
+    /**
+     * @param identifier Needs to be as unique as possible. Only characters [a-z], [0-9], [-] and [_] are supported. No spaces!
+     */
     public AbstractLayoutEditorWidgetBuilder(@NotNull String identifier) {
+        if (!CharacterFilter.buildBasicFilenameCharacterFilter().isAllowedText(identifier)) {
+            throw new RuntimeException("Invalid characters in identifier! Only characters [a-z], [0-9], [-] and [_] are supported. No spaces!");
+        }
         this.identifier = identifier;
     }
 
@@ -31,16 +38,17 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
         return this.identifier;
     }
 
-    @NotNull
-    public abstract T buildWithSettings(@NotNull LayoutEditorScreen editor, @NotNull WidgetSettings settings);
+    public abstract void applySettings(@NotNull LayoutEditorScreen editor, @NotNull WidgetSettings settings, @NotNull T applyTo);
 
+    @SuppressWarnings("all")
     @Nullable
     public AbstractLayoutEditorWidget buildWithSettingsInternal(@NotNull LayoutEditorScreen editor) {
 
         try {
 
             WidgetSettings settings = this.readSettingsInternal();
-            AbstractLayoutEditorWidget widget = Objects.requireNonNull(this.buildWithSettings(Objects.requireNonNull(editor), Objects.requireNonNull(settings)));
+            AbstractLayoutEditorWidget widget = this.buildDefaultInstance(Objects.requireNonNull(editor));
+            this.applySettings(editor, Objects.requireNonNull(settings), (T) Objects.requireNonNull(widget));
 
             String offsetX = settings.getValue("offset_x");
             if ((offsetX != null) && MathUtils.isInteger(offsetX)) {
@@ -97,7 +105,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
     }
 
     @NotNull
-    public abstract T buildWithoutSettings(@NotNull LayoutEditorScreen editor);
+    public abstract T buildDefaultInstance(@NotNull LayoutEditorScreen editor);
 
     public abstract void writeSettings(@NotNull WidgetSettings settings, @NotNull T widgetInstance);
 
@@ -131,7 +139,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
         try {
             File savedSettingsFile = this.getSettingsFile();
             if (!savedSettingsFile.isFile()) {
-                this.writeSettingsInternal(Objects.requireNonNull(this.buildWithoutSettings(DUMMY_LAYOUT_EDITOR)));
+                this.writeSettingsInternal(Objects.requireNonNull(this.buildDefaultInstance(DUMMY_LAYOUT_EDITOR)));
             }
             PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(savedSettingsFile.getAbsolutePath());
             if (set != null) {

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import net.minecraft.client.Minecraft;
@@ -29,9 +30,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-/**
- * {@link AbstractLayoutEditorWidget}s need a constructor that takes only one parameter of type {@link LayoutEditorScreen}.
- */
 public abstract class AbstractLayoutEditorWidget extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -53,16 +51,15 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     protected boolean headerHovered = false;
     protected boolean visible = true;
     protected boolean expanded = true;
+    protected ResizingEdge activeResizeEdge = null;
+    protected ResizingEdge hoveredResizeEdge = null;
     protected boolean leftMouseDownHeader = false;
-    protected double leftMouseDownHeaderMouseX = 0;
-    protected double leftMouseDownHeaderMouseY = 0;
-    protected int leftMouseDownHeaderWidgetOffsetX = 0;
-    protected int leftMouseDownHeaderWidgetOffsetY = 0;
-
-    //TODO widget resizing adden
-    //TODO widget resizing adden
-    //TODO widget resizing adden
-    //TODO widget resizing adden
+    protected double leftMouseDownMouseX = 0;
+    protected double leftMouseDownMouseY = 0;
+    protected int leftMouseDownWidgetOffsetX = 0;
+    protected int leftMouseDownWidgetOffsetY = 0;
+    protected int leftMouseDownInnerWidth = 0;
+    protected int leftMouseDownInnerHeight = 0;
 
     public AbstractLayoutEditorWidget(@NotNull LayoutEditorScreen editor, @NotNull AbstractLayoutEditorWidgetBuilder<?> builder) {
         this.editor = Objects.requireNonNull(editor);
@@ -83,6 +80,8 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     public void refresh() {
+        this.activeResizeEdge = null;
+        this.hoveredResizeEdge = null;
         this.leftMouseDownHeader = false;
     }
 
@@ -107,6 +106,9 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
         this.hovered = this.isMouseOver(scaledMouseX, scaledMouseY);
         this.headerHovered = this.isMouseOverHeader(scaledMouseX, scaledMouseY);
+        this.hoveredResizeEdge = this.updateHoveredResizingEdge(scaledMouseX, scaledMouseY);
+
+        this.updateCursor();
 
         pose.pushPose();
         pose.scale(UIBase.getFixedUIScale(), UIBase.getFixedUIScale(), UIBase.getFixedUIScale());
@@ -189,6 +191,39 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         RenderingUtils.resetShaderColor();
     }
 
+    protected void updateCursor() {
+        if ((this.hoveredResizeEdge == ResizingEdge.TOP) || (this.hoveredResizeEdge == ResizingEdge.BOTTOM)) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_VERTICAL);
+        } else if ((this.hoveredResizeEdge == ResizingEdge.LEFT) || (this.hoveredResizeEdge == ResizingEdge.RIGHT)) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_RESIZE_HORIZONTAL);
+        }
+    }
+
+    @Nullable
+    protected ResizingEdge updateHoveredResizingEdge(double mouseX, double mouseY) {
+        if (!this.isVisible()) return null;
+        if (!this.isExpanded()) return null;
+        if (this.leftMouseDownHeader) return null;
+        if (this.activeResizeEdge != null) return this.activeResizeEdge;
+        //It's important to check this AFTER possibly returning the active edge
+        if (this.isHeaderButtonHovered()) return null;
+        int hoverAreaThickness = (int) (10.0F / Minecraft.getInstance().getWindow().getGuiScale());
+        int halfHoverAreaThickness = hoverAreaThickness / 2;
+        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX() - halfHoverAreaThickness, this.getScaledAbsoluteY(), hoverAreaThickness, this.getAbsoluteHeight())) {
+            return ResizingEdge.LEFT;
+        }
+        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX(), this.getScaledAbsoluteY() - halfHoverAreaThickness, this.getAbsoluteWidth(), hoverAreaThickness)) {
+            return ResizingEdge.TOP;
+        }
+        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX() + this.getAbsoluteWidth() - halfHoverAreaThickness, this.getScaledAbsoluteY(), hoverAreaThickness, this.getAbsoluteHeight())) {
+            return ResizingEdge.RIGHT;
+        }
+        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX(), this.getScaledAbsoluteY() + this.getAbsoluteHeight() - halfHoverAreaThickness, this.getAbsoluteWidth(), hoverAreaThickness)) {
+            return ResizingEdge.BOTTOM;
+        }
+        return null;
+    }
+
     public void setUnscaledWidgetOffsetX(int offsetX, boolean forceSet) {
         if (!forceSet) {
             if ((offsetX > this.unscaledWidgetOffsetX) && (this.getAbsoluteX() == this.getMaxAbsoluteX())) return;
@@ -260,24 +295,28 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     protected int getScreenEdgeBorderThickness() {
-        return 3;
+        return 10;
+    }
+
+    protected int getGUIScaledScreenEdgeBorderThickness() {
+        return (int) ((double)this.getScreenEdgeBorderThickness() / Minecraft.getInstance().getWindow().getGuiScale());
     }
 
     protected int getMinAbsoluteX() {
-        return this.getScreenEdgeBorderThickness();
+        return this.getGUIScaledScreenEdgeBorderThickness();
     }
 
     protected int getMaxAbsoluteX() {
-        return ScreenUtils.getScreenWidth() - this.getScreenEdgeBorderThickness() - this.getScaledAbsoluteWidth();
+        return ScreenUtils.getScreenWidth() - this.getGUIScaledScreenEdgeBorderThickness() - this.getScaledAbsoluteWidth();
     }
 
     protected int getMinAbsoluteY() {
         int scaledMenuBarHeight = (int)(this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale()));
-        return scaledMenuBarHeight + this.getScreenEdgeBorderThickness();
+        return scaledMenuBarHeight + this.getGUIScaledScreenEdgeBorderThickness();
     }
 
     protected int getMaxAbsoluteY() {
-        return ScreenUtils.getScreenHeight() - this.getScreenEdgeBorderThickness() - this.getScaledAbsoluteHeight();
+        return ScreenUtils.getScreenHeight() - this.getGUIScaledScreenEdgeBorderThickness() - this.getScaledAbsoluteHeight();
     }
 
     public int getScaledInnerX() {
@@ -340,6 +379,14 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         return this.headerHovered;
     }
 
+    public boolean isHeaderButtonHovered() {
+        if (!this.isVisible()) return false;
+        for (HeaderButton b : this.headerButtons) {
+            if (b.isHovered()) return true;
+        }
+        return false;
+    }
+
     public boolean isVisible() {
         return this.visible;
     }
@@ -375,12 +422,18 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         int scaledMouseX = (int) ((float)mouseX / UIBase.getFixedUIScale());
         int scaledMouseY = (int) ((float)mouseY / UIBase.getFixedUIScale());
         if (this.isVisible()) {
-            if (this.isHeaderHovered()) {
+            this.activeResizeEdge = this.hoveredResizeEdge;
+            if ((this.activeResizeEdge == null) && this.isHeaderHovered() && !this.isHeaderButtonHovered()) {
                 this.leftMouseDownHeader = true;
-                this.leftMouseDownHeaderMouseX = mouseX;
-                this.leftMouseDownHeaderMouseY = mouseY;
-                this.leftMouseDownHeaderWidgetOffsetX = this.unscaledWidgetOffsetX;
-                this.leftMouseDownHeaderWidgetOffsetY = this.unscaledWidgetOffsetY;
+            }
+            if ((this.activeResizeEdge != null) || this.leftMouseDownHeader) {
+                this.leftMouseDownMouseX = mouseX;
+                this.leftMouseDownMouseY = mouseY;
+                this.leftMouseDownWidgetOffsetX = this.unscaledWidgetOffsetX;
+                this.leftMouseDownWidgetOffsetY = this.unscaledWidgetOffsetY;
+                this.leftMouseDownInnerWidth = this.innerWidth;
+                this.leftMouseDownInnerHeight = this.innerHeight;
+                return true;
             }
             for (HeaderButton b : this.headerButtons) {
                 if (b.mouseClicked(scaledMouseX, scaledMouseY, button)) return true;
@@ -392,22 +445,45 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         this.leftMouseDownHeader = false;
+        this.activeResizeEdge = null;
         return false;
     }
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
-        if (this.isVisible() && this.leftMouseDownHeader) {
-            double offsetX = (mouseX - this.leftMouseDownHeaderMouseX) * Minecraft.getInstance().getWindow().getGuiScale();
-            double offsetY = (mouseY - this.leftMouseDownHeaderMouseY) * Minecraft.getInstance().getWindow().getGuiScale();
-            this.setUnscaledWidgetOffsetX((int)(this.leftMouseDownHeaderWidgetOffsetX + offsetX), false);
-            this.setUnscaledWidgetOffsetY((int)(this.leftMouseDownHeaderWidgetOffsetY + offsetY), false);
-            return true;
+        if (this.isVisible()) {
+            double offsetX = (mouseX - this.leftMouseDownMouseX) * Minecraft.getInstance().getWindow().getGuiScale();
+            double offsetY = (mouseY - this.leftMouseDownMouseY) * Minecraft.getInstance().getWindow().getGuiScale();
+            if (this.activeResizeEdge != null) {
+                this.handleResize((int) offsetX, (int) offsetY);
+                return true;
+            } else if (this.leftMouseDownHeader) {
+                this.setUnscaledWidgetOffsetX((int)(this.leftMouseDownWidgetOffsetX + offsetX), false);
+                this.setUnscaledWidgetOffsetY((int)(this.leftMouseDownWidgetOffsetY + offsetY), false);
+                return true;
+            }
         }
 
         return false;
 
+    }
+
+    protected void handleResize(int dragOffsetX, int dragOffsetY) {
+        if ((this.activeResizeEdge == ResizingEdge.LEFT) || (this.activeResizeEdge == ResizingEdge.RIGHT)) {
+            int i = (this.activeResizeEdge == ResizingEdge.LEFT) ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
+            if (i >= (this.getCombinedHeaderButtonWidth() + 10)) {
+                this.innerWidth = i;
+                this.unscaledWidgetOffsetX = this.leftMouseDownWidgetOffsetX + ((this.activeResizeEdge == ResizingEdge.LEFT) ? dragOffsetX : 0);
+            }
+        }
+        if ((this.activeResizeEdge == ResizingEdge.TOP) || (this.activeResizeEdge == ResizingEdge.BOTTOM)) {
+            int i = (this.activeResizeEdge == ResizingEdge.TOP) ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
+            if (i >= (this.getHeaderHeight() + 10)) {
+                this.innerHeight = i;
+                this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + ((this.activeResizeEdge == ResizingEdge.TOP) ? dragOffsetY : 0);
+            }
+        }
     }
 
     @Override
@@ -438,6 +514,7 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         protected Consumer<HeaderButton> clickAction;
         @NotNull
         protected ConsumingSupplier<HeaderButton, ITexture> iconSupplier;
+        protected boolean hovered = false;
 
         protected HeaderButton(AbstractLayoutEditorWidget parent, @NotNull ConsumingSupplier<HeaderButton, ITexture> iconSupplier, @NotNull Consumer<HeaderButton> clickAction) {
             this.parent = parent;
@@ -447,6 +524,8 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+            this.hovered = this.isMouseOver(mouseX, mouseY);
 
             this.renderHoverBackground(pose, mouseX, mouseY);
 
@@ -467,6 +546,10 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
                 fill(pose, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
                 RenderingUtils.resetShaderColor();
             }
+        }
+
+        public boolean isHovered() {
+            return this.hovered;
         }
 
         @Override
@@ -530,6 +613,13 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
             return null;
         }
 
+    }
+
+    public enum ResizingEdge {
+        LEFT,
+        RIGHT,
+        TOP,
+        BOTTOM
     }
 
 }

@@ -27,6 +27,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -51,7 +52,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 @SuppressWarnings("unused")
 public abstract class AbstractEditorElement extends GuiComponent implements Renderable, GuiEventListener {
@@ -65,9 +65,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 		return UIBase.getUIColorScheme().layout_editor_element_border_color_normal.getColorInt();
 	};
-	protected static final long CURSOR_HORIZONTAL_RESIZE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HRESIZE_CURSOR);
-	protected static final long CURSOR_VERTICAL_RESIZE = GLFW.glfwCreateStandardCursor(GLFW.GLFW_VRESIZE_CURSOR);
-	protected static final long CURSOR_NORMAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
 
 	public AbstractElement element;
 	public final EditorElementSettings settings;
@@ -478,7 +475,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		//Update cursor
 		ResizeGrabber hoveredGrabber = this.getHoveredResizeGrabber();
-		GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), (hoveredGrabber != null) ? hoveredGrabber.getCursor() : CURSOR_NORMAL);
+		if (hoveredGrabber != null) CursorHandler.setClientTickCursor(hoveredGrabber.getCursor());
 
 		this.renderBorder(pose, mouseX, mouseY, partial);
 
@@ -818,9 +815,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		protected long getCursor() {
 			if ((this.type == ResizeGrabberType.TOP) || (this.type == ResizeGrabberType.BOTTOM)) {
-				return CURSOR_VERTICAL_RESIZE;
+				return CursorHandler.CURSOR_RESIZE_VERTICAL;
 			}
-			return CURSOR_HORIZONTAL_RESIZE;
+			return CursorHandler.CURSOR_RESIZE_HORIZONTAL;
 		}
 
 		protected boolean isGrabberEnabled() {

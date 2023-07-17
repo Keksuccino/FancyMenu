@@ -11,13 +11,12 @@ public class LayerLayoutEditorWidgetBuilder extends AbstractLayoutEditorWidgetBu
     }
 
     @Override
-    public @NotNull LayerLayoutEditorWidget buildWithSettings(@NotNull LayoutEditorScreen editor, @NotNull WidgetSettings settings) {
+    public void applySettings(@NotNull LayoutEditorScreen editor, @NotNull WidgetSettings settings, @NotNull LayerLayoutEditorWidget applyTo) {
         //TODO apply settings
-        return new LayerLayoutEditorWidget(editor, this);
     }
 
     @Override
-    public @NotNull LayerLayoutEditorWidget buildWithoutSettings(@NotNull LayoutEditorScreen editor) {
+    public @NotNull LayerLayoutEditorWidget buildDefaultInstance(@NotNull LayoutEditorScreen editor) {
         LayerLayoutEditorWidget w = new LayerLayoutEditorWidget(editor, this);
         w.setInnerWidth(200);
         w.setInnerHeight(300);

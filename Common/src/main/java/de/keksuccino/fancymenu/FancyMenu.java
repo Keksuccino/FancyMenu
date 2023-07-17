@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
@@ -127,6 +128,8 @@ public class FancyMenu {
 				UIColorThemes.registerAll();
 
 				TextColorFormatters.registerAll();
+
+				CursorHandler.init();
 
 	        	ScreenCustomization.init();
 
