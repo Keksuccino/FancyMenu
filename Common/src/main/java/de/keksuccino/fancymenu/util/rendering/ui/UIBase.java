@@ -15,12 +15,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class UIBase extends GuiComponent {
+public class UIBase extends RenderingUtils {
 
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
 	public static final int VERTICAL_SCROLL_BAR_WIDTH = 5;
