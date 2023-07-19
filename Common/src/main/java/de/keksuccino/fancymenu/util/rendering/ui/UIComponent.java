@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.ScreenUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -9,56 +8,127 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.function.Supplier;
-
 public abstract class UIComponent extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
 
-    /** The scale of the {@link UIComponent}. Not fixed. */
-    @NotNull
-    protected Supplier<Float> componentScaleSupplier = UIBase::getUIScale;
-    protected Minecraft mc = Minecraft.getInstance();
-    public float z = 0f;
+    public float posZ = 0f;
     protected boolean hovered = false;
     protected boolean visible = true;
-    protected UIComponentPositioner positioner = new UIComponentPositioner();
+    protected Minecraft mc = Minecraft.getInstance();
 
-    public abstract void renderComponent(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height);
+    /**
+     * Make sure to render everything here at X=0 and Y=0!<br>
+     * The {@link UIComponent} gets translated to the correct position!
+     */
+    public abstract void renderComponent(@NotNull PoseStack pose, double mouseX, double mouseY, float partial);
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack pose, int ignoredMouseX, int ignoredMouseY, float partial) {
 
         if (!this.isVisible()) return;
 
-        this.hovered = this.isMouseOver(0,0);
+        this.hovered = this.isMouseOver();
 
         pose.pushPose();
         pose.scale(this.getFixedComponentScale(), this.getFixedComponentScale(), this.getFixedComponentScale());
-        pose.translate(this.getComponentX(this.positioner), this.getComponentY(this.positioner), this.z);
-        this.renderComponent(pose, this.getComponentScaledMouseX(), this.getComponentScaledMouseY(), partial, 0f, 0f, this.getComponentWidth(), this.getComponentHeight());
+        pose.translate(this.getComponentX(), this.getComponentY(), this.posZ);
+
+        this.renderComponent(pose, this.getComponentMouseX(), this.getComponentMouseY(), partial);
+
         pose.popPose();
 
     }
 
-//    /** This is the final/real X-position of the component. Should be used when getting the component's position outside the component class. **/
-//    public float getX() {
-//        return this.getComponentX(this.positioner) * (float)this.getWindowScale();
-////        return this.getComponentX(this.positioner) / (float)this.getWindowScale();
-//    }
-//
-//    /** This is the final/real Y-position of the component. Should be used when getting the component's position outside the component class. **/
-//    public float getY() {
-//        return this.getComponentY(this.positioner) * (float)this.getWindowScale();
-//    }
-//
-//    /** This is the final/real width of the component. Should be used when getting the component's size outside the component class. **/
-//    public float getWidth() {
-//        return this.getComponentScaledWidth();
-//    }
-//
-//    /** This is the final/real height of the component. Should be used when getting the component's size outside the component class. **/
-//    public float getHeight() {
-//        return this.getComponentScaledHeight();
-//    }
+    /**
+     * This is always 0 and is just a dummy coordinate to not get too confused with rendering everything at X=0 Y=0 in {@link UIComponent#renderComponent(PoseStack, double, double, float)}.
+     */
+    protected float getRenderX() {
+        return 0;
+    }
+
+    /**
+     * This is always 0 and is just a dummy coordinate to not get too confused with rendering everything at X=0 Y=0 in {@link UIComponent#renderComponent(PoseStack, double, double, float)}.
+     */
+    protected float getRenderY() {
+        return 0;
+    }
+
+    public abstract float getComponentX();
+
+    public abstract float getComponentY();
+
+    public abstract float getComponentWidth();
+
+    public abstract float getComponentHeight();
+
+    /**
+     * Since {@link UIComponent}s get rendered in a different scale than the normal GUI, it's important to scale the mouse position to the component's scale.<br>
+     * The position returned by this method is correctly scaled.
+     */
+    public double getComponentMouseX() {
+        return this.mc.mouseHandler.xpos() / this.getComponentScale();
+    }
+
+    /**
+     * Since {@link UIComponent}s get rendered in a different scale than the normal GUI, it's important to scale the mouse position to the component's scale.<br>
+     * The position returned by this method is correctly scaled.
+     */
+    public double getComponentMouseY() {
+        return this.mc.mouseHandler.ypos() / this.getComponentScale();
+    }
+
+    protected float getScreenWidth() {
+        return this.mc.getWindow().getWidth() / this.getComponentScale();
+    }
+
+    protected float getScreenHeight() {
+        return this.mc.getWindow().getHeight() / this.getComponentScale();
+    }
+
+    /**
+     * Checks if a component area is hovered.<br>
+     * Set {@code isRenderPosition} to {@code true}, if the XY-position is a component render position (rendered at X=0 and Y=0).
+     */
+    protected boolean isComponentAreaHovered(float x, float y, float width, float height, boolean isRenderPosition) {
+        if (isRenderPosition) {
+            x += this.getComponentX();
+            y += this.getComponentY();
+        }
+        return isXYInArea(this.getComponentMouseX(), this.getComponentMouseY(), x, y, width+1, height+1);
+    }
+
+    /**
+     * The scale of the {@link UIComponent}.
+     */
+    public float getComponentScale() {
+        return getUIScale();
+    }
+
+    /**
+     * This scale works against the actual GUI scale to make it possible to render the {@link UIComponent} in a different scale than the GUI scale.
+     */
+    public float getFixedComponentScale() {
+        return calculateFixedScale(this.getComponentScale());
+    }
+
+    /**
+     * Scissor with automatic scale handling.<br>
+     * Set {@code isRenderPosition} to {@code true}, if the XY-position is a component render position (rendered at X=0 and Y=0).
+     */
+    protected void enableComponentScissor(int x, int y, int width, int height, boolean isRenderPosition) {
+        if (isRenderPosition) {
+            x += this.getComponentX();
+            y += this.getComponentY();
+        }
+        int scissorX = (int) (x * this.getFixedComponentScale());
+        int scissorY = (int) (y * this.getFixedComponentScale());
+        int scissorWidth = (int) (width * this.getFixedComponentScale());
+        int scissorHeight = (int) (height * this.getFixedComponentScale());
+        enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
+    }
+
+    protected void disableComponentScissor() {
+        disableScissor();
+    }
 
     public boolean isHovered() {
         if (!this.isVisible()) return false;
@@ -69,124 +139,59 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
         return this.visible;
     }
 
-    /**
-     * This is the render X-position of the component.<br>
-     * Here you "build" the X-position of the component.<br><br>
-     *
-     * The goal is to prepare everything in advance, so you don't need to take care of scaling here, as long as you only use the given {@link UIComponentPositioner}.<br>
-     * <br>
-     */
-    protected abstract float getComponentX(@NotNull UIComponentPositioner positioner);
-
-    /**
-     * This is the render Y-position of the component.<br>
-     * Here you "build" the X-position of the component.<br><br>
-     *
-     * The goal is to prepare everything in advance, so you don't need to take care of scaling here, as long as you only use the given {@link UIComponentPositioner}.<br>
-     * <br>
-     */
-    protected abstract float getComponentY(@NotNull UIComponentPositioner positioner);
-
-    /** This is the unscaled width of the component. Not the real width. **/
-    public abstract float getComponentWidth();
-
-    /** This is the unscaled height of the component. Not the real height. **/
-    public abstract float getComponentHeight();
-
-    public float getComponentScaledWidth() {
-        return this.calcComponentScaledDimension(this.getComponentWidth());
-    }
-
-    public float getComponentScaledHeight() {
-        return this.calcComponentScaledDimension(this.getComponentHeight());
-    }
-
-    public double getComponentScaledMouseX() {
-        return this.mc.mouseHandler.xpos() / this.getComponentScale();
-    }
-
-    public double getComponentScaledMouseY() {
-        return this.mc.mouseHandler.ypos() / this.getComponentScale();
-    }
-
-    public double getWindowScaledMouseX() {
-        return this.mc.mouseHandler.xpos() / this.getWindowScale();
-    }
-
-    public double getWindowScaledMouseY() {
-        return this.mc.mouseHandler.ypos() / this.getWindowScale();
-    }
-
-    public float getComponentScaledScreenWith() {
-        int width = ScreenUtils.getScreenWidth();
-        if (width == 0) return 0;
-        return this.calcComponentScaledDimension(width);
-    }
-
-    public float getComponentScaledScreenHeight() {
-        int height = ScreenUtils.getScreenHeight();
-        if (height == 0) return 0;
-        return this.calcComponentScaledDimension(height);
-    }
-
-    protected float calcComponentScaledDimension(float unscaledWidthHeightXY) {
-        return unscaledWidthHeightXY / this.getFixedComponentScale();
-    }
-
-    protected boolean isComponentScaledAreaHovered(float unscaledX, float unscaledY, float unscaledWidth, float unscaledHeight) {
-        return isXYInArea(this.getComponentScaledMouseX(), this.getComponentScaledMouseY(), unscaledX, unscaledY, unscaledWidth+1, unscaledHeight+1);
-    }
-
-    public double getWindowScale() {
-        return this.mc.getWindow().getGuiScale();
-    }
-
-    public float getComponentScale() {
-        return this.componentScaleSupplier.get();
-    }
-
-    public float getFixedComponentScale() {
-        return calculateFixedScale(this.getComponentScale());
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     protected abstract boolean mouseClickedComponent(double mouseX, double mouseY, int button);
 
+    @Deprecated
     @Override
     public boolean mouseClicked(double ignoredMouseX, double ignoredMouseY, int button) {
-        return this.mouseClickedComponent(this.getComponentScaledMouseX(), this.getComponentScaledMouseY(), button);
+        return this.mouseClickedComponent(this.getComponentMouseX(), this.getComponentMouseY(), button);
     }
 
     protected abstract boolean mouseReleasedComponent(double mouseX, double mouseY, int button);
 
+    @Deprecated
     @Override
     public boolean mouseReleased(double ignoredMouseX, double ignoredMouseY, int button) {
-        return this.mouseReleasedComponent(this.getComponentScaledMouseX(), this.getComponentScaledMouseY(), button);
+        return this.mouseReleasedComponent(this.getComponentMouseX(), this.getComponentMouseY(), button);
     }
 
     protected abstract boolean mouseDraggedComponent(double mouseX, double mouseY, int button, double d1, double d2);
 
+    @Deprecated
     @Override
     public boolean mouseDragged(double ignoredMouseX, double ignoredMouseY, int button, double d1, double d2) {
-        return this.mouseDraggedComponent(this.getComponentScaledMouseX(), this.getComponentScaledMouseY(), button, d1, d2);
+        return this.mouseDraggedComponent(this.getComponentMouseX(), this.getComponentMouseY(), button, d1, d2);
     }
 
     protected abstract boolean mouseScrolledComponent(double mouseX, double mouseY, double scrollDelta);
 
+    @Deprecated
     @Override
     public boolean mouseScrolled(double ignoredMouseX, double ignoredMouseY, double scrollDelta) {
-        return this.mouseScrolledComponent(this.getComponentScaledMouseX(), this.getComponentScaledMouseY(), scrollDelta);
+        return this.mouseScrolledComponent(this.getComponentMouseX(), this.getComponentMouseY(), scrollDelta);
     }
 
     protected abstract void mouseMovedComponent(double mouseX, double mouseY);
 
+    @Deprecated
     @Override
     public void mouseMoved(double ignoredMouseX, double ignoredMouseY) {
-        this.mouseMovedComponent(this.getComponentScaledMouseX(), this.getComponentScaledMouseY());
+        this.mouseMovedComponent(this.getComponentMouseX(), this.getComponentMouseY());
     }
 
+    public boolean isMouseOver() {
+        if (!this.isVisible()) return false;
+        return this.isComponentAreaHovered(this.getComponentX(), this.getComponentY(), this.getComponentWidth(), this.getComponentHeight(), false);
+    }
+
+    @Deprecated
     @Override
     public boolean isMouseOver(double ignoredMouseX, double ignoredMouseY) {
-        return this.isComponentScaledAreaHovered(this.getComponentX(this.positioner), this.getComponentY(this.positioner), this.getComponentWidth(), this.getComponentHeight());
+        return this.isMouseOver();
     }
 
     @Override
@@ -205,28 +210,6 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
 
     @Override
     public void updateNarration(@NotNull NarrationElementOutput var1) {
-    }
-
-    public class UIComponentPositioner {
-
-        private final UIComponent comp = UIComponent.this;
-
-        protected float getScreenWidth() {
-            return comp.getComponentScaledScreenWith();
-        }
-
-        protected float getScreenHeight() {
-            return comp.getComponentScaledScreenHeight();
-        }
-
-        protected float getComponentWidth() {
-            return comp.getComponentWidth();
-        }
-
-        protected float getComponentHeight() {
-            return comp.getComponentHeight();
-        }
-
     }
 
 }

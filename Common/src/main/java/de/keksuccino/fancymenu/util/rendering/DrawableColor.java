@@ -15,12 +15,6 @@ public class DrawableColor {
     protected int colorInt;
     protected String hex;
 
-    @NotNull
-    public static DrawableColor of(@NotNull SerializedDrawableColor serializedDrawableColor) {
-        Objects.requireNonNull(serializedDrawableColor);
-        return DrawableColor.of(serializedDrawableColor.r, serializedDrawableColor.g, serializedDrawableColor.b, serializedDrawableColor.a);
-    }
-
     /** Creates a {@link DrawableColor} out of the given {@link Color}. **/
     @NotNull
     public static DrawableColor of(@NotNull Color color) {
@@ -134,13 +128,6 @@ public class DrawableColor {
             return String.format("#%02X%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
         } catch (Exception ignored) {}
         return null;
-    }
-
-    public static class SerializedDrawableColor {
-        int r;
-        int g;
-        int b;
-        int a;
     }
 
 }

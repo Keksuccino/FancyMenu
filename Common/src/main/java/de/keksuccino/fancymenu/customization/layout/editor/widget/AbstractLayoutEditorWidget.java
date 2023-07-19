@@ -5,18 +5,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -30,7 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public abstract class AbstractLayoutEditorWidget extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
+@SuppressWarnings("unused")
+public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -40,26 +37,24 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
-    protected Component displayLabel = Component.literal("Widget");
-    private int unscaledWidgetOffsetX = 0;
-    private int unscaledWidgetOffsetY = 0;
-    private int innerWidth = 100;
-    private int innerHeight = 100;
+    protected Component displayLabel = Component.literal("Widgetttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
+    private float unscaledWidgetOffsetX = 0;
+    private float unscaledWidgetOffsetY = 0;
+    private float innerWidth = 100;
+    private float innerHeight = 100;
     protected SnappingSide snappingSide = SnappingSide.TOP_RIGHT;
     protected List<HeaderButton> headerButtons = new ArrayList<>();
-    protected boolean hovered = false;
     protected boolean headerHovered = false;
-    protected boolean visible = true;
     protected boolean expanded = true;
     protected ResizingEdge activeResizeEdge = null;
     protected ResizingEdge hoveredResizeEdge = null;
     protected boolean leftMouseDownHeader = false;
     protected double leftMouseDownMouseX = 0;
     protected double leftMouseDownMouseY = 0;
-    protected int leftMouseDownWidgetOffsetX = 0;
-    protected int leftMouseDownWidgetOffsetY = 0;
-    protected int leftMouseDownInnerWidth = 0;
-    protected int leftMouseDownInnerHeight = 0;
+    protected float leftMouseDownWidgetOffsetX = 0;
+    protected float leftMouseDownWidgetOffsetY = 0;
+    protected float leftMouseDownInnerWidth = 0;
+    protected float leftMouseDownInnerHeight = 0;
 
     public AbstractLayoutEditorWidget(@NotNull LayoutEditorScreen editor, @NotNull AbstractLayoutEditorWidgetBuilder<?> builder) {
         this.editor = Objects.requireNonNull(editor);
@@ -91,102 +86,92 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderComponent(@NotNull PoseStack pose, double mouseX, double mouseY, float partial) {
 
-//        LOGGER.info("1 ########### Screen width: {} | origin X: {} | widgetOffsetX: {} | widget width: {} | widget scaled width: {} | absolute X: {} | absolute scaled X: {} | GUI Scale: {} | UI Scale: {}", ScreenUtils.getScreenWidth(), this.snappingSide.getOriginX(this), this.widgetOffsetX, this.getAbsoluteWidth(), this.getScaledAbsoluteWidth(), this.getAbsoluteX(), this.getScaledAbsoluteX(), Minecraft.getInstance().getWindow().getGuiScale(), UIBase.getFixedUIScale());
+        float x = this.getRenderX();
+        float y = this.getRenderY();
 
         //Fix offset on render tick, if needed
-        if (this.getAbsoluteX() < this.getMinAbsoluteX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
-        if (this.getAbsoluteX() > this.getMaxAbsoluteX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
-        if (this.getAbsoluteY() < this.getMinAbsoluteY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
-        if (this.getAbsoluteY() > this.getMaxAbsoluteY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+        if (this.getComponentX() < this.getMinComponentX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+        if (this.getComponentX() > this.getMaxComponentX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+        if (this.getComponentY() < this.getMinComponentY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+        if (this.getComponentY() > this.getMaxComponentY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
 
-        int scaledMouseX = (int) ((float)mouseX / UIBase.getFixedUIScale());
-        int scaledMouseY = (int) ((float)mouseY / UIBase.getFixedUIScale());
-
-        this.hovered = this.isMouseOver(scaledMouseX, scaledMouseY);
-        this.headerHovered = this.isMouseOverHeader(scaledMouseX, scaledMouseY);
-        this.hoveredResizeEdge = this.updateHoveredResizingEdge(scaledMouseX, scaledMouseY);
+        this.hovered = this.isMouseOver();
+        this.headerHovered = this.isMouseOverHeader();
+        this.hoveredResizeEdge = this.updateHoveredResizingEdge();
 
         this.updateCursor();
 
-        pose.pushPose();
-        pose.scale(UIBase.getFixedUIScale(), UIBase.getFixedUIScale(), UIBase.getFixedUIScale());
         RenderingUtils.resetShaderColor();
-
         if (this.isExpanded()) {
-            this.renderBody(pose, scaledMouseX, scaledMouseY, partial, this.getScaledInnerX(), this.getScaledInnerY(), this.getInnerWidth(), this.getInnerHeight());
+            this.renderBody(pose, mouseX, mouseY, partial, x + this.getBorderThickness(), y +  this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getInnerWidth(), this.getInnerHeight());
         }
-
-        this.renderFrame(pose, scaledMouseX, scaledMouseY, partial);
-
-        pose.popPose();
+        this.renderFrame(pose, mouseX, mouseY, partial, x, y, this.getComponentWidth(), this.getComponentHeight());
         RenderingUtils.resetShaderColor();
 
     }
 
-    protected abstract void renderBody(@NotNull PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height);
+    protected abstract void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height);
 
-    protected void renderFrame(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderFrame(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
-        this.renderHeader(pose, mouseX, mouseY, partial);
+        this.renderHeader(pose, mouseX, mouseY, partial, x, y, width, height);
 
         //Separator between header and body
         if (this.isExpanded()) {
             RenderingUtils.resetShaderColor();
-            int separatorXMin = this.getScaledAbsoluteX() + this.getBorderThickness();
-            int separatorYMin =  this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight();
-            int separatorXMax = separatorXMin + this.getInnerWidth();
-            int separatorYMax = separatorYMin + this.getBorderThickness();
-            fill(pose, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorScheme().element_border_color_normal.getColorInt());
+            float separatorXMin = x + this.getBorderThickness();
+            float separatorYMin =  y + this.getBorderThickness() + this.getHeaderHeight();
+            float separatorXMax = separatorXMin + this.getInnerWidth();
+            float separatorYMax = separatorYMin + this.getBorderThickness();
+            fillF(pose, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorScheme().element_border_color_normal.getColorInt());
         }
 
         //Widget border
         RenderingUtils.resetShaderColor();
         if (this.isExpanded()) {
-            UIBase.renderBorder(pose, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getScaledAbsoluteX() + this.getAbsoluteWidth(), this.getScaledAbsoluteY() + this.getAbsoluteHeight(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal, true, true, true, true);
+            UIBase.renderBorder(pose, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal.getColorInt(), true, true, true, true);
         } else {
-            UIBase.renderBorder(pose, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getScaledAbsoluteX() + this.getAbsoluteWidth(), this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal, true, true, true, true);
+            UIBase.renderBorder(pose, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal.getColorInt(), true, true, true, true);
         }
 
         RenderingUtils.resetShaderColor();
 
     }
 
-    protected void renderHeader(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderHeader(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         //Background
         RenderingUtils.resetShaderColor();
-        fill(pose, this.getScaledAbsoluteX() + this.getBorderThickness(), this.getScaledAbsoluteY() + this.getBorderThickness(), this.getScaledAbsoluteX() + this.getBorderThickness() + this.getInnerWidth(), this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
+        fillF(pose, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getInnerWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
         RenderingUtils.resetShaderColor();
 
         //Buttons
-        int buttonX = this.getScaledAbsoluteX() + this.getBorderThickness() + this.getInnerWidth();
+        float buttonX = x + this.getBorderThickness() + this.getInnerWidth();
         for (HeaderButton b : this.headerButtons) {
             buttonX -= b.width;
             b.x = buttonX;
-            b.y = this.getScaledAbsoluteY() + this.getBorderThickness();
-            b.render(pose, mouseX, mouseY, partial);
+            b.y = y + this.getBorderThickness();
+            b.render(pose, partial);
         }
 
-        this.renderLabel(pose, mouseX, mouseY, partial);
+        this.renderLabel(pose, mouseX, mouseY, partial, x, y, width, height);
 
     }
 
-    protected void renderLabel(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        int headerX = this.getScaledAbsoluteX() + this.getBorderThickness();
-        int headerY = this.getScaledAbsoluteY() + this.getBorderThickness();
-        int labelDisplayWidth = Math.max(1, this.getInnerWidth() - this.getCombinedHeaderButtonWidth() - 3);
-        int scissorX = this.getAbsoluteX() + this.getBorderThickness();
-        int scissorY = this.getAbsoluteY() + this.getBorderThickness();
-        int scissorWidth = (int) ((float)labelDisplayWidth * UIBase.getFixedUIScale());
-        int scissorHeight = (int) ((float)this.getHeaderHeight() * UIBase.getFixedUIScale());
+    protected void renderLabel(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+        float headerX = x + this.getBorderThickness();
+        float headerY = y + this.getBorderThickness();
+        float labelDisplayWidth = Math.max(1, this.getInnerWidth() - this.getCombinedHeaderButtonWidth() - 3);
+        float scissorX = x + this.getBorderThickness() - 1;
+        float scissorY = y + this.getBorderThickness() - 1;
         RenderingUtils.resetShaderColor();
         RenderSystem.enableBlend();
         pose.pushPose();
-        GuiComponent.enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
-        UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.displayLabel, headerX + 3, headerY + (this.getHeaderHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2));
-        GuiComponent.disableScissor();
+        this.enableComponentScissor((int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
+        UIBase.drawElementLabelF(pose, Minecraft.getInstance().font, this.displayLabel, headerX + 3, headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f));
+        this.disableComponentScissor();
         pose.popPose();
         RenderingUtils.resetShaderColor();
     }
@@ -200,174 +185,158 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     @Nullable
-    protected ResizingEdge updateHoveredResizingEdge(double mouseX, double mouseY) {
+    protected ResizingEdge updateHoveredResizingEdge() {
         if (!this.isVisible()) return null;
         if (!this.isExpanded()) return null;
         if (this.leftMouseDownHeader) return null;
         if (this.activeResizeEdge != null) return this.activeResizeEdge;
         //It's important to check this AFTER possibly returning the active edge
         if (this.isHeaderButtonHovered()) return null;
-        int hoverAreaThickness = (int) (10.0F / Minecraft.getInstance().getWindow().getGuiScale());
-        int halfHoverAreaThickness = hoverAreaThickness / 2;
-        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX() - halfHoverAreaThickness, this.getScaledAbsoluteY(), hoverAreaThickness, this.getAbsoluteHeight())) {
+        float hoverAreaThickness = 10.0f;
+        float halfHoverAreaThickness = hoverAreaThickness / 2f;
+        if (this.isComponentAreaHovered(this.getComponentX() - halfHoverAreaThickness, this.getComponentY(), hoverAreaThickness, this.getComponentHeight(), false)) {
             return ResizingEdge.LEFT;
         }
-        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX(), this.getScaledAbsoluteY() - halfHoverAreaThickness, this.getAbsoluteWidth(), hoverAreaThickness)) {
+        if (this.isComponentAreaHovered(this.getComponentX(), this.getComponentY() - halfHoverAreaThickness, this.getComponentWidth(), hoverAreaThickness, false)) {
             return ResizingEdge.TOP;
         }
-        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX() + this.getAbsoluteWidth() - halfHoverAreaThickness, this.getScaledAbsoluteY(), hoverAreaThickness, this.getAbsoluteHeight())) {
+        if (this.isComponentAreaHovered(this.getComponentX() + this.getComponentWidth() - halfHoverAreaThickness, this.getComponentY(), hoverAreaThickness, this.getComponentHeight(), false)) {
             return ResizingEdge.RIGHT;
         }
-        if (UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX(), this.getScaledAbsoluteY() + this.getAbsoluteHeight() - halfHoverAreaThickness, this.getAbsoluteWidth(), hoverAreaThickness)) {
+        if (this.isComponentAreaHovered(this.getComponentX(), this.getComponentY() + this.getComponentHeight() - halfHoverAreaThickness, this.getComponentWidth(), hoverAreaThickness, false)) {
             return ResizingEdge.BOTTOM;
         }
         return null;
     }
 
-    public void setUnscaledWidgetOffsetX(int offsetX, boolean forceSet) {
+    public void setUnscaledWidgetOffsetX(float offsetX, boolean forceSet) {
         if (!forceSet) {
-            if ((offsetX > this.unscaledWidgetOffsetX) && (this.getAbsoluteX() == this.getMaxAbsoluteX())) return;
-            if ((offsetX < this.unscaledWidgetOffsetX) && (this.getAbsoluteX() == this.getMinAbsoluteX())) return;
+            if ((offsetX > this.unscaledWidgetOffsetX) && (this.getComponentX() == this.getMaxComponentX())) return;
+            if ((offsetX < this.unscaledWidgetOffsetX) && (this.getComponentX() == this.getMinComponentX())) return;
         }
         this.unscaledWidgetOffsetX = offsetX;
         if (!forceSet) {
-            if (this.getAbsoluteX() < this.getMinAbsoluteX()) {
-                int i = this.getMinAbsoluteX() - this.getAbsoluteX();
-                this.unscaledWidgetOffsetX += ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            if (this.getComponentX() < this.getMinComponentX()) {
+                float i = this.getMinComponentX() - this.getComponentX();
+                this.unscaledWidgetOffsetX += i;
             }
-            if (this.getAbsoluteX() > this.getMaxAbsoluteX()) {
-                int i = this.getAbsoluteX() - this.getMaxAbsoluteX();
-                this.unscaledWidgetOffsetX -= ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            if (this.getComponentX() > this.getMaxComponentX()) {
+                float i = this.getComponentX() - this.getMaxComponentX();
+                this.unscaledWidgetOffsetX -= i;
             }
         }
     }
 
-    public void setUnscaledWidgetOffsetY(int offsetY, boolean forceSet) {
+    public void setUnscaledWidgetOffsetY(float offsetY, boolean forceSet) {
         if (!forceSet) {
-            if ((offsetY > this.unscaledWidgetOffsetY) && (this.getAbsoluteY() == this.getMaxAbsoluteY())) return;
-            if ((offsetY < this.unscaledWidgetOffsetY) && (this.getAbsoluteY() == this.getMinAbsoluteY())) return;
+            if ((offsetY > this.unscaledWidgetOffsetY) && (this.getComponentY() == this.getMaxComponentY())) return;
+            if ((offsetY < this.unscaledWidgetOffsetY) && (this.getComponentY()) == this.getMinComponentY()) return;
         }
         this.unscaledWidgetOffsetY = offsetY;
         if (!forceSet) {
-            if (this.getAbsoluteY() < this.getMinAbsoluteY()) {
-                int i = this.getMinAbsoluteY() - this.getAbsoluteY();
-                this.unscaledWidgetOffsetY += ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            if (this.getComponentY() < this.getMinComponentY()) {
+                float i = this.getMinComponentY() - this.getComponentY();
+                this.unscaledWidgetOffsetY += i;
             }
-            if (this.getAbsoluteY() > this.getMaxAbsoluteY()) {
-                int i = this.getAbsoluteY() - this.getMaxAbsoluteY();
-                this.unscaledWidgetOffsetY -= ((double)i * Minecraft.getInstance().getWindow().getGuiScale());
+            if (this.getComponentY() > this.getMaxComponentY()) {
+                float i = this.getComponentY() - this.getMaxComponentY();
+                this.unscaledWidgetOffsetY -= i;
             }
         }
     }
 
-    public int getCombinedHeaderButtonWidth() {
-        int i = 0;
+    @Override
+    public float getComponentX() {
+        return this.getOriginX() + this.unscaledWidgetOffsetX;
+    }
+
+    @Override
+    public float getComponentY() {
+        return this.getOriginY() + this.unscaledWidgetOffsetY;
+    }
+
+    @Override
+    public float getComponentWidth() {
+        return this.innerWidth + (this.getBorderThickness() * 2);
+    }
+
+    @Override
+    public float getComponentHeight() {
+        if (!this.isExpanded()) return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
+        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness() + this.innerHeight + this.getBorderThickness();
+    }
+
+    public float getCombinedHeaderButtonWidth() {
+        float i = 0;
         for (HeaderButton b : this.headerButtons) {
             i += b.width;
         }
         return i;
     }
 
-    public int getUnscaledWidgetOffsetX() {
+    public float getUnscaledWidgetOffsetX() {
         return this.unscaledWidgetOffsetX;
     }
 
-    public int getUnscaledWidgetOffsetY() {
+    public float getUnscaledWidgetOffsetY() {
         return this.unscaledWidgetOffsetY;
     }
 
-    public int getAbsoluteX() {
-        int guiScaledOffsetX = (int) ((double)this.unscaledWidgetOffsetX / Minecraft.getInstance().getWindow().getGuiScale());
-        return this.snappingSide.getOriginX(this) + guiScaledOffsetX;
+    protected float getOriginX() {
+        if (this.snappingSide == SnappingSide.TOP_RIGHT) return this.getScreenWidth();
+        return 0;
     }
 
-    public int getAbsoluteY() {
-        int guiScaledOffsetY = (int) ((double)this.unscaledWidgetOffsetY / Minecraft.getInstance().getWindow().getGuiScale());
-        return this.snappingSide.getOriginY(this) + guiScaledOffsetY;
+    protected float getOriginY() {
+        return this.getMinComponentY();
     }
 
-    public int getScaledAbsoluteX() {
-        return (int) ((float)this.getAbsoluteX() / UIBase.getFixedUIScale());
-    }
-
-    public int getScaledAbsoluteY() {
-        return (int) ((float)this.getAbsoluteY() / UIBase.getFixedUIScale());
-    }
-
-    protected int getScreenEdgeBorderThickness() {
+    protected float getScreenEdgeBorderThickness() {
         return 10;
     }
 
-    protected int getGUIScaledScreenEdgeBorderThickness() {
-        return (int) ((double)this.getScreenEdgeBorderThickness() / Minecraft.getInstance().getWindow().getGuiScale());
+    protected float getMinComponentX() {
+        return this.getScreenEdgeBorderThickness();
     }
 
-    protected int getMinAbsoluteX() {
-        return this.getGUIScaledScreenEdgeBorderThickness();
+    protected float getMaxComponentX() {
+        Minecraft.getInstance().getWindow();
+        return this.getScreenWidth() - this.getScreenEdgeBorderThickness() - this.getComponentWidth();
     }
 
-    protected int getMaxAbsoluteX() {
-        return ScreenUtils.getScreenWidth() - this.getGUIScaledScreenEdgeBorderThickness() - this.getScaledAbsoluteWidth();
+    protected float getMinComponentY() {
+        return this.editor.menuBar.getHeight() + this.getScreenEdgeBorderThickness();
     }
 
-    protected int getMinAbsoluteY() {
-        int scaledMenuBarHeight = (int)(this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale()));
-        return scaledMenuBarHeight + this.getGUIScaledScreenEdgeBorderThickness();
+    protected float getMaxComponentY() {
+        return this.getScreenHeight() - this.getScreenEdgeBorderThickness() - this.getComponentHeight();
     }
 
-    protected int getMaxAbsoluteY() {
-        return ScreenUtils.getScreenHeight() - this.getGUIScaledScreenEdgeBorderThickness() - this.getScaledAbsoluteHeight();
-    }
-
-    public int getScaledInnerX() {
-        return this.getScaledAbsoluteX() + this.getBorderThickness();
-    }
-
-    public int getScaledInnerY() {
-        return this.getScaledAbsoluteY() + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
-    }
-
-    public void setInnerWidth(int innerWidth) {
+    public void setInnerWidth(float innerWidth) {
         this.innerWidth = innerWidth;
     }
 
-    public void setInnerHeight(int innerHeight) {
+    public void setInnerHeight(float innerHeight) {
         this.innerHeight = innerHeight;
     }
 
-    public int getInnerWidth() {
+    public float getInnerWidth() {
         return this.innerWidth;
     }
 
-    public int getInnerHeight() {
+    public float getInnerHeight() {
         return this.innerHeight;
     }
 
-    public int getAbsoluteWidth() {
-        return this.innerWidth + (this.getBorderThickness() * 2);
-    }
-
-    public int getAbsoluteHeight() {
-        if (!this.isExpanded()) return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
-        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness() + this.innerHeight + this.getBorderThickness();
-    }
-
-    public int getScaledAbsoluteWidth() {
-        return (int) ((float)this.getAbsoluteWidth() * UIBase.getFixedUIScale());
-    }
-
-    public int getScaledAbsoluteHeight() {
-        return (int) ((float)this.getAbsoluteHeight() * UIBase.getFixedUIScale());
-    }
-
-    public int getHeaderHeight() {
+    public float getHeaderHeight() {
         return 15;
     }
 
-    public int getBorderThickness() {
+    public float getBorderThickness() {
         return 1;
     }
 
+    @Override
     public boolean isHovered() {
         if (!this.isVisible()) return false;
         if (!this.isExpanded()) return this.isHeaderHovered();
@@ -387,15 +356,6 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         return false;
     }
 
-    public boolean isVisible() {
-        return this.visible;
-    }
-
-    public AbstractLayoutEditorWidget setVisible(boolean visible) {
-        this.visible = visible;
-        return this;
-    }
-
     public boolean isExpanded() {
         return this.expanded;
     }
@@ -405,22 +365,13 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
         return this;
     }
 
-    public boolean isMouseOverHeader(double mouseX, double mouseY) {
+    public boolean isMouseOverHeader() {
         if (!this.isVisible()) return false;
-        return UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getAbsoluteWidth(), this.getHeaderHeight() + (this.getBorderThickness() * 2));
+        return this.isComponentAreaHovered(this.getComponentX(), this.getComponentY(), this.getComponentWidth(), this.getHeaderHeight() + (this.getBorderThickness() * 2), false);
     }
 
     @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        if (!this.isVisible()) return false;
-        if (!this.isExpanded()) return this.isMouseOverHeader(mouseX, mouseY);
-        return UIBase.isXYInArea(mouseX, mouseY, this.getScaledAbsoluteX(), this.getScaledAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int scaledMouseX = (int) ((float)mouseX / UIBase.getFixedUIScale());
-        int scaledMouseY = (int) ((float)mouseY / UIBase.getFixedUIScale());
+    protected boolean mouseClickedComponent(double mouseX, double mouseY, int button) {
         if (this.isVisible()) {
             this.activeResizeEdge = this.hoveredResizeEdge;
             if ((this.activeResizeEdge == null) && this.isHeaderHovered() && !this.isHeaderButtonHovered()) {
@@ -436,27 +387,26 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
                 return true;
             }
             for (HeaderButton b : this.headerButtons) {
-                if (b.mouseClicked(scaledMouseX, scaledMouseY, button)) return true;
+                if (b.mouseClicked(mouseX, mouseY, button)) return true;
             }
         }
-        return this.isVisible() && this.isMouseOver(scaledMouseX, scaledMouseY);
+        return this.isVisible() && this.isMouseOver();
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    protected boolean mouseReleasedComponent(double mouseX, double mouseY, int button) {
         this.leftMouseDownHeader = false;
         this.activeResizeEdge = null;
         return false;
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
-
+    protected boolean mouseDraggedComponent(double mouseX, double mouseY, int button, double d1, double d2) {
         if (this.isVisible()) {
-            double offsetX = (mouseX - this.leftMouseDownMouseX) * Minecraft.getInstance().getWindow().getGuiScale();
-            double offsetY = (mouseY - this.leftMouseDownMouseY) * Minecraft.getInstance().getWindow().getGuiScale();
+            double offsetX = (mouseX - this.leftMouseDownMouseX);
+            double offsetY = (mouseY - this.leftMouseDownMouseY);
             if (this.activeResizeEdge != null) {
-                this.handleResize((int) offsetX, (int) offsetY);
+                this.handleResize((float) offsetX, (float) offsetY);
                 return true;
             } else if (this.leftMouseDownHeader) {
                 this.setUnscaledWidgetOffsetX((int)(this.leftMouseDownWidgetOffsetX + offsetX), false);
@@ -464,21 +414,19 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
                 return true;
             }
         }
-
         return false;
-
     }
 
-    protected void handleResize(int dragOffsetX, int dragOffsetY) {
+    protected void handleResize(float dragOffsetX, float dragOffsetY) {
         if ((this.activeResizeEdge == ResizingEdge.LEFT) || (this.activeResizeEdge == ResizingEdge.RIGHT)) {
-            int i = (this.activeResizeEdge == ResizingEdge.LEFT) ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
+            float i = (this.activeResizeEdge == ResizingEdge.LEFT) ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
             if (i >= (this.getCombinedHeaderButtonWidth() + 10)) {
                 this.innerWidth = i;
                 this.unscaledWidgetOffsetX = this.leftMouseDownWidgetOffsetX + ((this.activeResizeEdge == ResizingEdge.LEFT) ? dragOffsetX : 0);
             }
         }
         if ((this.activeResizeEdge == ResizingEdge.TOP) || (this.activeResizeEdge == ResizingEdge.BOTTOM)) {
-            int i = (this.activeResizeEdge == ResizingEdge.TOP) ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
+            float i = (this.activeResizeEdge == ResizingEdge.TOP) ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
             if (i >= (this.getHeaderHeight() + 10)) {
                 this.innerHeight = i;
                 this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + ((this.activeResizeEdge == ResizingEdge.TOP) ? dragOffsetY : 0);
@@ -487,29 +435,20 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
     }
 
     @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
+    protected boolean mouseScrolledComponent(double mouseX, double mouseY, double scrollDelta) {
         return false;
     }
 
     @Override
-    public @NotNull NarrationPriority narrationPriority() {
-        return NarrationPriority.NONE;
+    protected void mouseMovedComponent(double mouseX, double mouseY) {
     }
 
-    @Override
-    public void updateNarration(@NotNull NarrationElementOutput var1) {
-    }
-
-    protected static class HeaderButton extends GuiComponent implements Renderable, GuiEventListener {
+    protected static class HeaderButton extends UIBase implements GuiEventListener {
 
         protected AbstractLayoutEditorWidget parent;
-        protected int x;
-        protected int y;
-        protected int width = 15;
+        protected float x;
+        protected float y;
+        protected float width = 15;
         @NotNull
         protected Consumer<HeaderButton> clickAction;
         @NotNull
@@ -522,28 +461,27 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
             this.clickAction = clickAction;
         }
 
-        @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void render(@NotNull PoseStack pose, float partial) {
 
-            this.hovered = this.isMouseOver(mouseX, mouseY);
+            this.hovered = this.isMouseOver();
 
-            this.renderHoverBackground(pose, mouseX, mouseY);
+            this.renderHoverBackground(pose);
 
             ITexture icon = this.iconSupplier.get(this);
             if ((icon != null) && (icon.getResourceLocation() != null)) {
                 UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
                 RenderSystem.enableBlend();
                 RenderingUtils.bindTexture(icon.getResourceLocation());
-                blit(pose, this.x, this.y, 0.0F, 0.0F, this.width, this.parent.getHeaderHeight(), this.width, this.parent.getHeaderHeight());
+                blitF(pose, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
                 RenderingUtils.resetShaderColor();
             }
 
         }
 
-        protected void renderHoverBackground(PoseStack pose, int mouseX, int mouseY) {
-            if (this.isMouseOver(mouseX, mouseY)) {
+        protected void renderHoverBackground(PoseStack pose) {
+            if (this.isMouseOver()) {
                 RenderingUtils.resetShaderColor();
-                fill(pose, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
+                fillF(pose, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
                 RenderingUtils.resetShaderColor();
             }
         }
@@ -563,7 +501,7 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if ((button == 0) && this.isMouseOver(mouseX, mouseY)) {
+            if ((button == 0) && this.isMouseOver()) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
@@ -573,36 +511,28 @@ public abstract class AbstractLayoutEditorWidget extends GuiComponent implements
             return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
         }
 
+        public boolean isMouseOver() {
+            return this.parent.isComponentAreaHovered(this.x, this.y, this.width, this.parent.getHeaderHeight(), true);
+        }
+
+        @Deprecated
         @Override
-        public boolean isMouseOver(double mouseX, double mouseY) {
-            return UIBase.isXYInArea(mouseX, mouseY, this.x, this.y, this.width, this.parent.getHeaderHeight());
+        public boolean isMouseOver(double ignoredMouseX, double ignoredMouseY) {
+//            LOGGER.info("##################### HEADER BUTTON MOUSE OVER: mX: {} | mY: {} | x: {} | y: {} | width: {} | height: {}", this.parent.getComponentMouseX(), (this).parent.getComponentMouseY(), this.x, this.y, this.width, this.parent.getHeaderHeight());
+            return this.isMouseOver();
         }
 
     }
 
     public enum SnappingSide {
 
-        TOP_LEFT("top-left", false, widget -> 0, AbstractLayoutEditorWidget::getMinAbsoluteY),
-        TOP_RIGHT("top-right", false, widget -> ScreenUtils.getScreenWidth(), AbstractLayoutEditorWidget::getMinAbsoluteY);
+        TOP_LEFT("top-left"),
+        TOP_RIGHT("top-right");
 
         public final String name;
-        public final boolean horizontal;
-        private final ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originXSupplier;
-        private final ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originYSupplier;
 
-        SnappingSide(String name, boolean horizontal, ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originXSupplier, ConsumingSupplier<AbstractLayoutEditorWidget, Integer> originYSupplier) {
+        SnappingSide(String name) {
             this.name = name;
-            this.horizontal = horizontal;
-            this.originXSupplier = originXSupplier;
-            this.originYSupplier = originYSupplier;
-        }
-
-        public int getOriginX(AbstractLayoutEditorWidget widget) {
-            return this.originXSupplier.get(widget);
-        }
-
-        public int getOriginY(AbstractLayoutEditorWidget widget) {
-            return this.originYSupplier.get(widget);
         }
 
         @Nullable

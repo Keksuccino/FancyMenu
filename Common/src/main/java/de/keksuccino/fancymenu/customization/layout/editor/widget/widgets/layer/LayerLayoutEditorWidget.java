@@ -15,10 +15,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    protected void renderBody(@NotNull PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
+    protected void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         RenderingUtils.resetShaderColor();
-        fill(pose, x, y, x + width, y + height, UIBase.getUIColorScheme().area_background_color.getColorInt());
+        fillF(pose, x, y, x + width, y + height, !this.isHovered() ? UIBase.getUIColorScheme().area_background_color.getColorInt() : UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
         RenderingUtils.resetShaderColor();
 
     }

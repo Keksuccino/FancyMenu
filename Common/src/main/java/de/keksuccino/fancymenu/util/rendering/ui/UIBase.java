@@ -113,6 +113,17 @@ public class UIBase extends RenderingUtils {
 		}
 	}
 
+	public static int drawElementLabelF(PoseStack pose, Font font, String text, float x, float y) {
+		return drawElementLabelF(pose, font, Component.literal(text), x, y);
+	}
+
+	public static int drawElementLabelF(PoseStack pose, Font font, Component text, float x, float y) {
+		if (!FancyMenu.getOptions().enableUiTextShadow.getValue()) {
+			return font.draw(pose, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+		}
+		return font.drawShadow(pose, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+	}
+
 	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y) {
 		return drawElementLabel(pose, font, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
 	}
