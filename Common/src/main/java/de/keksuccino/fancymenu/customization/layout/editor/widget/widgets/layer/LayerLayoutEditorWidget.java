@@ -17,6 +17,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     @Override
     protected void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
+        //TODO build layer widget
+        //TODO make version of ScrollArea that implements and uses GuiEventListener
+
         RenderingUtils.resetShaderColor();
         fillF(pose, x, y, x + width, y + height, !this.isHovered() ? UIBase.getUIColorScheme().area_background_color.getColorInt() : UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
         RenderingUtils.resetShaderColor();
