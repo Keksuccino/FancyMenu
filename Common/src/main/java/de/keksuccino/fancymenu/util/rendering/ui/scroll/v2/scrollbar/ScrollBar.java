@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollbar.v2;
+package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;

@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollbar.v1;
+package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar;
 
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;

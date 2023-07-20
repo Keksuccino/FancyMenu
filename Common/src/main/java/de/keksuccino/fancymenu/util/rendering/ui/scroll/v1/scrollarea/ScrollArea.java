@@ -1,159 +1,147 @@
-package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2;
+package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollbar.v2.ScrollBar;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-@SuppressWarnings("all")
-public class ScrollArea extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
+@SuppressWarnings("unused")
+public class ScrollArea extends UIBase {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     public ScrollBar verticalScrollBar;
     public ScrollBar horizontalScrollBar;
-    protected float x;
-    protected float y;
-    protected float width;
-    protected float height;
-    public Supplier<DrawableColor> backgroundColor = () -> getUIColorScheme().area_background_color;
-    public Supplier<DrawableColor> borderColor = () -> getUIColorScheme().element_border_color_normal;
-    protected float borderThickness = 1;
+    protected int x;
+    protected int y;
+    protected int width;
+    protected int height;
+    public Color backgroundColor = UIBase.getUIColorScheme().area_background_color.getColor();
+    public Color borderColor = UIBase.getUIColorScheme().element_border_color_normal.getColor();
+    protected int borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
     public boolean minimumEntryWidthIsAreaWidth = true;
     protected List<ScrollAreaEntry> entries = new ArrayList<>();
-    public float overriddenTotalScrollWidth = -1;
-    public float overriddenTotalScrollHeight = -1;
+    public int overriddenTotalScrollWidth = -1;
+    public int overriddenTotalScrollHeight = -1;
     public boolean correctYOnAddingRemovingEntries = true;
-    protected boolean enableScissor = true;
-    /** Set this if the {@link ScrollArea} gets rendered in a custom-scaled render environment. **/
-    @Nullable
-    public Float renderScale = null;
-    protected boolean hovered = false;
-    protected boolean innerAreaHovered = false;
+    
+    public float customGuiScale = -1F;
 
-    public ScrollArea(float x, float y, float width, float height) {
+    public ScrollArea(int x, int y, int width, int height) {
         this.setX(x, true);
         this.setY(y, true);
         this.setWidth(width, true);
         this.setHeight(height, true);
-        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUIColorScheme().scroll_grabber_color_normal, () -> getUIColorScheme().scroll_grabber_color_hover);
+        this.verticalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, VERTICAL_SCROLL_BAR_WIDTH, VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, UIBase.getUIColorScheme().scroll_grabber_color_normal.getColor(), UIBase.getUIColorScheme().scroll_grabber_color_hover.getColor());
         this.verticalScrollBar.setScrollWheelAllowed(true);
-        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> getUIColorScheme().scroll_grabber_color_normal, () -> getUIColorScheme().scroll_grabber_color_hover);
+        this.horizontalScrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, HORIZONTAL_SCROLL_BAR_WIDTH, HORIZONTAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, UIBase.getUIColorScheme().scroll_grabber_color_normal.getColor(), UIBase.getUIColorScheme().scroll_grabber_color_hover.getColor());
         this.updateScrollArea();
     }
 
-    @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-
-        this.hovered = this.isMouseOver(mouseX, mouseY);
-        this.innerAreaHovered = this.isMouseOverInnerArea(mouseX, mouseY);
+    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         this.updateScrollArea();
+
         this.updateWheelScrollSpeed();
+
         this.resetScrollOnFit();
 
-        this.renderBackground(pose, mouseX, mouseY, partial);
+        this.renderBackground(matrix, mouseX, mouseY, partial);
 
-        this.renderEntries(pose, mouseX, mouseY, partial);
+        this.renderEntries(matrix, mouseX, mouseY, partial);
 
-        this.renderBorder(pose, mouseX, mouseY, partial);
+        this.renderBorder(matrix, mouseX, mouseY, partial);
 
         if (this.verticalScrollBar.active) {
-            this.verticalScrollBar.render(pose, mouseX, mouseY, partial);
+            this.verticalScrollBar.render(matrix);
         }
         if (this.horizontalScrollBar.active) {
-            this.horizontalScrollBar.render(pose, mouseX, mouseY, partial);
+            this.horizontalScrollBar.render(matrix);
         }
 
     }
 
-    public void renderBackground(PoseStack pose, int mouseX, int mouseY, float partial) {
-        fillF(pose, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.get().getColorInt());
+    public void renderBackground(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        fill(matrix, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
-    public void renderBorder(PoseStack pose, int mouseX, int mouseY, float partial) {
-        renderBorder(pose, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor.get().getColorInt(), true, true, true, true);
+    public void renderBorder(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        renderBorder(matrix, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor, true, true, true, true);
     }
 
-    public void renderEntries(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderEntries(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         Window win = Minecraft.getInstance().getWindow();
         
-        if (this.isScissorEnabled()) {
-            double scale = (this.renderScale != null) ? this.renderScale : win.getGuiScale();
-            float sciBottomY = this.getInnerY() + this.getInnerHeight();
-            RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
-        }
+        double scale = (this.customGuiScale != -1F) ? this.customGuiScale : win.getGuiScale();
+        int sciBottomY = this.getInnerY() + this.getInnerHeight();
+        RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
 
         this.updateEntries((entry) -> {
-            float cachedWidth = -1;
+            int cachedWidth = -1;
             if (this.minimumEntryWidthIsAreaWidth) {
                 cachedWidth = entry.getWidth();
                 if (cachedWidth < this.getInnerWidth()) {
                     entry.setWidth(this.getInnerWidth());
                 }
             }
-            entry.render(pose, mouseX, mouseY, partial);
+            entry.render(matrix, mouseX, mouseY, partial);
             if (cachedWidth != -1) {
                 entry.setWidth(cachedWidth);
             }
         });
 
-        if (this.isScissorEnabled()) RenderSystem.disableScissor();
+        RenderSystem.disableScissor();
 
     }
 
-    public float getEntryRenderOffsetX() {
+    public int getEntryRenderOffsetX() {
         return this.getEntryRenderOffsetX(this.getTotalScrollWidth());
     }
 
-    public float getEntryRenderOffsetY() {
+    public int getEntryRenderOffsetY() {
         return this.getEntryRenderOffsetY(this.getTotalScrollHeight());
     }
 
-    public float getEntryRenderOffsetX(float totalScrollWidth) {
-        return -((totalScrollWidth / 100.0F) * (this.horizontalScrollBar.getScroll() * 100.0F));
+    public int getEntryRenderOffsetX(float totalScrollWidth) {
+        return -(int)((totalScrollWidth / 100.0F) * (this.horizontalScrollBar.getScroll() * 100.0F));
     }
 
-    public float getEntryRenderOffsetY(float totalScrollHeight) {
-        return -((totalScrollHeight / 100.0F) * (this.verticalScrollBar.getScroll() * 100.0F));
+    public int getEntryRenderOffsetY(float totalScrollHeight) {
+        return -(int)((totalScrollHeight / 100.0F) * (this.verticalScrollBar.getScroll() * 100.0F));
     }
 
-    public float getTotalScrollWidth() {
+    public int getTotalScrollWidth() {
         if (this.overriddenTotalScrollWidth != -1) {
             return this.overriddenTotalScrollWidth;
         }
-        return Math.max(0f, this.getTotalEntryWidth() - this.getInnerWidth());
+        return Math.max(0, this.getTotalEntryWidth() - this.getInnerWidth());
     }
 
-    public float getTotalScrollHeight() {
+    public int getTotalScrollHeight() {
         if (this.overriddenTotalScrollHeight != -1) {
             return this.overriddenTotalScrollHeight;
         }
-        return Math.max(0f, this.getTotalEntryHeight() - this.getInnerHeight());
+        return Math.max(0, this.getTotalEntryHeight() - this.getInnerHeight());
     }
 
     public void updateEntries(@Nullable Consumer<ScrollAreaEntry> doAfterEachEntryUpdate) {
         try {
             int index = 0;
-            float y = this.getInnerY();
+            int y = this.getInnerY();
             List<ScrollAreaEntry> l = new ArrayList<>(this.entries);
             for (ScrollAreaEntry e : l) {
                 e.index = index;
@@ -189,7 +177,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
 
     public void updateWheelScrollSpeed() {
         //Adjust the scroll wheel speed depending on the amount of entries
-        this.verticalScrollBar.setWheelScrollSpeed(1.0F / (this.getTotalScrollHeight() / 500.0F));
+        this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
     }
 
     public void resetScrollOnFit() {
@@ -219,13 +207,13 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             } else {
                 oldTotalScrollHeight = this.getTotalScrollHeight() + totalHeightRemovedAdded;
             }
-            float yOld = this.getEntryRenderOffsetY(oldTotalScrollHeight);
-            float yNew = this.getEntryRenderOffsetY();
-            float yDiff = Math.max(yOld, yNew) - Math.min(yOld, yNew);
+            int yOld = this.getEntryRenderOffsetY(oldTotalScrollHeight);
+            int yNew = this.getEntryRenderOffsetY();
+            int yDiff = Math.max(yOld, yNew) - Math.min(yOld, yNew);
             if (this.getTotalScrollHeight() <= 0) {
                 return;
             }
-            float scrollDiff = Math.max(0f, Math.min(1f, yDiff / this.getTotalScrollHeight()));
+            float scrollDiff = Math.max(0.0F, Math.min(1.0F, (float)yDiff / (float)this.getTotalScrollHeight()));
             if (!removed) {
                 scrollDiff = -scrollDiff;
             }
@@ -237,113 +225,102 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         return this.verticalScrollBar.isGrabberGrabbed() || this.verticalScrollBar.isGrabberHovered() || this.horizontalScrollBar.isGrabberGrabbed() || this.horizontalScrollBar.isGrabberHovered();
     }
 
-    public void setX(float x, boolean respectBorder) {
+    public void setX(int x, boolean respectBorder) {
         this.x = x;
         if (respectBorder) {
             this.x += this.borderThickness;
         }
     }
 
-    public void setX(float x) {
+    public void setX(int x) {
         this.setX(x, true);
     }
 
-    public float getInnerX() {
+    public int getInnerX() {
         return this.x;
     }
 
-    public float getXWithBorder() {
+    public int getXWithBorder() {
         return this.x - this.borderThickness;
     }
 
-    public void setY(float y, boolean respectBorder) {
+    public void setY(int y, boolean respectBorder) {
         this.y = y;
         if (respectBorder) {
             this.y += this.borderThickness;
         }
     }
 
-    public void setY(float y) {
+    public void setY(int y) {
         this.setY(y, true);
     }
 
-    public float getInnerY() {
+    public int getInnerY() {
         return this.y;
     }
 
-    public float getYWithBorder() {
+    public int getYWithBorder() {
         return this.y - this.borderThickness;
     }
 
-    public void setWidth(float width, boolean respectBorder) {
+    public void setWidth(int width, boolean respectBorder) {
         this.width = width;
         if (respectBorder) {
             this.width -= (this.borderThickness * 2);
         }
     }
 
-    public void setWidth(float width) {
+    public void setWidth(int width) {
         this.setWidth(width, true);
     }
 
-    public float getInnerWidth() {
+    public int getInnerWidth() {
         return this.width;
     }
 
-    public float getWidthWithBorder() {
+    public int getWidthWithBorder() {
         return this.width + (this.borderThickness * 2);
     }
 
-    public void setHeight(float height, boolean respectBorder) {
+    public void setHeight(int height, boolean respectBorder) {
         this.height = height;
         if (respectBorder) {
             this.height -= (this.borderThickness * 2);
         }
     }
 
-    public void setHeight(float height) {
+    public void setHeight(int height) {
         this.setHeight(height, true);
     }
 
-    public float getInnerHeight() {
+    public int getInnerHeight() {
         return this.height;
     }
 
-    public float getHeightWithBorder() {
+    public int getHeightWithBorder() {
         return this.height + (this.borderThickness * 2);
     }
 
-    public void setBorderThickness(float borderThickness) {
+    public void setBorderThickness(int borderThickness) {
         this.borderThickness = borderThickness;
     }
 
-    public float getBorderThickness() {
+    public int getBorderThickness() {
         return this.borderThickness;
     }
 
-    public boolean isInnerAreaHovered() {
-        return this.innerAreaHovered;
-    }
-
-    public boolean isHovered() {
-        return this.hovered;
-    }
-
-    public boolean isMouseOverInnerArea(double mouseX, double mouseY) {
-        return isXYInArea(mouseX, mouseY, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight());
-    }
-
-    @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return isXYInArea(mouseX, mouseY, this.getXWithBorder(), this.getYWithBorder(), this.getWidthWithBorder(), this.getHeightWithBorder());
+    public boolean isMouseInsideArea() {
+        int mX = MouseInput.getMouseX();
+        int mY = MouseInput.getMouseY();
+        return (mX >= this.getInnerX()) && (mX <= this.getInnerX() + this.getInnerWidth()) && (mY >= this.getInnerY()) && (mY <= this.getInnerY() + this.getInnerHeight());
     }
 
     public int getEntryCount() {
         return this.entries.size();
     }
 
-    public float getTotalEntryWidth() {
-        float i = this.width;
+    public int getTotalEntryWidth() {
+        int i = this.width;
         for (ScrollAreaEntry e : this.entries) {
             if (e.getWidth() > i) {
                 i = e.getWidth();
@@ -352,8 +329,8 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         return i;
     }
 
-    public float getTotalEntryHeight() {
-        float i = 0;
+    public int getTotalEntryHeight() {
+        int i = 0;
         for (ScrollAreaEntry e : this.entries) {
             i += e.getHeight();
         }
@@ -446,67 +423,10 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     public void makeCurrentEntriesSameWidth() {
-        float totalWidth = this.getTotalEntryWidth();
+        int totalWidth = this.getTotalEntryWidth();
         for (ScrollAreaEntry e : this.getEntries()) {
             e.setWidth(totalWidth);
         }
-    }
-
-    public boolean isScissorEnabled() {
-        return this.enableScissor;
-    }
-
-    public void setScissorEnabled(boolean enabled) {
-        this.enableScissor = enabled;
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-        if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-        for (ScrollAreaEntry entry : this.entries) {
-            if (entry.mouseClicked(mouseX, mouseY, button)) return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (this.verticalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
-        if (this.horizontalScrollBar.mouseReleased(mouseX, mouseY, button)) return true;
-        return false;
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
-        if (this.verticalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
-        if (this.horizontalScrollBar.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
-        return false;
-    }
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        if (this.verticalScrollBar.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
-        if (this.horizontalScrollBar.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
-        return false;
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
-    }
-
-    @Override
-    public @NotNull NarrationPriority narrationPriority() {
-        return NarrationPriority.NONE;
-    }
-
-    @Override
-    public void updateNarration(@NotNull NarrationElementOutput var1) {
     }
 
 }

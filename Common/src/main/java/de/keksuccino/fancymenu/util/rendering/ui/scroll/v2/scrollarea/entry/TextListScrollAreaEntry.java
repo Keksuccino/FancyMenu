@@ -1,8 +1,8 @@
-package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2.entry;
+package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
