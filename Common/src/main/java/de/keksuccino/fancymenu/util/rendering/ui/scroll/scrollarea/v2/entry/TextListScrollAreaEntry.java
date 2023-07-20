@@ -1,24 +1,24 @@
-package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry;
+package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2.entry;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 public class TextListScrollAreaEntry extends ScrollAreaEntry {
 
-    public Color listDotColor;
+    public DrawableColor listDotColor;
     protected Component text;
     protected int textWidth;
     public Font font = Minecraft.getInstance().font;
     protected Consumer<TextListScrollAreaEntry> onClickCallback;
 
-    public TextListScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull Color listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+    public TextListScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
         super(parent, 0, 16);
         this.listDotColor = listDotColor;
         this.onClickCallback = onClick;
@@ -26,16 +26,10 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
-
-        super.render(matrix, mouseX, mouseY, partial);
-
-        int centerY = this.getY() + (this.getHeight() / 2);
-
-        renderListingDot(matrix, this.getX() + 5, centerY - 2, this.listDotColor);
-
-        this.font.draw(matrix, this.text, (float)(this.getX() + 5 + 4 + 3), (float)(centerY - (this.font.lineHeight / 2)), -1);
-
+    public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        float centerY = this.getY() + (this.getHeight() / 2f);
+        renderListingDot(pose, (this.getX() + 5f), (centerY - 2f), this.listDotColor.getColorInt());
+        this.font.draw(pose, this.text, this.getX() + 5f + 4f + 3f, centerY - (this.font.lineHeight / 2f), -1);
     }
 
     @Override

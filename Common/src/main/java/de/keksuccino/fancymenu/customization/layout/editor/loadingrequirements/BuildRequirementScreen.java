@@ -3,10 +3,10 @@ package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v1.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v1.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v1.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v1.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;

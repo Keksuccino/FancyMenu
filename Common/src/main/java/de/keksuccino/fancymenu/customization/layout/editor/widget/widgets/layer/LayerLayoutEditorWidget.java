@@ -6,9 +6,12 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v2.ScrollArea;
 import org.jetbrains.annotations.NotNull;
 
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
+
+    protected ScrollArea scrollArea = new ScrollArea(0, 0, 0, 0);
 
     public LayerLayoutEditorWidget(LayoutEditorScreen editor, AbstractLayoutEditorWidgetBuilder<?> builder) {
         super(editor, builder);

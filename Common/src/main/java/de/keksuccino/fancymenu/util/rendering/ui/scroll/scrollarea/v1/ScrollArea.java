@@ -1,11 +1,11 @@
-package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea;
+package de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v1;
 
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollbar.ScrollBar;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollarea.v1.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.scrollbar.v1.ScrollBar;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;

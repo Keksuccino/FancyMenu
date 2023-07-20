@@ -86,6 +86,10 @@ public class UIBase extends RenderingUtils {
 		return (targetX >= x) && (targetX < (x + width)) && (targetY >= y) && (targetY < (y + height));
 	}
 
+	public static void renderListingDot(PoseStack matrix, float x, float y, int color) {
+		fillF(matrix, x, y, x + 4, y + 4, color);
+	}
+
 	public static void renderListingDot(PoseStack matrix, int x, int y, Color color) {
 		fill(matrix, x, y, x + 4, y + 4, color.getRGB());
 	}

@@ -89,15 +89,15 @@ public class RenderingUtils extends GuiComponent {
         RenderSystem.disableBlend();
     }
 
-    public static void blitF(@NotNull PoseStack pose, float x, float y, float f3, float f4, int width, int height, int width2, int height2) {
+    public static void blitF(@NotNull PoseStack pose, float x, float y, float f3, float f4, float width, float height, float width2, float height2) {
         blit(pose, x, y, width, height, f3, f4, width, height, width2, height2);
     }
 
-    private static void blit(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, int $$7, int $$8, int $$9, int $$10) {
+    private static void blit(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10) {
         blit($$0, $$1, $$1 + $$3, $$2, $$2 + $$4, 0, $$7, $$8, $$5, $$6, $$9, $$10);
     }
 
-    private static void blit(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int $$10, int $$11) {
+    private static void blit(PoseStack $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
         innerBlit($$0.last().pose(), $$1, $$2, $$3, $$4, $$5, ($$8 + 0.0F) / (float)$$10, ($$8 + (float)$$6) / (float)$$10, ($$9 + 0.0F) / (float)$$11, ($$9 + (float)$$7) / (float)$$11);
     }
 
