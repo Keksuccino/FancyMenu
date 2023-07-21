@@ -37,7 +37,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
-    protected Component displayLabel = Component.literal("Widgetttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt");
+    protected Component displayLabel = Component.literal("Widget");
     private float unscaledWidgetOffsetX = 0;
     private float unscaledWidgetOffsetY = 0;
     private float innerWidth = 100;
