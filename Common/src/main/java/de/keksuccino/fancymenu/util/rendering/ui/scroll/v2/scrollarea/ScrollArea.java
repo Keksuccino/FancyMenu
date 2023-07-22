@@ -41,7 +41,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     public float overriddenTotalScrollWidth = -1;
     public float overriddenTotalScrollHeight = -1;
     public boolean correctYOnAddingRemovingEntries = true;
-    protected boolean enableScissor = true;
+    protected boolean applyScissor = true;
     /** Set this if the {@link ScrollArea} gets rendered in a custom-scaled render environment. **/
     @Nullable
     public Float renderScale = null;
@@ -96,7 +96,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
 
         Window win = Minecraft.getInstance().getWindow();
         
-        if (this.isScissorEnabled()) {
+        if (this.isApplyScissor()) {
             double scale = (this.renderScale != null) ? this.renderScale : win.getGuiScale();
             float sciBottomY = this.getInnerY() + this.getInnerHeight();
             RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
@@ -116,7 +116,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             }
         });
 
-        if (this.isScissorEnabled()) RenderSystem.disableScissor();
+        if (this.isApplyScissor()) RenderSystem.disableScissor();
 
     }
 
@@ -452,12 +452,12 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         }
     }
 
-    public boolean isScissorEnabled() {
-        return this.enableScissor;
+    public boolean isApplyScissor() {
+        return this.applyScissor;
     }
 
-    public void setScissorEnabled(boolean enabled) {
-        this.enableScissor = enabled;
+    public void setApplyScissor(boolean apply) {
+        this.applyScissor = apply;
     }
 
     @Override

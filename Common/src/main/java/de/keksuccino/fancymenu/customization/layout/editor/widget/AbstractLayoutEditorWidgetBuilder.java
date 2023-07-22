@@ -62,12 +62,12 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
 
             String innerWidth = settings.getValue("inner_width");
             if ((innerWidth != null) && MathUtils.isInteger(innerWidth)) {
-                widget.setInnerWidth(Integer.parseInt(innerWidth));
+                widget.setBodyWidth(Integer.parseInt(innerWidth));
             }
 
             String innerHeight = settings.getValue("inner_height");
             if ((innerHeight != null) && MathUtils.isInteger(innerHeight)) {
-                widget.setInnerHeight(Integer.parseInt(innerHeight));
+                widget.setBodyHeight(Integer.parseInt(innerHeight));
             }
 
             String snappingSide = settings.getValue("snapping_side");
@@ -116,8 +116,8 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             WidgetSettings settings = new WidgetSettings();
             settings.putProperty("offset_x", "" + widgetInstance.getUnscaledWidgetOffsetX());
             settings.putProperty("offset_y", "" + widgetInstance.getUnscaledWidgetOffsetY());
-            settings.putProperty("inner_width", "" + widgetInstance.getInnerWidth());
-            settings.putProperty("inner_height", "" + widgetInstance.getInnerHeight());
+            settings.putProperty("inner_width", "" + widgetInstance.getBodyWidth());
+            settings.putProperty("inner_height", "" + widgetInstance.getBodyHeight());
             settings.putProperty("snapping_side", "" + widgetInstance.snappingSide.name);
             settings.putProperty("expanded", "" + widgetInstance.isExpanded());
             settings.putProperty("visible", "" + widgetInstance.isVisible());

@@ -40,8 +40,8 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected Component displayLabel = Component.literal("Widget");
     private float unscaledWidgetOffsetX = 0;
     private float unscaledWidgetOffsetY = 0;
-    private float innerWidth = 100;
-    private float innerHeight = 100;
+    private float bodyWidth = 100;
+    private float bodyHeight = 100;
     protected SnappingSide snappingSide = SnappingSide.TOP_RIGHT;
     protected List<HeaderButton> headerButtons = new ArrayList<>();
     protected boolean headerHovered = false;
@@ -88,14 +88,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     @Override
     public void renderComponent(@NotNull PoseStack pose, double mouseX, double mouseY, float partial) {
 
-        float x = this.getRenderX();
-        float y = this.getRenderY();
+        float x = this.getRealX();
+        float y = this.getRealY();
 
         //Fix offset on render tick, if needed
-        if (this.getComponentX() < this.getMinComponentX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
-        if (this.getComponentX() > this.getMaxComponentX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
-        if (this.getComponentY() < this.getMinComponentY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
-        if (this.getComponentY() > this.getMaxComponentY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+        if (this.getTranslatedX() < this.getMinTranslatedX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+        if (this.getTranslatedX() > this.getMaxTranslatedX()) this.setUnscaledWidgetOffsetX(this.unscaledWidgetOffsetX, false);
+        if (this.getTranslatedY() < this.getMinTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
+        if (this.getTranslatedY() > this.getMaxTranslatedY()) this.setUnscaledWidgetOffsetY(this.unscaledWidgetOffsetY, false);
 
         this.hovered = this.isMouseOver();
         this.headerHovered = this.isMouseOverHeader();
@@ -105,14 +105,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         RenderingUtils.resetShaderColor();
         if (this.isExpanded()) {
-            this.renderBody(pose, mouseX, mouseY, partial, x + this.getBorderThickness(), y +  this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getInnerWidth(), this.getInnerHeight());
+            this.renderBody(pose, mouseX, mouseY, partial);
         }
-        this.renderFrame(pose, mouseX, mouseY, partial, x, y, this.getComponentWidth(), this.getComponentHeight());
+        this.renderFrame(pose, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
         RenderingUtils.resetShaderColor();
 
     }
 
-    protected abstract void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height);
+    protected abstract void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial);
 
     protected void renderFrame(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
@@ -123,7 +123,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             RenderingUtils.resetShaderColor();
             float separatorXMin = x + this.getBorderThickness();
             float separatorYMin =  y + this.getBorderThickness() + this.getHeaderHeight();
-            float separatorXMax = separatorXMin + this.getInnerWidth();
+            float separatorXMax = separatorXMin + this.getBodyWidth();
             float separatorYMax = separatorYMin + this.getBorderThickness();
             fillF(pose, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorScheme().element_border_color_normal.getColorInt());
         }
@@ -144,11 +144,11 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         //Background
         RenderingUtils.resetShaderColor();
-        fillF(pose, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getInnerWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
+        fillF(pose, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
         RenderingUtils.resetShaderColor();
 
         //Buttons
-        float buttonX = x + this.getBorderThickness() + this.getInnerWidth();
+        float buttonX = x + this.getBorderThickness() + this.getBodyWidth();
         for (HeaderButton b : this.headerButtons) {
             buttonX -= b.width;
             b.x = buttonX;
@@ -163,14 +163,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected void renderLabel(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
         float headerX = x + this.getBorderThickness();
         float headerY = y + this.getBorderThickness();
-        float labelDisplayWidth = Math.max(1, this.getInnerWidth() - this.getCombinedHeaderButtonWidth() - 3);
+        float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedHeaderButtonWidth() - 3);
         float scissorX = x + this.getBorderThickness() - 1;
         float scissorY = y + this.getBorderThickness() - 1;
         RenderingUtils.resetShaderColor();
         RenderSystem.enableBlend();
         pose.pushPose();
         this.enableComponentScissor((int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
-        UIBase.drawElementLabelF(pose, Minecraft.getInstance().font, this.displayLabel, headerX + 3, headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f));
+        UIBase.drawElementLabelF(pose, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
         this.disableComponentScissor();
         pose.popPose();
         RenderingUtils.resetShaderColor();
@@ -194,16 +194,16 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         if (this.isHeaderButtonHovered()) return null;
         float hoverAreaThickness = 10.0f;
         float halfHoverAreaThickness = hoverAreaThickness / 2f;
-        if (this.isComponentAreaHovered(this.getComponentX() - halfHoverAreaThickness, this.getComponentY(), hoverAreaThickness, this.getComponentHeight(), false)) {
+        if (this.isComponentAreaHovered(this.getTranslatedX() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false)) {
             return ResizingEdge.LEFT;
         }
-        if (this.isComponentAreaHovered(this.getComponentX(), this.getComponentY() - halfHoverAreaThickness, this.getComponentWidth(), hoverAreaThickness, false)) {
+        if (this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY() - halfHoverAreaThickness, this.getWidth(), hoverAreaThickness, false)) {
             return ResizingEdge.TOP;
         }
-        if (this.isComponentAreaHovered(this.getComponentX() + this.getComponentWidth() - halfHoverAreaThickness, this.getComponentY(), hoverAreaThickness, this.getComponentHeight(), false)) {
+        if (this.isComponentAreaHovered(this.getTranslatedX() + this.getWidth() - halfHoverAreaThickness, this.getTranslatedY(), hoverAreaThickness, this.getHeight(), false)) {
             return ResizingEdge.RIGHT;
         }
-        if (this.isComponentAreaHovered(this.getComponentX(), this.getComponentY() + this.getComponentHeight() - halfHoverAreaThickness, this.getComponentWidth(), hoverAreaThickness, false)) {
+        if (this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY() + this.getHeight() - halfHoverAreaThickness, this.getWidth(), hoverAreaThickness, false)) {
             return ResizingEdge.BOTTOM;
         }
         return null;
@@ -211,17 +211,17 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     public void setUnscaledWidgetOffsetX(float offsetX, boolean forceSet) {
         if (!forceSet) {
-            if ((offsetX > this.unscaledWidgetOffsetX) && (this.getComponentX() == this.getMaxComponentX())) return;
-            if ((offsetX < this.unscaledWidgetOffsetX) && (this.getComponentX() == this.getMinComponentX())) return;
+            if ((offsetX > this.unscaledWidgetOffsetX) && (this.getTranslatedX() == this.getMaxTranslatedX())) return;
+            if ((offsetX < this.unscaledWidgetOffsetX) && (this.getTranslatedX() == this.getMinTranslatedX())) return;
         }
         this.unscaledWidgetOffsetX = offsetX;
         if (!forceSet) {
-            if (this.getComponentX() < this.getMinComponentX()) {
-                float i = this.getMinComponentX() - this.getComponentX();
+            if (this.getTranslatedX() < this.getMinTranslatedX()) {
+                float i = this.getMinTranslatedX() - this.getTranslatedX();
                 this.unscaledWidgetOffsetX += i;
             }
-            if (this.getComponentX() > this.getMaxComponentX()) {
-                float i = this.getComponentX() - this.getMaxComponentX();
+            if (this.getTranslatedX() > this.getMaxTranslatedX()) {
+                float i = this.getTranslatedX() - this.getMaxTranslatedX();
                 this.unscaledWidgetOffsetX -= i;
             }
         }
@@ -229,41 +229,41 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     public void setUnscaledWidgetOffsetY(float offsetY, boolean forceSet) {
         if (!forceSet) {
-            if ((offsetY > this.unscaledWidgetOffsetY) && (this.getComponentY() == this.getMaxComponentY())) return;
-            if ((offsetY < this.unscaledWidgetOffsetY) && (this.getComponentY()) == this.getMinComponentY()) return;
+            if ((offsetY > this.unscaledWidgetOffsetY) && (this.getTranslatedY() == this.getMaxTranslatedY())) return;
+            if ((offsetY < this.unscaledWidgetOffsetY) && (this.getTranslatedY()) == this.getMinTranslatedY()) return;
         }
         this.unscaledWidgetOffsetY = offsetY;
         if (!forceSet) {
-            if (this.getComponentY() < this.getMinComponentY()) {
-                float i = this.getMinComponentY() - this.getComponentY();
+            if (this.getTranslatedY() < this.getMinTranslatedY()) {
+                float i = this.getMinTranslatedY() - this.getTranslatedY();
                 this.unscaledWidgetOffsetY += i;
             }
-            if (this.getComponentY() > this.getMaxComponentY()) {
-                float i = this.getComponentY() - this.getMaxComponentY();
+            if (this.getTranslatedY() > this.getMaxTranslatedY()) {
+                float i = this.getTranslatedY() - this.getMaxTranslatedY();
                 this.unscaledWidgetOffsetY -= i;
             }
         }
     }
 
     @Override
-    public float getComponentX() {
+    public float getTranslatedX() {
         return this.getOriginX() + this.unscaledWidgetOffsetX;
     }
 
     @Override
-    public float getComponentY() {
+    public float getTranslatedY() {
         return this.getOriginY() + this.unscaledWidgetOffsetY;
     }
 
     @Override
-    public float getComponentWidth() {
-        return this.innerWidth + (this.getBorderThickness() * 2);
+    public float getWidth() {
+        return this.bodyWidth + (this.getBorderThickness() * 2);
     }
 
     @Override
-    public float getComponentHeight() {
+    public float getHeight() {
         if (!this.isExpanded()) return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
-        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness() + this.innerHeight + this.getBorderThickness();
+        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness() + this.bodyHeight + this.getBorderThickness();
     }
 
     public float getCombinedHeaderButtonWidth() {
@@ -288,44 +288,52 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected float getOriginY() {
-        return this.getMinComponentY();
+        return this.getMinTranslatedY();
     }
 
     protected float getScreenEdgeBorderThickness() {
         return 10;
     }
 
-    protected float getMinComponentX() {
+    protected float getMinTranslatedX() {
         return this.getScreenEdgeBorderThickness();
     }
 
-    protected float getMaxComponentX() {
+    protected float getMaxTranslatedX() {
         Minecraft.getInstance().getWindow();
-        return this.getScreenWidth() - this.getScreenEdgeBorderThickness() - this.getComponentWidth();
+        return this.getScreenWidth() - this.getScreenEdgeBorderThickness() - this.getWidth();
     }
 
-    protected float getMinComponentY() {
+    protected float getMinTranslatedY() {
         return this.editor.menuBar.getHeight() + this.getScreenEdgeBorderThickness();
     }
 
-    protected float getMaxComponentY() {
-        return this.getScreenHeight() - this.getScreenEdgeBorderThickness() - this.getComponentHeight();
+    protected float getMaxTranslatedY() {
+        return this.getScreenHeight() - this.getScreenEdgeBorderThickness() - this.getHeight();
     }
 
-    public void setInnerWidth(float innerWidth) {
-        this.innerWidth = innerWidth;
+    public float getRealBodyX() {
+        return this.getBorderThickness();
     }
 
-    public void setInnerHeight(float innerHeight) {
-        this.innerHeight = innerHeight;
+    public float getRealBodyY() {
+        return this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness();
     }
 
-    public float getInnerWidth() {
-        return this.innerWidth;
+    public void setBodyWidth(float innerWidth) {
+        this.bodyWidth = innerWidth;
     }
 
-    public float getInnerHeight() {
-        return this.innerHeight;
+    public void setBodyHeight(float innerHeight) {
+        this.bodyHeight = innerHeight;
+    }
+
+    public float getBodyWidth() {
+        return this.bodyWidth;
+    }
+
+    public float getBodyHeight() {
+        return this.bodyHeight;
     }
 
     public float getHeaderHeight() {
@@ -367,44 +375,44 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     public boolean isMouseOverHeader() {
         if (!this.isVisible()) return false;
-        return this.isComponentAreaHovered(this.getComponentX(), this.getComponentY(), this.getComponentWidth(), this.getHeaderHeight() + (this.getBorderThickness() * 2), false);
+        return this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY(), this.getWidth(), this.getHeaderHeight() + (this.getBorderThickness() * 2), false);
     }
 
     @Override
-    protected boolean mouseClickedComponent(double mouseX, double mouseY, int button) {
+    protected boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         if (this.isVisible()) {
             this.activeResizeEdge = this.hoveredResizeEdge;
             if ((this.activeResizeEdge == null) && this.isHeaderHovered() && !this.isHeaderButtonHovered()) {
                 this.leftMouseDownHeader = true;
             }
             if ((this.activeResizeEdge != null) || this.leftMouseDownHeader) {
-                this.leftMouseDownMouseX = mouseX;
-                this.leftMouseDownMouseY = mouseY;
+                this.leftMouseDownMouseX = translatedMouseX;
+                this.leftMouseDownMouseY = translatedMouseY;
                 this.leftMouseDownWidgetOffsetX = this.unscaledWidgetOffsetX;
                 this.leftMouseDownWidgetOffsetY = this.unscaledWidgetOffsetY;
-                this.leftMouseDownInnerWidth = this.innerWidth;
-                this.leftMouseDownInnerHeight = this.innerHeight;
+                this.leftMouseDownInnerWidth = this.bodyWidth;
+                this.leftMouseDownInnerHeight = this.bodyHeight;
                 return true;
             }
             for (HeaderButton b : this.headerButtons) {
-                if (b.mouseClicked(mouseX, mouseY, button)) return true;
+                if (b.mouseClicked(realMouseX, realMouseY, button)) return true;
             }
         }
-        return this.isVisible() && this.isMouseOver();
+        return false;
     }
 
     @Override
-    protected boolean mouseReleasedComponent(double mouseX, double mouseY, int button) {
+    protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         this.leftMouseDownHeader = false;
         this.activeResizeEdge = null;
         return false;
     }
 
     @Override
-    protected boolean mouseDraggedComponent(double mouseX, double mouseY, int button, double d1, double d2) {
+    protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
         if (this.isVisible()) {
-            double offsetX = (mouseX - this.leftMouseDownMouseX);
-            double offsetY = (mouseY - this.leftMouseDownMouseY);
+            double offsetX = (translatedMouseX - this.leftMouseDownMouseX);
+            double offsetY = (translatedMouseY - this.leftMouseDownMouseY);
             if (this.activeResizeEdge != null) {
                 this.handleResize((float) offsetX, (float) offsetY);
                 return true;
@@ -421,26 +429,26 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         if ((this.activeResizeEdge == ResizingEdge.LEFT) || (this.activeResizeEdge == ResizingEdge.RIGHT)) {
             float i = (this.activeResizeEdge == ResizingEdge.LEFT) ? (this.leftMouseDownInnerWidth - dragOffsetX) : (this.leftMouseDownInnerWidth + dragOffsetX);
             if (i >= (this.getCombinedHeaderButtonWidth() + 10)) {
-                this.innerWidth = i;
+                this.bodyWidth = i;
                 this.unscaledWidgetOffsetX = this.leftMouseDownWidgetOffsetX + ((this.activeResizeEdge == ResizingEdge.LEFT) ? dragOffsetX : 0);
             }
         }
         if ((this.activeResizeEdge == ResizingEdge.TOP) || (this.activeResizeEdge == ResizingEdge.BOTTOM)) {
             float i = (this.activeResizeEdge == ResizingEdge.TOP) ? (this.leftMouseDownInnerHeight - dragOffsetY) : (this.leftMouseDownInnerHeight + dragOffsetY);
             if (i >= (this.getHeaderHeight() + 10)) {
-                this.innerHeight = i;
+                this.bodyHeight = i;
                 this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + ((this.activeResizeEdge == ResizingEdge.TOP) ? dragOffsetY : 0);
             }
         }
     }
 
     @Override
-    protected boolean mouseScrolledComponent(double mouseX, double mouseY, double scrollDelta) {
+    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta) {
         return false;
     }
 
     @Override
-    protected void mouseMovedComponent(double mouseX, double mouseY) {
+    protected void mouseMovedComponent(double realMouseX, double realMouseY) {
     }
 
     protected static class HeaderButton extends UIBase implements GuiEventListener {
@@ -518,7 +526,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         @Deprecated
         @Override
         public boolean isMouseOver(double ignoredMouseX, double ignoredMouseY) {
-//            LOGGER.info("##################### HEADER BUTTON MOUSE OVER: mX: {} | mY: {} | x: {} | y: {} | width: {} | height: {}", this.parent.getComponentMouseX(), (this).parent.getComponentMouseY(), this.x, this.y, this.width, this.parent.getHeaderHeight());
             return this.isMouseOver();
         }
 

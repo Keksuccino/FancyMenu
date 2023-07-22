@@ -66,7 +66,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     public abstract void onClick(ScrollAreaEntry entry);
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.isHovered() && this.parent.isMouseInteractingWithGrabbers() && this.parent.isInnerAreaHovered()) {
+        if (this.isHovered() && !this.parent.isMouseInteractingWithGrabbers() && this.parent.isInnerAreaHovered()) {
             if (this.selectOnClick) {
                 this.setSelected(true);
             }

@@ -259,6 +259,12 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        if (this.leftMouseDownOnGrabber) return true;
+        return this.isMouseInsideScrollArea(mouseX, mouseY, true);
+    }
+
+    @Override
     public void setFocused(boolean var1) {
     }
 

@@ -30,49 +30,71 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
 
         pose.pushPose();
         pose.scale(this.getFixedComponentScale(), this.getFixedComponentScale(), this.getFixedComponentScale());
-        pose.translate(this.getComponentX(), this.getComponentY(), this.posZ);
+        pose.translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
 
-        this.renderComponent(pose, this.getComponentMouseX(), this.getComponentMouseY(), partial);
+        this.renderComponent(pose, this.getRealMouseX(), this.getRealMouseY(), partial);
 
         pose.popPose();
 
     }
 
     /**
-     * This is always 0 and is just a dummy coordinate to not get too confused with rendering everything at X=0 Y=0 in {@link UIComponent#renderComponent(PoseStack, double, double, float)}.
+     * This is always 0, since {@link UIComponent}s get translated to their "final" positions on render.
      */
-    protected float getRenderX() {
+    protected float getRealX() {
         return 0;
     }
 
     /**
-     * This is always 0 and is just a dummy coordinate to not get too confused with rendering everything at X=0 Y=0 in {@link UIComponent#renderComponent(PoseStack, double, double, float)}.
+     * This is always 0, since {@link UIComponent}s get translated to their "final" positions on render.
      */
-    protected float getRenderY() {
+    protected float getRealY() {
         return 0;
     }
 
-    public abstract float getComponentX();
-
-    public abstract float getComponentY();
-
-    public abstract float getComponentWidth();
-
-    public abstract float getComponentHeight();
+    /**
+     * This is the X-position the {@link UIComponent} gets translated to on render.<br>
+     * Keep in mind that this is NOT the REAL position.
+     */
+    public abstract float getTranslatedX();
 
     /**
-     * Since {@link UIComponent}s get rendered in a different scale than the normal GUI, it's important to scale the mouse position to the component's scale.<br>
-     * The position returned by this method is correctly scaled.
+     * This is the Y-position the {@link UIComponent} gets translated to on render.<br>
+     * Keep in mind that this is NOT the REAL position.
      */
-    public double getComponentMouseX() {
+    public abstract float getTranslatedY();
+
+    public abstract float getWidth();
+
+    public abstract float getHeight();
+
+    /**
+     * Since {@link UIComponent} positions get translated and scaled on render, normal mouse positions wouldn't work, so you need to use these whenever
+     * you do anything mouse-pos-related. They corrected to work in this custom-scaled and -translated render environment.
+     */
+    public double getRealMouseX() {
+        return (this.mc.mouseHandler.xpos() - (this.getTranslatedX() * this.getComponentScale())) / this.getComponentScale();
+    }
+
+    /**
+     * Since {@link UIComponent} positions get translated and scaled on render, normal mouse positions wouldn't work, so you need to use these whenever
+     * you do anything mouse-pos-related. They corrected to work in this custom-scaled and -translated render environment.
+     */
+    public double getRealMouseY() {
+        return (this.mc.mouseHandler.ypos() - (this.getTranslatedY() * this.getComponentScale())) / this.getComponentScale();
+    }
+
+    /**
+     * The mouse position after the {@link UIComponent} got translated on render.
+     */
+    public double getTranslatedMouseX() {
         return this.mc.mouseHandler.xpos() / this.getComponentScale();
     }
 
     /**
-     * Since {@link UIComponent}s get rendered in a different scale than the normal GUI, it's important to scale the mouse position to the component's scale.<br>
-     * The position returned by this method is correctly scaled.
+     * The mouse position after the {@link UIComponent} got translated on render.
      */
-    public double getComponentMouseY() {
+    public double getTranslatedMouseY() {
         return this.mc.mouseHandler.ypos() / this.getComponentScale();
     }
 
@@ -85,15 +107,16 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
     }
 
     /**
-     * Checks if a component area is hovered.<br>
-     * Set {@code isRenderPosition} to {@code true}, if the XY-position is a component render position (rendered at X=0 and Y=0).
+     * Checks if a component area is hovered.
      */
-    protected boolean isComponentAreaHovered(float x, float y, float width, float height, boolean isRenderPosition) {
-        if (isRenderPosition) {
-            x += this.getComponentX();
-            y += this.getComponentY();
+    protected boolean isComponentAreaHovered(float x, float y, float width, float height, boolean isRealPosition) {
+        double mX = this.getRealMouseX();
+        double mY = this.getRealMouseY();
+        if (!isRealPosition) {
+            x -= this.getTranslatedX();
+            y -= this.getTranslatedY();
         }
-        return isXYInArea(this.getComponentMouseX(), this.getComponentMouseY(), x, y, width+1, height+1);
+        return isXYInArea(mX, mY, x, y, width+1, height+1);
     }
 
     /**
@@ -111,13 +134,12 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
     }
 
     /**
-     * Scissor with automatic scale handling.<br>
-     * Set {@code isRenderPosition} to {@code true}, if the XY-position is a component render position (rendered at X=0 and Y=0).
+     * Scissor with automatic scale handling.
      */
-    protected void enableComponentScissor(int x, int y, int width, int height, boolean isRenderPosition) {
-        if (isRenderPosition) {
-            x += this.getComponentX();
-            y += this.getComponentY();
+    protected void enableComponentScissor(int x, int y, int width, int height, boolean isRealPosition) {
+        if (isRealPosition) {
+            x += this.getTranslatedX();
+            y += this.getTranslatedY();
         }
         int scissorX = (int) (x * this.getFixedComponentScale());
         int scissorY = (int) (y * this.getFixedComponentScale());
@@ -143,49 +165,52 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
         this.visible = visible;
     }
 
-    protected abstract boolean mouseClickedComponent(double mouseX, double mouseY, int button);
+    protected abstract boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button);
 
     @Deprecated
     @Override
     public boolean mouseClicked(double ignoredMouseX, double ignoredMouseY, int button) {
-        return this.mouseClickedComponent(this.getComponentMouseX(), this.getComponentMouseY(), button);
+        return this.mouseClickedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), button);
     }
 
-    protected abstract boolean mouseReleasedComponent(double mouseX, double mouseY, int button);
+    protected abstract boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button);
 
     @Deprecated
     @Override
     public boolean mouseReleased(double ignoredMouseX, double ignoredMouseY, int button) {
-        return this.mouseReleasedComponent(this.getComponentMouseX(), this.getComponentMouseY(), button);
+        return this.mouseReleasedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), button);
     }
 
-    protected abstract boolean mouseDraggedComponent(double mouseX, double mouseY, int button, double d1, double d2);
+    /**
+     * Real mouse coordinates don't really support drag offset calculation, so you should use translated coordinates here.
+     */
+    protected abstract boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2);
 
     @Deprecated
     @Override
     public boolean mouseDragged(double ignoredMouseX, double ignoredMouseY, int button, double d1, double d2) {
-        return this.mouseDraggedComponent(this.getComponentMouseX(), this.getComponentMouseY(), button, d1, d2);
+        return this.mouseDraggedComponent(this.getTranslatedMouseX(), this.getTranslatedMouseY(), button, d1, d2);
     }
 
-    protected abstract boolean mouseScrolledComponent(double mouseX, double mouseY, double scrollDelta);
+    protected abstract boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta);
 
     @Deprecated
     @Override
     public boolean mouseScrolled(double ignoredMouseX, double ignoredMouseY, double scrollDelta) {
-        return this.mouseScrolledComponent(this.getComponentMouseX(), this.getComponentMouseY(), scrollDelta);
+        return this.mouseScrolledComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), scrollDelta);
     }
 
-    protected abstract void mouseMovedComponent(double mouseX, double mouseY);
+    protected abstract void mouseMovedComponent(double realMouseX, double realMouseY);
 
     @Deprecated
     @Override
     public void mouseMoved(double ignoredMouseX, double ignoredMouseY) {
-        this.mouseMovedComponent(this.getComponentMouseX(), this.getComponentMouseY());
+        this.mouseMovedComponent(this.getRealMouseX(), this.getRealMouseY());
     }
 
     public boolean isMouseOver() {
         if (!this.isVisible()) return false;
-        return this.isComponentAreaHovered(this.getComponentX(), this.getComponentY(), this.getComponentWidth(), this.getComponentHeight(), false);
+        return this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY(), this.getWidth(), this.getHeight(), false);
     }
 
     @Deprecated

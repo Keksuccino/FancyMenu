@@ -29,7 +29,7 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         float centerY = this.getY() + (this.getHeight() / 2f);
         renderListingDot(pose, (this.getX() + 5f), (centerY - 2f), this.listDotColor.getColorInt());
-        this.font.draw(pose, this.text, this.getX() + 5f + 4f + 3f, centerY - (this.font.lineHeight / 2f), -1);
+        this.font.draw(pose, this.text, (int)(this.getX() + 5f + 4f + 3f), (int)(centerY - (this.font.lineHeight / 2f)), -1);
     }
 
     @Override

@@ -18,8 +18,8 @@ public class LayerLayoutEditorWidgetBuilder extends AbstractLayoutEditorWidgetBu
     @Override
     public @NotNull LayerLayoutEditorWidget buildDefaultInstance(@NotNull LayoutEditorScreen editor) {
         LayerLayoutEditorWidget w = new LayerLayoutEditorWidget(editor, this);
-        w.setInnerWidth(200);
-        w.setInnerHeight(300);
+        w.setBodyWidth(200);
+        w.setBodyHeight(300);
         return w;
     }
 
