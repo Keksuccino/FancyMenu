@@ -17,6 +17,11 @@ import org.jetbrains.annotations.Nullable;
 
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
+    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
+    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
+    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
+    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected ScrollArea scrollArea;

@@ -541,7 +541,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 this.font.draw(pose, this.fileNameComponent, this.x + BORDER + 20 + 3, this.y + ((float)this.height / 2) - ((float)this.font.lineHeight / 2) , textColor);
 
                 //Show "unsupported characters" tooltip on hover, if resource-unfriendly file name
-                if (this.isHovered() && this.resourceUnfriendlyFileName) {
+                if (this.isHovered() && this.parent.isMouseInsideArea() && this.resourceUnfriendlyFileName) {
                     TooltipHandler.INSTANCE.addTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")).setDefaultStyle(), () -> true, false, true);
                 }
 
