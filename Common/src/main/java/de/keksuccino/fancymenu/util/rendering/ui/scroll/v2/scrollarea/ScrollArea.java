@@ -37,6 +37,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     protected float borderThickness = 1;
     public boolean makeEntriesWidthOfArea = false;
     public boolean minimumEntryWidthIsAreaWidth = true;
+    public boolean makeAllEntriesWidthOfWidestEntry = true;
     protected List<ScrollAreaEntry> entries = new ArrayList<>();
     public float overriddenTotalScrollWidth = -1;
     public float overriddenTotalScrollHeight = -1;
@@ -102,18 +103,13 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
         }
 
+        final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
         this.updateEntries((entry) -> {
-            float cachedWidth = -1;
-            if (this.minimumEntryWidthIsAreaWidth) {
-                cachedWidth = entry.getWidth();
-                if (cachedWidth < this.getInnerWidth()) {
-                    entry.setWidth(this.getInnerWidth());
-                }
+            if (this.makeAllEntriesWidthOfWidestEntry) entry.setWidth(totalWidth);
+            if (this.minimumEntryWidthIsAreaWidth && (entry.getWidth() < this.getInnerWidth())) {
+                entry.setWidth(this.getInnerWidth());
             }
             entry.render(pose, mouseX, mouseY, partial);
-            if (cachedWidth != -1) {
-                entry.setWidth(cachedWidth);
-            }
         });
 
         if (this.isApplyScissor()) RenderSystem.disableScissor();

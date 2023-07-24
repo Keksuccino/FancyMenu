@@ -1183,5 +1183,6 @@
   "fancymenu.editor.menu_bar.window.always_show_anchor_overlay": "Always Show Anchor Overlay: %s",
   "fancymenu.editor.menu_bar.window.show_all_anchor_connections": "Show All Anchor Connections: %s",
   "fancymenu.editor.menu_bar.window.change_anchor_on_hover": "Change Anchor on Hover: %s",
-  "fancymenu.editor.menu_bar.edit.select_all": "Select All"
+  "fancymenu.editor.menu_bar.edit.select_all": "Select All",
+  "fancymenu.editor.widgets.layers": "Layers"
 }
