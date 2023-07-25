@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -449,6 +450,15 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     @Override
     protected void mouseMovedComponent(double realMouseX, double realMouseY) {
+    }
+
+    public void editorElementAdded(@NotNull AbstractEditorElement element) {
+    }
+
+    public void editorElementRemovedOrHidden(@NotNull AbstractEditorElement element) {
+    }
+
+    public void tick() {
     }
 
     protected static class HeaderButton extends UIBase implements GuiEventListener {

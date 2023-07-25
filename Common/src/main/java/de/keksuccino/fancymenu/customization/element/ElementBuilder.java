@@ -67,6 +67,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
             element.setInstanceIdentifier(id);
 
+            element.customElementLayerName = serialized.getValue("custom_element_layer_name");
+
             String fi = serialized.getValue("fade_in");
             if (fi == null) {
                 fi = serialized.getValue("fadein");
@@ -224,6 +226,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("element_type", element.builder.getIdentifier());
             sec.putProperty("instance_identifier", element.getInstanceIdentifier());
+
+            if (element.customElementLayerName != null) {
+                sec.putProperty("custom_element_layer_name", element.customElementLayerName);
+            }
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
             sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);

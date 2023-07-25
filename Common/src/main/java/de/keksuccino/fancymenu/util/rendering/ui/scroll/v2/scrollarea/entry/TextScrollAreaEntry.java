@@ -29,7 +29,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     }
 
     @Override
-    public void onClick(ScrollAreaEntry entry) {
+    public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
         this.onClickCallback.accept((TextScrollAreaEntry) entry);
     }
 

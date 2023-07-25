@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -62,7 +63,7 @@ public class SplashTextElement extends AbstractElement {
 
             this.renderSplash(pose);
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderingUtils.resetShaderColor();
 
         }
 
@@ -156,12 +157,11 @@ public class SplashTextElement extends AbstractElement {
         if (i < alpha) {
             alpha = i;
         }
-        int c = FastColor.ARGB32.color(alpha, this.baseColor.getColor().getRed(), this.baseColor.getColor().getGreen(), this.baseColor.getColor().getBlue());
 
         if (this.shadow) {
-            font.drawShadow(pose, renderTextFinal, -((float)font.width(renderTextFinal) / 2F), 0F, c);
+            font.drawShadow(pose, renderTextFinal, -((float)font.width(renderTextFinal) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
         } else {
-            font.draw(pose, renderTextFinal, -((float)font.width(renderTextFinal) / 2F), 0F, c);
+            font.draw(pose, renderTextFinal, -((float)font.width(renderTextFinal) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
         }
 
         pose.popPose();

@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -481,6 +482,9 @@ public class LayoutEditorUI {
 					if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
 						//Add new element at right-click menu coordinates
 						editorElement.setAnchorPoint(editorElement.element.anchorPoint, true, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+					}
+					for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
+						w.editorElementAdded(editorElement);
 					}
 					menu.closeMenu();
 				}

@@ -63,15 +63,15 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         }
     }
 
-    public abstract void onClick(ScrollAreaEntry entry);
+    public abstract void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button);
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isHovered() && !this.parent.isMouseInteractingWithGrabbers() && this.parent.isInnerAreaHovered()) {
-            if (this.selectOnClick) {
+            if ((button == 0) && this.selectOnClick) {
                 this.setSelected(true);
             }
-            if (this.playClickSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            this.onClick(this);
+            if ((button == 0) && this.playClickSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            this.onClick(this, mouseX, mouseY, button);
             return true;
         }
         return false;

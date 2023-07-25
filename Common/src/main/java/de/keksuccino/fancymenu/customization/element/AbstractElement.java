@@ -60,6 +60,8 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 **/
 	public float customGuiScale = -1F;
 	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
+	@Nullable
+	public String customElementLayerName = null;
 	private String instanceIdentifier;
 
 	@SuppressWarnings("all")

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -76,6 +77,9 @@ public class LayoutEditorHistory {
 					this.editor.activeElementContextMenu = null;
 				}
 				this.editor.constructElementInstances();
+				for (AbstractLayoutEditorWidget w : this.editor.layoutEditorWidgets) {
+					w.refresh();
+				}
 
 			}
 		}
@@ -98,6 +102,9 @@ public class LayoutEditorHistory {
 						this.editor.activeElementContextMenu = null;
 					}
 					this.editor.constructElementInstances();
+					for (AbstractLayoutEditorWidget w : this.editor.layoutEditorWidgets) {
+						w.refresh();
+					}
 				}
 
 			}

@@ -54,9 +54,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class LayoutEditorScreen extends Screen implements IElementFactory {
 
-	//TODO grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getogglet wird
-
-	//TODO add layer widget (photoshop-like)
+	//TODO grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -176,6 +174,13 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	public boolean shouldCloseOnEsc() {
 		return false;
+	}
+
+	@Override
+	public void tick() {
+		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+			w.tick();
+		}
 	}
 
 	@Override
@@ -498,6 +503,9 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				this.normalEditorElements.remove(element);
 				this.vanillaButtonEditorElements.remove(element);
 				this.deepEditorElements.remove(element);
+				for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
+					w.editorElementRemovedOrHidden(element);
+				}
 				return true;
 			} else if (element instanceof IHideableElement hideable) {
 				hideable.setHidden(true);
@@ -697,7 +705,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
-	protected void openRightClickMenuAtMouse(int mouseX, int mouseY) {
+	public void openRightClickMenuAtMouse(int mouseX, int mouseY) {
 		if (this.rightClickMenu != null) {
 			this.rightClickMenuOpenPosX = mouseX;
 			this.rightClickMenuOpenPosY = mouseY;
@@ -705,7 +713,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
-	protected void closeRightClickMenu() {
+	public void closeRightClickMenu() {
 		if (this.rightClickMenu != null) {
 			if (this.rightClickMenu.isUserNavigatingInMenu()) return;
 			this.rightClickMenuOpenPosX = -1000;
@@ -714,7 +722,22 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 	}
 
-	protected void closeActiveElementMenu() {
+	public void openElementContextMenuAtMouseIfPossible() {
+		this.closeActiveElementMenu();
+		List<AbstractEditorElement> selectedElements = this.getSelectedElements();
+		if (selectedElements.size() == 1) {
+			this.activeElementContextMenu = selectedElements.get(0).rightClickMenu;
+			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
+			this.activeElementContextMenu.openMenuAtMouse();
+		} else if (selectedElements.size() > 1) {
+			List<ContextMenu> menus = ObjectUtils.getOfAll(ContextMenu.class, selectedElements, consumes -> consumes.rightClickMenu);
+			this.activeElementContextMenu = ContextMenu.stackContextMenus(menus);
+			((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
+			this.activeElementContextMenu.openMenuAtMouse();
+		}
+	}
+
+	public void closeActiveElementMenu() {
 		if (this.activeElementContextMenu != null) {
 			if (this.activeElementContextMenu.isUserNavigatingInMenu()) return;
 			this.activeElementContextMenu.closeMenu();
@@ -802,17 +825,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.closeRightClickMenu();
 			//Set and open active element context menu
 			if (button == 1) {
-				List<AbstractEditorElement> selectedElements = this.getSelectedElements();
-				if (selectedElements.size() == 1) {
-					this.activeElementContextMenu = topHoverElement.rightClickMenu;
-					((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
-					this.activeElementContextMenu.openMenuAtMouse();
-				} else if (selectedElements.size() > 1) {
-					List<ContextMenu> menus = ObjectUtils.getOfAll(ContextMenu.class, selectedElements, consumes -> consumes.rightClickMenu);
-					this.activeElementContextMenu = ContextMenu.stackContextMenus(menus);
-					((IMixinScreen)this).getChildrenFancyMenu().add(0, this.activeElementContextMenu);
-					this.activeElementContextMenu.openMenuAtMouse();
-				}
+				this.openElementContextMenuAtMouseIfPossible();
 			}
 		}
 

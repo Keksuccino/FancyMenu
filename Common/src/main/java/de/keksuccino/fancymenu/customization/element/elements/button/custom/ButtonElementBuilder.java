@@ -177,7 +177,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        if (element instanceof ButtonElement b) {
+        if ((element instanceof ButtonElement b) && !b.getButton().getMessage().getString().replace(" ", "").isEmpty()) {
             return b.getButton().getMessage();
         }
         return Component.translatable("fancymenu.editor.add.button");
