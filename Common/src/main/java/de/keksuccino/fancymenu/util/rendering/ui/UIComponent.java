@@ -7,13 +7,17 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 
-public abstract class UIComponent extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
+public abstract class UIComponent extends UIBase implements FocuslessContainerEventHandler, Renderable, NarratableEntry {
 
     public float posZ = 0f;
     protected boolean hovered = false;
     protected boolean visible = true;
     protected Minecraft mc = Minecraft.getInstance();
+    protected boolean dragging = false;
+    protected final List<GuiEventListener> children = new ArrayList<>();
 
     /**
      * Make sure to render everything here at X=0 and Y=0!<br>
@@ -165,7 +169,23 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
         this.visible = visible;
     }
 
-    protected abstract boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button);
+    @Override
+    public @NotNull List<GuiEventListener> children() {
+        return this.children;
+    }
+
+    protected boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
+        for(GuiEventListener child : this.children()) {
+            if (child.mouseClicked(realMouseX, realMouseY, button)) {
+                this.setFocused(child);
+                if (button == 0) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Deprecated
     @Override
@@ -173,7 +193,13 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
         return this.mouseClickedComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), button);
     }
 
-    protected abstract boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button);
+    protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
+        this.setDragging(false);
+        for(GuiEventListener child : this.children()) {
+            if (child.mouseReleased(realMouseX, realMouseY, button)) return true;
+        }
+        return false;
+    }
 
     @Deprecated
     @Override
@@ -184,7 +210,14 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
     /**
      * Real mouse coordinates don't really support drag offset calculation, so you should use translated coordinates here.
      */
-    protected abstract boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2);
+    protected boolean mouseDraggedComponent(double translatedMouseX, double translatedMouseY, int button, double d1, double d2) {
+        if (this.isDragging() && (button == 0)) {
+            for (GuiEventListener child : this.children()) {
+                if (child.mouseDragged(this.getRealMouseX(), this.getRealMouseY(), button, d1, d2)) return true;
+            }
+        }
+        return false;
+    }
 
     @Deprecated
     @Override
@@ -192,7 +225,22 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
         return this.mouseDraggedComponent(this.getTranslatedMouseX(), this.getTranslatedMouseY(), button, d1, d2);
     }
 
-    protected abstract boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta);
+    @Override
+    public boolean isDragging() {
+        return this.dragging;
+    }
+
+    @Override
+    public void setDragging(boolean dragging) {
+        this.dragging = dragging;
+    }
+
+    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta) {
+        for(GuiEventListener child : this.children()) {
+            if (child.mouseScrolled(realMouseX, realMouseY, scrollDelta)) return true;
+        }
+        return false;
+    }
 
     @Deprecated
     @Override
@@ -200,7 +248,8 @@ public abstract class UIComponent extends UIBase implements GuiEventListener, Re
         return this.mouseScrolledComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), scrollDelta);
     }
 
-    protected abstract void mouseMovedComponent(double realMouseX, double realMouseY);
+    protected void mouseMovedComponent(double realMouseX, double realMouseY) {
+    }
 
     @Deprecated
     @Override

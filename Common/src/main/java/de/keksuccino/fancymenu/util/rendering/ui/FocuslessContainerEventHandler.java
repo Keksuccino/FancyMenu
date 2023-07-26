@@ -2,15 +2,12 @@ package de.keksuccino.fancymenu.util.rendering.ui;
 
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 /**
  * {@link ContainerEventHandler}, but fires all events for every child instead of just focused/hovered ones in some cases.
  */
-public interface FocuslessEventHandler extends ContainerEventHandler {
+public interface FocuslessContainerEventHandler extends ContainerEventHandler {
 
     @Override
     default boolean mouseReleased(double mouseX, double mouseY, int button) {
@@ -76,9 +73,5 @@ public interface FocuslessEventHandler extends ContainerEventHandler {
     @Override
     default void setFocused(boolean $$0) {
     }
-
-    @Override
-    @NotNull
-    List<GuiEventListener> children();
 
 }

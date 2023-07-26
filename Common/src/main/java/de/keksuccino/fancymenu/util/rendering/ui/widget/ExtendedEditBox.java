@@ -139,6 +139,14 @@ public class ExtendedEditBox extends EditBox {
 
     }
 
+    public int getDisplayPosition() {
+        return ((IMixinEditBox)this).getDisplayPosFancyMenu();
+    }
+
+    public void setDisplayPosition(int position) {
+        ((IMixinEditBox)this).setDisplayPosFancyMenu(position);
+    }
+
     public @Nullable CharacterFilter getCharacterFilter() {
         return this.characterFilter;
     }

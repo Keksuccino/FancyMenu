@@ -132,7 +132,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.clearEntries();
 				int i = 0;
 				for (AbstractEditorElement e : cachedHoveredElementsOnRightClickMenuOpen) {
-					this.addClickableEntry("element_" + i, e.element.builder.getDisplayName(e.element), (menu, entry) -> {
+					this.addClickableEntry("element_" + i, (e.element.customElementLayerName != null) ? Component.literal(e.element.customElementLayerName) : e.element.builder.getDisplayName(e.element), (menu, entry) -> {
 						for (AbstractEditorElement e2 : AbstractEditorElement.this.editor.getAllElements()) {
 							e2.resetElementStates();
 						}

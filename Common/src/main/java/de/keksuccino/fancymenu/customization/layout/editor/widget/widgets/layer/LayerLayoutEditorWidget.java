@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -29,13 +29,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
-
-    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
-    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
-    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
-    //TODO FIXEN: Pos + Size von widgets wird nicht (mehr?) gespeichert (evtl. settings im allgemeinen broken)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -76,13 +72,20 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     public void updateList(boolean keepScroll) {
         float scroll = this.scrollArea.verticalScrollBar.getScroll();
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
+            if (e instanceof LayerElementEntry l) {
+                this.children.remove(l.editLayerNameBox);
+            }
+        }
         this.scrollArea.clearEntries();
         if (this.editor.layout.renderElementsBehindVanilla) {
             this.scrollArea.addEntry(new VanillaLayerElementEntry(this.scrollArea, this));
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
         }
         for (AbstractEditorElement e : Lists.reverse(new ArrayList<>(this.editor.normalEditorElements))) {
-            this.scrollArea.addEntry(new LayerElementEntry(this.scrollArea, this, e));
+            LayerElementEntry layer = new LayerElementEntry(this.scrollArea, this, e);
+            this.children.add(layer.editLayerNameBox);
+            this.scrollArea.addEntry(layer);
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
         }
         if (!this.editor.layout.renderElementsBehindVanilla) {
@@ -133,13 +136,24 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     @Override
     protected boolean mouseClickedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
 
-        if (super.mouseClickedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button)) return true;
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
+            if (e instanceof LayerElementEntry l) {
+                if (!l.isLayerNameHovered()) {
+                    l.stopEditingLayerName();
+                }
+            }
+        }
 
-        //Override original mouseClicked of ScrollArea, to use a combination of real and translated mouse coordinates
-        if (this.scrollArea.verticalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
-        if (this.scrollArea.horizontalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
-        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-            if (entry.mouseClicked(realMouseX, realMouseY, button)) return true;
+        if (this.isVisible()) {
+            if (super.mouseClickedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button)) return true;
+            if (this.isExpanded()) {
+                //Override original mouseClicked of ScrollArea, to use a combination of real and translated mouse coordinates
+                if (this.scrollArea.verticalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
+                if (this.scrollArea.horizontalScrollBar.mouseClicked(translatedMouseX, translatedMouseY, button)) return true;
+                for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+                    if (entry.mouseClicked(realMouseX, realMouseY, button)) return true;
+                }
+            }
         }
 
         return this.isVisible() && this.isMouseOver();
@@ -196,8 +210,20 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
-            this.editLayerNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty());
-            this.editLayerNameBox.setCanLoseFocus(false);
+            this.editLayerNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty()) {
+                @Override
+                public boolean keyPressed(int keycode, int scancode, int modifiers) {
+                    if (this.isVisible() && LayerElementEntry.this.displayEditLayerNameBox) {
+                        if (keycode == InputConstants.KEY_ENTER) {
+                            LayerElementEntry.this.stopEditingLayerName();
+                            return true;
+                        }
+                    }
+                    return super.keyPressed(keycode, scancode, modifiers);
+                }
+            };
+            this.editLayerNameBox.setVisible(false);
+            this.editLayerNameBox.setMaxLength(10000);
         }
 
         @Override
@@ -226,18 +252,40 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             if (!this.displayEditLayerNameBox) {
                 this.layerWidget.enableComponentScissor((int) (this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
-                UIBase.drawElementLabelF(pose, this.font, Component.literal(this.getLayerName()), (int) (this.getX() + this.getButtonWidth() + 3f), (int) (this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
+                UIBase.drawElementLabelF(pose, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
                 this.layerWidget.disableComponentScissor();
             } else {
                 UIBase.applyDefaultWidgetSkinTo(this.editLayerNameBox);
-                this.editLayerNameBox.setX((int)(this.getX() + this.getButtonWidth() + 3f));
-                this.editLayerNameBox.setY((int)(this.getY() + (this.getHeight() / 2f) - ((this.font.lineHeight + 2) / 2f)));
-//                this.editLayerNameBox.setWidth((int) (this.getX() + this.getWidth() - 3f) - this.editLayerNameBox.getX());
-                this.editLayerNameBox.setWidth((int)this.getLayerNameWidth());
-                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu(this.font.lineHeight);
+                this.editLayerNameBox.setX((int)this.getLayerNameX());
+                this.editLayerNameBox.setY((int)this.getLayerNameY() - 1);
+                this.editLayerNameBox.setWidth((int) Math.min(this.getMaxLayerNameWidth(), this.font.width(this.editLayerNameBox.getValue() + 13)));
+                if (this.editLayerNameBox.getWidth() < this.getMaxLayerNameWidth()) {
+                    this.editLayerNameBox.setDisplayPosition(0);
+                }
+                ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu(this.font.lineHeight + 2);
                 this.editLayerNameBox.render(pose, mouseX, mouseY, partial);
             }
 
+        }
+
+        protected void startEditingLayerName() {
+            this.editLayerNameBox.setVisible(true);
+            this.editLayerNameBox.setFocused(true);
+            this.editLayerNameBox.setValue(this.getLayerName());
+            this.editLayerNameBox.moveCursorToEnd();
+            this.displayEditLayerNameBox = true;
+        }
+
+        protected void stopEditingLayerName() {
+            if (this.displayEditLayerNameBox) {
+                String oldLayerName = this.getLayerName();
+                this.element.element.customElementLayerName = this.editLayerNameBox.getValue();
+                if (Objects.equals(oldLayerName, this.element.element.customElementLayerName)) this.element.element.customElementLayerName = null;
+                if ((this.element.element.customElementLayerName != null) && this.element.element.customElementLayerName.replace(" ", "").isEmpty()) this.element.element.customElementLayerName = null;
+            }
+            this.editLayerNameBox.setFocused(false);
+            this.editLayerNameBox.setVisible(false);
+            this.displayEditLayerNameBox = false;
         }
 
         @SuppressWarnings("all")
@@ -246,13 +294,16 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return this.element.element.builder.getDisplayName(this.element.element).getString();
         }
 
-        public float getLayerNameWidth() {
-            float x = this.getX() + this.getButtonWidth() + 3f;
-            float textWidth = this.font.width(this.getLayerName());
-            if ((x + textWidth) > (this.getX() + this.getWidth() - 3f)) {
-                textWidth = (this.getX() + this.getWidth() - 3f) - x;
-            }
-            return textWidth;
+        public float getLayerNameX() {
+            return this.getX() + this.getButtonWidth() + 3f;
+        }
+
+        public float getLayerNameY() {
+            return this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f);
+        }
+
+        public float getMaxLayerNameWidth() {
+            return (this.getX() + this.getWidth() - 3f) - this.getLayerNameX();
         }
 
         public boolean isMoveUpButtonHovered() {
@@ -282,9 +333,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public boolean isLayerNameMouseOver(double mouseX, double mouseY) {
             if (this.parent.isMouseInteractingWithGrabbers()) return false;
             if (!this.parent.isInnerAreaHovered()) return false;
-            float x = this.getX() + this.getButtonWidth() + 3f;
-            float textWidth = this.getLayerNameWidth();
-            return isXYInArea(mouseX, mouseY, x, this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f), textWidth, this.font.lineHeight);
+            return isXYInArea(mouseX, mouseY, this.getLayerNameX(), this.getLayerNameY(), this.getMaxLayerNameWidth(), this.font.lineHeight);
         }
 
         public float getButtonHeight() {
@@ -316,39 +365,23 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                         this.layerWidget.editor.moveElementDown(this.element);
                         MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     }
-                } else if (this.isLayerNameHovered()) {
-                    long now = System.currentTimeMillis();
-                    if ((this.lastLeftClick + 400) > now) {
-                        this.editLayerNameBox.setValue(this.getLayerName());
-                        this.editLayerNameBox.setFocused(true);
-                        this.displayEditLayerNameBox = true;
-                        if (this.layerWidget.editor.children().isEmpty() || (this.layerWidget.editor.children().get(0) != this.editLayerNameBox)) {
-                            MainThreadTaskExecutor.executeInMainThread(() -> {
-                                this.layerWidget.editor.children().remove(this.editLayerNameBox);
-                                ((IMixinScreen)this.layerWidget.editor).getChildrenFancyMenu().add(0, this.layerWidget);
-                            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                        }
-                    }
-                    this.lastLeftClick = now;
                 } else {
                     if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     if (!Screen.hasControlDown()) this.layerWidget.editor.deselectAllElements();
                     this.element.setSelected(!this.element.isSelected());
+                    if (this.isLayerNameHovered()) {
+                        long now = System.currentTimeMillis();
+                        if ((this.lastLeftClick + 400) > now) {
+                            this.startEditingLayerName();
+                        }
+                        this.lastLeftClick = now;
+                    }
                 }
             }
             if (button == 1) {
                 if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                 this.element.setSelected(true);
                 MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.editor.openElementContextMenuAtMouseIfPossible(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-            }
-            if (!this.isLayerNameHovered()) {
-                if (this.displayEditLayerNameBox) {
-                    this.element.element.customElementLayerName = this.editLayerNameBox.getValue();
-                    if (this.element.element.customElementLayerName.replace(" ", "").isEmpty()) this.element.element.customElementLayerName = null;
-                }
-                this.editLayerNameBox.setFocused(false);
-                this.displayEditLayerNameBox = false;
-                MainThreadTaskExecutor.executeInMainThread(() -> ((IMixinScreen)this.layerWidget.editor).getChildrenFancyMenu().remove(this.editLayerNameBox), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             }
         }
 

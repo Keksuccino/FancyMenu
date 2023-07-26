@@ -38,6 +38,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
+    @NotNull
     protected Component displayLabel = Component.literal("Widget");
     private float unscaledWidgetOffsetX = 0;
     private float unscaledWidgetOffsetY = 0;
@@ -65,11 +66,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     protected void init() {
 
-        this.headerButtons.add(new HeaderButton(this, consumes -> WrappedTexture.of(HIDE_BUTTON_ICON_TEXTURE), button -> {
+        this.children.clear();
+        this.headerButtons.clear();
+
+        this.addHeaderButton(new HeaderButton(this, consumes -> WrappedTexture.of(HIDE_BUTTON_ICON_TEXTURE), button -> {
             this.setVisible(false);
         }));
 
-        this.headerButtons.add(new HeaderButton(this, consumes -> WrappedTexture.of(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> WrappedTexture.of(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
             this.setExpanded(!this.isExpanded());
         }));
 
@@ -175,6 +179,11 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         this.disableComponentScissor();
         pose.popPose();
         RenderingUtils.resetShaderColor();
+    }
+
+    protected void addHeaderButton(@NotNull HeaderButton button) {
+        this.children.add(button);
+        this.headerButtons.add(button);
     }
 
     protected void updateCursor() {
@@ -374,6 +383,11 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         return this;
     }
 
+    @NotNull
+    public Component getDisplayLabel() {
+        return this.displayLabel;
+    }
+
     public boolean isMouseOverHeader() {
         if (!this.isVisible()) return false;
         return this.isComponentAreaHovered(this.getTranslatedX(), this.getTranslatedY(), this.getWidth(), this.getHeaderHeight() + (this.getBorderThickness() * 2), false);
@@ -395,9 +409,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                 this.leftMouseDownInnerHeight = this.bodyHeight;
                 return true;
             }
-            for (HeaderButton b : this.headerButtons) {
-                if (b.mouseClicked(realMouseX, realMouseY, button)) return true;
-            }
+            return super.mouseClickedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button);
         }
         return false;
     }
@@ -406,7 +418,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         this.leftMouseDownHeader = false;
         this.activeResizeEdge = null;
-        return false;
+        return super.mouseReleasedComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, button);
     }
 
     @Override
@@ -423,7 +435,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                 return true;
             }
         }
-        return false;
+        return super.mouseDraggedComponent(translatedMouseX, translatedMouseY, button, d1, d2);
     }
 
     protected void handleResize(float dragOffsetX, float dragOffsetY) {
@@ -441,15 +453,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                 this.unscaledWidgetOffsetY = this.leftMouseDownWidgetOffsetY + ((this.activeResizeEdge == ResizingEdge.TOP) ? dragOffsetY : 0);
             }
         }
-    }
-
-    @Override
-    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta) {
-        return false;
-    }
-
-    @Override
-    protected void mouseMovedComponent(double realMouseX, double realMouseY) {
     }
 
     public void editorElementAdded(@NotNull AbstractEditorElement element) {

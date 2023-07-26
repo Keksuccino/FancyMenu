@@ -12,7 +12,6 @@ public class LayerLayoutEditorWidgetBuilder extends AbstractLayoutEditorWidgetBu
 
     @Override
     public void applySettings(@NotNull LayoutEditorScreen editor, @NotNull WidgetSettings settings, @NotNull LayerLayoutEditorWidget applyTo) {
-        //TODO apply settings
     }
 
     @Override
@@ -25,7 +24,6 @@ public class LayerLayoutEditorWidgetBuilder extends AbstractLayoutEditorWidgetBu
 
     @Override
     public void writeSettings(@NotNull WidgetSettings settings, @NotNull LayerLayoutEditorWidget widgetInstance) {
-        //TODO write settings
     }
 
 }

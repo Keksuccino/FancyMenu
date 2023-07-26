@@ -766,7 +766,13 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
 
-		if (PopupHandler.isPopupActive() || super.mouseClicked(mouseX, mouseY, button)) {
+		if (PopupHandler.isPopupActive()) {
+			this.closeRightClickMenu();
+			this.closeActiveElementMenu();
+			return false;
+		}
+
+		if (super.mouseClicked(mouseX, mouseY, button)) {
 			this.closeRightClickMenu();
 			this.closeActiveElementMenu();
 			return true;
@@ -844,7 +850,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.isMouseSelection = false;
 		}
 
-		if (PopupHandler.isPopupActive()) return true;
+		if (PopupHandler.isPopupActive()) return false;
 
 		//Imitate super.mouseReleased in a way that doesn't suck
 		this.setDragging(false);
@@ -884,7 +890,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
-		if (PopupHandler.isPopupActive()) return true;
+		if (PopupHandler.isPopupActive()) return false;
 
 		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
 
@@ -916,6 +922,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public boolean keyPressed(int keycode, int scancode, int $$2) {
 
 		if (PopupHandler.isPopupActive()) return false;
+
+		if (super.keyPressed(keycode, scancode, $$2)) return true;
 
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
 		if (key == null) key = "";

@@ -51,23 +51,23 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             this.applySettings(editor, Objects.requireNonNull(settings), (T) Objects.requireNonNull(widget));
 
             String offsetX = settings.getValue("offset_x");
-            if ((offsetX != null) && MathUtils.isInteger(offsetX)) {
-                widget.setUnscaledWidgetOffsetX(Integer.parseInt(offsetX), true);
+            if ((offsetX != null) && MathUtils.isFloat(offsetX)) {
+                widget.setUnscaledWidgetOffsetX(Float.parseFloat(offsetX), true);
             }
 
             String offsetY = settings.getValue("offset_y");
-            if ((offsetY != null) && MathUtils.isInteger(offsetY)) {
-                widget.setUnscaledWidgetOffsetY(Integer.parseInt(offsetY), true);
+            if ((offsetY != null) && MathUtils.isFloat(offsetY)) {
+                widget.setUnscaledWidgetOffsetY(Float.parseFloat(offsetY), true);
             }
 
             String innerWidth = settings.getValue("inner_width");
-            if ((innerWidth != null) && MathUtils.isInteger(innerWidth)) {
-                widget.setBodyWidth(Integer.parseInt(innerWidth));
+            if ((innerWidth != null) && MathUtils.isFloat(innerWidth)) {
+                widget.setBodyWidth(Float.parseFloat(innerWidth));
             }
 
             String innerHeight = settings.getValue("inner_height");
-            if ((innerHeight != null) && MathUtils.isInteger(innerHeight)) {
-                widget.setBodyHeight(Integer.parseInt(innerHeight));
+            if ((innerHeight != null) && MathUtils.isFloat(innerHeight)) {
+                widget.setBodyHeight(Float.parseFloat(innerHeight));
             }
 
             String snappingSide = settings.getValue("snapping_side");

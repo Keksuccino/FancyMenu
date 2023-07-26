@@ -148,6 +148,10 @@ public class LayoutEditorUI {
 		ContextMenu windowMenu = new ContextMenu();
 		menuBar.addContextMenuEntry("window_tab", Component.translatable("fancymenu.editor.menu_bar.window"), windowMenu);
 
+		windowMenu.addSubMenuEntry("editor_widgets", Component.translatable("fancymenu.editor.widgets"), buildEditorWidgetsContextMenu(editor));
+
+		windowMenu.addSeparatorEntry("separator_after_editor_widgets");
+
 		windowMenu.addValueCycleEntry("enable_grid", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.grid", FancyMenu.getOptions().showLayoutEditorGrid.getValue()).addCycleListener(cycle -> {
 			FancyMenu.getOptions().showLayoutEditorGrid.setValue(cycle.getAsBoolean());
 		})).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.grid"));
@@ -204,6 +208,19 @@ public class LayoutEditorUI {
 
 	protected static void displayUnsavedWarning(@NotNull Consumer<Boolean> callback) {
 		Minecraft.getInstance().setScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
+	}
+
+	@NotNull
+	public static ContextMenu buildEditorWidgetsContextMenu(@NotNull LayoutEditorScreen editor) {
+		ContextMenu menu = new ContextMenu();
+		int i = 0;
+		for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
+			menu.addClickableEntry("widget_" + i, w.getDisplayLabel(), (menu1, entry) -> {
+				w.setVisible(true);
+			});
+			i++;
+		}
+		return menu;
 	}
 
 	@NotNull
