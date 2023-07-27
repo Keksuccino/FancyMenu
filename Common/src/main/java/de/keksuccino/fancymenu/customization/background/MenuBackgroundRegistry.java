@@ -18,15 +18,10 @@ public class MenuBackgroundRegistry {
      * {@link MenuBackgroundBuilder}s should get registered during mod-init.
      **/
     public static void register(@NotNull MenuBackgroundBuilder<?> builder) {
-        Objects.requireNonNull(builder.getIdentifier(), "[FANCYMENU] Failed to register menu background! Identifier was NULL!");
-        if (BACKGROUNDS.containsKey(builder.getIdentifier())) {
+        if (BACKGROUNDS.containsKey(Objects.requireNonNull(builder.getIdentifier()))) {
             LOGGER.warn("[FANCYMENU] Menu background with identifier '" + builder.getIdentifier() + "' already registered! Overriding background!");
         }
         BACKGROUNDS.put(builder.getIdentifier(), builder);
-    }
-
-    public static void unregister(@NotNull String identifier) {
-        BACKGROUNDS.remove(identifier);
     }
 
     @NotNull

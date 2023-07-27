@@ -11,7 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
@@ -661,11 +661,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		}
 		fileNamePreset = fileNamePreset.toLowerCase();
 		fileNamePreset = CharacterFilter.buildBasicFilenameCharacterFilter().filterForAllowedChars(fileNamePreset);
-		fileNamePreset = FileUtils.generateAvailableFilename(FancyMenu.LAYOUT_DIR.getAbsolutePath(), fileNamePreset, "txt");
+		fileNamePreset = FileUtils.generateAvailableFilename(LayoutHandler.LAYOUT_DIR.getAbsolutePath(), fileNamePreset, "txt");
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();
 		}
-		Minecraft.getInstance().setScreen(SaveFileScreen.build(FancyMenu.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
+		Minecraft.getInstance().setScreen(SaveFileScreen.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
 			if (call != null) {
 				try {
 					this.layout.updateLastEditedTime();

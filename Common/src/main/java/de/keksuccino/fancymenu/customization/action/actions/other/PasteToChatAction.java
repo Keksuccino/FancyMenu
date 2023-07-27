@@ -3,10 +3,13 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
-import net.minecraft.client.resources.language.I18n;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PasteToChatAction extends Action {
 
@@ -20,12 +23,12 @@ public class PasteToChatAction extends Action {
     }
 
     @Override
-    public void execute(String value) {
+    public void execute(@Nullable String value) {
         if (value != null) {
             String msg;
             boolean append = true;
             if (value.toLowerCase().startsWith("true:") || value.toLowerCase().startsWith("false:")) {
-                msg = value.split("[:]", 2)[1];
+                msg = value.split(":", 2)[1];
                 if (value.toLowerCase().startsWith("false:")) {
                     append = false;
                 }
@@ -35,9 +38,9 @@ public class PasteToChatAction extends Action {
             if (Minecraft.getInstance().level != null) {
                 if (Minecraft.getInstance().player != null) {
                     Screen s = Minecraft.getInstance().screen;
-                    if ((s == null) || !(s instanceof ChatScreen)) {
+                    if (!(s instanceof ChatScreen)) {
                         ((IMixinMinecraft)Minecraft.getInstance()).openChatScreenFancyMenu(msg);
-                    } else if (s instanceof ChatScreen) {
+                    } else {
                         if (append) {
                             ((IMixinChatScreen)s).getInputFancyMenu().insertText(msg);
                         } else {
@@ -50,13 +53,18 @@ public class PasteToChatAction extends Action {
     }
 
     @Override
-    public String getActionDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.paste_to_chat.desc");
+    public @NotNull Component getActionDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.paste_to_chat");
     }
 
     @Override
-    public String getValueDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
+    public @NotNull Component[] getActionDescription() {
+        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.paste_to_chat.desc");
+    }
+
+    @Override
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
     }
 
     @Override

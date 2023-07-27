@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.action.actions.layout;
 
-import com.google.common.io.Files;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import net.minecraft.client.resources.language.I18n;
-
-import java.util.List;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class EnableLayoutAction extends Action {
 
@@ -20,7 +20,7 @@ public class EnableLayoutAction extends Action {
     }
 
     @Override
-    public void execute(String value) {
+    public void execute(@Nullable String value) {
 
         if (value != null) {
 
@@ -34,13 +34,18 @@ public class EnableLayoutAction extends Action {
     }
 
     @Override
-    public String getActionDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.enable_layout.desc");
+    public @NotNull Component getActionDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.enable_layout");
     }
 
     @Override
-    public String getValueDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.enable_layout.value.desc");
+    public @NotNull Component[] getActionDescription() {
+        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.enable_layout.desc");
+    }
+
+    @Override
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.enable_layout.value.desc");
     }
 
     @Override

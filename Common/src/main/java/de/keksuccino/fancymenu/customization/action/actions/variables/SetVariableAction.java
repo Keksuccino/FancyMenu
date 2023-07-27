@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.customization.action.actions.variables;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import net.minecraft.client.resources.language.I18n;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class SetVariableAction extends Action {
 
@@ -27,13 +29,18 @@ public class SetVariableAction extends Action {
     }
 
     @Override
-    public String getActionDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.variables.set.desc");
+    public @NotNull Component getActionDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.variables.set");
     }
 
     @Override
-    public String getValueDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.variables.set.value.desc");
+    public @NotNull Component[] getActionDescription() {
+        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.variables.set.desc");
+    }
+
+    @Override
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.variables.set.value.desc");
     }
 
     @Override

@@ -14,15 +14,10 @@ public class DeepScreenCustomizationLayerRegistry {
     private static final Map<String, DeepScreenCustomizationLayer> LAYERS = new HashMap<>();
 
     public static void register(@NotNull DeepScreenCustomizationLayer layer) {
-        Objects.requireNonNull(layer.getTargetMenuIdentifier(), "[FANCYMENU] Failed to register DeepScreenCustomizationLayer! Identifier was NULL!");
-        if (LAYERS.containsKey(layer.getTargetMenuIdentifier())) {
+        if (LAYERS.containsKey(Objects.requireNonNull(layer.getTargetMenuIdentifier()))) {
             LOGGER.warn("[FANCYMENU] DeepScreenCustomizationLayer with identifier '" + layer.getTargetMenuIdentifier() + "' already registered! Overriding layer!");
         }
         LAYERS.put(layer.getTargetMenuIdentifier(), layer);
-    }
-
-    public static void unregister(@NotNull String menuIdentifier) {
-        LAYERS.remove(menuIdentifier);
     }
 
     @NotNull

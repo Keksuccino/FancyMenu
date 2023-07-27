@@ -5,11 +5,11 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.layer.
 
 public class LayoutEditorWidgets {
 
-    public static final LayerLayoutEditorWidgetBuilder LAYER_WIDGET_BUILDER = new LayerLayoutEditorWidgetBuilder();
+    public static final LayerLayoutEditorWidgetBuilder LAYERS = new LayerLayoutEditorWidgetBuilder();
 
     public static void registerAll() {
 
-        LayoutEditorWidgetRegistry.register(LAYER_WIDGET_BUILDER);
+        LayoutEditorWidgetRegistry.register(LAYERS);
 
     }
 

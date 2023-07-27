@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class LayoutEditorWidgetRegistry {
 
@@ -16,11 +17,16 @@ public class LayoutEditorWidgetRegistry {
     private static final List<AbstractLayoutEditorWidgetBuilder<?>> WIDGET_BUILDERS = new ArrayList<>();
 
     public static void register(@NotNull AbstractLayoutEditorWidgetBuilder<?> widgetBuilder) {
-        if (!isBuilderRegistered(widgetBuilder.getIdentifier())) {
+        if (!isBuilderRegistered(Objects.requireNonNull(widgetBuilder.getIdentifier()))) {
             WIDGET_BUILDERS.add(widgetBuilder);
         } else {
             LOGGER.error("[FANCYMENU] Failed to register AbstractLayoutEditorWidgetBuilder! Builder with same identifier already registered! (" + widgetBuilder.getIdentifier() + ")");
         }
+    }
+
+    @NotNull
+    public static List<AbstractLayoutEditorWidgetBuilder<?>> getBuilders() {
+        return new ArrayList<>(WIDGET_BUILDERS);
     }
 
     @Nullable
@@ -29,11 +35,6 @@ public class LayoutEditorWidgetRegistry {
             if (b.getIdentifier().equals(identifier)) return b;
         }
         return null;
-    }
-
-    @NotNull
-    public static List<AbstractLayoutEditorWidgetBuilder<?>> getBuilders() {
-        return new ArrayList<>(WIDGET_BUILDERS);
     }
 
     public static boolean isBuilderRegistered(@NotNull String identifier) {

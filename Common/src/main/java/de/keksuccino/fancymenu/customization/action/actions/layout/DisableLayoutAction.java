@@ -3,7 +3,10 @@ package de.keksuccino.fancymenu.customization.action.actions.layout;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import net.minecraft.client.resources.language.I18n;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class DisableLayoutAction extends Action {
 
@@ -17,7 +20,7 @@ public class DisableLayoutAction extends Action {
     }
 
     @Override
-    public void execute(String value) {
+    public void execute(@Nullable String value) {
 
         if (value != null) {
 
@@ -31,13 +34,18 @@ public class DisableLayoutAction extends Action {
     }
 
     @Override
-    public String getActionDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.disable_layout.desc");
+    public @NotNull Component getActionDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.disable_layout");
     }
 
     @Override
-    public String getValueDescription() {
-        return I18n.get("fancymenu.helper.buttonaction.disable_layout.value.desc");
+    public @NotNull Component[] getActionDescription() {
+        return LocalizationUtils.splitLocalizedLines("fancymenu.helper.buttonaction.disable_layout.desc");
+    }
+
+    @Override
+    public Component getValueDisplayName() {
+        return Component.translatable("fancymenu.helper.buttonaction.disable_layout.value.desc");
     }
 
     @Override

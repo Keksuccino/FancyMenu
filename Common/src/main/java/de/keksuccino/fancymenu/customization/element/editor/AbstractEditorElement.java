@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -848,16 +849,16 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		{
 			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 			if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
-				File startDir = FancyMenu.ASSETS_DIR;
+				File startDir = LayoutHandler.ASSETS_DIR;
 				List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, targetFieldGetter);
 				if (ListUtils.allInListEqual(allPaths)) {
 					String path = allPaths.get(0);
 					if (path != null) {
 						startDir = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
-						if (startDir == null) startDir = FancyMenu.ASSETS_DIR;
+						if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
 					}
 				}
-				ChooseFileScreen fileChooser = new ChooseFileScreen(FancyMenu.ASSETS_DIR, startDir, (call) -> {
+				ChooseFileScreen fileChooser = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, startDir, (call) -> {
 					if (call != null) {
 						this.editor.history.saveSnapshot();
 						for (AbstractEditorElement e : selectedElements) {

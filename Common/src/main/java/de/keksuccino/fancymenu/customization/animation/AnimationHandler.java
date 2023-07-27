@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.customization.animation.AnimationData.Type;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
@@ -20,11 +21,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("unused")
 public class AnimationHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	
+
+	public static final File ANIMATIONS_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/animations"));
+
 	private static final Map<String, AnimationData> ANIMATIONS = new HashMap<>();
 	private static final List<String> EXTERNAL_ANIMATION_NAMES = new ArrayList<>();
 	protected static boolean preloadCompleted = false;
@@ -69,16 +71,9 @@ public class AnimationHandler {
 	}
 
 	public static void discoverAndRegisterExternalAnimations() {
-
-		File f = FancyMenu.getAnimationPath();
-		if (!f.exists() || !f.isDirectory()) {
-			return;
-		}
-
 		preloadCompleted = false;
 		clearExternalAnimations();
-
-		File[] filesArray = f.listFiles();
+		File[] filesArray = ANIMATIONS_DIR.listFiles();
 		if (filesArray == null) return;
 		for (File a : filesArray) {
 			String name;

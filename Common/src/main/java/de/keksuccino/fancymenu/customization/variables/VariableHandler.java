@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.*;
 

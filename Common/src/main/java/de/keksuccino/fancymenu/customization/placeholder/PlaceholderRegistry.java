@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 public class PlaceholderRegistry {
@@ -19,26 +18,20 @@ public class PlaceholderRegistry {
     private static final Map<String, Placeholder> PLACEHOLDERS = new LinkedHashMap<>();
 
     public static void register(@NotNull Placeholder placeholder) {
-        Objects.requireNonNull(placeholder.getIdentifier());
-        if (PLACEHOLDERS.containsKey(placeholder.getIdentifier())) {
+        if (PLACEHOLDERS.containsKey(Objects.requireNonNull(placeholder.getIdentifier()))) {
             LOGGER.warn("[FANCYMENU] A placeholder with the identifier '" + placeholder.getIdentifier() + "' is already registered! Overriding placeholder!");
         }
         PLACEHOLDERS.put(placeholder.getIdentifier(), placeholder);
     }
 
+    @NotNull
+    public static List<Placeholder> getPlaceholders() {
+        return new ArrayList<>(PLACEHOLDERS.values());
+    }
+
     @Nullable
     public static Placeholder getPlaceholder(String identifier) {
         return PLACEHOLDERS.get(identifier);
-    }
-
-    @NotNull
-    public static Map<String, Placeholder> getPlaceholders() {
-        return PLACEHOLDERS;
-    }
-
-    @NotNull
-    public static List<Placeholder> getPlaceholdersList() {
-        return new ArrayList<>(PLACEHOLDERS.values());
     }
 
 }

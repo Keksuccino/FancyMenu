@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.widget;
 
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -24,7 +24,7 @@ public class ButtonMimeHandler {
     public static boolean tryCache(String menuIdentifier, boolean overrideCache) {
         if (!cachedButtons.containsKey(menuIdentifier) || overrideCache) {
             try {
-                Screen s = GuiConstructor.tryToConstruct(menuIdentifier);
+                Screen s = ScreenInstanceFactory.tryConstruct(menuIdentifier);
                 if (s != null) {
                     ButtonPackage p = new ButtonPackage();
                     if (p.init(s)) {

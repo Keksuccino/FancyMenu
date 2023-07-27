@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -29,14 +30,14 @@ public class NonStackableOverlayUI {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu addToFinal = addResetOption ? subMenu : addTo;
         ContextMenu.ClickableContextMenuEntry<?> chooseEntry = addToFinal.addClickableEntry(addResetOption ? "choose_file" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) -> {
-            File startDir = FancyMenu.ASSETS_DIR;
+            File startDir = LayoutHandler.ASSETS_DIR;
             String path = getter.get();
             if (path != null) {
                 startDir = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path)).getParentFile();
-                if (startDir == null) startDir = FancyMenu.ASSETS_DIR;
+                if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
             }
             Screen current = Minecraft.getInstance().screen;
-            ChooseFileScreen fileChooser = new ChooseFileScreen(FancyMenu.ASSETS_DIR, startDir, (call) -> {
+            ChooseFileScreen fileChooser = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, startDir, (call) -> {
                 if (call != null) {
                     setter.accept(call.getPath());
                 }

@@ -5,17 +5,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class PanoramaHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+
+	public static final File PANORAMA_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/panoramas"));
 
 	private static final Map<String, ExternalTexturePanoramaRenderer> PANORAMAS = new HashMap<>();
 	
@@ -25,29 +27,30 @@ public class PanoramaHandler {
 	}
 	
 	public static void updatePanoramas() {
-		File f = FancyMenu.getPanoramaDirectory();
 		PANORAMAS.clear();
-		for (File f2 : f.listFiles()) {
-			if (f2.isDirectory()) {
-				File f3 = new File(f2.getPath() + "/properties.txt");
-				if (!f3.exists()) {
-					f3 = new File(f2.getPath() + "/properties.txt.txt");
+		File[] files = PANORAMA_DIR.listFiles();
+		if (files == null) return;
+		for (File panorama : files) {
+			if (panorama.isDirectory()) {
+				File propertiesFile = new File(panorama.getPath() + "/properties.txt");
+				if (!propertiesFile.exists()) {
+					propertiesFile = new File(panorama.getPath() + "/properties.txt.txt");
 				}
-				File f4 = new File(f2.getPath() + "/panorama");
-				if (f3.exists() && f4.exists()) {
-					ExternalTexturePanoramaRenderer render = new ExternalTexturePanoramaRenderer(f2.getPath());
+				File imageDir = new File(panorama.getPath() + "/panorama");
+				if (propertiesFile.exists() && imageDir.exists()) {
+					ExternalTexturePanoramaRenderer render = new ExternalTexturePanoramaRenderer(panorama.getPath());
 					String name = render.getName();
 					if (name != null) {
 						render.preparePanorama();
 						PANORAMAS.put(name, render);
 					} else {
-						LOGGER.error(buildErrorMessage(f2, false, false, false) + " (name is empty/NULL)");
+						LOGGER.error(buildErrorMessage(panorama, false, false, false) + " (name is empty/NULL)");
 					}
 				} else {
-					LOGGER.error(buildErrorMessage(f2, true, f3.exists(), f4.exists()));
+					LOGGER.error(buildErrorMessage(panorama, true, propertiesFile.exists(), imageDir.exists()));
 				}
 			} else {
-				LOGGER.error(buildErrorMessage(f2, false, false, false) + " (not a directory)");
+				LOGGER.error(buildErrorMessage(panorama, false, false, false) + " (not a directory)");
 			}
 		}
 	}

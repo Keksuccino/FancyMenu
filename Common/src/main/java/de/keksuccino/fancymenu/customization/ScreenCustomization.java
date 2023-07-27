@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization;
 
 import java.io.File;
-import java.net.URL;
 import java.util.*;
 
 import de.keksuccino.fancymenu.FancyMenu;
@@ -16,8 +15,8 @@ import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiLoader;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.LoadingRequirements;
@@ -97,7 +96,7 @@ public class ScreenCustomization {
 
 		SlideshowHandler.init();
 
-		CustomGuiLoader.loadCustomGuis();
+		CustomGuiHandler.reloadGuis();
 
 		GameIntroHandler.init();
 
@@ -236,7 +235,7 @@ public class ScreenCustomization {
 	}
 
 	public static String findValidMenuIdentifierFor(String identifier) {
-		if (CustomGuiLoader.guiExists(identifier)) {
+		if (CustomGuiHandler.guiExists(identifier)) {
 			return identifier;
 		}
 		SetupSharingHandler.MenuIdentifierDatabase db = SetupSharingHandler.getIdentifierDatabase();
@@ -287,7 +286,7 @@ public class ScreenCustomization {
 		AnimationHandler.resetAnimationSounds();
 		AnimationHandler.stopAnimationSounds();
 		LayoutHandler.reloadLayouts();
-		CustomGuiLoader.loadCustomGuis();
+		CustomGuiHandler.reloadGuis();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}

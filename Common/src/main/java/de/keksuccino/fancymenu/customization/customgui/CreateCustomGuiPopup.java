@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.guicreator;
+package de.keksuccino.fancymenu.customization.customgui;
 
 import java.awt.Color;
 import java.io.File;
@@ -103,7 +103,7 @@ public class CreateCustomGuiPopup extends FMPopup {
 		this.cancelButton.y = (renderIn.height / 2) + 55;
 		
 		if ((id != null) && (id.length() > 0) && !id.contains(" ")) {
-			List<String> l = CustomGuiLoader.getCustomGuis();
+			List<String> l = CustomGuiHandler.getCustomGuis();
 			if (!l.contains(id)) {
 				this.doneButton.x = (renderIn.width / 2) - (this.doneButton.getWidth() / 2);
 				this.doneButton.y = (renderIn.height / 2) + 80;
@@ -125,9 +125,9 @@ public class CreateCustomGuiPopup extends FMPopup {
 		try {
 			String name = "";
 			if (this.identifierText.getValue() != null) {
-				name = FileUtils.generateAvailableFilename(FancyMenu.getCustomGuisDirectory().getPath(), this.identifierText.getValue(), "txt");
+				name = FileUtils.generateAvailableFilename(CustomGuiHandler.CUSTOM_GUIS_DIR.getPath(), this.identifierText.getValue(), "txt");
 				
-				File f = new File(FancyMenu.getCustomGuisDirectory().getPath() + "/" + name);
+				File f = new File(CustomGuiHandler.CUSTOM_GUIS_DIR.getPath() + "/" + name);
 				if (!f.exists()) {
 					f.createNewFile();
 				}
@@ -142,8 +142,8 @@ public class CreateCustomGuiPopup extends FMPopup {
 				FileUtils.writeTextToFile(f, false, l.toArray(new String[0]));
 				
 				this.setDisplayed(false);
-				CustomGuiLoader.loadCustomGuis();
-				CustomGuiBase gui = CustomGuiLoader.getGui(this.identifierText.getValue(), Minecraft.getInstance().screen, null);
+				CustomGuiHandler.reloadGuis();
+				CustomGuiBase gui = CustomGuiHandler.getGui(this.identifierText.getValue(), Minecraft.getInstance().screen, null);
 				if (gui != null) {
 					Minecraft.getInstance().setScreen(gui);
 					Minecraft.getInstance().setScreen(new LayoutEditorScreen(gui, new Layout(gui)));

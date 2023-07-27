@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -40,10 +40,6 @@ public class ScreenCustomizationLayerHandler {
 	}
 
 	public static void registerLayer(@NotNull ScreenCustomizationLayer layer) {
-		if (layer.getIdentifier() == null) {
-			LOGGER.error("[FANCYMENU] Unable to register ScreenCustomizationLayer! Identifier was NULL!");
-			return;
-		}
 		registerLayer(layer.getIdentifier(), layer);
 	}
 

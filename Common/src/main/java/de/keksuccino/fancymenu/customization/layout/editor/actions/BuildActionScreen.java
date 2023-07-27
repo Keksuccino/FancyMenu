@@ -25,6 +25,10 @@ import java.util.function.Consumer;
 
 public class BuildActionScreen extends Screen {
 
+    //TODO "Cancel" button zu Edit Action adden (beim öffnen wird action kopiert und Änderungen nur übernommen, wenn nicht Cancel)
+
+    //TODO Wenn Action Type geändert wird, value resetten, aber altes value + type cachen (wenn auf alten type zurück gewechselt wird, value wiederherstellen)
+
     protected Screen parentScreen;
     protected final ManageActionsScreen.ActionInstance instance;
     protected boolean isEdit;
@@ -69,7 +73,7 @@ public class BuildActionScreen extends Screen {
         super.init();
 
         this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
-            TextEditorScreen s = new TextEditorScreen(Component.literal(this.instance.action.getValueDescription()), null, (call) -> {
+            TextEditorScreen s = new TextEditorScreen(this.instance.action.getValueDisplayName(), null, (call) -> {
                 if (call != null) {
                     this.instance.value = call;
                 }
@@ -195,19 +199,16 @@ public class BuildActionScreen extends Screen {
     }
 
     protected void setDescription(@Nullable Action action) {
-
         this.actionDescriptionScrollArea.clearEntries();
-
         if ((action != null) && (action.getActionDescription() != null)) {
-            for (String s : LocalizationUtils.splitLocalizedStringLines(action.getActionDescription())) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.actionDescriptionScrollArea, Component.literal(s), (entry) -> {});
+            for (Component c : action.getActionDescription()) {
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.actionDescriptionScrollArea, c, (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
                 this.actionDescriptionScrollArea.addEntry(e);
             }
         }
-
     }
 
     protected void setContentOfActionsList() {
@@ -229,7 +230,7 @@ public class BuildActionScreen extends Screen {
         public Action action;
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(action.getIdentifier()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), UIBase.getUIColorScheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), UIBase.getUIColorScheme().listing_dot_color_1.getColor(), onClick);
             this.action = action;
         }
 

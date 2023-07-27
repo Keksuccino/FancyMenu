@@ -5,17 +5,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SlideshowHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+
+	public static final File SLIDESHOW_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/slideshows"));
 
 	private static final Map<String, ExternalTextureSlideshowRenderer> SLIDESHOWS = new HashMap<>();
 	
@@ -25,29 +29,30 @@ public class SlideshowHandler {
 	}
 	
 	public static void updateSlideshows() {
-		File f = FancyMenu.getSlideshowDirectory();
 		SLIDESHOWS.clear();
-		for (File f2 : f.listFiles()) {
-			if (f2.isDirectory()) {
-				File f3 = new File(f2.getPath() + "/properties.txt");
-				if (!f3.exists()) {
-					new File(f2.getPath() + "/properties.txt.txt");
+		File[] files = SLIDESHOW_DIR.listFiles();
+		if (files == null) return;
+		for (File slideshow : files) {
+			if (slideshow.isDirectory()) {
+				File propertiesFile = new File(slideshow.getPath() + "/properties.txt");
+				if (!propertiesFile.exists()) {
+					new File(slideshow.getPath() + "/properties.txt.txt");
 				}
-				File f4 = new File(f2.getPath() + "/images");
-				if (f3.exists() && f4.exists()) {
-					ExternalTextureSlideshowRenderer render = new ExternalTextureSlideshowRenderer(f2.getPath());
+				File imageDir = new File(slideshow.getPath() + "/images");
+				if (propertiesFile.exists() && imageDir.exists()) {
+					ExternalTextureSlideshowRenderer render = new ExternalTextureSlideshowRenderer(slideshow.getPath());
 					String name = render.getName();
 					if (name != null) {
 						render.prepareSlideshow();
 						SLIDESHOWS.put(name, render);
 					} else {
-						LOGGER.error(buildErrorMessage(f2, false, false, false) + " (name is empty/NULL)");
+						LOGGER.error(buildErrorMessage(slideshow, false, false, false) + " (name is empty/NULL)");
 					}
 				} else {
-					LOGGER.error(buildErrorMessage(f2, true, f3.exists(), f4.exists()));
+					LOGGER.error(buildErrorMessage(slideshow, true, propertiesFile.exists(), imageDir.exists()));
 				}
 			} else {
-				LOGGER.error(buildErrorMessage(f2, false, false, false) + " (not a directory)");
+				LOGGER.error(buildErrorMessage(slideshow, false, false, false) + " (not a directory)");
 			}
 		}
 	}
@@ -71,25 +76,24 @@ public class SlideshowHandler {
 		}
 		return msg;
 	}
-	
-	public static ExternalTextureSlideshowRenderer getSlideshow(String name) {
-		return SLIDESHOWS.get(name);
+
+	@Nullable
+	public static ExternalTextureSlideshowRenderer getSlideshow(@NotNull String identifier) {
+		return SLIDESHOWS.get(identifier);
 	}
-	
+
+	@NotNull
 	public static List<ExternalTextureSlideshowRenderer> getSlideshows() {
-		List<ExternalTextureSlideshowRenderer> l = new ArrayList<ExternalTextureSlideshowRenderer>();
-		l.addAll(SLIDESHOWS.values());
-		return l;
+		return new ArrayList<>(SLIDESHOWS.values());
 	}
-	
+
+	@NotNull
 	public static List<String> getSlideshowNames() {
-		List<String> l = new ArrayList<String>();
-		l.addAll(SLIDESHOWS.keySet());
-		return l;
+		return new ArrayList<>(SLIDESHOWS.keySet());
 	}
 	
-	public static boolean slideshowExists(String name) {
-		return SLIDESHOWS.containsKey(name);
+	public static boolean slideshowExists(@NotNull String identifier) {
+		return SLIDESHOWS.containsKey(identifier);
 	}
 	
 	@EventListener

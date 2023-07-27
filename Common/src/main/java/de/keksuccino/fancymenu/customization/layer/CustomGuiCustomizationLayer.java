@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layer;
 
-import de.keksuccino.fancymenu.customization.guicreator.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
 import net.minecraft.client.gui.screens.Screen;
 
 public class CustomGuiCustomizationLayer extends ScreenCustomizationLayer {

@@ -1,48 +1,45 @@
 package de.keksuccino.fancymenu.customization.action;
 
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
+import java.util.Objects;
 
 /**
- * A button action container.<br><br>
- *
- * Needs to be registered to the {@link ActionRegistry} at mod init.
+ * An action to use with buttons, tickers, etc.<br>
+ * Needs to get registered to the {@link ActionRegistry} at mod init.
  */
 public abstract class Action {
 
     private final String identifier;
 
     public Action(@NotNull String uniqueIdentifier) {
-        this.identifier = uniqueIdentifier;
+        this.identifier = Objects.requireNonNull(uniqueIdentifier);
     }
 
     /**
-     * If this action has a value or not.
+     * If this action has a value.
      */
     public abstract boolean hasValue();
 
     /**
-     * Is called when a button with this action gets clicked.<br>
      * @param value The value that was set to the action or NULL if this action has no value.
      */
-    public abstract void execute(String value);
+    public abstract void execute(@Nullable String value);
+
+    @NotNull
+    public abstract Component getActionDisplayName();
+
+    @NotNull
+    public abstract Component[] getActionDescription();
+
+    @Nullable
+    public abstract Component getValueDisplayName();
 
     /**
-     * The description of the action.
-     */
-    public abstract String getActionDescription();
-
-    /**
-     * The description of the action value.
-     */
-    public abstract String getValueDescription();
-
-    /**
-     * An example of how the value of this action should look like.<br>
-     * Return NULL if this action has no value.
+     * An example of how the value of this action should look like.
      */
     @Nullable
     public abstract String getValueExample();

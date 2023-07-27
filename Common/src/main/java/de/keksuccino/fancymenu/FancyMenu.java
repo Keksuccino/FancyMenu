@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
-
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -15,19 +14,25 @@ import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.guiconstruction.GuiConstructor;
+import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//PRIORITY:
+	//TODO Element Listeners
+	// - Jeder Element Typ hat eigene Listener
+	// - Per Rechtsklick auf element können Listener geadded werden, die dann Actions ausführen (jeder listener hat eigene Actions list)
+	// - "Element Listeners" Option ist unter "Loading Requirements" in Context Menu
+	// - Default Listeners (Alle Elemente):
+	//   - On Load
+	//   - On Click
+	//   - On Hover Start
+	//   - On Hover End
+	//   - On Render (Jeden Render Tick)
 
 	//TODO FIXEN: Hover sound von vanilla + custom buttons geht nicht
-
-
-	//-----------------------------
 
 	//TODO text editor brackets highlighter broken
 
@@ -53,17 +58,11 @@ public class FancyMenu {
 
 	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)
 
-	//TODO element list mit allen elementen eines layouts als widget (wie in photoshop)
-	// - elemente sind nach order gelistet
-	// - non-orderables haben andere Farbe und sind an richtiger (fester) position in list
-
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
-
-	//TODO add cancel button to ManageRequirementsScreen that returns NULL as callback (NULL gets handled already, just needs the return logic)
 
 	//TODO "Key Pressed" Loading Requirement
 
@@ -72,10 +71,6 @@ public class FancyMenu {
 	//TODO Layout Editor: Toast Notifications rechts oben nach verschiedenen Aktionen wie copy/paste, undo/redo, etc.
 
 	//TODO Text Element: auto line break (toggleable)
-
-	//TODO NOCH NICHT KOMPLETT: Alten Legacy/Deprecated/V1 stuff entfernen und komplett auf neue Registries porten
-	// - Visibility Requirements (v1 stuff zu loading requirements machen)
-	// - Actions
 
 	//TODO TextView class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
 
@@ -90,20 +85,10 @@ public class FancyMenu {
 	public static final File MOD_DIR = createDirectory(new File(getGameDirectory(), "/config/fancymenu"));
 	public static final File INSTANCE_DATA_DIR = createDirectory(new File(getGameDirectory(), "/.fancymenu_data"));
 	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
-	public static final File LAYOUT_DIR = createDirectory(new File(MOD_DIR, "/customization"));
-	public static final File ASSETS_DIR = createDirectory(new File(MOD_DIR, "/assets"));
-
-	//TODO Move these to their actual classes
-	private static final File ANIMATIONS_DIR = new File(MOD_DIR, "/animations");
-	private static final File CUSTOM_GUIS_DIR = new File(MOD_DIR, "/customguis");
-	private static final File BUTTONSCRIPT_DIR = new File(MOD_DIR, "/buttonscripts");
-	private static final File PANORAMA_DIR = new File(MOD_DIR, "/panoramas");
-	private static final File SLIDESHOW_DIR = new File(MOD_DIR, "/slideshows");
 
 	private static Options options;
 
 	public static void init() {
-
 		try {
 
 	    	if (Services.PLATFORM.isOnClient()) {
@@ -116,14 +101,6 @@ public class FancyMenu {
 				if (!INSTANCE_DATA_DIR.isDirectory()) {
 					INSTANCE_DATA_DIR.mkdirs();
 				}
-	    		
-	    		//Create all important directories
-	    		ANIMATIONS_DIR.mkdirs();
-	    		LAYOUT_DIR.mkdirs();
-	    		CUSTOM_GUIS_DIR.mkdirs();
-	    		BUTTONSCRIPT_DIR.mkdirs();
-	    		PANORAMA_DIR.mkdirs();
-	    		SLIDESHOW_DIR.mkdirs();
 
 				UIColorThemes.registerAll();
 
@@ -139,7 +116,7 @@ public class FancyMenu {
 				EventHandler.INSTANCE.registerListenersOf(new Test());
 
 				if (isOptiFineLoaded()) {
-					LOGGER.info("[FANCYMENU] OptiFine compatibility mode enabled!");
+					LOGGER.info("[FANCYMENU] OptiFine detected!");
 				}
 
 	    	} else {
@@ -149,25 +126,22 @@ public class FancyMenu {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 	
 	public static void onClientSetup() {
-
 		try {
 
 			SetupSharingHandler.init();
 
 			CustomLocalsHandler.loadLocalizations();
 
-        	GuiConstructor.init();
+        	ScreenInstanceFactory.init();
 
 			ServerCache.init();
 	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-
 	}
 
 	public static Options getOptions() {
@@ -179,41 +153,6 @@ public class FancyMenu {
 
 	public static void reloadOptions() {
 		options = new Options();
-	}
-	
-	public static File getAnimationPath() {
-		if (!ANIMATIONS_DIR.exists()) {
-			ANIMATIONS_DIR.mkdirs();
-		}
-		return ANIMATIONS_DIR;
-	}
-	
-	public static File getCustomGuisDirectory() {
-		if (!CUSTOM_GUIS_DIR.exists()) {
-			CUSTOM_GUIS_DIR.mkdirs();
-		}
-		return CUSTOM_GUIS_DIR;
-	}
-
-	public static File getButtonScriptPath() {
-		if (!BUTTONSCRIPT_DIR.exists()) {
-			BUTTONSCRIPT_DIR.mkdirs();
-		}
-		return BUTTONSCRIPT_DIR;
-	}
-
-	public static File getPanoramaDirectory() {
-		if (!PANORAMA_DIR.exists()) {
-			PANORAMA_DIR.mkdirs();
-		}
-		return PANORAMA_DIR;
-	}
-
-	public static File getSlideshowDirectory() {
-		if (!SLIDESHOW_DIR.exists()) {
-			SLIDESHOW_DIR.mkdirs();
-		}
-		return SLIDESHOW_DIR;
 	}
 
 	public static boolean isOptiFineLoaded() {

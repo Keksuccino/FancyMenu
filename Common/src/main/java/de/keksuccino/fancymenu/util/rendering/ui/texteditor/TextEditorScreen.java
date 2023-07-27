@@ -494,7 +494,7 @@ public class TextEditorScreen extends Screen {
     protected Map<String, List<Placeholder>> getPlaceholdersOrderedByCategories() {
         //Build lists of all placeholders ordered by categories
         Map<String, List<Placeholder>> categories = new LinkedHashMap<>();
-        for (Placeholder p : PlaceholderRegistry.getPlaceholdersList()) {
+        for (Placeholder p : PlaceholderRegistry.getPlaceholders()) {
             String cat = p.getCategory();
             if (cat == null) {
                 cat = I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");
