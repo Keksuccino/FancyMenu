@@ -16,18 +16,18 @@ import java.util.Map;
 public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRule {
 
     protected Style[] colorsByLevelOfNesting = new Style[] {
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_1.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_2.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_3.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_4.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_5.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_6.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_7.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_8.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_9.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_10.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_11.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorScheme().text_editor_text_formatting_nested_text_color_12.getColorInt())
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_1.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_2.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_3.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_4.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_5.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_6.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_7.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_8.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_9.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_10.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_11.getColorInt()),
+            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_12.getColorInt())
     };
 
     protected Map<TextEditorLine, List<PlaceholderIndexPair>> placeholderIndexes = new HashMap<>();

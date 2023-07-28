@@ -224,8 +224,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
 			int endX = Math.max(this.mouseSelectionStartX, mouseX);
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
-			fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorScheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
-			UIBase.renderBorder(pose, startX, startY, endX, endY, 1, UIBase.getUIColorScheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
+			fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
+			UIBase.renderBorder(pose, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 		}
 	}
@@ -263,7 +263,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	protected void renderBackground(PoseStack pose, int mouseX, int mouseY, float partial) {
 
-		fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color_darker.getColorInt());
+		fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
 		if (this.layout.menuBackground != null) {
 			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.keepBackgroundAspectRatio;
@@ -283,7 +283,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			fill(pose, (this.width / 2) - 1, 0, (this.width / 2) + 1, this.height, UIBase.getUIColorScheme().layout_editor_grid_color_center.getColorInt());
+			fill(pose, (this.width / 2) - 1, 0, (this.width / 2) + 1, this.height, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw vertical lines center -> left
 			int linesVerticalToLeftPosX = (this.width / 2) - gridSize - 1;
@@ -291,7 +291,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				int minY = 0;
 				int maxY = this.height;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
-				fill(pose, linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorScheme().layout_editor_grid_color_normal.getColorInt());
+				fill(pose, linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
@@ -301,12 +301,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				int minY = 0;
 				int maxY = this.height;
 				int maxX = linesVerticalToRightPosX + lineThickness;
-				fill(pose, linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorScheme().layout_editor_grid_color_normal.getColorInt());
+				fill(pose, linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			fill(pose, 0, (this.height / 2) - 1, this.width, (this.height / 2) + 1, UIBase.getUIColorScheme().layout_editor_grid_color_center.getColorInt());
+			fill(pose, 0, (this.height / 2) - 1, this.width, (this.height / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw horizontal lines center -> top
 			int linesHorizontalToTopPosY = (this.height / 2) - gridSize - 1;
@@ -314,7 +314,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				int minX = 0;
 				int maxX = this.width;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
-				fill(pose, minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorScheme().layout_editor_grid_color_normal.getColorInt());
+				fill(pose, minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
@@ -324,7 +324,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				int minX = 0;
 				int maxX = this.width;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
-				fill(pose, minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorScheme().layout_editor_grid_color_normal.getColorInt());
+				fill(pose, minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToBottomPosY += gridSize;
 			}
 

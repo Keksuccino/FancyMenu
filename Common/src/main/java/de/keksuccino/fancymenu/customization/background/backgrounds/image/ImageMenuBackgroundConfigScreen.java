@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.util.file.FileFilter;
@@ -106,14 +105,14 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
         MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
         int titleWidth = this.font.width(title);
-        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.chooseImageButton.setX(centerX - (this.chooseImageButton.getWidth() / 2));
         this.chooseImageButton.setY(centerY - 20 - 3);

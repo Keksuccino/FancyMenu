@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.ExecutableAction;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
@@ -14,7 +16,6 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 
 public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEditorElement> {
@@ -31,7 +32,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.label = "New Button";
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
-                for (ActionExecutor.ActionContainer c : element.getActionList()) {
+                for (ExecutableAction c : element.getActionList()) {
                     c.execute();
                 }
             }
@@ -55,17 +56,23 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             if (buttonAction.contains("%btnaction_splitter_fm%")) {
                 for (String s : StringUtils.splitLines(buttonAction, "%btnaction_splitter_fm%")) {
                     if (s.length() > 0) {
-                        String action = s;
+                        String actionIdentifier = s;
                         String value = null;
                         if (s.contains(";")) {
-                            action = s.split(";", 2)[0];
+                            actionIdentifier = s.split(";", 2)[0];
                             value = s.split(";", 2)[1];
                         }
-                        element.actions.add(new ActionExecutor.ActionContainer(action, value));
+                        Action a = ActionRegistry.getAction(actionIdentifier);
+                        if (a != null) {
+                            element.actions.add(new ExecutableAction(a, value));
+                        }
                     }
                 }
             } else {
-                element.actions.add(new ActionExecutor.ActionContainer(buttonAction, actionValue));
+                Action a = ActionRegistry.getAction(buttonAction);
+                if (a != null) {
+                    element.actions.add(new ExecutableAction(a, actionValue));
+                }
             }
         }
 
@@ -84,7 +91,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.tooltip = serialized.getValue("description");
 
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
-            for (ActionExecutor.ActionContainer c : element.getActionList()) {
+            for (ExecutableAction c : element.getActionList()) {
                 c.execute();
             }
         });
@@ -126,8 +133,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         if (!element.actions.isEmpty()) {
             String buttonaction = "";
-            for (ActionExecutor.ActionContainer c : element.actions) {
-                String s2 = c.action;
+            for (ExecutableAction c : element.actions) {
+                String s2 = c.action.getIdentifier();
                 if (c.value != null) {
                     s2 += ";" + c.value;
                 }

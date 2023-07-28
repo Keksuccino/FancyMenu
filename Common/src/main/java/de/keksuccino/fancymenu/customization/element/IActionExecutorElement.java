@@ -1,11 +1,12 @@
 package de.keksuccino.fancymenu.customization.element;
 
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
-
+import de.keksuccino.fancymenu.customization.action.ExecutableAction;
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public interface IActionExecutorElement {
 
-    List<ActionExecutor.ActionContainer> getActionList();
+    @NotNull
+    List<ExecutableAction> getActionList();
 
 }

@@ -30,7 +30,7 @@ public class ComponentWidget extends AbstractWidget {
     protected ConsumingSupplier<ComponentWidget, MutableComponent> textSupplier;
     protected boolean shadow = true;
     @NotNull
-    protected ConsumingSupplier<ComponentWidget, DrawableColor> baseColorSupplier = (var) -> UIBase.getUIColorScheme().generic_text_base_color;
+    protected ConsumingSupplier<ComponentWidget, DrawableColor> baseColorSupplier = (var) -> UIBase.getUIColorTheme().generic_text_base_color;
     protected Consumer<ComponentWidget> onHoverOrFocusStart;
     protected Consumer<ComponentWidget> onHoverOrFocusEnd;
     protected Consumer<ComponentWidget> onClick;

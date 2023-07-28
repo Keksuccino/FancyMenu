@@ -1,10 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
-import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -13,9 +10,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class TickerEditorElement extends AbstractEditorElement {
 
@@ -33,21 +27,10 @@ public class TickerEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
-            List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
-            for (ActionExecutor.ActionContainer c : this.getTickerElement().actions) {
-                Action bac = ActionRegistry.getAction(c.action);
-                if (bac != null) {
-                    ManageActionsScreen.ActionInstance i = new ManageActionsScreen.ActionInstance(bac, c.value);
-                    l.add(i);
-                }
-            }
-            ManageActionsScreen s = new ManageActionsScreen(l, (call) -> {
+            ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actions, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
-                    this.getTickerElement().actions.clear();
-                    for (ManageActionsScreen.ActionInstance i : call) {
-                        this.getTickerElement().actions.add(new ActionExecutor.ActionContainer(i.action.getIdentifier(), i.value));
-                    }
+                    this.getTickerElement().actions = call;
                 }
                 Minecraft.getInstance().setScreen(this.editor);
             });

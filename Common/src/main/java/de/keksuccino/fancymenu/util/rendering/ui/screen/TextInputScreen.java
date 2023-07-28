@@ -78,12 +78,12 @@ public class TextInputScreen extends Screen {
 
         RenderSystem.enableBlend();
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         RenderSystem.enableBlend();
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         int titleWidth = Minecraft.getInstance().font.width(t);
-        this.font.draw(pose, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.input.x = (this.width / 2) - (this.input.getWidth() / 2);
         this.input.y = (this.height / 2) - (this.input.getHeight() / 2);

@@ -1,8 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
-import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
-import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
@@ -18,8 +15,6 @@ import de.keksuccino.fancymenu.util.ObjectUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class ButtonEditorElement extends AbstractEditorElement {
@@ -34,21 +29,10 @@ public class ButtonEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
-            List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
-            for (ActionExecutor.ActionContainer c : this.getButtonElement().actions) {
-                Action bac = ActionRegistry.getAction(c.action);
-                if (bac != null) {
-                    ManageActionsScreen.ActionInstance i = new ManageActionsScreen.ActionInstance(bac, c.value);
-                    l.add(i);
-                }
-            }
-            ManageActionsScreen s = new ManageActionsScreen(l, (call) -> {
+            ManageActionsScreen s = new ManageActionsScreen(this.getButtonElement().actions, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
-                    this.getButtonElement().actions.clear();
-                    for (ManageActionsScreen.ActionInstance i : call) {
-                        this.getButtonElement().actions.add(new ActionExecutor.ActionContainer(i.action.getIdentifier(), i.value));
-                    }
+                    this.getButtonElement().actions = call;
                 }
                 Minecraft.getInstance().setScreen(this.editor);
             });

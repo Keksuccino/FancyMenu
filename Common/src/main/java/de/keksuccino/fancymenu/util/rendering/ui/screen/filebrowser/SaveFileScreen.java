@@ -71,7 +71,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             }
         }.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
             if (characterIndex >= Math.max(0, (editBox.getValue().length() - forcedFileExtension.length())-1)) {
-                component.withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().edit_box_text_color_uneditable.getColorInt()));
+                component.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt()));
             }
             return component;
         });

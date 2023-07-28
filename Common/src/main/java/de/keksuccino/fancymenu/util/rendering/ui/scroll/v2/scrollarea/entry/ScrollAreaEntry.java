@@ -22,9 +22,9 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     protected float width;
     protected float height;
     @Nullable
-    protected Supplier<DrawableColor> backgroundColorNormal = () -> getUIColorScheme().area_background_color;
+    protected Supplier<DrawableColor> backgroundColorNormal = () -> getUIColorTheme().area_background_color;
     @Nullable
-    protected Supplier<DrawableColor> backgroundColorHover = () -> getUIColorScheme().list_entry_color_selected_hovered;
+    protected Supplier<DrawableColor> backgroundColorHover = () -> getUIColorTheme().list_entry_color_selected_hovered;
     @Nullable
     protected Tooltip tooltip;
     protected boolean selectable = true;

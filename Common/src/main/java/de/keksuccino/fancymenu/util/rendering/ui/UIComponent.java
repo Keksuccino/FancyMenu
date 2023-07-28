@@ -6,6 +6,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -196,7 +197,11 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
     protected boolean mouseReleasedComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, int button) {
         this.setDragging(false);
         for(GuiEventListener child : this.children()) {
-            if (child.mouseReleased(realMouseX, realMouseY, button)) return true;
+            if (child.mouseReleased(realMouseX, realMouseY, button)) {
+                //TODO remove debug
+                LogManager.getLogger().info("############## uicomp: return true: " + child);
+                return true;
+            }
         }
         return false;
     }

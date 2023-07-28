@@ -10,7 +10,6 @@ import javax.annotation.Nonnull;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -62,9 +61,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = new ResourceLocation("fancymenu", "textures/not_allowed.png");
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
-			return UIBase.getUIColorScheme().layout_editor_element_border_color_selected.getColorInt();
+			return UIBase.getUIColorTheme().layout_editor_element_border_color_selected.getColorInt();
 		}
-		return UIBase.getUIColorScheme().layout_editor_element_border_color_normal.getColorInt();
+		return UIBase.getUIColorTheme().layout_editor_element_border_color_normal.getColorInt();
 	};
 
 	public AbstractElement element;
@@ -500,7 +499,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			RenderSystem.enableBlend();
-			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorScheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
+			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];
@@ -1105,10 +1104,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		BiConsumer<AbstractEditorElement, Boolean> setter = (BiConsumer<AbstractEditorElement, Boolean>) targetFieldSetter;
 		return addCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
-				MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().success_text_color.getColorInt()));
+				MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
 				return Component.translatable(labelLocalizationKeyBase, enabled);
 			}
-			MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
+			MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
 			return Component.translatable(labelLocalizationKeyBase, disabled);
 		}).setStackable(true);
 	}

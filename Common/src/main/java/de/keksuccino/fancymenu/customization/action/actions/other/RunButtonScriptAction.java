@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
+import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
@@ -26,9 +26,8 @@ public class RunButtonScriptAction extends Action {
         if (value != null) {
             if (value.endsWith(".txt")) value = value.replace(".txt", "");
             if (value.endsWith(".TXT")) value = value.replace(".TXT", "");
-            if (ActionExecutor.SCRIPTS.containsKey(value)) {
-                ActionExecutor.SCRIPTS.get(value).runScript();
-            }
+            ButtonScriptHandler.ButtonScript script = ButtonScriptHandler.getScript(value);
+            if (script != null) script.runScript();
         }
     }
 

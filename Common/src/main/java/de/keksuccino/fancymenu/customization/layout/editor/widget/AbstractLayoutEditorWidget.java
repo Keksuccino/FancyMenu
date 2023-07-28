@@ -130,15 +130,15 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             float separatorYMin =  y + this.getBorderThickness() + this.getHeaderHeight();
             float separatorXMax = separatorXMin + this.getBodyWidth();
             float separatorYMax = separatorYMin + this.getBorderThickness();
-            fillF(pose, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorScheme().element_border_color_normal.getColorInt());
+            fillF(pose, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 
         //Widget border
         RenderingUtils.resetShaderColor();
         if (this.isExpanded()) {
-            UIBase.renderBorder(pose, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(pose, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         } else {
-            UIBase.renderBorder(pose, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(pose, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         }
 
         RenderingUtils.resetShaderColor();
@@ -149,7 +149,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         //Background
         RenderingUtils.resetShaderColor();
-        fillF(pose, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
+        fillF(pose, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         RenderingUtils.resetShaderColor();
 
         //Buttons
@@ -490,7 +490,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
             ITexture icon = this.iconSupplier.get(this);
             if ((icon != null) && (icon.getResourceLocation() != null)) {
-                UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
+                UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
                 RenderSystem.enableBlend();
                 RenderingUtils.bindTexture(icon.getResourceLocation());
                 blitF(pose, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
@@ -502,7 +502,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         protected void renderHoverBackground(PoseStack pose) {
             if (this.isMouseOver()) {
                 RenderingUtils.resetShaderColor();
-                fillF(pose, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
+                fillF(pose, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
                 RenderingUtils.resetShaderColor();
             }
         }

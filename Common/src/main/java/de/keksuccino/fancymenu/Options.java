@@ -41,7 +41,7 @@ public class Options {
     public final Option<Boolean> showAllAnchorConnections = new Option<>(config, "show_all_anchor_connections", false, "layout_editor");
     public final Option<Boolean> changeAnchorOnHover = new Option<>(config, "change_anchor_on_hover", true, "layout_editor");
 
-    public final Option<Float> uiScale = new Option<>(config, "ui_scale", 1.0F, "ui");
+    public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");
     public final Option<Boolean> enableUiTextShadow = new Option<>(config, "enable_ui_text_shadow", false, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");

@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.ExecutableAction;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
@@ -19,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEditorElement> {
@@ -83,7 +84,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
 
         TickerElement element = this.buildDefaultInstance();
 
-        Map<Integer, ActionExecutor.ActionContainer> tempActions = new HashMap<>();
+        Map<Integer, ExecutableAction> tempActions = new HashMap<>();
         for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
             //tickeraction_<index>_ACTION
             if (m.getKey().startsWith("tickeraction_")) {
@@ -91,7 +92,10 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
                 String tickerAction = m.getKey().split("_", 3)[2];
                 String actionValue = m.getValue();
                 if (MathUtils.isInteger(index)) {
-                    tempActions.put(Integer.parseInt(index), new ActionExecutor.ActionContainer(tickerAction, actionValue));
+                    Action a = ActionRegistry.getAction(tickerAction);
+                    if (a != null) {
+                        tempActions.put(Integer.parseInt(index), new ExecutableAction(a, actionValue));
+                    }
                 }
             }
         }
@@ -131,12 +135,12 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
         serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
         serializeTo.putProperty("tick_mode", "" + element.tickMode.name);
         int index = 0;
-        for (ActionExecutor.ActionContainer c : element.actions) {
+        for (ExecutableAction c : element.actions) {
             String v = c.value;
             if (v == null) {
                 v = "";
             }
-            serializeTo.putProperty("tickeraction_" + index + "_" + c.action, v);
+            serializeTo.putProperty("tickeraction_" + index + "_" + c.action.getIdentifier(), v);
             index++;
         }
 

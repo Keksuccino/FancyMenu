@@ -2,26 +2,24 @@ package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.action.ExecutableAction;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor.ActionContainer;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 
 public class TickerElement extends AbstractElement implements IActionExecutorElement {
 
-    public volatile List<ActionContainer> actions = new ArrayList<>();
+    public volatile List<ExecutableAction> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
-
     protected volatile boolean ready = false;
     protected volatile boolean ticked = false;
     protected volatile long lastTick = -1;
@@ -32,9 +30,7 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
     }
 
     public void tick() {
-
         if (this.ready && this.shouldRender()) {
-
             if (this.ticked && (this.tickMode == TickMode.ON_MENU_LOAD)) {
                 return;
             }
@@ -50,13 +46,11 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
             if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
-                for (ActionContainer a : this.actions) {
+                for (ExecutableAction a : this.actions) {
                     a.execute();
                 }
             }
-
         }
-
     }
 
     @Override
@@ -102,7 +96,7 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
 
     
     @Override
-    public List<ActionContainer> getActionList() {
+    public @NotNull List<ExecutableAction> getActionList() {
         return this.actions;
     }
 

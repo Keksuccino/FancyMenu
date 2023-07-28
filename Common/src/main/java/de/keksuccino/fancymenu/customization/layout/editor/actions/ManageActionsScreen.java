@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ExecutableAction;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -19,29 +19,32 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class ManageActionsScreen extends Screen {
 
-    protected List<ActionInstance> instances;
+    protected List<ExecutableAction> actions = new ArrayList<>();
+    protected Consumer<List<ExecutableAction>> callback;
 
     protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected Consumer<List<ActionInstance>> callback;
     protected ExtendedButton addActionButton;
     protected ExtendedButton moveUpButton;
     protected ExtendedButton moveDownButton;
     protected ExtendedButton editButton;
     protected ExtendedButton removeButton;
     protected ExtendedButton doneButton;
+    protected ExtendedButton cancelButton;
 
-    public ManageActionsScreen(@NotNull List<ActionInstance> instances, @NotNull Consumer<List<ActionInstance>> callback) {
+    public ManageActionsScreen(@NotNull List<ExecutableAction> actions, @NotNull Consumer<List<ExecutableAction>> callback) {
 
         super(Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
 
+        for (ExecutableAction a : actions) {
+            this.actions.add(a.copy());
+        }
         this.callback = callback;
-        this.instances = instances;
         this.updateActionInstanceScrollArea(false);
 
     }
@@ -57,11 +60,12 @@ public class ManageActionsScreen extends Screen {
         super.init();
 
         this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
-            BuildActionScreen s = new BuildActionScreen(this, null, (call) -> {
+            BuildActionScreen s = new BuildActionScreen(null, (call) -> {
                 if (call != null) {
-                    this.instances.add(call);
+                    this.actions.add(call);
                     this.updateActionInstanceScrollArea(false);
                 }
+                Minecraft.getInstance().setScreen(this);
             });
             Minecraft.getInstance().setScreen(s);
         });
@@ -71,14 +75,14 @@ public class ManageActionsScreen extends Screen {
 
         this.moveUpButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_up"), (button) -> {
             if (this.isInstanceSelected()) {
-                ActionInstance selected = this.getSelectedInstance();
-                int index = this.instances.indexOf(selected);
+                ExecutableAction selected = this.getSelectedInstance();
+                int index = this.actions.indexOf(selected);
                 if (index > 0) {
-                    this.instances.remove(selected);
-                    this.instances.add(index-1, selected);
+                    this.actions.remove(selected);
+                    this.actions.add(index-1, selected);
                     this.updateActionInstanceScrollArea(true);
                     for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
-                        if ((e instanceof ActionInstanceEntry) && (((ActionInstanceEntry)e).instance == selected)) {
+                        if ((e instanceof ExecutableActionEntry) && (((ExecutableActionEntry)e).action == selected)) {
                             e.setSelected(true);
                             break;
                         }
@@ -104,14 +108,14 @@ public class ManageActionsScreen extends Screen {
 
         this.moveDownButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_down"), (button) -> {
             if (this.isInstanceSelected()) {
-                ActionInstance selected = this.getSelectedInstance();
-                int index = this.instances.indexOf(selected);
-                if ((index >= 0) && (index <= this.instances.size()-2)) {
-                    this.instances.remove(selected);
-                    this.instances.add(index+1, selected);
+                ExecutableAction selected = this.getSelectedInstance();
+                int index = this.actions.indexOf(selected);
+                if ((index >= 0) && (index <= this.actions.size()-2)) {
+                    this.actions.remove(selected);
+                    this.actions.add(index+1, selected);
                     this.updateActionInstanceScrollArea(true);
                     for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
-                        if ((e instanceof ActionInstanceEntry) && (((ActionInstanceEntry)e).instance == selected)) {
+                        if ((e instanceof ExecutableActionEntry) && (((ExecutableActionEntry)e).action == selected)) {
                             e.setSelected(true);
                             break;
                         }
@@ -136,9 +140,20 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.moveDownButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
-            if (this.isInstanceSelected()) {
-                BuildActionScreen s = new BuildActionScreen(this, this.getSelectedInstance(), (call) -> {
-                    this.updateActionInstanceScrollArea(false);
+            ExecutableAction a = this.getSelectedInstance();
+            if (a != null) {
+                BuildActionScreen s = new BuildActionScreen(a.copy(), (call) -> {
+                    if (call != null) {
+                        int index = this.actions.indexOf(a);
+                        this.actions.remove(a);
+                        if (index != -1) {
+                            this.actions.add(index, call);
+                        } else {
+                            this.actions.add(call);
+                        }
+                        this.updateActionInstanceScrollArea(false);
+                    }
+                    Minecraft.getInstance().setScreen(this);
                 });
                 Minecraft.getInstance().setScreen(s);
             }
@@ -161,10 +176,10 @@ public class ManageActionsScreen extends Screen {
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), (button) -> {
             if (this.isInstanceSelected()) {
-                ActionInstance i = this.getSelectedInstance();
+                ExecutableAction i = this.getSelectedInstance();
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
-                        this.instances.remove(i);
+                        this.actions.remove(i);
                         this.updateActionInstanceScrollArea(false);
                     }
                     Minecraft.getInstance().setScreen(this);
@@ -188,27 +203,33 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.removeButton);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
-            this.callback.accept(this.instances);
+            this.callback.accept(this.actions);
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+            this.callback.accept(null);
+        });
+        this.addWidget(this.cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
     }
 
     @Override
     public void onClose() {
-        this.callback.accept(this.instances);
+        this.callback.accept(null);
     }
 
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.actionsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
@@ -220,8 +241,12 @@ public class ManageActionsScreen extends Screen {
         this.doneButton.setY(this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
+        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
+        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+
         this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.doneButton.getY() - 15 - 20);
+        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
         this.removeButton.render(matrix, mouseX, mouseY, partial);
 
         this.editButton.setX(this.width - 20 - this.editButton.getWidth());
@@ -245,10 +270,10 @@ public class ManageActionsScreen extends Screen {
     }
 
     @Nullable
-    protected ActionInstance getSelectedInstance() {
+    protected ExecutableAction getSelectedInstance() {
         ScrollAreaEntry e = this.actionsScrollArea.getFocusedEntry();
-        if (e instanceof ActionInstanceEntry) {
-            return ((ActionInstanceEntry)e).instance;
+        if (e instanceof ExecutableActionEntry) {
+            return ((ExecutableActionEntry)e).action;
         }
         return null;
     }
@@ -264,8 +289,8 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsScrollArea.clearEntries();
 
-        for (ActionInstance i : this.instances) {
-            ActionInstanceEntry e = new ActionInstanceEntry(this.actionsScrollArea, i, 14);
+        for (ExecutableAction i : this.actions) {
+            ExecutableActionEntry e = new ExecutableActionEntry(this.actionsScrollArea, i, 14);
             this.actionsScrollArea.addEntry(e);
         }
 
@@ -276,26 +301,26 @@ public class ManageActionsScreen extends Screen {
 
     }
 
-    public static class ActionInstanceEntry extends ScrollAreaEntry {
+    public static class ExecutableActionEntry extends ScrollAreaEntry {
 
         public static final int HEADER_FOOTER_HEIGHT = 3;
 
-        public ActionInstance instance;
+        public ExecutableAction action;
         public final int lineHeight;
         public Font font = Minecraft.getInstance().font;
 
         private final MutableComponent displayNameComponent;
         private final MutableComponent valueComponent;
 
-        public ActionInstanceEntry(ScrollArea parent, ActionInstance instance, int lineHeight) {
+        public ExecutableActionEntry(ScrollArea parent, ExecutableAction action, int lineHeight) {
 
             super(parent, 100, 30);
-            this.instance = instance;
+            this.action = action;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = this.instance.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
-            String valueString = ((this.instance.value != null) && this.instance.action.hasValue()) ? this.instance.value : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().element_label_color_normal.getColorInt())));
+            this.displayNameComponent = this.action.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            String valueString = ((this.action.value != null) && this.action.action.hasValue()) ? this.action.value : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
+            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 2) + (HEADER_FOOTER_HEIGHT * 2));
@@ -312,10 +337,10 @@ public class ManageActionsScreen extends Screen {
 
             RenderSystem.enableBlend();
 
-            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorScheme().listing_dot_color_2.getColor());
+            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
             this.font.draw(matrix, this.displayNameComponent, (float)(this.getX() + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
 
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorScheme().listing_dot_color_1.getColor());
+            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
             this.font.draw(matrix, this.valueComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
 
         }
@@ -331,18 +356,6 @@ public class ManageActionsScreen extends Screen {
 
         @Override
         public void onClick(ScrollAreaEntry entry) {}
-
-    }
-
-    public static class ActionInstance {
-
-        public Action action;
-        public String value;
-
-        public ActionInstance(Action action, @Nullable String value) {
-            this.action = action;
-            this.value = value;
-        }
 
     }
 

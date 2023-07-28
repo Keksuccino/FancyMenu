@@ -200,7 +200,7 @@ public class LayoutEditorUI {
 				}
 			});
 		}).setIconTexture(CLOSE_EDITOR_TEXTURE)
-				.setIconTextureColor(() -> UIBase.getUIColorScheme().layout_editor_close_icon_color);
+				.setIconTextureColor(() -> UIBase.getUIColorTheme().layout_editor_close_icon_color);
 
 		return menuBar;
 

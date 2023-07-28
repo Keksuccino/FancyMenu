@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
+import de.keksuccino.fancymenu.customization.action.ExecutableAction;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
@@ -53,7 +53,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     public String backgroundAnimationHover;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
-    public final List<ActionExecutor.ActionContainer> actions = new ArrayList<>();
+    public List<ExecutableAction> actions = new ArrayList<>();
 
     protected Object lastBackgroundNormal;
     protected Object lastBackgroundHover;
@@ -272,7 +272,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     }
 
     @Override
-    public List<ActionExecutor.ActionContainer> getActionList() {
+    public @NotNull List<ExecutableAction> getActionList() {
         return this.actions;
     }
 

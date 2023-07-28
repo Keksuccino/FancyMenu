@@ -130,12 +130,12 @@ public class ManageLayoutsScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, Component.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.layoutListScrollArea.setWidth((this.width / 2) - 40, true);
         this.layoutListScrollArea.setHeight(this.height - 85, true);
@@ -222,7 +222,7 @@ public class ManageLayoutsScreen extends Screen {
             this.layoutListScrollArea.addEntry(e);
         }
         if (this.layoutListScrollArea.getEntries().isEmpty()) {
-            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Component.translatable("fancymenu.layout.manage.no_layouts_found").setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt())), (entry) -> {}));
+            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Component.translatable("fancymenu.layout.manage.no_layouts_found").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
         }
     }
 
@@ -231,14 +231,14 @@ public class ManageLayoutsScreen extends Screen {
         public Layout layout;
 
         public LayoutScrollEntry(ScrollArea parent, @NotNull Layout layout, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(""), UIBase.getUIColorScheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(""), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.layout = layout;
             this.updateName();
         }
 
         protected void updateName() {
             Style style = this.layout.getStatus().getEntryComponentStyle();
-            MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
+            MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
             c.append(Component.literal(" (").setStyle(style));
             c.append(this.layout.getStatus().getEntryComponent());
             c.append(Component.literal(")").setStyle(style));

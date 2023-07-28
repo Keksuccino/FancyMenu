@@ -133,7 +133,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             UIBase.resetShaderColor();
         }
         //Render background
-        RenderingUtils.fillF(pose, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + this.getHeight()), UIBase.getUIColorScheme().element_background_color_normal.getColorInt());
+        RenderingUtils.fillF(pose, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + this.getHeight()), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         UIBase.resetShaderColor();
         //Update + render entries
         float entryY = scaledY;
@@ -154,7 +154,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
         UIBase.resetShaderColor();
         //Render border
-        UIBase.renderBorder(pose, (float) (scaledX - this.getBorderThickness()), (float) (scaledY - this.getBorderThickness()), (float) (scaledX + this.getWidth() + this.getBorderThickness()), (float) (scaledY + this.getHeight() + this.getBorderThickness()), (float) this.getBorderThickness(), UIBase.getUIColorScheme().element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(pose, (float) (scaledX - this.getBorderThickness()), (float) (scaledY - this.getBorderThickness()), (float) (scaledX + this.getWidth() + this.getBorderThickness()), (float) (scaledY + this.getHeight() + this.getBorderThickness()), (float) this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -980,14 +980,14 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             int labelX = (int) (this.x + 10);
             if ((this.icon != null) || this.addSpaceForIcon) labelX += 20;
             int labelY = (int) (this.y + (this.height / 2) - (this.font.lineHeight / 2));
-            UIBase.drawElementLabel(pose, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
+            UIBase.drawElementLabel(pose, this.font, this.getLabel(), labelX, labelY, this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
 
             int shortcutTextWidth = 0;
             Component shortcutText = this.getShortcutText();
             if (shortcutText != null) {
                 shortcutTextWidth = this.font.width(shortcutText);
                 int shortcutX = (int) (this.x + this.width - 10 - shortcutTextWidth);
-                UIBase.drawElementLabel(pose, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorScheme().element_label_color_normal.getColorInt() : UIBase.getUIColorScheme().element_label_color_inactive.getColorInt());
+                UIBase.drawElementLabel(pose, this.font, shortcutText, shortcutX, labelY, this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
             }
 
             this.renderIcon(pose);
@@ -999,7 +999,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected void renderIcon(PoseStack pose) {
             if (this.icon != null) {
                 RenderSystem.enableBlend();
-                UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
+                UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
                 RenderingUtils.bindTexture(this.icon);
                 blit(pose, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
                 UIBase.resetShaderColor();
@@ -1023,7 +1023,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                UIBase.getUIColorScheme().setUITextureShaderColor(this.tooltipIconHovered ? 1.0F : 0.2F);
+                UIBase.getUIColorTheme().setUITextureShaderColor(this.tooltipIconHovered ? 1.0F : 0.2F);
                 RenderingUtils.bindTexture(CONTEXT_MENU_TOOLTIP_ICON);
                 blit(pose, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
                 UIBase.resetShaderColor();
@@ -1057,7 +1057,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         protected void renderBackground(@NotNull PoseStack pose) {
             if (this.isHovered() && this.isActive()) {
-                RenderingUtils.fillF(pose, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorScheme().element_background_color_hover.getColorInt());
+                RenderingUtils.fillF(pose, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
         }
 
@@ -1233,7 +1233,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         protected void renderSubMenuArrow(PoseStack pose) {
             RenderSystem.enableBlend();
-            UIBase.getUIColorScheme().setUITextureShaderColor(1.0F);
+            UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
             RenderingUtils.bindTexture(SUB_CONTEXT_MENU_ARROW_ICON);
             blit(pose, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
             UIBase.resetShaderColor();
@@ -1394,7 +1394,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            RenderingUtils.fillF(pose, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.getUIColorScheme().element_border_color_normal.getColorInt());
+            RenderingUtils.fillF(pose, (float) (this.x + 10), (float) (this.y + 4), (float) (this.x + this.width - 10), (float) (this.y + 5), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 
         @Override

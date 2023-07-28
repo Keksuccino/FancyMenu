@@ -42,7 +42,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	private static ExtendedEditBox applyDefaultEditBoxSkinTo(ExtendedEditBox editBox) {
-		UIColorTheme theme = UIBase.getUIColorScheme();
+		UIColorTheme theme = UIBase.getUIColorTheme();
 		editBox.setTextColor(theme.edit_box_text_color_normal);
 		editBox.setTextColorUneditable(theme.edit_box_text_color_uneditable);
 		editBox.setBackgroundColor(theme.edit_box_background_color);
@@ -53,9 +53,9 @@ public class UIBase extends RenderingUtils {
 	}
 
 	private static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
-		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_background_color_hover, UIBase.getUIColorScheme().element_border_color_normal, UIBase.getUIColorScheme().element_border_color_hover, ELEMENT_BORDER_THICKNESS));
-		button.setLabelBaseColorNormal(UIBase.getUIColorScheme().element_label_color_normal);
-		button.setLabelBaseColorInactive(UIBase.getUIColorScheme().element_label_color_inactive);
+		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorTheme().element_background_color_normal, UIBase.getUIColorTheme().element_background_color_hover, UIBase.getUIColorTheme().element_border_color_normal, UIBase.getUIColorTheme().element_border_color_hover, ELEMENT_BORDER_THICKNESS));
+		button.setLabelBaseColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
+		button.setLabelBaseColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
 		button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());
 		button.setForceDefaultTooltipStyle(true);
 		return button;
@@ -63,7 +63,15 @@ public class UIBase extends RenderingUtils {
 
 	public static float getUIScale() {
 		float uiScale = FancyMenu.getOptions().uiScale.getValue();
-		if (Minecraft.getInstance().isEnforceUnicode() && (uiScale > 2.0F)) {
+		//Handle "Auto" scale (set scale to 2 if window bigger than 1920x1080)
+		if (uiScale == 4) {
+			uiScale = 1;
+			if ((Minecraft.getInstance().getWindow().getWidth() > 1920) || (Minecraft.getInstance().getWindow().getHeight() > 1080)) {
+				uiScale = 2;
+			}
+		}
+		//Force a scale of 2 or bigger if Unicode font is enabled
+		if (Minecraft.getInstance().isEnforceUnicode() && (uiScale < 2.0F)) {
 			uiScale = 2.0F;
 		}
 		return uiScale;
@@ -123,17 +131,17 @@ public class UIBase extends RenderingUtils {
 
 	public static int drawElementLabelF(PoseStack pose, Font font, Component text, float x, float y) {
 		if (!FancyMenu.getOptions().enableUiTextShadow.getValue()) {
-			return font.draw(pose, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+			return font.draw(pose, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 		}
-		return font.drawShadow(pose, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+		return font.drawShadow(pose, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y) {
-		return drawElementLabel(pose, font, text, x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+		return drawElementLabel(pose, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y) {
-		return drawElementLabel(pose, font, Component.literal(text), x, y, getUIColorScheme().element_label_color_normal.getColorInt());
+		return drawElementLabel(pose, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y, int baseColor) {
@@ -158,10 +166,6 @@ public class UIBase extends RenderingUtils {
 		RenderSystem.setShaderColor(r, g, b, alpha);
 	}
 
-	public static void resetShaderColor() {
-		RenderingUtils.resetShaderColor();
-	}
-
 	//TODO remove this
 	@Deprecated
 	public static void displayNotification(String... notification) {
@@ -169,7 +173,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	@NotNull
-	public static UIColorTheme getUIColorScheme() {
+	public static UIColorTheme getUIColorTheme() {
 		return UIColorThemeRegistry.getActiveTheme();
 	}
 

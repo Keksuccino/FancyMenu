@@ -32,22 +32,22 @@ public class ConfirmationScreen extends Screen {
 
     @NotNull
     public static ConfirmationScreen critical(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
-        return ofComponents(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().error_text_color);
+        return ofComponents(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorTheme().error_text_color);
     }
 
     @NotNull
     public static ConfirmationScreen critical(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
-        return ofStrings(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().error_text_color);
+        return ofStrings(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorTheme().error_text_color);
     }
 
     @NotNull
     public static ConfirmationScreen warning(@NotNull Consumer<Boolean> callback, @NotNull Component... textLines) {
-        return ofComponents(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().warning_text_color);
+        return ofComponents(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorTheme().warning_text_color);
     }
 
     @NotNull
     public static ConfirmationScreen warning(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
-        return ofStrings(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorScheme().warning_text_color);
+        return ofStrings(callback, textLines).setHeadlineBold(true).setHeadlineColor(UIBase.getUIColorTheme().warning_text_color);
     }
 
     @NotNull
@@ -106,7 +106,7 @@ public class ConfirmationScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         int y = (this.height / 2) - ((this.textLines.size() * 14) / 2);
         int lineCounter = 0;
@@ -117,7 +117,7 @@ public class ConfirmationScreen extends Screen {
                 if (this.headlineBold) line.setStyle(line.getStyle().withBold(true));
             }
             int textWidth = this.font.width(line);
-            this.font.draw(pose, line, (int)((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+            this.font.draw(pose, line, (int)((this.width / 2) - (textWidth / 2)), y, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
             y += 14;
             lineCounter++;
         }

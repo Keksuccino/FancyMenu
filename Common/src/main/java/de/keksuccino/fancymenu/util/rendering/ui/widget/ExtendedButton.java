@@ -296,6 +296,12 @@ public class ExtendedButton extends Button {
         return this;
     }
 
+    //This is to make the button work in FocuslessEventHandlers
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return false;
+    }
+
     public static abstract class ButtonBackground extends GuiComponent implements Renderable {
 
         protected ExtendedButton parent;

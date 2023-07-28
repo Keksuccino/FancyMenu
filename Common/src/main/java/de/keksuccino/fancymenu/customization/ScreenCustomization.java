@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
-import de.keksuccino.fancymenu.customization.action.ActionExecutor;
+import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
@@ -106,7 +106,7 @@ public class ScreenCustomization {
 
 		readCustomizableScreensFromFile();
 
-		ActionExecutor.init();
+		ButtonScriptHandler.init();
 
 		LastWorldHandler.init();
 

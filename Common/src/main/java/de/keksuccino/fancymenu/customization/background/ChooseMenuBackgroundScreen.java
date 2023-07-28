@@ -134,12 +134,12 @@ public class ChooseMenuBackgroundScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorScheme().screen_background_color.getColorInt());
+        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, Component.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(matrix, Component.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.backgroundTypeListScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundTypeListScrollArea.setHeight(this.height - 85, true);
@@ -149,7 +149,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         Component descLabel = Component.translatable("fancymenu.menu_background.choose.type_description");
         int descLabelWidth = this.font.width(descLabel);
-        this.font.draw(matrix, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(matrix, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.backgroundDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
@@ -181,7 +181,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         if ((builder != null) && (builder.getDescription() != null)) {
             for (Component c : builder.getDescription()) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.backgroundDescriptionScrollArea, c.copy().withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt())), (entry) -> {});
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.backgroundDescriptionScrollArea, c.copy().withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                 e.setSelectable(false);
                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                 e.setPlayClickSound(false);
@@ -238,15 +238,15 @@ public class ChooseMenuBackgroundScreen extends Screen {
         public MenuBackgroundBuilder<?> backgroundType;
 
         public BackgroundTypeScrollEntry(ScrollArea parent, @NotNull MenuBackgroundBuilder<?> backgroundType, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, getText(backgroundType), UIBase.getUIColorScheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, getText(backgroundType), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.backgroundType = backgroundType;
         }
 
         private static Component getText(MenuBackgroundBuilder<?> backgroundType) {
             if (backgroundType == NO_BACKGROUND_TYPE) {
-                return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().error_text_color.getColorInt()));
+                return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
             }
-            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorScheme().description_area_text_color.getColorInt()));
+            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
         }
 
     }

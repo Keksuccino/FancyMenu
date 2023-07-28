@@ -253,6 +253,12 @@ public class ExtendedEditBox extends EditBox {
         super.insertText(textToWrite);
     }
 
+    //This is to make the edit box work in FocuslessEventHandlers
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return false;
+    }
+
     @FunctionalInterface
     public interface CharacterRenderFormatter {
         @NotNull MutableComponent formatComponent(@NotNull ExtendedEditBox editBox, @NotNull MutableComponent component, int characterIndex, char character, @NotNull String visiblePartOfLine, @NotNull String fullLine);

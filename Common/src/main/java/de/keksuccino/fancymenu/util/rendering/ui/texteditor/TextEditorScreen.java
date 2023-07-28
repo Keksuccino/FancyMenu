@@ -76,23 +76,23 @@ public class TextEditorScreen extends Screen {
     protected int borderLeft = 40;
     protected int borderRight = 20;
     protected int lineHeight = 14;
-    protected Color screenBackgroundColor = UIBase.getUIColorScheme().screen_background_color.getColor();
-    protected Color editorAreaBorderColor = UIBase.getUIColorScheme().element_border_color_normal.getColor();
-    protected Color editorAreaBackgroundColor = UIBase.getUIColorScheme().area_background_color.getColor();
-    protected Color textColor = UIBase.getUIColorScheme().text_editor_text_color.getColor();
-    protected Color focusedLineColor = UIBase.getUIColorScheme().list_entry_color_selected_hovered.getColor();
-    protected Color scrollGrabberIdleColor = UIBase.getUIColorScheme().scroll_grabber_color_normal.getColor();
-    protected Color scrollGrabberHoverColor = UIBase.getUIColorScheme().scroll_grabber_color_hover.getColor();
-    protected Color sideBarColor = UIBase.getUIColorScheme().text_editor_sidebar_color.getColor();
-    protected Color lineNumberTextColorNormal = UIBase.getUIColorScheme().text_editor_line_number_text_color_normal.getColor();
-    protected Color lineNumberTextColorFocused = UIBase.getUIColorScheme().text_editor_line_number_text_color_selected.getColor();
-    protected Color multilineNotSupportedNotificationColor = UIBase.getUIColorScheme().error_text_color.getColor();
-    protected Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorScheme().area_background_color.getColor();
-    protected Color placeholderEntryBackgroundColorHover = UIBase.getUIColorScheme().list_entry_color_selected_hovered.getColor();
-    protected Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorScheme().listing_dot_color_1.getColor();
-    protected Color placeholderEntryDotColorCategory = UIBase.getUIColorScheme().listing_dot_color_2.getColor();
-    protected Color placeholderEntryLabelColor = UIBase.getUIColorScheme().description_area_text_color.getColor();
-    protected Color placeholderEntryBackToCategoriesLabelColor = UIBase.getUIColorScheme().warning_text_color.getColor();
+    protected Color screenBackgroundColor = UIBase.getUIColorTheme().screen_background_color.getColor();
+    protected Color editorAreaBorderColor = UIBase.getUIColorTheme().element_border_color_normal.getColor();
+    protected Color editorAreaBackgroundColor = UIBase.getUIColorTheme().area_background_color.getColor();
+    protected Color textColor = UIBase.getUIColorTheme().text_editor_text_color.getColor();
+    protected Color focusedLineColor = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
+    protected Color scrollGrabberIdleColor = UIBase.getUIColorTheme().scroll_grabber_color_normal.getColor();
+    protected Color scrollGrabberHoverColor = UIBase.getUIColorTheme().scroll_grabber_color_hover.getColor();
+    protected Color sideBarColor = UIBase.getUIColorTheme().text_editor_sidebar_color.getColor();
+    protected Color lineNumberTextColorNormal = UIBase.getUIColorTheme().text_editor_line_number_text_color_normal.getColor();
+    protected Color lineNumberTextColorFocused = UIBase.getUIColorTheme().text_editor_line_number_text_color_selected.getColor();
+    protected Color multilineNotSupportedNotificationColor = UIBase.getUIColorTheme().error_text_color.getColor();
+    protected Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorTheme().area_background_color.getColor();
+    protected Color placeholderEntryBackgroundColorHover = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
+    protected Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorTheme().listing_dot_color_1.getColor();
+    protected Color placeholderEntryDotColorCategory = UIBase.getUIColorTheme().listing_dot_color_2.getColor();
+    protected Color placeholderEntryLabelColor = UIBase.getUIColorTheme().description_area_text_color.getColor();
+    protected Color placeholderEntryBackToCategoriesLabelColor = UIBase.getUIColorTheme().warning_text_color.getColor();
     protected int currentLineWidth;
     protected int lastTickFocusedLineIndex = -1;
     protected TextEditorLine startHighlightLine = null;
@@ -204,7 +204,7 @@ public class TextEditorScreen extends Screen {
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
             if (extendedPlaceholderMenu) {
-                this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorScheme().element_background_color_normal, UIBase.getUIColorScheme().element_background_color_hover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));
+                this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorTheme().element_background_color_normal, UIBase.getUIColorTheme().element_background_color_hover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));
                 ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
             }
         } else {
@@ -333,7 +333,7 @@ public class TextEditorScreen extends Screen {
 
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
-        this.font.draw(pose, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorScheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
     }
 
