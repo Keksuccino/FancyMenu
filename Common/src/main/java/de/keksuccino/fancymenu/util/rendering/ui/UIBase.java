@@ -86,14 +86,6 @@ public class UIBase extends RenderingUtils {
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 
-	public static boolean isXYInArea(int targetX, int targetY, int x, int y, int width, int height) {
-		return isXYInArea((double)targetX, targetY, x, y, width, height);
-	}
-
-	public static boolean isXYInArea(double targetX, double targetY, double x, double y, double width, double height) {
-		return (targetX >= x) && (targetX < (x + width)) && (targetY >= y) && (targetY < (y + height));
-	}
-
 	public static void renderListingDot(PoseStack matrix, float x, float y, int color) {
 		fillF(matrix, x, y, x + 4, y + 4, color);
 	}

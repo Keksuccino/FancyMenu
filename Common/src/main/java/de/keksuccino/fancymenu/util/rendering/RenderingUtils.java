@@ -18,6 +18,14 @@ public class RenderingUtils extends GuiComponent {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
     }
 
+    public static boolean isXYInArea(int targetX, int targetY, int x, int y, int width, int height) {
+        return isXYInArea((double)targetX, targetY, x, y, width, height);
+    }
+
+    public static boolean isXYInArea(double targetX, double targetY, double x, double y, double width, double height) {
+        return (targetX >= x) && (targetX < (x + width)) && (targetY >= y) && (targetY < (y + height));
+    }
+
     public static void resetGuiScale() {
         Window m = Minecraft.getInstance().getWindow();
         m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));

@@ -37,11 +37,6 @@ import java.util.Map;
 
 public class TextElement extends AbstractElement {
 
-    //TODO add auto line break (toggleable)
-    //TODO add auto line break (toggleable)
-    //TODO add auto line break (toggleable)
-    //TODO add auto line break (toggleable)
-
     public SourceMode sourceMode = SourceMode.DIRECT;
     public String source; //direct text, file path, link
     public boolean shadow = true;
