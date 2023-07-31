@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.QuoteContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,38 +22,62 @@ public class MarkdownParser {
         List<MarkdownTextFragment> fragments = new ArrayList<>();
         
         FragmentBuilder builder = new FragmentBuilder(renderer);
-        boolean startOfLine = true;
+        boolean queueNewLine = true;
         boolean italicUnderscore = false;
         int charsToSkip = 0;
+        boolean skipLine = false;
+
+        String currentLine = "";
 
         int index = -1;
         for (char c : markdownText.toCharArray()) {
 
-            boolean cachedStartOfLine = startOfLine;
-            startOfLine = false;
+            boolean isStartOfLine = queueNewLine;
+            queueNewLine = false;
 
             index++;
 
+            //Update Current Line
+            if (isStartOfLine) {
+                currentLine = getLine(markdownText.substring(index));
+            }
+
+            //Skip Chars
             if (charsToSkip > 0) {
                 charsToSkip--;
                 continue;
             }
 
+            //Skip Line
+            if ((c != '\n') && skipLine) {
+                continue;
+            }
+            if ((c == '\n') && skipLine) {
+                builder.headlineType = HeadlineType.NONE;
+                builder.separationLine = false;
+                skipLine = false;
+                queueNewLine = true;
+                continue;
+            }
+
             //Handle Headline
-            if ((c == '#') && cachedStartOfLine) {
+            if ((c == '#') && isStartOfLine) {
                 if (builder.headlineType == HeadlineType.NONE) {
                     String s = markdownText.substring(index);
                     if (s.startsWith("# ")) {
                         builder.headlineType = HeadlineType.BIGGEST;
-                        charsToSkip = 2;
+                        charsToSkip = 1;
                     }
                     if (s.startsWith("## ")) {
                         builder.headlineType = HeadlineType.BIGGER;
-                        charsToSkip = 3;
+                        charsToSkip = 2;
                     }
                     if (s.startsWith("### ")) {
                         builder.headlineType = HeadlineType.BIG;
-                        charsToSkip = 4;
+                        charsToSkip = 3;
+                    }
+                    if (builder.headlineType != HeadlineType.NONE) {
+                        continue;
                     }
                 }
             }
@@ -61,18 +87,18 @@ public class MarkdownParser {
                 String s = markdownText.substring(index);
                 String s2 = markdownText.substring(Math.min(markdownText.length(), index+2));
                 if (s.startsWith("**") && s2.contains("**")) {
-                    fragments.add(builder.build(false));
+                    fragments.add(builder.build(false, false));
                     builder.bold = true;
-                    charsToSkip = 2;
+                    charsToSkip = 1;
                     continue;
                 }
             }
             if ((c == '*') && builder.bold) {
                 String s = markdownText.substring(index);
                 if (s.startsWith("**")) {
-                    fragments.add(builder.build(false));
+                    fragments.add(builder.build(false, false));
                     builder.bold = false;
-                    charsToSkip = 2;
+                    charsToSkip = 1;
                     continue;
                 }
             }
@@ -81,18 +107,16 @@ public class MarkdownParser {
             if ((c == '_') && !builder.italic) {
                 String s = markdownText.substring(Math.min(markdownText.length(), index+1));
                 if (s.contains("_")) {
-                    fragments.add(builder.build(false));
+                    fragments.add(builder.build(false, false));
                     builder.italic = true;
                     italicUnderscore = true;
-                    charsToSkip = 1;
                     continue;
                 }
             }
             if ((c == '_') && builder.italic && italicUnderscore) {
-                fragments.add(builder.build(false));
+                fragments.add(builder.build(false, false));
                 builder.italic = false;
                 italicUnderscore = false;
-                charsToSkip = 1;
                 continue;
             }
 
@@ -114,9 +138,8 @@ public class MarkdownParser {
                         index2++;
                     }
                     if (isEndSingleAsterisk) {
-                        fragments.add(builder.build(false));
+                        fragments.add(builder.build(false, false));
                         builder.italic = true;
-                        charsToSkip = 1;
                         continue;
                     }
                 }
@@ -124,9 +147,8 @@ public class MarkdownParser {
             if ((c == '*') && builder.italic && !italicUnderscore) {
                 String s = markdownText.substring(index);
                 if (!s.startsWith("**")) {
-                    fragments.add(builder.build(false));
+                    fragments.add(builder.build(false, false));
                     builder.italic = false;
-                    charsToSkip = 1;
                     continue;
                 }
             }
@@ -135,16 +157,14 @@ public class MarkdownParser {
             if ((c == '~') && !builder.strikethrough) {
                 String s = markdownText.substring(Math.min(markdownText.length(), index+1));
                 if (s.contains("~")) {
-                    fragments.add(builder.build(false));
+                    fragments.add(builder.build(false, false));
                     builder.strikethrough = true;
-                    charsToSkip = 1;
                     continue;
                 }
             }
             if ((c == '~') && builder.strikethrough) {
-                fragments.add(builder.build(false));
+                fragments.add(builder.build(false, false));
                 builder.strikethrough = false;
-                charsToSkip = 1;
                 continue;
             }
 
@@ -156,7 +176,7 @@ public class MarkdownParser {
                     if (s2.contains("](") && s2.contains(")")) {
                         String hyperlink = getHyperlinkFrom(s);
                         if (hyperlink != null) {
-                            fragments.add(builder.build(false));
+                            fragments.add(builder.build(false, false));
                             builder.hyperlink = new Hyperlink();
                             builder.hyperlink.link = hyperlink;
                             continue;
@@ -167,26 +187,60 @@ public class MarkdownParser {
             if ((c == ']') && (builder.hyperlink != null)) {
                 String s = markdownText.substring(index);
                 if (s.startsWith("](")) {
-                    fragments.add(builder.build(false));
-                    charsToSkip = 3 + builder.hyperlink.link.length();
+                    fragments.add(builder.build(false, false));
+                    charsToSkip = 2 + builder.hyperlink.link.length();
                     builder.hyperlink = null;
                     continue;
                 }
             }
 
-            builder.text += c;
+            //Handle Quote
+            if ((c == '>') && isStartOfLine && (builder.quoteContext == null)) {
+                String s = markdownText.substring(index);
+                if (s.startsWith("> ")) {
+                    builder.quoteContext = new QuoteContext();
+                    charsToSkip = 1;
+                    continue;
+                }
+            }
+            if (isStartOfLine && (builder.quoteContext != null) && currentLine.replace(" ", "").isEmpty()) {
+                builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
+                fragments.add(builder.build(true, true));
+                queueNewLine = true;
+                continue;
+            }
+
+            //Handle Separation Line
+            if ((c == '-') && isStartOfLine) {
+                String s = markdownText.substring(index);
+                CharacterFilter filter = new CharacterFilter();
+                filter.addAllowedCharacters('-');
+                String line = currentLine.replace(" ", "");
+                if (s.startsWith("---") && filter.isAllowedText(line)) {
+                    builder.separationLine = true;
+                    builder.text = "---";
+                    fragments.add(builder.build(true, true));
+                    skipLine = true;
+                    continue;
+                }
+            }
+
+            if (c != '\n') {
+                builder.text += c;
+            }
 
             //Build fragment at every space
             if (c == ' ') {
-                fragments.add(builder.build(false));
+                fragments.add(builder.build(false, true));
                 continue;
             }
 
             //Build fragment at end of line
             if (c == '\n') {
-                fragments.add(builder.build(true));
+                fragments.add(builder.build(true, true));
                 builder.headlineType = HeadlineType.NONE;
-                startOfLine = true;
+                builder.separationLine = false;
+                queueNewLine = true;
             }
 
         }
@@ -195,14 +249,19 @@ public class MarkdownParser {
         
     }
 
+    @NotNull
+    protected static String getLine(@NotNull String text) {
+        return text.contains("\n") ? text.split("\n", 2)[0] : text;
+    }
+
     @Nullable
-    protected static String getHyperlinkFrom(String textFragment) {
-        if (textFragment.startsWith("[") && textFragment.contains("](") && textFragment.contains(")")) {
+    protected static String getHyperlinkFrom(String text) {
+        if (text.startsWith("[") && text.contains("](") && text.contains(")")) {
             boolean beforeClosedBrackets = true;
             boolean isInsideHyperlink = false;
             String hyperlink = "";
             boolean openRoundBracketsFound = false;
-            String s = textFragment.substring(1);
+            String s = text.substring(1);
             int index = -1;
             for (char c : s.toCharArray()) {
                 index++;
@@ -245,21 +304,22 @@ public class MarkdownParser {
 
         protected final MarkdownRenderer renderer;
         protected String text = "";
+        protected boolean separationLine = false;
         protected boolean bold = false;
         protected boolean italic = false;
         protected boolean strikethrough = false;
         protected Hyperlink hyperlink = null;
         protected HeadlineType headlineType = HeadlineType.NONE;
-        protected boolean quote = false;
-        protected boolean quoteStart = false;
+        protected QuoteContext quoteContext = null;
 
         protected FragmentBuilder(MarkdownRenderer renderer) {
             this.renderer = renderer;
         }
 
         @NotNull
-        protected MarkdownTextFragment build(boolean naturalLineBreakAfter) {
+        protected MarkdownTextFragment build(boolean naturalLineBreakAfter, boolean endOfWord) {
             MarkdownTextFragment frag = new MarkdownTextFragment(this.renderer, text);
+            frag.separationLine = separationLine;
             frag.bold = bold;
             frag.italic = italic;
             frag.strikethrough = strikethrough;
@@ -268,9 +328,12 @@ public class MarkdownParser {
                 hyperlink.hyperlinkFragments.add(frag);
             }
             frag.headlineType = headlineType;
-            frag.quote = quote;
-            frag.quoteStart = quoteStart;
+            frag.quoteContext = quoteContext;
+            if (quoteContext != null) {
+                quoteContext.quoteFragments.add(frag);
+            }
             frag.naturalLineBreakAfter = naturalLineBreakAfter;
+            frag.endOfWord = endOfWord;
             frag.updateWidth();
             this.clearText();
             return frag;
