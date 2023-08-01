@@ -32,17 +32,37 @@ public class Test {
         markdownRenderer.setOptimalWidth(300);
         markdownRenderer.setX(40);
         markdownRenderer.setY(40);
-        markdownRenderer.setText("## About\n" +
+        markdownRenderer.setText("## About [Hyperlink](https://github.com/Keksuccino/FancyMenu-Translations)\n" +
                 "\n" +
-                "Source ~code for the~ FancyMenu _Minecraft mod_.\n" +
+                "Source _code for_ the FancyMenu ~Minecraft~ mod.\n" +
                 "\n" +
                 "**The source code for the different versions of FancyMenu (Forge, Fabric, multiple MC versions) is separated by branches.**\n" +
                 "**For example, if you want to see the code for FancyMenu Forge MC 1.16, use the `forge-1.16` branch.**\n" +
                 "\n" +
-                "> This is a little quote.\n" +
-                "I use this to test the quote formatting.\n" +
+                "---\n" +
                 "\n" +
-                "## Localization\n" +
+                "The thing above is a separation line.\n" +
+                "\n" +
+//                "![](config/fancymenu/assets/back_norm7.png)\n" +
+//                "\n" +
+                "![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg)\n" +
+                "\n" +
+                "> This is a little quote.\n" +
+                "I added this to test the quote feature.\n" +
+                "\n" +
+                "Some text line before the code block.\n" +
+                "This is a `single line code block`.\n" +
+                "And this is the line after the code block.\n" +
+                "\n" +
+                "This is a\n" +
+                "```\n" +
+                "multi line code block `dfiduidfuiu` iu iou oiuoiui\n" +
+                "iu iou oiuoiuioiou **iouoiu** iouoiu oiuoiu oi\n" +
+                "iu iou oiuoiuioiou iouoiu _iouoiu_ oiuoiu oiuoiu oiuoi\n" +
+                "```\n" +
+                "Well, and this is the line after the multi line block.\n" +
+                "\n" +
+                "## Localization `Code Block`\n" +
                 "\n" +
                 "You want to help me **translate the mod** to your language? That's great!\n" +
                 "There is a [separate repository for FancyMenu translations](https://github.com/Keksuccino/FancyMenu-Translations) with all important details you need to know!\n" +

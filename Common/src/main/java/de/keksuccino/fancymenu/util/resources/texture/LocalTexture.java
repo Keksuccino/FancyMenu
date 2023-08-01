@@ -20,6 +20,8 @@ public class LocalTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public static final LocalTexture EMPTY = new LocalTexture(null, null);
+
     @Nullable
     private ResourceLocation textureLocation;
     @Nullable

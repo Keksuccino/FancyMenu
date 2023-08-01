@@ -1193,5 +1193,6 @@
   "fancymenu.editor.menu_bar.edit.select_all": "Select All",
   "fancymenu.editor.widgets": "Editor Widgets",
   "fancymenu.editor.widgets.layers": "Layers",
-  "fancymenu.editor.widgets.layers.vanilla_elements": "Vanilla Elements"
+  "fancymenu.editor.widgets.layers.vanilla_elements": "Vanilla Elements",
+  "fancymenu.markdown.missing_local_image": "[MISSING LOCAL IMAGE OR NOT IN CONFIG/FANCYMENU/ASSETS]"
 }

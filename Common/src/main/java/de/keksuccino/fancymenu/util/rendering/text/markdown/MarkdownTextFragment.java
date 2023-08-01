@@ -5,6 +5,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
@@ -21,10 +25,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public final String text;
     public float x;
     public float y;
-    public float unscaledWidth;
-    public float unscaledHeight;
+    public float unscaledTextWidth;
+    public float unscaledTextHeight;
+    public boolean startOfRenderLine = false;
     public boolean naturalLineBreakAfter;
+    public boolean autoLineBreakAfter;
     public boolean endOfWord;
+    public ITexture image = null;
     public boolean separationLine;
     public DrawableColor textColor = null;
     public boolean shadow = true;
@@ -35,56 +42,104 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
+    public CodeBlockContext codeBlockContext = null;
     public boolean hovered = false;
 
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
         this.text = text;
-        this.unscaledHeight = this.parent.font.lineHeight;
+        this.unscaledTextHeight = this.parent.font.lineHeight;
     }
-
-    //TODO render line under headline in full markdown renderer width (not just fragment width)
 
     //TODO add HEX color formatting
 
-    //TODO add image support (  [](image_url)  )
-
-    //TODO add code block formatting (wie bei quotes machen -> erstes fragment rendert hintergrund für vollen (mehrzeiligen) block)
+    //TODO wenn möglich, support für zentriert und rechtsbündig adden
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        if (this.separationLine) {
+        this.hovered = this.isMouseOver(mouseX, mouseY);
 
-            this.unscaledWidth = this.parent.getRealWidth();
+        if (this.image != null) {
 
-            //TODO render as separation line
+            if (this.image.getResourceLocation() != null) {
+                RenderSystem.enableBlend();
+                RenderingUtils.bindTexture(this.image.getResourceLocation());
+                RenderingUtils.resetShaderColor();
+                RenderingUtils.blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
+                RenderingUtils.resetShaderColor();
+            }
+
+        } else if (this.separationLine) {
+
+            RenderSystem.enableBlend();
+            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorInt());
+            RenderingUtils.resetShaderColor();
 
         } else {
 
-            this.hovered = this.isMouseOver(mouseX, mouseY);
+            if ((this.hyperlink != null) && this.hovered) {
+                CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+            }
+
+            this.renderCodeBlock(pose);
 
             RenderSystem.enableBlend();
             pose.pushPose();
             pose.scale(this.getScale(), this.getScale(), this.getScale());
-            if (this.shadow) {
-                this.parent.font.drawShadow(pose, this.buildRenderComponent(), (int) this.getScaledX(), (int) this.getScaledY(), this.parent.textBaseColor.getColorInt());
+            if (this.shadow && (this.codeBlockContext == null)) {
+                this.parent.font.drawShadow(pose, this.buildRenderComponent(), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
             } else {
-                this.parent.font.draw(pose, this.buildRenderComponent(), (int) this.getScaledX(), (int) this.getScaledY(), this.parent.textBaseColor.getColorInt());
+                this.parent.font.draw(pose, this.buildRenderComponent(), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
             }
             pose.popPose();
             RenderingUtils.resetShaderColor();
 
             this.renderQuoteLine(pose);
 
+            this.renderHeadlineUnderline(pose);
+
         }
 
+    }
+
+    protected void renderCodeBlock(PoseStack pose) {
+        if (this.codeBlockContext != null) {
+            MarkdownTextFragment start = this.codeBlockContext.getBlockStart();
+            MarkdownTextFragment end = this.codeBlockContext.getBlockEnd();
+            if (start != this) return;
+            if (end == null) return;
+            if (this.codeBlockContext.singleLine) {
+                float xEnd = end.x + end.getRenderWidth();
+                renderCodeBlockBackground(pose, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorInt());
+            } else {
+                renderCodeBlockBackground(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorInt());
+            }
+        }
+    }
+
+    protected void renderCodeBlockBackground(PoseStack pose, float minX, float minY, float maxX, float maxY, int color) {
+        RenderSystem.enableBlend();
+        RenderingUtils.fillF(pose, minX+1, minY, maxX-1, minY+1, color);
+        RenderingUtils.fillF(pose, minX, minY+1, maxX, maxY-1, color);
+        RenderingUtils.fillF(pose, minX+1, maxY-1, maxX-1, maxY, color);
+        RenderingUtils.resetShaderColor();
+    }
+
+    protected void renderHeadlineUnderline(PoseStack pose) {
+        if (this.startOfRenderLine && ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST))) {
+            RenderSystem.enableBlend();
+            float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
+            float lineThickness = (scale > 1) ? 0.5f : 1f;
+            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, this.y + this.getRenderHeight() - lineThickness, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, this.y + this.getRenderHeight(), this.parent.headlineUnderlineColor.getColorInt());
+            RenderingUtils.resetShaderColor();
+        }
     }
 
     protected void renderQuoteLine(PoseStack pose) {
         if ((this.quoteContext != null) && (this.quoteContext.getQuoteEnd() != null) && (this.quoteContext.getQuoteEnd() == this)) {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
-            float yEnd = this.y + this.getScaledHeight() + 1;
+            float yEnd = this.y + this.getRenderHeight() + 1;
             RenderSystem.enableBlend();
             RenderingUtils.fillF(pose, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorInt());
             RenderingUtils.resetShaderColor();
@@ -107,27 +162,111 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             style = style.withColor(this.parent.hyperlinkColor.getColorInt());
             if (this.hyperlink.isHovered()) style = style.withUnderlined(true);
         }
-        return Component.literal(this.text).setStyle(style);
+        String t = this.text;
+        if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
+            t = t.substring(0, t.length()-1);
+        }
+        return Component.literal(t).setStyle(style);
     }
 
     protected void updateWidth() {
-        this.unscaledWidth = this.parent.font.width(this.buildRenderComponent());
+        this.unscaledTextWidth = this.parent.font.width(this.buildRenderComponent());
     }
 
-    public float getScaledX() {
-        return this.x / this.getScale();
+    public float getTextRenderX() {
+        float f = this.x / this.getScale();
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
+            f += 10;
+        }
+        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
+            f += 1;
+        }
+        return f;
     }
 
-    public float getScaledY() {
-        return this.y / this.getScale();
+    public float getTextRenderY() {
+        float f = this.y / this.getScale();
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
+            f += 10;
+        }
+        return f;
     }
 
-    public float getScaledWidth() {
-        return this.unscaledWidth * this.getScale();
+    public float getRenderWidth() {
+
+        if (this.image != null) {
+            if (this.image.getResourceLocation() == null) return 10;
+            if (this.image.getWidth() <= (this.parent.getRealWidth() - this.parent.border - this.parent.border)) {
+                return this.image.getWidth();
+            }
+            return this.parent.getRealWidth() - this.parent.border - this.parent.border;
+        }
+
+        float f = this.getTextRenderWidth();
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
+            f += 10;
+        }
+        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
+            f += 1;
+        }
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.autoLineBreakAfter || this.naturalLineBreakAfter)) {
+            f += 10;
+        }
+        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
+            f += 1;
+        }
+        return f;
+
     }
 
-    public float getScaledHeight() {
-        return this.unscaledHeight * this.getScale();
+    public float getRenderHeight() {
+
+        if (this.image != null) {
+            if (this.image.getResourceLocation() == null) return 10;
+            return this.image.getAspectRatio().getAspectRatioHeight((int)this.getRenderWidth());
+        }
+
+        float f = this.getTextRenderHeight();
+        if ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST)) {
+            f += 5;
+        }
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
+            f += 10;
+        }
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() != null) && (this.codeBlockContext.getBlockEnd().y == this.y)) {
+            f += 10;
+        }
+        return f;
+    }
+
+    public float getTextRenderWidth() {
+        return this.unscaledTextWidth * this.getScale();
+    }
+
+    public float getTextRenderHeight() {
+        return this.unscaledTextHeight * this.getScale();
+    }
+
+    public float getTextX() {
+        float f = this.getTextRenderX();
+        f -= (this.x / this.getScale());
+        f += this.x;
+        return f;
+    }
+
+    public float getTextY() {
+        float f = this.getTextRenderY();
+        f -= (this.y / this.getScale());
+        f += this.y;
+        return f;
+    }
+
+    public float getTextWidth() {
+        return this.getTextRenderWidth();
+    }
+
+    public float getTextHeight() {
+        return this.getTextRenderHeight();
     }
 
     public float getScale() {
@@ -139,7 +278,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        return RenderingUtils.isXYInArea(mouseX, mouseY, this.getScaledX(), this.getScaledY(), this.getScaledWidth(), this.getScaledHeight());
+        return RenderingUtils.isXYInArea(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());
     }
 
     @Override
@@ -187,6 +326,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         @Nullable
         public MarkdownTextFragment getQuoteEnd() {
             if (!quoteFragments.isEmpty()) return quoteFragments.get(quoteFragments.size()-1);
+            return null;
+        }
+
+    }
+
+    public static class CodeBlockContext {
+
+        public final List<MarkdownTextFragment> codeBlockFragments = new ArrayList<>();
+        public boolean singleLine = true;
+
+        @Nullable
+        public MarkdownTextFragment getBlockStart() {
+            if (!codeBlockFragments.isEmpty()) return codeBlockFragments.get(0);
+            return null;
+        }
+
+        @Nullable
+        public MarkdownTextFragment getBlockEnd() {
+            if (!codeBlockFragments.isEmpty()) return codeBlockFragments.get(codeBlockFragments.size()-1);
             return null;
         }
 
