@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
@@ -22,7 +21,8 @@ import java.util.Objects;
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public final MarkdownRenderer parent;
-    public final String text;
+    public MarkdownTextLine parentLine;
+    public String text;
     public float x;
     public float y;
     public float unscaledTextWidth;
@@ -51,9 +51,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         this.unscaledTextHeight = this.parent.font.lineHeight;
     }
 
-    //TODO add HEX color formatting
-
-    //TODO wenn möglich, support für zentriert und rechtsbündig adden
+    //TODO add HEX color formatting <-----------------
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -141,7 +139,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
             float yEnd = this.y + this.getRenderHeight() + 1;
             RenderSystem.enableBlend();
-            RenderingUtils.fillF(pose, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorInt());
+            if (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
+                RenderingUtils.fillF(pose, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorInt());
+            } else if (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
+                RenderingUtils.fillF(pose, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorInt());
+            }
             RenderingUtils.resetShaderColor();
         }
     }
@@ -154,6 +156,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 .withStrikethrough(this.strikethrough);
         if (this.quoteContext != null) {
             style = style.withColor(this.parent.quoteColor.getColorInt());
+            if (this.parent.quoteItalic) {
+                style = style.withItalic(true);
+            }
         }
         if (this.textColor != null) {
             style = style.withColor(this.textColor.getColorInt());
@@ -175,6 +180,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public float getTextRenderX() {
         float f = this.x / this.getScale();
+        if ((this.quoteContext != null) && this.startOfRenderLine && (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
+            f += this.parent.quoteIndent;
+        }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
             f += 10;
         }
@@ -203,6 +211,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         float f = this.getTextRenderWidth();
+        if ((this.quoteContext != null) && this.startOfRenderLine && (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
+            f += this.parent.quoteIndent;
+        }
+        if ((this.quoteContext != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
+            f += this.parent.quoteIndent;
+        }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
             f += 10;
         }

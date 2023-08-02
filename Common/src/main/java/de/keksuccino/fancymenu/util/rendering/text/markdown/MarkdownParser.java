@@ -182,12 +182,9 @@ public class MarkdownParser {
 
             //Handle Image
             if ((c == '!') && isStartOfLine) {
-                LOGGER.info("############ ! FOUND");
                 if (currentLine.startsWith("![")) {
-                    LOGGER.info("############ ![ FOUND");
                     String imageLink = getImageFromLine(currentLine);
                     if (imageLink != null) {
-                        LOGGER.info("################# IMAGE != NULL");
                         if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(imageLink)) {
                             builder.image = TextureHandler.INSTANCE.getWebTexture(imageLink);
                             builder.text = "Image";

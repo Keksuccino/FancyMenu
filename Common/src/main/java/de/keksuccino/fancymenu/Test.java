@@ -45,8 +45,8 @@ public class Test {
                 "\n" +
 //                "![](config/fancymenu/assets/back_norm7.png)\n" +
 //                "\n" +
-                "![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg)\n" +
-                "\n" +
+//                "![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg)\n" +
+//                "\n" +
                 "> This is a little quote.\n" +
                 "I added this to test the quote feature.\n" +
                 "\n" +
