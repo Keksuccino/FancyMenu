@@ -20,6 +20,8 @@ import java.util.Objects;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
+    protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
+
     public final MarkdownRenderer parent;
     public MarkdownTextLine parentLine;
     public String text;
@@ -38,6 +40,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean bold;
     public boolean italic;
     public boolean strikethrough;
+    public boolean bulletListItemStart = false;
+    public int bulletListLevel = 0;
+    @NotNull
+    public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
     @NotNull
     public HeadlineType headlineType = HeadlineType.NONE;
@@ -51,12 +57,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         this.unscaledTextHeight = this.parent.font.lineHeight;
     }
 
-    //TODO add HEX color formatting <-----------------
+    //TODO Wenn Headline über mehrere Zeilen, nur unterste unterstreichen
+
+    //TODO Single-Line Code Block korrekt formatieren, wenn über mehrere Zeilen
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
+
+        if ((this.hyperlink != null) && this.hovered) {
+            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+        }
 
         if (this.image != null) {
 
@@ -76,10 +88,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         } else {
 
-            if ((this.hyperlink != null) && this.hovered) {
-                CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
-            }
-
             this.renderCodeBlock(pose);
 
             RenderSystem.enableBlend();
@@ -94,6 +102,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderingUtils.resetShaderColor();
 
             this.renderQuoteLine(pose);
+
+            this.renderBulletListDot(pose);
 
             this.renderHeadlineUnderline(pose);
 
@@ -139,11 +149,20 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
             float yEnd = this.y + this.getRenderHeight() + 1;
             RenderSystem.enableBlend();
-            if (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
+            if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 RenderingUtils.fillF(pose, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorInt());
-            } else if (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
+            } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
                 RenderingUtils.fillF(pose, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorInt());
             }
+            RenderingUtils.resetShaderColor();
+        }
+    }
+
+    protected void renderBulletListDot(PoseStack pose) {
+        if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
+            RenderSystem.enableBlend();
+            float yStart = this.getTextRenderY() + (this.getTextRenderHeight() / 2) - 2;
+            RenderingUtils.fillF(pose, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT - 3, yStart, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT, yStart+3, this.parent.bulletListDotColor.getColorInt());
             RenderingUtils.resetShaderColor();
         }
     }
@@ -171,6 +190,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
             t = t.substring(0, t.length()-1);
         }
+        if (this.codeBlockContext != null) {
+            style = Style.EMPTY;
+        }
         return Component.literal(t).setStyle(style);
     }
 
@@ -180,8 +202,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public float getTextRenderX() {
         float f = this.x / this.getScale();
-        if ((this.quoteContext != null) && this.startOfRenderLine && (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
+        if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
             f += this.parent.quoteIndent;
+        }
+        if ((this.bulletListLevel > 0) && this.startOfRenderLine) {
+            f += (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
             f += 10;
@@ -189,7 +214,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
             f += 1;
         }
-        return f;
+        return (int)f;
     }
 
     public float getTextRenderY() {
@@ -197,7 +222,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
             f += 10;
         }
-        return f;
+        if ((this.bulletListLevel > 0) && (this.parentLine != null) && this.parentLine.bulletListItemStartLine) {
+            f += this.parent.bulletListSpacing;
+        }
+        return (int)f;
     }
 
     public float getRenderWidth() {
@@ -211,11 +239,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         float f = this.getTextRenderWidth();
-        if ((this.quoteContext != null) && this.startOfRenderLine && (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
+        if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
             f += this.parent.quoteIndent;
         }
-        if ((this.quoteContext != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && (this.parent.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
+        if ((this.quoteContext != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
             f += this.parent.quoteIndent;
+        }
+        if ((this.bulletListLevel > 0) && this.startOfRenderLine) {
+            f += (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
             f += 10;
@@ -249,6 +280,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() != null) && (this.codeBlockContext.getBlockEnd().y == this.y)) {
             f += 10;
+        }
+        if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
+            f += this.parent.bulletListSpacing;
         }
         return f;
     }
@@ -292,6 +326,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
+        if ((this.image != null) && (this.image.getResourceLocation() != null)) {
+            return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
+        }
         return RenderingUtils.isXYInArea(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());
     }
 

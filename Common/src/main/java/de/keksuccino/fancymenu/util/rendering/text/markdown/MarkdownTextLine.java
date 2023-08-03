@@ -12,6 +12,9 @@ public class MarkdownTextLine implements Renderable {
     public float offsetX;
     public float offsetY;
     public boolean containsMultilineCodeBlockFragments = false;
+    @NotNull
+    public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+    public boolean bulletListItemStartLine = false;
     public final List<MarkdownTextFragment> fragments = new ArrayList<>();
 
     public MarkdownTextLine(@NotNull MarkdownRenderer parent) {
@@ -55,6 +58,10 @@ public class MarkdownTextLine implements Renderable {
         if (!this.fragments.isEmpty()) {
             MarkdownTextFragment first = this.fragments.get(0);
             MarkdownTextFragment last = this.fragments.get(this.fragments.size()-1);
+            //Set line alignment by first fragment
+            this.alignment = first.alignment;
+            //Set bullet list start by first fragment
+            this.bulletListItemStartLine = first.bulletListItemStart;
             first.startOfRenderLine = true;
             last.autoLineBreakAfter = !last.naturalLineBreakAfter;
         }
@@ -69,7 +76,7 @@ public class MarkdownTextLine implements Renderable {
         }
         if (last != null) {
             if (last.text.endsWith(" ")) {
-                f -= this.parent.font.width(" ");
+                f -= (this.parent.font.width(" ") * last.getScale());
             }
         }
         if (f < 0) {

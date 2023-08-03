@@ -1,20 +1,12 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 public class Test {
 
@@ -34,21 +26,33 @@ public class Test {
         markdownRenderer.setY(40);
         markdownRenderer.setText("## About [Hyperlink](https://github.com/Keksuccino/FancyMenu-Translations)\n" +
                 "\n" +
+                "^^^\n" +
                 "Source _code for_ the FancyMenu ~Minecraft~ mod.\n" +
+                "^^^\n" +
                 "\n" +
-                "**The source code for the different versions of FancyMenu (Forge, Fabric, multiple MC versions) is separated by branches.**\n" +
+                "|||\n" +
+                "**The source %#bdfc00%code for the different%#% versions of FancyMenu (Forge, Fabric, multiple MC versions) is separated by branches.**\n" +
                 "**For example, if you want to see the code for FancyMenu Forge MC 1.16, use the `forge-1.16` branch.**\n" +
+                "|||\n" +
+                "The text above should be on the right side.\n" +
+                "\n" +
+                "The following list contains items:\n" +
+                "\n" +
+                "- Some Item\n" +
+                "- Another Itemmmm idfiduf lj erit zieruz tieruz tuirezt uidzf gjhdfgjhdgf jsdhgfe uzretfgd sjhfg sdjhgfd jhgfsdjhf gjhg hjsdgfjhs\n" +
+                "  - Level 2 Item\n" +
+                "- This is also an item\n" +
                 "\n" +
                 "---\n" +
                 "\n" +
                 "The thing above is a separation line.\n" +
                 "\n" +
-//                "![](config/fancymenu/assets/back_norm7.png)\n" +
-//                "\n" +
-//                "![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg)\n" +
-//                "\n" +
-                "> This is a little quote.\n" +
-                "I added this to test the quote feature.\n" +
+                "![](config/fancymenu/assets/back_norm.png)\n" +
+                "\n" +
+                "[![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/RedCat_8727.jpg/1200px-RedCat_8727.jpg)](https://github.com/Keksuccino/FancyMenu-Translations)\n" +
+                "\n" +
+                "> This is a %#36ccd188%little quote.\n" +
+                "I added this to test the quote feature.%#%\n" +
                 "\n" +
                 "Some text line before the code block.\n" +
                 "This is a `single line code block`.\n" +
@@ -75,8 +79,8 @@ public class Test {
                 "\n" +
                 "## Licensing\n" +
                 "\n" +
-                "FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).\n" +
-                "See `LICENSE.md` for more information.\n" +
+                "FancyMenu %#36ccd188%is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).\n" +
+                "See%#% `LICENSE.md` for more information.\n" +
                 "\n" +
                 "## Copyright\n" +
                 "\n" +

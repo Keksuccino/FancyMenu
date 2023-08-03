@@ -34,8 +34,6 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     protected float realWidth;
     protected float realHeight;
     @NotNull
-    protected MarkdownLineAlignment alignment = MarkdownLineAlignment.LEFT;
-    @NotNull
     protected DrawableColor codeBlockSingleLineColor = DrawableColor.of(new Color(115, 115, 115));
     @NotNull
     protected DrawableColor codeBlockMultiLineColor = DrawableColor.of(new Color(86, 86, 86));
@@ -49,6 +47,10 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     protected DrawableColor quoteColor = DrawableColor.of(new Color(129, 129, 129));
     protected float quoteIndent = 8;
     protected boolean quoteItalic = false;
+    @NotNull
+    protected DrawableColor bulletListDotColor = DrawableColor.of(new Color(169, 169, 169));
+    protected float bulletListIndent = 8;
+    protected float bulletListSpacing = 3;
     @NotNull
     protected DrawableColor textBaseColor = DrawableColor.WHITE;
     protected boolean autoLineBreaks = true;
@@ -75,13 +77,13 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
         float lineOffsetY = this.border;
         for (MarkdownTextLine line : this.lines) {
             float lineAlignmentOffsetX = 0;
-            if (line.isAlignmentAllowed(this.alignment)) {
+            if (line.isAlignmentAllowed(line.alignment)) {
                 float realInnerWidth = this.getRealWidth() - this.border - this.border;
-                if (this.alignment == MarkdownLineAlignment.CENTERED) {
+                if (line.alignment == MarkdownLineAlignment.CENTERED) {
                     lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.getLineWidth());
                     if (lineAlignmentOffsetX > 0) lineAlignmentOffsetX = lineAlignmentOffsetX / 2f;
                 }
-                if (this.alignment == MarkdownLineAlignment.RIGHT) {
+                if (line.alignment == MarkdownLineAlignment.RIGHT) {
                     lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.getLineWidth());
                 }
             }
@@ -107,12 +109,14 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
             this.renderText = newRenderText;
             this.rebuildFragments();
             this.rebuildLines();
+            this.onRender(null, 0, 0, 0, false);
             //TODO remove debug
             LOGGER.info("##### REBUILDING MARKDOWN (RENDER TEXT CHANGED)");
         } else if ((this.lastOptimalWidth != -1000) && (this.lastOptimalWidth != this.optimalWidth)) {
             //TODO remove debug
             LOGGER.info("##### REBUILDING MARKDOWN (OPTIMAL WIDTH CHANGED)");
             this.rebuildLines();
+            this.onRender(null, 0, 0, 0, false);
         }
         this.lastOptimalWidth = this.optimalWidth;
 
@@ -225,15 +229,6 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     public MarkdownRenderer setText(@NotNull String text) {
         this.text = Objects.requireNonNull(text);
         return this;
-    }
-
-    @NotNull
-    public MarkdownLineAlignment getAlignment() {
-        return this.alignment;
-    }
-
-    public void setAlignment(@NotNull MarkdownLineAlignment alignment) {
-        this.alignment = Objects.requireNonNull(alignment);
     }
 
     public float getX() {
@@ -359,6 +354,34 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setTextBaseColor(@NotNull DrawableColor textBaseColor) {
         this.textBaseColor = textBaseColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getBulletListDotColor() {
+        return this.bulletListDotColor;
+    }
+
+    public MarkdownRenderer setBulletListDotColor(@NotNull DrawableColor bulletListDotColor) {
+        this.bulletListDotColor = bulletListDotColor;
+        return this;
+    }
+
+    public float getBulletListIndent() {
+        return this.bulletListIndent;
+    }
+
+    public MarkdownRenderer setBulletListIndent(float bulletListIndent) {
+        this.bulletListIndent = bulletListIndent;
+        return this;
+    }
+
+    public float getBulletListSpacing() {
+        return this.bulletListSpacing;
+    }
+
+    public MarkdownRenderer setBulletListSpacing(float bulletListSpacing) {
+        this.bulletListSpacing = bulletListSpacing;
         return this;
     }
 

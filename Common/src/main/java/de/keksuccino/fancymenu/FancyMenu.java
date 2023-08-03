@@ -85,6 +85,7 @@ public class FancyMenu {
 	public static final File MOD_DIR = createDirectory(new File(getGameDirectory(), "/config/fancymenu"));
 	public static final File INSTANCE_DATA_DIR = createDirectory(new File(getGameDirectory(), "/fancymenu_data"));
 	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
+	public static final File CACHE_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/cached_data"));
 
 	private static Options options;
 

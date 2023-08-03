@@ -27,7 +27,10 @@ public class DrawableColor {
         return c;
     }
 
-    /** Creates a {@link DrawableColor} out of the given HEX-{@link String}. **/
+    /**
+     * Creates a {@link DrawableColor} out of the given HEX-{@link String}.<br>
+     * Returns {@link DrawableColor#EMPTY} if the method failed to parse the HEX code.
+     */
     @NotNull
     public static DrawableColor of(@NotNull String hex) {
         Objects.requireNonNull(hex);
