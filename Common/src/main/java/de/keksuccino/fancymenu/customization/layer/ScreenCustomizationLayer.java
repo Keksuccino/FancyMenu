@@ -256,7 +256,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			if (widgetsToRegister != null) {
 				for (GuiEventListener w : widgetsToRegister) {
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
-						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(w);
+						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, w);
 					}
 				}
 			}

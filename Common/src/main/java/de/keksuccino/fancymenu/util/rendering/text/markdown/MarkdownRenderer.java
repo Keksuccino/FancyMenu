@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
@@ -54,6 +54,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     @NotNull
     protected DrawableColor textBaseColor = DrawableColor.WHITE;
     protected boolean autoLineBreaks = true;
+    protected boolean textShadow = true;
     protected float lineSpacing = 2;
     protected float border = 2;
     @Nullable
@@ -63,6 +64,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     protected boolean dragging;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
+    protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
     protected float lastOptimalWidth = -1000;
 
     @Override
@@ -89,16 +91,14 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
             }
             line.offsetX = this.border + lineAlignmentOffsetX;
             line.offsetY = lineOffsetY;
-            if (shouldRender) {
+            if (shouldRender && this.isLineRenderingAllowedByValidators(line)) {
                 line.render(pose, mouseX, mouseY, partial);
             }
             lineOffsetY += line.getLineHeight() + this.lineSpacing;
         }
 
         //TODO remove debug
-        if (shouldRender) {
-            UIBase.renderBorder(pose, this.x, this.y, this.x + this.optimalWidth, this.y + this.getRealHeight(), 1, DrawableColor.BLACK.getColorInt(), true, true, true, true);
-        }
+//        LOGGER.info("### TOTAL HEIGHT RENDER: " + lineOffsetY + " | REAL HEIGHT: " + this.getRealHeight());
 
     }
 
@@ -115,6 +115,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
         } else if ((this.lastOptimalWidth != -1000) && (this.lastOptimalWidth != this.optimalWidth)) {
             //TODO remove debug
             LOGGER.info("##### REBUILDING MARKDOWN (OPTIMAL WIDTH CHANGED)");
+            this.lastOptimalWidth = this.optimalWidth;
             this.rebuildLines();
             this.onRender(null, 0, 0, 0, false);
         }
@@ -218,7 +219,19 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @NotNull
     protected String buildRenderText() {
-        return PlaceholderParser.replacePlaceholders(this.text).replace("%n%", "\n").replace("\\n", "\n");
+        return PlaceholderParser.replacePlaceholders(this.text).replace("%n%", "\n").replace("\r", "\n");
+    }
+
+    public MarkdownRenderer addLineRenderValidator(@NotNull ConsumingSupplier<MarkdownTextLine, Boolean> validator) {
+        this.lineRenderValidators.add(validator);
+        return this;
+    }
+
+    protected boolean isLineRenderingAllowedByValidators(@NotNull MarkdownTextLine line) {
+        for (ConsumingSupplier<MarkdownTextLine, Boolean> validator : this.lineRenderValidators) {
+            if (!validator.get(line)) return false;
+        }
+        return true;
     }
 
     @NotNull
@@ -400,6 +413,15 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setQuoteIndent(float quoteIndent) {
         this.quoteIndent = quoteIndent;
+        return this;
+    }
+
+    public boolean isTextShadow() {
+        return this.textShadow;
+    }
+
+    public MarkdownRenderer setTextShadow(boolean textShadow) {
+        this.textShadow = textShadow;
         return this;
     }
 

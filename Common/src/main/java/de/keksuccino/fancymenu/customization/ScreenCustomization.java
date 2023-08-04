@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -293,6 +294,7 @@ public class ScreenCustomization {
 
 	public static void reInitCurrentScreen() {
 		if (Minecraft.getInstance().screen != null) {
+			RenderingUtils.resetGuiScale();
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen));
 			Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());

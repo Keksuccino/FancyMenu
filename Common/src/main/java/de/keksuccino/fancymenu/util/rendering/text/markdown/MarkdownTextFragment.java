@@ -36,7 +36,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public ITexture image = null;
     public boolean separationLine;
     public DrawableColor textColor = null;
-    public boolean shadow = true;
     public boolean bold;
     public boolean italic;
     public boolean strikethrough;
@@ -93,7 +92,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderSystem.enableBlend();
             pose.pushPose();
             pose.scale(this.getScale(), this.getScale(), this.getScale());
-            if (this.shadow && (this.codeBlockContext == null)) {
+            if (this.parent.textShadow && (this.codeBlockContext == null)) {
                 this.parent.font.drawShadow(pose, this.buildRenderComponent(), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
             } else {
                 this.parent.font.draw(pose, this.buildRenderComponent(), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());

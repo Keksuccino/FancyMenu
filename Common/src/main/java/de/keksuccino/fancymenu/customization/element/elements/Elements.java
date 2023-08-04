@@ -19,6 +19,7 @@ public class Elements {
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
     public static final SliderElementBuilder SLIDER = new SliderElementBuilder();
     public static final TextElementBuilder TEXT = new TextElementBuilder();
+    public static final de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder TEXT_V2 = new de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
@@ -33,6 +34,7 @@ public class Elements {
         ElementRegistry.register(INPUT_FIELD);
         ElementRegistry.register(SLIDER);
         ElementRegistry.register(TEXT);
+        ElementRegistry.register(TEXT_V2);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);

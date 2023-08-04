@@ -331,6 +331,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
+        if (this.isMouseInteractingWithGrabbers()) return true;
         return isXYInArea(mouseX, mouseY, this.getXWithBorder(), this.getYWithBorder(), this.getWidthWithBorder(), this.getHeightWithBorder());
     }
 
