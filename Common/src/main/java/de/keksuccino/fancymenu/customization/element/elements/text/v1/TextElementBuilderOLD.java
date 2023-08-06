@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.customization.element.elements.text;
+package de.keksuccino.fancymenu.customization.element.elements.text.v1;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -13,15 +13,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 
-public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorElement> {
+public class TextElementBuilderOLD extends ElementBuilder<TextElementOLD, TextEditorElementOLD> {
 
-    public TextElementBuilder() {
+    public TextElementBuilderOLD() {
         super("fancymenu_customization_item_text");
     }
 
     @Override
-    public @NotNull TextElement buildDefaultInstance() {
-        TextElement i = new TextElement(this);
+    public @NotNull TextElementOLD buildDefaultInstance() {
+        TextElementOLD i = new TextElementOLD(this);
         i.baseWidth = 200;
         i.baseHeight = 40;
         i.source = "< EMPTY TEXT ELEMENT >";
@@ -30,10 +30,10 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
     }
 
     @Override
-    public TextElement deserializeElement(@NotNull SerializedElement serialized) {
+    public TextElementOLD deserializeElement(@NotNull SerializedElement serialized) {
 
         //Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
-        TextElement element = new TextElement(this);
+        TextElementOLD element = new TextElementOLD(this);
         element.baseWidth = 200;
         element.baseHeight = 40;
         element.source = "< EMPTY TEXT ELEMENT >";
@@ -42,7 +42,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         String sourceModeString = serialized.getValue("source_mode");
         if (sourceModeString != null) {
-            TextElement.SourceMode s = TextElement.SourceMode.getByName(sourceModeString);
+            TextElementOLD.SourceMode s = TextElementOLD.SourceMode.getByName(sourceModeString);
             if (s != null) {
                 element.sourceMode = s;
             }
@@ -55,7 +55,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         String caseModeString = serialized.getValue("case_mode");
         if (caseModeString != null) {
-            TextElement.CaseMode c = TextElement.CaseMode.getByName(caseModeString);
+            TextElementOLD.CaseMode c = TextElementOLD.CaseMode.getByName(caseModeString);
             if (c != null) {
                 element.caseMode = c;
             }
@@ -112,7 +112,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
     }
 
     @Override
-    protected SerializedElement serializeElement(@NotNull TextElement element, @NotNull SerializedElement serializeTo) {
+    protected SerializedElement serializeElement(@NotNull TextElementOLD element, @NotNull SerializedElement serializeTo) {
 
         if (element.source != null) {
             serializeTo.putProperty("source", element.source);
@@ -152,8 +152,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
     }
 
     @Override
-    public @NotNull TextEditorElement wrapIntoEditorElement(@NotNull TextElement element, @NotNull LayoutEditorScreen editor) {
-        return new TextEditorElement(element, editor);
+    public @NotNull TextEditorElementOLD wrapIntoEditorElement(@NotNull TextElementOLD element, @NotNull LayoutEditorScreen editor) {
+        return new TextEditorElementOLD(element, editor);
     }
 
     @Override

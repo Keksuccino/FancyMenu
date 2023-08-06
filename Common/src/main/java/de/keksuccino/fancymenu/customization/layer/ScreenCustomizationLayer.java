@@ -3,9 +3,8 @@ package de.keksuccino.fancymenu.customization.layer;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -254,6 +253,8 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			//Add widgets of element to screen
 			List<GuiEventListener> widgetsToRegister = i.getWidgetsToRegister();
 			if (widgetsToRegister != null) {
+				//Element children get always added at pos 0, so reverse the list to preserve the natural widget order
+				widgetsToRegister = Lists.reverse(widgetsToRegister);
 				for (GuiEventListener w : widgetsToRegister) {
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
 						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, w);

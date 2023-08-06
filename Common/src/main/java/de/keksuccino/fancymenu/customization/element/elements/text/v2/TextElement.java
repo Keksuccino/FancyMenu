@@ -36,9 +36,11 @@ import java.util.Objects;
 @SuppressWarnings("all")
 public class TextElement extends AbstractElement {
 
-    //TODO FIXEN: (nicht text element) wenn click auf "Reset to Default" bei "Forced Scale" -> menü bleibt unsichtbar geöffnet und context entry wird immer wieder geklickt, wenn maus click
+    //TODO FIXEN: (allgemein, nicht nur text element): es werden keine snapshots erstellt, wenn element resized wird
 
-    //TODO FIXEN: scroll höhe von scroll area zeigt nicht ganzes Markdown element
+    //TODO FIXEN: Hover bei hyperlink broke
+
+    //TODO FIXEN: multi-line code block background broke
 
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
@@ -67,11 +69,25 @@ public class TextElement extends AbstractElement {
             @Override
             public void updateScrollArea() {
                 super.updateScrollArea();
-                //Manually Update scroll bar area size, so the grabbers are outside the area
+                //Manually update scroll bar area size, so the grabbers are outside the area
                 if (Minecraft.getInstance().screen != null) {
                     this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + 12;
                     this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + 12;
                 }
+            }
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                if (isEditor()) {
+                    if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+                    if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
+                    return false;
+                }
+                return super.mouseClicked(mouseX, mouseY, button);
+            }
+            @Override
+            public boolean isMouseOver(double mouseX, double mouseY) {
+                if (isEditor()) return false;
+                return super.isMouseOver(mouseX, mouseY);
             }
         };
         this.scrollArea.minimumEntryWidthIsAreaWidth = false;
@@ -86,6 +102,7 @@ public class TextElement extends AbstractElement {
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
 
+        //Don't render markdown lines outside of visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
             if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.getAbsoluteY()) {
                 return false;
@@ -325,33 +342,6 @@ public class TextElement extends AbstractElement {
 
     }
 
-    public static enum CaseMode {
-
-        NORMAL("normal"),
-        ALL_LOWER("lower"),
-        ALL_UPPER("upper");
-
-        final String name;
-
-        CaseMode(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-
-        public static CaseMode getByName(String name) {
-            for (CaseMode i : CaseMode.values()) {
-                if (i.getName().equals(name)) {
-                    return i;
-                }
-            }
-            return null;
-        }
-
-    }
-
     protected static class MarkdownRendererEntry extends ScrollAreaEntry {
 
         protected MarkdownRenderer markdownRenderer;
@@ -372,6 +362,7 @@ public class TextElement extends AbstractElement {
             this.markdownRenderer.setY(this.y);
             this.setWidth(this.markdownRenderer.getRealWidth());
             this.setHeight(this.markdownRenderer.getRealHeight());
+//            LogManager.getLogger().info("################ SCROLL ENTRY HEIGHT: " + this.getHeight() + " | AREA HEIGHT: " + this.parent.getTotalEntryHeight() + " | AREA SCROLL HEIGHT: " + this.parent.getTotalScrollHeight() + " | MARKDOWN RENDERER HEIGHT: " + this.markdownRenderer.getRealHeight() + " | SCROLL: " + this.parent.verticalScrollBar.getScroll());
             this.markdownRenderer.render(pose, mouseX, mouseY, partial);
         }
 

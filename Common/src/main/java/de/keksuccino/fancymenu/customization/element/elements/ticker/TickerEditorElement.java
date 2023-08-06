@@ -39,7 +39,7 @@ public class TickerEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
-        this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay",
+        this.addGenericLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay",
                         consumes -> (consumes instanceof TickerEditorElement),
                         consumes -> ((TickerElement)consumes.element).tickDelayMs,
                         (element, delay) -> ((TickerElement)element.element).tickDelayMs = Math.min(0L, delay),
@@ -48,7 +48,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_delay.desc")));
 
-        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_async",
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_async",
                         consumes -> (consumes instanceof TickerEditorElement),
                         consumes -> ((TickerElement)consumes.element).isAsync,
                         (element1, aBoolean) -> ((TickerElement)element1.element).isAsync = aBoolean,
@@ -56,7 +56,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.async.desc")));
 
-        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
+        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
                         ListUtils.build(TickerElement.TickMode.NORMAL, TickerElement.TickMode.ONCE_PER_SESSION, TickerElement.TickMode.ON_MENU_LOAD),
                         consumes -> (consumes instanceof TickerEditorElement),
                         consumes -> ((TickerElement)consumes.element).tickMode,

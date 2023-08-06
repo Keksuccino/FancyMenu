@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.text;
+package de.keksuccino.fancymenu.customization.element.elements.text.v1;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -35,7 +35,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TextElement extends AbstractElement {
+public class TextElementOLD extends AbstractElement {
 
     public SourceMode sourceMode = SourceMode.DIRECT;
     public String source; //direct text, file path, link
@@ -57,7 +57,7 @@ public class TextElement extends AbstractElement {
     public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
     public volatile boolean updating = false;
 
-    public TextElement(@NotNull ElementBuilder<?, ?> builder) {
+    public TextElementOLD(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
@@ -67,14 +67,14 @@ public class TextElement extends AbstractElement {
             @Override
             public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
                 super.render(matrix, mouseX, mouseY, partial);
-                this.verticalScrollBar.active = (this.getTotalEntryHeight() > this.getInnerHeight()) && TextElement.this.enableScrolling;
+                this.verticalScrollBar.active = (this.getTotalEntryHeight() > this.getInnerHeight()) && TextElementOLD.this.enableScrolling;
             }
             @Override
             public void updateScrollArea() {
                 super.updateScrollArea();
                 if (Minecraft.getInstance().screen != null) {
-                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + 12;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + 12;
+                    this.verticalScrollBar.scrollAreaEndX = TextElementOLD.this.getAbsoluteX() + TextElementOLD.this.getAbsoluteWidth() + 12;
+                    this.horizontalScrollBar.scrollAreaEndY = TextElementOLD.this.getAbsoluteY() + TextElementOLD.this.getAbsoluteHeight() + 12;
                 }
             }
         };
@@ -363,10 +363,10 @@ public class TextElement extends AbstractElement {
         public final String textRaw;
         public final boolean bold;
         public final float scale;
-        public final TextElement parentItem;
+        public final TextElementOLD parentItem;
         protected String lastTextToRender;
 
-        public LineScrollEntry(ScrollArea parent, String textRaw, boolean bold, float scale, TextElement parentItem) {
+        public LineScrollEntry(ScrollArea parent, String textRaw, boolean bold, float scale, TextElementOLD parentItem) {
             super(parent, Component.literal(""), (entry) -> {});
             this.textRaw = textRaw;
             this.bold = bold;

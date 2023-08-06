@@ -24,7 +24,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
+        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
                 ListUtils.build(SplashTextElement.SourceMode.VANILLA, SplashTextElement.SourceMode.DIRECT_TEXT, SplashTextElement.SourceMode.TEXT_FILE),
                 consumes -> (consumes instanceof SplashTextEditorElement),
                 consumes -> ((SplashTextElement)consumes.element).sourceMode,
@@ -54,7 +54,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         false, FileFilter.TXT_FILE_FILTER)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "input_direct",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).source,
                         (element1, s) -> {
@@ -67,7 +67,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("splash_separator_1");
 
-        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
+        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).scale,
                         (element, scale) -> {
@@ -78,7 +78,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         true, 1.0F, null, null)
                 .setStackable(true);
 
-        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_rotation",
+        this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_rotation",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).rotation,
                         (element, rot) -> {
@@ -89,7 +89,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         true, 20.0F, null, null)
                 .setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).baseColor.getHex(),
                         (element1, s) -> {
@@ -100,21 +100,21 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                         true, DrawableColor.of(255, 255, 0).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
-        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "shadow",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).shadow,
                         (element1, s) -> ((SplashTextElement)element1.element).shadow = s,
                         "fancymenu.elements.splash.shadow")
                 .setStackable(true);
 
-        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "bouncing",
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "bouncing",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).bounce,
                         (element1, s) -> ((SplashTextElement)element1.element).bounce = s,
                         "fancymenu.editor.items.splash.bounce")
                 .setStackable(true);
 
-        this.addBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "refresh_on_load",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         consumes -> ((SplashTextElement)consumes.element).refreshOnMenuReload,
                         (element1, s) -> ((SplashTextElement)element1.element).refreshOnMenuReload = s,

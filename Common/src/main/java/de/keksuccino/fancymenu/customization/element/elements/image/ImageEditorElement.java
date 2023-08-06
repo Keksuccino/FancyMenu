@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.image;
 
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -30,7 +29,7 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.build(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
+        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.build(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
                 consumes -> (consumes instanceof ImageEditorElement),
                 consumes -> ((ImageElement)consumes.element).sourceMode,
                 (element1, sourceMode) -> {

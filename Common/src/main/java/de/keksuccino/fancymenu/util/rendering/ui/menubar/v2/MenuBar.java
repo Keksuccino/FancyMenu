@@ -61,6 +61,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         pose.pushPose();
         pose.scale(scale, scale, scale);
+        pose.translate(0f, 0f, 400f);
 
         this.renderBackground(pose, scaledWidth, this.height);
 

@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 public class ScreenInstanceFactory {
 	
 	private static final Map<Class<?>, Object> DEFAULT_PARAMETERS = new HashMap<>();
-	private static final Map<String, Supplier<? extends Screen>> SCREEN_SUPPLIERS = new HashMap<>();
+	private static final Map<String, Supplier<? extends Screen>> SCREEN_INSTANCE_PROVIDERS = new HashMap<>();
 	
 	public static void init() {
 		
@@ -44,7 +44,7 @@ public class ScreenInstanceFactory {
 		DEFAULT_PARAMETERS.put(Double.class, 0D);
 		DEFAULT_PARAMETERS.put(Float.class, 0F);
 
-		registerScreenSupplier(PackSelectionScreen.class.getName(), () -> {
+		registerScreenProvider(PackSelectionScreen.class.getName(), () -> {
 			return new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
 				Minecraft.getInstance().options.updateResourcePacks(repo);
 				Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
@@ -53,13 +53,13 @@ public class ScreenInstanceFactory {
 		
 	}
 
-	public static void registerScreenSupplier(@NotNull String fullScreenClassName, @NotNull Supplier<? extends Screen> supplier) {
-		SCREEN_SUPPLIERS.put(fullScreenClassName, supplier);
+	public static void registerScreenProvider(@NotNull String fullScreenClassName, @NotNull Supplier<? extends Screen> provider) {
+		SCREEN_INSTANCE_PROVIDERS.put(fullScreenClassName, provider);
 	}
 
 	@Nullable
-	public static Supplier<? extends Screen> getScreenSupplier(@NotNull String fullScreenClassName) {
-		return SCREEN_SUPPLIERS.get(fullScreenClassName);
+	public static Supplier<? extends Screen> getScreenProvider(@NotNull String fullScreenClassName) {
+		return SCREEN_INSTANCE_PROVIDERS.get(fullScreenClassName);
 	}
 
 	@Nullable
@@ -75,9 +75,9 @@ public class ScreenInstanceFactory {
 			if (Minecraft.getInstance().player != null) {
 				DEFAULT_PARAMETERS.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
-			//Check if a supplier is registered for the screen and return from supplier if one was found
-			Supplier<? extends Screen> screenSupplier = getScreenSupplier(fullScreenClassName);
-			if (screenSupplier != null) return screenSupplier.get();
+			//Check if a provider is registered for the screen and return from provider if one was found
+			Supplier<? extends Screen> screenProvider = getScreenProvider(fullScreenClassName);
+			if (screenProvider != null) return screenProvider.get();
 			//Try to construct and instance of the screen
 			Class<?> screenClass = Class.forName(fullScreenClassName, false, ScreenInstanceFactory.class.getClassLoader());
 			if (Screen.class.isAssignableFrom(screenClass)) {

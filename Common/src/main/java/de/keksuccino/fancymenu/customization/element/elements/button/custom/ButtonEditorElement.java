@@ -148,14 +148,14 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_1").setStackable(true);
 
-        this.addBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "loop_animation",
+        this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "loop_animation",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         consumes -> ((ButtonElement)consumes.element).loopBackgroundAnimations,
                         (element1, s) -> ((ButtonElement)element1.element).loopBackgroundAnimations = s,
                         "fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation")
                 .setStackable(true);
 
-        this.addBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "restart_animation_on_hover",
+        this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "restart_animation_on_hover",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         consumes -> ((ButtonElement)consumes.element).restartBackgroundAnimationsOnHover,
                         (element1, s) -> ((ButtonElement)element1.element).restartBackgroundAnimationsOnHover = s,
@@ -164,7 +164,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
@@ -173,7 +173,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
@@ -206,7 +206,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_4").setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         consumes -> {
                             String t = ((ButtonElement)consumes.element).tooltip;

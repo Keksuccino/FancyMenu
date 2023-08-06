@@ -11,14 +11,14 @@ import de.keksuccino.fancymenu.customization.element.elements.slider.SliderEleme
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.text.TextElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.text.v1.TextElementBuilderOLD;
 
 public class Elements {
 
     public static final ButtonElementBuilder BUTTON = new ButtonElementBuilder();
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
     public static final SliderElementBuilder SLIDER = new SliderElementBuilder();
-    public static final TextElementBuilder TEXT = new TextElementBuilder();
+    public static final TextElementBuilderOLD TEXT = new TextElementBuilderOLD();
     public static final de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder TEXT_V2 = new de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();

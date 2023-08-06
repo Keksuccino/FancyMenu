@@ -382,6 +382,9 @@ public class MarkdownParser {
             }
 
         }
+
+        //Manually build the last fragment of the last line, because it doesn't end with "\n"
+        fragments.add(builder.build(true, true));
         
         return fragments;
         

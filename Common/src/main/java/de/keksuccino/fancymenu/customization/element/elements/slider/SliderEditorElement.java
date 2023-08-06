@@ -24,7 +24,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).linkedVariable,
                         (element, varName) -> ((SliderElement)element.element).linkedVariable = varName,
@@ -34,7 +34,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("slider_separator_1");
 
-        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_slider_type",
+        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_slider_type",
                         ListUtils.build(SliderElement.SliderType.LIST, SliderElement.SliderType.RANGE),
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).type,
@@ -50,7 +50,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.type.desc")));
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_list_values",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_list_values",
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes ->
                         {
@@ -75,7 +75,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.list.set_list_values.desc")))
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
 
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
+        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).minRangeValue,
                         (element, range) -> {
@@ -86,7 +86,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         true, 0, null, null)
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.RANGE);
 
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
+        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).maxRangeValue,
                         (element, range) -> {
@@ -99,7 +99,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("slider_separator_2");
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_prefix",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_prefix",
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).labelPrefix,
                         (element, label) -> {
@@ -111,7 +111,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_prefix.desc")));
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_suffix",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_label_suffix",
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).labelSuffix,
                         (element, label) -> {

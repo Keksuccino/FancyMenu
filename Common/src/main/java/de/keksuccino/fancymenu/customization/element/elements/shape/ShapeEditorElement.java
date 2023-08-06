@@ -21,7 +21,7 @@ public class ShapeEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
+        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
                         consumes -> (consumes instanceof ShapeEditorElement),
                         consumes -> ((ShapeElement)consumes.element).color.getHex(),
                         (element, colorHex) -> {

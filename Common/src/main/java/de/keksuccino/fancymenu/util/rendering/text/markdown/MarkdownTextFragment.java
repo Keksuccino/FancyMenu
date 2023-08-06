@@ -12,6 +12,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -192,6 +193,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.codeBlockContext != null) {
             style = Style.EMPTY;
         }
+        if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_UPPER) {
+            t = t.toUpperCase();
+        }
+        if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_LOWER) {
+            t = t.toLowerCase();
+        }
         return Component.literal(t).setStyle(style);
     }
 
@@ -317,10 +324,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getScale() {
-        if (this.headlineType == HeadlineType.BIG) return 1.2F;
-        if (this.headlineType == HeadlineType.BIGGER) return 1.6F;
-        if (this.headlineType == HeadlineType.BIGGEST) return 2F;
-        return 1.0F;
+        float f = 1.0f;
+        if (this.headlineType == HeadlineType.BIG) f = 1.2f;
+        if (this.headlineType == HeadlineType.BIGGER) f = 1.6f;
+        if (this.headlineType == HeadlineType.BIGGEST) f = 2.0f;
+        return f * this.parent.textBaseScale;
     }
 
     @Override

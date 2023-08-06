@@ -873,6 +873,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         public boolean isHovered() {
+            if (!this.parent.isOpen()) return false;
             return this.hovered;
         }
 

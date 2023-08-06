@@ -401,6 +401,7 @@ public class LayoutEditorUI {
 				editor.history.saveSnapshot();
 				editor.layout.autoScalingWidth = 0;
 				editor.layout.autoScalingHeight = 0;
+				menu.closeMenu();
 				editor.init();
 			}
 		});
@@ -418,6 +419,7 @@ public class LayoutEditorUI {
 				integer -> {
 					editor.history.saveSnapshot();
 					editor.layout.forcedScale = integer;
+					menu.closeMenu();
 					editor.init();
 				},
 				true, 0, consumes -> {
